@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="payment_provider_form" model="ir.ui.view">
+        <field name="name">payment.provider.form</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//group[@name='provider_config']" position="after">
+                <group string="COD Rules" invisible="custom_mode != 'cod'">
+                    <field name="cod_rule_ids" nolabel="1" colspan="4">
+                        <list>
+                            <field name="sequence" widget="handle"/>
+                            <field name="pricing_based"/>
+                            <field name="fixed_amount" readonly="pricing_based != 'fixed'"/>
+                            <field name="percentage_amount" readonly="pricing_based != 'percentage'"/>
+                            <field name="min_amount"/>
+                            <field name="max_amount"/>
+                            <field name="company_currency_id"/>
+                        </list>
+                        <form>
+                            <group>
+                                <group>
+                                    <field name="pricing_based"/>
+                                    <field name="fixed_amount" readonly="pricing_based != 'fixed'"/>
+                                    <field name="percentage_amount" readonly="pricing_based != 'percentage'"/>
+                                    <field name="min_amount"/>
+                                    <field name="max_amount"/>
+                                    <field name="company_currency_id"/>
+                                </group>
+                            </group>
+                        </form>
+                    </field>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

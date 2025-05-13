@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="view_sales_order_filter_ecommerce" model="ir.ui.view">
+            <field name="name">sale.order.search</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="website_sale.view_sales_order_filter_ecommerce"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//filter[@name='from_website']" position="after">
+                    <separator/>
+                    <filter string="Cash on Delivery" name="payment_cod" domain="[('transaction_ids.provider_id.custom_mode', '=', 'cod')]"/>
+                </xpath>
+
+            </field>
+        </record>
+
+    </data>
+</odoo>

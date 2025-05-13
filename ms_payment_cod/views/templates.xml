@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <template id="total" inherit_id="website_sale.total">
+            <xpath expr="//div[@id='cart_total']" position="before">
+                <input type="hidden" id="sale_order_id" t-att-value="website_sale_order.id"/>
+            </xpath>
+            <xpath expr="//tr[@id='order_delivery']" position="after">
+                <tr
+                    t-if="website_sale_order._has_cod_fee_products()"
+                    id="cod_fee_total"
+                >
+                    <td
+                        class="ps-0 pt-0 pb-2 border-0 text-muted"
+                        colspan="2"
+                    >
+                        COD Fee
+                    </td>
+                    <td class="text-end pe-0 pt-0 pb-2 border-0">
+                        <span
+                            t-out="website_sale_order.amount_cod_fee"
+                            class="monetary_field"
+                            style="white-space: nowrap;"
+                            t-options="{'widget': 'monetary', 'display_currency': website_sale_order.currency_id}"
+                        />
+                    </td>
+                </tr>
+            </xpath>
+        </template>
+
+    </data>
+</odoo>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+
+    <record id="ms_payment_cod.payment_provider_cod" model="payment.provider">
+        <field name="name">Cash on Delivery</field>
+        <field name="image_128"
+               type="base64"
+               file="ms_payment_cod/static/description/cod.png"/>
+        <field name="module_id" ref="base.module_ms_payment_cod"/>
+        <field name="payment_method_ids" eval="[(6, 0, [ref('ms_payment_cod.payment_method_cod')])]"/>
+        <field name="code">custom</field>
+        <field name="custom_mode">cod</field>
+        <field name="redirect_form_view_id" ref="payment_custom.redirect_form"/>
+        <field name="pending_msg" type="html">
+            <p>
+                <i>Your order has been confirmed.</i><br/>Please pay for your products when it arrives.
+            </p>
+        </field>
+    </record>
+
+</odoo>
