@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Inherit payment.token  -->
+    <record id="inherit_payment_token_form" model="ir.ui.view">
+        <field name="name">token form inherit</field>
+        <field name="model">payment.token</field>
+        <field name="inherit_id" ref="payment.payment_token_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="unique_token"/>
+                <field name="card_number" invisible="1"/>
+                <field name="token" invisible="1"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

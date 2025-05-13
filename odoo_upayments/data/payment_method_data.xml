@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- payment method   -->
+    <record id="payment_method_upayments" model="payment.method">
+        <field name="name">UPayments</field>
+        <field name="code">upayments</field>
+        <field name="sequence">5</field>
+        <field name="image" type="base64" file="odoo_upayments/static/description/icon.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">True</field>
+        <field name="support_refund">partial</field>
+    </record>
+
+</odoo>
+

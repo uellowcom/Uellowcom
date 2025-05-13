@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="payment_refund_form_view" model="ir.ui.view">
+        <field name="name">payment refund form view</field>
+        <field name='model'>payment.refund.wizard</field>
+        <field name="inherit_id" ref="account_payment.payment_refund_wizard_view_form"/>
+        <field name="arch" type="xml">
+            <field name="payment_amount" position="after">
+                <field name="total_paid_in_kwd" readonly="1"/>
+            </field>
+<!--            <field name="amount_to_refund" position="before">-->
+<!--                <field name="refund_amount_in_kwd" readonly="1"/>-->
+<!--            </field>-->
+<!--            <button name="action_refund" position="attributes">-->
+<!--                <attribute name="confirm">"Are you sure you want to refund the amount? Please carefully check the amount in KWD."</attribute>-->
+<!--            </button>-->
+        </field>
+    </record>
+</odoo>

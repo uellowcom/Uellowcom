@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Redirect template -->
+    <template id="redirect_form" name="UPayment Redirect Form">
+        <form t-att-action="api_url" method="post">
+            <input type="hidden" name="ref" t-att-value="ref"/>
+            <input type="hidden" name="sess_id" t-att-value="sess_id"/>
+            <input type="hidden" name="upay_payment_link_url" t-att-value="upay_payment_link_url"/>
+        </form>
+    </template>
+
+</odoo>

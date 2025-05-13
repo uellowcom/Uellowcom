@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- show payment generate link   -->
+    <record id="payment_link_generate_wizard" model="ir.ui.view">
+        <field name="name">payment link generate wizard</field>
+        <field name="model">payment.link.wizard</field>
+        <field name="inherit_id" ref="payment.payment_link_wizard_view_form"/>
+        <field name="arch" type="xml">
+            <field name="amount" position="after">
+                 <field name="link" widget="url"/>
+            </field>
+        </field>
+    </record>
+</odoo>

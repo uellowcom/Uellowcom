@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- UPayments transaction details -->
+    <record id="payment_transaction_form" model="ir.ui.view">
+        <field name="name">payment.transaction.form.inherit</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='reference']" position="after">
+                <field name="upayment_payment_ref" invisible="operation == 'refund'" readonly="1"/>
+                <field name="upayment_payment_id" invisible="operation == 'refund'" readonly="1"/>
+                <field name="upayment_track_id" invisible="operation == 'refund'" readonly="1"/>
+                <field name="upayment_auth" invisible="operation == 'refund'" readonly="1"/>
+                <field name="upayment_invoice_id" invisible="operation == 'refund'"/>
+                <field name="upayment_refund_order_id"/>
+                <field name="upayment_requested_order_id"/>
+                <field name="upayment_refundArn" invisible="operation != 'refund'"/>
+                <field name="total_paid_non_kwd" invisible="operation == 'refund'" readonly="1"/>
+            </xpath>
+            <xpath expr="//field[@name='partner_lang']" position="after">
+                <field name="upayment_payment_type"/>
+                <field name="upayment_transaction_date"/>
+                <field name="upayment_result"/>
+                <field name="currency_id"/>
+                <field name="upayment_post_date"/>
+                <field name="operation" invisible="1"/>
+                <field name="customer_id" invisible="operation == 'refund'" readonly="1"/>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button name="check_payment_status" invisible="operation == 'refund'" class="oe_highlight" type="object"
+                        string="Check Payment Status"
+                />
+                <button name="check_refund_status" invisible="operation != 'refund'" class="oe_highlight" type="object"
+                        string="Check Refund Status"
+                />
+            </xpath>
+            <field name="partner_id" position="before">
+                <field name="upayment_verified" widget="badge" decoration-danger="upayment_verified == 'failed'"
+                       decoration-success="upayment_verified == 'success'"
+                       invisible="operation == 'refund'"
+                />
+                <field name="refund_verified" widget="badge" decoration-danger="refund_verified == 'failed'"
+                       decoration-success="refund_verified == 'success'"
+                       invisible="operation != 'refund'"
+                />
+            </field>
+        </field>
+    </record>
+
+</odoo>
+

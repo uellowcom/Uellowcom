@@ -1,0 +1,34 @@
+<!--<?xml version="1.0" encoding="UTF-8" ?>-->
+<!--<odoo>-->
+<!--    &lt;!&ndash; form view  &ndash;&gt;-->
+<!--    <record id="payment_method_form_view_inherit" model="ir.ui.view">-->
+<!--        <field name="name">Payment method form view inherit</field>-->
+<!--        <field name="model">payment.method</field>-->
+<!--        <field name="inherit_id" ref="payment.payment_method_form"/>-->
+<!--        <field name="arch" type="xml">-->
+<!--            <field name="code" position="after">-->
+<!--                <field name="is_upayment_method" invisible="1"/>-->
+<!--            </field>-->
+<!--            <field name="active" position="attributes">-->
+<!--                <attribute name="readonly">is_upayment_method == True</attribute>-->
+<!--            </field>-->
+<!--        </field>-->
+<!--    </record>-->
+
+<!--    &lt;!&ndash; tree view  &ndash;&gt;-->
+<!--    <record id="payment_method_tree_view_inherit" model="ir.ui.view">-->
+<!--        <field name="name">Payment method tree view inherit</field>-->
+<!--        <field name="model">payment.method</field>-->
+<!--        <field name="inherit_id" ref="payment.payment_method_tree"/>-->
+<!--        <field name="arch" type="xml">-->
+<!--            <field name="name" position="after">-->
+<!--                <field name="is_upayment_method" invisible="1"/>-->
+<!--            </field>-->
+<!--            <field name="active" position="attributes">-->
+<!--                <attribute name="readonly">is_upayment_method == True</attribute>-->
+<!--            </field>-->
+<!--        </field>-->
+<!--    </record>-->
+
+
+<!--</odoo>-->

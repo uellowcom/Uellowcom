@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Inherit res.partner -->
+    <record id="inherit_contact_form_view_for_token" model="ir.ui.view">
+        <field name="name">inherit res partner form view</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="priority" eval="80"/>
+        <field name="arch" type="xml">
+            <field name="category_id" position="after">
+                <field name="unique_token" force_save="1" invisible="1"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

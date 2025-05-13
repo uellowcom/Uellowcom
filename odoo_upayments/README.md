@@ -1,0 +1,2 @@
+# odoo
+Upayments Odoo Plugin
