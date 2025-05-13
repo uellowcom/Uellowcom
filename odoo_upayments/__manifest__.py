@@ -5,7 +5,7 @@
     "author": 'UPayments',
     "website": 'https://upayments.com/',
     'company': 'https://upayments.com/',
-    'version': '17.0.0.0.1',
+    'version': '18.0',
     'license': 'OPL-1',
     'category': 'Accounting/Payment Providers',
     'depends': ['base', 'payment', 'website_sale', 'web', 'contacts', 'account_payment'],
