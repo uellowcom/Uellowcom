@@ -1,5 +1,6 @@
 from odoo import http
 from odoo.http import request
+import logging
 
 
 class QuickCheckout(http.Controller):
@@ -57,13 +58,23 @@ class QuickCheckout(http.Controller):
         # Clear current cart
         request.website.sale_reset()
         
-        # Add product to cart
-        product = request.env['product.product'].browse(product_id)
-        if product:
-            request.website.sale_get_order(force_create=1)._cart_update(
+        # Verify product exists before adding to cart
+        product = request.env['product.product'].sudo().browse(product_id)
+        if not product.exists():
+            # Product doesn't exist, redirect to shop with warning
+            return request.redirect('/shop?warning=Product not found')
+        
+        try:
+            # Add product to cart with error handling
+            order = request.website.sale_get_order(force_create=1)
+            order._cart_update(
                 product_id=product_id,
                 add_qty=1
             )
-        
-        # Redirect to quick checkout form
-        return request.redirect('/shop/quick_checkout')
+            # Redirect to quick checkout form
+            return request.redirect('/shop/quick_checkout')
+        except Exception as e:
+            # Log the error and redirect with message
+            _logger = logging.getLogger(__name__)
+            _logger.error(f"Error in quick checkout: {str(e)}")
+            return request.redirect('/shop?error=Could not add product to cart')
