@@ -22,6 +22,7 @@
     'assets': {
         'web.assets_frontend': [
             'quick_checkout/static/src/js/quick_checkout.js',
+            'quick_checkout/static/src/xml/quick_checkout_templates.xml',
         ],
     },
     'installable': True,
