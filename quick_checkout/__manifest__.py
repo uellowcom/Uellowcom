@@ -24,12 +24,10 @@
         'web.assets_frontend': [
             'quick_checkout/static/src/js/quick_checkout.js',
             'quick_checkout/static/src/js/checkout_map_component.js',
+            'quick_checkout/static/src/js/map_location_owl.js',
             'quick_checkout/static/src/js/checkout_map_injector_owl.js',
-            'quick_checkout/static/src/js/map_location.js',
-            'quick_checkout/static/src/js/checkout_map_injector.js',
             'quick_checkout/static/src/xml/quick_checkout_templates.xml',
-            'quick_checkout/static/src/xml/checkout_map_component.xml',
-            'quick_checkout/static/src/xml/map_location_templates.xml'
+            'quick_checkout/static/src/xml/checkout_map_component.xml'
         ],
         'web.assets_frontend_lazy': [
             'quick_checkout/static/src/js/theme_prime_patch.js',
