@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="quick_checkout.CheckoutMapComponentTemplate" owl="1">
+        <div class="checkout-map-container">
+            <div t-if="state.isLoading" class="map-loading">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading map...</p>
+            </div>
+            
+            <div t-if="state.error" class="alert alert-warning" role="alert">
+                <i class="fa fa-exclamation-triangle me-2"></i>
+                <t t-esc="state.error"/>
+                <button class="btn btn-sm btn-outline-primary ms-3" t-on-click="onRefreshLocation">
+                    <i class="fa fa-refresh me-1"></i> Try Again
+                </button>
+            </div>
+            
+            <div class="map-container mb-3">
+                <div t-ref="mapContainer" class="map-view" style="height: 300px; width: 100%; border-radius: 8px;"></div>
+            </div>
+            
+            <div class="map-info mt-3" t-if="state.location.latitude">
+                <div class="location-details">
+                    <p class="mb-1"><strong>Selected Location:</strong></p>
+                    <p class="location-address mb-2" t-if="state.location.address">
+                        <i class="fa fa-map-marker me-2"></i>
+                        <t t-esc="state.location.address"/>
+                    </p>
+                    <p class="location-coordinates small text-muted">
+                        <i class="fa fa-crosshairs me-1"></i>
+                        Lat: <t t-esc="state.location.latitude.toFixed(6)"/>, 
+                        Lng: <t t-esc="state.location.longitude.toFixed(6)"/>
+                    </p>
+                </div>
+                <div class="map-actions mt-2">
+                    <button class="btn btn-sm btn-outline-secondary" t-on-click="onRefreshLocation">
+                        <i class="fa fa-location-arrow me-1"></i> Use My Current Location
+                    </button>
+                </div>
+            </div>
+            
+            <div class="map-instructions small text-muted mt-2">
+                <p><i class="fa fa-info-circle me-1"></i> Drag the marker to pinpoint your exact location or use the button to detect your current location.</p>
+            </div>
+        </div>
+    </t>
+</templates>

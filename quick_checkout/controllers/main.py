@@ -1,7 +1,7 @@
 from odoo import http
 from odoo.http import request
 import logging
-
+from odoo.addons.website_sale.controllers.main import WebsiteSale
 
 class QuickCheckout(http.Controller):
 
@@ -23,23 +23,50 @@ class QuickCheckout(http.Controller):
         partner_obj = request.env['res.partner'].sudo()
         existing_partner = partner_obj.search([('phone', '=', post.get('phone'))], limit=1)
         
+        # Get location data from form
+        latitude = post.get('latitude')
+        longitude = post.get('longitude')
+        address = post.get('address')
+        
         if existing_partner:
             partner = existing_partner
+            # Update partner's location if provided
+            if latitude and longitude:
+                partner.write({
+                    'contact_address': address,
+                    'partner_latitude': latitude,
+                    'partner_longitude': longitude,
+                })
         else:
             partner_values = {
                 'name': post.get('name'),
                 'phone': post.get('phone'),
                 'customer_rank': 1,
             }
+            
+            # Add location data if provided
+            if latitude and longitude:
+                partner_values.update({
+                    'contact_address': address,
+                    'partner_latitude': latitude,
+                    'partner_longitude': longitude,
+                })
+                
             partner = partner_obj.create(partner_values)
         
         # Update the order with partner information
-        order.write({
+        order_values = {
             'partner_id': partner.id,
             'partner_invoice_id': partner.id,
             'partner_shipping_id': partner.id,
             'is_quick_checkout': True,
-        })
+        }
+        
+        # Add location data to order note if provided
+        if address:
+            order_values['note'] = f"Delivery Address: {address}\nCoordinates: {latitude}, {longitude}"
+            
+        order.write(order_values)
         
         # Confirm the order
         order.action_confirm()
@@ -50,6 +77,7 @@ class QuickCheckout(http.Controller):
         # Render success page
         return request.render('quick_checkout.quick_checkout_success', {
             'phone': post.get('phone'),
+            'address': address,
         })
         
     @http.route(['/shop/product/quick_checkout/<int:product_id>'], type='http', auth="public", website=True)
@@ -58,23 +86,13 @@ class QuickCheckout(http.Controller):
         # Clear current cart
         request.website.sale_reset()
         
-        # Verify product exists before adding to cart
-        product = request.env['product.product'].sudo().browse(product_id)
-        if not product.exists():
-            # Product doesn't exist, redirect to shop with warning
-            return request.redirect('/shop?warning=Product not found')
-        
-        try:
-            # Add product to cart with error handling
-            order = request.website.sale_get_order(force_create=1)
-            order._cart_update(
+        # Add product to cart
+        product = request.env['product.product'].browse(product_id)
+        if product:
+            request.website.sale_get_order(force_create=1)._cart_update(
                 product_id=product_id,
                 add_qty=1
             )
-            # Redirect to quick checkout form
-            return request.redirect('/shop/quick_checkout')
-        except Exception as e:
-            # Log the error and redirect with message
-            _logger = logging.getLogger(__name__)
-            _logger.error(f"Error in quick checkout: {str(e)}")
-            return request.redirect('/shop?error=Could not add product to cart')
+        
+        # Redirect to quick checkout form
+        return request.redirect('/shop/quick_checkout')
