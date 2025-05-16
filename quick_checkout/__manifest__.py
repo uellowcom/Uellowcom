@@ -24,6 +24,9 @@
             'quick_checkout/static/src/js/quick_checkout.js',
             'quick_checkout/static/src/xml/quick_checkout_templates.xml',
         ],
+        'web.assets_frontend_lazy': [
+            'quick_checkout/static/src/js/theme_prime_patch.js',
+        ],
     },
     'installable': True,
     'application': False,
