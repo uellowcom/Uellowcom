@@ -2,7 +2,7 @@
 <odoo>
     <!-- Direct injection of map into checkout form -->
     <template id="checkout_map_injection" inherit_id="website_sale.checkout" active="True">
-        <xpath expr="//form[hasclass('checkout_autoformat')]" position="inside">
+        <xpath expr="//div[@id='shop_checkout']" position="inside">
             <div class="row mt-3 mb-3">
                 <div class="col-12">
                     <div class="card">
