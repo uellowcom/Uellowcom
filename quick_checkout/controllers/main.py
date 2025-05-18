@@ -86,13 +86,24 @@ class QuickCheckout(http.Controller):
         # Clear current cart
         request.website.sale_reset()
         
-        # Add product to cart
-        product = request.env['product.product'].browse(product_id)
-        if product:
-            request.website.sale_get_order(force_create=1)._cart_update(
+        # Add product to cart with better error handling
+        product = request.env['product.product'].sudo().browse(product_id)
+        if not product.exists():
+            return request.redirect('/shop?error=product_not_found')
+            
+        if not product.active:
+            return request.redirect('/shop?error=product_not_active')
+            
+        try:
+            order = request.website.sale_get_order(force_create=1)
+            order._cart_update(
                 product_id=product_id,
                 add_qty=1
             )
-        
-        # Redirect to quick checkout form
-        return request.redirect('/shop/quick_checkout')
+            # Redirect to quick checkout form
+            return request.redirect('/shop/quick_checkout')
+        except Exception as e:
+            # Log the error for debugging
+            _logger = logging.getLogger(__name__)
+            _logger.error(f"Quick checkout error: {str(e)}")
+            return request.redirect('/shop?error=cart_update_failed')
