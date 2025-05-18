@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- This file was created to resolve a FileNotFoundError during module installation -->
+    <!-- Add your checkout map templates here if needed -->
+</odoo>

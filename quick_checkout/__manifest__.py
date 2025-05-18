@@ -13,12 +13,12 @@
         'theme_prime',
         'contacts',
         'sale',
-        'checkout_map',  # Added dependency on the new checkout_map module
     ],
     'data': [
         'security/ir.model.access.csv',
         'views/quick_checkout_templates.xml',
         'views/sale_order_views.xml',
+        'views/checkout_map_templates.xml',
     ],
     'assets': {
         'web.assets_frontend': [
