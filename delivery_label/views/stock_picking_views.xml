@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit stock.picking form view to add print label button -->
+    <record id="view_picking_form_inherit" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_cancel']" position="before">
+                <button name="print_delivery_label" string="Print Label" type="object" 
+                        invisible="state not in ('assigned', 'done')" 
+                        groups="stock.group_stock_user"
+                        class="oe_highlight"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

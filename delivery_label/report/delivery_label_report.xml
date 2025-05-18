@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_delivery_label" model="ir.actions.report">
+        <field name="name">Delivery Label</field>
+        <field name="model">stock.picking</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">delivery_label.report_delivery_label</field>
+        <field name="report_file">delivery_label.report_delivery_label</field>
+        <field name="print_report_name">'Delivery Label - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_stock_picking"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="delivery_label.paperformat_delivery_label"/>
+    </record>
+</odoo>

@@ -13,21 +13,17 @@
         'theme_prime',
         'contacts',
         'sale',
+        'checkout_map',  # Added dependency on the new checkout_map module
     ],
     'data': [
         'security/ir.model.access.csv',
         'views/quick_checkout_templates.xml',
         'views/sale_order_views.xml',
-        'views/checkout_map_templates.xml',
     ],
     'assets': {
         'web.assets_frontend': [
             'quick_checkout/static/src/js/quick_checkout.js',
-            'quick_checkout/static/src/js/checkout_map_component.js',
-            'quick_checkout/static/src/js/map_location_owl.js',
-            'quick_checkout/static/src/js/checkout_map_injector_owl.js',
             'quick_checkout/static/src/xml/quick_checkout_templates.xml',
-            'quick_checkout/static/src/xml/checkout_map_component.xml'
         ],
         'web.assets_frontend_lazy': [
             'quick_checkout/static/src/js/theme_prime_patch.js',
