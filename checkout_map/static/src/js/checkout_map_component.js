@@ -16,6 +16,7 @@ class CheckoutMapComponent extends Component {
                 latitude: null,
                 longitude: null,
                 address: '',
+                addressDetails: null,
             },
             mapInitialized: false
         });
@@ -255,7 +256,10 @@ class CheckoutMapComponent extends Component {
             if (data && data.display_name) {
                 this.state.location.address = data.display_name;
                 
-                // Update hidden form fields
+                // Store address details for form filling
+                this.state.location.addressDetails = data.address || {};
+                
+                // Update hidden form fields and fill address form
                 this._updateFormFields();
             }
         } catch (error) {
@@ -264,10 +268,10 @@ class CheckoutMapComponent extends Component {
     }
     
     /**
-     * Update hidden form fields with location data
+     * Update hidden form fields with location data and fill address form fields
      */
     _updateFormFields() {
-        const { latitude, longitude, address } = this.state.location;
+        const { latitude, longitude, address, addressDetails } = this.state.location;
         
         // Update hidden form fields
         // Use mapRef.el instead of this.el which might be undefined
@@ -281,6 +285,11 @@ class CheckoutMapComponent extends Component {
         this._createOrUpdateHiddenField(form, 'latitude', latitude);
         this._createOrUpdateHiddenField(form, 'longitude', longitude);
         this._createOrUpdateHiddenField(form, 'map_address', address);
+        
+        // Fill address form fields if address details are available
+        if (addressDetails) {
+            this._fillAddressForm(form, addressDetails);
+        }
     }
     
     /**
@@ -293,10 +302,255 @@ class CheckoutMapComponent extends Component {
             field = document.createElement('input');
             field.type = 'hidden';
             field.name = name;
+            field.id = name;
             form.appendChild(field);
         }
         
-        field.value = value;
+        field.value = value || '';
+    }
+    
+    /**
+     * Fill address form fields with data from the map marker
+     */
+    _fillAddressForm(form, addressDetails) {
+        console.log('Filling address form with details:', addressDetails);
+        
+        // Map of form field names to address detail properties
+        const fieldMappings = {
+            'street': ['road', 'street', 'footway', 'pedestrian', 'path', 'track'],
+            'street2': ['suburb', 'neighbourhood', 'district', 'quarter'],
+            'city': ['city', 'town', 'village', 'hamlet', 'municipality'],
+            'zip': ['postcode', 'postal_code', 'post_code'],
+            'state_id': ['state', 'province', 'region', 'county', 'state_district'],
+            'country_id': ['country', 'country_code']
+        };
+        
+        // Build a complete address string for logging
+        let addressComponents = [];
+        
+        // Fill each form field if we have matching data
+        for (const [fieldName, possibleKeys] of Object.entries(fieldMappings)) {
+            // Skip country and state as they're handled separately
+            if (fieldName === 'country_id' || fieldName === 'state_id') continue;
+            
+            // Try each possible key until we find a match
+            for (const key of possibleKeys) {
+                if (addressDetails[key]) {
+                    // For street, add house number if available
+                    if (fieldName === 'street' && addressDetails['house_number']) {
+                        const streetValue = `${addressDetails['house_number']} ${addressDetails[key]}`;
+                        this._setFormFieldValue(form, fieldName, streetValue);
+                        addressComponents.push(`${fieldName}: ${streetValue}`);
+                    } else {
+                        this._setFormFieldValue(form, fieldName, addressDetails[key]);
+                        addressComponents.push(`${fieldName}: ${addressDetails[key]}`);
+                    }
+                    break; // Stop after first match
+                }
+            }
+        }
+        
+        console.log('Address components filled:', addressComponents.join(', '));
+        
+        // Handle special case for country and state selects
+        this._handleCountryAndStateSelects(form, addressDetails);
+    }
+    
+    /**
+     * Show a notification that address was filled from map
+     */
+    _showAddressFilledNotification() {
+        // Create notification element if it doesn't exist
+        let notification = document.getElementById('map-address-notification');
+        if (!notification) {
+            notification = document.createElement('div');
+            notification.id = 'map-address-notification';
+            notification.className = 'alert alert-success mt-2 mb-2 py-2';
+            notification.style.transition = 'opacity 0.5s';
+            notification.style.opacity = '0';
+            notification.innerHTML = '<i class="fa fa-check-circle me-2"></i>Address filled from map location';
+            
+            // Insert after the map
+            const mapElement = this.mapRef.el;
+            if (mapElement && mapElement.parentNode) {
+                mapElement.parentNode.insertBefore(notification, mapElement.nextSibling);
+            }
+        }
+        
+        // Show the notification
+        setTimeout(() => {
+            notification.style.opacity = '1';
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                
+                // Remove after fade out
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.parentNode.removeChild(notification);
+                    }
+                }, 500);
+            }, 3000);
+        }, 100);
+    }
+    
+    /**
+     * Set value for a form field, handling different input types
+     */
+    _setFormFieldValue(form, fieldName, value) {
+        // Try different variations of the field name (with and without prefix)
+        const possibleSelectors = [
+            `[name="${fieldName}"]`,
+            `[name="partner_${fieldName}"]`,
+            `[id="${fieldName}"]`,
+            `[id="partner_${fieldName}"]`
+        ];
+        
+        for (const selector of possibleSelectors) {
+            const field = form.querySelector(selector);
+            if (field) {
+                // Set value based on field type
+                if (field.tagName === 'SELECT') {
+                    // For select fields, we'll handle country/state separately
+                    console.log(`Found SELECT field for ${fieldName}`);
+                } else {
+                    field.value = value;
+                    // Trigger change event to ensure Odoo's JS picks up the change
+                    field.dispatchEvent(new Event('change', { bubbles: true }));
+                    console.log(`Set ${fieldName} to ${value}`);
+                }
+                return true;
+            }
+        }
+        
+        console.log(`Could not find field for ${fieldName}`);
+        return false;
+    }
+    
+    /**
+     * Handle country and state select fields which need special treatment
+     */
+    _handleCountryAndStateSelects(form, addressDetails) {
+        // Try to set country first
+        if (addressDetails.country_code || addressDetails.country) {
+            const countryCode = addressDetails.country_code ? addressDetails.country_code.toUpperCase() : null;
+            const countryName = addressDetails.country || '';
+            const countrySelectors = ['[name="country_id"]', '[name="partner_country_id"]'];
+            
+            for (const selector of countrySelectors) {
+                const countrySelect = form.querySelector(selector);
+                if (countrySelect) {
+                    let matched = false;
+                    
+                    // First try to match by country code (most accurate)
+                    if (countryCode) {
+                        for (const option of countrySelect.options) {
+                            // Check if the option has a data-code attribute matching the country code
+                            if ((option.dataset.code && option.dataset.code.toUpperCase() === countryCode) ||
+                                (option.getAttribute('data-code') && option.getAttribute('data-code').toUpperCase() === countryCode)) {
+                                this._selectCountryOption(countrySelect, option, addressDetails);
+                                matched = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // If no match by code, try to match by country name
+                    if (!matched && countryName) {
+                        for (const option of countrySelect.options) {
+                            // Try to match by country name (case insensitive)
+                            if (option.text.toLowerCase() === countryName.toLowerCase() ||
+                                option.text.toLowerCase().includes(countryName.toLowerCase())) {
+                                this._selectCountryOption(countrySelect, option, addressDetails);
+                                matched = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // If still no match but we have a country code, try partial text match
+                    if (!matched && countryCode) {
+                        for (const option of countrySelect.options) {
+                            if (option.text.toUpperCase().includes(countryCode)) {
+                                this._selectCountryOption(countrySelect, option, addressDetails);
+                                matched = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // If we found and set a country, no need to check other selectors
+                    if (matched) break;
+                }
+            }
+        }
+    }
+    
+    /**
+     * Helper method to select a country option and trigger related events
+     */
+    _selectCountryOption(countrySelect, option, addressDetails) {
+        // Set the value and trigger change event
+        countrySelect.value = option.value;
+        countrySelect.dispatchEvent(new Event('change', { bubbles: true }));
+        console.log(`Set country to ${option.text}`);
+        
+        // Show feedback to user that address was filled from map
+        this._showAddressFilledNotification();
+        
+        // After setting country, wait for state options to load, then set state
+        setTimeout(() => {
+            this._setStateAfterCountry(countrySelect.form, addressDetails);
+        }, 800); // Increased timeout to ensure state options load
+    }
+    
+    /**
+     * Set state field after country has been set and state options loaded
+     */
+    _setStateAfterCountry(form, addressDetails) {
+        if (!addressDetails.state && !addressDetails.county && !addressDetails.region) return;
+        
+        // Try different possible state names from address details
+        const stateName = addressDetails.state || addressDetails.county || addressDetails.region || '';
+        if (!stateName) return;
+        
+        const stateSelectors = ['[name="state_id"]', '[name="partner_state_id"]'];
+        
+        for (const selector of stateSelectors) {
+            const stateSelect = form.querySelector(selector);
+            if (stateSelect && stateSelect.options.length > 1) { // Make sure we have options
+                let matched = false;
+                
+                // Try exact match first
+                for (const option of stateSelect.options) {
+                    if (option.text.toLowerCase() === stateName.toLowerCase()) {
+                        stateSelect.value = option.value;
+                        stateSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        console.log(`Set state to ${option.text} (exact match)`);
+                        matched = true;
+                        break;
+                    }
+                }
+                
+                // If no exact match, try partial match
+                if (!matched) {
+                    for (const option of stateSelect.options) {
+                        if (option.text.toLowerCase().includes(stateName.toLowerCase()) ||
+                            stateName.toLowerCase().includes(option.text.toLowerCase())) {
+                            stateSelect.value = option.value;
+                            stateSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                            console.log(`Set state to ${option.text} (partial match)`);
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // If we found a match, no need to check other selectors
+                if (matched) break;
+            }
+        }
     }
     
     /**

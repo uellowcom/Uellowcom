@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Customize the checkout form to hide company name, VAT fields and make email not required -->
+    <template id="address_form_customizations" inherit_id="website_sale.address" active="True">
+        <!-- Hide company name and VAT fields -->
+        <xpath expr="//div[@id='company_name_div']" position="attributes">
+            <attribute name="style">display: none;</attribute>
+        </xpath>
+        
+        <xpath expr="//div[@id='div_vat']" position="attributes">
+            <attribute name="style">display: none;</attribute>
+        </xpath>
+    
+    </template>
+</odoo>

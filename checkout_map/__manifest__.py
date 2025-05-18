@@ -16,6 +16,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/checkout_map_templates.xml',
+        'views/checkout_form_customizations.xml',
     ],
     'assets': {
         'web.assets_frontend': [
