@@ -1,0 +1,108 @@
+hijri_converter
+fastapi
+uvicorn
+firebase-admin>=6.0.0
+redis>=5.0.1
+pyjwt>=2.8.0
+packaging>=21.0
+# Core Dependencies
+pydantic>=2.5.0
+pydantic[email]>=2.5.0
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+authlib>=1.3.0
+cryptography>=41.0.7
+
+# OAuth Providers
+google-auth>=2.25.0
+google-auth-oauthlib>=1.2.0
+facebook-sdk>=3.1.0
+pyjwt>=2.8.0
+
+# Firebase
+firebase-admin>=6.4.0
+
+# Database
+psycopg2-binary>=2.9.9
+sqlalchemy>=2.0.25
+alembic>=1.13.1
+
+# Redis Cache
+redis>=5.0.1
+hiredis>=2.3.2
+
+# HTTP Client
+httpx>=0.26.0
+aiohttp>=3.9.1
+
+# Email
+python-dotenv>=1.0.0
+aiosmtplib>=3.0.1
+email-validator>=2.1.0
+
+# SMS (Optional - Twilio)
+twilio>=8.11.0
+
+# Data Processing
+python-dateutil>=2.8.2
+pytz>=2023.3
+
+# Monitoring & Logging
+python-json-logger>=2.0.7
+sentry-sdk[fastapi]>=1.39.1
+
+# Testing
+pytest>=7.4.4
+pytest-asyncio>=0.23.3
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+httpx>=0.26.0
+faker>=22.0.0
+
+# Development
+black>=23.12.1
+flake8>=7.0.0
+mypy>=1.8.0
+pre-commit>=3.6.0
+
+# Performance
+orjson>=3.9.10
+ujson>=5.9.0
+
+# Documentation
+mkdocs>=1.5.3
+mkdocs-material>=9.5.3
+
+# Rate Limiting
+slowapi>=0.1.9
+
+# CORS
+fastapi-cors>=0.0.6
+
+# File Processing
+python-magic>=0.4.27
+pillow>=10.2.0
+
+# Barcode
+python-barcode>=0.15.1
+qrcode>=7.4.2
+
+# Payment (Optional)
+stripe>=7.10.0
+
+# Utilities
+python-slugify>=8.0.1
+phonenumbers>=8.13.27
+
+a2wsgi>=1.10.6
+apispec
+cerberus
+contextvars
+extendable>=0.0.4
+parse-accept-language
+pyquerystring
+typing-extensions
+ujson

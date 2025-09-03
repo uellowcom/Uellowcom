@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Mobile FastAPI Menu -->
+    <menuitem id="menu_mobile_fastapi_root"
+              name="Mobile FastAPI"
+              sequence="100"/>
+
+    <!-- Mobile Users Menu -->
+    <menuitem id="menu_mobile_users"
+              name="Mobile Users"
+              parent="menu_mobile_fastapi_root"
+              action="action_mobile_user"
+              sequence="10"/>
+
+    <!-- Mobile API Endpoints Menu -->
+    <menuitem id="menu_mobile_api_endpoints"
+              name="API Endpoints"
+              parent="menu_mobile_fastapi_root"
+              action="fastapi.action_fastapi_endpoint"
+              sequence="20"/>
+</odoo>

@@ -1,0 +1,66 @@
+# Git files
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+CI-CD-README.md
+
+# Development files
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# CI/CD
+.github/
+k8s/
+scripts/
+docker-compose.yml
+docker-compose.*.yml
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Node modules (if any frontend assets)
+node_modules/
+
+# Excel files
+*.xlsx
+*.xls
+*.csv
+
+# Credentials
+*_cred.txt
+u_cred.txt

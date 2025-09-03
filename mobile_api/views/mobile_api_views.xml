@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Mobile Device Views -->
+        <record id="view_mobile_device_tree" model="ir.ui.view">
+            <field name="name">mobile.device.tree</field>
+            <field name="model">mobile.device</field>
+            <field name="arch" type="xml">
+                <list string="Mobile Devices">
+                    <field name="partner_id"/>
+                    <field name="device_id"/>
+                    <field name="device_type"/>
+                    <field name="device_model"/>
+                    <field name="app_version"/>
+                    <field name="last_used"/>
+                    <field name="is_active"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_mobile_device_form" model="ir.ui.view">
+            <field name="name">mobile.device.form</field>
+            <field name="model">mobile.device</field>
+            <field name="arch" type="xml">
+                <form string="Mobile Device">
+                    <sheet>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="device_id"/>
+                            <field name="device_type"/>
+                            <field name="is_active"/>
+                        </group>
+                        <group>
+                            <field name="device_model"/>
+                            <field name="app_version"/>
+                            <field name="os_version"/>
+                            <field name="push_token"/>
+                            <field name="last_used"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Mobile Wishlist Views -->
+        <record id="view_mobile_wishlist_tree" model="ir.ui.view">
+            <field name="name">mobile.wishlist.tree</field>
+            <field name="model">mobile.wishlist</field>
+            <field name="arch" type="xml">
+                <list string="Mobile Wishlist">
+                    <field name="partner_id"/>
+                    <field name="product_id"/>
+                    <field name="create_date"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_mobile_wishlist_form" model="ir.ui.view">
+            <field name="name">mobile.wishlist.form</field>
+            <field name="model">mobile.wishlist</field>
+            <field name="arch" type="xml">
+                <form string="Mobile Wishlist">
+                    <sheet>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="product_id"/>
+                            <field name="create_date"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Mobile Notification Views -->
+        <record id="view_mobile_notification_tree" model="ir.ui.view">
+            <field name="name">mobile.notification.tree</field>
+            <field name="model">mobile.notification</field>
+            <field name="arch" type="xml">
+                <list string="Mobile Notifications" decoration-bf="not is_read">
+                    <field name="partner_id"/>
+                    <field name="title"/>
+                    <field name="notification_type"/>
+                    <field name="is_read"/>
+                    <field name="push_sent"/>
+                    <field name="create_date"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_mobile_notification_form" model="ir.ui.view">
+            <field name="name">mobile.notification.form</field>
+            <field name="model">mobile.notification</field>
+            <field name="arch" type="xml">
+                <form string="Mobile Notification">
+                    <sheet>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="title"/>
+                            <field name="notification_type"/>
+                            <field name="is_read"/>
+                            <field name="read_date"/>
+                        </group>
+                        <group>
+                            <field name="push_sent"/>
+                            <field name="push_sent_date"/>
+                            <field name="push_error"/>
+                        </group>
+                        <field name="message"/>
+                        <field name="data"/>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Mobile Wallet Transaction Views -->
+        <record id="view_mobile_wallet_transaction_tree" model="ir.ui.view">
+            <field name="name">mobile.wallet.transaction.tree</field>
+            <field name="model">mobile.wallet.transaction</field>
+            <field name="arch" type="xml">
+                <list string="Wallet Transactions" decoration-success="transaction_type=='credit'" decoration-warning="transaction_type=='debit'">
+                    <field name="partner_id"/>
+                    <field name="amount"/>
+                    <field name="transaction_type"/>
+                    <field name="description"/>
+                    <field name="status"/>
+                    <field name="create_date"/>
+                </list>
+            </field>
+        </record>
+
+        <record id="view_mobile_wallet_transaction_form" model="ir.ui.view">
+            <field name="name">mobile.wallet.transaction.form</field>
+            <field name="model">mobile.wallet.transaction</field>
+            <field name="arch" type="xml">
+                <form string="Wallet Transaction">
+                    <sheet>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="amount"/>
+                            <field name="transaction_type"/>
+                            <field name="status"/>
+                        </group>
+                        <group>
+                            <field name="payment_method"/>
+                            <field name="reference"/>
+                            <field name="create_date"/>
+                            <field name="processed_date"/>
+                        </group>
+                        <field name="description"/>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Mobile Product View History -->
+        <record id="view_mobile_product_view_tree" model="ir.ui.view">
+            <field name="name">mobile.product.view.tree</field>
+            <field name="model">mobile.product.view</field>
+            <field name="arch" type="xml">
+                <list string="Product View History">
+                    <field name="partner_id"/>
+                    <field name="product_id"/>
+                    <field name="create_date"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Actions -->
+        <record id="action_mobile_device" model="ir.actions.act_window">
+            <field name="name">Mobile Devices</field>
+            <field name="res_model">mobile.device</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <record id="action_mobile_wishlist" model="ir.actions.act_window">
+            <field name="name">Mobile Wishlist</field>
+            <field name="res_model">mobile.wishlist</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <record id="action_mobile_notification" model="ir.actions.act_window">
+            <field name="name">Mobile Notifications</field>
+            <field name="res_model">mobile.notification</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <record id="action_mobile_wallet_transaction" model="ir.actions.act_window">
+            <field name="name">Wallet Transactions</field>
+            <field name="res_model">mobile.wallet.transaction</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <record id="action_mobile_product_view" model="ir.actions.act_window">
+            <field name="name">Product View History</field>
+            <field name="res_model">mobile.product.view</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <!-- Menu Items -->
+        <menuitem id="mobile_api_menu_root" name="Mobile API" sequence="100"/>
+
+        <menuitem id="mobile_api_menu_devices" name="Devices" parent="mobile_api_menu_root" action="action_mobile_device" sequence="10"/>
+        <menuitem id="mobile_api_menu_wishlist" name="Wishlist" parent="mobile_api_menu_root" action="action_mobile_wishlist" sequence="20"/>
+        <menuitem id="mobile_api_menu_notifications" name="Notifications" parent="mobile_api_menu_root" action="action_mobile_notification" sequence="30"/>
+        <menuitem id="mobile_api_menu_wallet" name="Wallet Transactions" parent="mobile_api_menu_root" action="action_mobile_wallet_transaction" sequence="40"/>
+        <menuitem id="mobile_api_menu_product_views" name="Product Views" parent="mobile_api_menu_root" action="action_mobile_product_view" sequence="50"/>
+
+    </data>
+</odoo>

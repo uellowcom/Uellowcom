@@ -10,6 +10,20 @@
         <xpath expr="//div[@id='div_vat']" position="attributes">
             <attribute name="style">display: none;</attribute>
         </xpath>
-    
+        
+        <!-- Make email not required by directly modifying the required_fields input -->
+        <xpath expr="//input[@name='required_fields']" position="replace">
+            <input type="hidden" name="required_fields" value="name,country_id"/>
+        </xpath>
+        
+        <!-- Add a simple script to remove required attribute from email fields -->
+        <xpath expr="//form[@action='/shop/address/submit']" position="after">
+            <script>
+                $(document).ready(function() {
+                    // Remove required attribute from all email fields
+                    $("input[type='email']").removeAttr("required");
+                });
+            </script>
+        </xpath>
     </template>
 </odoo>

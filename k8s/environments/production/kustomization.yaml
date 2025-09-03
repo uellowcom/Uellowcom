@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: odoo-production
+
+bases:
+  - ../../
+
+namePrefix: prod-
+
+commonLabels:
+  environment: production
+
+replicas:
+  - name: odoo-deployment
+    count: 3
+  - name: postgres-deployment
+    count: 1
+
+patchesStrategicMerge:
+  - resources-patch.yaml
+
+configMapGenerator:
+  - name: odoo-config
+    behavior: replace
+    files:
+      - odoo.conf
