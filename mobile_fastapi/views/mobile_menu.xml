@@ -16,6 +16,6 @@
     <menuitem id="menu_mobile_api_endpoints"
               name="API Endpoints"
               parent="menu_mobile_fastapi_root"
-              action="fastapi.action_fastapi_endpoint"
+              action="fastapi.menu_fastapi_root"
               sequence="20"/>
 </odoo>
