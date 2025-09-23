@@ -51,7 +51,7 @@ class MobileAuthController(http.Controller):
     def register(self):
         """Register a new user with email and password"""
         try:
-            data = request.jsonrequest
+            data = request.params
 
             # Validate required fields
             required_fields = ["email", "password", "name"]
@@ -76,7 +76,6 @@ class MobileAuthController(http.Controller):
                 "phone": data.get("phone"),
                 "is_company": False,
                 "customer_rank": 1,
-                "mobile_user": True,
             }
 
             partner = request.env["res.partner"].sudo().create(user_vals)
@@ -136,7 +135,7 @@ class MobileAuthController(http.Controller):
     def login(self):
         """Login with email and password"""
         try:
-            data = request.jsonrequest
+            data = request.params
 
             # Validate required fields
             required_fields = ["email", "password"]
@@ -225,7 +224,7 @@ class MobileAuthController(http.Controller):
     def firebase_sms_auth(self):
         """Authenticate using Firebase SMS"""
         try:
-            data = request.jsonrequest
+            data = request.params
 
             required_fields = ["phone_number"]
             is_valid, error_msg = self._validate_request_data(required_fields, data)
@@ -261,7 +260,6 @@ class MobileAuthController(http.Controller):
                             "phone": data["phone_number"],
                             "is_company": False,
                             "customer_rank": 1,
-                            "mobile_user": True,
                         }
                         partner = request.env["res.partner"].sudo().create(partner_vals)
 
@@ -320,7 +318,7 @@ class MobileAuthController(http.Controller):
     def social_login(self, provider):
         """Login with social providers (Google, Facebook, Apple)"""
         try:
-            data = request.jsonrequest
+            data = request.params
 
             if provider not in ["google", "facebook", "apple"]:
                 return self._create_response(error="Unsupported provider", status=400)
@@ -358,7 +356,6 @@ class MobileAuthController(http.Controller):
                         "phone": user_info.get("phone"),
                         "is_company": False,
                         "customer_rank": 1,
-                        "mobile_user": True,
                     }
                     partner = request.env["res.partner"].sudo().create(partner_vals)
 
@@ -402,7 +399,7 @@ class MobileAuthController(http.Controller):
     def refresh_token(self):
         """Refresh access token"""
         try:
-            data = request.jsonrequest
+            data = request.params
 
             required_fields = ["refresh_token"]
             is_valid, error_msg = self._validate_request_data(required_fields, data)
