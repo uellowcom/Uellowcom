@@ -67,6 +67,7 @@ black>=23.12.1
 flake8>=7.0.0
 mypy>=1.8.0
 pre-commit>=3.6.0
+debugpy>=1.8.0
 
 # Performance
 orjson>=3.9.10
@@ -106,3 +107,4 @@ parse-accept-language
 pyquerystring
 typing-extensions
 ujson
+fastapi>=0.110.0
