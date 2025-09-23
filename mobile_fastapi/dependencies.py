@@ -29,8 +29,8 @@ def odoo_env():
 
 
 def get_current_user(
-    authorization: Annotated[str, Header()] = None,
-    env: Annotated[Environment, Depends(odoo_env)] = Depends(odoo_env),
+    authorization: Annotated[str, Header()],
+    env: Annotated[Environment, Depends(odoo_env)],
 ) -> Dict[str, Any]:
     """Get the current user from the JWT token"""
     if not authorization:
@@ -83,8 +83,8 @@ def get_current_user(
 
 
 def get_optional_user(
-    authorization: Annotated[Optional[str], Header()] = None,
-    env: Annotated[Environment, Depends(odoo_env)] = Depends(odoo_env),
+    authorization: Annotated[Optional[str], Header()],
+    env: Annotated[Environment, Depends(odoo_env)],
 ) -> Optional[Dict[str, Any]]:
     """Get the current user from the JWT token if available, otherwise None"""
     if not authorization:
