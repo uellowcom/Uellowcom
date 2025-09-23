@@ -311,7 +311,7 @@ async def get_search_suggestions(
         return {"success": False, "error": str(e)}
 
 
-async def get_trending_searches(env: Annotated[Environment, Depends(odoo_env)]):
+def get_trending_searches(env):
     """Get trending search terms"""
     # This will be implemented later
     return {"success": True, "data": {"searches": []}}
