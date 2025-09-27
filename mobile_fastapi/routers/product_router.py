@@ -8,7 +8,12 @@ from odoo.http import request
 from fastapi import APIRouter, Depends, Query, HTTPException, status
 from pydantic import BaseModel
 
-from ..dependencies import odoo_env, get_current_user, get_optional_user
+from ..dependencies import (
+    odoo_env,
+    get_current_user,
+    get_optional_user,
+    get_authenticated_partner_env,
+)
 
 # Define the router
 router = APIRouter(prefix="/mobile/v1/products", tags=["products"])
@@ -302,7 +307,7 @@ async def get_product_detail(
 @router.post("/wishlist/{product_id}", response_model=ApiResponse)
 async def toggle_wishlist(
     product_id: int,
-    env: Annotated[Environment, Depends(odoo_env)],
+    env: Annotated[Environment, Depends(get_authenticated_partner_env)],
     current_user: Annotated[Dict[str, Any], Depends(get_current_user)],
 ):
     """Toggle product in wishlist"""
@@ -350,7 +355,7 @@ async def toggle_wishlist(
 
 @router.get("/wishlist", response_model=ApiResponse)
 async def get_wishlist(
-    env: Annotated[Environment, Depends(odoo_env)],
+    env: Annotated[Environment, Depends(get_authenticated_partner_env)],
     current_user: Annotated[Dict[str, Any], Depends(get_current_user)],
 ):
     """Get user's wishlist"""

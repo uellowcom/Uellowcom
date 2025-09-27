@@ -28,6 +28,82 @@ def odoo_env():
     return request.env
 
 
+def get_authenticated_partner_env(
+    authorization: Annotated[str, Header()],
+    env: Annotated[Environment, Depends(odoo_env)],
+) -> Environment:
+    """Get the Odoo environment with authenticated_partner_id context"""
+    if not authorization:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = get_token_from_header(authorization)
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    payload = decode_token(token)
+    if "error" in payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=payload["error"],
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    sub = payload.get("sub")
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token: missing subject",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user_id = int(sub)
+    mobile_user = env["mobile.user"].sudo().browse(user_id)
+
+    if not mobile_user.exists() or not mobile_user.active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    partner_id = mobile_user.partner_id.id
+    return env.with_context(authenticated_partner_id=partner_id)
+
+
+def get_authenticated_partner(
+    authorization: Annotated[str, Header()],
+    partner_env: Annotated[Environment, Depends(get_authenticated_partner_env)],
+):
+    """Get the authenticated partner from the environment with proper context"""
+    token = get_token_from_header(authorization)
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    payload = decode_token(token)
+    sub = payload.get("sub")
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token: missing subject",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    user_id = int(sub)
+    mobile_user = partner_env["mobile.user"].sudo().browse(user_id)
+    partner_id = mobile_user.partner_id.id
+    return partner_env["res.partner"].browse(partner_id)
+
+
 def get_current_user(
     authorization: Annotated[str, Header()],
     env: Annotated[Environment, Depends(odoo_env)],
@@ -79,6 +155,7 @@ def get_current_user(
         "username": mobile_user.username,
         "partner_id": mobile_user.partner_id.id,
         "user_id": mobile_user.user_id.id,
+        "partner": mobile_user.partner_id,  # Add partner object for convenience
     }
 
 
@@ -113,4 +190,5 @@ def get_optional_user(
         "username": mobile_user.username,
         "partner_id": mobile_user.partner_id.id,
         "user_id": mobile_user.user_id.id,
+        "partner": mobile_user.partner_id,  # Add partner object for convenience
     }

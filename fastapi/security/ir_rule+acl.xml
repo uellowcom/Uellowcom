@@ -43,6 +43,14 @@
         <field name="groups" eval="[(4, ref('group_fastapi_endpoint_runner'))]" />
     </record>
 
+    <!-- Allow admin users (Settings group) to access all partners -->
+    <record id="res_partner_fastapi_admin_rule" model="ir.rule">
+        <field name="name">Fastapi: Admin full access to partners</field>
+        <field name="model_id" ref="base.model_res_partner" />
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('base.group_system'))]" />
+    </record>
+
     <!-- give access by the user running the demo app to the fastapi.enddoint model -->
     <record id="fastapi_endpoint_fastapi_running_user" model="ir.model.access">
         <field name="name">Fastapi: Running user read endpoints</field>
