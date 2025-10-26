@@ -23,6 +23,7 @@
     ],
     'data': [
         'security/ir.model.access.csv',
+        'data/fastapi_endpoint.xml',
         'views/mobile_user_views.xml',
         'views/mobile_menu.xml',
     ],

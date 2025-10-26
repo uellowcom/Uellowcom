@@ -2,3 +2,12 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_mobile_user_admin,mobile.user admin,model_mobile_user,base.group_system,1,1,1,1
 access_mobile_user_user,mobile.user user,model_mobile_user,base.group_user,1,0,0,0
 access_mobile_user_public,mobile.user public,model_mobile_user,,1,0,0,0
+access_mobile_user_api,mobile.user api,model_mobile_user,mobile_api_group,1,1,1,0
+access_res_partner_api,res.partner api,base.model_res_partner,mobile_api_group,1,1,1,0
+access_res_users_api,res.users api,base.model_res_users,mobile_api_group,1,0,0,0
+access_product_product_api,product.product api,product.model_product_product,mobile_api_group,1,0,0,0
+access_product_template_api,product.template api,product.model_product_template,mobile_api_group,1,0,0,0
+access_product_category_api,product.category api,product.model_product_category,mobile_api_group,1,0,0,0
+access_sale_order_api,sale.order api,sale.model_sale_order,mobile_api_group,1,1,1,0
+access_sale_order_line_api,sale.order.line api,sale.model_sale_order_line,mobile_api_group,1,1,1,1
+access_fastapi_endpoint_api,fastapi.endpoint api,fastapi.model_fastapi_endpoint,mobile_api_group,1,0,0,0
