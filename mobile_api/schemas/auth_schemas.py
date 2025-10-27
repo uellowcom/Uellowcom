@@ -18,7 +18,7 @@ class UserRegisterRequest(BaseModel):
 
     # Basic info
     email: Optional[EmailStr] = None
-    phone: Optional[str] = Field(None, regex=r"^\+?[1-9]\d{1,14}$")
+    phone: Optional[str] = Field(None, pattern=r"^\+?[1-9]\d{1,14}$")
     password: str = Field(..., min_length=8, max_length=128)
     confirm_password: str
 
@@ -30,13 +30,13 @@ class UserRegisterRequest(BaseModel):
 
     # Location
     country_code: Optional[str] = Field(
-        None, regex=r"^[A-Z]{2}$", description="ISO country code"
+        None, pattern=r"^[A-Z]{2}$", description="ISO country code"
     )
     city: Optional[str] = Field(None, max_length=100)
 
     # Preferences
-    language: Optional[str] = Field("en", regex=r"^(en|ar|fr|es)$")
-    currency: Optional[str] = Field("USD", regex=r"^[A-Z]{3}$")
+    language: Optional[str] = Field("en", pattern=r"^(en|ar|fr|es)$")
+    currency: Optional[str] = Field("USD", pattern=r"^[A-Z]{3}$")
 
     # Privacy & Marketing
     agree_to_terms: bool = Field(..., description="Must agree to terms")
@@ -115,7 +115,7 @@ class SocialLoginRequest(BaseModel):
 class FirebaseSMSRequest(BaseModel):
     """Firebase SMS authentication schema"""
 
-    phone_number: str = Field(..., regex=r"^\+?[1-9]\d{1,14}$")
+    phone_number: str = Field(..., pattern=r"^\+?[1-9]\d{1,14}$")
     verification_code: Optional[str] = Field(None, min_length=6, max_length=6)
     verification_id: Optional[str] = None
 
@@ -124,7 +124,7 @@ class PasswordResetRequest(BaseModel):
     """Password reset initiation schema"""
 
     email: Optional[EmailStr] = None
-    phone: Optional[str] = Field(None, regex=r"^\+?[1-9]\d{1,14}$")
+    phone: Optional[str] = Field(None, pattern=r"^\+?[1-9]\d{1,14}$")
     method: Literal["email", "sms"] = "email"
 
     @root_validator
@@ -199,7 +199,7 @@ class ResendVerificationRequest(BaseModel):
     """Resend verification request"""
 
     email: Optional[EmailStr] = None
-    phone: Optional[str] = Field(None, regex=r"^\+?[1-9]\d{1,14}$")
+    phone: Optional[str] = Field(None, pattern=r"^\+?[1-9]\d{1,14}$")
     method: Literal["email", "sms"] = "email"
 
     @root_validator

@@ -35,17 +35,17 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
     device_id: Optional[str] = None
-    device_type: Optional[str] = Field(None, regex=r"^(ios|android)$")
+    device_type: Optional[str] = Field(None, pattern=r"^(ios|android)$")
 
 
 class FirebaseSMSAuth(BaseModel):
-    phone_number: str = Field(..., regex=r"^\+?[1-9]\d{1,14}$")
+    phone_number: str = Field(..., pattern=r"^\+?[1-9]\d{1,14}$")
     verification_code: Optional[str] = None
     verification_id: Optional[str] = None
 
 
 class SocialLogin(BaseModel):
-    provider: str = Field(..., regex=r"^(google|facebook|apple)$")
+    provider: str = Field(..., pattern=r"^(google|facebook|apple)$")
     id_token: str
     device_info: Optional[dict] = None
 
@@ -60,7 +60,7 @@ class AuthResponse(BaseModel):
 
 @router.post("/register", response_model=AuthResponse)
 async def register(
-    user_data: UserRegister, env: Annotated[Environment, Depends(odoo_env)]
+    env: Annotated[Environment, Depends(odoo_env)], user_data: UserRegister
 ):
     """Register a new user with email and password"""
     try:
@@ -121,7 +121,7 @@ async def register(
 
 
 @router.post("/login", response_model=AuthResponse)
-async def login(credentials: UserLogin, env: Annotated[Environment, Depends(odoo_env)]):
+async def login(env: Annotated[Environment, Depends(odoo_env)], credentials: UserLogin):
     """Login with email and password"""
     try:
         # Authenticate user
@@ -177,7 +177,7 @@ async def login(credentials: UserLogin, env: Annotated[Environment, Depends(odoo
 
 @router.post("/firebase/sms")
 async def firebase_sms_auth(
-    data: FirebaseSMSAuth, env: Annotated[Environment, Depends(odoo_env)]
+    env: Annotated[Environment, Depends(odoo_env)], data: FirebaseSMSAuth
 ):
     """Authenticate using Firebase SMS"""
     try:
@@ -232,7 +232,7 @@ async def firebase_sms_auth(
 
 @router.post("/social/{provider}", response_model=AuthResponse)
 async def social_login(
-    provider: str, data: SocialLogin, env: Annotated[Environment, Depends(odoo_env)]
+    env: Annotated[Environment, Depends(odoo_env)], provider: str, data: SocialLogin
 ):
     """Login with social providers (Google, Facebook, Apple)"""
     try:
@@ -285,7 +285,7 @@ async def social_login(
 
 @router.post("/refresh")
 async def refresh_token(
-    refresh_token: str, env: Annotated[Environment, Depends(odoo_env)]
+    env: Annotated[Environment, Depends(odoo_env)], refresh_token: str
 ):
     """Refresh access token"""
     try:

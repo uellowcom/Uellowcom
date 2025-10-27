@@ -17,19 +17,56 @@ from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 from fastapi.openapi.utils import get_openapi
 
 # Import API routers
-from .api.v1.router import api_v1_router
-from .core.config import get_settings
-from .core.exceptions import APIException, ValidationException
-from .middleware.auth_middleware import AuthMiddleware
-from .middleware.logging_middleware import LoggingMiddleware
-from .middleware.rate_limit_middleware import RateLimitMiddleware
+from .routers import (
+    mobile_auth_router,
+    mobile_home_router,
+    mobile_product_router,
+    mobile_wallet_router,
+    mobile_notification_router,
+)
+
+try:
+    from .core.config import get_settings
+    from .core.exceptions import APIException, ValidationException
+    from .middleware.auth_middleware import AuthMiddleware
+    from .middleware.logging_middleware import LoggingMiddleware
+    from .middleware.rate_limit_middleware import RateLimitMiddleware
+
+    has_custom_config = True
+except ImportError:
+    has_custom_config = False
+
+    # Fallback configuration
+    class APIException(Exception):
+        def __init__(
+            self, status_code=500, error_code="ERROR", message="Error", details=None
+        ):
+            self.status_code = status_code
+            self.error_code = error_code
+            self.message = message
+            self.details = details
+
+    class ValidationException(Exception):
+        def __init__(self, errors):
+            self.errors = errors
+
 
 # Initialize logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Get application settings
-settings = get_settings()
+if has_custom_config:
+    settings = get_settings()
+else:
+    # Fallback settings
+    class Settings:
+        ENVIRONMENT = "development"
+        DEBUG = True
+        API_VERSION = "1"
+        ALLOWED_HOSTS = ["*"]
+
+    settings = Settings()
 
 
 @asynccontextmanager
@@ -96,9 +133,11 @@ def create_application() -> FastAPI:
     setup_middlewares(app)
 
     # Add routers
-    app.include_router(
-        api_v1_router, prefix=f"/api/v{settings.API_VERSION}", tags=["API v1"]
-    )
+    app.include_router(mobile_auth_router.router)
+    app.include_router(mobile_home_router.router)
+    app.include_router(mobile_product_router.router)
+    app.include_router(mobile_wallet_router.router)
+    app.include_router(mobile_notification_router.router)
 
     # Add exception handlers
     setup_exception_handlers(app)
@@ -122,47 +161,55 @@ def setup_middlewares(app: FastAPI) -> None:
     )
 
     # Trusted host middleware
-    if settings.ENVIRONMENT == "production":
+    if settings.ENVIRONMENT == "production" and settings.ALLOWED_HOSTS != ["*"]:
         app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
 
-    # Custom middlewares
-    app.add_middleware(LoggingMiddleware)
-    app.add_middleware(RateLimitMiddleware)
-    app.add_middleware(AuthMiddleware)
+    # Custom middlewares (only if available)
+    if has_custom_config:
+        try:
+            app.add_middleware(LoggingMiddleware)
+            app.add_middleware(RateLimitMiddleware)
+            app.add_middleware(AuthMiddleware)
+        except Exception as e:
+            logger.warning(f"Could not add custom middlewares: {e}")
 
 
 def setup_exception_handlers(app: FastAPI) -> None:
     """Setup global exception handlers"""
 
-    @app.exception_handler(APIException)
-    async def api_exception_handler(request: Request, exc: APIException):
-        return JSONResponse(
-            status_code=exc.status_code,
-            content={
-                "success": False,
-                "error": {
-                    "code": exc.error_code,
-                    "message": exc.message,
-                    "details": exc.details,
-                },
-                "data": None,
-            },
-        )
+    if has_custom_config:
 
-    @app.exception_handler(ValidationException)
-    async def validation_exception_handler(request: Request, exc: ValidationException):
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            content={
-                "success": False,
-                "error": {
-                    "code": "VALIDATION_ERROR",
-                    "message": "Request validation failed",
-                    "details": exc.errors,
+        @app.exception_handler(APIException)
+        async def api_exception_handler(request: Request, exc: APIException):
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={
+                    "success": False,
+                    "error": {
+                        "code": exc.error_code,
+                        "message": exc.message,
+                        "details": exc.details,
+                    },
+                    "data": None,
                 },
-                "data": None,
-            },
-        )
+            )
+
+        @app.exception_handler(ValidationException)
+        async def validation_exception_handler(
+            request: Request, exc: ValidationException
+        ):
+            return JSONResponse(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                content={
+                    "success": False,
+                    "error": {
+                        "code": "VALIDATION_ERROR",
+                        "message": "Request validation failed",
+                        "details": exc.errors,
+                    },
+                    "data": None,
+                },
+            )
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):

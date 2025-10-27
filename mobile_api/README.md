@@ -1,8 +1,16 @@
 # Yellow Mobile API Module
 
+> **📝 Note:** This module is the result of merging `mobile_fastapi` and `mobile_api` modules. See [MERGE_SUMMARY.md](MERGE_SUMMARY.md) for details about the merge process.
+
 ## 📱 Overview
 
 The Yellow Mobile API module provides comprehensive REST API endpoints for mobile applications, supporting both iOS and Android platforms. Built on top of Odoo with FastAPI integration, it offers high-performance, scalable APIs for e-commerce operations.
+
+This unified module combines the best of both previous approaches:
+- Extends Odoo's native `res.partner` model for user management
+- Integrates seamlessly with FastAPI for modern REST API functionality
+- Provides comprehensive authentication options (Email, SMS, Social, Firebase)
+- Includes extensive e-commerce features (Products, Orders, Wallet, Notifications)
 
 ## 🚀 Features
 
@@ -102,10 +110,11 @@ FIREBASE_CREDENTIALS_PATH=config/firebase_credentials.json
 ## 📝 API Documentation
 
 ### Interactive Documentation
-Once the server is running, access the interactive API documentation:
+Once the Odoo server is running with the module installed, access the interactive API documentation:
 
-- **Swagger UI**: http://localhost:8000/api/v1/docs
-- **ReDoc**: http://localhost:8000/api/v1/redoc
+- **Swagger UI**: http://your-domain/mobile/docs
+- **ReDoc**: http://your-domain/mobile/redoc
+- **Health Check**: http://your-domain/mobile/health
 
 ### Authentication
 All protected endpoints require a Bearer token in the Authorization header:
@@ -117,20 +126,35 @@ Authorization: Bearer <your-jwt-token>
 
 #### Register User
 ```bash
-curl -X POST "http://localhost:8000/api/v1/auth/register" \
+curl -X POST "http://your-domain/mobile/v1/auth/register" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
     "password": "SecurePass123!",
-    "confirm_password": "SecurePass123!",
-    "first_name": "John",
-    "last_name": "Doe"
+    "name": "John Doe",
+    "phone": "+1234567890"
   }'
+```
+
+#### Login
+```bash
+curl -X POST "http://your-domain/mobile/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "SecurePass123!"
+  }'
+```
+
+#### Get Home Page Data
+```bash
+curl -X GET "http://your-domain/mobile/v1/home" \
+  -H "Authorization: Bearer <token>"
 ```
 
 #### Get Products
 ```bash
-curl -X GET "http://localhost:8000/api/v1/products?page=1&limit=20" \
+curl -X GET "http://your-domain/mobile/v1/products?page=1&limit=20" \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -188,14 +212,26 @@ pytest mobile_api/tests/ --cov=mobile_api --cov-report=html
 ### Project Structure
 ```
 mobile_api/
-├── api/           # API endpoints
-├── core/          # Core utilities
-├── models/        # Data models
-├── schemas/       # Pydantic schemas
-├── services/      # Business logic
-├── middleware/    # Middleware components
-├── database/      # Database layer
-└── tests/         # Test suite
+├── __init__.py
+├── __manifest__.py           # Odoo module manifest
+├── app.py                    # FastAPI application
+├── main.py                   # Module entry point
+├── dependencies.py           # FastAPI dependencies
+├── api/                      # API v1 endpoints
+│   └── v1/
+│       ├── endpoints/
+│       └── router.py
+├── controllers/              # Odoo HTTP controllers
+├── core/                     # Core utilities and config
+├── data/                     # Odoo XML data files
+├── middleware/               # Middleware components
+├── models/                   # Odoo models
+├── routers/                  # FastAPI routers
+├── schemas/                  # Pydantic schemas
+├── security/                 # Access rights
+├── services/                 # Business logic services
+├── tests/                    # Test suite
+└── views/                    # Odoo views
 ```
 
 ### Adding New Endpoints
@@ -240,12 +276,13 @@ kubectl apply -f k8s/service.yaml
 
 ### Health Check
 ```bash
-curl http://localhost:8000/api/v1/health
+curl http://your-domain/mobile/health
 ```
 
-### Metrics Endpoint
+### API Status
+Check if the API is properly configured:
 ```bash
-curl http://localhost:8000/api/v1/metrics
+curl http://your-domain/mobile/v1/auth/health
 ```
 
 ### Logging

@@ -45,15 +45,23 @@ class MobileAuthController(http.Controller):
         "/mobile/v1/auth/register",
         auth="public",
         methods=["POST"],
-        type="json",
+        type="http",
         csrf=False,
     )
     def register(self):
         """Register a new user with email and password"""
         try:
-            data = request.params
+            # Parse JSON body from HTTP request
+            data = json.loads(request.httprequest.data.decode("utf-8"))
+            print(data)
+            # Validate required fields - accept both 'email' and 'username'
+            email = data.get("email") or data.get("username")
+            if not email:
+                return self._create_response(
+                    error="Email or username is required", status=400
+                )
 
-            # Validate required fields
+            data["email"] = email  # Normalize to 'email' field
             required_fields = ["email", "password", "name"]
             is_valid, error_msg = self._validate_request_data(required_fields, data)
             if not is_valid:
@@ -129,36 +137,51 @@ class MobileAuthController(http.Controller):
         "/mobile/v1/auth/login",
         auth="public",
         methods=["POST"],
-        type="json",
+        type="http",
         csrf=False,
     )
     def login(self):
         """Login with email and password"""
         try:
-            data = request.params
+            # Parse JSON body from HTTP request
+            data = json.loads(request.httprequest.data.decode("utf-8"))
 
-            # Validate required fields
+            # Accept both 'email' and 'username'
+            email = data.get("email") or data.get("username")
+            if not email:
+                return self._create_response(
+                    error="Email or username is required", status=400
+                )
+
+            data["email"] = email  # Normalize to 'email' field
             required_fields = ["email", "password"]
             is_valid, error_msg = self._validate_request_data(required_fields, data)
             if not is_valid:
                 return self._create_response(error=error_msg, status=400)
 
-            # Authenticate user
-            user = (
-                request.env["res.users"]
-                .sudo()
-                .search([("login", "=", data["email"])], limit=1)
-            )
-
-            if not user:
-                return self._create_response(error="Invalid credentials", status=401)
-
-            # Verify password
+            # Authenticate user using Odoo's authentication system
             try:
-                user.sudo().check_credentials(data["password"])
-            except:
+                auth_info = (
+                    request.env["res.users"]
+                    .sudo()
+                    .authenticate(
+                        db=request.env.cr.dbname,
+                        credential={
+                            "type": "password",
+                            "login": data["email"],
+                            "password": data["password"],
+                        },
+                        user_agent_env=None,
+                    )
+                )
+            except Exception as e:
+                _logger.error(f"Authentication error: {str(e)}")
                 return self._create_response(error="Invalid credentials", status=401)
 
+            if not auth_info or not auth_info.get("uid"):
+                return self._create_response(error="Invalid credentials", status=401)
+
+            user = request.env["res.users"].sudo().browse(auth_info["uid"])
             partner = user.partner_id
 
             # Generate JWT tokens
@@ -218,13 +241,14 @@ class MobileAuthController(http.Controller):
         "/mobile/v1/auth/firebase-sms",
         auth="public",
         methods=["POST"],
-        type="json",
+        type="http",
         csrf=False,
     )
     def firebase_sms_auth(self):
         """Authenticate using Firebase SMS"""
         try:
-            data = request.params
+            # Parse JSON body from HTTP request
+            data = json.loads(request.httprequest.data.decode("utf-8"))
 
             required_fields = ["phone_number"]
             is_valid, error_msg = self._validate_request_data(required_fields, data)
@@ -316,13 +340,14 @@ class MobileAuthController(http.Controller):
         "/mobile/v1/auth/social/<string:provider>",
         auth="public",
         methods=["POST"],
-        type="json",
+        type="http",
         csrf=False,
     )
     def social_login(self, provider):
         """Login with social providers (Google, Facebook, Apple)"""
         try:
-            data = request.params
+            # Parse JSON body from HTTP request
+            data = json.loads(request.httprequest.data.decode("utf-8"))
 
             if provider not in ["google", "facebook", "apple"]:
                 return self._create_response(error="Unsupported provider", status=400)
@@ -332,11 +357,9 @@ class MobileAuthController(http.Controller):
             if not is_valid:
                 return self._create_response(error=error_msg, status=400)
 
-            firebase_service = FirebaseService()
-
             try:
                 # For now, extract basic info from token data
-                # TODO: Implement proper social token verification
+                # TODO: Implement proper social token verification with FirebaseService
                 user_info = {
                     "email": data.get("email"),
                     "name": data.get("name", f"{provider.title()} User"),
@@ -404,13 +427,14 @@ class MobileAuthController(http.Controller):
         "/mobile/v1/auth/refresh",
         auth="public",
         methods=["POST"],
-        type="json",
+        type="http",
         csrf=False,
     )
     def refresh_token(self):
         """Refresh access token"""
         try:
-            data = request.params
+            # Parse JSON body from HTTP request
+            data = json.loads(request.httprequest.data.decode("utf-8"))
 
             required_fields = ["refresh_token"]
             is_valid, error_msg = self._validate_request_data(required_fields, data)
@@ -459,7 +483,7 @@ class MobileAuthController(http.Controller):
         "/mobile/v1/auth/logout",
         auth="public",
         methods=["POST"],
-        type="json",
+        type="http",
         csrf=False,
     )
     def logout(self):

@@ -36,7 +36,9 @@ class SortParams:
     def __init__(
         self,
         sort_by: Optional[str] = Query(None, description="Field to sort by"),
-        sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order"),
+        sort_order: str = Query(
+            "asc", pattern="^(asc|desc)$", description="Sort order"
+        ),
     ):
         self.sort_by = sort_by
         self.sort_order = sort_order

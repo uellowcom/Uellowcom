@@ -5,84 +5,72 @@
         <!-- FastAPI App Configuration for Mobile API -->
         <record id="fastapi_endpoint_mobile" model="fastapi.endpoint">
             <field name="name">Mobile API v1</field>
-            <field name="route_prefix">/mobile</field>
-            <field name="app">mobile_api.main:app</field>
-            <field name="config_id" ref="fastapi.default_fastapi_config"/>
+            <field name="app">mobile_api</field>
+            <field name="root_path">/mobile</field>
             <field name="user_id" ref="base.user_admin"/>
         </record>
 
-        <!-- Mobile API Routes Registration -->
-        <record id="mobile_auth_endpoints" model="fastapi.endpoint.route">
-            <field name="endpoint_id" ref="fastapi_endpoint_mobile"/>
-            <field name="route">/mobile/v1/auth</field>
-            <field name="request_method">GET,POST,PUT,DELETE</field>
-            <field name="name">Mobile Authentication</field>
+        <!-- JWT Configuration for Mobile API -->
+        <record id="mobile_jwt_secret_key" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.secret_key</field>
+            <field name="value">change-this-secret-key-in-production-please</field>
         </record>
 
-        <record id="mobile_product_endpoints" model="fastapi.endpoint.route">
-            <field name="endpoint_id" ref="fastapi_endpoint_mobile"/>
-            <field name="route">/mobile/v1/products</field>
-            <field name="request_method">GET,POST,PUT,DELETE</field>
-            <field name="name">Mobile Products</field>
+        <record id="mobile_jwt_algorithm" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.algorithm</field>
+            <field name="value">HS256</field>
         </record>
 
-        <record id="mobile_home_endpoints" model="fastapi.endpoint.route">
-            <field name="endpoint_id" ref="fastapi_endpoint_mobile"/>
-            <field name="route">/mobile/v1/home</field>
-            <field name="request_method">GET</field>
-            <field name="name">Mobile Home</field>
+        <record id="mobile_jwt_access_token_expire" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.access_token_expire_minutes</field>
+            <field name="value">30</field>
         </record>
 
-        <record id="mobile_wallet_endpoints" model="fastapi.endpoint.route">
-            <field name="endpoint_id" ref="fastapi_endpoint_mobile"/>
-            <field name="route">/mobile/v1/wallet</field>
-            <field name="request_method">GET,POST,PUT</field>
-            <field name="name">Mobile Wallet</field>
+        <record id="mobile_jwt_refresh_token_expire" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.refresh_token_expire_days</field>
+            <field name="value">7</field>
         </record>
 
-        <record id="mobile_notification_endpoints" model="fastapi.endpoint.route">
-            <field name="endpoint_id" ref="fastapi_endpoint_mobile"/>
-            <field name="route">/mobile/v1/notifications</field>
-            <field name="request_method">GET,POST,PUT,DELETE</field>
-            <field name="name">Mobile Notifications</field>
+        <!-- App Configuration for Mobile API -->
+        <record id="mobile_app_name" model="ir.config_parameter">
+            <field name="key">mobile_api.app_name</field>
+            <field name="value">Yellow</field>
         </record>
 
-        <!-- Health Check and Documentation Routes -->
-        <record id="mobile_health_endpoint" model="fastapi.endpoint.route">
-            <field name="endpoint_id" ref="fastapi_endpoint_mobile"/>
-            <field name="route">/mobile/health</field>
-            <field name="request_method">GET</field>
-            <field name="name">Mobile Health Check</field>
+        <record id="mobile_app_version" model="ir.config_parameter">
+            <field name="key">mobile_api.app_version</field>
+            <field name="value">1.0.0</field>
         </record>
 
-        <record id="mobile_docs_endpoint" model="fastapi.endpoint.route">
-            <field name="endpoint_id" ref="fastapi_endpoint_mobile"/>
-            <field name="route">/mobile/v1/docs</field>
-            <field name="request_method">GET</field>
-            <field name="name">Mobile API Documentation</field>
+        <record id="mobile_support_email" model="ir.config_parameter">
+            <field name="key">mobile_api.support_email</field>
+            <field name="value">support@uellow.com</field>
         </record>
 
-        <record id="mobile_redoc_endpoint" model="fastapi.endpoint.route">
-            <field name="endpoint_id" ref="fastapi_endpoint_mobile"/>
-            <field name="route">/mobile/v1/redoc</field>
-            <field name="request_method">GET</field>
-            <field name="name">Mobile API ReDoc</field>
+        <record id="mobile_support_phone" model="ir.config_parameter">
+            <field name="key">mobile_api.support_phone</field>
+            <field name="value">+1234567890</field>
         </record>
 
-        <!-- CORS Configuration for Mobile Apps -->
-        <record id="mobile_cors_config" model="ir.config_parameter">
-            <field name="key">mobile_api.cors.allow_origins</field>
-            <field name="value">["*"]</field>
+        <!-- Feature Flags -->
+        <record id="mobile_wallet_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.wallet_enabled</field>
+            <field name="value">true</field>
         </record>
 
-        <record id="mobile_cors_methods" model="ir.config_parameter">
-            <field name="key">mobile_api.cors.allow_methods</field>
-            <field name="value">["GET", "POST", "PUT", "DELETE", "OPTIONS"]</field>
+        <record id="mobile_reviews_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.reviews_enabled</field>
+            <field name="value">true</field>
         </record>
 
-        <record id="mobile_cors_headers" model="ir.config_parameter">
-            <field name="key">mobile_api.cors.allow_headers</field>
-            <field name="value">["*"]</field>
+        <record id="mobile_wishlist_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.wishlist_enabled</field>
+            <field name="value">true</field>
+        </record>
+
+        <record id="mobile_notifications_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.notifications_enabled</field>
+            <field name="value">true</field>
         </record>
 
     </data>

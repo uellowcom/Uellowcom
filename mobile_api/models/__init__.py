@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from . import fastapi_endpoint
 from . import mobile_user
 from . import mobile_device
 from . import mobile_notification

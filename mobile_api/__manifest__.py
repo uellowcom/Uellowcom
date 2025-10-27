@@ -28,6 +28,7 @@
     "website": "https://uellow.com",
     "depends": [
         "base",
+        "fastapi",
         "contacts",
         "website",
         "sale",
@@ -41,6 +42,7 @@
     "data": [
         "security/ir.model.access.csv",
         "data/sequences.xml",
+        "data/fastapi_endpoint.xml",
         "views/mobile_api_views.xml",
     ],
     "external_dependencies": {},

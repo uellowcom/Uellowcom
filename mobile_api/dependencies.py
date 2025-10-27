@@ -10,7 +10,14 @@ from odoo.addons.fastapi.dependencies import odoo_env
 from odoo.addons.base.models.res_partner import Partner
 
 from .services.jwt_service import JWTService
-from .services.firebase_service import FirebaseService
+
+try:
+    from .services.firebase_service import FirebaseService
+
+    FIREBASE_AVAILABLE = True
+except ImportError:
+    FirebaseService = None
+    FIREBASE_AVAILABLE = False
 
 security = HTTPBearer()
 
@@ -59,8 +66,13 @@ async def get_optional_user(
         return None
 
 
-def firebase_auth() -> FirebaseService:
+def firebase_auth():
     """Get Firebase authentication service"""
+    if not FIREBASE_AVAILABLE or FirebaseService is None:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="Firebase service not available",
+        )
     return FirebaseService()
 
 

@@ -28,19 +28,42 @@ class FastApiDispatcher(Dispatcher):
         self.request.params = {}  # dict(self.request.get_http_params(), **args)
         environ = self._get_environ()
         path = environ["PATH_INFO"]
-        # TODO store the env into contextvar to be used by the odoo_env
-        # depends method
+        # Store the env into contextvar to be used by the odoo_env
+        # depends method - this is now implemented below
         with fastapi_app_pool.get_app(env=request.env, root_path=path) as app:
             uid = request.env["fastapi.endpoint"].sudo().get_uid(path)
             data = BytesIO()
-            with self._manage_odoo_env(uid):
+            # Set the context variable before calling the FastAPI app
+            # so that dependencies can access it
+            env = request.env
+            accept_language = request.httprequest.headers.get("Accept-language")
+            context = env.context
+            if accept_language:
+                lang = (
+                    env["res.lang"]
+                    .sudo()
+                    ._get_lang_from_accept_language(accept_language)
+                )
+                if lang:
+                    env = env(context=dict(context, lang=lang))
+            if uid:
+                env = env(user=uid)
+            token = odoo_env_ctx.set(env)
+            try:
                 for r in app(environ, self._make_response):
                     data.write(r)
+                # Flush here to ensure all pending computations are being executed with
+                # authenticated fastapi user before exiting this context manager, as it
+                # would otherwise be done using the public user on the commit of the DB
+                # cursor, what could potentially lead to inconsistencies or AccessError.
+                env.flush_all()
                 if self.inner_exception:
                     raise self.inner_exception
                 return self.request.make_response(
                     data.getvalue(), headers=self.headers, status=self.status
                 )
+            finally:
+                odoo_env_ctx.reset(token)
 
     def handle_error(self, exc):
         headers = getattr(exc, "headers", None)
@@ -98,27 +121,3 @@ class FastApiDispatcher(Dispatcher):
             stream.seek(0)
         environ["wsgi.input"] = stream
         return environ
-
-    @contextmanager
-    def _manage_odoo_env(self, uid=None):
-        env = request.env
-        accept_language = request.httprequest.headers.get("Accept-language")
-        context = env.context
-        if accept_language:
-            lang = (
-                env["res.lang"].sudo()._get_lang_from_accept_language(accept_language)
-            )
-            if lang:
-                env = env(context=dict(context, lang=lang))
-        if uid:
-            env = env(user=uid)
-        token = odoo_env_ctx.set(env)
-        try:
-            yield
-            # Flush here to ensure all pending computations are being executed with
-            #  authenticated fastapi user before exiting this context manager, as it
-            #  would otherwise be done using the public user on the commit of the DB
-            #  cursor, what could potentially lead to inconsistencies or AccessError.
-            env.flush_all()
-        finally:
-            odoo_env_ctx.reset(token)
