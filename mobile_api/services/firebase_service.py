@@ -93,3 +93,167 @@ class FirebaseService:
         except Exception as e:
             logger.error(f"Token verification failed: {str(e)}")
             return None
+
+    async def send_push_notification(
+        self,
+        token: str,
+        title: str,
+        body: str,
+        data: Optional[Dict[str, Any]] = None,
+        image_url: Optional[str] = None,
+    ) -> bool:
+        """
+        Send push notification via Firebase Cloud Messaging (FCM)
+
+        Args:
+            token: FCM device token
+            title: Notification title
+            body: Notification body/message
+            data: Additional data payload
+            image_url: Optional image URL for rich notification
+
+        Returns:
+            bool: True if sent successfully, False otherwise
+        """
+        if not self.firebase_available:
+            logger.warning("Firebase not available - notification not sent")
+            return False
+
+        try:
+            from firebase_admin import messaging
+
+            # Build notification
+            notification = messaging.Notification(
+                title=title, body=body, image=image_url
+            )
+
+            # Build Android-specific config
+            android_config = messaging.AndroidConfig(
+                priority="high",
+                notification=messaging.AndroidNotification(
+                    sound="default",
+                    color="#FF6B35",  # Yellow brand color
+                    channel_id="yellow_notifications",
+                ),
+            )
+
+            # Build iOS-specific config
+            apns_config = messaging.APNSConfig(
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(sound="default", badge=1, content_available=True)
+                )
+            )
+
+            # Create message
+            message = messaging.Message(
+                notification=notification,
+                data=data or {},
+                token=token,
+                android=android_config,
+                apns=apns_config,
+            )
+
+            # Send message
+            response = messaging.send(message)
+            logger.info(f"Successfully sent FCM message: {response}")
+            return True
+
+        except Exception as e:
+            logger.error(f"FCM send failed: {str(e)}")
+            return False
+
+    async def send_push_notification_multicast(
+        self,
+        tokens: list[str],
+        title: str,
+        body: str,
+        data: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Send push notification to multiple devices
+
+        Args:
+            tokens: List of FCM device tokens
+            title: Notification title
+            body: Notification body/message
+            data: Additional data payload
+
+        Returns:
+            dict: Contains success_count, failure_count, and failed_tokens
+        """
+        if not self.firebase_available or not tokens:
+            return {"success_count": 0, "failure_count": 0, "failed_tokens": []}
+
+        try:
+            from firebase_admin import messaging
+
+            # Create multicast message
+            message = messaging.MulticastMessage(
+                notification=messaging.Notification(title=title, body=body),
+                data=data or {},
+                tokens=tokens,
+            )
+
+            # Send to multiple devices
+            response = messaging.send_multicast(message)
+
+            # Collect failed tokens
+            failed_tokens = []
+            if response.failure_count > 0:
+                for idx, resp in enumerate(response.responses):
+                    if not resp.success:
+                        failed_tokens.append(tokens[idx])
+
+            logger.info(
+                f"FCM multicast: {response.success_count} successful, "
+                f"{response.failure_count} failed"
+            )
+
+            return {
+                "success_count": response.success_count,
+                "failure_count": response.failure_count,
+                "failed_tokens": failed_tokens,
+            }
+
+        except Exception as e:
+            logger.error(f"FCM multicast send failed: {str(e)}")
+            return {
+                "success_count": 0,
+                "failure_count": len(tokens),
+                "failed_tokens": tokens,
+            }
+
+    async def send_topic_notification(
+        self, topic: str, title: str, body: str, data: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        """
+        Send notification to a topic (e.g., 'all_users', 'promotions')
+
+        Args:
+            topic: Topic name
+            title: Notification title
+            body: Notification body
+            data: Additional data
+
+        Returns:
+            bool: True if sent successfully
+        """
+        if not self.firebase_available:
+            return False
+
+        try:
+            from firebase_admin import messaging
+
+            message = messaging.Message(
+                notification=messaging.Notification(title=title, body=body),
+                data=data or {},
+                topic=topic,
+            )
+
+            response = messaging.send(message)
+            logger.info(f"Successfully sent topic message to '{topic}': {response}")
+            return True
+
+        except Exception as e:
+            logger.error(f"Topic message send failed: {str(e)}")
+            return False
