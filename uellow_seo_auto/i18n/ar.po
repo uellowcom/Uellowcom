@@ -1,0 +1,61 @@
+# Translation: uellow_seo_auto
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0?0:n==1?1:n==2?2:n%100>=3&&n%100<=10?3:n%100>=11&&n%100<=99?4:5;\n"
+#. module: uellow_seo_auto
+#: model:ir.model,name:uellow_seo_auto.model_uellow_seo_product
+msgid "Product SEO Data"
+msgstr "بيانات SEO للمنتج"
+
+#. module: uellow_seo_auto
+#: model:ir.model.fields,field_description:uellow_seo_auto.field_uellow_seo_product__meta_title_en
+msgid "Meta Title (EN)"
+msgstr "العنوان التعريفي (إنجليزي)"
+
+#. module: uellow_seo_auto
+#: model:ir.model.fields,field_description:uellow_seo_auto.field_uellow_seo_product__meta_title_ar
+msgid "Meta Title (AR)"
+msgstr "العنوان التعريفي (عربي)"
+
+#. module: uellow_seo_auto
+#: model:ir.model.fields,field_description:uellow_seo_auto.field_uellow_seo_product__meta_desc_en
+msgid "Meta Description (EN)"
+msgstr "الوصف التعريفي (إنجليزي)"
+
+#. module: uellow_seo_auto
+#: model:ir.model.fields,field_description:uellow_seo_auto.field_uellow_seo_product__meta_desc_ar
+msgid "Meta Description (AR)"
+msgstr "الوصف التعريفي (عربي)"
+
+#. module: uellow_seo_auto
+#: model:ir.model.fields,field_description:uellow_seo_auto.field_uellow_seo_product__ai_generated
+msgid "AI Generated"
+msgstr "أنشأه الذكاء الاصطناعي"
+
+#. module: uellow_seo_auto
+#: model:ir.model.fields,field_description:uellow_seo_auto.field_uellow_seo_product__needs_update
+msgid "Needs Update"
+msgstr "يحتاج تحديثاً"
+
+#. module: uellow_seo_auto
+#: model:ir.model.fields,field_description:uellow_seo_auto.field_uellow_seo_config__schema_markup
+msgid "Add Schema Markup"
+msgstr "إضافة Schema Markup"
+
+#. module: uellow_seo_auto
+#: model:ir.model.fields,field_description:uellow_seo_auto.field_uellow_seo_config__auto_generate_new
+msgid "Auto-generate for New Products"
+msgstr "إنشاء تلقائي للمنتجات الجديدة"
+
+#. module: uellow_seo_auto
+#: model_terms:ir.ui.menu,name:uellow_seo_auto.menu_seo_root
+msgid "SEO"
+msgstr "تحسين محركات البحث"
+
+#. module: uellow_seo_auto
+#: model_terms:ir.ui.menu,name:uellow_seo_auto.menu_seo_products
+msgid "Product SEO"
+msgstr "SEO المنتجات"

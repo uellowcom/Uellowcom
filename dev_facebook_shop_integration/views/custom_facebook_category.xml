@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="custom_facebook_category_view_list" model="ir.ui.view">
+        <field name="name">custom.facebook.category.list</field>
+        <field name="model">custom.facebook.category</field>
+        <field name="arch" type="xml">
+            <list string="Facebook Categories">
+                <header>
+                    <button name="fetch_facebook_categories" type="object" string="Fetch Facebook Category"
+                            display="always"/>
+                </header>
+                <field name="code" optional="hide"/>
+                <field name="display_name" optional="show"/>
+                <field name="name" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="custom_facebook_category_view_form" model="ir.ui.view">
+        <field name="name">custom.facebook.category.form</field>
+        <field name="model">custom.facebook.category</field>
+        <field name="arch" type="xml">
+            <form string="Facebook Category">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h3>
+                            <field name="name" placeholder="Name" default_focus="1"/>
+                        </h3>
+                        <label for="code" class="oe_edit_only"/>
+                        <field name="code"/>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_custom_facebook_categories" model="ir.actions.act_window">
+        <field name="name">Facebook Categories</field>
+        <field name="res_model">custom.facebook.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem
+            id="facebook_configuration"
+            name="Configuration"
+            parent="menu_facebook_shop" sequence="2"/>
+
+    <menuitem action="action_custom_facebook_categories"
+              id="menu_custom_facebook_category"
+              name="Facebook Categories"
+              parent="dev_facebook_shop_integration.facebook_configuration" sequence="2"/>
+</odoo>

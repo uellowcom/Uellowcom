@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_pers_rule_list" model="ir.ui.view">
+    <field name="name">uellow.personalization.rule.list</field>
+    <field name="model">uellow.personalization.rule</field>
+    <field name="arch" type="xml">
+      <list string="Personalization Rules">
+        <field name="priority"/><field name="name"/>
+        <field name="segment" widget="badge"/>
+        <field name="show_type"/><field name="max_products"/>
+        <field name="active" widget="boolean_toggle"/>
+      </list>
+    </field>
+  </record>
+  <record id="view_pers_rule_form" model="ir.ui.view">
+    <field name="name">uellow.personalization.rule.form</field>
+    <field name="model">uellow.personalization.rule</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <group><field name="name"/><field name="segment"/><field name="priority"/><field name="active" widget="boolean_toggle"/></group>
+            <group><field name="show_type"/><field name="max_products"/><field name="category_id" invisible="show_type != 'category'"/></group>
+          </group>
+          <group string="Section Titles">
+            <field name="section_title_en"/><field name="section_title_ar"/>
+          </group>
+          <field name="country_ids" invisible="segment != 'country'" widget="many2many_tags"/>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="action_pers_rules" model="ir.actions.act_window">
+    <field name="name">Personalization Rules</field>
+    <field name="res_model">uellow.personalization.rule</field>
+    <field name="view_mode">list,form</field>
+  </record>
+</odoo>

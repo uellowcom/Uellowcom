@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =========================================================
+         1. Standalone form for product.video model
+         ========================================================= -->
+    <record id="view_product_video_form" model="ir.ui.view">
+        <field name="name">product.video.form</field>
+        <field name="model">product.video</field>
+        <field name="arch" type="xml">
+            <form string="Product Video">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="sequence"/>
+                        <field name="video_type"/>
+                    </group>
+                    <group invisible="video_type != 'tiktok_url'">
+                        <field name="tiktok_url" placeholder="https://www.tiktok.com/@username/video/1234567890"/>
+                        <field name="tiktok_video_id" readonly="1"/>
+                    </group>
+                    <group invisible="video_type != 'direct_upload'">
+                        <field name="video_file" filename="video_filename"/>
+                        <field name="video_filename" invisible="1"/>
+                        <field name="video_mimetype"/>
+                    </group>
+                    <group invisible="video_type not in ['youtube', 'vimeo']">
+                        <field name="video_url" placeholder="https://www.youtube.com/watch?v=..."/>
+                    </group>
+                    <group>
+                        <field name="thumbnail"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- =========================================================
+         2. Standalone list for product.video model
+         ========================================================= -->
+    <record id="view_product_video_list" model="ir.ui.view">
+        <field name="name">product.video.list</field>
+        <field name="model">product.video</field>
+        <field name="arch" type="xml">
+            <list string="Product Videos" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="video_type"/>
+                <field name="tiktok_url" optional="show"/>
+                <field name="active" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- =========================================================
+         3. Add "Videos" tab to product.template form
+         ========================================================= -->
+    <record id="view_product_template_form_video" model="ir.ui.view">
+        <field name="name">product.template.form.video</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Videos" name="uellow_videos">
+                    <div class="alert alert-info" role="alert" style="margin-bottom:16px;">
+                        <strong>&#x1F3AC; TikTok &amp; Video Gallery</strong> — Add TikTok URLs or upload MP4/WebM videos.
+                        Videos appear <strong>first</strong> in the product gallery on the website,
+                        and a <strong>&#x25BA; play icon</strong> is shown on the product card in the shop.
+                    </div>
+                    <field name="product_video_ids">
+                        <list string="Videos" editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name" required="1"/>
+                            <field name="video_type" required="1"/>
+                            <field name="tiktok_url"
+                                   invisible="video_type != 'tiktok_url'"
+                                   required="video_type == 'tiktok_url'"
+                                   placeholder="https://www.tiktok.com/@user/video/..."/>
+                            <field name="video_file"
+                                   invisible="video_type != 'direct_upload'"
+                                   required="video_type == 'direct_upload'"
+                                   filename="video_filename" widget="binary"/>
+                            <field name="video_filename" invisible="1"/>
+                            <field name="video_url"
+                                   invisible="video_type not in ['youtube','vimeo']"
+                                   required="video_type in ['youtube','vimeo']"
+                                   placeholder="https://youtube.com/watch?v=..."/>
+                            <field name="tiktok_video_id" readonly="1" optional="show"
+                                   invisible="video_type != 'tiktok_url'"/>
+                            <field name="active" optional="show"/>
+                        </list>
+                    </field>
+                    <div class="text-muted mt-2" style="font-size:12px;">
+                        Supported: TikTok URL, Direct Upload (MP4/WebM), YouTube, Vimeo.
+                        Drag rows to reorder. First video appears first in gallery.
+                    </div>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+</odoo>

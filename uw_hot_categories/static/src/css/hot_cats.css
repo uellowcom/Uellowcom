@@ -1,0 +1,372 @@
+/* ═══════════════════════════════════════════════
+   UW HOT CATEGORIES — hot_cats.css  v1.0
+   Odoo 18 Website Snippet
+═══════════════════════════════════════════════ */
+
+/* ── Section wrapper ── */
+.uw_hot_cats {
+    padding: 25px 0;
+    margin: 0 0 20px 0;
+    border-radius: 20px;
+    overflow: hidden;
+    display: block !important;
+    width: 100%;
+    min-height: 280px;
+    background: #f8f9fa;
+    box-sizing: border-box;
+}
+
+/* ── Header row ── */
+.uw_hot_cats .uw_f_header_flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 0 4px;
+    direction: ltr;
+}
+
+.uw_hot_cats .uw_f_main_title {
+    font-weight: 900;
+    font-size: 20px;
+    color: #1a202c;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.uw_hot_cats .uw_f_more_btn {
+    font-size: 11px;
+    font-weight: 900;
+    color: #000 !important;
+    text-decoration: none !important;
+    padding: 5px 16px;
+    border-radius: 50px;
+    background: #f7d117;
+    border: 1px solid #e6b800;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.4px;
+}
+.uw_hot_cats .uw_f_more_btn:hover {
+    background: #ffe44d;
+    transform: scale(1.04);
+    box-shadow: 0 3px 10px rgba(247,209,23,0.4);
+}
+
+/* ── Flame animation ── */
+@keyframes uw_f_flame_anim {
+    0%,100% { transform: scale(1) rotate(0deg); }
+    50%      { transform: scale(1.25) rotate(8deg); }
+}
+.uw_hot_cats .uw_f_flame {
+    display: inline-block;
+    animation: uw_f_flame_anim 1.6s ease-in-out infinite;
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
+/* ── Grid layout ── */
+.uw_hot_cats .uw_f_grid {
+    display: grid;
+    grid-template-columns: 220px repeat(3, 1fr);
+    grid-template-rows: repeat(2, 160px);
+    gap: 10px;
+}
+
+/* ── Generic card ── */
+.uw_hot_cats .uw_f_card {
+    border-radius: 14px;
+    padding: 10px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    border: none;
+    text-decoration: none !important;
+    transition: transform 0.25s, box-shadow 0.25s;
+    overflow: hidden;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    box-sizing: border-box;
+}
+.uw_hot_cats .uw_f_card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(0,0,0,0.09);
+}
+
+/* ── Category title ── */
+.uw_hot_cats .uw_f_title {
+    font-weight: 800;
+    font-size: 14px;
+    color: #1a202c !important;
+    text-align: center;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 22px;
+    flex-shrink: 0;
+    line-height: 1.3;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 100%;
+    text-decoration: none !important;
+}
+
+/* ── 3-product row ── */
+.uw_hot_cats .uw_f_row {
+    display: flex;
+    gap: 5px;
+    flex-grow: 1;
+    align-items: stretch;
+    padding-bottom: 4px;
+}
+
+.uw_hot_cats .uw_f_item {
+    flex: 1;
+    background: #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1/1;
+    border: 1px solid rgba(0,0,0,0.04);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+    min-width: 0;
+    text-decoration: none !important;
+}
+.uw_hot_cats .uw_f_item:hover {
+    border-color: #f7d117;
+    box-shadow: 0 0 8px rgba(247,209,23,0.35);
+}
+.uw_hot_cats .uw_f_item img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+}
+
+/* ── Sub-category color classes ── */
+.uw_hot_cats .uw_f_s0 { background: #e0f2fe !important; }
+.uw_hot_cats .uw_f_s1 { background: #dcfce7 !important; }
+.uw_hot_cats .uw_f_s2 { background: #f3e8ff !important; }
+.uw_hot_cats .uw_f_s3 { background: #fee2e2 !important; }
+.uw_hot_cats .uw_f_s4 { background: #e0e7ff !important; }
+.uw_hot_cats .uw_f_s5 { background: #fef9c3 !important; }
+
+/* ── Main large card ── */
+.uw_hot_cats .uw_f_large {
+    grid-row: span 2;
+    background: linear-gradient(145deg, #1a365d 0%, #2b6cb0 100%) !important;
+    position: relative;
+    overflow: hidden;
+}
+.uw_hot_cats .uw_f_large::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        radial-gradient(ellipse at 85% 10%, rgba(147,210,255,0.2) 0%, transparent 50%),
+        radial-gradient(ellipse at 10% 90%, rgba(56,100,200,0.15) 0%, transparent 50%);
+    background-size: 22px 22px, 22px 22px, 100% 100%, 100% 100%;
+    pointer-events: none;
+    z-index: 0;
+}
+.uw_hot_cats .uw_f_large::after {
+    content: '';
+    position: absolute;
+    top: -50px; right: -50px;
+    width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(174,214,241,0.2) 0%, transparent 65%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+}
+.uw_hot_cats .uw_f_large .uw_f_title {
+    color: #fff !important;
+    font-size: 16px;
+    text-shadow: 0 1px 8px rgba(0,0,0,0.35);
+    position: relative;
+    z-index: 1;
+}
+
+/* ── Shop Now button inside large card ── */
+.uw_hot_cats .uw_f_shop_btn {
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    display: block;
+    width: fit-content;
+    margin: 0 auto 10px;
+    padding: 6px 18px;
+    border-radius: 50px;
+    background: linear-gradient(135deg, #f7d117 0%, #ffb300 100%);
+    color: #000 !important;
+    font-size: 11px;
+    font-weight: 900;
+    text-decoration: none !important;
+    letter-spacing: 0.5px;
+    border: 1px solid #e6a800;
+    box-shadow: 0 2px 10px rgba(247,209,23,0.45);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.uw_hot_cats .uw_f_shop_btn:hover {
+    transform: scale(1.06);
+    box-shadow: 0 4px 16px rgba(247,209,23,0.65);
+}
+
+/* ── Hero image area ── */
+.uw_hot_cats .uw_f_hero_wrapper {
+    display: flex;
+    width: 100%;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 6px;
+    position: relative;
+    z-index: 1;
+}
+.uw_hot_cats .uw_f_hero {
+    width: 90%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    overflow: hidden;
+    transition: transform 0.2s;
+    text-decoration: none !important;
+}
+.uw_hot_cats .uw_f_hero:hover { transform: scale(1.02); }
+.uw_hot_cats .uw_f_hero img {
+    max-height: 85%;
+    max-width: 85%;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 18px rgba(0,0,0,0.3));
+    border-radius: 8px;
+}
+
+/* ── Loader ── */
+.uw_hot_cats .uw_f_loader {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 30px;
+    color: #aaa;
+    font-size: 13px;
+}
+
+/* ── Responsive: tablet ── */
+@media (max-width: 1100px) {
+    .uw_hot_cats .uw_f_grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+    }
+    .uw_hot_cats .uw_f_large {
+        grid-column: span 2;
+        min-height: 200px;
+    }
+}
+
+/* ── Responsive: mobile ── */
+@media (max-width: 768px) {
+    .uw_hot_cats { border-radius: 0; }
+    .uw_hot_cats .uw_f_large { display: none !important; }
+    .uw_hot_cats .uw_f_grid {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+        gap: 8px;
+    }
+    .uw_hot_cats .uw_f_main_title { font-size: 16px; }
+}
+
+/* ── RTL support ── */
+[dir="rtl"] .uw_hot_cats .uw_f_header_flex,
+.uw_hot_cats.uw_rtl .uw_f_header_flex {
+    flex-direction: row-reverse;
+}
+
+/* ══════════════════════════════════════════════
+   RTL — Arabic full support
+══════════════════════════════════════════════ */
+
+/* Section direction */
+.uw_hot_cats[dir="rtl"],
+.uw_hot_cats.uw_rtl {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Header row — RTL */
+.uw_hot_cats[dir="rtl"] .uw_f_header_flex,
+.uw_hot_cats.uw_rtl .uw_f_header_flex {
+    direction: rtl;
+    flex-direction: row-reverse !important;
+}
+
+/* Main title — RTL */
+.uw_hot_cats[dir="rtl"] .uw_f_main_title,
+.uw_hot_cats.uw_rtl .uw_f_main_title {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Cards — RTL text alignment */
+.uw_hot_cats[dir="rtl"] .uw_f_card,
+.uw_hot_cats .uw_f_card[dir="rtl"] {
+    direction: rtl;
+    text-align: right;
+}
+
+/* Category title inside card — center in RTL */
+.uw_hot_cats[dir="rtl"] .uw_f_title,
+.uw_hot_cats .uw_f_card[dir="rtl"] .uw_f_title {
+    direction: rtl;
+    text-align: center;
+    justify-content: center;
+}
+
+/* Large card title — RTL */
+.uw_hot_cats[dir="rtl"] .uw_f_large .uw_f_title,
+.uw_hot_cats .uw_f_large[dir="rtl"] .uw_f_title {
+    direction: rtl;
+    text-align: center;
+    justify-content: center;
+}
+
+/* Product row — RTL (reverse direction) */
+.uw_hot_cats[dir="rtl"] .uw_f_row,
+.uw_hot_cats .uw_f_card[dir="rtl"] .uw_f_row {
+    direction: rtl;
+    flex-direction: row-reverse;
+}
+
+/* Grid — RTL */
+.uw_hot_cats[dir="rtl"] .uw_f_grid,
+.uw_hot_cats.uw_rtl .uw_f_grid {
+    direction: rtl;
+}
+
+/* Shop button — RTL centered */
+.uw_hot_cats[dir="rtl"] .uw_f_shop_btn,
+.uw_hot_cats.uw_rtl .uw_f_shop_btn {
+    direction: rtl;
+    margin: 0 auto 10px auto;
+}
+
+/* More button — RTL */
+.uw_hot_cats[dir="rtl"] .uw_f_more_btn,
+.uw_hot_cats.uw_rtl .uw_f_more_btn {
+    direction: rtl;
+}
+
+/* Responsive RTL — mobile */
+@media (max-width: 768px) {
+    .uw_hot_cats[dir="rtl"] .uw_f_header_flex,
+    .uw_hot_cats.uw_rtl .uw_f_header_flex {
+        flex-direction: row-reverse !important;
+    }
+}

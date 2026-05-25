@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Server Actions — appear in Action menu (⚙️) on sale orders -->
+  <record id="action_server_assign_carrier" model="ir.actions.server">
+    <field name="name">Assign to Carrier Portal</field>
+    <field name="model_id" ref="sale.model_sale_order"/>
+    <field name="binding_model_id" ref="sale.model_sale_order"/>
+    <field name="state">code</field>
+    <field name="code">
+for rec in records:
+    if rec.delivery_carrier_company_id:
+        rec.write({'delivery_status': 'assigned'})
+    </field>
+  </record>
+
+  <record id="action_server_recall_carrier" model="ir.actions.server">
+    <field name="name">Recall from Carrier Portal</field>
+    <field name="model_id" ref="sale.model_sale_order"/>
+    <field name="binding_model_id" ref="sale.model_sale_order"/>
+    <field name="state">code</field>
+    <field name="code">
+for rec in records:
+    rec.write({'delivery_status': 'pending'})
+    </field>
+  </record>
+
+  <!-- Form view — Delivery tab + header buttons -->
+  <record id="view_sale_order_delivery_inherit" model="ir.ui.view">
+    <field name="name">sale.order.delivery.inherit</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_order_form"/>
+    <field name="arch" type="xml">
+      <!-- Add Assign/Recall buttons to header -->
+      <xpath expr="//div[@name='button_box']" position="before">
+        <div style="display:flex;gap:6px;align-items:center;margin-left:8px;">
+          <button name="%(delivery_carrier_portal.action_server_assign_carrier)d"
+                  type="action"
+                  string="✅ Assign to Carrier"
+                  class="btn btn-success btn-sm"
+                  invisible="not delivery_carrier_company_id or delivery_status != 'pending'"/>
+          <button name="%(delivery_carrier_portal.action_server_recall_carrier)d"
+                  type="action"
+                  string="↩ Recall from Carrier"
+                  class="btn btn-warning btn-sm"
+                  invisible="delivery_status == 'pending'"/>
+        </div>
+      </xpath>
+      <notebook position="inside">
+        <page string="Delivery Info" name="delivery_info">
+          <group>
+            <group string="Assignment">
+              <field name="delivery_carrier_company_id"/>
+              <field name="delivery_driver_id"
+                     domain="[('carrier_company_id', '=', delivery_carrier_company_id)]"/>
+              <field name="carrier_order_ref" string="Carrier Order Ref"
+                     placeholder="e.g. ARS-001"/>
+              <field name="carrier_order_type" string="Order Type"/>
+              <field name="pricing_rule_id" string="Pricing Rule"
+                     domain="[('carrier_company_id', '=', delivery_carrier_company_id)]"/>
+              <field name="carrier_cancel_type" string="Cancellation Billing"
+                     invisible="delivery_status not in ('failed','failed_returned')"/>
+              <field name="delivery_trip_id"/>
+            </group>
+            <group string="Status">
+              <field name="delivery_status" widget="statusbar"
+                     statusbar_visible="pending,assigned,out_for_delivery,delivered"/>
+              <field name="payment_method_type"/>
+              <field name="cash_collection_status"
+                     invisible="payment_method_type != 'cash'"/>
+              <field name="cash_remittance_id"
+                     invisible="payment_method_type != 'cash'"/>
+              <field name="delivery_date_actual"/>
+              <field name="carrier_delivery_fee"    string="Delivery Fee KD"   readonly="1"/>
+              <field name="carrier_cash_commission" string="Cash Commission KD" readonly="1"/>
+              <field name="carrier_cancel_fee"      string="Cancel Fee KD"      readonly="1"/>
+              <field name="carrier_return_fee"      string="Return/Exchange KD" readonly="1"/>
+              <field name="carrier_net_cost"        string="Net Carrier Cost KD" readonly="1"/>
+            </group>
+          </group>
+          <group string="Map Location">
+            <field name="delivery_lat"/>
+            <field name="delivery_lng"/>
+            <field name="delivery_address_text"/>
+          </group>
+        </page>
+        <!-- Return tab — only visible for failed orders -->
+        <page string="Return Info" name="return_info"
+              invisible="delivery_status not in ('failed','failed_returned')">
+          <group>
+            <group string="Return Status">
+              <field name="return_status" widget="statusbar"
+                     statusbar_visible="awaiting_return,return_scheduled,return_in_transit,returned_received"/>
+              <field name="return_scheduled_date"/>
+              <field name="return_received_date"/>
+              <field name="return_received_by"/>
+              <field name="return_checklist_ok"/>
+            </group>
+            <group string="Notes">
+              <field name="return_notes" nolabel="1"/>
+            </group>
+          </group>
+          <group string="Return Signature (Uellow Employee)">
+            <field name="return_signature" widget="image" options="{'size': [300, 100]}" nolabel="1"/>
+          </group>
+        </page>
+      </notebook>
+    </field>
+  </record>
+
+  <!-- Inherit trip line form to show proof in backend -->
+  <record id="view_delivery_trip_line_proof" model="ir.ui.view">
+    <field name="name">delivery.trip.line.proof</field>
+    <field name="model">delivery.trip.line</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <group string="Delivery Info">
+              <field name="sale_order_id"/>
+              <field name="driver_id"/>
+              <field name="delivery_status"/>
+              <field name="delivery_date_actual"/>
+              <field name="failure_reason"/>
+            </group>
+            <group string="Location">
+              <field name="delivery_lat"/>
+              <field name="delivery_lng"/>
+              <field name="delivery_address_text"/>
+            </group>
+          </group>
+          <group string="Proof">
+            <field name="proof_image" widget="image"/>
+            <field name="proof_signature" widget="image"/>
+          </group>
+          <group string="Notes">
+            <field name="notes" nolabel="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- List view — colored delivery status + cash status -->
+  <record id="view_sale_order_delivery_list_inherit" model="ir.ui.view">
+    <field name="name">sale.order.delivery.list.inherit</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_quotation_tree_with_onboarding"/>
+    <field name="arch" type="xml">
+      <field name="amount_total" position="after">
+        <field name="delivery_status" optional="show"
+               decoration-success="delivery_status == 'delivered'"
+               decoration-danger="delivery_status in ('failed','failed_returned')"
+               decoration-warning="delivery_status == 'out_for_delivery'"
+               decoration-info="delivery_status == 'assigned'"
+               decoration-muted="delivery_status == 'pending'"/>
+        <field name="cash_collection_status" optional="show"
+               decoration-success="cash_collection_status == 'remitted'"
+               decoration-warning="cash_collection_status == 'collected'"
+               decoration-danger="cash_collection_status == 'pending'"
+               decoration-muted="cash_collection_status == 'not_applicable'"/>
+        <field name="delivery_carrier_company_id" optional="show"/>
+        <field name="delivery_driver_id" optional="show"/>
+        <field name="carrier_order_ref" optional="show" string="Carrier Ref"/>
+      </field>
+    </field>
+  </record>
+
+  <!-- Search view for delivery orders -->
+  <record id="action_delivery_orders_search" model="ir.ui.view">
+    <field name="name">sale.order.delivery.search</field>
+    <field name="model">sale.order</field>
+    <field name="type">search</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name" string="Order"/>
+        <field name="partner_id" string="Customer"/>
+        <field name="delivery_carrier_company_id" string="Carrier"/>
+        <field name="delivery_driver_id" string="Driver"/>
+        <filter name="assigned" string="Assigned" domain="[('delivery_status','=','assigned')]"/>
+        <filter name="out_for_delivery" string="Out for Delivery" domain="[('delivery_status','=','out_for_delivery')]"/>
+        <filter name="delivered" string="Delivered" domain="[('delivery_status','=','delivered')]"/>
+        <filter name="failed" string="Failed" domain="[('delivery_status','in',['failed','failed_returned'])]"/>
+        <separator/>
+        <filter name="cash" string="Cash Orders" domain="[('payment_method_type','=','cash')]"/>
+        <filter name="has_carrier" string="Has Carrier" domain="[('delivery_carrier_company_id','!=',False)]"/>
+        <group expand="0" string="Group By">
+          <filter name="group_carrier" string="Carrier" context="{'group_by': 'delivery_carrier_company_id'}"/>
+          <filter name="group_driver" string="Driver" context="{'group_by': 'delivery_driver_id'}"/>
+          <filter name="group_status" string="Delivery Status" context="{'group_by': 'delivery_status'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+
+
+
+  <!-- Failed Returns List View -->
+  <record id="view_failed_returns_list" model="ir.ui.view">
+    <field name="name">sale.order.failed.returns.list</field>
+    <field name="model">sale.order</field>
+    <field name="arch" type="xml">
+      <list string="Failed Returns"
+            decoration-danger="return_status == 'awaiting_return'"
+            decoration-warning="return_status == 'return_scheduled'"
+            decoration-info="return_status == 'return_in_transit'"
+            decoration-success="return_status == 'returned_received'">
+        <field name="name"/>
+        <field name="partner_id" string="Customer"/>
+        <field name="delivery_carrier_company_id" string="Carrier"/>
+        <field name="amount_total" string="Amount"/>
+        <field name="delivery_status" string="Delivery Status"
+               decoration-danger="delivery_status == 'failed'"
+               decoration-success="delivery_status == 'failed_returned'"/>
+        <field name="return_status" string="Return Status"/>
+        <field name="return_scheduled_date" string="Scheduled"/>
+        <field name="return_received_date" string="Received"/>
+        <field name="return_received_by" string="Received By"/>
+        <button name="action_confirm_return_received"
+                string="✅ Confirm Receipt + Sign"
+                type="object"
+                class="btn btn-success btn-sm"
+                invisible="return_status == 'returned_received'"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- Failed Returns Search View -->
+  <record id="view_failed_returns_search" model="ir.ui.view">
+    <field name="name">sale.order.failed.returns.search</field>
+    <field name="model">sale.order</field>
+    <field name="type">search</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="name" string="Order"/>
+        <field name="partner_id" string="Customer"/>
+        <field name="delivery_carrier_company_id" string="Carrier"/>
+        <filter name="awaiting" string="Awaiting Return"
+                domain="[('return_status','=','awaiting_return')]"/>
+        <filter name="scheduled" string="Scheduled"
+                domain="[('return_status','=','return_scheduled')]"/>
+        <filter name="in_transit" string="In Transit"
+                domain="[('return_status','=','return_in_transit')]"/>
+        <filter name="received" string="Received"
+                domain="[('return_status','=','returned_received')]"/>
+        <group expand="0" string="Group By">
+          <filter name="group_carrier" string="Carrier"
+                  context="{'group_by': 'delivery_carrier_company_id'}"/>
+          <filter name="group_status" string="Return Status"
+                  context="{'group_by': 'return_status'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <!-- Failed Returns Action -->
+  <record id="action_failed_returns" model="ir.actions.act_window">
+    <field name="name">Failed Returns</field>
+    <field name="res_model">sale.order</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('delivery_status','in',['failed','failed_returned'])]</field>
+    <field name="view_id" ref="view_failed_returns_list"/>
+    <field name="search_view_id" ref="view_failed_returns_search"/>
+  </record>
+
+
+  <record id="action_delivery_trip" model="ir.actions.act_window">
+    <field name="name">Pickup Requests</field>
+    <field name="res_model">delivery.trip</field>
+    <field name="view_mode">list,form</field>
+    <field name="context">{'default_state': 'draft'}</field>
+  </record>
+
+</odoo>

@@ -445,10 +445,7 @@
                         <section class="container">
                             <div class="row m-0 mt-2">
                                 <div class="col-lg-8 offset-lg-2">
-                                    <t t-call="portal.message_thread">
-                                        <t t-set="object" t-value="product"/>
-                                        <t t-set="display_rating" t-value="True"/>
-                                        <t t-set="message_per_page" t-value="10"/>
+                                    <t t-call="product_reviews.reviews_widget"><t t-set="product" t-value="product"/>
                                     </t>
                                 </div>
                             </div>

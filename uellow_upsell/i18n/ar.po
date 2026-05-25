@@ -1,0 +1,67 @@
+# Translation: uellow_upsell
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0?0:n==1?1:n==2?2:n%100>=3&&n%100<=10?3:n%100>=11&&n%100<=99?4:5;\n"
+
+#. module: uellow_upsell
+#: model:ir.model,name:uellow_upsell.model_uellow_upsell_rule
+msgid "Upsell/Cross-sell Rule"
+msgstr "قاعدة Upsell/Cross-sell"
+
+#. module: uellow_upsell
+#: model:ir.model.fields.selection,name:uellow_upsell.selection__uellow_upsell_rule__rule_type__upsell
+msgid "Upsell"
+msgstr "ترقية المنتج"
+
+#. module: uellow_upsell
+#: model:ir.model.fields.selection,name:uellow_upsell.selection__uellow_upsell_rule__rule_type__crosssell
+msgid "Cross-sell"
+msgstr "منتجات مكملة"
+
+#. module: uellow_upsell
+#: model:ir.model.fields.selection,name:uellow_upsell.selection__uellow_upsell_rule__rule_type__bundle
+msgid "Bundle"
+msgstr "حزمة"
+
+#. module: uellow_upsell
+#: model:ir.model.fields.selection,name:uellow_upsell.selection__uellow_upsell_rule__display_position__product_page
+msgid "Product Page"
+msgstr "صفحة المنتج"
+
+#. module: uellow_upsell
+#: model:ir.model.fields.selection,name:uellow_upsell.selection__uellow_upsell_rule__display_position__cart
+msgid "Cart"
+msgstr "السلة"
+
+#. module: uellow_upsell
+#: model:ir.model.fields.selection,name:uellow_upsell.selection__uellow_upsell_rule__display_position__both
+msgid "Both"
+msgstr "المنتج والسلة"
+
+#. module: uellow_upsell
+#: model:ir.model.fields,field_description:uellow_upsell.field_uellow_upsell_rule__max_display
+msgid "Max Items"
+msgstr "أقصى عدد عناصر"
+
+#. module: uellow_upsell
+#: model:ir.model.fields,field_description:uellow_upsell.field_uellow_upsell_rule__discount_bundle
+msgid "Bundle Discount (%)"
+msgstr "خصم الحزمة (%)"
+
+#. module: uellow_upsell
+#: model:ir.model.fields,field_description:uellow_upsell.field_product_template__upsell_title_en
+msgid "Upsell Title (EN)"
+msgstr "عنوان الاقتراح (إنجليزي)"
+
+#. module: uellow_upsell
+#: model:ir.model.fields,field_description:uellow_upsell.field_product_template__upsell_title_ar
+msgid "Upsell Title (AR)"
+msgstr "عنوان الاقتراح (عربي)"
+
+#. module: uellow_upsell
+#: model:ir.ui.view,arch_db:uellow_upsell.view_upsell_rule_list
+msgid "Upsell / Cross-sell Rules"
+msgstr "قواعد الاقتراح والبيع المكمّل"

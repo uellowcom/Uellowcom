@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ── List View ── -->
+  <record id="view_import_job_list" model="ir.ui.view">
+    <field name="name">uellow.import.job.list</field>
+    <field name="model">uellow.import.job</field>
+    <field name="arch" type="xml">
+      <list string="Import Jobs"
+            decoration-warning="state=='review'"
+            decoration-success="state=='done'"
+            decoration-danger="state=='error'"
+            decoration-muted="state=='rolled_back'">
+        <field name="name"/>
+        <field name="job_type" widget="badge"/>
+        <field name="total_lines" string="Total"/>
+        <field name="new_count" string="New"/>
+        <field name="update_count" string="Update"/>
+        <field name="warning_count" string="Warnings"/>
+        <field name="approved_count" string="Approved"/>
+        <field name="state" widget="badge"
+               decoration-info="state=='processing'"
+               decoration-warning="state=='review'"
+               decoration-success="state=='done'"
+               decoration-danger="state=='error'"/>
+        <field name="write_date" string="Last Updated"/>
+        <button name="action_open_review" string="Review"
+                type="object" icon="fa-eye"
+                invisible="state != 'review'"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- ── Form View ── -->
+  <record id="view_import_job_form" model="ir.ui.view">
+    <field name="name">uellow.import.job.form</field>
+    <field name="model">uellow.import.job</field>
+    <field name="arch" type="xml">
+      <form string="Smart Connector — Import Job">
+        <header>
+          <button name="action_run" string="Run Import"
+                  type="object" class="oe_highlight"
+                  invisible="state != 'draft'"/>
+          <button name="action_open_review" string="Review Results"
+                  type="object" class="oe_highlight"
+                  invisible="state != 'review'"/>
+          <button name="action_rollback" string="Rollback"
+                  type="object"
+                  confirm="Are you sure you want to rollback this import?"
+                  invisible="state != 'done'"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="draft,processing,review,done"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name" readonly="1"/></h1>
+          </div>
+          <group>
+            <group string="Import Settings">
+              <field name="job_type"/>
+              <field name="source_url"
+                     invisible="job_type != 'url_import'"
+                     placeholder="https://..."/>
+              <field name="attachment_id"
+                     invisible="job_type != 'file_update'"
+                     widget="many2one"/>
+              <field name="max_products_per_run"/>
+              <field name="price_variance_limit" string="Max Price Change (%)"/>
+            </group>
+            <group string="AI Settings">
+              <field name="enable_translation" string="Arabic/English Translation"/>
+              <field name="enable_seo" string="Write SEO Description"/>
+              <field name="warranty_text" string="Uellow Warranty Text"/>
+            </group>
+          </group>
+          <group string="Statistics" invisible="state == 'draft'">
+            <group>
+              <field name="total_lines" string="Total Products"/>
+              <field name="new_count" string="New"/>
+              <field name="update_count" string="Update"/>
+            </group>
+            <group>
+              <field name="warning_count" string="Warnings"/>
+              <field name="approved_count" string="Approved"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Product Lines" name="lines">
+              <field name="line_ids" context="{'default_job_id': id}">
+                <list decoration-warning="has_warning"
+                      decoration-danger="line_state=='rejected'"
+                      decoration-success="line_state in ('approved','applied')">
+                  <field name="name_en" string="Name (EN)"/>
+                  <field name="name_ar" string="Name (AR)"/>
+                  <field name="product_action" widget="badge"/>
+                  <field name="match_score" string="Match %"/>
+                  <field name="new_price" string="New Price"/>
+                  <field name="old_price" string="Current Price"/>
+                  <field name="price_diff_pct" string="Δ%"/>
+                  <field name="has_warning" widget="boolean" string="⚠"/>
+                  <field name="ai_enriched" widget="boolean" string="AI"/>
+                  <field name="line_state" widget="badge"
+                         decoration-warning="line_state=='pending'"
+                         decoration-success="line_state in ('approved','applied')"
+                         decoration-danger="line_state=='rejected'"/>
+                  <button name="action_approve" string="Approve"
+                          type="object" icon="fa-check"
+                          invisible="line_state != 'pending'"/>
+                  <button name="action_reject" string="Reject"
+                          type="object" icon="fa-times"
+                          invisible="line_state != 'pending'"/>
+                  <button name="action_apply" string="Apply"
+                          type="object" icon="fa-save"
+                          invisible="line_state != 'approved'"/>
+                </list>
+              </field>
+            </page>
+            <page string="Error Log" invisible="not error_message">
+              <field name="error_message" readonly="1" widget="text"/>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <!-- ── Search ── -->
+  <record id="view_import_job_search" model="ir.ui.view">
+    <field name="name">uellow.import.job.search</field>
+    <field name="model">uellow.import.job</field>
+    <field name="arch" type="xml">
+      <search string="Search Import Jobs">
+        <field name="name" string="Job Number"/>
+        <filter string="Pending Review" name="review"
+                domain="[('state','=','review')]"/>
+        <filter string="Done" name="done"
+                domain="[('state','=','done')]"/>
+        <filter string="Error" name="error"
+                domain="[('state','=','error')]"/>
+        <separator/>
+        <filter string="URL Import" name="url"
+                domain="[('job_type','=','url_import')]"/>
+        <filter string="File Import" name="file"
+                domain="[('job_type','=','file_update')]"/>
+        <group expand="0" string="Group By">
+          <filter string="State" name="group_state"
+                  context="{'group_by': 'state'}"/>
+          <filter string="Type" name="group_type"
+                  context="{'group_by': 'job_type'}"/>
+          <filter string="Month" name="group_month"
+                  context="{'group_by': 'create_date:month'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <!-- ── Action ── -->
+  <record id="action_import_job" model="ir.actions.act_window">
+    <field name="name">Import Jobs</field>
+    <field name="res_model">uellow.import.job</field>
+    <field name="view_mode">list,form</field>
+    <field name="search_view_id" ref="view_import_job_search"/>
+    <field name="context">{'search_default_review': 0}</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">
+        No import jobs yet
+      </p>
+      <p>Create your first import job to start importing products from a URL or Excel file.</p>
+    </field>
+  </record>
+
+</odoo>

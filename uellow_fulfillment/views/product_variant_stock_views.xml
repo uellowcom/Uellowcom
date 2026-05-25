@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Extend product.product form: add FBU tab -->
+    <record id="view_product_product_fbu" model="ir.ui.view">
+        <field name="name">product.product.fbu.tab</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="FBU Stock" name="fbu_stock">
+                    <group>
+                        <group string="معلومات التاجر">
+                            <field name="vendor_partner_id"
+                                   options="{'no_create': True}"
+                                   domain="[('is_uellow_vendor','=',True)]"/>
+                        </group>
+                        <group string="حالة المخزون">
+                            <field name="fbu_qty_onhand" readonly="1"
+                                   string="كمية WH/VND (FBU)"/>
+                            <field name="vendor_qty"
+                                   string="كمية التاجر الخارجية (Continue Selling)"/>
+                            <field name="continue_selling" readonly="1"/>
+                            <field name="fbu_state" readonly="1" widget="badge"
+                                   decoration-success="fbu_state=='on_hand'"
+                                   decoration-warning="fbu_state=='continue_selling'"
+                                   decoration-danger="fbu_state=='out_of_stock'"/>
+                        </group>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+    <!-- Extend product.template list: add vendor tag + fbu_state -->
+    <record id="view_product_template_fbu_list" model="ir.ui.view">
+        <field name="name">product.template.fbu.list</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="list_price" position="after">
+                <field name="type" column_invisible="True"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- product.product list with FBU columns (standalone view) -->
+    <record id="view_product_product_fbu_list" model="ir.ui.view">
+        <field name="name">product.product.fbu.list</field>
+        <field name="model">product.product</field>
+        <field name="arch" type="xml">
+            <list string="Products — FBU Status"
+                  decoration-danger="fbu_state=='out_of_stock'"
+                  decoration-warning="fbu_state=='continue_selling'">
+                <field name="product_tmpl_id" string="المنتج الأب"/>
+                <field name="display_name" string="Variant"/>
+                <field name="vendor_partner_id" string="التاجر"
+                       widget="many2one_tags"
+                       optional="show"/>
+                <field name="fbu_qty_onhand" string="WH/VND" readonly="1"/>
+                <field name="vendor_qty" string="عند التاجر"/>
+                <field name="fbu_state" widget="badge" string="الحالة"
+                       decoration-success="fbu_state=='on_hand'"
+                       decoration-warning="fbu_state=='continue_selling'"
+                       decoration-danger="fbu_state=='out_of_stock'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_product_fbu_state" model="ir.actions.act_window">
+        <field name="name">المنتجات — حالة FBU</field>
+        <field name="res_model">product.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_product_product_fbu_list"/>
+        <field name="domain">[('type','=','product')]</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- HTML الـ Snippet الفعلي -->
+    <template id="new_arrivals_assets" inherit_id="website.layout" name="New Arrivals Fonts">
+        <xpath expr="//head" position="inside">
+            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+        </xpath>
+    </template>
+
+    <template id="new_arrivals_snippet" name="New Arrivals">
+        <section class="s_uellow_new_arrivals" data-snippet="s_uellow_new_arrivals" data-name="New Arrivals">
+            <div class="yw-na-root">
+                <div class="yw-topbar">
+                    <div class="yw-left">
+                        <h2 class="yw-title">وصل حديثاً</h2>
+                        <span class="yw-badge">جديد</span>
+                    </div>
+                    <div class="yw-center" style="display:none">
+                        <button class="yw-nav-btn yw-nav-prev" disabled="disabled">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <div class="yw-dots"></div>
+                        <button class="yw-nav-btn yw-nav-next">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                        </button>
+                    </div>
+                    <div class="yw-right-link">
+                        <a class="yw-viewall" href="/ar/shop?order=id+desc">عرض الكل ↙</a>
+                    </div>
+                </div>
+                <div class="yw-slider-outer">
+                    <div class="yw-track">
+                        <div class="yw-skeleton"><div class="yw-sk-img"></div><div class="yw-sk-body"><div class="yw-sk-line" style="width:80%"></div><div class="yw-sk-line" style="width:55%"></div></div></div>
+                        <div class="yw-skeleton"><div class="yw-sk-img"></div><div class="yw-sk-body"><div class="yw-sk-line" style="width:75%"></div><div class="yw-sk-line" style="width:60%"></div></div></div>
+                        <div class="yw-skeleton"><div class="yw-sk-img"></div><div class="yw-sk-body"><div class="yw-sk-line" style="width:85%"></div><div class="yw-sk-line" style="width:50%"></div></div></div>
+                        <div class="yw-skeleton"><div class="yw-sk-img"></div><div class="yw-sk-body"><div class="yw-sk-line" style="width:70%"></div><div class="yw-sk-line" style="width:65%"></div></div></div>
+                        <div class="yw-skeleton"><div class="yw-sk-img"></div><div class="yw-sk-body"><div class="yw-sk-line" style="width:78%"></div><div class="yw-sk-line" style="width:58%"></div></div></div>
+                        <div class="yw-skeleton"><div class="yw-sk-img"></div><div class="yw-sk-body"><div class="yw-sk-line" style="width:72%"></div><div class="yw-sk-line" style="width:62%"></div></div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- تسجيل الـ Snippet في قائمة الـ Blocks — الطريقة الصح لأودو 18 -->
+    <template id="snippets" inherit_id="website.snippets" name="New Arrival Snippet">
+
+        <!-- الخطوة 1: إنشاء Group باسم Uellow -->
+        <xpath expr="//snippets[@id='snippet_groups']/*[1]" position="before">
+            <t snippet-group="uellow"
+               t-snippet="website.s_snippet_group"
+               string="Uellow"
+               t-thumbnail="/uellow_snippets/static/description/thumbnail.svg"/>
+        </xpath>
+
+        <!-- الخطوة 2: إضافة الـ Snippet داخل الـ Group -->
+        <xpath expr="//snippets[@id='snippet_structure']/*[1]" position="before">
+            <t t-snippet="uellow_snippets.new_arrivals_snippet"
+               string="New Arrivals"
+               group="uellow">
+                <keywords>New Arrivals Products Slider وصل حديثاً</keywords>
+            </t>
+        </xpath>
+
+    </template>
+
+</odoo>

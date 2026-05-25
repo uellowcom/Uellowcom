@@ -1,0 +1,61 @@
+# Translation: uellow_ab_testing
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0?0:n==1?1:n==2?2:n%100>=3&&n%100<=10?3:n%100>=11&&n%100<=99?4:5;\n"
+#. module: uellow_ab_testing
+#: model:ir.model,name:uellow_ab_testing.model_uellow_ab_test
+msgid "A/B Test"
+msgstr "اختبار A/B"
+
+#. module: uellow_ab_testing
+#: model:ir.model.fields.selection,name:uellow_ab_testing.selection__uellow_ab_test__test_type__price
+msgid "Price"
+msgstr "السعر"
+
+#. module: uellow_ab_testing
+#: model:ir.model.fields.selection,name:uellow_ab_testing.selection__uellow_ab_test__test_type__title
+msgid "Product Title"
+msgstr "اسم المنتج"
+
+#. module: uellow_ab_testing
+#: model:ir.model.fields.selection,name:uellow_ab_testing.selection__uellow_ab_test__test_type__description
+msgid "Description"
+msgstr "الوصف"
+
+#. module: uellow_ab_testing
+#: model:ir.model.fields.selection,name:uellow_ab_testing.selection__uellow_ab_test__winner__a
+msgid "A Wins"
+msgstr "A فاز"
+
+#. module: uellow_ab_testing
+#: model:ir.model.fields.selection,name:uellow_ab_testing.selection__uellow_ab_test__winner__b
+msgid "B Wins"
+msgstr "B فاز"
+
+#. module: uellow_ab_testing
+#: model:ir.model.fields.selection,name:uellow_ab_testing.selection__uellow_ab_test__winner__tie
+msgid "Tie"
+msgstr "تعادل"
+
+#. module: uellow_ab_testing
+#: model:ir.model.fields,field_description:uellow_ab_testing.field_uellow_ab_test__traffic_split
+msgid "Traffic to B (%)"
+msgstr "نسبة الزوار لـ B (%)"
+
+#. module: uellow_ab_testing
+#: model:ir.ui.view,arch_db:uellow_ab_testing.view_ab_list
+msgid "Start Test"
+msgstr "بدء الاختبار"
+
+#. module: uellow_ab_testing
+#: model:ir.ui.view,arch_db:uellow_ab_testing.view_ab_list
+msgid "Apply Winner"
+msgstr "تطبيق الفائز"
+
+#. module: uellow_ab_testing
+#: model_terms:ir.ui.menu,name:uellow_ab_testing.menu_ab_tests
+msgid "A/B Tests"
+msgstr "اختبارات A/B"

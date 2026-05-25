@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_vendor_settings_form" model="ir.ui.view">
+    <field name="name">uellow.vendor.settings.form</field>
+    <field name="model">uellow.vendor.settings</field>
+    <field name="arch" type="xml">
+      <form string="Vendor Settings">
+        <sheet>
+          <group>
+            <field name="vendor_id" readonly="1"/>
+          </group>
+          <notebook>
+            <page string="Products">
+              <group>
+                <field name="product_approval"/>
+                <field name="ai_enrich_products"/>
+                <field name="allow_smart_connector"/>
+                <field name="allow_flash_sale"/>
+                <field name="allow_bundle"/>
+                <field name="max_products"/>
+                <field name="unlimited_products"/>
+                <field name="add_uellow_warranty"/>
+                <field name="vendor_sets_price"/>
+              </group>
+            </page>
+            <page string="Orders">
+              <group>
+                <field name="sla_hours"/>
+                <field name="sla_breach_action"/>
+                <field name="max_cancel_rate"/>
+                <field name="vendor_can_cancel"/>
+                <field name="notify_admin_on_order"/>
+              </group>
+            </page>
+            <page string="Visibility">
+              <group>
+                <group string="Customer Sees">
+                  <field name="show_vendor_name"/>
+                  <field name="show_verification_badge"/>
+                  <field name="show_ratings"/>
+                  <field name="show_phone"/>
+                  <field name="show_whatsapp"/>
+                </group>
+                <group string="Documents">
+                  <field name="sender_label"/>
+                  <field name="invoice_name"/>
+                </group>
+              </group>
+            </page>
+            <page string="Communication">
+              <group>
+                <field name="vendor_sees_customer"/>
+                <field name="vendor_can_message"/>
+                <field name="monitor_messages"/>
+              </group>
+            </page>
+            <page string="Shipping">
+              <group>
+                <group string="Conditions Logic">
+                  <field name="shipping_logic"/>
+                  <field name="cond_active_subscription"/>
+                  <field name="cond_wallet_enabled"/>
+                  <field name="cond_min_wallet" invisible="not cond_wallet_enabled"/>
+                  <field name="cond_online_only"/>
+                  <field name="cond_rating_enabled"/>
+                  <field name="cond_min_rating" invisible="not cond_rating_enabled"/>
+                  <field name="cond_cancel_enabled"/>
+                  <field name="cond_max_cancel" invisible="not cond_cancel_enabled"/>
+                </group>
+                <group string="Shipping Rules">
+                  <field name="allow_cod"/>
+                  <field name="shipping_priority"/>
+                  <field name="shipping_cost"/>
+                </group>
+              </group>
+            </page>
+            <page string="Notifications">
+              <group>
+                <field name="notify_new_order"/>
+                <field name="notify_sla_warning"/>
+                <field name="notify_low_stock"/>
+                <field name="notify_weekly_report"/>
+                <field name="notify_new_review"/>
+                <field name="notify_subscription_expiry"/>
+                <field name="notify_dispute"/>
+              </group>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_vendor_settings" model="ir.actions.act_window">
+    <field name="name">Vendor Settings</field>
+    <field name="res_model">uellow.vendor.settings</field>
+    <field name="view_mode">list,form</field>
+  </record>
+</odoo>

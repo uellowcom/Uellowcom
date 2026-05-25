@@ -1,210 +1,177 @@
-<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <template id="report_delivery_label">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
-                <div class="page" style="padding: 0; margin: 0;">
-                        <div class="row" style="border: 1px solid black; margin-bottom: 0px; padding: 0px;">
-                            <!-- Header with logo and company info -->
-                            <div class="col-3" style="padding: 10px;">
-                                <img t-if="o.company_id.logo" t-att-src="image_data_uri(o.company_id.logo)" style="max-height: 50px;" alt="Company Logo"/>
-                                <div t-if="not o.company_id.logo" style="font-size: 24px; color: red; font-weight: bold;">
-                                    <span t-field="o.company_id.name"/>
-                                </div>
-                            </div>
-                            <div class="col-3" style="padding: 10px; font-size: 10px;">
-                                <div style="font-weight: bold;"><span t-field="o.company_id.name"/></div>
-                                <div t-if="o.company_id.street"><span t-field="o.company_id.street"/></div>
-                                <div t-if="o.company_id.city"><span t-field="o.company_id.city"/></div>
-                                <div t-if="o.company_id.country_id"><span t-field="o.company_id.country_id.name"/></div>
-                                <div t-if="o.company_id.phone"><span t-field="o.company_id.phone"/></div>
-                            </div>
-                            <div class="col-6 text-right" style="padding: 10px;">
-                                <img t-if="o.carrier_tracking_ref" t-att-src="'/report/barcode/?type=Code128&amp;value=%s&amp;width=300&amp;height=50' % o.carrier_tracking_ref" style="width: 100%;" alt="Barcode"/>
-                                <div t-if="o.carrier_tracking_ref" style="font-size: 14px; text-align: center;">
-                                    <span t-field="o.carrier_tracking_ref"/>
-                                </div>
-                                <div t-if="not o.carrier_tracking_ref" style="font-size: 14px; text-align: center;">
-                                    441634536555
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Origin and Date -->
-                        <div class="row" style="border-left: 1px solid black; border-right: 1px solid black; margin-top: 0px; margin-bottom: 0px; padding: 0px;">
-                            <div class="col-6" style="border-right: 1px solid black; padding: 10px;">
-                                <div style="font-weight: bold;">Origin:</div>
-                                <div style="font-size: 18px; font-weight: bold;">
-                                    <t t-if="o.company_id.country_id.code">
-                                        <span t-field="o.company_id.country_id.code"/>
+                <t t-set="barcode_ref" t-value="o.get_barcode_b64(o.name, width=620, height=80)"/>
+                <t t-set="qr_value" t-value="o.carrier_tracking_url or 'https://uellow.com/contactus'"/>
+                <t t-set="barcode_qr" t-value="o.get_barcode_b64(qr_value, barcode_type='QR', width=150, height=150)"/>
+                <t t-set="moves" t-value="o.move_ids[:4]"/>
+                <t t-set="show_other" t-value="len(o.move_ids) > 4"/>
+                <div class="page" style="font-family:Arial,sans-serif;width:100mm;height:150mm;max-height:150mm;margin:0;padding:1.5mm;overflow:hidden;box-sizing:border-box;page-break-inside:avoid;">
+                    <div style="width:97mm;height:147mm;max-height:147mm;overflow:hidden;box-sizing:border-box;border:1.4px solid #000;">
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="width:30%;height:11mm;padding:1.5mm;border:1.2px solid #000;vertical-align:middle;text-align:center;">
+                                    <t t-if="o.company_id.logo">
+                                        <img t-att-src="image_data_uri(o.company_id.logo)" style="max-height:8.5mm;max-width:100%;" alt="Logo"/>
                                     </t>
-                                    <t t-else="">AMM</t>
-                                </div>
-                            </div>
-                            <div class="col-6" style="padding: 10px;">
-                                <div style="font-weight: bold;">Date:</div>
-                                <div style="font-size: 18px; font-weight: bold;">
-                                    <span t-field="o.date_done" t-options='{"widget": "date", "format": "MMM dd, YYYY"}'/>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Foreign Ref and Ref# -->
-                        <div class="row" style="border-left: 1px solid black; border-right: 1px solid black; margin-top: 0px; margin-bottom: 0px; padding: 0px;">
-                            <div class="col-6" style="border-right: 1px solid black; padding: 10px;">
-                                <div style="font-weight: bold;">Foreign Ref:</div>
-                                <div style="font-size: 18px; font-weight: bold;">
-                                    <t t-if="o.origin">
-                                        <span t-field="o.origin"/>
-                                    </t>
-                                    <t t-else="">WHLO24167YWW</t>
-                                </div>
-                                <div style="text-align: right; font-size: 14px;">مرجع التسليم</div>
-                            </div>
-                            <div class="col-6" style="padding: 10px;">
-                                <div style="font-weight: bold;">Ref#:</div>
-                                <div style="font-size: 18px; font-weight: bold;">
-                                    <span t-field="o.name"/>
-                                </div>
-                                <div style="text-align: right; font-size: 14px;">رقم الطلب</div>
-                            </div>
-                        </div>
-                        
-                        <!-- DOM, OND, P, 1/1 -->
-                        <div class="row" style="border-left: 1px solid black; border-right: 1px solid black; margin-top: 0px; margin-bottom: 0px; padding: 0px;">
-                            <div class="col-3" style="border-right: 1px solid black; padding: 10px; text-align: center;">
-                                <div style="font-size: 24px; font-weight: bold;">DOM</div>
-                            </div>
-                            <div class="col-3" style="border-right: 1px solid black; padding: 10px; text-align: center;">
-                                <div style="font-size: 24px; font-weight: bold;">OND</div>
-                            </div>
-                            <div class="col-3" style="border-right: 1px solid black; padding: 10px; text-align: center;">
-                                <div style="font-size: 24px; font-weight: bold;">P</div>
-                            </div>
-                            <div class="col-3" style="padding: 10px; text-align: center;">
-                                <div style="font-size: 24px; font-weight: bold;">1/1</div>
-                            </div>
-                        </div>
-                        
-                        <!-- Weight and Description -->
-                        <div class="row" style="border-left: 1px solid black; border-right: 1px solid black; margin-top: 0px; margin-bottom: 0px; padding: 0px;">
-                            <div class="col-6" style="border-right: 1px solid black; padding: 10px;">
-                                <div>Weight: <span t-field="o.weight"/> KG</div>
-                                <div>Chargeable: <span t-field="o.weight"/> KG</div>
-                                <div style="text-align: right; font-size: 14px;">بيانات الطلب</div>
-                            </div>
-                            <div class="col-6" style="padding: 10px;">
-                                <div>Description: 
-                                    <t t-if="o.note">
-                                        <span t-field="o.note"/>
-                                    </t>
-                                    <t t-else="">Misc Screens</t>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Services and Pieces -->
-                        <div class="row" style="border-left: 1px solid black; border-right: 1px solid black; margin-top: 0px; margin-bottom: 0px; padding: 0px;">
-                            <div class="col-6" style="padding: 10px;">
-                                <div>Services: OND</div>
-                                <div>Pieces: <t t-esc="len(o.move_line_ids)"/></div>
-                            </div>
-                            <div class="col-6" style="padding: 10px; text-align: right;">
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Account and Customer Info -->
-                        <div class="row" style="border-left: 1px solid black; border-right: 1px solid black; margin-top: 0px; margin-bottom: 0px; padding: 0px;">
-                            <div class="col-6" style="padding: 10px;">
-                                <div>Account: <span t-field="o.company_id.id"/></div>
-                                <div style="font-weight: bold;">Your Company</div>
-                                <div t-if="o.company_id.street"><span t-field="o.company_id.street"/></div>
-                                <div t-if="o.company_id.city"><span t-field="o.company_id.city"/></div>
-                                <div t-if="o.company_id.phone"><span t-field="o.company_id.phone"/></div>
-                                <div style="text-align: right; font-size: 14px;">بيانات العميل</div>
-                            </div>
-                            <div class="col-6" style="padding: 10px; text-align: right;">
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <img t-if="o.carrier_tracking_ref" t-att-src="'/report/barcode/?type=Code128&amp;value=%s&amp;width=300&amp;height=50' % o.carrier_tracking_ref" style="width: 100%;" alt="Barcode"/>
-                                <div style="font-size: 14px; text-align: center;">
-                                    <span t-field="o.carrier_tracking_ref"/>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Shipper Info -->
-                        <div class="row" style="border-left: 1px solid black; border-right: 1px solid black; margin-top: 0px; margin-bottom: 0px; padding: 0px;">
-                            <div class="col-6" style="padding: 10px;">
-                                <div style="font-weight: bold;">Shipper:</div>
-                                <div style="font-weight: bold;">
-                                    <t t-if="o.carrier_id.vendor_partner_id">
-                                        <span t-field="o.carrier_id.vendor_partner_id.name"/>
-                                    </t>
-                                    <t t-else="">Acme Partner</t>
-                                </div>
-                                <div t-if="o.carrier_id.vendor_partner_id.street">
-                                    <span t-field="o.carrier_id.vendor_partner_id.street"/>
-                                </div>
-                                <t t-else="">
-                                    <div>Industrial WestStret, Slumberland</div>
+                                </td>
+                                <td style="height:11mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;text-align:center;">
+                                    <div style="font-weight:800;font-size:14px;color:#000;font-family:Georgia,serif;line-height:1.05;">Uellow W.L.L</div>
+                                    <div style="font-size:9px;font-weight:600;color:#222;margin-top:0.8mm;line-height:1.05;">+96597170933 | info@uellow.com</div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="width:33%;height:10mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;">
+                                    <div style="font-size:8px;color:#333;font-weight:800;line-height:1;">Origin</div>
+                                    <div style="font-size:15px;font-weight:900;line-height:1.05;margin-top:0.5mm;">
+                                        <t t-if="o.company_id.country_id.code"><t t-esc="o.company_id.country_id.code"/></t>
+                                        <t t-else="">KW</t>
+                                    </div>
+                                </td>
+                                <td style="width:34%;height:10mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;">
+                                    <div style="font-size:8px;color:#333;font-weight:800;line-height:1;">Date</div>
+                                    <div style="font-size:11px;font-weight:800;line-height:1.05;margin-top:0.5mm;"><span t-field="o.scheduled_date" t-options='{"widget": "date", "format": "MMM dd, YYYY"}'/></div>
+                                </td>
+                                <td style="width:33%;height:10mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;">
+                                    <div style="font-size:8px;color:#333;font-weight:800;line-height:1;">Pieces</div>
+                                    <div style="font-size:15px;font-weight:900;line-height:1.05;margin-top:0.5mm;"><t t-esc="len(o.move_line_ids) or len(o.move_ids)"/></div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="width:50%;height:8mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;">
+                                    <div style="font-size:8px;color:#333;font-weight:800;line-height:1;">Sales Order Ref</div>
+                                    <div style="font-size:12px;font-weight:900;line-height:1.05;margin-top:0.4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                        <t t-if="o.origin"><t t-esc="o.origin"/></t>
+                                        <t t-else="">-</t>
+                                    </div>
+                                </td>
+                                <td style="width:50%;height:8mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;">
+                                    <div style="font-size:8px;color:#333;font-weight:800;line-height:1;">Ref#</div>
+                                    <div style="font-size:12px;font-weight:900;line-height:1.05;margin-top:0.4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><t t-esc="o.name"/></div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="width:25%;height:7mm;padding:1mm;border:1.2px solid #000;text-align:center;vertical-align:middle;"><div style="font-size:14px;font-weight:900;line-height:1;">DOM</div></td>
+                                <td style="width:25%;height:7mm;padding:1mm;border:1.2px solid #000;text-align:center;vertical-align:middle;"><div style="font-size:14px;font-weight:900;line-height:1;">OND</div></td>
+                                <td style="width:25%;height:7mm;padding:1mm;border:1.2px solid #000;text-align:center;vertical-align:middle;"><div style="font-size:14px;font-weight:900;line-height:1;">P</div></td>
+                                <td style="width:25%;height:7mm;padding:1mm;border:1.2px solid #000;text-align:center;vertical-align:middle;"><div style="font-size:14px;font-weight:900;line-height:1;">1/1</div></td>
+                            </tr>
+                        </table>
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="width:50%;height:8mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;">
+                                    <div style="font-size:9px;font-weight:700;line-height:1.1;">Weight: <span t-field="o.weight"/> KG</div>
+                                    <div style="font-size:9px;font-weight:700;line-height:1.1;">Chargeable: <span t-field="o.weight"/> KG</div>
+                                </td>
+                                <td style="width:50%;height:8mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;">
+                                    <div style="font-size:8px;color:#333;font-weight:800;line-height:1;">Notes</div>
+                                    <div style="font-size:9px;font-weight:650;line-height:1.05;height:4mm;overflow:hidden;margin-top:0.5mm;">
+                                        <t t-if="o.note"><t t-esc="o.note"/></t>
+                                        <t t-else="">-</t>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <t t-if="o.payment_method == 'cod'">
+                                    <td style="height:10mm;padding:1mm 2mm;border:1.2px solid #000;background:#fffde7;vertical-align:middle;">
+                                        <div style="font-size:8px;color:#333;font-weight:800;line-height:1;">COD Amount</div>
+                                        <div style="font-size:16px;font-weight:900;color:#000;line-height:1.05;margin-top:0.5mm;">
+                                            <t t-esc="'%.3f' % o.cod_amount"/>
+                                            <span style="font-size:10px;font-weight:800;"><t t-esc="o.currency_id.symbol or o.currency_id.name"/></span>
+                                        </div>
+                                    </td>
                                 </t>
-                                <div t-if="o.carrier_id.vendor_partner_id.city">
-                                    <span t-field="o.carrier_id.vendor_partner_id.city"/>
-                                </div>
                                 <t t-else="">
-                                    <div>Amman</div>
+                                    <td style="height:10mm;padding:1mm 2mm;border:1.2px solid #000;background:#e8f5e9;text-align:center;vertical-align:middle;">
+                                        <div style="font-size:19px;font-weight:900;color:#2e7d32;letter-spacing:4px;line-height:1;">PAID</div>
+                                    </td>
                                 </t>
-                                <div t-if="o.carrier_id.vendor_partner_id.phone">
-                                    <span t-field="o.carrier_id.vendor_partner_id.phone"/>
-                                </div>
-                                <t t-else="">
-                                    <div>+962 6 98765543</div>
-                                </t>
-                            </div>
-                            <div class="col-6" style="padding: 10px; text-align: right;">
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <div style="border-bottom: 3px solid black; width: 100%; margin-bottom: 5px;"></div>
-                                <img t-if="o.carrier_tracking_ref" t-att-src="'/report/barcode/?type=Code128&amp;value=%s&amp;width=300&amp;height=50' % o.carrier_tracking_ref" style="width: 100%;" alt="Barcode"/>
-                            </div>
-                        </div>
-                        
-                        <!-- Shipper Ref -->
-                        <div class="row" style="border-left: 1px solid black; border-right: 1px solid black; margin-top: 0px; margin-bottom: 0px; padding: 0px;">
-                            <div class="col-6" style="padding: 10px;">
-                                <div style="font-weight: bold;">Shipper Ref:</div>
-                                <div style="font-size: 18px; font-weight: bold;">
-                                    <t t-if="o.carrier_id.vendor_partner_id.ref">
-                                        <span t-field="o.carrier_id.vendor_partner_id.ref"/>
-                                    </t>
-                                    <t t-else="">SDO</t>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Consignee Ref -->
-                        <div class="row" style="border: 1px solid black; margin-top: 0px; margin-bottom: 0px; padding: 0px;">
-                            <div class="col-6" style="padding: 10px;">
-                                <div style="font-weight: bold;">Consignee Ref:</div>
-                                <div style="font-size: 18px; font-weight: bold;">
-                                    <t t-if="o.partner_id.ref">
-                                        <span t-field="o.partner_id.ref"/>
-                                    </t>
-                                    <t t-else="">ZA99</t>
-                                </div>
-                            </div>
-                        </div>
+                            </tr>
+                        </table>
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="width:62%;height:25mm;padding:1.2mm 2mm;border:1.2px solid #000;vertical-align:top;background:#f5f5f5;">
+                                    <div style="font-weight:900;font-size:8px;color:#000;border-bottom:1px solid #888;padding-bottom:0.6mm;margin-bottom:0.8mm;line-height:1;">Shipping To</div>
+                                    <div style="font-weight:900;font-size:12px;color:#000;line-height:1.05;max-height:6mm;overflow:hidden;"><t t-esc="o.partner_id.name"/></div>
+                                    <t t-if="o.partner_id.street"><div style="font-size:9px;font-weight:650;color:#111;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><t t-esc="o.partner_id.street"/></div></t>
+                                    <t t-if="o.partner_id.street2"><div style="font-size:9px;font-weight:650;color:#111;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><t t-esc="o.partner_id.street2"/></div></t>
+                                    <t t-if="o.partner_id.city"><div style="font-size:9px;font-weight:650;color:#111;line-height:1.08;"><t t-esc="o.partner_id.city"/><t t-if="o.partner_id.country_id">, <t t-esc="o.partner_id.country_id.name"/></t></div></t>
+                                    <t t-if="o.partner_id.phone"><div style="font-size:11px;font-weight:900;color:#000;line-height:1.08;margin-top:0.8mm;"><t t-esc="o.partner_id.phone"/></div></t>
+                                    <t t-elif="o.partner_id.mobile"><div style="font-size:11px;font-weight:900;color:#000;line-height:1.08;margin-top:0.8mm;"><t t-esc="o.partner_id.mobile"/></div></t>
+                                </td>
+                                <td style="width:38%;height:25mm;padding:1.2mm 2mm;border:1.2px solid #000;vertical-align:middle;text-align:center;background:#f5f5f5;">
+                                    <div style="font-size:18px;font-weight:900;color:#000;line-height:1.05;max-height:13mm;overflow:hidden;">
+                                        <t t-if="o.partner_id.city"><t t-esc="o.partner_id.city"/></t>
+                                        <t t-else="">-</t>
+                                    </div>
+                                    <t t-if="o.partner_id.country_id"><div style="font-size:9px;font-weight:700;color:#444;margin-top:1mm;"><t t-esc="o.partner_id.country_id.name"/></div></t>
+                                </td>
+                            </tr>
+                        </table>
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="width:50%;height:8mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;">
+                                    <div style="font-size:8px;color:#333;font-weight:800;line-height:1;">Carrier</div>
+                                    <div style="font-size:11px;font-weight:900;line-height:1.05;margin-top:0.4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                        <t t-if="o.carrier_id"><t t-esc="o.carrier_id.name"/></t>
+                                        <t t-else="">-</t>
+                                    </div>
+                                </td>
+                                <td style="width:50%;height:8mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;">
+                                    <div style="font-size:8px;color:#333;font-weight:800;line-height:1;">Tracking Ref</div>
+                                    <div style="font-size:11px;font-weight:900;line-height:1.05;margin-top:0.4mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                        <t t-if="o.carrier_tracking_ref"><t t-esc="o.carrier_tracking_ref"/></t>
+                                        <t t-else="">-</t>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="height:3mm;padding:0.5mm 2mm;border:1.2px solid #000;background:#fafafa;vertical-align:middle;">
+                                    <div style="font-size:8px;color:#000;font-weight:900;line-height:1;">Items</div>
+                                </td>
+                            </tr>
+                        </table>
+                        <table style="width:100%;height:21mm;border-collapse:collapse;table-layout:fixed;">
+                            <tr style="height:3mm;">
+                                <th style="width:79%;padding:0.3mm 2mm;border:1.2px solid #000;text-align:left;font-size:7.5px;font-weight:900;color:#111;line-height:1;">Item</th>
+                                <th style="width:21%;padding:0.3mm 1mm;border:1.2px solid #000;text-align:center;font-size:7.5px;font-weight:900;color:#111;line-height:1;">Qty</th>
+                            </tr>
+                            <t t-foreach="moves" t-as="m">
+                                <tr style="height:3.6mm;">
+                                    <td style="padding:0.35mm 2mm;border:1.2px solid #000;font-size:8.5px;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><t t-esc="m.product_id.display_name"/></td>
+                                    <td style="padding:0.35mm 1mm;border:1.2px solid #000;text-align:center;font-size:8.5px;font-weight:900;line-height:1;"><t t-esc="int(m.product_uom_qty)"/></td>
+                                </tr>
+                            </t>
+                            <t t-if="show_other">
+                                <tr style="height:3.6mm;">
+                                    <td colspan="2" style="padding:0.35mm 2mm;border:1.2px solid #000;font-size:8.5px;font-weight:800;font-style:italic;color:#222;line-height:1;">and other</td>
+                                </tr>
+                            </t>
+                        </table>
+                        <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
+                            <tr>
+                                <td style="width:31mm;height:29mm;padding:1mm;border:1.2px solid #000;text-align:center;vertical-align:middle;">
+                                    <img t-att-src="'data:image/png;base64,' + barcode_qr" style="width:27mm;height:27mm;display:block;margin:0 auto;image-rendering:crisp-edges;" alt="QR"/>
+                                </td>
+                                <td style="height:29mm;padding:1mm 2mm;border:1.2px solid #000;vertical-align:middle;text-align:center;">
+                                    <div style="font-size:8px;color:#222;font-weight:900;margin-bottom:1mm;line-height:1;">Ref# <t t-esc="o.name"/></div>
+                                    <img t-att-src="'data:image/png;base64,' + barcode_ref" style="width:100%;height:15mm;display:block;image-rendering:crisp-edges;" alt="Ref Barcode"/>
+                                    <t t-if="o.carrier_tracking_ref"><div style="font-size:8px;font-weight:800;color:#222;margin-top:1mm;line-height:1;"><t t-esc="o.carrier_tracking_ref"/></div></t>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
             </t>
         </t>

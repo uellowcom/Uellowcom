@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_flash_sale_list" model="ir.ui.view">
+    <field name="name">uellow.flash.sale.list</field>
+    <field name="model">uellow.flash.sale</field>
+    <field name="arch" type="xml">
+      <list string="Flash Sales"
+            decoration-success="state=='active'"
+            decoration-muted="state=='ended'">
+        <field name="name"/>
+        <field name="vendor_id"/>
+        <field name="discount_pct" string="Discount%"/>
+        <field name="start_datetime"/>
+        <field name="end_datetime"/>
+        <field name="units_sold"/>
+        <field name="revenue"/>
+        <field name="state" widget="badge"
+               decoration-success="state=='active'"
+               decoration-warning="state=='draft'"
+               decoration-muted="state in ('ended','cancelled')"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_flash_sale_form" model="ir.ui.view">
+    <field name="name">uellow.flash.sale.form</field>
+    <field name="model">uellow.flash.sale</field>
+    <field name="arch" type="xml">
+      <form string="Flash Sale">
+        <header>
+          <button name="action_activate" string="Activate"
+                  type="object" class="oe_highlight"
+                  invisible="state != 'draft'"/>
+          <button name="action_end" string="End Sale"
+                  type="object" invisible="state != 'active'"/>
+          <button name="action_cancel" string="Cancel"
+                  type="object" invisible="state not in ('draft','active')"/>
+          <field name="state" widget="statusbar"/>
+        </header>
+        <sheet>
+          <group>
+            <group>
+              <field name="name"/>
+              <field name="vendor_id"/>
+              <field name="discount_pct"/>
+              <field name="extra_commission"/>
+            </group>
+            <group>
+              <field name="start_datetime"/>
+              <field name="end_datetime"/>
+              <field name="max_quantity"/>
+              <field name="remaining_seconds" readonly="1" invisible="state != 'active'"/>
+            </group>
+          </group>
+          <field name="product_ids" widget="many2many_tags"/>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_flash_sales" model="ir.actions.act_window">
+    <field name="name">Flash Sales</field>
+    <field name="res_model">uellow.flash.sale</field>
+    <field name="view_mode">list,form</field>
+  </record>
+</odoo>

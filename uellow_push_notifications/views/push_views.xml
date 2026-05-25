@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_push_config_form" model="ir.ui.view">
+    <field name="name">uellow.push.config.form</field>
+    <field name="model">uellow.push.config</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <group string="FCM Config"><field name="active" widget="boolean_toggle"/><field name="fcm_server_key" password="True"/><field name="fcm_project_id"/></group>
+            <group string="Triggers">
+              <field name="send_order_confirm"/><field name="send_order_shipped"/>
+              <field name="send_flash_sale"/><field name="send_loyalty_milestone"/>
+              <field name="send_vendor_new_order"/><field name="send_vendor_low_stock"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="view_push_log_list" model="ir.ui.view">
+    <field name="name">uellow.push.log.list</field>
+    <field name="model">uellow.push.log</field>
+    <field name="arch" type="xml">
+      <list><field name="sent_at"/><field name="title"/><field name="trigger"/><field name="recipients"/><field name="status" widget="badge" decoration-success="status=='sent'" decoration-danger="status=='failed'"/></list>
+    </field>
+  </record>
+  <record id="action_push_config" model="ir.actions.act_window">
+    <field name="name">Push Settings</field><field name="res_model">uellow.push.config</field><field name="view_mode">form</field>
+  </record>
+  <record id="action_push_logs" model="ir.actions.act_window">
+    <field name="name">Push Logs</field><field name="res_model">uellow.push.log</field><field name="view_mode">list</field>
+  </record>
+</odoo>

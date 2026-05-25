@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sequences -->
+    <record id="seq_delivery_trip" model="ir.sequence">
+        <field name="name">Delivery Trip</field>
+        <field name="code">delivery.trip</field>
+        <field name="prefix">TRIP-</field>
+        <field name="padding">4</field>
+    </record>
+
+    <record id="seq_cash_remittance" model="ir.sequence">
+        <field name="name">Cash Remittance</field>
+        <field name="code">delivery.cash.remittance</field>
+        <field name="prefix">REM-</field>
+        <field name="padding">4</field>
+    </record>
+
+    <!-- Root Menu -->
+    <menuitem id="menu_delivery_portal_root"
+              name="Delivery"
+              sequence="50"/>
+
+    <menuitem id="menu_delivery_dashboard"
+              name="Dashboard"
+              parent="menu_delivery_portal_root"
+              action="action_delivery_dashboard_client"
+              sequence="1"/>
+
+    <menuitem id="menu_carrier_companies"
+              name="Carrier Companies"
+              parent="menu_delivery_portal_root"
+              action="action_carrier_company"
+              sequence="10"/>
+
+    <menuitem id="menu_delivery_drivers"
+              name="Drivers"
+              parent="menu_delivery_portal_root"
+              action="action_delivery_driver"
+              sequence="20"/>
+
+    <menuitem id="menu_delivery_trips"
+              name="Pickup Requests"
+              parent="menu_delivery_portal_root"
+              action="action_delivery_trip"
+              sequence="30"/>
+
+    <menuitem id="menu_all_delivery_orders"
+              name="All Delivery Orders"
+              parent="menu_delivery_portal_root"
+              action="action_all_delivery_orders"
+              sequence="40"/>
+
+    <menuitem id="menu_delivered_orders"
+              name="Delivered Orders"
+              parent="menu_delivery_portal_root"
+              action="action_delivered_orders"
+              sequence="45"/>
+
+    <menuitem id="menu_cash_remittances"
+              name="Financial Remitting"
+              parent="menu_delivery_portal_root"
+              action="action_delivery_cash_remittance"
+              sequence="50"/>
+
+    <menuitem id="menu_failed_returns"
+              name="Failed Returns"
+              parent="menu_delivery_portal_root"
+              action="action_failed_returns"
+              sequence="55"/>
+  <menuitem id="menu_carrier_pricing_rules"
+            name="Pricing Rules"
+            parent="delivery_carrier_portal.menu_delivery_portal_root"
+            action="delivery_carrier_portal.action_carrier_pricing_rules"
+            sequence="25"/>
+
+
+
+</odoo>

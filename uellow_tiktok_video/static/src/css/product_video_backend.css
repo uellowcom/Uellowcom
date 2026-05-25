@@ -1,0 +1,23 @@
+/* =====================================================================
+   Uellow TikTok Video Gallery - Backend CSS
+   ===================================================================== */
+
+/* Videos tab indicator */
+.o_field_one2many .uellow-video-list-hint {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+/* Video count badge in product list */
+.o_list_view .o_field_integer[name="video_count"] span {
+    display: inline-block;
+    background: #fe2c55;
+    color: #fff;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_product_rating_list" model="ir.ui.view">
+        <field name="name">product.rating.list</field>
+        <field name="model">rating.rating</field>
+        <field name="arch" type="xml">
+            <list string="Product Reviews" decoration-success="consumed==True" decoration-muted="consumed==False">
+                <field name="write_date" string="Date"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="rating" string="Rating"/>
+                <field name="feedback" string="Review" optional="show"/>
+                <field name="consumed" string="Published" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_rating_rating_form_pr" model="ir.ui.view">
+        <field name="name">rating.rating.form.pr</field>
+        <field name="model">rating.rating</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form><sheet><group>
+                <group string="Info"><field name="partner_id"/><field name="rating"/><field name="write_date"/><field name="consumed" string="Published"/></group>
+                <group string="Content"><field name="feedback" widget="text" nolabel="1"/></group>
+            </group></sheet></form>
+        </field>
+    </record>
+    <record id="view_product_rating_search" model="ir.ui.view">
+        <field name="name">product.rating.search</field>
+        <field name="model">rating.rating</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="partner_id"/>
+                <field name="feedback"/>
+                <filter string="Published" name="published" domain="[('consumed','=',True)]"/>
+                <filter string="Pending" name="pending" domain="[('consumed','=',False)]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_product_ratings" model="ir.actions.act_window">
+        <field name="name">Product Reviews</field>
+        <field name="res_model">rating.rating</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('res_model','=','product.template')]</field>
+        <field name="context">{'search_default_pending':1}</field>
+        <field name="search_view_id" ref="view_product_rating_search"/>
+    </record>
+    <menuitem id="menu_product_reviews_root" name="Reviews" sequence="51"/>
+    <menuitem id="menu_product_reviews" name="Product Reviews" parent="menu_product_reviews_root" action="action_product_ratings" sequence="10"/>
+</odoo>

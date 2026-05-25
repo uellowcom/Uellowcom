@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ══ ROOT TOP-LEVEL MENU ══════════════════════════════════════ -->
+  <menuitem id="menu_marketplace_main"
+            name="Marketplace"
+            sequence="51"
+            web_icon="uellow_multivendor,static/description/icon.png"/>
+
+  <!-- ══ DASHBOARD ════════════════════════════════════════════════ -->
+  <menuitem id="menu_marketplace_dashboard"
+            name="Dashboard"
+            parent="menu_marketplace_main"
+            action="action_marketplace_dashboard"
+            sequence="1"/>
+
+  <!-- ══ VENDORS ══════════════════════════════════════════════════ -->
+  <menuitem id="menu_marketplace_vendors_root"
+            name="Vendors"
+            parent="menu_marketplace_main"
+            sequence="10"/>
+
+  <menuitem id="menu_marketplace_vendors"
+            name="All Vendors"
+            parent="menu_marketplace_vendors_root"
+            action="action_vendors"
+            sequence="11"/>
+
+
+
+  <!-- ══ FINANCE ══════════════════════════════════════════════════ -->
+  <menuitem id="menu_marketplace_finance_root"
+            name="Finance"
+            parent="menu_marketplace_main"
+            sequence="20"/>
+
+  <menuitem id="menu_marketplace_commissions"
+            name="Commissions"
+            parent="menu_marketplace_finance_root"
+            action="action_vendor_commissions"
+            sequence="21"/>
+
+  <menuitem id="menu_marketplace_payouts"
+            name="Payouts"
+            parent="menu_marketplace_finance_root"
+            action="action_vendor_payouts"
+            sequence="22"/>
+
+  <menuitem id="menu_marketplace_wallets"
+            name="Wallets"
+            parent="menu_marketplace_finance_root"
+            action="action_vendor_wallets"
+            sequence="23"/>
+
+  <menuitem id="menu_marketplace_plans"
+            name="Commission Plans"
+            parent="menu_marketplace_finance_root"
+            action="action_commission_plans"
+            sequence="24"/>
+
+  <!-- ══ PROMOTIONS ═══════════════════════════════════════════════ -->
+  <menuitem id="menu_marketplace_promo_root"
+            name="Promotions"
+            parent="menu_marketplace_main"
+            sequence="30"/>
+
+  <menuitem id="menu_marketplace_flash"
+            name="Flash Sales"
+            parent="menu_marketplace_promo_root"
+            action="action_flash_sales"
+            sequence="31"/>
+
+  <!-- ══ CONFIGURATION ════════════════════════════════════════════ -->
+  <menuitem id="menu_marketplace_config_root"
+            name="Configuration"
+            parent="menu_marketplace_main"
+            sequence="90"
+            groups="uellow_multivendor.group_marketplace_manager"/>
+
+
+  <!-- ══ CONFIGURATION ITEMS ═══════════════════════════════════════ -->
+  <menuitem id="menu_marketplace_commission_plans_config"
+            name="Commission Plans"
+            parent="menu_marketplace_config_root"
+            action="action_commission_plans"
+            sequence="91"
+            groups="uellow_multivendor.group_marketplace_manager"/>
+
+  <menuitem id="menu_marketplace_vendor_settings_config"
+            name="Vendor Settings"
+            parent="menu_marketplace_config_root"
+            action="action_vendor_settings"
+            sequence="92"
+            groups="uellow_multivendor.group_marketplace_manager"/>
+
+</odoo>

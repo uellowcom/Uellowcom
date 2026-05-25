@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_supplier_list" model="ir.ui.view">
+    <field name="name">uellow.supplier.profile.list</field>
+    <field name="model">uellow.supplier.profile</field>
+    <field name="arch" type="xml">
+      <list><field name="partner_id"/><field name="is_dropship" widget="boolean"/>
+        <field name="health_score"/><field name="on_time_rate"/>
+        <field name="quality_rate"/><field name="total_orders"/></list>
+    </field>
+  </record>
+  <record id="action_suppliers" model="ir.actions.act_window">
+    <field name="name">Suppliers</field><field name="res_model">uellow.supplier.profile</field><field name="view_mode">list,form</field>
+  </record>
+</odoo>

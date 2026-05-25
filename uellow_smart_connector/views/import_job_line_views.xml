@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_import_job_line_form" model="ir.ui.view">
+    <field name="name">uellow.import.job.line.form</field>
+    <field name="model">uellow.import.job.line</field>
+    <field name="arch" type="xml">
+      <form string="Import Line">
+        <header>
+          <button name="action_approve" string="Approve" type="object"
+                  class="oe_highlight" invisible="line_state != 'pending'"/>
+          <button name="action_reject" string="Reject" type="object"
+                  invisible="line_state != 'pending'"/>
+          <button name="action_apply" string="Apply to Catalog" type="object"
+                  class="oe_highlight" invisible="line_state != 'approved'"/>
+          <field name="line_state" widget="statusbar"
+                 statusbar_visible="pending,approved,applied"/>
+        </header>
+        <sheet>
+          <group>
+            <group string="Product Names">
+              <field name="name_en" string="Name (English)"/>
+              <field name="name_ar" string="Name (Arabic)"/>
+              <field name="source_sku" string="Source SKU"/>
+              <field name="ai_enriched" readonly="1" string="AI Enriched"/>
+            </group>
+            <group string="Pricing &amp; Stock">
+              <field name="product_action" string="Action"/>
+              <field name="existing_product_id" string="Existing Product"/>
+              <field name="match_score" string="Match Score (%)"/>
+              <field name="new_price" string="New Price"/>
+              <field name="old_price" readonly="1" string="Current Price"/>
+              <field name="price_diff_pct" readonly="1" string="Price Change (%)"/>
+              <field name="new_qty" string="New Quantity"/>
+            </group>
+          </group>
+          <group>
+            <group string="Description (Arabic)">
+              <field name="description_ar" nolabel="1"/>
+            </group>
+            <group string="Description (English)">
+              <field name="description_en" nolabel="1"/>
+            </group>
+          </group>
+          <group string="Rejection Details" invisible="line_state != 'rejected'">
+            <field name="reject_reason" string="Reason"/>
+            <field name="reject_note" string="Note"/>
+          </group>
+          <group string="Warning" invisible="not has_warning">
+            <field name="warning_reason" readonly="1" string="Warning Reason"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+</odoo>

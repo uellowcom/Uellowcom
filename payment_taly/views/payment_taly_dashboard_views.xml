@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Main Taly Dashboard Form View -->
+    <record id="view_taly_dashboard_form" model="ir.ui.view">
+        <field name="name">payment.provider.taly.dashboard</field>
+        <field name="model">payment.provider</field>
+        <field name="arch" type="xml">
+            <form string="Taly Dashboard">
+                <sheet>
+                    <!-- Header Banner -->
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 mb-4"
+                         style="background:linear-gradient(135deg,#7B2FF7 0%,#00C9A7 100%);border-radius:12px;color:white;">
+                        <div>
+                            <h2 class="mb-1" style="color:white;">
+                                <i class="fa fa-credit-card me-2"/>Taly Payment Dashboard
+                            </h2>
+                            <span style="opacity:.8;">لوحة تحكم بوابة الدفع بالأقساط</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button name="action_test_connection"
+                                    string="🔌 Test API"
+                                    type="object"
+                                    class="btn btn-light btn-sm"/>
+                            <button name="action_view_taly_logs"
+                                    string="📜 API Logs"
+                                    type="object"
+                                    class="btn btn-light btn-sm"/>
+                        </div>
+                    </div>
+
+                    <!-- KPI Cards -->
+                    <div class="row">
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center p-3 rounded"
+                                 style="background:#f0fdf4;border-left:4px solid #22c55e;">
+                                <div style="font-size:2rem;font-weight:700;color:#16a34a;">
+                                    <field name="taly_tx_done_count"/>
+                                </div>
+                                <div class="text-muted">✅ Successful</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center p-3 rounded"
+                                 style="background:#fefce8;border-left:4px solid #eab308;">
+                                <div style="font-size:2rem;font-weight:700;color:#ca8a04;">
+                                    <field name="taly_tx_pending_count"/>
+                                </div>
+                                <div class="text-muted">⏳ Pending</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center p-3 rounded"
+                                 style="background:#fef2f2;border-left:4px solid #ef4444;">
+                                <div style="font-size:2rem;font-weight:700;color:#dc2626;">
+                                    <field name="taly_tx_cancel_count"/>
+                                </div>
+                                <div class="text-muted">❌ Cancelled</div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 mb-3">
+                            <div class="text-center p-3 rounded"
+                                 style="background:#eff6ff;border-left:4px solid #3b82f6;">
+                                <div style="font-size:1.4rem;font-weight:700;color:#1d4ed8;">
+                                    <field name="taly_total_amount" widget="monetary"/>
+                                </div>
+                                <div class="text-muted">💰 Total Processed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="d-flex gap-2 flex-wrap mb-4">
+                        <button name="action_view_taly_transactions"
+                                string="📋 All Transactions"
+                                type="object"
+                                class="btn btn-primary"/>
+                        <button name="action_view_taly_logs"
+                                string="📜 API Logs"
+                                type="object"
+                                class="btn btn-secondary"/>
+                    </div>
+
+                    <!-- Configuration Summary -->
+                    <group string="⚙️ Current Configuration" col="4">
+                        <field name="state"/>
+                        <field name="taly_installment_type"/>
+                        <field name="taly_widget_lang"/>
+                        <field name="taly_min_order_amount"/>
+                        <field name="taly_max_order_amount"/>
+                        <field name="taly_show_widget_product"/>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Taly Dashboard Action -->
+    <record id="action_taly_dashboard" model="ir.actions.act_window">
+        <field name="name">Taly Dashboard</field>
+        <field name="res_model">payment.provider</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('code', '=', 'taly')]</field>
+    </record>
+
+</odoo>

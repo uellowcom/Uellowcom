@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════
+         apple.login.config form view — fully standalone
+         NO relation to res.config.settings at all
+         ══════════════════════════════════════════════════ -->
+
+    <record id="view_apple_login_config_form" model="ir.ui.view">
+        <field name="name">apple.login.config.form</field>
+        <field name="model">apple.login.config</field>
+        <field name="arch" type="xml">
+            <form string="Sign in with Apple">
+                <header>
+                    <button string="Save Settings" name="action_save"
+                            type="object" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 814 1000"
+                                 style="width:28px;height:28px;fill:#000;vertical-align:middle;margin-right:8px;">
+                                <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 405.6 0 280.9 0 162.1c0-114.2 75.6-174.5 149.1-174.5 79.4 0 131.2 53.8 176.5 53.8 43.7 0 102.8-57.1 191.4-57.1 30.8 0 108.2 2.6 168.7 80.1zm-255.6-81.2c-39.5-52.5-95.7-85.5-157.3-85.5-7.1 0-14.2.6-21.3 1.9 2.6 52.5 23.3 105 55.7 141.9 30.8 33.7 80.1 61.6 135.7 61.6 6.5 0 13-.6 19.5-1.9-3.2-44.9-14.8-88.9-32.3-118z"/>
+                            </svg>
+                            Sign in with Apple — Settings
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="General">
+                            <field name="enabled"/>
+                        </group>
+                    </group>
+
+                    <group invisible="not enabled">
+                        <group string="Apple Developer Credentials">
+                            <field name="client_id"/>
+                            <field name="team_id"/>
+                            <field name="key_id"/>
+                        </group>
+                        <group string="Private Key">
+                            <field name="private_key" nolabel="1"
+                                   style="font-family:monospace;font-size:11px;min-height:120px;"/>
+                        </group>
+                    </group>
+
+                    <group invisible="not enabled">
+                        <div class="alert alert-info" role="alert" style="margin:16px 0;">
+                            <strong>Redirect URI</strong> — Add this in Apple Developer Portal:<br/>
+                            <code style="font-size:13px;">https://uellow.com/apple/login/callback</code>
+                        </div>
+                    </group>
+
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- List view (needed for act_window) -->
+    <record id="view_apple_login_config_list" model="ir.ui.view">
+        <field name="name">apple.login.config.list</field>
+        <field name="model">apple.login.config</field>
+        <field name="arch" type="xml">
+            <list string="Apple Login Config">
+                <field name="name"/>
+                <field name="enabled"/>
+                <field name="client_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_apple_login_config" model="ir.actions.act_window">
+        <field name="name">Sign in with Apple</field>
+        <field name="res_model">apple.login.config</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_apple_login_config_form"/>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Menus -->
+    <menuitem id="menu_apple_login_root"
+              name="Apple Login"
+              sequence="99"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_apple_login_config"
+              name="Settings"
+              parent="menu_apple_login_root"
+              action="action_apple_login_config"
+              sequence="1"
+              groups="base.group_system"/>
+
+</odoo>

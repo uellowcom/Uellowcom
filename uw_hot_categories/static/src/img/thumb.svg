@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
+  <rect width="200" height="120" fill="#f8f9fa" rx="8"/>
+  <!-- Header -->
+  <text x="10" y="16" font-family="Arial" font-size="9" font-weight="900" fill="#1a202c">H🔥T CATEGORIES</text>
+  <rect x="155" y="6" width="38" height="13" rx="6" fill="#f7d117"/>
+  <text x="161" y="16" font-family="Arial" font-size="7" font-weight="700" fill="#000">More ❯</text>
+  <!-- Large blue card -->
+  <rect x="6" y="22" width="58" height="93" rx="8" fill="url(#bg1)"/>
+  <text x="35" y="38" font-family="Arial" font-size="6" font-weight="800" fill="#fff" text-anchor="middle">Mobile</text>
+  <rect x="12" y="44" width="46" height="10" rx="4" fill="rgba(255,215,0,0.9)"/>
+  <text x="35" y="52" font-family="Arial" font-size="5" font-weight="700" fill="#000" text-anchor="middle">Shop Now</text>
+  <rect x="14" y="58" width="42" height="52" rx="6" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/>
+  <rect x="22" y="66" width="26" height="36" rx="3" fill="rgba(255,255,255,0.18)"/>
+  <!-- Sub 1 -->
+  <rect x="70" y="22" width="39" height="45" rx="7" fill="#e0f2fe"/>
+  <text x="89" y="33" font-family="Arial" font-size="5" font-weight="700" fill="#1a202c" text-anchor="middle">EarBuds</text>
+  <rect x="73" y="37" width="11" height="11" rx="3" fill="#fff"/>
+  <rect x="86" y="37" width="11" height="11" rx="3" fill="#fff"/>
+  <rect x="99" y="37" width="11" height="11" rx="3" fill="#fff"/>
+  <!-- Sub 2 -->
+  <rect x="114" y="22" width="39" height="45" rx="7" fill="#dcfce7"/>
+  <text x="133" y="33" font-family="Arial" font-size="5" font-weight="700" fill="#1a202c" text-anchor="middle">Chargers</text>
+  <rect x="117" y="37" width="11" height="11" rx="3" fill="#fff"/>
+  <rect x="130" y="37" width="11" height="11" rx="3" fill="#fff"/>
+  <rect x="143" y="37" width="11" height="11" rx="3" fill="#fff"/>
+  <!-- Sub 3 -->
+  <rect x="158" y="22" width="36" height="45" rx="7" fill="#f3e8ff"/>
+  <text x="176" y="33" font-family="Arial" font-size="5" font-weight="700" fill="#1a202c" text-anchor="middle">Speakers</text>
+  <rect x="161" y="37" width="9" height="9" rx="2" fill="#fff"/>
+  <rect x="172" y="37" width="9" height="9" rx="2" fill="#fff"/>
+  <rect x="183" y="37" width="9" height="9" rx="2" fill="#fff"/>
+  <!-- Sub 4 -->
+  <rect x="70" y="72" width="39" height="43" rx="7" fill="#fee2e2"/>
+  <text x="89" y="82" font-family="Arial" font-size="5" font-weight="700" fill="#1a202c" text-anchor="middle">Kitchen</text>
+  <rect x="73" y="86" width="11" height="11" rx="3" fill="#fff"/>
+  <rect x="86" y="86" width="11" height="11" rx="3" fill="#fff"/>
+  <rect x="99" y="86" width="11" height="11" rx="3" fill="#fff"/>
+  <!-- Sub 5 -->
+  <rect x="114" y="72" width="39" height="43" rx="7" fill="#e0e7ff"/>
+  <text x="133" y="82" font-family="Arial" font-size="5" font-weight="700" fill="#1a202c" text-anchor="middle">Bags</text>
+  <rect x="117" y="86" width="11" height="11" rx="3" fill="#fff"/>
+  <rect x="130" y="86" width="11" height="11" rx="3" fill="#fff"/>
+  <rect x="143" y="86" width="11" height="11" rx="3" fill="#fff"/>
+  <!-- Sub 6 -->
+  <rect x="158" y="72" width="36" height="43" rx="7" fill="#fef9c3"/>
+  <text x="176" y="82" font-family="Arial" font-size="5" font-weight="700" fill="#1a202c" text-anchor="middle">Sports</text>
+  <rect x="161" y="86" width="9" height="9" rx="2" fill="#fff"/>
+  <rect x="172" y="86" width="9" height="9" rx="2" fill="#fff"/>
+  <rect x="183" y="86" width="9" height="9" rx="2" fill="#fff"/>
+  <defs>
+    <linearGradient id="bg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a365d"/>
+      <stop offset="100%" style="stop-color:#2b6cb0"/>
+    </linearGradient>
+  </defs>
+</svg>

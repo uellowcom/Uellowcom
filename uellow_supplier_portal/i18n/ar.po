@@ -1,0 +1,36 @@
+# Translation: uellow_supplier_portal
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0?0:n==1?1:n==2?2:n%100>=3&&n%100<=10?3:n%100>=11&&n%100<=99?4:5;\n"
+#. module: uellow_supplier_portal
+#: model:ir.model,name:uellow_supplier_portal.model_uellow_supplier_profile
+msgid "Supplier Profile"
+msgstr "ملف المورد"
+
+#. module: uellow_supplier_portal
+#: model:ir.model.fields,field_description:uellow_supplier_portal.field_uellow_supplier_profile__health_score
+msgid "Health Score"
+msgstr "نقاط الأداء"
+
+#. module: uellow_supplier_portal
+#: model:ir.model.fields,field_description:uellow_supplier_portal.field_uellow_supplier_profile__on_time_rate
+msgid "On-time Delivery Rate (%)"
+msgstr "معدل التسليم في الوقت (%)"
+
+#. module: uellow_supplier_portal
+#: model:ir.model.fields,field_description:uellow_supplier_portal.field_uellow_supplier_profile__is_dropship
+msgid "Dropship Supplier"
+msgstr "مورد Dropshipping"
+
+#. module: uellow_supplier_portal
+#: model:ir.model.fields,field_description:uellow_supplier_portal.field_purchase_order__tracking_number
+msgid "Tracking Number"
+msgstr "رقم التتبع"
+
+#. module: uellow_supplier_portal
+#: model_terms:ir.ui.menu,name:uellow_supplier_portal.menu_suppliers
+msgid "Suppliers"
+msgstr "الموردون"

@@ -71,7 +71,7 @@ class PaymentTransaction(models.Model):
                 raise ValidationError(_('Invalid response from the server'))
 
     def get_payload_data(self):
-        base_url = self.provider_id.get_base_url()
+        base_url = "https://www.uellow.com/"
         payload = {
             "order": {
                 "id": self.reference,
@@ -104,7 +104,7 @@ class PaymentTransaction(models.Model):
         res = super()._get_specific_rendering_values(processing_values)
         if self.provider_code != 'upayments':
             return res
-        base_url = self.provider_id.get_base_url()
+        base_url = "https://www.uellow.com/"
         payload = self.get_payload_data()
 
         if self.provider_id.api_type == 'white_label':
@@ -410,3 +410,6 @@ class PaymentTransaction(models.Model):
                 }
         else:
             raise ValidationError(_('Refund order ID is not valid.'))
+# Debug patch - will be removed
+import logging as _logging
+_upay_logger = _logging.getLogger('uellow.upayments.debug')

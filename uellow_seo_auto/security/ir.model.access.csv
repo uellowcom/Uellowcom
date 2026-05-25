@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_seo_config,seo.config,model_uellow_seo_config,base.group_system,1,1,1,1
+access_seo_product_user,seo.product.user,model_uellow_seo_product,base.group_user,1,0,0,0
+access_seo_product_admin,seo.product.admin,model_uellow_seo_product,base.group_system,1,1,1,1

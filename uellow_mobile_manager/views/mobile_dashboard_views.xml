@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<template id="mobile_dashboard_template" name="Mobile App Dashboard">
+    <t t-call="web.html_container">
+        <div class="o_action" style="padding: 0;">
+            <div id="mobile_dashboard_root"/>
+        </div>
+    </t>
+</template>
+
+<record id="mobile_dashboard_client_action" model="ir.actions.client">
+    <field name="name">App Dashboard</field>
+    <field name="tag">mobile_manager.Dashboard</field>
+</record>
+
+</odoo>

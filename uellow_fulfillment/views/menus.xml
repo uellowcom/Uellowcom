@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Root menu under Inventory -->
+    <menuitem id="menu_fbu_root"
+              name="Fulfillment by Uellow"
+              parent="stock.menu_stock_root"
+              sequence="99"/>
+
+    <menuitem id="menu_fbu_restock"
+              name="Restock Requests"
+              parent="menu_fbu_root"
+              action="action_restock_request"
+              sequence="10"/>
+
+    <menuitem id="menu_fbu_vendor_locations"
+              name="Vendor Warehouses"
+              parent="menu_fbu_root"
+              action="action_vendor_location"
+              sequence="20"
+              groups="uellow_fulfillment.group_fbu_manager"/>
+
+    <menuitem id="menu_fbu_product_state"
+              name="Products FBU Status"
+              parent="menu_fbu_root"
+              action="action_product_fbu_state"
+              sequence="30"/>
+
+</odoo>

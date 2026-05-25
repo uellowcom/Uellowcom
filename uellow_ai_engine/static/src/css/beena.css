@@ -1,0 +1,668 @@
+/* ═══════════════════════════════════════════
+   Uellow AI Engine — Beena CSS
+   ═══════════════════════════════════════════ */
+
+:root {
+    --beena-yellow:     #F5C320;
+    --beena-yellow-dk:  #C8980A;
+    --beena-dark:       #1A1A1A;
+    --beena-radius:     16px;
+    --beena-shadow:     0 4px 20px rgba(0,0,0,.12);
+}
+
+/* ── Float Button ─────────────────────────────── */
+#beena-float {
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+#beena-float-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--beena-yellow);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform .2s;
+    box-shadow: var(--beena-shadow);
+}
+
+#beena-float-btn:hover { transform: scale(1.08); }
+#beena-float-btn:active { transform: scale(.95); }
+
+#beena-float-label {
+    background: var(--beena-yellow);
+    color: var(--beena-dark);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .3s, transform .3s;
+    pointer-events: none;
+    font-family: inherit;
+}
+
+#beena-float:hover #beena-float-label,
+#beena-float.nudge #beena-float-label {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#beena-float.nudge #beena-float-btn {
+    animation: beena-pulse 1.2s ease-in-out 3;
+}
+
+@keyframes beena-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245,195,32,.6); }
+    50%       { box-shadow: 0 0 0 14px rgba(245,195,32,0); }
+}
+
+/* ── Notification badge ───────────────────────── */
+#beena-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #E24B4A;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #fff;
+    display: none;
+}
+
+/* ── Chat Dialog ──────────────────────────────── */
+#beena-chat {
+    position: fixed;
+    bottom: 100px;
+    left: 24px;
+    width: 360px;
+    max-height: 580px;
+    background: #fff;
+    border-radius: var(--beena-radius);
+    box-shadow: var(--beena-shadow);
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform-origin: bottom left;
+    transition: opacity .25s, transform .25s;
+    opacity: 0;
+    transform: scale(.92) translateY(10px);
+    pointer-events: none;
+    border: 1px solid rgba(0,0,0,.08);
+    font-family: inherit;
+}
+
+#beena-chat.open {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: all;
+}
+
+/* RTL layout for Arabic */
+body[dir="rtl"] #beena-float,
+body[dir="rtl"] #beena-chat {
+    left: auto;
+    right: 24px;
+    transform-origin: bottom right;
+}
+
+/* ── Chat Header ──────────────────────────────── */
+#beena-header {
+    background: var(--beena-yellow);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+#beena-avatar-wrap {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    position: relative;
+}
+
+#beena-avatar-wrap svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+#beena-header-info { flex: 1; }
+
+#beena-header-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--beena-dark);
+    line-height: 1;
+}
+
+#beena-header-status {
+    font-size: 11px;
+    color: #854F0B;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#beena-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #1D9E75;
+    flex-shrink: 0;
+}
+
+#beena-close {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #854F0B;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    opacity: .7;
+    transition: opacity .2s;
+}
+#beena-close:hover { opacity: 1; }
+
+/* ── Product Context Bar ──────────────────────── */
+#beena-context {
+    background: #FFF8E1;
+    border-bottom: 1px solid rgba(245,195,32,.3);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+#beena-context-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #f0e9c8;
+}
+
+#beena-context-name {
+    font-weight: 700;
+    color: #633806;
+    line-height: 1.2;
+}
+
+#beena-context-price {
+    font-size: 11px;
+    color: #854F0B;
+    margin-top: 2px;
+}
+
+/* ── Messages Area ────────────────────────────── */
+#beena-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    scroll-behavior: smooth;
+}
+
+#beena-messages::-webkit-scrollbar { width: 4px; }
+#beena-messages::-webkit-scrollbar-track { background: transparent; }
+#beena-messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,.12); border-radius: 2px; }
+
+/* ── Message Bubbles ──────────────────────────── */
+.beena-msg {
+    max-width: 88%;
+    padding: 9px 12px;
+    font-size: 13px;
+    line-height: 1.55;
+    animation: beena-msg-in .2s ease;
+}
+
+@keyframes beena-msg-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.beena-msg-ai {
+    background: #F5F4F2;
+    border-radius: 0 10px 10px 10px;
+    color: #1A1A1A;
+    align-self: flex-start;
+}
+
+body[dir="rtl"] .beena-msg-ai {
+    border-radius: 10px 0 10px 10px;
+    align-self: flex-end;
+}
+
+.beena-msg-user {
+    background: var(--beena-yellow);
+    border-radius: 10px 0 10px 10px;
+    color: var(--beena-dark);
+    align-self: flex-end;
+    font-weight: 500;
+}
+
+body[dir="rtl"] .beena-msg-user {
+    border-radius: 0 10px 10px 10px;
+    align-self: flex-start;
+}
+
+/* ── Typing Indicator ─────────────────────────── */
+.beena-typing {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 10px 14px;
+    background: #F5F4F2;
+    border-radius: 0 10px 10px 10px;
+    align-self: flex-start;
+    width: fit-content;
+}
+
+.beena-typing span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--beena-yellow-dk);
+    animation: beena-bounce .9s infinite;
+}
+
+.beena-typing span:nth-child(2) { animation-delay: .15s; }
+.beena-typing span:nth-child(3) { animation-delay: .3s; }
+
+@keyframes beena-bounce {
+    0%, 80%, 100% { transform: scale(.7); opacity: .5; }
+    40%            { transform: scale(1.1); opacity: 1; }
+}
+
+/* ── Quick Chips ──────────────────────────────── */
+.beena-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+}
+
+.beena-chip {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--beena-yellow-dk);
+    color: #633806;
+    background: #FFF8E1;
+    cursor: pointer;
+    transition: background .15s;
+    font-family: inherit;
+}
+
+.beena-chip:hover { background: var(--beena-yellow); }
+
+/* ── Product Cards in Chat ────────────────────── */
+.beena-product-card {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: #F9F8F5;
+    border-radius: 8px;
+    padding: 8px;
+    margin-top: 5px;
+}
+
+.beena-product-card img {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.beena-product-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1A1A1A;
+}
+
+.beena-product-price {
+    font-size: 11px;
+    color: #633806;
+    font-weight: 700;
+}
+
+.beena-buy-btn {
+    margin-right: auto;
+    background: var(--beena-yellow);
+    color: var(--beena-dark);
+    border: none;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity .15s;
+    flex-shrink: 0;
+}
+
+.beena-buy-btn:hover { opacity: .85; }
+
+/* ── Order Summary Card ───────────────────────── */
+.beena-order-card {
+    background: #F9F8F5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.beena-order-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+    color: #5F5E5A;
+}
+
+.beena-order-total {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 13px;
+    color: #1A1A1A;
+    border-top: 1px solid rgba(0,0,0,.08);
+    padding-top: 6px;
+    margin-top: 4px;
+}
+
+.beena-pay-btn {
+    width: 100%;
+    padding: 9px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+    font-family: inherit;
+    transition: opacity .15s;
+}
+
+.beena-pay-upay {
+    background: var(--beena-yellow);
+    color: var(--beena-dark);
+}
+
+.beena-pay-taly {
+    background: #fff;
+    color: #1A1A1A;
+    border: 1px solid rgba(0,0,0,.12) !important;
+}
+
+.beena-pay-btn:hover { opacity: .85; }
+
+/* ── Input Row ────────────────────────────────── */
+#beena-input-row {
+    padding: 8px 12px;
+    border-top: 1px solid rgba(0,0,0,.07);
+    display: flex;
+    gap: 7px;
+    align-items: center;
+    flex-shrink: 0;
+    background: #fff;
+}
+
+#beena-input {
+    flex: 1;
+    border: 1px solid rgba(0,0,0,.1);
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    outline: none;
+    background: #F5F4F2;
+    font-family: inherit;
+    color: #1A1A1A;
+    transition: border-color .2s;
+    direction: rtl;
+    -webkit-text-size-adjust: 100%;
+    touch-action: manipulation;
+}
+
+@media (min-width: 769px) {
+    #beena-input { font-size: 13px; }
+}
+
+#beena-input:focus { border-color: var(--beena-yellow); }
+
+#beena-input::placeholder { color: #888780; }
+
+#beena-cam-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #FFF8E1;
+    border: 1px solid var(--beena-yellow-dk);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 15px;
+    color: #854F0B;
+    transition: background .15s;
+}
+
+#beena-cam-btn:hover { background: var(--beena-yellow); }
+
+#beena-send-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--beena-yellow);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 16px;
+    color: var(--beena-dark);
+    transition: transform .15s;
+}
+
+#beena-send-btn:hover  { transform: scale(1.08); }
+#beena-send-btn:active { transform: scale(.93); }
+
+/* ── Buy with AI Button ───────────────────────── */
+.beena-buy-ai-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--beena-yellow);
+    color: var(--beena-dark);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity .2s, transform .15s;
+}
+
+.beena-buy-ai-btn:hover  { opacity: .9; transform: translateY(-1px); }
+.beena-buy-ai-btn:active { transform: translateY(0); }
+
+/* ── Beena SVG Animations ─────────────────────── */
+
+/* idle: gentle float */
+.beena-state-idle .beena-body-group {
+    animation: beena-float 2.5s ease-in-out infinite;
+}
+
+/* talking: quick side-shake */
+.beena-state-talking .beena-body-group {
+    animation: beena-shake 0.3s ease-in-out infinite;
+}
+
+/* thinking: slow tilt */
+.beena-state-thinking .beena-body-group {
+    animation: beena-tilt 1.8s ease-in-out infinite;
+}
+
+/* happy: jump! */
+.beena-state-happy .beena-body-group {
+    animation: beena-jump 0.5s ease-in-out infinite;
+}
+
+/* excited: fast bounce */
+.beena-state-excited .beena-body-group {
+    animation: beena-excited 0.4s ease-in-out infinite;
+}
+
+/* sad: droop */
+.beena-state-sad .beena-body-group {
+    animation: beena-droop 3s ease-in-out infinite;
+}
+
+/* Wing flap speeds */
+.beena-state-idle .beena-wing     { animation: beena-wing-flap .9s ease-in-out infinite; }
+.beena-state-talking .beena-wing  { animation: beena-wing-flap .25s ease-in-out infinite; }
+.beena-state-thinking .beena-wing { animation: beena-wing-flap 1.3s ease-in-out infinite; }
+.beena-state-happy .beena-wing    { animation: beena-wing-flap .18s ease-in-out infinite; }
+.beena-state-excited .beena-wing  { animation: beena-wing-flap .14s ease-in-out infinite; }
+.beena-state-sad .beena-wing      { animation: beena-wing-flap 2.2s ease-in-out infinite; }
+
+@keyframes beena-float   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+@keyframes beena-shake   { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-2px)} 75%{transform:translateX(2px)} }
+@keyframes beena-tilt    { 0%,100%{transform:rotate(0deg)} 30%{transform:rotate(4deg)} 70%{transform:rotate(-2deg)} }
+@keyframes beena-jump    { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-8px)} }
+@keyframes beena-excited { 0%,100%{transform:translateY(0) rotate(0)} 25%{transform:translateY(-7px) rotate(-3deg)} 75%{transform:translateY(-5px) rotate(3deg)} }
+@keyframes beena-droop   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(3px)} }
+@keyframes beena-wing-flap {
+    0%,100% { transform: scaleY(1); }
+    50%     { transform: scaleY(.55); }
+}
+
+/* Special effects */
+.beena-state-happy .beena-sparkle   { animation: beena-sparkle-pop .5s ease-in-out infinite; }
+.beena-state-excited .beena-sparkle { animation: beena-sparkle-pop .4s ease-in-out infinite alternate; }
+@keyframes beena-sparkle-pop { 0%,100%{opacity:.3;transform:scale(.7)} 50%{opacity:1;transform:scale(1.1)} }
+
+.beena-state-thinking .beena-question { animation: beena-blink 1.8s ease-in-out infinite; }
+@keyframes beena-blink { 0%,100%{opacity:0} 40%,60%{opacity:1} }
+
+/* ── Mobile ───────────────────────────────────── */
+@media (max-width: 480px) {
+    #beena-chat {
+        left: 10px;
+        right: 10px;
+        width: auto;
+        bottom: 90px;
+    }
+
+    body[dir="rtl"] #beena-chat {
+        left: 10px;
+        right: 10px;
+    }
+}
+
+/* ── COD Button ───────────────────────────────── */
+.beena-pay-cod {
+    background: #fff;
+    color: #1A1A1A;
+    border: 1.5px solid #1A1A1A !important;
+    font-weight: 600;
+}
+
+.beena-pay-cod:hover {
+    background: #f5f4f2;
+    opacity: 1;
+}
+
+/* ── Voice Button ─────────────────────────────── */
+#beena-voice-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--color-background-secondary, #F5F4F2);
+    border: 1px solid rgba(0,0,0,.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-size: 15px;
+    transition: background .15s, border-color .15s;
+}
+
+#beena-voice-btn:hover {
+    background: #FFF8E1;
+    border-color: var(--beena-yellow, #F5C320);
+}
+
+#beena-voice-btn.listening {
+    background: #FCEBEB;
+    border-color: #E24B4A;
+    animation: beena-pulse-red 1s ease-in-out infinite;
+}
+
+@keyframes beena-pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(226,75,74,.4); }
+    50%       { box-shadow: 0 0 0 8px rgba(226,75,74,0); }
+}
+
+/* ── Visual Search preview ────────────────────── */
+.beena-img-preview {
+    max-width: 140px;
+    max-height: 140px;
+    border-radius: 8px;
+    display: block;
+    margin-bottom: 4px;
+    border: 1px solid rgba(0,0,0,.08);
+}
+
+/* ── Mobile Input Fix ─────────────────────── */
+@media (max-width: 768px) {
+    #beena-input-row {
+        min-height: 48px;
+        cursor: text;
+    }
+    #beena-input {
+        font-size: 16px !important; /* Prevents iOS zoom */
+        min-height: 44px;
+        padding: 10px 12px;
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 22px;
+    }
+    #beena-input:focus {
+        outline: none;
+        border-color: #F5C320;
+    }
+}

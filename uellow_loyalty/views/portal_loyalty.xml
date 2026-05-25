@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="portal_loyalty" name="Loyalty Account">
+  <t t-call="website.layout">
+    <div class="container py-4" style="max-width:800px">
+      <h2 class="fw-bold mb-4">My Loyalty Points</h2>
+      <div class="row g-3 mb-4">
+        <div class="col-md-4">
+          <div class="card text-center border-0 shadow-sm p-3">
+            <div class="fs-1 fw-bold text-primary"><t t-esc="account.balance"/></div>
+            <div class="text-muted small">Points Balance</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center border-0 shadow-sm p-3">
+            <div class="fs-3 fw-bold"><t t-esc="account.tier"/></div>
+            <div class="text-muted small">Your Tier</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card text-center border-0 shadow-sm p-3">
+            <div class="fs-3 fw-bold text-success"><t t-esc="account.total_earned"/></div>
+            <div class="text-muted small">Total Earned</div>
+          </div>
+        </div>
+      </div>
+      <div class="card shadow-sm">
+        <div class="card-header fw-bold">Recent Transactions</div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Date</th><th>Type</th><th>Points</th><th>Reason</th></tr>
+            </thead>
+            <tbody>
+              <t t-foreach="transactions" t-as="txn">
+                <tr>
+                  <td><t t-esc="txn.date"/></td>
+                  <td>
+                    <span t-attf-class="badge #{txn.tx_type == 'earn' and 'bg-success' or 'bg-warning'}">
+                      <t t-esc="txn.tx_type"/>
+                    </span>
+                  </td>
+                  <td><t t-esc="txn.points"/></td>
+                  <td><t t-esc="txn.reason or '-'"/></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </t>
+</template>
+</odoo>

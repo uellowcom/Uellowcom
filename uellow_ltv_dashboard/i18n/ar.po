@@ -1,0 +1,56 @@
+# Translation: uellow_ltv_dashboard
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0?0:n==1?1:n==2?2:n%100>=3&&n%100<=10?3:n%100>=11&&n%100<=99?4:5;\n"
+#. module: uellow_ltv_dashboard
+#: model:ir.model,name:uellow_ltv_dashboard.model_uellow_customer_ltv
+msgid "Customer Lifetime Value"
+msgstr "قيمة العميل على المدى الطويل"
+
+#. module: uellow_ltv_dashboard
+#: model:ir.model.fields.selection,name:uellow_ltv_dashboard.selection__uellow_customer_ltv__segment__vip
+msgid "VIP"
+msgstr "VIP — عميل مميز"
+
+#. module: uellow_ltv_dashboard
+#: model:ir.model.fields.selection,name:uellow_ltv_dashboard.selection__uellow_customer_ltv__segment__active
+msgid "Active"
+msgstr "نشط"
+
+#. module: uellow_ltv_dashboard
+#: model:ir.model.fields.selection,name:uellow_ltv_dashboard.selection__uellow_customer_ltv__segment__at_risk
+msgid "At Risk"
+msgstr "معرّض للمغادرة"
+
+#. module: uellow_ltv_dashboard
+#: model:ir.model.fields.selection,name:uellow_ltv_dashboard.selection__uellow_customer_ltv__segment__dormant
+msgid "Dormant"
+msgstr "خامل"
+
+#. module: uellow_ltv_dashboard
+#: model:ir.model.fields.selection,name:uellow_ltv_dashboard.selection__uellow_customer_ltv__segment__lost
+msgid "Lost"
+msgstr "فقد"
+
+#. module: uellow_ltv_dashboard
+#: model:ir.model.fields,field_description:uellow_ltv_dashboard.field_uellow_customer_ltv__ltv_score
+msgid "LTV Score"
+msgstr "نقاط القيمة"
+
+#. module: uellow_ltv_dashboard
+#: model:ir.model.fields,field_description:uellow_ltv_dashboard.field_uellow_customer_ltv__churn_probability
+msgid "Churn Probability (%)"
+msgstr "احتمال المغادرة (%)"
+
+#. module: uellow_ltv_dashboard
+#: model:ir.model.fields,field_description:uellow_ltv_dashboard.field_uellow_customer_ltv__days_since_last_order
+msgid "Days Since Last Order"
+msgstr "أيام منذ آخر طلب"
+
+#. module: uellow_ltv_dashboard
+#: model_terms:ir.ui.menu,name:uellow_ltv_dashboard.menu_ltv
+msgid "Customer LTV"
+msgstr "قيمة العملاء LTV"

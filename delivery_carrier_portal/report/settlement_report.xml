@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+  <record id="action_settlement_report" model="ir.actions.report">
+    <field name="name">Settlement Report</field>
+    <field name="model">delivery.cash.remittance</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">delivery_carrier_portal.settlement_report_template</field>
+    <field name="report_file">delivery_carrier_portal.settlement_report_template</field>
+    <field name="binding_model_id" ref="model_delivery_cash_remittance"/>
+    <field name="binding_type">report</field>
+    <field name="paperformat_id" ref="delivery_carrier_portal.paperformat_settlement"/>
+  </record>
+  <template id="settlement_report_template">
+    <t t-call="web.html_container">
+      <t t-foreach="docs" t-as="rem">
+        <t t-call="web.external_layout">
+          <style>
+            .page li,.page ul,.page ol{list-style:none!important;margin:0;padding:0}
+            li::marker{display:none!important;content:''}
+          </style>
+          <div class="page" style="font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;">
+            <div style="border-bottom:2px solid #1B4F96;padding-bottom:6px;margin-bottom:10px;">
+              <div style="font-size:20px;font-weight:700;color:#1B4F96;line-height:1.2;">Settlement Report</div>
+              <div style="font-size:9px;font-weight:700;color:#64748B;margin-top:2px;">Financial Remittance Statement</div>
+            </div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;border-collapse:separate;border-spacing:4px 0;">
+              <tr>
+                <td style="padding:5px 9px;background:#F1F5F9;border-radius:4px;white-space:nowrap;">
+                  <div style="font-size:7px;color:#64748B;text-transform:uppercase;">Ref No.</div>
+                  <div style="font-weight:700;font-size:12px;color:#1B4F96;"><t t-esc="rem.name"/></div>
+                </td>
+                <td style="padding:5px 9px;background:#F1F5F9;border-radius:4px;white-space:nowrap;">
+                  <div style="font-size:7px;color:#64748B;text-transform:uppercase;">Period</div>
+                  <div style="font-weight:600;font-size:10px;">
+                    <t t-if="rem.line_ids">
+                      <t t-esc="str(min(l.order_id.date_order for l in rem.line_ids if l.order_id and l.order_id.date_order))[:10]"/> — <t t-esc="str(max(l.order_id.date_order for l in rem.line_ids if l.order_id and l.order_id.date_order))[:10]"/>
+                    </t>
+                    <t t-else="">—</t>
+                  </div>
+                </td>
+                <td style="padding:5px 9px;background:#F1F5F9;border-radius:4px;white-space:nowrap;">
+                  <div style="font-size:7px;color:#64748B;text-transform:uppercase;">Date</div>
+                  <div style="font-weight:600;"><t t-esc="str(rem.create_date)[:10] if rem.create_date else '—'"/></div>
+                </td>
+                <td style="padding:5px 9px;background:#F1F5F9;border-radius:4px;white-space:nowrap;">
+                  <div style="font-size:7px;color:#64748B;text-transform:uppercase;">Carrier Ref</div>
+                  <div style="font-weight:600;"><t t-esc="rem.carrier_ref or '—'"/></div>
+                </td>
+                <td style="padding:5px 9px;background:#F1F5F9;border-radius:4px;white-space:nowrap;">
+                  <div style="font-size:7px;color:#64748B;text-transform:uppercase;">Carrier</div>
+                  <div style="font-weight:700;"><t t-esc="rem.carrier_company_id.name"/></div>
+                </td>
+                <td style="padding:5px 12px;background:#EFF6FF;border-radius:4px;white-space:nowrap;text-align:right;">
+                  <div style="font-size:7px;color:#1B4F96;text-transform:uppercase;font-weight:600;">Net Due to Uellow</div>
+                  <div style="font-weight:700;font-size:15px;color:#1B4F96;">KD&#160;<t t-esc="'%.3f' % (rem.net_to_uellow or 0)"/></div>
+                </td>
+              </tr>
+            </table>
+            <div style="font-size:10px;font-weight:700;color:#1B4F96;margin-bottom:5px;text-transform:uppercase;">Order Details — <t t-esc="len(rem.line_ids)"/> orders</div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:14px;font-size:10px;">
+              <tr style="background:#1B4F96;color:white;">
+                <th style="padding:5px 7px;text-align:left;">Order #</th>
+                <th style="padding:5px 7px;text-align:left;">Carrier Ref</th>
+                <th style="padding:5px 7px;text-align:left;">Date</th>
+                <th style="padding:5px 7px;text-align:left;">Order Type</th>
+                <th style="padding:5px 7px;text-align:left;">Status</th>
+                <th style="padding:5px 7px;text-align:left;">Payment</th>
+                <th style="padding:5px 7px;text-align:right;">Amount KD</th>
+                <th style="padding:5px 7px;text-align:right;">Del. Fee</th>
+                <th style="padding:5px 7px;text-align:right;">Cash Comm.</th>
+                <th style="padding:5px 7px;text-align:right;">Cancel Fee</th>
+                <th style="padding:5px 7px;text-align:right;">Net KD</th>
+              </tr>
+              <t t-foreach="rem.line_ids" t-as="line">
+                <tr t-attf-style="background:#{('#F8FAFC' if line_index % 2 == 0 else 'white')};border-bottom:0.5px solid #E2E8F0;">
+                  <td style="padding:5px 7px;font-weight:700;color:#1B4F96;"><t t-esc="line.order_id.name if line.order_id else '—'"/></td>
+                  <td style="padding:5px 7px;color:#64748B;"><t t-if="line.order_id"><t t-esc="line.order_id.carrier_order_ref or '—'"/></t><t t-else="">—</t></td>
+                  <td style="padding:5px 7px;white-space:nowrap;"><t t-if="line.order_id and line.order_id.date_order"><t t-esc="line.order_id.date_order.strftime('%d %b %Y')"/></t><t t-else="">—</t></td>
+                  <td style="padding:5px 7px;">
+                    <t t-if="line.order_id and line.order_id.carrier_order_type == 'return'"><span style="background:#EDE9FE;color:#5B21B6;padding:1px 5px;border-radius:4px;font-size:9px;">Return</span></t>
+                    <t t-elif="line.order_id and line.order_id.carrier_order_type == 'exchange'"><span style="background:#EDE9FE;color:#5B21B6;padding:1px 5px;border-radius:4px;font-size:9px;">Exchange</span></t>
+                    <t t-else=""><span style="background:#F1F5F9;color:#475569;padding:1px 5px;border-radius:4px;font-size:9px;">Standard</span></t>
+                  </td>
+                  <td style="padding:5px 7px;">
+                    <t t-if="line.order_id and line.order_id.delivery_status == 'delivered'"><span style="background:#DCFCE7;color:#15803D;padding:1px 5px;border-radius:4px;font-size:9px;">Delivered</span></t>
+                    <t t-elif="line.order_id and line.order_id.delivery_status in ('failed','failed_returned')"><span style="background:#FEE2E2;color:#B91C1C;padding:1px 5px;border-radius:4px;font-size:9px;">Failed</span></t>
+                    <t t-else="">—</t>
+                  </td>
+                  <td style="padding:5px 7px;">
+                    <t t-if="line.order_id and line.order_id.payment_method_type == 'cash'"><span style="background:#FEF3C7;color:#92400E;padding:1px 5px;border-radius:4px;font-size:9px;">Cash</span></t>
+                    <t t-else=""><span style="background:#DBEAFE;color:#1D4ED8;padding:1px 5px;border-radius:4px;font-size:9px;">Online</span></t>
+                  </td>
+                  <td style="padding:5px 7px;text-align:right;font-weight:600;"><t t-esc="'%.3f' % line.amount"/></td>
+                  <td style="padding:5px 7px;text-align:right;color:#1B4F96;"><t t-if="line.order_id and line.order_id.carrier_delivery_fee"><t t-esc="'%.3f' % line.order_id.carrier_delivery_fee"/></t><t t-else="">—</t></td>
+                  <td style="padding:5px 7px;text-align:right;color:#B45309;"><t t-if="line.order_id and line.order_id.carrier_cash_commission"><t t-esc="'%.3f' % line.order_id.carrier_cash_commission"/></t><t t-else="">—</t></td>
+                  <td style="padding:5px 7px;text-align:right;color:#B91C1C;"><t t-if="line.order_id and line.order_id.carrier_cancel_fee"><t t-esc="'%.3f' % line.order_id.carrier_cancel_fee"/></t><t t-else="">—</t></td>
+                  <td style="padding:5px 7px;text-align:right;font-weight:700;"><t t-if="line.order_id and line.order_id.carrier_net_cost"><t t-esc="'%.3f' % line.order_id.carrier_net_cost"/></t><t t-else=""><t t-esc="'%.3f' % line.amount"/></t></td>
+                </tr>
+              </t>
+              <tr style="background:#EFF6FF;border-top:1.5px solid #1B4F96;font-weight:700;">
+                <td colspan="6" style="padding:5px 7px;">TOTALS</td>
+                <td style="padding:5px 7px;text-align:right;"><t t-esc="'%.3f' % sum(l.amount for l in rem.line_ids)"/></td>
+                <td style="padding:5px 7px;text-align:right;color:#1B4F96;"><t t-esc="'%.3f' % (rem.total_delivery_fees or 0)"/></td>
+                <td style="padding:5px 7px;text-align:right;color:#B45309;"><t t-esc="'%.3f' % (rem.total_cash_commission or 0)"/></td>
+                <td style="padding:5px 7px;text-align:right;color:#B91C1C;"><t t-esc="'%.3f' % (rem.total_cancel_fees or 0)"/></td>
+                <td style="padding:5px 7px;text-align:right;"><t t-esc="'%.3f' % (rem.total_carrier_cost or 0)"/></td>
+              </tr>
+            </table>
+            <div style="font-size:10px;font-weight:700;color:#1B4F96;margin-bottom:5px;text-transform:uppercase;">Financial Summary</div>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:18px;font-size:11px;">
+              <tr style="border-bottom:0.5px solid #E2E8F0;"><td style="padding:5px 8px;color:#64748B;">Delivery Fees</td><td style="padding:5px 8px;text-align:right;font-weight:600;color:#1B4F96;">KD <t t-esc="'%.3f' % (rem.total_delivery_fees or 0)"/></td></tr>
+              <tr style="border-bottom:0.5px solid #E2E8F0;background:#F8FAFC;"><td style="padding:5px 8px;color:#64748B;">Cash Commission</td><td style="padding:5px 8px;text-align:right;font-weight:600;color:#B45309;">KD <t t-esc="'%.3f' % (rem.total_cash_commission or 0)"/></td></tr>
+              <tr style="border-bottom:0.5px solid #E2E8F0;"><td style="padding:5px 8px;color:#64748B;">Cancellation Fees</td><td style="padding:5px 8px;text-align:right;font-weight:600;color:#B91C1C;">KD <t t-esc="'%.3f' % (rem.total_cancel_fees or 0)"/></td></tr>
+              <tr style="border-bottom:0.5px solid #E2E8F0;background:#F8FAFC;"><td style="padding:5px 8px;color:#64748B;">Return / Exchange Fees</td><td style="padding:5px 8px;text-align:right;font-weight:600;color:#7F77DD;">KD <t t-esc="'%.3f' % (rem.total_return_exch_fees or 0)"/></td></tr>
+              <tr style="border-bottom:1.5px solid #E2E8F0;font-weight:700;"><td style="padding:5px 8px;">Total Carrier Cost</td><td style="padding:5px 8px;text-align:right;">KD <t t-esc="'%.3f' % (rem.total_carrier_cost or 0)"/></td></tr>
+              <tr style="border-bottom:0.5px solid #E2E8F0;background:#F8FAFC;"><td style="padding:5px 8px;color:#64748B;">Cash Collected from Customers</td><td style="padding:5px 8px;text-align:right;font-weight:600;color:#15803D;">KD <t t-esc="'%.3f' % (rem.cash_collected or 0)"/></td></tr>
+              <tr style="background:#DCFCE7;"><td style="padding:7px 8px;font-weight:700;color:#15803D;">Net Amount Due to Uellow</td><td style="padding:7px 8px;text-align:right;font-weight:700;font-size:13px;color:#15803D;">KD <t t-esc="'%.3f' % (rem.net_to_uellow or 0)"/></td></tr>
+            </table>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="width:45%;border:0.5px solid #E2E8F0;border-radius:4px;padding:12px;text-align:center;">
+                  <div style="font-size:9px;color:#64748B;margin-bottom:28px;">Carrier Representative</div>
+                  <div style="border-top:0.5px solid #94A3B8;padding-top:4px;font-size:9px;color:#64748B;"><t t-esc="rem.carrier_company_id.name"/></div>
+                </td>
+                <td style="width:10%;"></td>
+                <td style="width:45%;border:0.5px solid #E2E8F0;border-radius:4px;padding:12px;text-align:center;">
+                  <div style="font-size:9px;color:#64748B;margin-bottom:28px;">Received by (Uellow)</div>
+                  <div style="border-top:0.5px solid #94A3B8;padding-top:4px;font-size:9px;color:#64748B;">Uellow W.L.L</div>
+                </td>
+              </tr>
+            </table>
+            <div style="margin-top:10px;text-align:center;font-size:8px;color:#94A3B8;border-top:0.5px solid #E2E8F0;padding-top:8px;">
+              Valid upon signature by both parties. All amounts in Kuwaiti Dinar (KD). Disputes must be raised within 7 business days of receipt.
+              Settlement Ref: <t t-esc="rem.name"/> &#183; Carrier Ref: <t t-esc="rem.carrier_ref or '—'"/>
+            </div>
+          </div>
+        </t>
+      </t>
+    </t>
+  </template>
+  </data>
+</odoo>

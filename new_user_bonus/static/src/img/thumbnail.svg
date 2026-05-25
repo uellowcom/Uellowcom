@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="80" viewBox="0 0 200 80">
+  <rect width="200" height="80" rx="8" fill="#FFB700"/>
+  <rect x="8" y="10" width="70" height="60" rx="6" fill="rgba(0,0,0,0.08)"/>
+  <text x="43" y="36" font-family="Arial" font-size="9" font-weight="900" fill="#1a1000" text-anchor="middle">5% OFF</text>
+  <rect x="12" y="42" width="62" height="8" rx="3" fill="rgba(255,255,255,0.45)"/>
+  <text x="43" y="49" font-family="Arial" font-size="6" font-weight="700" fill="#3a2600" text-anchor="middle">WELCOME5</text>
+  <rect x="12" y="55" width="62" height="10" rx="5" fill="#FF4646"/>
+  <text x="43" y="62" font-family="Arial" font-size="6" font-weight="700" fill="#fff" text-anchor="middle">GET BONUS</text>
+  <rect x="86"  y="10" width="28" height="60" rx="5" fill="#fff" opacity="0.9"/>
+  <rect x="88"  y="13" width="24" height="38" rx="3" fill="#f0f0f0"/>
+  <rect x="88"  y="54" width="24" height="5"  rx="2" fill="#eee"/>
+  <rect x="88"  y="61" width="16" height="5"  rx="2" fill="#FFB700"/>
+  <rect x="120" y="10" width="28" height="60" rx="5" fill="#fff" opacity="0.9"/>
+  <rect x="122" y="13" width="24" height="38" rx="3" fill="#f0f0f0"/>
+  <rect x="122" y="54" width="24" height="5"  rx="2" fill="#eee"/>
+  <rect x="122" y="61" width="16" height="5"  rx="2" fill="#FFB700"/>
+  <rect x="154" y="10" width="28" height="60" rx="5" fill="#fff" opacity="0.9"/>
+  <rect x="156" y="13" width="24" height="38" rx="3" fill="#f0f0f0"/>
+  <rect x="156" y="54" width="24" height="5"  rx="2" fill="#eee"/>
+  <rect x="156" y="61" width="16" height="5"  rx="2" fill="#FFB700"/>
+</svg>

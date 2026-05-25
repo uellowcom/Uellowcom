@@ -1,0 +1,255 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# * uellow_smart_connector
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-23 00:00+0000\n"
+"PO-Revision-Date: 2026-05-23 00:00+0000\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: uellow_smart_connector
+#: model:ir.model,name:uellow_smart_connector.model_uellow_import_job
+msgid "Product Import Job"
+msgstr "عملية استيراد المنتجات"
+
+#. module: uellow_smart_connector
+#: model_terms:ir.ui.menu,name:uellow_smart_connector.menu_sc_root
+msgid "Smart Connector"
+msgstr "Smart Connector"
+
+#. module: uellow_smart_connector
+#: model_terms:ir.ui.menu,name:uellow_smart_connector.menu_sc_jobs
+msgid "Import Jobs"
+msgstr "عمليات الاستيراد"
+
+#. module: uellow_smart_connector
+#: model_terms:ir.ui.menu,name:uellow_smart_connector.menu_sc_price
+msgid "Price Monitoring"
+msgstr "مراقبة الأسعار"
+
+#. module: uellow_smart_connector
+#: model_terms:ir.ui.menu,name:uellow_smart_connector.menu_sc_dead
+msgid "Dead Stock"
+msgstr "المخزون الراكد"
+
+#. module: uellow_smart_connector
+#: model_terms:ir.ui.menu,name:uellow_smart_connector.menu_sc_settings
+msgid "Settings"
+msgstr "الإعدادات"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job__job_type__url
+msgid "URL Import"
+msgstr "استيراد من رابط"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job__job_type__file
+msgid "File Update"
+msgstr "تحديث من ملف"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job__state__draft
+msgid "Draft"
+msgstr "مسودة"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job__state__processing
+msgid "Processing"
+msgstr "جاري التنفيذ"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job__state__review
+msgid "Review"
+msgstr "مراجعة"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job__state__done
+msgid "Done"
+msgstr "مكتملة"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job__state__rolled_back
+msgid "Rolled Back"
+msgstr "تم التراجع"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job__state__error
+msgid "Error"
+msgstr "خطأ"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields,field_description:uellow_smart_connector.field_uellow_import_job__source_url
+msgid "Source URL"
+msgstr "رابط المصدر"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields,field_description:uellow_smart_connector.field_uellow_import_job__enable_translation
+msgid "Translate Arabic/English"
+msgstr "ترجمة عربي/إنجليزي"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields,field_description:uellow_smart_connector.field_uellow_import_job__enable_seo
+msgid "Write SEO Description"
+msgstr "كتابة وصف SEO"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields,field_description:uellow_smart_connector.field_uellow_import_job__warranty_text
+msgid "Uellow Warranty Text"
+msgstr "نص ضمان Uellow"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields,field_description:uellow_smart_connector.field_uellow_import_job__price_variance_limit
+msgid "Price Change Limit (%)"
+msgstr "حد تغير السعر (%)"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__product_action__new
+msgid "New Product"
+msgstr "منتج جديد"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__product_action__update
+msgid "Update Existing"
+msgstr "تحديث منتج موجود"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__product_action__skip
+msgid "Skip"
+msgstr "تجاهل"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__line_state__pending
+msgid "Pending Review"
+msgstr "بانتظار المراجعة"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__line_state__approved
+msgid "Approved"
+msgstr "معتمد"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__line_state__rejected
+msgid "Rejected"
+msgstr "مرفوض"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__line_state__applied
+msgid "Applied"
+msgstr "تم التطبيق"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__reject_reason__price_unrealistic
+msgid "Unrealistic price"
+msgstr "سعر غير منطقي"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__reject_reason__bad_description
+msgid "Insufficient description"
+msgstr "وصف غير كافٍ"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__reject_reason__bad_images
+msgid "Bad images"
+msgstr "صور سيئة"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__reject_reason__wrong_category
+msgid "Wrong category"
+msgstr "فئة خاطئة"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_import_job_line__reject_reason__duplicate
+msgid "Duplicate"
+msgstr "منتج مكرر"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_smart_connector__state__ok
+msgid "Normal"
+msgstr "طبيعي"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_price_intelligence__state__cheaper
+msgid "We are cheaper"
+msgstr "نحن أرخص"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_price_intelligence__state__pricier
+msgid "We are pricier"
+msgstr "نحن أغلى"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_dead_stock__suggested_action__discount
+msgid "Flash Sale Discount"
+msgstr "خصم Flash Sale"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_dead_stock__suggested_action__bundle
+msgid "Bundle Products"
+msgstr "دمج في حزمة"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_dead_stock__suggested_action__return_vendor
+msgid "Return to Vendor"
+msgstr "إرجاع للتاجر"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_dead_stock__suggested_action__write_off
+msgid "Write Off"
+msgstr "شطب"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_dead_stock__suggested_action__none
+msgid "No Action"
+msgstr "لا إجراء"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_dead_stock__state__active
+msgid "Dead Stock"
+msgstr "راكد"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_dead_stock__state__resolved
+msgid "Resolved"
+msgstr "تمت المعالجة"
+
+#. module: uellow_smart_connector
+#: model:ir.model.fields.selection,name:uellow_smart_connector.selection__uellow_dead_stock__state__ignored
+msgid "Ignored"
+msgstr "متجاهل"
+
+#. module: uellow_smart_connector
+#: model:ir.ui.view,arch_db:uellow_smart_connector.view_import_job_form
+msgid "Run"
+msgstr "تشغيل"
+
+#. module: uellow_smart_connector
+#: model:ir.ui.view,arch_db:uellow_smart_connector.view_import_job_form
+msgid "Review Results"
+msgstr "مراجعة النتائج"
+
+#. module: uellow_smart_connector
+#: model:ir.ui.view,arch_db:uellow_smart_connector.view_import_job_form
+msgid "Rollback"
+msgstr "تراجع"
+
+#. module: uellow_smart_connector
+#: model:ir.ui.view,arch_db:uellow_smart_connector.view_review_wizard_form
+msgid "Apply & Close"
+msgstr "تطبيق وإغلاق"
+
+#. module: uellow_smart_connector
+#: model:ir.ui.view,arch_db:uellow_smart_connector.view_review_wizard_form
+msgid "Manual Review"
+msgstr "مراجعة يدوية"
+
+#. module: uellow_smart_connector
+#: model:res.groups,name:uellow_smart_connector.group_sc_manager
+msgid "Smart Connector Manager"
+msgstr "مدير Smart Connector"

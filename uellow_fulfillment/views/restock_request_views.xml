@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- LIST VIEW -->
+    <record id="view_restock_request_list" model="ir.ui.view">
+        <field name="name">uellow.restock.request.list</field>
+        <field name="model">uellow.restock.request</field>
+        <field name="arch" type="xml">
+            <list string="طلبات التزويد" decoration-warning="state=='submitted'"
+                  decoration-success="state=='received'" decoration-muted="state=='cancelled'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="total_variants"/>
+                <field name="total_units"/>
+                <field name="expected_date"/>
+                <field name="state" widget="badge"
+                       decoration-warning="state=='submitted'"
+                       decoration-info="state=='approved'"
+                       decoration-success="state=='received'"
+                       decoration-danger="state=='cancelled'"/>
+                <field name="purchase_order_id"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- FORM VIEW -->
+    <record id="view_restock_request_form" model="ir.ui.view">
+        <field name="name">uellow.restock.request.form</field>
+        <field name="model">uellow.restock.request</field>
+        <field name="arch" type="xml">
+            <form string="طلب تزويد FBU">
+                <header>
+                    <button name="action_submit" string="إرسال للموافقة"
+                            type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve" string="موافقة + إنشاء PO"
+                            type="object" class="oe_highlight"
+                            groups="uellow_fulfillment.group_fbu_manager"
+                            invisible="state != 'submitted'"/>
+                    <button name="action_receive" string="استلام المخزون"
+                            type="object" class="oe_highlight"
+                            groups="uellow_fulfillment.group_fbu_manager"
+                            invisible="state != 'approved'"/>
+                    <button name="action_cancel" string="إلغاء"
+                            type="object"
+                            invisible="state in ('received','cancelled')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,approved,received"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="معلومات التاجر">
+                            <field name="vendor_location_id"
+                                   options="{'no_create': True}"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="location_id" readonly="1"/>
+                        </group>
+                        <group string="التفاصيل اللوجستية">
+                            <field name="expected_date"/>
+                            <field name="confirmed_date"
+                                   groups="uellow_fulfillment.group_fbu_manager"/>
+                            <field name="transport_method"/>
+                            <field name="purchase_order_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="المنتجات والـ Variants">
+                            <field name="line_ids" widget="one2many_list">
+                                <list editable="bottom">
+                                    <field name="product_id"
+                                           domain="[('type','=','product')]"
+                                           options="{'no_create': False}"/>
+                                    <field name="variant_description" readonly="1"/>
+                                    <field name="qty_requested"/>
+                                    <field name="fbu_qty_onhand" readonly="1"
+                                           string="In WH/VND now"/>
+                                    <field name="qty_received" readonly="1"/>
+                                    <field name="qty_accepted" readonly="1"/>
+                                    <field name="qty_damaged" readonly="1"/>
+                                    <field name="difference_reason" readonly="1"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer">
+                                <field name="total_variants" readonly="1"/>
+                                <field name="total_units" readonly="1"/>
+                            </group>
+                        </page>
+                        <page string="الملاحظات">
+                            <group>
+                                <field name="notes" placeholder="ملاحظات للمستودع..."/>
+                                <field name="admin_notes"
+                                       groups="uellow_fulfillment.group_fbu_manager"
+                                       placeholder="ملاحظات Uellow Admin..."/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- SEARCH VIEW -->
+    <record id="view_restock_request_search" model="ir.ui.view">
+        <field name="name">uellow.restock.request.search</field>
+        <field name="model">uellow.restock.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <filter string="بانتظار الموافقة" name="submitted"
+                        domain="[('state','=','submitted')]"/>
+                <filter string="موافق" name="approved"
+                        domain="[('state','=','approved')]"/>
+                <filter string="تم الاستلام" name="received"
+                        domain="[('state','=','received')]"/>
+                <group expand="0" string="تجميع حسب">
+                    <filter string="التاجر" name="by_partner"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter string="الحالة" name="by_state"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ACTION -->
+    <record id="action_restock_request" model="ir.actions.act_window">
+        <field name="name">طلبات تزويد FBU</field>
+        <field name="res_model">uellow.restock.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_restock_request_search"/>
+        <field name="context">{'search_default_submitted': 1}</field>
+    </record>
+
+</odoo>

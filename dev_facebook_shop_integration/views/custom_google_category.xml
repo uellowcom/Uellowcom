@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+   <record id="custom_google_category_view_list" model="ir.ui.view">
+        <field name="name">custom.google.category.list</field>
+        <field name="model">custom.google.category</field>
+        <field name="arch" type="xml">
+            <list string="Google Categories">
+                <header>
+                    <button name="fetch_google_categories" type="object" string="Fetch Google Category"
+                        display="always" />
+                </header>
+                <field name="sequence" optional="hide" groups="base.group_no_one" />
+                <field name="code" optional="hide" />
+                <field name="display_name" optional="show" />
+                <field name="parent_id" optional="hide" />
+                <field name="name" optional="hide" />
+            </list>
+        </field>
+    </record>
+
+    <record id="custom_google_category_view_form" model="ir.ui.view">
+        <field name="name">custom.google.category.form</field>
+        <field name="model">custom.google.category</field>
+        <field name="arch" type="xml">
+            <form string="Google Category">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h3><field name="name" placeholder="Name" default_focus="1"/></h3>
+                        <label for="code" class="oe_edit_only"/>
+                        <field name="code" />
+                    </div>
+                    <group>
+                        <field name="parent_id" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <record id="action_custom_google_categories" model="ir.actions.act_window">
+        <field name="name">Google Categories</field>
+        <field name="res_model">custom.google.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem action="action_custom_google_categories"
+              id="menu_product_google_category"
+              name="Google Categories"
+              parent="dev_facebook_shop_integration.facebook_configuration" sequence="3"/>
+</odoo>

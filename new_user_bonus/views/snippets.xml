@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 1. تعريف الـ Snippet HTML -->
+    <template id="new_user_bonus_snippet" name="New User Bonus">
+        <section class="s_new_user_bonus"
+                 data-snippet="s_new_user_bonus"
+                 data-name="New User Bonus"
+                 data-tag-id="17"
+                 data-coupon="WELCOME5"
+                 data-disc-ar="5% خصم"
+                 data-disc-en="5% OFF">
+            <div class="uellow-bonus-host"></div>
+        </section>
+    </template>
+
+    <!-- 2. إضافة البلوك في snippet_content — أودو 18 -->
+    <template id="snippets" inherit_id="website.snippets" name="New User Bonus - Block">
+        <xpath expr="//snippets[@id='snippet_content']" position="inside">
+            <t t-snippet="new_user_bonus.new_user_bonus_snippet"
+               t-thumbnail="/new_user_bonus/static/src/img/thumbnail.svg"
+               string="New User Bonus"
+               snippet-group="content"/>
+        </xpath>
+    </template>
+
+</odoo>

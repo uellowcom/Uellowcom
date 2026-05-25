@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Root menu — standalone application -->
+  <menuitem id="menu_sc_root"
+            name="Smart Connector"
+            sequence="60"
+            web_icon="uellow_smart_connector,static/description/icon.png"/>
+
+  <!-- Dashboard -->
+  <menuitem id="menu_sc_dashboard"
+            name="Dashboard"
+            parent="menu_sc_root"
+            action="action_sc_dashboard"
+            sequence="1"/>
+
+  <!-- Import Jobs -->
+  <menuitem id="menu_sc_jobs"
+            name="Import Jobs"
+            parent="menu_sc_root"
+            action="action_import_job"
+            sequence="10"/>
+
+  <!-- Price Intelligence -->
+  <menuitem id="menu_sc_price"
+            name="Price Intelligence"
+            parent="menu_sc_root"
+            action="action_price_intel"
+            sequence="20"/>
+
+  <!-- Dead Stock -->
+  <menuitem id="menu_sc_dead"
+            name="Dead Stock"
+            parent="menu_sc_root"
+            action="action_dead_stock"
+            sequence="30"/>
+
+  <!-- Settings -->
+  <menuitem id="menu_sc_settings"
+            name="Configuration"
+            parent="menu_sc_root"
+            sequence="90"/>
+
+  <menuitem id="menu_sc_settings_main"
+            name="Settings"
+            parent="menu_sc_settings"
+            action="action_connector_settings"
+            sequence="10"
+            groups="uellow_smart_connector.group_sc_manager"/>
+
+</odoo>

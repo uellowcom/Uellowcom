@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_reviewer_profile_public,reviewer.profile public,model_reviewer_profile,,1,0,0,0
+access_reviewer_profile_user,reviewer.profile user,model_reviewer_profile,base.group_user,1,1,1,0
+access_reviewer_profile_admin,reviewer.profile admin,model_reviewer_profile,base.group_system,1,1,1,1
+access_review_request_public,review.request public,model_review_request,,1,1,1,0
+access_review_request_user,review.request user,model_review_request,base.group_user,1,1,1,0
+access_review_request_admin,review.request admin,model_review_request,base.group_system,1,1,1,1
+access_reviewer_commission_admin,reviewer.commission admin,model_reviewer_commission,base.group_system,1,1,1,1
+access_reviewer_settings_admin,reviewer.settings admin,model_reviewer_settings,base.group_system,1,1,1,1

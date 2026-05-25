@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="delivery_carrier_portal.Dashboard">
+    <div class="db-owl-wrap" dir="rtl">
+
+        <div t-if="state.loading" class="db-owl-loading">
+            <div class="db-owl-spinner"></div>
+        </div>
+
+        <div class="db-owl-header">
+            <div>
+                <div class="db-owl-title">📦 Delivery Dashboard</div>
+                <div class="db-owl-sub">آخر تحديث: <t t-esc="state.timestamp"/> | يتحدث كل 3 دقائق</div>
+            </div>
+            <div class="db-owl-controls">
+                <select class="db-owl-select" t-on-change="onPeriodChange">
+                    <option value="7">آخر 7 أيام</option>
+                    <option value="30" selected="1">آخر 30 يوم</option>
+                    <option value="90">آخر 3 أشهر</option>
+                    <option value="365">هذا العام</option>
+                </select>
+                <select class="db-owl-select" t-on-change="onCarrierChange">
+                    <option value="0">كل الشركات</option>
+                    <t t-foreach="state.carriers" t-as="c" t-key="c.id">
+                        <option t-att-value="c.id" t-esc="c.name"/>
+                    </t>
+                </select>
+                <button class="db-owl-btn-primary" t-on-click="() => this.loadData()">🔄 تحديث</button>
+            </div>
+        </div>
+
+        <!-- KPI Operations -->
+        <div class="db-owl-section-title">📊 إحصائيات التشغيل</div>
+        <div class="db-owl-kpi-grid">
+            <div class="db-owl-kpi db-owl-kpi-blue" t-on-click="() => this.openOrders(false)">
+                <div class="db-owl-kpi-icon">📦</div>
+                <div class="db-owl-kpi-label">إجمالي الطلبات</div>
+                <div class="db-owl-kpi-value"><t t-esc="state.kpi.total || 0"/></div>
+                <div class="db-owl-kpi-note">↑ هذه الفترة</div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-green" t-on-click="() => this.openOrders('delivered')">
+                <div class="db-owl-kpi-icon">✅</div>
+                <div class="db-owl-kpi-label">تم التوصيل</div>
+                <div class="db-owl-kpi-value"><t t-esc="state.kpi.delivered || 0"/></div>
+                <div class="db-owl-kpi-note">نسبة النجاح: <t t-esc="(state.kpi.success_rate || 0) + '%'"/></div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-red" t-on-click="() => this.openOrders('failed')">
+                <div class="db-owl-kpi-icon">❌</div>
+                <div class="db-owl-kpi-label">فشل التوصيل</div>
+                <div class="db-owl-kpi-value"><t t-esc="state.kpi.failed || 0"/></div>
+                <div class="db-owl-kpi-note">تحتاج مراجعة</div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-yellow" t-on-click="() => this.openOrders('out_for_delivery')">
+                <div class="db-owl-kpi-icon">🚚</div>
+                <div class="db-owl-kpi-label">في الطريق الآن</div>
+                <div class="db-owl-kpi-value"><t t-esc="state.kpi.in_transit || 0"/></div>
+                <div class="db-owl-kpi-note">لايف</div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-blue" t-on-click="() => this.openOrders('assigned')">
+                <div class="db-owl-kpi-icon">🕐</div>
+                <div class="db-owl-kpi-label">مخصص — انتظار</div>
+                <div class="db-owl-kpi-value"><t t-esc="state.kpi.assigned || 0"/></div>
+                <div class="db-owl-kpi-note">بانتظار السائق</div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-red">
+                <div class="db-owl-kpi-icon">↩</div>
+                <div class="db-owl-kpi-label">مرتجعات معلقة</div>
+                <div class="db-owl-kpi-value"><t t-esc="state.kpi.returns_awaiting || 0"/></div>
+                <div class="db-owl-kpi-note">تحتاج استلام</div>
+            </div>
+        </div>
+
+        <!-- KPI Financial -->
+        <div class="db-owl-section-title">💰 الإحصائيات المالية</div>
+        <div class="db-owl-kpi-grid">
+            <div class="db-owl-kpi db-owl-kpi-green">
+                <div class="db-owl-kpi-icon">💵</div>
+                <div class="db-owl-kpi-label">إجمالي المبيعات المُوصَّلة</div>
+                <div class="db-owl-kpi-value" style="font-size:18px;">KD <t t-esc="fmt(state.kpi.total_delivered_amount)"/></div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-blue">
+                <div class="db-owl-kpi-icon">💳</div>
+                <div class="db-owl-kpi-label">أونلاين مدفوعة</div>
+                <div class="db-owl-kpi-value" style="font-size:18px;">KD <t t-esc="fmt(state.kpi.online_amount)"/></div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-yellow">
+                <div class="db-owl-kpi-icon">💵</div>
+                <div class="db-owl-kpi-label">كاش محصّل</div>
+                <div class="db-owl-kpi-value" style="font-size:18px;">KD <t t-esc="fmt(state.kpi.cash_amount)"/></div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-red">
+                <div class="db-owl-kpi-icon">💰</div>
+                <div class="db-owl-kpi-label">كاش معلق</div>
+                <div class="db-owl-kpi-value" style="font-size:18px;">KD <t t-esc="fmt(state.kpi.cash_pending)"/></div>
+                <div class="db-owl-kpi-note"><t t-esc="(state.kpi.pending_remittances || 0) + ' طلب تسوية معلق'"/></div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-purple">
+                <div class="db-owl-kpi-icon">📊</div>
+                <div class="db-owl-kpi-label">متوسط قيمة الطلب</div>
+                <div class="db-owl-kpi-value" style="font-size:18px;">KD <t t-esc="fmt(state.kpi.avg_order)"/></div>
+            </div>
+            <div class="db-owl-kpi db-owl-kpi-green">
+                <div class="db-owl-kpi-icon">✅</div>
+                <div class="db-owl-kpi-label">كاش مُسوَّى</div>
+                <div class="db-owl-kpi-value" style="font-size:18px;">KD <t t-esc="fmt(state.kpi.cash_remitted)"/></div>
+            </div>
+        </div>
+
+        <!-- Chart + Donut -->
+        <div class="db-owl-section-title">📈 اتجاه التوصيل</div>
+        <div class="db-owl-grid-2">
+            <div class="db-owl-card">
+                <div class="db-owl-card-head">
+                    <span class="db-owl-card-title">اتجاه التوصيل اليومي — آخر 14 يوم</span>
+                    <div style="display:flex;gap:10px;font-size:10px;">
+                        <span style="color:#2d6be4;">■ تم</span>
+                        <span style="color:#fca5a5;">■ فشل</span>
+                    </div>
+                </div>
+                <div class="db-owl-card-body">
+                    <div class="db-owl-chart">
+                        <t t-foreach="state.daily_trend" t-as="d" t-key="d.date">
+                            <div class="db-owl-bar-wrap">
+                                <div class="db-owl-bar-col">
+                                    <div class="db-owl-bar-fail" t-att-style="'height:' + failHeight(d, state.daily_trend) + 'px;'"/>
+                                    <div t-attf-class="db-owl-bar-del {{ d_last ? 'today' : '' }}"
+                                         t-att-style="'height:' + barHeight(d, state.daily_trend) + 'px;'"
+                                         t-att-title="d.total"/>
+                                </div>
+                                <div class="db-owl-bar-label" t-esc="d.date ? d.date.slice(5) : ''"/>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+            <div class="db-owl-card">
+                <div class="db-owl-card-head"><span class="db-owl-card-title">🥧 توزيع الحالات</span></div>
+                <div class="db-owl-card-body">
+                    <div class="db-owl-donut-wrap">
+                        <div class="db-owl-donut-circle">
+                            <div class="db-owl-donut-center">
+                                <div class="db-owl-donut-pct"><t t-esc="(state.kpi.success_rate || 0) + '%'"/></div>
+                                <div style="font-size:9px;color:#64748b;">نجاح</div>
+                            </div>
+                        </div>
+                        <div class="db-owl-donut-info">
+                            <t t-foreach="[
+                                {label: '✅ تم التوصيل', val: state.kpi.delivered, color: '#16a34a'},
+                                {label: '🚚 في الطريق', val: state.kpi.in_transit, color: '#2d6be4'},
+                                {label: '🕐 مخصص', val: state.kpi.assigned, color: '#d97706'},
+                                {label: '❌ فشل', val: state.kpi.failed, color: '#dc2626'},
+                            ]" t-as="row" t-key="row.label">
+                                <div class="db-owl-donut-row">
+                                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
+                                        <span t-att-style="'color:' + row.color" t-esc="row.label"/>
+                                        <span style="font-weight:700;">
+                                            <t t-esc="row.val || 0"/> (<t t-esc="state.kpi.total ? Math.round((row.val||0)/state.kpi.total*100) : 0"/>%)
+                                        </span>
+                                    </div>
+                                    <div class="db-owl-prog">
+                                        <div class="db-owl-prog-fill" t-att-style="'width:' + (state.kpi.total ? Math.round((row.val||0)/state.kpi.total*100) : 0) + '%;background:' + row.color"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carriers + Cash + Returns -->
+        <div class="db-owl-section-title">🏢 أداء الشركات والمال</div>
+        <div class="db-owl-grid-3">
+            <div class="db-owl-card">
+                <div class="db-owl-card-head"><span class="db-owl-card-title">🏢 أداء شركات التوصيل</span></div>
+                <div class="db-owl-card-body">
+                    <t t-foreach="state.carriers_data" t-as="c" t-key="c.id">
+                        <div class="db-owl-carrier-item">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                                <span style="font-size:12px;font-weight:700;">🚚 <t t-esc="c.name"/></span>
+                                <span t-att-style="'font-size:10px;font-weight:700;color:' + (c.success_rate >= 80 ? '#16a34a' : '#d97706')">
+                                    <t t-esc="c.success_rate"/>% نجاح
+                                </span>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:10px;margin-bottom:5px;">
+                                <div style="text-align:center;"><div style="color:#64748b;">طلبات</div><div style="font-weight:700;"><t t-esc="c.total"/></div></div>
+                                <div style="text-align:center;"><div style="color:#64748b;">مُوصَّل</div><div style="font-weight:700;color:#16a34a;"><t t-esc="c.delivered"/></div></div>
+                                <div style="text-align:center;"><div style="color:#64748b;">فشل</div><div style="font-weight:700;color:#dc2626;"><t t-esc="c.failed"/></div></div>
+                            </div>
+                            <div class="db-owl-prog"><div class="db-owl-prog-fill" t-att-style="'width:' + c.success_rate + '%;background:' + getCarrierColor(c.success_rate)"/></div>
+                            <div style="font-size:10px;color:#64748b;display:flex;justify-content:space-between;margin-top:4px;">
+                                <span>كاش: <strong>KD <t t-esc="fmt(c.cash_pending)"/></strong></span>
+                                <span>سائقين: <strong><t t-esc="c.drivers_count"/></strong></span>
+                            </div>
+                        </div>
+                    </t>
+                    <div t-if="!state.carriers_data.length" style="text-align:center;color:#94a3b8;padding:16px;">لا توجد بيانات</div>
+                </div>
+            </div>
+            <div class="db-owl-card">
+                <div class="db-owl-card-head"><span class="db-owl-card-title">💰 حالة الكاش</span></div>
+                <div class="db-owl-card-body">
+                    <div style="text-align:center;margin-bottom:14px;">
+                        <div style="font-size:26px;font-weight:800;color:#d97706;">KD <t t-esc="fmt(state.kpi.cash_pending)"/></div>
+                        <div style="font-size:11px;color:#64748b;">إجمالي الكاش المعلق</div>
+                    </div>
+                    <div class="db-owl-cash-item" style="background:#fff5f5;"><span>💵 محصّل — لم يُسوَّ</span><span style="font-weight:700;color:#dc2626;">KD <t t-esc="fmt(state.kpi.cash_pending)"/></span></div>
+                    <div class="db-owl-cash-item" style="background:#f0fdf4;"><span>✅ تمت التسوية</span><span style="font-weight:700;color:#16a34a;">KD <t t-esc="fmt(state.kpi.cash_remitted)"/></span></div>
+                    <div style="margin-top:10px;">
+                        <div style="font-size:10px;color:#64748b;">طلبات تسوية معلقة</div>
+                        <div style="font-size:22px;font-weight:800;color:#2d6be4;"><t t-esc="state.kpi.pending_remittances || 0"/></div>
+                    </div>
+                </div>
+            </div>
+            <div class="db-owl-card">
+                <div class="db-owl-card-head"><span class="db-owl-card-title">↩ المرتجعات</span></div>
+                <div class="db-owl-card-body">
+                    <div class="db-owl-cash-item" style="background:#fff5f5;"><span>⏳ انتظار الإرجاع</span><span style="font-size:16px;font-weight:800;color:#dc2626;"><t t-esc="state.kpi.returns_awaiting || 0"/></span></div>
+                    <div class="db-owl-cash-item" style="background:#fffbeb;"><span>📅 مجدول / في الطريق</span><span style="font-size:16px;font-weight:800;color:#d97706;"><t t-esc="state.kpi.returns_scheduled || 0"/></span></div>
+                    <div class="db-owl-cash-item" style="background:#f0fdf4;"><span>✅ استلمها Uellow</span><span style="font-size:16px;font-weight:800;color:#16a34a;"><t t-esc="state.kpi.returns_received || 0"/></span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drivers + Orders -->
+        <div class="db-owl-section-title">👷 السائقون وآخر الطلبات</div>
+        <div class="db-owl-grid-2b">
+            <div class="db-owl-card">
+                <div class="db-owl-card-head"><span class="db-owl-card-title">🏆 أداء السائقين</span></div>
+                <div class="db-owl-card-body" style="padding:0;">
+                    <table class="db-owl-table">
+                        <thead><tr><th>#</th><th>السائق</th><th>نجاح%</th><th>طلبات</th><th>كاش</th></tr></thead>
+                        <tbody>
+                            <t t-foreach="state.drivers" t-as="d" t-key="d.id">
+                                <tr>
+                                    <td><t t-esc="d_index === 0 ? '🥇' : d_index === 1 ? '🥈' : d_index === 2 ? '🥉' : (d_index + 1)"/></td>
+                                    <td style="font-weight:700;"><t t-esc="d.name"/></td>
+                                    <td><span t-att-style="'font-size:10px;font-weight:700;color:' + getCarrierColor(d.success_rate)"><t t-esc="d.success_rate"/>%</span></td>
+                                    <td><t t-esc="d.total"/></td>
+                                    <td style="font-size:10px;color:#15803d;">KD <t t-esc="fmt(d.cash_collected)"/></td>
+                                </tr>
+                            </t>
+                            <tr t-if="!state.drivers.length"><td colspan="5" style="text-align:center;padding:16px;color:#94a3b8;">لا توجد بيانات</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="db-owl-card">
+                <div class="db-owl-card-head">
+                    <span class="db-owl-card-title">📋 آخر الطلبات <span class="db-owl-live"><span class="db-owl-live-dot"/>لايف</span></span>
+                </div>
+                <div class="db-owl-card-body" style="padding:0;overflow-x:auto;">
+                    <table class="db-owl-table">
+                        <thead><tr><th>#</th><th>العميل</th><th>المبلغ</th><th>الحالة</th><th>السائق</th></tr></thead>
+                        <tbody>
+                            <t t-foreach="state.recent_orders" t-as="o" t-key="o.id">
+                                <tr style="cursor:pointer;" t-on-click="() => this.openOrder(o.id)">
+                                    <td style="font-family:monospace;font-weight:700;color:#2d6be4;"><t t-esc="o.name"/></td>
+                                    <td><t t-esc="o.partner"/></td>
+                                    <td style="font-weight:700;">KD <t t-esc="fmt(o.amount)"/></td>
+                                    <td>
+                                        <span t-attf-class="db-owl-tag {{ getStatusClass(o.status) }}">
+                                            <t t-esc="o.status"/>
+                                        </span>
+                                    </td>
+                                    <td style="font-size:10px;"><t t-esc="o.driver || '—'"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div class="db-owl-section-title">🔔 تنبيهات</div>
+        <div class="db-owl-card">
+            <div class="db-owl-card-body">
+                <t t-if="state.alerts.length">
+                    <t t-foreach="state.alerts" t-as="a" t-key="a_index">
+                        <div t-attf-class="db-owl-alert {{ a.type === 'danger' ? 'db-owl-alert-red' : 'db-owl-alert-yellow' }}">
+                            <t t-esc="a.type === 'danger' ? '⚠️' : '⏰'"/> <t t-esc="a.msg"/>
+                        </div>
+                    </t>
+                </t>
+                <div t-else="" style="color:#16a34a;font-size:12px;">✅ لا توجد تنبيهات</div>
+            </div>
+        </div>
+
+    </div>
+</t>
+
+</templates>

@@ -1,0 +1,35 @@
+# -*- coding: utf-8 -*-
+{
+    'name': 'Uellow Mobile App Manager',
+    'version': '18.0.2.0.0',
+    'category': 'Website/Mobile',
+    'summary': 'Full control panel for the Uellow Flutter mobile application',
+    'author': 'Uellow',
+    'website': 'https://uellow.com',
+    'depends': ['base', 'website', 'sale', 'product', 'web'],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/mobile_dashboard_views.xml',
+        'views/mobile_slider_views.xml',
+        'views/mobile_category_icon_views.xml',
+        'views/mobile_product_slider_views.xml',
+        'views/mobile_feature_banner_views.xml',
+        'views/mobile_notification_views.xml',
+        'views/mobile_app_setting_views.xml',
+        'views/mobile_session_views.xml',
+        'views/mobile_popup_views.xml',
+        'views/mobile_extras_views.xml',
+        'views/menu_views.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'uellow_mobile_manager/static/src/css/mobile_manager.css',
+            'uellow_mobile_manager/static/src/js/dashboard_template.xml',
+            'uellow_mobile_manager/static/src/js/dashboard.js',
+        ],
+    },
+    'installable': True,
+    'auto_install': False,
+    'application': True,
+    'license': 'LGPL-3',
+}

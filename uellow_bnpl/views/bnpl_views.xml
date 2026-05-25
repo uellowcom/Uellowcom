@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_bnpl_plan_list" model="ir.ui.view">
+    <field name="name">uellow.bnpl.plan.list</field>
+    <field name="model">uellow.bnpl.plan</field>
+    <field name="arch" type="xml">
+      <list><field name="name"/><field name="installments"/><field name="interval_days"/>
+        <field name="min_order_amount"/><field name="max_order_amount"/>
+        <field name="admin_fee_pct"/><field name="active" widget="boolean_toggle"/></list>
+    </field>
+  </record>
+  <record id="view_bnpl_app_list" model="ir.ui.view">
+    <field name="name">uellow.bnpl.application.list</field>
+    <field name="model">uellow.bnpl.application</field>
+    <field name="arch" type="xml">
+      <list decoration-success="state=='completed'" decoration-warning="state=='pending'" decoration-danger="state=='defaulted'">
+        <field name="name"/><field name="partner_id"/><field name="plan_id"/>
+        <field name="total_amount"/><field name="paid_count"/><field name="remaining_amount"/>
+        <field name="state" widget="badge"/>
+        <button name="action_approve" string="Approve" type="object" icon="fa-check" invisible="state!='pending'"/>
+      </list>
+    </field>
+  </record>
+  <record id="action_bnpl_plans" model="ir.actions.act_window">
+    <field name="name">BNPL Plans</field><field name="res_model">uellow.bnpl.plan</field><field name="view_mode">list,form</field>
+  </record>
+  <record id="action_bnpl_apps" model="ir.actions.act_window">
+    <field name="name">BNPL Applications</field><field name="res_model">uellow.bnpl.application</field><field name="view_mode">list,form</field>
+  </record>
+</odoo>

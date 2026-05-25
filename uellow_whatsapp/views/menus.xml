@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_whatsapp_root" name="WhatsApp" parent="uellow_multivendor.menu_marketplace_main" sequence="45"/>
+  <menuitem id="menu_wa_config" name="Settings" parent="menu_whatsapp_root" action="action_wa_config" sequence="1"/>
+  <menuitem id="menu_wa_templates" name="Templates" parent="menu_whatsapp_root" action="action_wa_templates" sequence="2"/>
+  <menuitem id="menu_wa_logs" name="Message Logs" parent="menu_whatsapp_root" action="action_wa_logs" sequence="3"/>
+</odoo>

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_body_profile_list" model="ir.ui.view">
+        <field name="name">customer.body.profile.list</field>
+        <field name="model">customer.body.profile</field>
+        <field name="arch" type="xml">
+            <list string="ملفات المقاسات">
+                <field name="partner_id"/>
+                <field name="height" string="الطول"/>
+                <field name="weight" string="الوزن"/>
+                <field name="chest"  string="الصدر"/>
+                <field name="waist"  string="الوسط"/>
+                <field name="shoe_size_eu" string="الحذاء EU"/>
+                <field name="completion_pct" string="اكتمال %" widget="progressbar"/>
+                <field name="profile_complete" widget="boolean"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_body_profile_form" model="ir.ui.view">
+        <field name="name">customer.body.profile.form</field>
+        <field name="model">customer.body.profile</field>
+        <field name="arch" type="xml">
+            <form string="ملف المقاسات">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="partner_id" placeholder="العميل"/></h1>
+                    </div>
+                    <group>
+                        <group string="معلومات أساسية">
+                            <field name="gender"/>
+                            <field name="age_range"/>
+                            <field name="body_type"/>
+                            <field name="preferred_fit"/>
+                            <field name="height"/>
+                            <field name="weight"/>
+                        </group>
+                        <group string="الجذع العلوي">
+                            <field name="shoulder"/>
+                            <field name="chest"/>
+                            <field name="waist"/>
+                            <field name="hip"/>
+                            <field name="arm_length"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="الجذع السفلي">
+                            <field name="inseam"/>
+                            <field name="thigh"/>
+                        </group>
+                        <group string="الحذاء">
+                            <field name="shoe_size_eu"/>
+                            <field name="shoe_size_us"/>
+                            <field name="shoe_width"/>
+                        </group>
+                    </group>
+                    <group string="اكتمال الملف">
+                        <field name="completion_pct" widget="progressbar"/>
+                        <field name="profile_complete"/>
+                    </group>
+                    <notebook>
+                        <page string="سجل المقاسات">
+                            <field name="fit_history_ids">
+                                <list>
+                                    <field name="product_id"/>
+                                    <field name="size_chosen"/>
+                                    <field name="fit_result"/>
+                                    <field name="notes"/>
+                                    <field name="create_date" string="التاريخ"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_body_profiles" model="ir.actions.act_window">
+        <field name="name">ملفات المقاسات</field>
+        <field name="res_model">customer.body.profile</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_smart_fit_root"
+              name="📏 Smart Fit"
+              sequence="92"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_body_profiles"
+              name="ملفات المقاسات"
+              parent="menu_smart_fit_root"
+              action="action_body_profiles"
+              sequence="10"/>
+
+</odoo>

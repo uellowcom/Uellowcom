@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Instead of inheriting the fragile res.config.settings view,
+        we create a standalone wizard view + menu action for PPC settings.
+        This is 100% safe across all Odoo 18 installations.
+    -->
+
+    <!-- Standalone form view for ppc.config.settings wizard -->
+    <record id="ppc_config_settings_view_form" model="ir.ui.view">
+        <field name="name">ppc.config.settings.view.form</field>
+        <field name="model">ppc.config.settings</field>
+        <field name="arch" type="xml">
+            <form string="Product Page Settings">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Product Page Custom — الإعدادات</h1>
+                    </div>
+                    <group string="واتساب / WhatsApp">
+                        <field name="whatsapp_number"
+                               string="رقم الواتساب"
+                               placeholder="+201234567890"
+                               help="أدخل رقم الواتساب مع كود الدولة، مثال: +201234567890"/>
+                    </group>
+                    <footer>
+                        <button name="action_save" type="object"
+                                string="حفظ" class="btn-primary"/>
+                        <button special="cancel" string="إلغاء"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action to open the wizard -->
+    <record id="ppc_config_settings_action" model="ir.actions.act_window">
+        <field name="name">Product Page Settings</field>
+        <field name="res_model">ppc.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menu: Website > Configuration > Product Page Settings -->
+    <menuitem id="ppc_config_menu"
+              name="Product Page Custom"
+              parent="website.menu_website_configuration"
+              action="ppc_config_settings_action"
+              sequence="99"/>
+
+</odoo>

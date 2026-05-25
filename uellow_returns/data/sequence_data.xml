@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="seq_return_request" model="ir.sequence">
+    <field name="name">Return Request</field>
+    <field name="code">uellow.return.request</field>
+    <field name="prefix">RET/%(year)s/</field>
+    <field name="padding">4</field>
+  </record>
+</odoo>

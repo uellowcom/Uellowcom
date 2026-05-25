@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_loyalty_root"
+            name="Loyalty"
+            parent="uellow_multivendor.menu_marketplace_main"
+            sequence="40"/>
+  <menuitem id="menu_loyalty_program"
+            name="Program Settings"
+            parent="menu_loyalty_root"
+            action="action_loyalty_program"
+            sequence="41"/>
+  <menuitem id="menu_loyalty_accounts"
+            name="Customer Accounts"
+            parent="menu_loyalty_root"
+            action="action_loyalty_accounts"
+            sequence="42"/>
+</odoo>

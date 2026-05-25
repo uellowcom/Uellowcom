@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="view_dead_stock_list" model="ir.ui.view">
+    <field name="name">uellow.dead.stock.list</field>
+    <field name="model">uellow.dead.stock</field>
+    <field name="arch" type="xml">
+      <list string="Dead Stock Monitor"
+            decoration-danger="days_since_last_sale &gt; 60"
+            decoration-warning="days_since_last_sale &gt; 30">
+        <field name="product_id" string="Product (Variant)"/>
+        <field name="product_tmpl_id" string="Product"/>
+        <field name="qty_on_hand" string="Stock Qty"/>
+        <field name="last_sale_date" string="Last Sale"/>
+        <field name="days_since_last_sale" string="Days Idle"/>
+        <field name="suggested_action" widget="badge" string="Suggested Action"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_dead_stock_search" model="ir.ui.view">
+    <field name="name">uellow.dead.stock.search</field>
+    <field name="model">uellow.dead.stock</field>
+    <field name="arch" type="xml">
+      <search string="Search Dead Stock">
+        <field name="product_id" string="Product"/>
+        <filter string="Critical (60+ days)" name="critical"
+                domain="[('days_since_last_sale','&gt;=',60)]"/>
+        <filter string="Warning (30+ days)" name="warning"
+                domain="[('days_since_last_sale','&gt;=',30)]"/>
+        <group expand="0" string="Group By">
+          <filter string="Suggested Action" name="group_action"
+                  context="{'group_by': 'suggested_action'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_dead_stock" model="ir.actions.act_window">
+    <field name="name">Dead Stock</field>
+    <field name="res_model">uellow.dead.stock</field>
+    <field name="view_mode">list</field>
+    <field name="search_view_id" ref="view_dead_stock_search"/>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">No dead stock detected</p>
+      <p>The system monitors products with stock but no sales activity.</p>
+    </field>
+  </record>
+
+</odoo>

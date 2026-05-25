@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Flash Sale Desktop — Snippet Template -->
+    <template id="flash_sale_snippet" name="Flash Sale Desktop">
+        <section class="uellow-flash-v30-root pt-3 pb-0">
+            <div class="container shadow-sm border rounded-4 overflow-hidden bg-white p-0 mb-0">
+                <div class="row g-0 align-items-stretch">
+
+                    <div class="col-lg-2 col-md-3 p-3 text-center text-white d-flex flex-column justify-content-center align-items-center uellow-flash-sidebar">
+                        <h2 class="fw-bold mb-1 fs-5 text-white v30-flash-title">عروض فلاش</h2>
+                        <p class="mb-2 fw-bold opacity-75 small text-white v30-ends-in">تنتهي خلال</p>
+                        <div class="d-flex align-items-center gap-1 mb-3">
+                            <div class="v30-timer-box" id="v30_h">00</div>
+                            <span class="fw-bold">:</span>
+                            <div class="v30-timer-box" id="v30_m">00</div>
+                            <span class="fw-bold">:</span>
+                            <div class="v30-timer-box" id="v30_s">00</div>
+                        </div>
+                        <a href="/shop/category/flash-deal-871"
+                           class="btn btn-light rounded-pill px-3 py-1 fw-bold shadow-sm v30-btn"
+                           style="color:#ff2a6d !important; font-size:10px;">
+                            عرض الكل
+                        </a>
+                    </div>
+
+                    <div class="col-lg-10 col-md-9 p-3 position-relative bg-white">
+                        <div class="swiper swiperV30Flash">
+                            <div class="swiper-wrapper" id="v30_flash_list">
+                                <div class="swiper-slide text-center py-5 w-100">
+                                    <div class="spinner-border text-danger spinner-border-sm"></div>
+                                </div>
+                            </div>
+                            <div class="swiper-button-next v30-f-nav"></div>
+                            <div class="swiper-button-prev v30-f-nav"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- تسجيل البلوك — نفس طريقة flash_sale_mobile بالضبط -->
+    <template id="flash_sale_snippet_register" inherit_id="website.snippets" name="Flash Sale Desktop Block">
+        <!-- 1. سجّل الـ group في snippet_groups -->
+        <xpath expr="//snippets[@id='snippet_groups']/*[1]" position="before">
+            <t snippet-group="uw_flash_desktop"
+               t-snippet="website.s_snippet_group"
+               string="Flash Sale"
+               t-thumbnail="/web/static/img/snippets_thumbs/s_text_image.svg"/>
+        </xpath>
+        <!-- 2. أضف البلوك في snippet_structure تحت الـ group -->
+        <xpath expr="//snippets[@id='snippet_structure']/*[1]" position="before">
+            <t t-snippet="flash_sale_desktop.flash_sale_snippet"
+               t-thumbnail="/web/static/img/snippets_thumbs/s_text_image.svg"
+               string="Flash Sale Desktop"
+               group="uw_flash_desktop"/>
+        </xpath>
+    </template>
+
+</odoo>

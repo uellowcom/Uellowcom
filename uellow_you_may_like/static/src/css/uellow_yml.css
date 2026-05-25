@@ -1,0 +1,282 @@
+/* ============================================================
+   Uellow – You May Like  |  uellow_yml.css
+   ============================================================ */
+
+.s_uellow_you_may_like {
+    --uyw-bg:     #f0f1f3;
+    --uyw-card:   #ffffff;
+    --uyw-radius: 12px;
+    --uyw-dark:   #1a1a2e;
+    --uyw-red:    #e63946;
+    --uyw-gold:   #f4c430;
+    --uyw-green:  #22c55e;
+    --uyw-muted:  #8a8f98;
+
+    background: var(--uyw-bg) !important;
+    padding: 0 !important;          /* ← لا مسافة أعلى أو أسفل */
+    margin: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* ── Inner container ────────────────────────────────────────── */
+.s_uellow_you_may_like .uyw_wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px 12px 16px;        /* ← مسافة صغيرة أعلى العنوان */
+    box-sizing: border-box;
+    background: var(--uyw-bg);
+    border-radius: 16px;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.s_uellow_you_may_like .uyw_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.s_uellow_you_may_like .uyw_title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--uyw-dark);
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+/* زر مور – أصفر باللون الأسود */
+.s_uellow_you_may_like .uyw_view_all {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #000 !important;
+    background: var(--uyw-gold);
+    text-decoration: none;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: .02em;
+    transition: opacity .2s, transform .15s;
+    white-space: nowrap;
+    display: inline-block;
+    line-height: 1.5;
+}
+.s_uellow_you_may_like .uyw_view_all:hover {
+    opacity: .85;
+    text-decoration: none;
+    color: #000 !important;
+    transform: scale(1.04);
+}
+
+/* ── Grid ───────────────────────────────────────────────────── */
+.s_uellow_you_may_like .uyw_grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+@media (min-width: 576px) { .s_uellow_you_may_like .uyw_grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 768px) { .s_uellow_you_may_like .uyw_grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
+@media (min-width: 992px) { .s_uellow_you_may_like .uyw_grid { grid-template-columns: repeat(5, 1fr); gap: 12px; } }
+
+/* ── Card – no border ───────────────────────────────────────── */
+.s_uellow_you_may_like .uyw_card {
+    background: var(--uyw-card);
+    border: none !important;        /* ← إزالة البوردر */
+    border-radius: var(--uyw-radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform .22s ease, box-shadow .22s ease;
+    text-decoration: none;
+    color: inherit;
+    height: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06); /* ظل خفيف بدل البوردر */
+}
+.s_uellow_you_may_like .uyw_card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.10);
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ── Image ──────────────────────────────────────────────────── */
+.s_uellow_you_may_like .uyw_img_box {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: #f9f9fb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    text-decoration: none;
+    position: relative;
+}
+.s_uellow_you_may_like .uyw_img_box img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    display: block !important;
+    transition: transform .35s ease;
+    max-width: none !important;
+    border: none !important;
+}
+.s_uellow_you_may_like .uyw_card:hover .uyw_img_box img { transform: scale(1.05); }
+
+/* ── Details ────────────────────────────────────────────────── */
+.s_uellow_you_may_like .uyw_details {
+    padding: 8px 9px 9px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-sizing: border-box;
+}
+
+.s_uellow_you_may_like .uyw_name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #222;
+    line-height: 1.3;
+    height: 32px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin: 0;
+}
+
+/* price row – السعر + المشطوب + نسبة الخصم في صف واحد */
+.s_uellow_you_may_like .uyw_price_row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0;
+}
+.s_uellow_you_may_like .uyw_price_now {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #111;
+    line-height: 1;
+}
+.s_uellow_you_may_like .uyw_price_old {
+    font-size: 0.75rem;
+    color: var(--uyw-muted);
+    text-decoration: line-through;
+    line-height: 1;
+}
+/* نسبة الخصم بجانب السعر المشطوب */
+.s_uellow_you_may_like .uyw_disc_inline {
+    background: var(--uyw-red);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 900;
+    padding: 1px 5px;
+    border-radius: 4px;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+/* stars */
+.s_uellow_you_may_like .uyw_stars {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    color: #f0ac00;
+    margin: 0;
+}
+.s_uellow_you_may_like .uyw_stars i { font-size: 10px; line-height: 1; }
+.s_uellow_you_may_like .uyw_stars .uyw_star_empty { color: #ddd; }
+.s_uellow_you_may_like .uyw_stars span { font-size: 10px; color: var(--uyw-muted); margin-left: 2px; }
+
+/* ticker */
+.s_uellow_you_may_like .uyw_ticker { height: 16px; overflow: hidden; margin: 1px 0; }
+.s_uellow_you_may_like .uyw_ticker_list {
+    list-style: none; margin: 0; padding: 0;
+    animation: uyw_tick 14s infinite;
+}
+.s_uellow_you_may_like .uyw_ticker_list li {
+    height: 16px; line-height: 16px; font-size: 10px; color: #555;
+    display: flex; align-items: center; gap: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding: 0; margin: 0;
+}
+.s_uellow_you_may_like .uyw_ticker_list li.uyw_save_li { color: var(--uyw-red); font-weight: 800; }
+.s_uellow_you_may_like .uyw_ticker_list li i { flex-shrink: 0; font-size: 10px; width: 11px; text-align: center; }
+
+/* card footer */
+.s_uellow_you_may_like .uyw_card_footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: auto; padding-top: 4px; gap: 3px; flex-wrap: nowrap;
+}
+.s_uellow_you_may_like .uyw_badges { display: flex; gap: 3px; align-items: center; flex-shrink: 0; }
+.s_uellow_you_may_like .uyw_badge_exp {
+    background: var(--uyw-gold); color: #000; font-size: 7px; font-weight: 900;
+    padding: 1px 4px; border-radius: 3px; letter-spacing: .02em;
+    text-transform: uppercase; white-space: nowrap; line-height: 1.5;
+}
+.s_uellow_you_may_like .uyw_badge_taly {
+    display: inline-flex; align-items: center; gap: 3px;
+    background: #1a1f2b; color: #fff; font-size: 9px; font-weight: 700;
+    padding: 2px 6px; border-radius: 20px; height: 16px; white-space: nowrap; line-height: 1;
+}
+.s_uellow_you_may_like .uyw_taly_icon {
+    display: inline-flex; flex-direction: column; width: 5px; height: 9px; flex-shrink: 0; gap: 0;
+}
+.s_uellow_you_may_like .uyw_taly_icon span:first-child {
+    display: block; width: 100%; height: 50%; background: #1e88e5; border-radius: 3px 3px 0 0;
+}
+.s_uellow_you_may_like .uyw_taly_icon span:last-child {
+    display: block; width: 100%; height: 50%; background: #90a4ae; border-radius: 0 0 3px 3px;
+}
+.s_uellow_you_may_like .uyw_stock {
+    font-size: 10px; font-weight: 700; display: flex; align-items: center; gap: 3px; flex-shrink: 0;
+}
+.s_uellow_you_may_like .uyw_stock.in  { color: var(--uyw-green); }
+.s_uellow_you_may_like .uyw_stock.out { color: var(--uyw-red); }
+
+/* ── Footer action ──────────────────────────────────────────── */
+.s_uellow_you_may_like .uyw_footer_action {
+    display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 20px;
+}
+.s_uellow_you_may_like .uyw_btn_more {
+    background: var(--uyw-gold);    /* ← أصفر */
+    color: #000 !important;         /* ← أسود */
+    border: none;
+    padding: 10px 44px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: .03em;
+    transition: opacity .2s, transform .15s;
+    display: inline-block;
+    line-height: 1.4;
+}
+.s_uellow_you_may_like .uyw_btn_more:hover {
+    opacity: .85;
+    transform: scale(1.03);
+    color: #000 !important;
+}
+.s_uellow_you_may_like .uyw_spinner {
+    width: 26px; height: 26px; border: 3px solid #ddd;
+    border-top-color: var(--uyw-dark); border-radius: 50%;
+    animation: uyw_spin .75s linear infinite; display: inline-block;
+}
+
+/* ── Keyframes ──────────────────────────────────────────────── */
+@keyframes uyw_spin { to { transform: rotate(360deg); } }
+@keyframes uyw_tick {
+    0%,  14% { transform: translateY(0);     }
+    19%, 34% { transform: translateY(-16px); }
+    39%, 54% { transform: translateY(-32px); }
+    59%, 74% { transform: translateY(-48px); }
+    79%, 94% { transform: translateY(-64px); }
+    99%,100% { transform: translateY(0);     }
+}
+
+/* ── RTL ────────────────────────────────────────────────────── */
+[dir="rtl"] .s_uellow_you_may_like .uyw_disc_inline { }

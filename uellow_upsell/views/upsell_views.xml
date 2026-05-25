@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_upsell_rule_list" model="ir.ui.view">
+    <field name="name">uellow.upsell.rule.list</field>
+    <field name="model">uellow.upsell.rule</field>
+    <field name="arch" type="xml">
+      <list string="Upsell Rules">
+        <field name="name"/><field name="rule_type" widget="badge"/>
+        <field name="display_position"/><field name="max_display"/>
+        <field name="click_count"/><field name="convert_count"/>
+        <field name="active" widget="boolean_toggle"/>
+      </list>
+    </field>
+  </record>
+  <record id="view_upsell_rule_form" model="ir.ui.view">
+    <field name="name">uellow.upsell.rule.form</field>
+    <field name="model">uellow.upsell.rule</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <group><field name="name"/><field name="rule_type"/><field name="active" widget="boolean_toggle"/></group>
+            <group><field name="display_position"/><field name="max_display"/><field name="discount_bundle"/></group>
+          </group>
+          <notebook>
+            <page string="Triggers"><field name="trigger_product_ids" widget="many2many_tags"/><field name="trigger_category_ids" widget="many2many_tags"/></page>
+            <page string="Recommended"><field name="recommended_product_ids" widget="many2many_tags"/></page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="action_upsell_rules" model="ir.actions.act_window">
+    <field name="name">Upsell / Cross-sell Rules</field>
+    <field name="res_model">uellow.upsell.rule</field>
+    <field name="view_mode">list,form</field>
+  </record>
+</odoo>

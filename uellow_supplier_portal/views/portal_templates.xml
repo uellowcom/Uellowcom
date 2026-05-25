@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+<template id="supplier_dashboard" name="Supplier Dashboard">
+  <t t-call="website.layout">
+    <div class="container py-4" style="max-width:900px">
+      <h2 class="fw-bold">Supplier Portal — <t t-esc="supplier.partner_id.name"/></h2>
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="card text-center p-3 border-0 shadow-sm">
+            <div class="fs-2 fw-bold" t-attf-style="color:#{supplier.health_score >= 90 and '#1E6B3C' or supplier.health_score >= 70 and '#C9922A' or '#C0392B'}">
+              <t t-esc="int(supplier.health_score)"/>
+            </div>
+            <div class="text-muted small">Health Score</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center p-3 border-0 shadow-sm">
+            <div class="fs-2 fw-bold text-primary"><t t-esc="supplier.total_orders"/></div>
+            <div class="text-muted small">Total Orders</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center p-3 border-0 shadow-sm">
+            <div class="fs-2 fw-bold text-success"><t t-esc="'%.1f' % supplier.on_time_rate"/>%</div>
+            <div class="text-muted small">On-time Rate</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card text-center p-3 border-0 shadow-sm">
+            <div class="fs-2 fw-bold text-warning"><t t-esc="'%.1f' % supplier.response_time_hrs"/>h</div>
+            <div class="text-muted small">Avg Response</div>
+          </div>
+        </div>
+      </div>
+      <div class="card shadow-sm">
+        <div class="card-header fw-bold">Recent Orders</div>
+        <div class="card-body p-0">
+          <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Order</th><th>Date</th><th>Amount</th><th>Confirmed</th><th>Tracking</th></tr></thead>
+            <tbody>
+              <t t-foreach="orders" t-as="order">
+                <tr>
+                  <td class="fw-bold"><t t-esc="order.name"/></td>
+                  <td><t t-esc="order.date_order"/></td>
+                  <td><t t-esc="'%.3f' % order.amount_total"/></td>
+                  <td><span t-attf-class="badge #{order.supplier_confirmed and 'bg-success' or 'bg-warning'}"><t t-if="order.supplier_confirmed">Yes</t><t t-else="">Pending</t></span></td>
+                  <td><t t-esc="order.tracking_number or '-'"/></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </t>
+</template>
+</odoo>

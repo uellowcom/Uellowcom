@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_barcode_session,barcode.session,model_uellow_barcode_session,base.group_user,1,1,1,0
+access_barcode_scan,barcode.scan,model_uellow_barcode_scan,base.group_user,1,1,1,0
+access_barcode_session_admin,barcode.session.admin,model_uellow_barcode_session,base.group_system,1,1,1,1
+access_barcode_scan_admin,barcode.scan.admin,model_uellow_barcode_scan,base.group_system,1,1,1,1

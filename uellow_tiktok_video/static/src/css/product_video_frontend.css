@@ -1,0 +1,25 @@
+.o_carousel_product_outer { position: relative; }
+.uellow-video-float-btn { position: absolute; top: 12px; right: 12px; z-index: 10; background: none; border: none; padding: 0; cursor: pointer; width: 48px; height: 48px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4)); transition: transform 0.2s ease; }
+.uellow-video-float-btn:hover { transform: scale(1.1); }
+.uellow-video-float-btn svg { width: 48px; height: 48px; display: block; }
+.uellow-video-tooltip { position: absolute; top: 54px; right: 0; background: rgba(0,0,0,0.8); color: #fff; font-size: 12px; white-space: nowrap; padding: 4px 10px; border-radius: 6px; pointer-events: none; opacity: 0; transform: translateY(-4px); transition: opacity 0.2s, transform 0.2s; }
+.uellow-video-float-btn:hover .uellow-video-tooltip { opacity: 1; transform: translateY(0); }
+@media (max-width: 767px) { .uellow-video-float-btn { width: 40px; height: 40px; top: 10px; right: 10px; } .uellow-video-float-btn svg { width: 40px; height: 40px; } }
+.uellow-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 99999; align-items: center; justify-content: center; padding: 16px; }
+.uellow-modal-overlay.uellow-open { display: flex; }
+.uellow-modal-box { background: #111; border-radius: 12px; overflow: hidden; width: 100%; max-width: 380px; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
+.uellow-modal-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #1a1a1a; flex-shrink: 0; }
+.uellow-modal-title { color: #fff; font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uellow-modal-close { background: none; border: none; color: #aaa; font-size: 20px; cursor: pointer; padding: 0 4px; line-height: 1; transition: color 0.15s; flex-shrink: 0; }
+.uellow-modal-close:hover { color: #fff; }
+.uellow-modal-body { flex: 1; overflow: hidden; }
+.uellow-tiktok-wrap { position: relative; padding-top: 177.77%; width: 100%; overflow: hidden; }
+.uellow-tiktok-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+.uellow-iframe-wrap { position: relative; padding-top: 56.25%; width: 100%; }
+.uellow-iframe-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+.uellow-modal-body video { width: 100%; display: block; background: #000; max-height: 75vh; }
+@media (max-width: 576px) { .uellow-modal-box { max-width: 100%; max-height: 85vh; border-radius: 8px; } }
+.oe_product_image { position: relative; overflow: hidden; }
+.uellow-play-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 2; }
+.uellow-play-icon { width: 52px; height: 52px; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); opacity: 0.85; transition: transform 0.2s, opacity 0.2s; }
+.oe_product_image:hover .uellow-play-icon { transform: scale(1.12); opacity: 1; }

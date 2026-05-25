@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_fraud_root"
+            name="Fraud Detection"
+            parent="uellow_multivendor.menu_marketplace_main"
+            sequence="50"/>
+  <menuitem id="menu_fraud_cases"
+            name="Fraud Cases"
+            parent="menu_fraud_root"
+            action="action_fraud_cases"
+            sequence="51"/>
+  <menuitem id="menu_fraud_rules"
+            name="Detection Rules"
+            parent="menu_fraud_root"
+            action="action_fraud_rules"
+            sequence="52"/>
+</odoo>

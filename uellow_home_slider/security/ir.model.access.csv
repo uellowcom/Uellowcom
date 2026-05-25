@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_uellow_home_slider_admin,uellow.home.slider.admin,model_uellow_home_slider,base.group_system,1,1,1,1
+access_uellow_home_slider_user,uellow.home.slider.user,model_uellow_home_slider,base.group_user,1,0,0,0
+access_uellow_home_slide_admin,uellow.home.slide.admin,model_uellow_home_slide,base.group_system,1,1,1,1
+access_uellow_home_slide_user,uellow.home.slide.user,model_uellow_home_slide,base.group_user,1,0,0,0

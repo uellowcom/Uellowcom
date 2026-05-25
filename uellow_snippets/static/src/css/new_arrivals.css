@@ -1,0 +1,82 @@
+.yw-na-root { padding:0 3px; max-width:100%; margin:0 auto; box-sizing:border-box; }
+.yw-na-root[dir="rtl"] { font-family:'Cairo',sans-serif; }
+.yw-na-root[dir="ltr"] { font-family:'Inter',sans-serif; }
+
+/* ── Header ── */
+.yw-na-root .yw-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem; gap:10px; }
+.yw-na-root .yw-left   { display:flex; align-items:center; gap:7px; flex-shrink:0; }
+.yw-na-root .yw-title  { font-size:15px; font-weight:700; color:#1a1a1a; }
+.yw-na-root .yw-badge  { background:#F5C10A; color:#1a1400; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; }
+.yw-na-root .yw-center { display:flex; align-items:center; gap:6px; flex:1; justify-content:center; }
+.yw-na-root .yw-nav-btn { width:26px; height:26px; border-radius:50%; background:#fff; border:0.5px solid #ddd; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background 0.15s; color:#1a1a1a; flex-shrink:0; }
+.yw-na-root .yw-nav-btn:hover { background:#F5C10A; border-color:#F5C10A; color:#1a1400; }
+.yw-na-root .yw-nav-btn:disabled { opacity:0.3; cursor:default; }
+.yw-na-root .yw-nav-btn:disabled:hover { background:#fff; border-color:#ddd; color:#1a1a1a; }
+.yw-na-root .yw-dots { display:flex; gap:4px; align-items:center; }
+.yw-na-root .yw-dot { width:5px; height:5px; border-radius:50%; background:#ddd; cursor:pointer; transition:background 0.2s, width 0.2s; border:none; }
+.yw-na-root .yw-dot.active { background:#F5C10A; width:14px; border-radius:3px; }
+.yw-na-root .yw-right-link { flex-shrink:0; }
+.yw-na-root .yw-viewall { font-size:11px; color:#B8860B; font-weight:600; border-bottom:1px solid #F5C10A; padding-bottom:1px; text-decoration:none; white-space:nowrap; margin:0 6px; }
+.yw-na-root .yw-viewall:hover { opacity:0.7; }
+
+/* ── Slider ── */
+.yw-na-root .yw-slider-outer { overflow:hidden; }
+.yw-na-root .yw-track { display:flex; gap:8px; transition:transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94); will-change:transform; }
+
+/* ── Card ── */
+.yw-na-root .yw-card { flex-shrink:0; background:#fff; border-radius:8px; border:0.5px solid #ebebeb; overflow:hidden; cursor:pointer; transition:transform 0.2s ease; position:relative; text-decoration:none; display:block; }
+.yw-na-root .yw-card:hover { transform:translateY(-2px); }
+
+/* ── Image ── */
+.yw-na-root .yw-img-wrap { position:relative; width:100%; padding-top:100%; background:#f5f5f5; overflow:hidden; }
+.yw-na-root .yw-img-inner { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+.yw-na-root .yw-img-inner img { width:100%; height:100%; object-fit:cover; transition:transform 0.3s; }
+.yw-na-root .yw-card:hover .yw-img-inner img { transform:scale(1.04); }
+.yw-na-root .yw-img-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#f5f5f5; }
+.yw-na-root .yw-new-tag { position:absolute; top:6px; background:#1a1400; color:#F5C10A; font-size:8px; font-weight:700; padding:2px 6px; border-radius:20px; z-index:2; }
+.yw-na-root[dir="rtl"] .yw-new-tag { right:6px; }
+.yw-na-root[dir="ltr"] .yw-new-tag { left:6px; }
+
+/* ── Body ── */
+.yw-na-root .yw-body { padding:5px 7px 6px; display:flex; flex-direction:column; gap:0; }
+.yw-na-root[dir="rtl"] .yw-body { align-items:flex-end; text-align:right; }
+.yw-na-root[dir="ltr"] .yw-body { align-items:flex-start; text-align:left; }
+
+/* اسم المنتج — سطرين بالضبط */
+.yw-na-root .yw-name { font-size:10px; font-weight:600; color:#1a1a1a; line-height:1.4; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; height:28px; margin-bottom:3px; }
+.yw-na-root[dir="rtl"] .yw-name { text-align:right; }
+.yw-na-root[dir="ltr"] .yw-name { text-align:left; }
+
+/* التقييمات — بلا مسافة فوقها */
+.yw-na-root .yw-rating { display:flex; align-items:center; gap:2px; height:13px; margin:0 0 3px 0; }
+.yw-na-root[dir="rtl"] .yw-rating { flex-direction:row-reverse; justify-content:flex-end; }
+.yw-na-root[dir="ltr"] .yw-rating { justify-content:flex-start; }
+.yw-na-root .yw-stars { display:flex; gap:1px; }
+.yw-na-root .yw-star  { width:10px; height:10px; display:inline-block; }
+.yw-na-root .yw-rating-count { font-size:9px; color:#888; margin:0 2px; }
+
+/* السعر */
+.yw-na-root .yw-price-row { display:flex; align-items:center; gap:4px; flex-wrap:wrap; min-height:18px; }
+.yw-na-root[dir="rtl"] .yw-price-row { flex-direction:row-reverse; justify-content:flex-end; direction:rtl; }
+.yw-na-root[dir="ltr"] .yw-price-row { justify-content:flex-start; direction:ltr; }
+.yw-na-root .yw-price-current { font-size:12px; font-weight:800; color:#1a1a1a; white-space:nowrap; }
+.yw-na-root .yw-price-old     { font-size:9px; color:#bbb; text-decoration:line-through; white-space:nowrap; }
+.yw-na-root .yw-disc-badge    { background:#E24B4A; color:#fff; font-size:8px; font-weight:700; padding:1px 4px; border-radius:3px; white-space:nowrap; }
+
+/* ── Skeleton ── */
+.yw-na-root .yw-skeleton { flex-shrink:0; background:#f7f7f7; border-radius:8px; border:0.5px solid #ebebeb; overflow:hidden; animation:yw-na-pulse 1.4s ease-in-out infinite; }
+@keyframes yw-na-pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.yw-na-root .yw-sk-img  { width:100%; padding-top:100%; background:#e5e5e5; }
+.yw-na-root .yw-sk-body { padding:5px 7px 6px; }
+.yw-na-root .yw-sk-line { height:7px; border-radius:4px; background:#e5e5e5; margin-bottom:5px; }
+
+/* ── Error ── */
+.yw-na-root .yw-error { width:100%; padding:1.5rem; text-align:center; color:#666; font-size:12px; }
+.yw-na-root .yw-error-box { background:#fff8e1; border:0.5px solid #F5C10A; border-radius:8px; padding:10px 14px; font-size:11px; color:#555; line-height:1.7; margin-top:8px; word-break:break-all; }
+.yw-na-root .yw-btn { margin-top:10px; padding:5px 18px; border:none; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; background:#F5C10A; color:#1a1400; }
+
+/* ── Responsive ── */
+@media (max-width:767px) {
+    .yw-na-root { padding:0 8px; }
+    .s_uellow_new_arrivals { padding-left:4px !important; padding-right:4px !important; }
+}

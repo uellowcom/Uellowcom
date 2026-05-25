@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_delivery_token,delivery.token,model_uellow_delivery_token,base.group_system,1,1,1,1
+access_delivery_trip,delivery.trip,model_uellow_delivery_trip,base.group_user,1,1,1,0
+access_delivery_trip_admin,delivery.trip.admin,model_uellow_delivery_trip,base.group_system,1,1,1,1

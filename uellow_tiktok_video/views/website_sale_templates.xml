@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =====================================================================
+         1. Floating video button overlay on the main product image carousel
+         Inherits shop_product_carousel - adds a fixed play button on top
+         ===================================================================== -->
+    <template id="uellow_product_page_video_inject"
+              inherit_id="website_sale.shop_product_carousel"
+              name="Uellow: TikTok Video Button on Product Image">
+        <xpath expr="//div[@id='o-carousel-product']" position="inside">
+            <t t-if="product.has_product_video">
+                <t t-set="first_video" t-value="product.product_video_ids.filtered(lambda v: v.active)[0] if product.product_video_ids.filtered(lambda v: v.active) else False"/>
+                <t t-if="first_video">
+                    <button type="button"
+                            class="uellow-video-float-btn"
+                            t-att-data-video-type="first_video.video_type"
+                            t-att-data-tiktok-id="first_video.tiktok_video_id or ''"
+                            t-att-data-file-url="'/web/content/product.video/%s/video_file' % first_video.id if first_video.video_type == 'direct_upload' else ''"
+                            t-att-data-embed-url="first_video.embed_url or ''"
+                            t-att-data-video-name="first_video.name"
+                            onclick="window.UellowVideoModal &amp;&amp; window.UellowVideoModal.open(this)"
+                            aria-label="Watch product video">
+                        <svg viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="22" cy="22" r="22" fill="#fe2c55"/>
+                            <polygon points="17,13 17,31 33,22" fill="white"/>
+                        </svg>
+                        <span class="uellow-video-tooltip">مشاهدة فيديو المنتج</span>
+                    </button>
+                </t>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- =====================================================================
+         2. Video modal - compact size for TikTok portrait format
+         ===================================================================== -->
+    <template id="uellow_product_video_modal"
+              inherit_id="website_sale.product"
+              name="Uellow: Video Modal">
+        <xpath expr="//div[@id='wrap']" position="inside">
+            <t t-if="product.has_product_video">
+                <div id="uellowVideoModal" class="uellow-modal-overlay" style="display:none;" onclick="if(event.target===this)UellowVideoModal.close()">
+                    <div class="uellow-modal-box">
+                        <div class="uellow-modal-header">
+                            <span id="uellowVideoModalLabel" class="uellow-modal-title"></span>
+                            <button type="button" class="uellow-modal-close" onclick="UellowVideoModal.close()">&#x2715;</button>
+                        </div>
+                        <div class="uellow-modal-body" id="uellowVideoModalBody"></div>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- =====================================================================
+         3. Shop Listing: Play icon overlay on product cards with video
+         ===================================================================== -->
+    <template id="uellow_shop_product_card_video_badge"
+              inherit_id="website_sale.products_item"
+              name="Uellow: Play Icon on Product Card">
+        <xpath expr="//div[hasclass('oe_product_image')]" position="inside">
+            <t t-if="product.has_product_video">
+                <div class="uellow-play-overlay">
+                    <svg class="uellow-play-icon" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="40" cy="40" r="38" fill="rgba(0,0,0,0.45)" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+                        <polygon points="32,24 32,56 58,40" fill="white" opacity="0.95"/>
+                    </svg>
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

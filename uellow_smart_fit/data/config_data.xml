@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="fit_enabled" model="ir.config_parameter">
+            <field name="key">uellow_fit.enabled</field>
+            <field name="value">True</field>
+        </record>
+        <record id="fit_show_on_product" model="ir.config_parameter">
+            <field name="key">uellow_fit.show_on_product</field>
+            <field name="value">True</field>
+        </record>
+    </data>
+</odoo>

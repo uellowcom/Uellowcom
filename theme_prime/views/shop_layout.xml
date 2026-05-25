@@ -391,19 +391,69 @@
 
     <template id="product_item_price" name="Theme Prime: Product Item Price">
         <div t-if="request.website._dr_has_b2b_access()" t-attf-class="product_price #{_classes}" itemprop="offers" itemscope="itemscope" itemtype="http://schema.org/Offer">
-            <span t-attf-class="#{_size or 'h6'} text-primary mb-0" t-if="template_price_vals['price_reduce'] or not website.prevent_zero_price_sale" t-out="template_price_vals['price_reduce']" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
-            <span t-attf-class="#{_size or 'h6'}" t-elif="any(ptav.price_extra for ptav in product.attribute_line_ids.product_template_value_ids)">&amp;nbsp;</span>
-            <span t-attf-class="#{_size or 'h6'} mb-0" t-else="" t-field="website.prevent_zero_price_sale_text"/>
-            <t t-if="'base_price' in template_price_vals">
-                <del t-attf-class="text-body ms-1 #{_size or 'h6'} mb-0" style="white-space: nowrap;">
-                    <span class="small" t-out="template_price_vals['base_price']" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}" />
-                </del>
-            </t>
-            <span itemprop="price" style="display:none;" t-out="template_price_vals['price_reduce']" />
-            <span itemprop="priceCurrency" style="display:none;" t-out="website.currency_id.name" />
-            <small t-if="'base_price' in template_price_vals" class="tp-discount-percentage d-none d-md-inline-block ms-1">
-                (<t t-out="round((template_price_vals['base_price'] - template_price_vals['price_reduce']) / template_price_vals['base_price'] * 100)"/>% OFF)
-            </small>
+            <!-- Uellow: price row - all in one flex row -->
+            <div class="uc-price-row">
+                <span class="uc-current-price" t-if="template_price_vals['price_reduce'] or not website.prevent_zero_price_sale" t-out="template_price_vals['price_reduce']" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+                <span t-elif="any(ptav.price_extra for ptav in product.attribute_line_ids.product_template_value_ids)">&amp;nbsp;</span>
+                <span t-else="" t-field="website.prevent_zero_price_sale_text"/>
+                <t t-if="'base_price' in template_price_vals">
+                    <del class="uc-old-price">
+                        <span t-out="template_price_vals['base_price']" t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+                    </del>
+                    <t t-set="uc_dp" t-value="int(round((template_price_vals['base_price'] - template_price_vals['price_reduce']) / template_price_vals['base_price'] * 100)) if template_price_vals['base_price'] else 0"/>
+                    <span t-if="uc_dp > 0" class="uc-disc-pill">-<t t-esc="uc_dp"/>%</span>
+                </t>
+            </div>
+            <span itemprop="price" style="display:none;" t-out="template_price_vals['price_reduce']"/>
+            <span itemprop="priceCurrency" style="display:none;" t-out="website.currency_id.name"/>
+            <!-- Uellow: stars + score + count -->
+            <t t-set="uc_is_ar" t-value="request.env.lang and request.env.lang.startswith('ar')"/>
+            <t t-set="uc_ravg"  t-value="product.rating_avg or 0"/>
+            <t t-set="uc_rcnt"  t-value="product.rating_count or 0"/>
+            <div class="uc-rating-row" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
+                <div class="uc-stars">
+                    <span class="uc-stars-bg">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                    <span class="uc-stars-fg" t-attf-style="width:#{round(uc_ravg / 5 * 100)}%">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                </div>
+                <span class="uc-rating-score"><t t-esc="'%.1f' % uc_ravg"/></span>
+                <span class="uc-rating-count">(<t t-esc="uc_rcnt"/>)</span>
+            </div>
+            <!-- Uellow: free/fast delivery -->
+            <t t-set="uc_is_free_del" t-value="15 in product.product_tag_ids.ids"/>
+            <div t-attf-class="uc-delivery #{uc_is_free_del and 'uc-delivery--free' or ''}" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
+                <svg class="uc-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14H12L11 22L20 10H12L13 2Z"/></svg>
+                <t t-if="uc_is_free_del">
+                    <span t-if="not uc_is_ar">Free Delivery</span>
+                    <span t-if="uc_is_ar">&#1578;&#1608;&#1589;&#1610;&#1604; &#1605;&#1580;&#1575;&#1606;&#1610;</span>
+                </t>
+                <t t-if="not uc_is_free_del">
+                    <span t-if="not uc_is_ar">Fast Delivery</span>
+                    <span t-if="uc_is_ar">&#1578;&#1608;&#1589;&#1610;&#1604; &#1587;&#1585;&#1610;&#1593;</span>
+                </t>
+            </div>
+            <!-- Uellow: badges + availability -->
+            <t t-set="uc_stock_status" t-value="product.dr_show_out_of_stock"/>
+            <div class="uc-footer" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
+                <div class="uc-badges">
+                    <span class="uc-badge-exp">EXPRESS</span>
+                    <span class="uc-badge-taly">taly</span>
+                </div>
+                <div t-if="uc_stock_status == 'OUT_OF_STOCK'" class="uc-oos">
+                    <span t-if="not uc_is_ar">Out of Stock</span>
+                    <span t-if="uc_is_ar">&#1606;&#1601;&#1584; &#1575;&#1604;&#1605;&#1582;&#1586;&#1608;&#1606;</span>
+                </div>
+                <div t-elif="uc_stock_status and uc_stock_status != 'OUT_OF_STOCK'" class="uc-units-left">
+                    <span><t t-esc="uc_stock_status"/> <t t-if="not uc_is_ar">left</t><t t-if="uc_is_ar">&#1605;&#1578;&#1628;&#1602;&#1610;</t></span>
+                </div>
+                <div t-else="" class="uc-avail">
+                    <svg class="uc-avail-icon" viewBox="0 0 24 24" fill="none" stroke="#2eac6e" stroke-width="2" stroke-linecap="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <span t-if="not uc_is_ar">Available</span>
+                    <span t-if="uc_is_ar">&#1605;&#1578;&#1608;&#1601;&#1585;</span>
+                </div>
+            </div>
         </div>
         <div t-else="" t-attf-class="#{_classes}">
             <t t-call="theme_prime.tp_b2b_price_label"/>
@@ -492,6 +542,17 @@
                             <i class="dri dri-cart"/> Add to Cart
                         </a>
                     </div>
+                    <!-- Uellow: save strip bottom of image -->
+                    <t t-if="'base_price' in template_price_vals and template_price_vals.get('base_price') and template_price_vals['base_price'] > template_price_vals.get('price_reduce', 0)">
+                        <t t-set="uc_save_amt" t-value="template_price_vals['base_price'] - template_price_vals['price_reduce']"/>
+                        <div class="uc-save-strip">
+                            <span class="uc-save-pill">
+                                <t t-if="not (request.env.lang and request.env.lang.startswith('ar'))">Save </t>
+                                <t t-if="request.env.lang and request.env.lang.startswith('ar')">&#1608;&#1601;&#1585; </t>
+                                <t t-esc="'%.3f' % uc_save_amt"/> KD
+                            </span>
+                        </div>
+                    </t>
                 </div>
                 <div class="tp-product-content border-top p-2 position-relative text-center text-lg-start">
                     <h6 class="mb-1 tp-product-title">

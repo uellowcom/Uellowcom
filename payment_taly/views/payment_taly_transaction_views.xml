@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Transaction List View -->
+    <record id="view_taly_transaction_list" model="ir.ui.view">
+        <field name="name">payment.transaction.taly.list</field>
+        <field name="model">payment.transaction</field>
+        <field name="arch" type="xml">
+            <list string="Taly Transactions"
+                  decoration-success="state == 'done'"
+                  decoration-warning="state == 'pending'"
+                  decoration-danger="state == 'cancel'">
+                <field name="create_date" string="Date"/>
+                <field name="reference" string="Reference"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="amount" string="Amount" widget="monetary"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="taly_order_id" string="Taly Order ID"/>
+                <field name="taly_order_status" string="Taly Status"/>
+                <field name="state" string="Odoo State"
+                       widget="badge"
+                       decoration-success="state == 'done'"
+                       decoration-warning="state == 'pending'"
+                       decoration-danger="state == 'cancel'"/>
+                <field name="taly_refunded_amount" string="Refunded"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Transaction Form (inherited) -->
+    <record id="view_taly_transaction_form_inherit" model="ir.ui.view">
+        <field name="name">payment.transaction.taly.form</field>
+        <field name="model">payment.transaction</field>
+        <field name="inherit_id" ref="payment.payment_transaction_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <div invisible="provider_code != 'taly'">
+                    <div class="alert alert-info mb-3" role="alert">
+                        <strong>💳 Taly Payment Details</strong>
+                    </div>
+                    <group string="Taly Information" col="4">
+                        <field name="taly_order_id"/>
+                        <field name="taly_order_token"/>
+                        <field name="taly_order_status"/>
+                        <field name="taly_installment_plan"/>
+                        <field name="taly_down_payment" widget="monetary"/>
+                        <field name="taly_refunded_amount" widget="monetary"/>
+                        <field name="taly_refund_reason"/>
+                    </group>
+                    <div class="d-flex gap-2 flex-wrap mb-3">
+                        <button name="action_taly_sync_status"
+                                string="🔄 Sync Status"
+                                type="object"
+                                class="btn btn-sm btn-secondary"
+                                invisible="not taly_order_token"/>
+                        <button name="action_taly_refund"
+                                string="💸 Refund"
+                                type="object"
+                                class="btn btn-sm btn-warning"
+                                invisible="state != 'done'"/>
+                        <button name="action_open_taly_checkout"
+                                string="🔗 Open Checkout URL"
+                                type="object"
+                                class="btn btn-sm btn-info"
+                                invisible="not taly_checkout_url"/>
+                    </div>
+                    <group string="Raw API Response"
+                           invisible="not taly_raw_response">
+                        <field name="taly_raw_response" nolabel="1" readonly="1"/>
+                    </group>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_taly_transactions" model="ir.actions.act_window">
+        <field name="name">Taly Transactions</field>
+        <field name="res_model">payment.transaction</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_taly_transaction_list"/>
+        <field name="domain">[('provider_code', '=', 'taly')]</field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_taly_transaction_search" model="ir.ui.view">
+        <field name="name">payment.transaction.taly.search</field>
+        <field name="model">payment.transaction</field>
+        <field name="arch" type="xml">
+            <search string="Search Taly Transactions">
+                <field name="reference" string="Reference"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="taly_order_id" string="Taly Order ID"/>
+                <separator/>
+                <filter string="Successful" name="done" domain="[('state', '=', 'done')]"/>
+                <filter string="Pending"    name="pending" domain="[('state', '=', 'pending')]"/>
+                <filter string="Cancelled"  name="cancel" domain="[('state', '=', 'cancel')]"/>
+                <separator/>
+                <filter string="Today" name="today"
+                        domain="[('create_date', '>=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status"   name="group_state"   context="{'group_by': 'state'}"/>
+                    <filter string="Month"    name="group_month"   context="{'group_by': 'create_date:month'}"/>
+                    <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="seq_bnpl" model="ir.sequence">
+    <field name="name">BNPL Application</field>
+    <field name="code">uellow.bnpl</field>
+    <field name="prefix">BNPL/%(year)s/</field>
+    <field name="padding">4</field>
+  </record>
+</odoo>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_dyn_pricing" name="Dynamic Pricing"
+            parent="uellow_multivendor.menu_marketplace_promo_root"
+            action="action_dyn_pricing" sequence="32"/>
+</odoo>

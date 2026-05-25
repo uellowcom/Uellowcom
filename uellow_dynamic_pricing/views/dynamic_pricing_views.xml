@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_dyn_price_list" model="ir.ui.view">
+    <field name="name">uellow.dynamic.pricing.rule.list</field>
+    <field name="model">uellow.dynamic.pricing.rule</field>
+    <field name="arch" type="xml">
+      <list string="Dynamic Pricing Rules">
+        <field name="name"/><field name="rule_type" widget="badge"/>
+        <field name="apply_to"/><field name="adjustment_type"/>
+        <field name="adjustment_value" string="Value"/>
+        <field name="times_applied"/><field name="last_applied"/>
+        <field name="active" widget="boolean_toggle"/>
+      </list>
+    </field>
+  </record>
+  <record id="view_dyn_price_form" model="ir.ui.view">
+    <field name="name">uellow.dynamic.pricing.rule.form</field>
+    <field name="model">uellow.dynamic.pricing.rule</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <group><field name="name"/><field name="rule_type"/><field name="active" widget="boolean_toggle"/></group>
+            <group><field name="apply_to"/><field name="category_id" invisible="apply_to!='category'"/><field name="adjustment_type"/><field name="adjustment_value"/></group>
+          </group>
+          <group string="Limits">
+            <field name="max_discount_pct"/><field name="max_price_increase_pct"/><field name="min_price"/>
+          </group>
+          <group string="Peak Hours" invisible="rule_type!='peak_hours'">
+            <field name="peak_start_hour"/><field name="peak_end_hour"/><field name="peak_days"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="action_dyn_pricing" model="ir.actions.act_window">
+    <field name="name">Dynamic Pricing Rules</field>
+    <field name="res_model">uellow.dynamic.pricing.rule</field>
+    <field name="view_mode">list,form</field>
+  </record>
+</odoo>

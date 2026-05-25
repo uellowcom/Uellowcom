@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_z_order_user,z.order.user,model_z_order,base.group_user,1,1,1,1
+access_z_order_portal,z.order.portal,model_z_order,base.group_portal,1,0,1,0
+access_z_order_public,z.order.public,model_z_order,base.group_public,1,0,1,0

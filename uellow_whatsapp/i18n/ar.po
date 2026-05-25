@@ -1,0 +1,92 @@
+# Translation: uellow_whatsapp
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0?0:n==1?1:n==2?2:n%100>=3&&n%100<=10?3:n%100>=11&&n%100<=99?4:5;\n"
+
+#. module: uellow_whatsapp
+#: model:ir.model,name:uellow_whatsapp.model_uellow_whatsapp_config
+msgid "WhatsApp API Configuration"
+msgstr "إعدادات WhatsApp API"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields.selection,name:uellow_whatsapp.selection__uellow_whatsapp_config__provider__twilio
+msgid "Twilio"
+msgstr "Twilio"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields.selection,name:uellow_whatsapp.selection__uellow_whatsapp_config__provider__whapi
+msgid "WhAPI.cloud"
+msgstr "WhAPI.cloud"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields,field_description:uellow_whatsapp.field_uellow_whatsapp_config__send_order_confirm
+msgid "Order Confirmation"
+msgstr "تأكيد الطلب"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields,field_description:uellow_whatsapp.field_uellow_whatsapp_config__send_shipping
+msgid "Shipping Update"
+msgstr "تحديث الشحن"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields,field_description:uellow_whatsapp.field_uellow_whatsapp_config__send_flash_sale
+msgid "Flash Sale Alert"
+msgstr "تنبيه Flash Sale"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields,field_description:uellow_whatsapp.field_uellow_whatsapp_config__send_cart_recovery
+msgid "Cart Recovery"
+msgstr "استرداد السلة"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields,field_description:uellow_whatsapp.field_uellow_whatsapp_config__api_key
+msgid "API Key"
+msgstr "مفتاح API"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields,field_description:uellow_whatsapp.field_uellow_whatsapp_config__sender_number
+msgid "Sender Number"
+msgstr "رقم المرسل"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields.selection,name:uellow_whatsapp.selection__uellow_whatsapp_template__trigger__order_confirm
+msgid "Order Confirmed"
+msgstr "تأكيد الطلب"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields.selection,name:uellow_whatsapp.selection__uellow_whatsapp_template__trigger__order_shipped
+msgid "Order Shipped"
+msgstr "تم الشحن"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields.selection,name:uellow_whatsapp.selection__uellow_whatsapp_template__trigger__flash_sale
+msgid "Flash Sale Start"
+msgstr "بدء Flash Sale"
+
+#. module: uellow_whatsapp
+#: model:ir.model.fields.selection,name:uellow_whatsapp.selection__uellow_whatsapp_template__trigger__cart_recovery
+msgid "Cart Recovery"
+msgstr "استرداد السلة"
+
+#. module: uellow_whatsapp
+#: model_terms:ir.ui.menu,name:uellow_whatsapp.menu_whatsapp_root
+msgid "WhatsApp"
+msgstr "واتساب"
+
+#. module: uellow_whatsapp
+#: model_terms:ir.ui.menu,name:uellow_whatsapp.menu_wa_config
+msgid "Settings"
+msgstr "الإعدادات"
+
+#. module: uellow_whatsapp
+#: model_terms:ir.ui.menu,name:uellow_whatsapp.menu_wa_templates
+msgid "Templates"
+msgstr "قوالب الرسائل"
+
+#. module: uellow_whatsapp
+#: model_terms:ir.ui.menu,name:uellow_whatsapp.menu_wa_logs
+msgid "Message Logs"
+msgstr "سجل الرسائل"

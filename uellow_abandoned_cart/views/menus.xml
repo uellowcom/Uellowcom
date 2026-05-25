@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_abandoned_cart_root"
+            name="Cart Recovery"
+            parent="uellow_multivendor.menu_marketplace_promo_root"
+            sequence="35"/>
+  <menuitem id="menu_abandoned_carts"
+            name="Abandoned Carts"
+            parent="menu_abandoned_cart_root"
+            action="action_abandoned_carts"
+            sequence="36"/>
+  <menuitem id="menu_cart_config"
+            name="Recovery Settings"
+            parent="menu_abandoned_cart_root"
+            action="action_cart_config"
+            sequence="37"/>
+</odoo>

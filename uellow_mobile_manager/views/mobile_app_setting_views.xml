@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="mobile_app_setting_view_form" model="ir.ui.view">
+        <field name="name">mobile.app.setting.form</field>
+        <field name="model">mobile.app.setting</field>
+        <field name="arch" type="xml">
+            <form string="App Settings">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Mobile App Settings</h1>
+                    </div>
+                    <notebook>
+                        <!-- TAB 1: General -->
+                        <page string="General" name="general">
+                            <group>
+                                <group string="App Info">
+                                    <field name="website_id"/>
+                                    <field name="app_name"/>
+                                    <field name="app_logo" widget="image" options="{'size': [120, 120]}"/>
+                                    <field name="currency_id"/>
+                                </group>
+                                <group string="Version Control">
+                                    <field name="app_version_android"/>
+                                    <field name="app_version_ios"/>
+                                    <field name="force_update"/>
+                                    <field name="maintenance_mode"/>
+                                    <field name="maintenance_message"
+                                           invisible="not maintenance_mode"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- TAB 2: Social Media -->
+                        <page string="Social Media" name="social">
+                            <group>
+                                <group string="Social Channels">
+                                    <field name="whatsapp_number" placeholder="+96594709709"/>
+                                    <field name="facebook_url" placeholder="https://facebook.com/uellow"/>
+                                    <field name="instagram_url" placeholder="https://instagram.com/uellow"/>
+                                    <field name="youtube_url"/>
+                                    <field name="tiktok_url"/>
+                                    <field name="twitter_url"/>
+                                </group>
+                                <group string="App Stores">
+                                    <field name="google_play_url"/>
+                                    <field name="app_store_url"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- TAB 3: Contact & Legal -->
+                        <page string="Contact &amp; Legal" name="contact">
+                            <group>
+                                <group string="Support">
+                                    <field name="support_email"/>
+                                    <field name="support_phone"/>
+                                    <field name="contact_url"/>
+                                </group>
+                                <group string="Legal Pages">
+                                    <field name="about_us_url"/>
+                                    <field name="privacy_policy_url"/>
+                                    <field name="terms_url"/>
+                                    <field name="blog_url"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- TAB 4: Chat -->
+                        <page string="Live Chat" name="chat">
+                            <group>
+                                <field name="chat_enabled"/>
+                                <field name="chat_provider" invisible="not chat_enabled"/>
+                                <field name="chat_custom_url"
+                                       invisible="chat_provider != 'custom' or not chat_enabled"/>
+                            </group>
+                        </page>
+
+                        <!-- TAB 5: Theme -->
+                        <page string="Theme &amp; Colors" name="theme">
+                            <group>
+                                <field name="primary_color" widget="color"/>
+                                <field name="secondary_color" widget="color"/>
+                                <field name="accent_color" widget="color"/>
+                            </group>
+                            <div class="alert alert-info mt-3">
+                                <i class="fa fa-info-circle me-1"/>
+                                Color changes require a new app build to take effect.
+                            </div>
+                        </page>
+
+                        <!-- TAB 6: Firebase -->
+                        <page string="Push / Firebase" name="firebase" groups="base.group_system">
+                            <group>
+                                <field name="firebase_project_id"/>
+                                <field name="fcm_server_key" password="True"/>
+                            </group>
+                            <div class="alert alert-warning mt-2">
+                                <i class="fa fa-lock me-1"/>
+                                FCM credentials are encrypted and only visible to administrators.
+                            </div>
+                        </page>
+
+                        <!-- TAB 7: Countries -->
+                        <page string="Countries" name="countries">
+                            <field name="country_ids" widget="many2many_tags"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="mobile_app_setting_view_list" model="ir.ui.view">
+        <field name="name">mobile.app.setting.list</field>
+        <field name="model">mobile.app.setting</field>
+        <field name="arch" type="xml">
+            <list string="App Settings">
+                <field name="website_id"/>
+                <field name="app_name"/>
+                <field name="app_version_android"/>
+                <field name="app_version_ios"/>
+                <field name="maintenance_mode" widget="toggle_button"/>
+                <field name="force_update" widget="toggle_button"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_mobile_app_setting" model="ir.actions.act_window">
+        <field name="name">App Settings</field>
+        <field name="res_model">mobile.app.setting</field>
+        <field name="view_mode">form,list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Configure your mobile app!</p>
+        </field>
+    </record>
+
+</odoo>

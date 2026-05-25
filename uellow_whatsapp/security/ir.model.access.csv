@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_wa_config,wa.config,model_uellow_whatsapp_config,base.group_system,1,1,1,1
+access_wa_template,wa.template,model_uellow_whatsapp_template,base.group_system,1,1,1,1
+access_wa_log,wa.log,model_uellow_whatsapp_log,base.group_system,1,1,1,1

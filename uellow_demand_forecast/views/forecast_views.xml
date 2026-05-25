@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_forecast_list" model="ir.ui.view">
+    <field name="name">uellow.demand.forecast.list</field>
+    <field name="model">uellow.demand.forecast</field>
+    <field name="arch" type="xml">
+      <list string="Demand Forecasts" decoration-danger="reorder_needed">
+        <field name="product_tmpl_id" string="Product"/>
+        <field name="product_id" string="Variant" optional="show"/>
+        <field name="forecast_date"/><field name="forecast_units"/>
+        <field name="current_stock"/><field name="avg_daily_sales"/>
+        <field name="trend" widget="badge" decoration-success="trend=='up'" decoration-danger="trend=='down'"/>
+        <field name="reorder_needed" widget="boolean"/>
+        <field name="reorder_qty"/>
+        <field name="confidence" string="Confidence%"/>
+        <button name="action_ignore" string="Ignore" type="object" icon="fa-ban" invisible="state!='active'"/>
+      </list>
+    </field>
+  </record>
+  <record id="action_forecast" model="ir.actions.act_window">
+    <field name="name">Demand Forecasts</field>
+    <field name="res_model">uellow.demand.forecast</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('state','=','active'),('reorder_needed','=',True)]</field>
+  </record>
+</odoo>

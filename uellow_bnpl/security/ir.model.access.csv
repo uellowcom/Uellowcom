@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_bnpl_plan,bnpl.plan,model_uellow_bnpl_plan,base.group_system,1,1,1,1
+access_bnpl_app_user,bnpl.app.user,model_uellow_bnpl_application,base.group_user,1,1,1,0
+access_bnpl_app_admin,bnpl.app.admin,model_uellow_bnpl_application,base.group_system,1,1,1,1
+access_bnpl_inst,bnpl.inst,model_uellow_bnpl_installment,base.group_user,1,1,0,0
+access_bnpl_inst_admin,bnpl.inst.admin,model_uellow_bnpl_installment,base.group_system,1,1,1,1

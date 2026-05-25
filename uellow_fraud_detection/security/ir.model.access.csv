@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fraud_rule,fraud.rule,model_uellow_fraud_rule,base.group_system,1,1,1,1
+access_fraud_case,fraud.case,model_uellow_fraud_case,base.group_system,1,1,1,1

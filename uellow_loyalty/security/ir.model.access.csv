@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_loyalty_program,loyalty.program,model_uellow_loyalty_program,base.group_system,1,1,1,1
+access_loyalty_tier_rule,loyalty.tier.rule,model_uellow_loyalty_tier_rule,base.group_system,1,1,1,1
+access_loyalty_account_user,loyalty.account.user,model_uellow_loyalty_account,base.group_user,1,0,0,0
+access_loyalty_account_admin,loyalty.account.admin,model_uellow_loyalty_account,base.group_system,1,1,1,1
+access_loyalty_txn_user,loyalty.txn.user,model_uellow_loyalty_transaction,base.group_user,1,0,0,0
+access_loyalty_txn_admin,loyalty.txn.admin,model_uellow_loyalty_transaction,base.group_system,1,1,1,1

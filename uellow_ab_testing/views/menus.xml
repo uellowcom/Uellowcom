@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_ab_tests" name="A/B Tests"
+            parent="uellow_multivendor.menu_marketplace_promo_root"
+            action="action_ab_tests" sequence="39"/>
+</odoo>

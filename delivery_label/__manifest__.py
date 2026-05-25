@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Delivery Label',
-    'version': '1.0',
+    'version': '18.0.1.3.0',
     'category': 'Inventory/Delivery',
-    'summary': 'Custom delivery carrier labels for sales and stock',
+    'summary': 'Custom delivery labels for Odoo 18 sales and inventory flows',
     'description': """
 Delivery Label Module
 ====================
-This module adds custom delivery carriers to be configured in the sales module
-and adds a many2one field in the stock.picking model.
+This module extends delivery carriers and stock pickings with custom label printing.
 Features:
-- Define carrier with image/logo
-- Automatically create vendor (res.partner) record with same info
-- Print custom shipping labels
+- Configure carrier logos and vendor details
+- Automatically create and synchronize a vendor contact
+- Print custom shipping labels from delivery orders
     """,
     'depends': [
         'base',

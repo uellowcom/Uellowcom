@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_warehouse_receive_wizard_form" model="ir.ui.view">
+        <field name="name">uellow.warehouse.receive.wizard.form</field>
+        <field name="model">uellow.warehouse.receive.wizard</field>
+        <field name="arch" type="xml">
+            <form string="FBU Stock Receipt">
+                <sheet>
+                    <group>
+                        <field name="request_id" readonly="1"/>
+                        <field name="partner_id" readonly="1"/>
+                        <field name="location_id" readonly="1"/>
+                    </group>
+                    <field name="line_ids">
+                        <list editable="bottom">
+                            <field name="product_id" readonly="1"/>
+                            <field name="variant_description" readonly="1"
+                                   string="Color/Size"/>
+                            <field name="qty_requested" readonly="1" string="Required"/>
+                            <field name="qty_received" string="Actually Received"/>
+                            <field name="qty_damaged" string="Damaged/Missing"/>
+                            <field name="qty_accepted" readonly="1" string="مقبول"/>
+                            <field name="difference_reason"
+                                   invisible="qty_received == qty_requested"/>
+                            <field name="difference_note"
+                                   invisible="qty_received == qty_requested"/>
+                        </list>
+                    </field>
+                </sheet>
+                <footer>
+                    <button name="action_confirm_receipt"
+                            string="Confirm & Update Stock"
+                            type="object" class="oe_highlight"/>
+                    <button string="إلغاء" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

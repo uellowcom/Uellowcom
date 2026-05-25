@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_return_config,return.config,model_uellow_return_config,base.group_system,1,1,1,1
+access_return_req_user,return.user,model_uellow_return_request,base.group_user,1,1,1,0
+access_return_req_admin,return.admin,model_uellow_return_request,base.group_system,1,1,1,1

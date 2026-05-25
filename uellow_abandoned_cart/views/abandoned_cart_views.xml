@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_cart_config_form" model="ir.ui.view">
+    <field name="name">uellow.cart.recovery.config.form</field>
+    <field name="model">uellow.cart.recovery.config</field>
+    <field name="arch" type="xml">
+      <form string="Cart Recovery Settings">
+        <sheet>
+          <group>
+            <field name="active" widget="boolean_toggle"/>
+            <field name="min_cart_value"/>
+            <field name="max_reminders"/>
+          </group>
+          <notebook>
+            <page string="Step 1 (1h)">
+              <group>
+                <field name="step1_enabled"/>
+                <field name="step1_delay_hours"/>
+                <field name="step1_channel"/>
+                <field name="step1_message"/>
+                <field name="step1_offer_discount"/>
+                <field name="step1_discount_pct" invisible="not step1_offer_discount"/>
+              </group>
+            </page>
+            <page string="Step 2 (24h)">
+              <group>
+                <field name="step2_enabled"/>
+                <field name="step2_delay_hours"/>
+                <field name="step2_channel"/>
+                <field name="step2_message"/>
+                <field name="step2_offer_discount"/>
+                <field name="step2_discount_pct" invisible="not step2_offer_discount"/>
+              </group>
+            </page>
+            <page string="Step 3 (48h)">
+              <group>
+                <field name="step3_enabled"/>
+                <field name="step3_delay_hours"/>
+                <field name="step3_channel"/>
+                <field name="step3_message"/>
+                <field name="step3_offer_discount"/>
+                <field name="step3_discount_pct" invisible="not step3_offer_discount"/>
+              </group>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_abandoned_cart_list" model="ir.ui.view">
+    <field name="name">uellow.abandoned.cart.list</field>
+    <field name="model">uellow.abandoned.cart</field>
+    <field name="arch" type="xml">
+      <list string="Abandoned Carts"
+            decoration-success="state=='recovered'"
+            decoration-warning="state in ('step1_sent','step2_sent','step3_sent')"
+            decoration-muted="state in ('expired','excluded')">
+        <field name="partner_id"/>
+        <field name="cart_value"/>
+        <field name="currency_id"/>
+        <field name="abandoned_at"/>
+        <field name="reminders_sent"/>
+        <field name="last_reminder"/>
+        <field name="state" widget="badge"/>
+        <button name="action_mark_recovered" string="Recovered"
+                type="object" icon="fa-check"
+                invisible="state not in ('step1_sent','step2_sent','step3_sent')"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_cart_config" model="ir.actions.act_window">
+    <field name="name">Recovery Settings</field>
+    <field name="res_model">uellow.cart.recovery.config</field>
+    <field name="view_mode">form</field>
+  </record>
+
+  <record id="action_abandoned_carts" model="ir.actions.act_window">
+    <field name="name">Abandoned Carts</field>
+    <field name="res_model">uellow.abandoned.cart</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('state','not in',('recovered','excluded'))]</field>
+  </record>
+</odoo>

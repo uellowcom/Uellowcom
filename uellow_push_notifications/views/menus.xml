@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_push_root" name="Push Notifications" parent="uellow_multivendor.menu_marketplace_main" sequence="44"/>
+  <menuitem id="menu_push_config" name="Settings" parent="menu_push_root" action="action_push_config" sequence="1"/>
+  <menuitem id="menu_push_logs" name="Logs" parent="menu_push_root" action="action_push_logs" sequence="2"/>
+</odoo>

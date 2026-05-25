@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Trip Form -->
+  <record id="view_delivery_trip_form" model="ir.ui.view">
+    <field name="name">delivery.trip.form</field>
+    <field name="model">delivery.trip</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_cancel" string="Cancel" type="object" invisible="state == 'cancelled'"/>
+          <button name="action_edit" string="Edit" type="object" invisible="state != 'draft'" class="btn-secondary"/>
+          ><button name="action_edit" string="✏️ Edit" type="object" class="btn-secondary"/>
+          <button name="action_assign" string="Assign" type="object" invisible="state != 'draft'"/> class="btn-primary"/>
+          <button name="action_start" string="Start Trip" type="object" invisible="state != 'assigned'" class="btn-primary"/>
+          <button name="action_done" string="Mark Done" type="object" invisible="state != 'in_progress'" class="btn-success" confirm="Are you sure? Some orders may not be delivered yet."/>
+          <field name="state" widget="statusbar" statusbar_visible="draft,assigned,in_progress,done"/>
+        </header>
+        <sheet>
+          <h1><field name="name"/></h1>
+          <group>
+            <group>
+              <field name="carrier_company_id"/>
+              <field name="date_trip"/>
+              <field name="driver_id"/>
+            </group>
+            <group>
+              <field name="line_count" string="Orders"/>
+              <field name="notes"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Orders" name="orders">
+              <field name="line_ids">
+                <list>
+                  <field name="sale_order_id" domain="[('delivery_carrier_company_id', '=', parent.carrier_company_id)]" options="{'no_create': True}"/>
+                  <field name="delivery_status"/>
+                  <field name="partner_name"/>
+                  <field name="amount_total"/>
+                  <field name="payment_method_type"/>
+                  <field name="delivery_date_actual"/>
+                </list>
+              </field>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <!-- Trip List -->
+  <record id="view_delivery_trip_list" model="ir.ui.view">
+    <field name="name">delivery.trip.list</field>
+    <field name="model">delivery.trip</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/>
+        <field name="carrier_company_id"/>
+        <field name="date_trip"/>
+        <field name="driver_id"/>
+        <field name="line_count" string="Orders"/>
+        <field name="state"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- Action -->
+  <record id="action_delivery_trip" model="ir.actions.act_window">
+    <field name="name">Pickup Requests</field>
+    <field name="res_model">delivery.trip</field>
+    <field name="view_mode">list,form</field>
+    <field name="context">{'default_state': 'draft'}</field>
+    <field name="flags">{'mode': 'edit'}</field>
+  </record>
+
+</odoo>

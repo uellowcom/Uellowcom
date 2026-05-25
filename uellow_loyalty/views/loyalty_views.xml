@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_loyalty_program_form" model="ir.ui.view">
+    <field name="name">uellow.loyalty.program.form</field>
+    <field name="model">uellow.loyalty.program</field>
+    <field name="arch" type="xml">
+      <form string="Loyalty Program">
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="active" widget="boolean_toggle"/>
+          </group>
+          <notebook>
+            <page string="Earning Rules">
+              <group>
+                <group string="Purchase">
+                  <field name="points_per_kd"/>
+                  <field name="points_first_purchase"/>
+                  <field name="points_birthday"/>
+                  <field name="points_referral"/>
+                </group>
+                <group string="Reviews">
+                  <field name="points_review_text"/>
+                  <field name="points_review_photo"/>
+                  <field name="points_review_video"/>
+                </group>
+              </group>
+            </page>
+            <page string="Redemption">
+              <group>
+                <field name="points_per_kd_redeem"/>
+                <field name="min_points_redeem"/>
+                <field name="max_redeem_pct"/>
+                <field name="points_expire_days"/>
+              </group>
+            </page>
+            <page string="Tiers">
+              <group>
+                <group string="Thresholds">
+                  <field name="tier_silver_min"/>
+                  <field name="tier_gold_min"/>
+                  <field name="tier_platinum_min"/>
+                </group>
+                <group string="Multipliers">
+                  <field name="silver_multiplier"/>
+                  <field name="gold_multiplier"/>
+                  <field name="platinum_multiplier"/>
+                </group>
+              </group>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_loyalty_account_list" model="ir.ui.view">
+    <field name="name">uellow.loyalty.account.list</field>
+    <field name="model">uellow.loyalty.account</field>
+    <field name="arch" type="xml">
+      <list string="Loyalty Accounts">
+        <field name="partner_id"/>
+        <field name="balance" string="Points"/>
+        <field name="tier" widget="badge"
+               decoration-warning="tier=='silver'"
+               decoration-success="tier=='gold'"
+               decoration-info="tier=='platinum'"/>
+        <field name="total_earned"/>
+        <field name="total_redeemed"/>
+        <field name="lifetime_points"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_loyalty_program" model="ir.actions.act_window">
+    <field name="name">Loyalty Program</field>
+    <field name="res_model">uellow.loyalty.program</field>
+    <field name="view_mode">form</field>
+  </record>
+
+  <record id="action_loyalty_accounts" model="ir.actions.act_window">
+    <field name="name">Loyalty Accounts</field>
+    <field name="res_model">uellow.loyalty.account</field>
+    <field name="view_mode">list,form</field>
+  </record>
+</odoo>

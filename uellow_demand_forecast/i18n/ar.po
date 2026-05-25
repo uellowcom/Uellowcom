@@ -1,0 +1,41 @@
+# Translation: uellow_demand_forecast
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0?0:n==1?1:n==2?2:n%100>=3&&n%100<=10?3:n%100>=11&&n%100<=99?4:5;\n"
+#. module: uellow_demand_forecast
+#: model:ir.model,name:uellow_demand_forecast.model_uellow_demand_forecast
+msgid "AI Demand Forecast"
+msgstr "توقع الطلب بالذكاء الاصطناعي"
+
+#. module: uellow_demand_forecast
+#: model:ir.model.fields.selection,name:uellow_demand_forecast.selection__uellow_demand_forecast__trend__up
+msgid "Trending Up"
+msgstr "في ارتفاع"
+
+#. module: uellow_demand_forecast
+#: model:ir.model.fields.selection,name:uellow_demand_forecast.selection__uellow_demand_forecast__trend__stable
+msgid "Stable"
+msgstr "مستقر"
+
+#. module: uellow_demand_forecast
+#: model:ir.model.fields.selection,name:uellow_demand_forecast.selection__uellow_demand_forecast__trend__down
+msgid "Trending Down"
+msgstr "في انخفاض"
+
+#. module: uellow_demand_forecast
+#: model:ir.model.fields,field_description:uellow_demand_forecast.field_uellow_demand_forecast__reorder_needed
+msgid "Reorder Needed"
+msgstr "يحتاج إعادة طلب"
+
+#. module: uellow_demand_forecast
+#: model:ir.model.fields,field_description:uellow_demand_forecast.field_uellow_demand_forecast__reorder_qty
+msgid "Suggested Reorder Qty"
+msgstr "الكمية المقترحة للطلب"
+
+#. module: uellow_demand_forecast
+#: model_terms:ir.ui.menu,name:uellow_demand_forecast.menu_forecast
+msgid "Demand Forecast"
+msgstr "توقع الطلب"

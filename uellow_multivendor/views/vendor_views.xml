@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="view_vendor_list" model="ir.ui.view">
+    <field name="name">uellow.vendor.list</field>
+    <field name="model">uellow.vendor</field>
+    <field name="arch" type="xml">
+      <list string="Vendors"
+            decoration-warning="state=='pending'"
+            decoration-success="state=='active'"
+            decoration-muted="state in ('rejected','suspended')">
+        <field name="display_name"/>
+        <field name="store_slug"/>
+        <field name="country_id"/>
+        <field name="currency_id"/>
+        <field name="plan_id"/>
+        <field name="tier" widget="badge"/>
+        <field name="order_count"/>
+        <field name="total_sales"/>
+        <field name="avg_rating"/>
+        <field name="cancel_rate" string="Cancel%"/>
+        <field name="state" widget="badge"
+               decoration-warning="state=='pending'"
+               decoration-success="state=='active'"
+               decoration-danger="state in ('rejected','suspended')"/>
+        <button name="action_approve_wizard" string="Approve"
+                type="object" icon="fa-check"
+                invisible="state != 'pending'"
+                groups="uellow_multivendor.group_marketplace_manager"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_vendor_form" model="ir.ui.view">
+    <field name="name">uellow.vendor.form</field>
+    <field name="model">uellow.vendor</field>
+    <field name="arch" type="xml">
+      <form string="Vendor">
+        <header>
+          <button name="action_submit" string="Submit for Review"
+                  type="object" class="oe_highlight"
+                  invisible="state != 'draft'"/>
+          <button name="action_approve_wizard" string="Approve"
+                  type="object" class="oe_highlight"
+                  invisible="state != 'pending'"
+                  groups="uellow_multivendor.group_marketplace_manager"/>
+          <button name="action_reject" string="Reject"
+                  type="object"
+                  invisible="state not in ('pending','active')"
+                  groups="uellow_multivendor.group_marketplace_manager"/>
+          <button name="action_suspend" string="Suspend"
+                  type="object"
+                  invisible="state != 'active'"
+                  groups="uellow_multivendor.group_marketplace_manager"/>
+          <button name="action_reactivate" string="Reactivate"
+                  type="object" class="oe_highlight"
+                  invisible="state != 'suspended'"
+                  groups="uellow_multivendor.group_marketplace_manager"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="draft,pending,active"/>
+        </header>
+        <sheet>
+          <div class="oe_button_box" name="button_box">
+            <button class="oe_stat_button" type="object"
+                    name="action_view_orders" icon="fa-shopping-cart">
+              <field name="order_count" widget="statinfo" string="Orders"/>
+            </button>
+            <button class="oe_stat_button" type="object"
+                    name="action_view_wallet" icon="fa-wallet">
+              <field name="wallet_balance" widget="statinfo" string="Balance"/>
+            </button>
+            <button class="oe_stat_button" icon="fa-users">
+              <field name="follower_count" widget="statinfo" string="Store Followers"/>
+            </button>
+          </div>
+          <div class="oe_title">
+            <h1><field name="store_name_en"/></h1>
+            <h2><field name="store_name_ar" placeholder="Arabic name..."/></h2>
+          </div>
+          <group>
+            <group string="Identity">
+              <field name="partner_id"/>
+              <field name="user_id"/>
+              <field name="store_slug"/>
+              <field name="plan_id"/>
+              <field name="tier"/>
+            </group>
+            <group string="Geography and Currency">
+              <field name="country_id"/>
+              <field name="currency_id"/>
+              <field name="timezone"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Store Info">
+              <group>
+                <group><field name="brand_color"/><field name="store_tagline_en"/><field name="store_tagline_ar"/></group>
+                <group><field name="store_description_en"/><field name="store_description_ar"/></group>
+              </group>
+            </page>
+            <page string="Registration">
+              <group>
+                <group><field name="business_name"/><field name="commercial_reg"/><field name="contact_phone"/><field name="contact_email"/></group>
+                <group><field name="bank_iban"/><field name="bank_name"/><field name="registration_date"/><field name="approval_date" readonly="1"/></group>
+              </group>
+            </page>
+            <page string="FBU and Wallet">
+              <group>
+                <field name="fbu_location_id" readonly="1"/>
+                <field name="wallet_id" readonly="1"/>
+              </group>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_vendor_search" model="ir.ui.view">
+    <field name="name">uellow.vendor.search</field>
+    <field name="model">uellow.vendor</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="display_name"/>
+        <field name="country_id"/>
+        <filter string="Pending" name="pending" domain="[('state','=','pending')]"/>
+        <filter string="Active" name="active" domain="[('state','=','active')]"/>
+        <filter string="Suspended" name="suspended" domain="[('state','=','suspended')]"/>
+        <group expand="0" string="Group By">
+          <filter string="Country" name="by_country" context="{'group_by':'country_id'}"/>
+          <filter string="Status" name="by_state" context="{'group_by':'state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_vendors" model="ir.actions.act_window">
+    <field name="name">Vendors</field>
+    <field name="res_model">uellow.vendor</field>
+    <field name="view_mode">list,form</field>
+    <field name="context">{'search_default_pending': 1}</field>
+  </record>
+
+  <record id="action_marketplace_dashboard" model="ir.actions.act_window">
+    <field name="name">Marketplace Dashboard</field>
+    <field name="res_model">uellow.vendor</field>
+    <field name="view_mode">list,form</field>
+    <field name="context">{'search_default_active': 1}</field>
+  </record>
+
+</odoo>

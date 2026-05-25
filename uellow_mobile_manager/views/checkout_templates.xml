@@ -1,0 +1,1083 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ═══════════════════════════
+     CART — Step 1
+     ═══════════════════════════ -->
+<record id="cart" model="ir.ui.view">
+  <field name="name">uellow_checkout.cart</field>
+  <field name="type">qweb</field>
+  <field name="key">uellow_checkout.cart</field>
+  <field name="arch" type="xml">
+<t t-name="uellow_checkout.cart">
+  <t t-set="uc_lang" t-value="'ar' if (request.env.lang or '').startswith('ar') else 'en'"/>
+  <t t-call="website.layout">
+    <t t-set="no_header" t-value="True"/>
+    <t t-set="no_footer" t-value="True"/>
+    <t t-set="title"><t t-if="uc_lang=='ar'">سلة التسوق</t><t t-else="">Shopping Cart</t></t>
+
+    <div class="uc-mobile-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
+      <!-- Top nav -->
+      <div class="uc-topnav">
+        <a href="/shop" class="uc-topnav__back">&#x2190;</a>
+        <h1 class="uc-topnav__title">&#x1F6D2; <t t-if="uc_lang=='ar'">سلة التسوق</t><t t-else="">Shopping Cart</t></h1>
+        <a href="/shop" class="uc-topnav__x">&#x2715;</a>
+      </div>
+
+      <!-- Stepper -->
+      <div class="uc-stepper">
+        <div class="uc-step-bars">
+          <div class="uc-step-bar act"/>
+          <div class="uc-step-bar"/>
+          <div class="uc-step-bar"/>
+        </div>
+        <div class="uc-step-lbls">
+          <div class="uc-step-lbl act"><t t-if="uc_lang=='ar'">السلة</t><t t-else="">Cart</t></div>
+          <div class="uc-step-lbl"><t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></div>
+          <div class="uc-step-lbl"><t t-if="uc_lang=='ar'">الدفع</t><t t-else="">Payment</t></div>
+        </div>
+      </div>
+
+      <div class="uc-scroll-body">
+        <t t-if="not order or not order.order_line">
+          <div style="text-align:center;padding:40px 20px">
+            <div style="font-size:48px;margin-bottom:16px">&#x1F6D2;</div>
+            <div style="font-size:16px;font-weight:700;color:#3E2000">
+              <t t-if="uc_lang=='ar'">السلة فارغة</t><t t-else="">Your cart is empty</t>
+            </div>
+            <a href="/shop" style="display:inline-block;margin-top:16px;background:linear-gradient(135deg,#FDD835,#FFB300);color:#3E2000;padding:12px 28px;border-radius:12px;font-weight:800;text-decoration:none">
+              <t t-if="uc_lang=='ar'">تسوق الآن</t><t t-else="">Shop Now</t>
+            </a>
+          </div>
+        </t>
+        <t t-else="">
+          <!-- Cart items -->
+          <t t-foreach="order.order_line.filtered(lambda l: not l.is_delivery)" t-as="line">
+            <div class="uc-item" t-att-data-line-id="line.id">
+              <t t-if="line.product_id.image_128">
+                <img t-att-src="'/web/image/product.product/%d/image_128' % line.product_id.id"
+                     t-att-alt="line.product_id.name"/>
+              </t>
+              <t t-else=""><div class="uc-item__ph">&#x1F4E6;</div></t>
+              <div class="uc-item__info">
+                <div class="uc-item__name"><t t-out="line.product_id.name"/></div>
+                <t t-if="line.product_id.product_template_attribute_value_ids">
+                  <div class="uc-item__variant">
+                    <t t-out="', '.join(line.product_id.product_template_attribute_value_ids.mapped('name'))"/>
+                  </div>
+                </t>
+                <div class="uc-item__price"><t t-out="'%.3f' % line.price_unit"/> <t t-out="currency_symbol"/></div>
+              </div>
+              <div class="uc-item__right">
+                <button type="button" class="uc-del" t-att-data-line-id="line.id">&#x2715;</button>
+                <div class="uc-qty" t-att-data-line-id="line.id">
+                  <button type="button" class="uc-qty__btn" data-action="minus">&#x2212;</button>
+                  <span class="uc-qty__n"><t t-out="int(line.product_uom_qty)"/></span>
+                  <button type="button" class="uc-qty__btn" data-action="plus">&#x2B;</button>
+                </div>
+                <span style="font-size:14px;font-weight:800;color:#D4500A">
+                  <t t-out="'%.3f' % line.price_subtotal"/> <t t-out="currency_symbol"/>
+                </span>
+              </div>
+            </div>
+          </t>
+
+          <!-- Coupon -->
+          <div class="uc-coupon-row">
+            <input class="uc-coupon-inp" type="text" id="uc-coupon-inp"
+                   t-att-placeholder="'كود الخصم...' if uc_lang=='ar' else 'Coupon code...'"/>
+            <button type="button" class="uc-coupon-btn" id="uc-apply-coupon">
+              <t t-if="uc_lang=='ar'">تطبيق</t><t t-else="">Apply</t>
+            </button>
+          </div>
+
+          <!-- Summary -->
+          <div class="uc-sum">
+            <div class="uc-sum-row">
+              <span class="k"><t t-if="uc_lang=='ar'">المجموع الفرعي</t><t t-else="">Subtotal</t></span>
+              <span class="v"><t t-out="'%.3f' % order.amount_untaxed"/> <t t-out="currency_symbol"/></span>
+            </div>
+            <div class="uc-sum-sep"/>
+            <div class="uc-sum-row">
+              <span class="k"><t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></span>
+              <span class="uc-muted"><t t-if="uc_lang=='ar'">يُحسب لاحقاً</t><t t-else="">Calculated next</t></span>
+            </div>
+            <div class="uc-sum-sep"/>
+            <div class="uc-sum-row tot">
+              <span class="k"><t t-if="uc_lang=='ar'">الإجمالي</t><t t-else="">Total</t></span>
+              <span class="v"><t t-out="'%.3f' % order.amount_total"/> <t t-out="currency_symbol"/></span>
+            </div>
+          </div>
+        </t>
+      </div><!-- end scroll-body -->
+
+      <!-- Footer -->
+      <t t-if="order and order.order_line">
+        <div class="uc-footer-bar">
+          <button type="button" class="uc-btn" id="uc-to-shipping">
+            <t t-if="uc_lang=='ar'">&#x2190; متابعة للشحن</t>
+            <t t-else="">Continue to Shipping &#x2192;</t>
+          </button>
+        </div>
+      </t>
+    </div><!-- mobile wrap -->
+
+    <!-- ═══ DESKTOP ═══ -->
+    <div class="uc-desk-wrap">
+      <div class="uc-desk-steps">
+        <a href="/shop" class="uc-desk-back">&#x2190; <t t-if="uc_lang=='ar'">المتجر</t><t t-else="">Shop</t></a>
+        <div class="uc-dstep act"><div class="uc-dstep__num">1</div><span><t t-if="uc_lang=='ar'">السلة</t><t t-else="">Cart</t></span></div>
+        <div class="uc-dstep-line"/>
+        <div class="uc-dstep"><div class="uc-dstep__num">2</div><span><t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></span></div>
+        <div class="uc-dstep-line"/>
+        <div class="uc-dstep"><div class="uc-dstep__num">3</div><span><t t-if="uc_lang=='ar'">الدفع</t><t t-else="">Payment</t></span></div>
+        <div class="uc-dstep-line"/>
+        <div class="uc-dstep"><div class="uc-dstep__num">&#x2713;</div><span><t t-if="uc_lang=='ar'">مكتمل</t><t t-else="">Done</t></span></div>
+      </div>
+      <div class="uc-desk-grid">
+        <div>
+          <div class="uc-desk-card">
+            <div class="uc-desk-card-head">
+              <div class="uc-desk-card-icon">&#x1F6D2;</div>
+              <span class="uc-desk-card-title"><t t-if="uc_lang=='ar'">سلة التسوق</t><t t-else="">Shopping Cart</t></span>
+            </div>
+            <t t-foreach="order.order_line.filtered(lambda l: not l.is_delivery)" t-as="line">
+              <div class="uc-desk-item" t-att-data-line-id="line.id">
+                <t t-if="line.product_id.image_128">
+                  <img t-att-src="'/web/image/product.product/%d/image_128' % line.product_id.id"
+                       t-att-alt="line.product_id.name"/>
+                </t>
+                <t t-else=""><div class="uc-desk-item__ph">&#x1F4E6;</div></t>
+                <div style="flex:1;min-width:0">
+                  <div class="uc-desk-item__name"><t t-out="line.product_id.name"/></div>
+                  <div class="uc-desk-item__price"><t t-out="'%.3f' % line.price_unit"/> <t t-out="currency_symbol"/></div>
+                </div>
+                <div class="uc-desk-item__right">
+                  <button type="button" class="uc-del" t-att-data-line-id="line.id">&#x2715;</button>
+                  <div class="uc-qty" t-att-data-line-id="line.id">
+                    <button type="button" class="uc-qty__btn" data-action="minus">&#x2212;</button>
+                    <span class="uc-qty__n"><t t-out="int(line.product_uom_qty)"/></span>
+                    <button type="button" class="uc-qty__btn" data-action="plus">&#x2B;</button>
+                  </div>
+                  <span style="font-size:14px;font-weight:800;color:#D4500A">
+                    <t t-out="'%.3f' % line.price_subtotal"/> <t t-out="currency_symbol"/>
+                  </span>
+                </div>
+              </div>
+            </t>
+            <!-- Coupon -->
+            <div style="padding:14px 18px;border-top:1px solid #FFF3CD">
+              <div class="uc-coupon-row">
+                <input class="uc-coupon-inp" type="text" id="uc-coupon-inp-desk"
+                       t-att-placeholder="'كود الخصم...' if uc_lang=='ar' else 'Coupon code...'"/>
+                <button type="button" class="uc-coupon-btn">
+                  <t t-if="uc_lang=='ar'">تطبيق</t><t t-else="">Apply</t>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Sidebar -->
+        <div class="uc-desk-sidebar-sticky">
+          <div class="uc-desk-card">
+            <div class="uc-desk-card-head">
+              <div class="uc-desk-card-icon">&#x1F4CB;</div>
+              <span class="uc-desk-card-title"><t t-if="uc_lang=='ar'">ملخص الطلب</t><t t-else="">Order Summary</t></span>
+            </div>
+            <div class="uc-desk-sum">
+              <div class="uc-sum">
+                <div class="uc-sum-row">
+                  <span class="k"><t t-if="uc_lang=='ar'">المجموع</t><t t-else="">Subtotal</t></span>
+                  <span class="v"><t t-out="'%.3f' % order.amount_untaxed"/> <t t-out="currency_symbol"/></span>
+                </div>
+                <div class="uc-sum-sep"/>
+                <div class="uc-sum-row">
+                  <span class="k"><t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></span>
+                  <span class="uc-muted"><t t-if="uc_lang=='ar'">لاحقاً</t><t t-else="">Next</t></span>
+                </div>
+                <div class="uc-sum-sep"/>
+                <div class="uc-sum-row tot">
+                  <span class="k"><t t-if="uc_lang=='ar'">الإجمالي</t><t t-else="">Total</t></span>
+                  <span class="v"><t t-out="'%.3f' % order.amount_total"/> <t t-out="currency_symbol"/></span>
+                </div>
+              </div>
+            </div>
+            <div style="padding:0 18px 18px">
+              <button type="button" class="uc-desk-btn" id="uc-to-shipping-desk">
+                <t t-if="uc_lang=='ar'">&#x2190; متابعة للشحن</t>
+                <t t-else="">Continue to Shipping &#x2192;</t>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </t>
+</t>
+  </field>
+</record>
+
+
+<!-- ═══════════════════════════
+     ADDRESS — Step 2
+     ═══════════════════════════ -->
+<record id="address" model="ir.ui.view">
+  <field name="name">uellow_checkout.address</field>
+  <field name="type">qweb</field>
+  <field name="key">uellow_checkout.address</field>
+  <field name="arch" type="xml">
+<t t-name="uellow_checkout.address">
+  <t t-set="uc_lang" t-value="'ar' if (request.env.lang or '').startswith('ar') else 'en'"/>
+  <t t-call="website.layout">
+    <t t-set="no_header" t-value="True"/>
+    <t t-set="no_footer" t-value="True"/>
+    <t t-set="title"><t t-if="uc_lang=='ar'">عنوان الشحن</t><t t-else="">Shipping Address</t></t>
+
+    <div class="uc-mobile-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
+      <div class="uc-topnav">
+        <a href="/shop/cart" class="uc-topnav__back">&#x2190;</a>
+        <h1 class="uc-topnav__title">&#x1F4CD; <t t-if="uc_lang=='ar'">عنوان الشحن</t><t t-else="">Shipping Address</t></h1>
+        <a href="/shop" class="uc-topnav__x">&#x2715;</a>
+      </div>
+      <div class="uc-stepper">
+        <div class="uc-step-bars">
+          <div class="uc-step-bar done"/>
+          <div class="uc-step-bar act"/>
+          <div class="uc-step-bar"/>
+        </div>
+        <div class="uc-step-lbls">
+          <div class="uc-step-lbl done"><t t-if="uc_lang=='ar'">السلة</t><t t-else="">Cart</t></div>
+          <div class="uc-step-lbl act"><t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></div>
+          <div class="uc-step-lbl"><t t-if="uc_lang=='ar'">الدفع</t><t t-else="">Payment</t></div>
+        </div>
+      </div>
+
+      <form method="post" action="/shop/checkout/address/save" id="uc-address-form"
+            class="uc-scroll-body">
+        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+        <input type="hidden" name="map_lat" id="field_map_lat"/>
+        <input type="hidden" name="map_lng" id="field_map_lng"/>
+
+        <!-- MAP at top -->
+        <div>
+          <!-- GeoIP banner -->
+          <div class="uc-geo-banner" id="uc-geo-banner">
+            <span class="uc-geo-banner__icon">&#x1F4CD;</span>
+            <div class="uc-geo-banner__text">
+              <div class="uc-geo-banner__lbl">
+                <t t-if="uc_lang=='ar'">موقعك المكتشف</t><t t-else="">Auto-Detected Location</t>
+              </div>
+              <div class="uc-geo-banner__val" id="uc-geo-val">
+                <t t-if="geo and geo.get('city')">
+                  <t t-out="geo.get('city')"/>
+                  <t t-if="geo.get('state')">, <t t-out="geo.get('state')"/></t>
+                </t>
+                <t t-else=""><t t-if="uc_lang=='ar'">جارٍ التحديد...</t><t t-else="">Detecting...</t></t>
+              </div>
+            </div>
+            <button type="button" class="uc-geo-change" id="uc-geo-change">
+              <t t-if="uc_lang=='ar'">تغيير</t><t t-else="">Change</t>
+            </button>
+          </div>
+
+          <!-- Map -->
+          <div class="uc-map-box" style="margin-top:10px">
+            <div id="uc-map-container"/>
+            <button type="button" class="uc-locate-btn" id="uc-locate-me">
+              &#x2295; <t t-if="uc_lang=='ar'">موقعي</t><t t-else="">My Location</t>
+            </button>
+            <div class="uc-map-hint">
+              <t t-if="uc_lang=='ar'">اسحب الدبوس لتحديد موقعك</t>
+              <t t-else="">Drag pin to set exact location</t>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form fields -->
+        <div class="uc-card">
+          <div class="uc-card-head">
+            <div class="uc-card-icon">&#x1F464;</div>
+            <span class="uc-card-title">
+              <t t-if="uc_lang=='ar'">بيانات التوصيل</t><t t-else="">Delivery Details</t>
+            </span>
+          </div>
+          <div class="uc-card-body" style="display:flex;flex-direction:column;gap:13px">
+
+            <!-- Full Name -->
+            <div class="uc-field">
+              <label class="uc-field-lbl" for="f_name">
+                <t t-if="uc_lang=='ar'">الاسم الكامل</t><t t-else="">Full Name</t>
+              </label>
+              <input class="uc-field-inp" id="f_name" name="name" type="text"
+                     autocomplete="name" required="1"
+                     t-att-placeholder="'أدخل اسمك الكامل' if uc_lang=='ar' else 'Enter your full name'"/>
+            </div>
+
+            <!-- Phone + Email -->
+            <div class="uc-fields-2col">
+              <div class="uc-field">
+                <label class="uc-field-lbl" for="f_phone">
+                  <t t-if="uc_lang=='ar'">الهاتف</t><t t-else="">Phone</t>
+                </label>
+                <input class="uc-field-inp" id="f_phone" name="phone" type="tel"
+                       inputmode="numeric" autocomplete="tel" required="1"
+                       style="direction:ltr" placeholder="+965 XXXX XXXX"/>
+              </div>
+              <div class="uc-field">
+                <label class="uc-field-lbl" for="f_email">
+                  <t t-if="uc_lang=='ar'">الإيميل</t><t t-else="">Email</t>
+                </label>
+                <input class="uc-field-inp" id="f_email" name="email" type="email"
+                       autocomplete="email" required="1"
+                       placeholder="example@email.com"/>
+              </div>
+            </div>
+
+            <!-- Country + State/Governorate -->
+            <div class="uc-fields-2col">
+              <div class="uc-field">
+                <label class="uc-field-lbl" for="f_country">
+                  <t t-if="uc_lang=='ar'">الدولة</t><t t-else="">Country</t>
+                </label>
+                <select class="uc-field-sel" id="f_country" name="country_id">
+                  <option value=""><t t-if="uc_lang=='ar'">-- اختر --</t><t t-else="">-- Select --</t></option>
+                  <t t-foreach="countries" t-as="c">
+                    <option t-att-value="c.id"
+                            t-att-selected="'selected' if c.id == selected_cid else None">
+                      <t t-out="c.name"/>
+                    </option>
+                  </t>
+                </select>
+              </div>
+              <div class="uc-field">
+                <label class="uc-field-lbl" for="f_state">
+                  <t t-if="uc_lang=='ar'">المحافظة</t><t t-else="">Governorate</t>
+                </label>
+                <select class="uc-field-sel" id="f_state" name="state_id" required="1">
+                  <option value=""><t t-if="uc_lang=='ar'">-- اختر --</t><t t-else="">-- Select --</t></option>
+                  <t t-foreach="states" t-as="s">
+                    <option t-att-value="s.id"
+                            t-att-selected="'selected' if geo and geo.get('state_id') and s.id == geo.get('state_id') else None">
+                      <t t-out="s.name"/>
+                    </option>
+                  </t>
+                </select>
+              </div>
+            </div>
+
+            <!-- City + Street -->
+            <div class="uc-fields-2col">
+              <div class="uc-field">
+                <label class="uc-field-lbl" for="f_city">
+                  <t t-if="uc_lang=='ar'">المدينة</t><t t-else="">City</t>
+                </label>
+                <input class="uc-field-inp" id="f_city" name="city" type="text"
+                       autocomplete="address-level2"
+                       t-att-value="geo.get('city','') if geo else ''"
+                       t-att-placeholder="'المدينة' if uc_lang=='ar' else 'City'"/>
+              </div>
+              <div class="uc-field">
+                <label class="uc-field-lbl" for="f_street">
+                  <t t-if="uc_lang=='ar'">الشارع</t><t t-else="">Street</t>
+                </label>
+                <input class="uc-field-inp" id="f_street" name="street" type="text"
+                       autocomplete="address-line1"
+                       t-att-placeholder="'رقم الشارع / المنطقة' if uc_lang=='ar' else 'Street / Block'"/>
+              </div>
+            </div>
+
+            <!-- Full address (auto-filled from map) -->
+            <div class="uc-field">
+              <label class="uc-field-lbl" for="f_full_addr">
+                <t t-if="uc_lang=='ar'">العنوان التفصيلي</t><t t-else="">Detailed Address</t>
+              </label>
+              <textarea class="uc-field-inp" id="f_full_addr" name="full_address" rows="2"
+                        t-att-placeholder="'يمكنك تعديل العنوان هنا' if uc_lang=='ar' else 'Edit full address here'"/>
+            </div>
+
+            <!-- Order notes -->
+            <div class="uc-field">
+              <label class="uc-field-lbl" for="f_notes">
+                <t t-if="uc_lang=='ar'">ملاحظات الطلب</t><t t-else="">Order Notes</t>
+              </label>
+              <textarea class="uc-field-inp" id="f_notes" name="order_notes" rows="2"
+                        t-att-placeholder="'أي تعليمات خاصة للتوصيل؟' if uc_lang=='ar' else 'Any special delivery instructions?'"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shipping methods -->
+        <t t-if="carriers">
+          <div class="uc-card">
+            <div class="uc-card-head">
+              <div class="uc-card-icon">&#x1F69A;</div>
+              <span class="uc-card-title">
+                <t t-if="uc_lang=='ar'">طريقة الشحن</t><t t-else="">Shipping Method</t>
+              </span>
+            </div>
+            <div class="uc-card-body" style="display:flex;flex-direction:column;gap:8px">
+              <t t-foreach="carriers" t-as="c">
+                <label class="uc-ship-opt" t-att-data-carrier-id="c['carrier'].id"
+                       t-att-data-price="'%.3f' % c['price']">
+                  <input type="radio" name="carrier_id" t-att-value="c['carrier'].id"/>
+                  <div class="uc-ship-icon">&#x1F69A;</div>
+                  <div class="uc-ship-info">
+                    <div class="uc-ship-name"><t t-out="c['carrier'].name"/></div>
+                    <div class="uc-ship-sub"><t t-if="uc_lang=='ar'">التوصيل القياسي</t><t t-else="">Standard delivery</t></div>
+                  </div>
+                  <div class="uc-ship-price">
+                    <t t-if="c['price'] == 0.0">
+                      <t t-if="uc_lang=='ar'">مجاني</t><t t-else="">Free</t>
+                    </t>
+                    <t t-else=""><t t-out="'%.3f' % c['price']"/> <t t-out="currency_symbol"/></t>
+                  </div>
+                  <div class="uc-rdot"/>
+                </label>
+              </t>
+            </div>
+          </div>
+        </t>
+
+        <!-- Footer -->
+        <div class="uc-footer-bar">
+          <button type="submit" class="uc-btn">
+            <t t-if="uc_lang=='ar'">&#x2190; متابعة للدفع</t>
+            <t t-else="">Continue to Payment &#x2192;</t>
+          </button>
+        </div>
+      </form>
+    </div><!-- mobile wrap -->
+
+    <!-- ═══ DESKTOP ═══ -->
+    <div class="uc-desk-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
+      <div class="uc-desk-steps">
+        <a href="/shop/cart" class="uc-desk-back">&#x2190; <t t-if="uc_lang=='ar'">السلة</t><t t-else="">Cart</t></a>
+        <div class="uc-dstep done"><div class="uc-dstep__num">&#x2713;</div><span><t t-if="uc_lang=='ar'">السلة</t><t t-else="">Cart</t></span></div>
+        <div class="uc-dstep-line done"/>
+        <div class="uc-dstep act"><div class="uc-dstep__num">2</div><span><t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></span></div>
+        <div class="uc-dstep-line"/>
+        <div class="uc-dstep"><div class="uc-dstep__num">3</div><span><t t-if="uc_lang=='ar'">الدفع</t><t t-else="">Payment</t></span></div>
+        <div class="uc-dstep-line"/>
+        <div class="uc-dstep"><div class="uc-dstep__num">&#x2713;</div><span><t t-if="uc_lang=='ar'">مكتمل</t><t t-else="">Done</t></span></div>
+      </div>
+
+      <form method="post" action="/shop/checkout/address/save" id="uc-address-form-desk">
+        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+        <input type="hidden" name="map_lat" id="field_map_lat_desk"/>
+        <input type="hidden" name="map_lng" id="field_map_lng_desk"/>
+
+        <div class="uc-desk-grid">
+          <div>
+            <!-- Map at top -->
+            <div class="uc-desk-card" style="margin-bottom:14px">
+              <div class="uc-desk-card-head">
+                <div class="uc-desk-card-icon">&#x1F5FA;</div>
+                <span class="uc-desk-card-title"><t t-if="uc_lang=='ar'">موقع التوصيل</t><t t-else="">Delivery Location</t></span>
+              </div>
+              <div style="padding:14px 18px 0">
+                <div class="uc-geo-banner">
+                  <span class="uc-geo-banner__icon">&#x1F4CD;</span>
+                  <div class="uc-geo-banner__text">
+                    <div class="uc-geo-banner__lbl"><t t-if="uc_lang=='ar'">موقعك</t><t t-else="">Your Location</t></div>
+                    <div class="uc-geo-banner__val" id="uc-geo-val-desk">
+                      <t t-if="geo and geo.get('city')"><t t-out="geo.get('city')"/></t>
+                      <t t-else="">...</t>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="uc-desk-map">
+                <div class="uc-map-box">
+                  <div id="uc-map-container-desk"/>
+                  <button type="button" class="uc-locate-btn" id="uc-locate-me-desk">
+                    &#x2295; <t t-if="uc_lang=='ar'">موقعي</t><t t-else="">My Location</t>
+                  </button>
+                  <div class="uc-map-hint">
+                    <t t-if="uc_lang=='ar'">اسحب الدبوس</t><t t-else="">Drag pin to adjust</t>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form -->
+            <div class="uc-desk-card">
+              <div class="uc-desk-card-head">
+                <div class="uc-desk-card-icon">&#x1F464;</div>
+                <span class="uc-desk-card-title"><t t-if="uc_lang=='ar'">بيانات التوصيل</t><t t-else="">Delivery Details</t></span>
+              </div>
+              <div class="uc-desk-form">
+                <div class="uc-fields-2col">
+                  <div class="uc-field">
+                    <label class="uc-field-lbl"><t t-if="uc_lang=='ar'">الاسم الكامل</t><t t-else="">Full Name</t></label>
+                    <input class="uc-field-inp" name="name" type="text" autocomplete="name" required="1"
+                           t-att-placeholder="'الاسم الكامل' if uc_lang=='ar' else 'Full name'"/>
+                  </div>
+                  <div class="uc-field">
+                    <label class="uc-field-lbl"><t t-if="uc_lang=='ar'">الهاتف</t><t t-else="">Phone</t></label>
+                    <input class="uc-field-inp" name="phone" type="tel" inputmode="numeric" required="1"
+                           style="direction:ltr" placeholder="+965 XXXX XXXX"/>
+                  </div>
+                </div>
+                <div class="uc-fields-2col">
+                  <div class="uc-field">
+                    <label class="uc-field-lbl"><t t-if="uc_lang=='ar'">الإيميل</t><t t-else="">Email</t></label>
+                    <input class="uc-field-inp" name="email" type="email" required="1" placeholder="example@email.com"/>
+                  </div>
+                  <div class="uc-field">
+                    <label class="uc-field-lbl"><t t-if="uc_lang=='ar'">الدولة</t><t t-else="">Country</t></label>
+                    <select class="uc-field-sel" name="country_id" id="f_country_desk">
+                      <option value=""><t t-if="uc_lang=='ar'">-- اختر --</t><t t-else="">-- Select --</t></option>
+                      <t t-foreach="countries" t-as="c">
+                        <option t-att-value="c.id" t-att-selected="'selected' if c.id == selected_cid else None">
+                          <t t-out="c.name"/>
+                        </option>
+                      </t>
+                    </select>
+                  </div>
+                </div>
+                <div class="uc-fields-2col">
+                  <div class="uc-field">
+                    <label class="uc-field-lbl required"><t t-if="uc_lang=='ar'">المحافظة *</t><t t-else="">Governorate *</t></label>
+                    <select class="uc-field-sel" name="state_id" id="f_state_desk" required="1">
+                      <option value=""><t t-if="uc_lang=='ar'">-- اختر --</t><t t-else="">-- Select --</t></option>
+                      <t t-foreach="states" t-as="s">
+                        <option t-att-value="s.id"
+                                t-att-selected="'selected' if geo and geo.get('state_id') and s.id == geo.get('state_id') else None">
+                          <t t-out="s.name"/>
+                        </option>
+                      </t>
+                    </select>
+                  </div>
+                  <div class="uc-field">
+                    <label class="uc-field-lbl"><t t-if="uc_lang=='ar'">المدينة</t><t t-else="">City</t></label>
+                    <input class="uc-field-inp" name="city" type="text"
+                           t-att-value="geo.get('city','') if geo else ''"
+                           t-att-placeholder="'المدينة' if uc_lang=='ar' else 'City'"/>
+                  </div>
+                </div>
+                <div class="uc-field">
+                  <label class="uc-field-lbl"><t t-if="uc_lang=='ar'">الشارع</t><t t-else="">Street Address</t></label>
+                  <input class="uc-field-inp" name="street" type="text"
+                         t-att-placeholder="'الشارع / المنطقة / رقم البلوك' if uc_lang=='ar' else 'Street / Block / Area'"/>
+                </div>
+                <div class="uc-field">
+                  <label class="uc-field-lbl"><t t-if="uc_lang=='ar'">العنوان التفصيلي</t><t t-else="">Full Address</t></label>
+                  <textarea class="uc-field-inp" name="full_address" id="f_full_addr_desk" rows="2"
+                            t-att-placeholder="'العنوان الكامل (من الخريطة)' if uc_lang=='ar' else 'Full address (from map)'"/>
+                </div>
+                <div class="uc-field">
+                  <label class="uc-field-lbl"><t t-if="uc_lang=='ar'">ملاحظات الطلب</t><t t-else="">Order Notes</t></label>
+                  <textarea class="uc-field-inp" name="order_notes" rows="2"
+                            t-att-placeholder="'تعليمات خاصة للتوصيل؟' if uc_lang=='ar' else 'Special instructions?'"/>
+                </div>
+              </div>
+            </div>
+
+            <!-- Shipping methods -->
+            <t t-if="carriers">
+              <div class="uc-desk-card">
+                <div class="uc-desk-card-head">
+                  <div class="uc-desk-card-icon">&#x1F69A;</div>
+                  <span class="uc-desk-card-title"><t t-if="uc_lang=='ar'">طريقة الشحن</t><t t-else="">Shipping Method</t></span>
+                </div>
+                <div class="uc-desk-ship">
+                  <t t-foreach="carriers" t-as="c">
+                    <label class="uc-ship-opt" t-att-data-carrier-id="c['carrier'].id">
+                      <input type="radio" name="carrier_id" t-att-value="c['carrier'].id"/>
+                      <div class="uc-ship-icon">&#x1F69A;</div>
+                      <div class="uc-ship-info">
+                        <div class="uc-ship-name"><t t-out="c['carrier'].name"/></div>
+                      </div>
+                      <div class="uc-ship-price">
+                        <t t-if="c['price'] == 0.0"><t t-if="uc_lang=='ar'">مجاني</t><t t-else="">Free</t></t>
+                        <t t-else=""><t t-out="'%.3f' % c['price']"/> <t t-out="currency_symbol"/></t>
+                      </div>
+                      <div class="uc-rdot"/>
+                    </label>
+                  </t>
+                </div>
+              </div>
+            </t>
+          </div>
+
+          <!-- Sidebar -->
+          <div class="uc-desk-sidebar-sticky">
+            <div class="uc-desk-card">
+              <div class="uc-desk-card-head">
+                <div class="uc-desk-card-icon">&#x1F4CB;</div>
+                <span class="uc-desk-card-title"><t t-if="uc_lang=='ar'">ملخص الطلب</t><t t-else="">Order Summary</t></span>
+              </div>
+              <div class="uc-desk-sum">
+                <div class="uc-sum">
+                  <div class="uc-sum-row">
+                    <span class="k"><t t-if="uc_lang=='ar'">المجموع</t><t t-else="">Subtotal</t></span>
+                    <span class="v"><t t-out="'%.3f' % order.amount_untaxed"/> <t t-out="currency_symbol"/></span>
+                  </div>
+                  <div class="uc-sum-sep"/>
+                  <div class="uc-sum-row tot">
+                    <span class="k"><t t-if="uc_lang=='ar'">الإجمالي</t><t t-else="">Total</t></span>
+                    <span class="v"><t t-out="'%.3f' % order.amount_total"/> <t t-out="currency_symbol"/></span>
+                  </div>
+                </div>
+              </div>
+              <div style="padding:0 18px 18px">
+                <button type="submit" class="uc-desk-btn">
+                  <t t-if="uc_lang=='ar'">&#x2190; متابعة للدفع</t>
+                  <t t-else="">Continue to Payment &#x2192;</t>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+  </t>
+</t>
+  </field>
+</record>
+
+
+<!-- ═══════════════════════════
+     PAYMENT — Step 3
+     ═══════════════════════════ -->
+<record id="payment" model="ir.ui.view">
+  <field name="name">uellow_checkout.payment</field>
+  <field name="type">qweb</field>
+  <field name="key">uellow_checkout.payment</field>
+  <field name="arch" type="xml">
+<t t-name="uellow_checkout.payment">
+  <t t-set="uc_lang" t-value="'ar' if (request.env.lang or '').startswith('ar') else 'en'"/>
+  <t t-call="website.layout">
+    <t t-set="no_header" t-value="True"/>
+    <t t-set="no_footer" t-value="True"/>
+    <t t-set="title"><t t-if="uc_lang=='ar'">الدفع</t><t t-else="">Payment</t></t>
+
+    <div class="uc-mobile-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
+      <div class="uc-topnav">
+        <a href="/shop/checkout" class="uc-topnav__back">&#x2190;</a>
+        <h1 class="uc-topnav__title">&#x1F4B3; <t t-if="uc_lang=='ar'">الدفع</t><t t-else="">Payment</t></h1>
+        <a href="/shop" class="uc-topnav__x">&#x2715;</a>
+      </div>
+      <div class="uc-stepper">
+        <div class="uc-step-bars">
+          <div class="uc-step-bar done"/>
+          <div class="uc-step-bar done"/>
+          <div class="uc-step-bar act"/>
+        </div>
+        <div class="uc-step-lbls">
+          <div class="uc-step-lbl done"><t t-if="uc_lang=='ar'">السلة</t><t t-else="">Cart</t></div>
+          <div class="uc-step-lbl done"><t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></div>
+          <div class="uc-step-lbl act"><t t-if="uc_lang=='ar'">الدفع</t><t t-else="">Payment</t></div>
+        </div>
+      </div>
+
+      <div class="uc-scroll-body">
+
+        <!-- Amount card — prominent at top (green like fast buy) -->
+        <div class="uc-pay-summary"
+             t-att-data-order-id="order.id if order else 0"
+             t-att-data-total="'%.3f' % order.amount_total if order else '0'">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div class="uc-pay-summary__lbl">
+                <t t-if="uc_lang=='ar'">المبلغ الإجمالي للدفع</t><t t-else="">Total Amount Due</t>
+              </div>
+              <div class="uc-pay-summary__total">
+                <t t-out="'%.3f' % order.amount_total"/> <t t-out="currency_symbol"/>
+              </div>
+            </div>
+            <!-- Items button like fast buy -->
+            <button type="button" id="uc-view-items-btn"
+                    style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;white-space:nowrap;margin-top:4px">
+              &#x1F4E6; <t t-if="uc_lang=='ar'">المنتجات</t><t t-else="">Items</t>
+            </button>
+          </div>
+          <div class="uc-pay-summary__rows">
+            <div class="uc-pay-summary__row">
+              <span><t t-if="uc_lang=='ar'">المجموع الفرعي</t><t t-else="">Subtotal</t></span>
+              <span class="v"><t t-out="'%.3f' % order.amount_untaxed"/> <t t-out="currency_symbol"/></span>
+            </div>
+            <t t-if="order.carrier_id">
+              <div class="uc-pay-summary__row">
+                <span>&#x1F69A; <t t-out="order.carrier_id.name"/></span>
+                <span class="v">
+                  <t t-if="order.amount_delivery and order.amount_delivery > 0">
+                    <t t-out="'%.3f' % order.amount_delivery"/> <t t-out="currency_symbol"/>
+                  </t>
+                  <t t-else=""><t t-if="uc_lang=='ar'">مجاني</t><t t-else="">Free</t></t>
+                </span>
+              </div>
+            </t>
+            <t t-if="order.partner_shipping_id and order.partner_shipping_id.city">
+              <div class="uc-pay-summary__row">
+                <span>&#x1F4CD;</span>
+                <span class="v"><t t-out="order.partner_shipping_id.city or ''"/></span>
+              </div>
+            </t>
+          </div>
+        </div>
+
+        <!-- Payment methods — loaded via AJAX like fast buy -->
+        <div class="uc-card">
+          <div class="uc-card-head">
+            <div class="uc-card-icon">&#x1F4B3;</div>
+            <span class="uc-card-title">
+              <t t-if="uc_lang=='ar'">اختر وسيلة الدفع</t><t t-else="">Choose Payment Method</t>
+            </span>
+          </div>
+          <div class="uc-card-body" id="uc-pay-list-mobile" style="display:flex;flex-direction:column;gap:8px">
+            <div style="text-align:center;padding:16px;color:#999;font-size:13px">&#x23F3; <t t-if="uc_lang=='ar'">جارٍ التحميل...</t><t t-else="">Loading...</t></div>
+          </div>
+        </div>
+
+        <!-- Secure badge -->
+        <div class="uc-secure">
+          &#x1F512; <t t-if="uc_lang=='ar'">دفع آمن ومشفر</t><t t-else="">Secure Encrypted Payment</t>
+        </div>
+
+      </div><!-- scroll-body -->
+
+      <!-- Footer -->
+      <div class="uc-footer-bar">
+        <button type="button" class="uc-btn uc-confirm-btn" id="uc-pay-now" disabled="1">
+          <t t-if="uc_lang=='ar'">&#x2190; تأكيد الدفع</t><t t-else="">Confirm Payment &#x2192;</t>
+        </button>
+      </div>
+    </div><!-- mobile wrap -->
+
+    <!-- ═══ DESKTOP ═══ -->
+    <div class="uc-desk-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
+      <div class="uc-desk-steps">
+        <a href="/shop/checkout" class="uc-desk-back">&#x2190; <t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></a>
+        <div class="uc-dstep done"><div class="uc-dstep__num">&#x2713;</div><span><t t-if="uc_lang=='ar'">السلة</t><t t-else="">Cart</t></span></div>
+        <div class="uc-dstep-line done"/>
+        <div class="uc-dstep done"><div class="uc-dstep__num">&#x2713;</div><span><t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></span></div>
+        <div class="uc-dstep-line done"/>
+        <div class="uc-dstep act"><div class="uc-dstep__num">3</div><span><t t-if="uc_lang=='ar'">الدفع</t><t t-else="">Payment</t></span></div>
+        <div class="uc-dstep-line"/>
+        <div class="uc-dstep"><div class="uc-dstep__num">&#x2713;</div><span><t t-if="uc_lang=='ar'">مكتمل</t><t t-else="">Done</t></span></div>
+      </div>
+      <div class="uc-desk-grid">
+        <div>
+          <div class="uc-desk-card">
+            <div class="uc-desk-card-head">
+              <div class="uc-desk-card-icon">&#x1F4B3;</div>
+              <span class="uc-desk-card-title"><t t-if="uc_lang=='ar'">وسيلة الدفع</t><t t-else="">Payment Method</t></span>
+            </div>
+            <div class="uc-desk-pay-opts" id="uc-pay-list-desk">
+              <div style="text-align:center;padding:16px;color:#999;font-size:13px">&#x23F3; <t t-if="uc_lang=='ar'">جارٍ التحميل...</t><t t-else="">Loading...</t></div>
+            </div>
+          </div>
+        </div>
+        <!-- Sidebar -->
+        <div class="uc-desk-sidebar-sticky">
+          <div class="uc-desk-card">
+            <div class="uc-desk-card-head">
+              <div class="uc-desk-card-icon">&#x1F4CB;</div>
+              <span class="uc-desk-card-title"><t t-if="uc_lang=='ar'">ملخص الدفع</t><t t-else="">Payment Summary</t></span>
+            </div>
+            <div class="uc-desk-sum">
+              <div class="uc-pay-summary" style="border-radius:10px">
+                <div class="uc-pay-summary__lbl"><t t-if="uc_lang=='ar'">الإجمالي</t><t t-else="">Total Due</t></div>
+                <div class="uc-pay-summary__total"><t t-out="'%.3f' % order.amount_total"/> <t t-out="currency_symbol"/></div>
+                <div class="uc-pay-summary__rows">
+                  <div class="uc-pay-summary__row">
+                    <span><t t-if="uc_lang=='ar'">المجموع الفرعي</t><t t-else="">Subtotal</t></span>
+                    <span class="v"><t t-out="'%.3f' % order.amount_untaxed"/> <t t-out="currency_symbol"/></span>
+                  </div>
+                  <t t-if="order.amount_delivery">
+                    <div class="uc-pay-summary__row">
+                      <span><t t-if="uc_lang=='ar'">الشحن</t><t t-else="">Shipping</t></span>
+                      <span class="v"><t t-out="'%.3f' % order.amount_delivery"/> <t t-out="currency_symbol"/></span>
+                    </div>
+                  </t>
+                </div>
+              </div>
+            </div>
+            <div style="padding:0 18px 18px">
+              <button type="button" class="uc-desk-btn uc-confirm-btn" id="uc-pay-now-desk" disabled="1">
+                <t t-if="uc_lang=='ar'">تأكيد الدفع</t><t t-else="">Confirm Payment</t>
+              </button>
+              <div class="uc-secure" style="margin-top:10px">
+                &#x1F512; <t t-if="uc_lang=='ar'">دفع آمن</t><t t-else="">Secure payment</t>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </t>
+</t>
+  </field>
+</record>
+
+
+<!-- ═══════════════════════════
+     SUCCESS
+     ═══════════════════════════ -->
+<record id="order_success" model="ir.ui.view">
+  <field name="name">uellow_checkout.order_success</field>
+  <field name="type">qweb</field>
+  <field name="key">uellow_checkout.order_success</field>
+  <field name="arch" type="xml">
+<t t-name="uellow_checkout.order_success">
+  <t t-set="uc_lang" t-value="'ar' if (request.env.lang or '').startswith('ar') else 'en'"/>
+  <t t-call="website.layout">
+    <t t-set="no_header" t-value="True"/>
+    <t t-set="no_footer" t-value="True"/>
+    <t t-set="title"><t t-if="uc_lang=='ar'">تأكيد الطلب</t><t t-else="">Order Confirmed</t></t>
+
+    <div class="uc-mobile-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
+      <div class="uc-topnav">
+        <span style="width:34px"/>
+        <h1 class="uc-topnav__title">
+          <t t-if="uc_lang=='ar'">تأكيد الطلب</t><t t-else="">Order Confirmed</t>
+        </h1>
+        <a href="/shop" class="uc-topnav__x">&#x2715;</a>
+      </div>
+
+      <div class="uc-scroll-body" style="align-items:center;padding-bottom:130px">
+
+        <!-- Icon -->
+        <t t-if="payment_failed">
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#FF4D4F,#CF1322);display:flex;align-items:center;justify-content:center;font-size:38px;color:#fff;box-shadow:0 6px 22px rgba(207,19,34,.35)">&#x2715;</div>
+          <div style="font-size:20px;font-weight:800;color:#CF1322;text-align:center">
+            <t t-if="uc_lang=='ar'">فشلت عملية الدفع</t><t t-else="">Payment Failed</t>
+          </div>
+          <div style="font-size:13px;text-align:center;color:#666">
+            <t t-if="uc_lang=='ar'">لم تكتمل. يرجى المحاولة مرة أخرى.</t>
+            <t t-else="">Payment was not completed. Please try again.</t>
+          </div>
+          <a href="/shop/payment" class="uc-btn" style="max-width:280px;text-decoration:none">
+            &#x27F3; <t t-if="uc_lang=='ar'">إعادة المحاولة</t><t t-else="">Try Again</t>
+          </a>
+        </t>
+        <t t-else="">
+          <div class="uc-success-icon">&#x2713;</div>
+          <div style="font-size:20px;font-weight:800;color:#3E2000;text-align:center">
+            &#x1F389; <t t-if="uc_lang=='ar'">تم تأكيد طلبك!</t><t t-else="">Order Confirmed!</t>
+          </div>
+          <div style="font-size:13px;text-align:center;color:#7A5000;line-height:1.6">
+            <t t-if="uc_lang=='ar'">شكراً! سيتم التواصل معك قريباً.</t>
+            <t t-else="">Thank you! We'll contact you soon.</t>
+          </div>
+
+          <!-- Progress steps -->
+          <div style="width:100%;max-width:420px;background:#fff;border-radius:14px;padding:16px;border:1.5px solid #FFE0A0">
+            <div style="font-size:12px;font-weight:800;color:#3E2000;text-align:center;margin-bottom:14px">
+              <t t-if="uc_lang=='ar'">حالة الطلب</t><t t-else="">Order Status</t>
+            </div>
+            <div class="uc-prog-track">
+              <div class="uc-prog-item done">
+                <div class="uc-prog-dot">&#x2713;</div>
+                <div class="uc-prog-lbl"><t t-if="uc_lang=='ar'">مسودة</t><t t-else="">Draft</t></div>
+              </div>
+              <div class="uc-prog-item done">
+                <div class="uc-prog-dot">&#x2713;</div>
+                <div class="uc-prog-lbl"><t t-if="uc_lang=='ar'">الطلب</t><t t-else="">Order</t></div>
+              </div>
+              <div class="uc-prog-item done">
+                <div class="uc-prog-dot">&#x2713;</div>
+                <div class="uc-prog-lbl"><t t-if="uc_lang=='ar'">مؤكد</t><t t-else="">Confirmed</t></div>
+              </div>
+              <div class="uc-prog-item active">
+                <div class="uc-prog-dot">&#x1F69A;</div>
+                <div class="uc-prog-lbl"><t t-if="uc_lang=='ar'">التوصيل</t><t t-else="">Delivery</t></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order details -->
+          <t t-if="order">
+            <div style="width:100%;max-width:420px">
+              <div style="background:#FFFDF5;border-radius:14px;overflow:hidden;border:1.5px solid #FFE0A0">
+                <!-- Header -->
+                <div style="padding:12px 16px;border-bottom:1px solid #FFF3CD;display:flex;justify-content:space-between;align-items:center;background:#FFFDF5">
+                  <span style="font-size:15px;font-weight:800;color:#3E2000"><t t-out="order.name"/></span>
+                  <span style="background:#FFF3CD;color:#D4500A;border:1px solid #FFB300;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700">
+                    <t t-if="uc_lang=='ar'">مؤكد</t><t t-else="">Confirmed</t>
+                  </span>
+                </div>
+                <!-- Items -->
+                <t t-foreach="order.order_line" t-as="line">
+                  <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #FFF9E0">
+                    <t t-if="line.product_id.image_128">
+                      <img t-att-src="'/web/image/product.product/%d/image_128' % line.product_id.id"
+                           style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex-shrink:0;background:#FFF3CD"/>
+                    </t>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:12px;font-weight:700;color:#3E2000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                        <t t-out="line.product_id.name"/>
+                      </div>
+                      <div style="font-size:11px;color:#B07020;margin-top:2px">
+                        <t t-out="int(line.product_uom_qty)"/> x <t t-out="'%.3f' % line.price_unit"/> <t t-out="currency_symbol"/>
+                      </div>
+                    </div>
+                    <span style="font-size:14px;font-weight:800;color:#D4500A">
+                      <t t-out="'%.3f' % line.price_subtotal"/> <t t-out="currency_symbol"/>
+                    </span>
+                  </div>
+                </t>
+                <!-- Footer rows -->
+                <div style="padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+                  <t t-if="order.partner_shipping_id">
+                    <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px">
+                      <span>&#x1F4CD;</span>
+                      <div>
+                        <div style="font-weight:700;color:#3E2000"><t t-out="order.partner_shipping_id.name or ''"/></div>
+                        <div style="color:#B07020;margin-top:2px">
+                          <t t-out="order.partner_shipping_id.city or ''"/>
+                          <t t-if="order.partner_shipping_id.state_id">, <t t-out="order.partner_shipping_id.state_id.name"/></t>
+                        </div>
+                      </div>
+                    </div>
+                  </t>
+                  <t t-if="order.carrier_id">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:12px">
+                      <span>&#x1F69A;</span>
+                      <span style="color:#B07020"><t t-out="order.carrier_id.name"/></span>
+                    </div>
+                  </t>
+                  <t t-if="order.partner_shipping_id">
+                    <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px">
+                      <span>&#x1F4CD;</span>
+                      <span style="color:#666">
+                        <t t-out="order.partner_shipping_id.name or ''"/><br/>
+                        <t t-if="order.partner_shipping_id.city"><t t-out="order.partner_shipping_id.city"/></t>
+                        <t t-if="order.partner_shipping_id.state_id">, <t t-out="order.partner_shipping_id.state_id.name"/></t>
+                      </span>
+                    </div>
+                  </t>
+                  <t t-if="order.note">
+                    <div style="display:flex;align-items:flex-start;gap:8px;font-size:12px">
+                      <span>&#x1F4B3;</span>
+                      <span style="color:#666">
+                        <t t-foreach="order.note.split(chr(10))" t-as="note_line">
+                          <t t-if="'Payment:' in note_line"><t t-out="note_line.replace('Payment: ','')"/></t>
+                        </t>
+                      </span>
+                    </div>
+                  </t>
+                  <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid #FFF3CD">
+                    <span style="font-size:14px;font-weight:800;color:#3E2000">
+                      <t t-if="uc_lang=='ar'">الإجمالي</t><t t-else="">Total</t>
+                    </span>
+                    <span style="font-size:17px;font-weight:800;color:#D4500A">
+                      <t t-out="'%.3f' % order.amount_total"/> <t t-out="currency_symbol"/>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </t>
+
+          <!-- Action buttons -->
+          <div style="display:flex;gap:10px;width:100%;max-width:420px">
+            <!-- Continue Shopping -->
+            <button type="button" id="uc-continue-shop"
+                    style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px 8px;border:none;border-radius:12px;background:linear-gradient(135deg,#FDD835,#FFB300);color:#3E2000;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+              &#x1F6CD; <t t-if="uc_lang=='ar'">متابعة التسوق</t><t t-else="">Continue Shopping</t>
+            </button>
+            <!-- WhatsApp -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:10px;font-weight:700;color:#E53935;text-align:center">WhatsApp</span>
+              <a t-att-href="whatsapp_url" target="_blank" rel="noopener"
+                 style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 8px;border:none;border-radius:12px;text-decoration:none;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-size:13px;font-weight:700;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.845L0 24l6.337-1.51A11.956 11.956 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.374l-.36-.214-3.73.889.933-3.617-.235-.372A9.818 9.818 0 0112 2.182c5.42 0 9.818 4.398 9.818 9.818 0 5.42-4.398 9.818-9.818 9.818z"/></svg>
+                <t t-if="uc_lang=='ar'">تواصل معنا</t><t t-else="">Contact Us</t>
+              </a>
+            </div>
+          </div>
+        </t>
+      </div>
+    </div><!-- mobile wrap end -->
+
+    <!-- ═══ DESKTOP SUCCESS ═══ -->
+    <div class="uc-desk-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
+      <div style="max-width:640px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:20px;padding-top:30px">
+        <t t-if="payment_failed">
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#FF4D4F,#CF1322);display:flex;align-items:center;justify-content:center;font-size:38px;color:#fff">&#x2715;</div>
+          <div style="font-size:22px;font-weight:800;color:#CF1322;text-align:center">
+            <t t-if="uc_lang=='ar'">فشلت عملية الدفع</t><t t-else="">Payment Failed</t>
+          </div>
+          <a href="/shop/payment" style="display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border:none;border-radius:12px;background:linear-gradient(135deg,#FDD835,#FFB300);color:#3E2000;font-size:14px;font-weight:700;text-decoration:none;">
+            &#x27F3; <t t-if="uc_lang=='ar'">إعادة المحاولة</t><t t-else="">Try Again</t>
+          </a>
+        </t>
+        <t t-else="">
+          <div class="uc-success-icon">&#x2713;</div>
+          <div style="font-size:24px;font-weight:800;color:#2E7D32;text-align:center">
+            &#x1F389; <t t-if="uc_lang=='ar'">تم تأكيد طلبك!</t><t t-else="">Order Confirmed!</t>
+          </div>
+          <div style="font-size:14px;text-align:center;color:#777">
+            <t t-if="uc_lang=='ar'">شكراً! سيتم التواصل معك قريباً.</t>
+            <t t-else="">Thank you! We'll contact you soon.</t>
+          </div>
+          <!-- Progress dots -->
+          <div style="width:100%;background:#fff;border-radius:14px;padding:20px;border:1.5px solid #E0E0E0">
+            <div style="text-align:center;font-size:13px;font-weight:800;color:#333;margin-bottom:16px">
+              <t t-if="uc_lang=='ar'">حالة الطلب</t><t t-else="">Order Status</t>
+            </div>
+            <div class="uc-prog-track">
+              <div class="uc-prog-item done"><div class="uc-prog-dot">&#x2713;</div><div class="uc-prog-lbl"><t t-if="uc_lang=='ar'">مسودة</t><t t-else="">Draft</t></div></div>
+              <div class="uc-prog-item done"><div class="uc-prog-dot">&#x2713;</div><div class="uc-prog-lbl"><t t-if="uc_lang=='ar'">الطلب</t><t t-else="">Order</t></div></div>
+              <div class="uc-prog-item done"><div class="uc-prog-dot">&#x2713;</div><div class="uc-prog-lbl"><t t-if="uc_lang=='ar'">مؤكد</t><t t-else="">Confirmed</t></div></div>
+              <div class="uc-prog-item active"><div class="uc-prog-dot">&#x1F69A;</div><div class="uc-prog-lbl"><t t-if="uc_lang=='ar'">التوصيل</t><t t-else="">Delivery</t></div></div>
+            </div>
+          </div>
+          <!-- Order summary -->
+          <t t-if="order">
+            <div style="width:100%;background:#fff;border-radius:14px;overflow:hidden;border:1.5px solid #FFE0A0">
+              <div style="padding:14px 18px;background:#FFFDF5;border-bottom:1px solid #FFF3CD;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:16px;font-weight:800;color:#3E2000"><t t-out="order.name"/></span>
+                <span style="background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;border-radius:8px;padding:4px 12px;font-size:12px;font-weight:700">
+                  <t t-if="uc_lang=='ar'">مؤكد</t><t t-else="">Confirmed</t>
+                </span>
+              </div>
+              <t t-foreach="order.order_line" t-as="line">
+                <div style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #FFF9E0">
+                  <t t-if="line.product_id.image_128">
+                    <img t-att-src="'/web/image/product.product/%d/image_128' % line.product_id.id"
+                         style="width:52px;height:52px;border-radius:8px;object-fit:cover"/>
+                  </t>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:700;color:#3E2000;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><t t-out="line.product_id.name"/></div>
+                    <div style="font-size:12px;color:#B07020;margin-top:3px"><t t-out="int(line.product_uom_qty)"/> x <t t-out="'%.3f' % line.price_unit"/> <t t-out="currency_symbol"/></div>
+                  </div>
+                  <span style="font-size:14px;font-weight:800;color:#D4500A"><t t-out="'%.3f' % line.price_subtotal"/> <t t-out="currency_symbol"/></span>
+                </div>
+              </t>
+              <div style="padding:14px 18px;display:flex;justify-content:space-between">
+                <span style="font-size:15px;font-weight:800;color:#3E2000"><t t-if="uc_lang=='ar'">الإجمالي</t><t t-else="">Total</t></span>
+                <span style="font-size:20px;font-weight:800;color:#D4500A"><t t-out="'%.3f' % order.amount_total"/> <t t-out="currency_symbol"/></span>
+              </div>
+            </div>
+          </t>
+          <!-- Buttons — fast buy style -->
+          <div style="display:flex;gap:12px;width:100%">
+            <button type="button" id="uc-continue-shop-desk"
+                    style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#FDD835,#FFB300);color:#3E2000;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">
+              &#x1F6CD; <t t-if="uc_lang=='ar'">متابعة التسوق</t><t t-else="">Continue Shopping</t>
+            </button>
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:10px;font-weight:700;color:#E53935;text-align:center">WhatsApp</span>
+              <a t-att-href="whatsapp_url" target="_blank" rel="noopener"
+                 style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:12px;text-decoration:none;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-size:14px;font-weight:700;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.845L0 24l6.305-1.654A11.882 11.882 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.007-1.374l-.36-.214-3.73.889.933-3.617-.235-.372A9.818 9.818 0 0112 2.182c5.42 0 9.818 4.398 9.818 9.818 0 5.42-4.398 9.818-9.818 9.818z"/></svg>
+                <t t-if="uc_lang=='ar'">تواصل معنا</t><t t-else="">Contact Us</t>
+              </a>
+            </div>
+          </div>
+        </t>
+      </div>
+    </div>
+
+  </t>
+</t>
+  </field>
+</record>
+
+</odoo>

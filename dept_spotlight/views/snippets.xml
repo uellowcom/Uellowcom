@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="dept_spotlight_snippet" name="Department Spotlight">
+        <section class="s_dept_spotlight"
+                 data-snippet="s_dept_spotlight"
+                 data-name="Department Spotlight"
+                 data-categ-ids=""
+                 data-badge-ar="عروض القسم"
+                 data-badge-en="Department Deals"
+                 data-cta-ar="عرض الكل"
+                 data-cta-en="View All">
+            <div class="dsp-host"></div>
+        </section>
+    </template>
+
+    <template id="snippets" inherit_id="website.snippets" name="Department Spotlight - Block">
+        <xpath expr="//snippets[@id='snippet_content']" position="inside">
+            <t t-snippet="dept_spotlight.dept_spotlight_snippet"
+               t-thumbnail="/dept_spotlight/static/src/img/thumbnail.svg"
+               string="Department Spotlight"
+               snippet-group="content"/>
+        </xpath>
+    </template>
+
+</odoo>

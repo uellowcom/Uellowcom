@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Dashboard — opens /delivery/dashboard in same tab -->
+  <record id="action_delivery_dashboard_client" model="ir.actions.act_url">
+    <field name="name">Delivery Dashboard</field>
+    <field name="url">/delivery/dashboard</field>
+    <field name="target">self</field>
+  </record>
+
+  <!-- All Delivery Orders -->
+  <record id="action_all_delivery_orders" model="ir.actions.act_window">
+    <field name="name">All Delivery Orders</field>
+    <field name="res_model">sale.order</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('delivery_carrier_company_id', '!=', False)]</field>
+    <field name="search_view_id" ref="action_delivery_orders_search"/>
+  </record>
+
+  <!-- Delivered Orders -->
+  <record id="action_delivered_orders" model="ir.actions.act_window">
+    <field name="name">Delivered Orders</field>
+    <field name="res_model">sale.order</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('delivery_status', '=', 'delivered')]</field>
+    <field name="search_view_id" ref="action_delivery_orders_search"/>
+  </record>
+
+  <!-- Failed Returns -->
+  <record id="action_failed_returns_dashboard" model="ir.actions.act_window">
+    <field name="name">Failed Returns</field>
+    <field name="res_model">sale.order</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('delivery_status', 'in', ['failed', 'failed_returned'])]</field>
+    <field name="search_view_id" ref="action_delivery_orders_search"/>
+  </record>
+
+</odoo>

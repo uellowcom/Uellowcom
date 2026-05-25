@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_vendor_location_user,vendor.location.user,model_uellow_vendor_location,base.group_user,1,0,0,0
+access_vendor_location_manager,vendor.location.manager,model_uellow_vendor_location,stock.group_stock_manager,1,1,1,1
+access_restock_request_user,restock.request.user,model_uellow_restock_request,base.group_user,1,1,1,0
+access_restock_request_manager,restock.request.manager,model_uellow_restock_request,stock.group_stock_manager,1,1,1,1
+access_restock_line_user,restock.line.user,model_uellow_restock_request_line,base.group_user,1,1,1,0
+access_restock_line_manager,restock.line.manager,model_uellow_restock_request_line,stock.group_stock_manager,1,1,1,1
+access_receive_wizard,receive.wizard,model_uellow_warehouse_receive_wizard,stock.group_stock_manager,1,1,1,1
+access_receive_wizard_line,receive.wizard.line,model_uellow_warehouse_receive_wizard_line,stock.group_stock_manager,1,1,1,1

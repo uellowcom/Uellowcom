@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_ai_chat_session_public,ai.chat.session public,model_ai_chat_session,,1,1,1,0
+access_ai_chat_session_user,ai.chat.session user,model_ai_chat_session,base.group_user,1,1,1,1
+access_ai_message_log_user,ai.message.log user,model_ai_message_log,base.group_user,1,1,1,0
+access_ai_message_log_admin,ai.message.log admin,model_ai_message_log,base.group_system,1,1,1,1
+access_ai_config_settings_admin,ai.config.settings admin,model_ai_config_settings,base.group_system,1,1,1,1

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_import_job" model="ir.sequence">
+        <field name="name">Smart Connector Import Job</field>
+        <field name="code">uellow.import.job</field>
+        <field name="prefix">SC/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_facebook_product_data_feed,access_facebook_product_data_feed,model_facebook_product_data_feed,,1,1,1,1
+access_shop_fields,access_shop_fields,model_shop_fields,,1,1,1,1
+access_product_brand,access_product_brand,model_product_brand,,1,1,1,1
+access_facebook_google_category,access_facebook_google_category,model_facebook_google_category,,1,1,1,1
+access_custom_google_category,access_custom_google_category,model_custom_google_category,,1,1,1,1
+access_custom_facebook_category,access_custom_facebook_category,model_custom_facebook_category,,1,1,1,1

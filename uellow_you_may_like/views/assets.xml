@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Assets are already declared inside __manifest__.py via the
+        'assets' key (Odoo 16/17 style).  This file is kept as a
+        compatibility shim for older Odoo 15 setups that rely on
+        ir.asset records instead.
+        
+        If you are on Odoo 16 or 17 you can leave this file empty –
+        the manifest assets key is sufficient.
+    -->
+</odoo>

@@ -1,0 +1,22 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_carrier_company_admin,delivery.carrier.company admin,model_delivery_carrier_company,base.group_system,1,1,1,1
+access_carrier_company_manager,delivery.carrier.company manager,model_delivery_carrier_company,group_carrier_manager,1,0,0,0
+access_carrier_company_driver,delivery.carrier.company driver,model_delivery_carrier_company,group_carrier_driver,1,0,0,0
+access_delivery_driver_admin,delivery.driver admin,model_delivery_driver,base.group_system,1,1,1,1
+access_delivery_driver_manager,delivery.driver manager,model_delivery_driver,group_carrier_manager,1,1,1,0
+access_delivery_driver_own,delivery.driver own,model_delivery_driver,group_carrier_driver,1,0,0,0
+access_delivery_trip_admin,delivery.trip admin,model_delivery_trip,base.group_system,1,1,1,1
+access_delivery_trip_user,delivery.trip user,model_delivery_trip,base.group_user,1,1,1,0
+access_delivery_trip_manager,delivery.trip manager,model_delivery_trip,group_carrier_manager,1,0,0,0
+access_delivery_trip_driver,delivery.trip driver,model_delivery_trip,group_carrier_driver,1,0,0,0
+access_delivery_trip_line_admin,delivery.trip.line admin,model_delivery_trip_line,base.group_system,1,1,1,1
+access_delivery_trip_line_user,delivery.trip.line user,model_delivery_trip_line,base.group_user,1,1,1,0
+access_delivery_trip_line_manager,delivery.trip.line manager,model_delivery_trip_line,group_carrier_manager,1,1,0,0
+access_delivery_trip_line_driver,delivery.trip.line driver,model_delivery_trip_line,group_carrier_driver,1,1,0,0
+access_delivery_cash_remittance_admin,delivery.cash.remittance admin,model_delivery_cash_remittance,base.group_system,1,1,1,1
+access_delivery_cash_remittance_user,delivery.cash.remittance user,model_delivery_cash_remittance,base.group_user,1,1,1,0
+access_delivery_cash_remittance_manager,delivery.cash.remittance manager,model_delivery_cash_remittance,group_carrier_manager,1,1,1,0
+access_remittance_line_manager,delivery.cash.remittance.line.manager,delivery_carrier_portal.model_delivery_cash_remittance_line,delivery_carrier_portal.group_carrier_manager,1,1,1,1
+access_remittance_line_admin,delivery.cash.remittance.line.admin,delivery_carrier_portal.model_delivery_cash_remittance_line,base.group_system,1,1,1,1
+access_carrier_pricing_rule_admin,carrier.pricing.rule.admin,delivery_carrier_portal.model_carrier_pricing_rule,base.group_system,1,1,1,1
+access_carrier_pricing_rule_manager,carrier.pricing.rule.manager,delivery_carrier_portal.model_carrier_pricing_rule,delivery_carrier_portal.group_carrier_manager,1,0,0,0

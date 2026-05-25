@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_returns_root" name="Returns" parent="uellow_multivendor.menu_marketplace_main" sequence="48"/>
+  <menuitem id="menu_returns" name="Return Requests" parent="menu_returns_root" action="action_returns" sequence="1"/>
+  <menuitem id="menu_return_config" name="Return Policy" parent="menu_returns_root" action="action_return_config" sequence="2"/>
+</odoo>

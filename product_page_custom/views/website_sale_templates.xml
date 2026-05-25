@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="ppc_head" inherit_id="website.layout" name="PPC - Head">
+        <xpath expr="//head" position="inside">
+            <script type="text/javascript">
+                window.ppcWa   = "<t t-esc="request.env['ir.config_parameter'].sudo().get_param('product_page_custom.whatsapp_number', '+96597170933')"/>";
+                window.ppcLang = "<t t-esc="(request.env.lang or 'en_US')[:2]"/>";
+                window.ppcCur  = "<t t-esc="request.env.company.currency_id.symbol or 'KD'"/>";
+            </script>
+        </xpath>
+    </template>
+
+    <template id="ppc_product_page" inherit_id="website_sale.product" name="PPC - Product Page">
+
+        <!-- JS vars -->
+        <xpath expr="//h1" position="before">
+            <t t-set="ppc_sudo" t-value="product.sudo()"/>
+            <script type="text/javascript">
+                window.ppcPrice = <t t-esc="ppc_sudo.list_price"/>;
+                window.ppcOrig  = <t t-esc="ppc_sudo.compare_list_price or 0"/>;
+                window.ppcCatg  = <t t-esc="ppc_sudo.categ_id.id if ppc_sudo.categ_id else 0"/>;
+                window.ppcProd  = <t t-esc="ppc_sudo.id"/>;
+            </script>
+        </xpath>
+
+        <!-- Stock/Ship/Express row — ABOVE qty+buttons -->
+        <xpath expr="//div[@id='o_wsale_cta_wrapper']" position="before">
+            <t t-set="ppc_qty"  t-value="ppc_sudo.virtual_available"/>
+            <t t-set="ppc_cont" t-value="ppc_sudo.product_variant_ids and ppc_sudo.product_variant_ids[0].allow_out_of_stock_order"/>
+            <div class="ppc-stock-express-row" id="ppcStockInline">
+                <t t-if="ppc_qty > 0">
+                    <span class="ppc-stk ppc-in-stock">
+                        <t t-if="(request.env.lang or 'en_US').startswith('ar')">✓ متوفر — <t t-esc="int(ppc_qty)"/> وحدة</t>
+                        <t t-else="">✓ In stock — <t t-esc="int(ppc_qty)"/> left</t>
+                    </span>
+                </t>
+                <t t-elif="ppc_cont">
+                    <span class="ppc-stk ppc-in-stock">
+                        <t t-if="(request.env.lang or 'en_US').startswith('ar')">✓ متوفر</t>
+                        <t t-else="">✓ In stock</t>
+                    </span>
+                </t>
+                <t t-else="">
+                    <span class="ppc-stk ppc-out-stock">
+                        <t t-if="(request.env.lang or 'en_US').startswith('ar')">✗ غير متوفر</t>
+                        <t t-else="">✗ Out of stock</t>
+                    </span>
+                </t>
+                <span class="ppc-ship" id="ppcShipBadge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    <t t-if="(request.env.lang or 'en_US').startswith('ar')">اطلب الآن واستلم طلبك خلال 24 ساعة</t>
+                    <t t-else="">Order Now &amp; receive by tomorrow</t>
+                </span>
+                <span class="ppc-express" id="ppcExpressBadge">
+                    <span class="ppc-express-hours">
+                        <t t-if="(request.env.lang or 'en_US').startswith('ar')">٣ ساعات</t>
+                        <t t-else="">3 Hours</t>
+                    </span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#7a4800" style="flex-shrink:0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    <span class="ppc-express-label">Express</span>
+                </span>
+            </div>
+        </xpath>
+
+        <!-- WA button after add_to_cart — same size as Buy Now -->
+        <xpath expr="//a[@id='add_to_cart']" position="after">
+            <t t-set="ppc_num" t-value="request.env['ir.config_parameter'].sudo().get_param('product_page_custom.whatsapp_number', '+96597170933').replace('+','').replace(' ','').replace('-','')"/>
+            <a t-attf-href="https://wa.me/#{ppc_num}"
+               id="ppcWaBtn" class="ppc-wa-btn btn ms-1"
+               target="_blank" rel="noopener noreferrer"
+               onclick="event.stopPropagation();">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15" style="flex-shrink:0">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.422 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                <t t-if="(request.env.lang or 'en_US').startswith('ar')">واتساب</t>
+                <t t-else="">WhatsApp</t>
+            </a>
+        </xpath>
+
+        <!-- Description block -->
+        <xpath expr="//a[@id='add_to_cart']" position="after">
+            <div id="ppcDescBlock" class="ppc-desc-outer" style="display:none">
+                <div class="ppc-desc-wrapper">
+                    <t t-if="product.website_description_ar">
+                        <div t-attf-class="ppc-desc-block ppc-ar-block#{' ppc-hidden' if not (request.env.lang or 'en_US').startswith('ar') else ''}" data-lb="ar">
+                            <div class="ppc-desc-inner" t-field="product.website_description_ar"/>
+                            <div class="ppc-fade-more">
+                                <button type="button" class="ppc-see-more">عرض المزيد</button>
+                            </div>
+                            <button type="button" class="ppc-see-less" style="display:none">▲ عرض أقل</button>
+                        </div>
+                    </t>
+                    <t t-if="product.website_description_en">
+                        <div t-attf-class="ppc-desc-block ppc-en-block#{' ppc-hidden' if (request.env.lang or 'en_US').startswith('ar') else ''}" data-lb="en">
+                            <div class="ppc-desc-inner" t-field="product.website_description_en"/>
+                            <div class="ppc-fade-more">
+                                <button type="button" class="ppc-see-more">See more</button>
+                            </div>
+                            <button type="button" class="ppc-see-less" style="display:none">▲ See less</button>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </xpath>
+
+        <!-- Bottom sections -->
+        <xpath expr="//div[hasclass('o_wsale_product_page')]" position="after">
+            <t t-if="ppc_sudo.categ_id">
+
+                <!-- You May Also Like slider -->
+                <div class="ppc-related-section" id="ppcRelatedSection"
+                     t-att-data-prod="ppc_sudo.id"
+                     t-att-data-cur="request.env.company.currency_id.symbol or 'KD'"
+                     style="display:none">
+                    <div class="container">
+                        <div class="ppc-related-header">
+                            <div class="ppc-related-bar"></div>
+                            <h2 class="ppc-related-title">
+                                <t t-if="(request.env.lang or 'en_US').startswith('ar')">منتجات مشابهة</t>
+                                <t t-else="">You May Also Like</t>
+                            </h2>
+                        </div>
+                        <div class="ppc-slider-wrap">
+                            <button type="button" class="ppc-sl-prev" onclick="ppcSlide(-1)">&#8249;</button>
+                            <div class="ppc-slider-viewport">
+                                <div class="ppc-slider" id="ppcSlider"></div>
+                            </div>
+                            <button type="button" class="ppc-sl-next" onclick="ppcSlide(1)">&#8250;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs + Top Selling sidebar -->
+                <div class="ppc-bottom-layout">
+                    <div class="ppc-tabs-col" id="ppcTabsCol"></div>
+                    <div class="ppc-ts-col">
+                        <div class="ppc-ts-header">
+                            <span class="ppc-ts-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="#f5a623"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>
+                            </span>
+                            <t t-if="(request.env.lang or 'en_US').startswith('ar')">وصل حديثاً ✨</t>
+                            <t t-else="">New In ✨</t>
+                        </div>
+                        <div class="ppc-ts-list" id="ppcTopSellingList"></div>
+                    </div>
+                </div>
+
+                <!-- Explore More grid -->
+                <div class="ppc-grid-section" id="ppcGridSection" style="display:none;">
+                    <div class="ppc-grid-card">
+                        <div class="ppc-grid-header">
+                            <div class="ppc-related-bar"></div>
+                            <h2 class="ppc-related-title">
+                                <t t-if="(request.env.lang or 'en_US').startswith('ar')">استكشف المزيد</t>
+                                <t t-else="">Explore More</t>
+                            </h2>
+                        </div>
+                        <div class="ppc-related-grid" id="ppcRelGrid"
+                             t-att-data-prod="ppc_sudo.id"
+                             t-att-data-categ="ppc_sudo.categ_id.id if ppc_sudo.categ_id else 0"
+                             t-att-data-cur="request.env.company.currency_id.symbol or 'KD'">
+                        </div>
+                        <div class="ppc-load-more-wrap ppc-hidden" id="ppcLoadMoreWrap">
+                            <button type="button" class="ppc-load-more-btn" id="ppcLoadMore" onclick="ppcLoadMore(this)">
+                                <t t-if="(request.env.lang or 'en_US').startswith('ar')">عرض المزيد</t>
+                                <t t-else="">Load More</t>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </t>
+        </xpath>
+
+    </template>
+
+</odoo>

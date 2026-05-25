@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_import_job_user,import.job.user,model_uellow_import_job,base.group_user,1,1,1,0
+access_import_job_mgr,import.job.mgr,model_uellow_import_job,base.group_system,1,1,1,1
+access_import_line_user,import.line.user,model_uellow_import_job_line,base.group_user,1,1,1,0
+access_import_line_mgr,import.line.mgr,model_uellow_import_job_line,base.group_system,1,1,1,1
+access_conn_settings,conn.settings,model_uellow_connector_settings,base.group_system,1,1,1,1
+access_price_intel_user,price.intel.user,model_uellow_price_intelligence,base.group_user,1,1,1,0
+access_price_intel_mgr,price.intel.mgr,model_uellow_price_intelligence,base.group_system,1,1,1,1
+access_dead_stock_user,dead.stock.user,model_uellow_dead_stock,base.group_user,1,1,1,0
+access_dead_stock_mgr,dead.stock.mgr,model_uellow_dead_stock,base.group_system,1,1,1,1
+access_product_mapping_user,prod.mapping.user,model_uellow_product_mapping,base.group_user,1,1,1,0
+access_product_mapping_mgr,prod.mapping.mgr,model_uellow_product_mapping,base.group_system,1,1,1,1
+access_review_wizard,review.wizard,model_uellow_import_review_wizard,base.group_user,1,1,1,1

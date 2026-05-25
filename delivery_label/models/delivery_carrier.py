@@ -1,77 +1,67 @@
 # -*- coding: utf-8 -*-
-from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo import api, fields, models
 
 class DeliveryCarrier(models.Model):
     _inherit = 'delivery.carrier'
 
-    # Add logo field to the delivery carrier
     logo = fields.Binary(string='Carrier Logo', attachment=True, help="Upload the carrier logo here")
-    vendor_partner_id = fields.Many2one('res.partner', string='Vendor Partner', readonly=True,
-                                       help="The vendor partner associated with this carrier")
-    
-    # Override create method to automatically create a vendor partner
-    @api.model
-    def create(self, vals):
-        carrier = super(DeliveryCarrier, self).create(vals)
-        # Create vendor partner with the same information
-        if not carrier.vendor_partner_id:
-            partner_vals = {
-                'name': carrier.name,
-                'phone': carrier.get_vendor_phone(),
-                'email': carrier.get_vendor_email(),
-                'street': carrier.get_vendor_street(),
-                'city': carrier.get_vendor_city(),
-                'zip': carrier.get_vendor_zip(),
-                'country_id': carrier.get_vendor_country_id(),
-                'image_1920': carrier.logo,
-                'supplier_rank': 1,  # Mark as vendor
-                'company_type': 'company',
-            }
-            partner = self.env['res.partner'].create(partner_vals)
-            carrier.vendor_partner_id = partner.id
-        return carrier
-    
-    # Override write method to update the vendor partner
+    vendor_partner_id = fields.Many2one(
+        'res.partner',
+        string='Vendor Partner',
+        readonly=True,
+        copy=False,
+        help="The vendor partner associated with this carrier",
+    )
+    vendor_phone = fields.Char(string='Vendor Phone')
+    vendor_email = fields.Char(string='Vendor Email')
+    vendor_street = fields.Char(string='Vendor Street')
+    vendor_city = fields.Char(string='Vendor City')
+    vendor_zip = fields.Char(string='Vendor ZIP')
+    vendor_country_id = fields.Many2one('res.country', string='Vendor Country')
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        carriers = super().create(vals_list)
+        for carrier in carriers:
+            if not carrier.vendor_partner_id:
+                partner = self.env['res.partner'].create(carrier._prepare_vendor_partner_vals())
+                carrier.vendor_partner_id = partner
+        return carriers
+
     def write(self, vals):
-        result = super(DeliveryCarrier, self).write(vals)
-        for carrier in self:
-            if carrier.vendor_partner_id:
-                partner_vals = {}
-                if 'name' in vals:
-                    partner_vals['name'] = vals['name']
-                if 'logo' in vals:
-                    partner_vals['image_1920'] = vals['logo']
-                
-                # Update other fields if needed
-                if partner_vals:
-                    carrier.vendor_partner_id.write(partner_vals)
+        result = super().write(vals)
+        sync_fields = {
+            'name',
+            'logo',
+            'vendor_phone',
+            'vendor_email',
+            'vendor_street',
+            'vendor_city',
+            'vendor_zip',
+            'vendor_country_id',
+        }
+        if sync_fields.intersection(vals):
+            for carrier in self.filtered('vendor_partner_id'):
+                carrier.vendor_partner_id.write(carrier._prepare_vendor_partner_vals())
         return result
-    
-    # Helper methods to get vendor information
-    def get_vendor_phone(self):
-        return self.env.context.get('vendor_phone', '')
-    
-    def get_vendor_email(self):
-        return self.env.context.get('vendor_email', '')
-    
-    def get_vendor_street(self):
-        return self.env.context.get('vendor_street', '')
-    
-    def get_vendor_city(self):
-        return self.env.context.get('vendor_city', '')
-    
-    def get_vendor_zip(self):
-        return self.env.context.get('vendor_zip', '')
-    
-    def get_vendor_country_id(self):
-        return self.env.context.get('vendor_country_id', False)
-    
-    # Method to print the delivery label
+
+    def _prepare_vendor_partner_vals(self):
+        self.ensure_one()
+        vals = {
+            'name': self.name,
+            'phone': self.vendor_phone or False,
+            'email': self.vendor_email or False,
+            'street': self.vendor_street or False,
+            'city': self.vendor_city or False,
+            'zip': self.vendor_zip or False,
+            'country_id': self.vendor_country_id.id or False,
+            'image_1920': self.logo or False,
+            'supplier_rank': 1,
+            'company_type': 'company',
+        }
+        return vals
+
     def print_delivery_label(self, picking):
-        """
-        Print the delivery label for the given picking
-        """
         self.ensure_one()
         if not picking:
             return False

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Extend res.partner form: vendor fields + approval button -->
+    <record id="view_partner_fbu" model="ir.ui.view">
+        <field name="name">res.partner.fbu</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add stat button for FBU location -->
+            <div name="button_box" position="inside">
+                <button name="action_approve_vendor"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-check-circle"
+                        invisible="vendor_state == 'active' or not is_uellow_vendor">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_text">اعتماد التاجر</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Add vendor fields after the name field -->
+            <field name="company_type" position="after">
+                <field name="is_uellow_vendor" widget="boolean_toggle"
+                       string="تاجر Uellow"/>
+                <field name="vendor_state"
+                       invisible="not is_uellow_vendor"
+                       widget="badge"
+                       decoration-warning="vendor_state=='pending'"
+                       decoration-success="vendor_state=='active'"
+                       decoration-danger="vendor_state in ('suspended','rejected')"/>
+            </field>
+
+        </field>
+    </record>
+
+</odoo>

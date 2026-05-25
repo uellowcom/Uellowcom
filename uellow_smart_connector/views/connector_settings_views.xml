@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_connector_settings_form" model="ir.ui.view">
+    <field name="name">uellow.connector.settings.form</field>
+    <field name="model">uellow.connector.settings</field>
+    <field name="arch" type="xml">
+      <form string="Smart Connector Settings">
+        <sheet>
+          <div class="alert alert-info" role="alert">
+            <i class="fa fa-info-circle"/> Settings are saved globally and persist between sessions.
+          </div>
+          <group string="AI Settings">
+            <field name="anthropic_api_key" password="True"
+                   placeholder="sk-ant-..."
+                   string="Anthropic API Key"/>
+            <field name="default_warranty_text" string="Default Warranty Text"/>
+            <field name="enable_ai_default" string="Enable AI by Default"/>
+          </group>
+          <group string="Import Settings">
+            <field name="default_price_variance" string="Max Price Change (%)"/>
+            <field name="max_products_default" string="Max Products per Job"/>
+          </group>
+          <group string="Price Intelligence">
+            <field name="price_check_enabled" string="Enable Price Monitoring"/>
+            <field name="price_check_sources"
+                   string="Comparison Sources (comma-separated URLs)"
+                   placeholder="https://site1.com, https://site2.com"/>
+          </group>
+          <group string="Dead Stock">
+            <field name="dead_stock_days" string="Idle Days Threshold"/>
+            <field name="dead_stock_alert_email" string="Send Email Alerts"/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_save" string="Save Settings"
+                  type="object" class="oe_highlight"/>
+          <button string="Discard" class="btn-secondary" special="cancel"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_connector_settings" model="ir.actions.act_window">
+    <field name="name">Smart Connector Settings</field>
+    <field name="res_model">uellow.connector.settings</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+</odoo>

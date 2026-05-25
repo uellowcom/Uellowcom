@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates>
+
+    <!--
+        Uellow POS Receipt — Odoo 18  v18.0.1.0.5
+        Fixes from v1.0.4:
+        + Logo: uses /web/image/res.company/{id}/logo URL (reliable)
+        + Background colors: forced via inline style for print
+        + All previous fixes retained
+    -->
+    <t t-name="uellow_pos_receipt.OrderReceipt"
+       t-inherit="point_of_sale.OrderReceipt"
+       t-inherit-mode="extension"
+       owl="1">
+
+        <xpath expr="//div[hasclass('pos-receipt')]" position="replace">
+        <div class="pos-receipt p-2 uellow-receipt">
+
+            <!-- TOP BAR -->
+            <div class="u-bar" style="height:4px;background:#333;width:100%;"/>
+
+            <!-- HEADER -->
+            <div class="u-header">
+                <t t-if="props.data.headerData and props.data.headerData.company and props.data.headerData.company.id">
+                    <img
+                        t-att-src="'/web/image/res.company/' + props.data.headerData.company.id + '/logo'"
+                        class="u-logo"
+                        alt="Logo"
+                        onerror="this.style.display='none'"
+                    />
+                </t>
+                <div class="u-company-name">Uellow W.L.L &#160;|&#160; شركة يلو دوت كوم</div>
+                <t t-if="props.data.headerData and props.data.headerData.company and props.data.headerData.company.phone">
+                    <div class="u-company-contact">
+                        Tel: <t t-esc="props.data.headerData.company.phone"/> &#160;|&#160; هاتف
+                    </div>
+                </t>
+            </div>
+
+            <!-- INVOICE TITLE — inline bg for print reliability -->
+            <div class="u-invoice-title" style="background:#e0e0e0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                <div class="u-title-text">INVOICE &#160;/&#160; فاتورة</div>
+                <div class="u-invoice-num">#<t t-esc="props.data.name"/></div>
+            </div>
+
+            <!-- META ROW — inline bg for print reliability -->
+            <div class="u-meta" style="background:#e8e8e8;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                <div class="u-meta-item">
+                    <span class="u-meta-label">Date / التاريخ</span>
+                    <span class="u-meta-value"><t t-esc="props.data.date"/></span>
+                </div>
+                <div class="u-meta-item">
+                    <span class="u-meta-label">Cashier / الكاشير</span>
+                    <span class="u-meta-value">
+                        <t t-if="props.data.headerData and props.data.headerData.cashier">
+                            <t t-esc="props.data.headerData.cashier"/>
+                        </t>
+                    </span>
+                </div>
+                <div class="u-meta-item">
+                    <span class="u-meta-label">POS / نقطة البيع</span>
+                    <span class="u-meta-value">
+                        <t t-if="props.data.headerData and props.data.headerData.pos_name">
+                            <t t-esc="props.data.headerData.pos_name"/>
+                        </t>
+                    </span>
+                </div>
+            </div>
+
+            <!-- CUSTOMER -->
+            <t t-if="props.data.headerData and props.data.headerData.client">
+                <div class="u-section-header" style="background:#d8d8d8;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                    <span class="u-sec-en">Customer Info</span>
+                    <span class="u-sec-ar">بيانات العميل</span>
+                </div>
+                <div class="u-customer" style="background:#f5f5f5;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                    <div class="u-customer-row">
+                        <span class="u-cust-key">Name / الاسم</span>
+                        <span class="u-cust-val"><t t-esc="props.data.headerData.client.name"/></span>
+                    </div>
+                    <t t-if="props.data.headerData.client.phone">
+                        <div class="u-customer-row">
+                            <span class="u-cust-key">Phone / الهاتف</span>
+                            <span class="u-cust-val"><t t-esc="props.data.headerData.client.phone"/></span>
+                        </div>
+                    </t>
+                    <t t-if="props.data.headerData.client.mobile">
+                        <div class="u-customer-row">
+                            <span class="u-cust-key">Mobile / الجوال</span>
+                            <span class="u-cust-val"><t t-esc="props.data.headerData.client.mobile"/></span>
+                        </div>
+                    </t>
+                    <t t-if="props.data.headerData.client.street">
+                        <div class="u-customer-row">
+                            <span class="u-cust-key">Address / العنوان</span>
+                            <span class="u-cust-val">
+                                <t t-esc="props.data.headerData.client.street"/>
+                                <t t-if="props.data.headerData.client.city">, <t t-esc="props.data.headerData.client.city"/></t>
+                            </span>
+                        </div>
+                    </t>
+                    <div class="u-customer-row">
+                        <span class="u-cust-key">Account / الحساب</span>
+                        <span class="u-cust-val">Customer Account</span>
+                    </div>
+                </div>
+            </t>
+
+            <!-- ITEMS -->
+            <div class="u-section-header" style="background:#d8d8d8;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                <span class="u-sec-en">Items</span>
+                <span class="u-sec-ar">المنتجات</span>
+            </div>
+
+            <t t-set="showTaxGroupLabels" t-value="doesAnyOrderlineHaveTaxLabel()"/>
+            <OrderWidget
+                t-if="props.data.orderlines and props.data.orderlines.length"
+                lines="props.data.orderlines"
+                t-slot-scope="scope"
+                generalNote="props.data.generalNote or ''"
+                screenName="props.data.screenName">
+                <t t-set="line" t-value="scope.line"/>
+                <t t-if="line.name_arabic or (line.product and line.product.name_arabic)">
+                    <div class="u-line-name-ar"><t t-esc="line.name_arabic or (line.product and line.product.name_arabic) or ''"/></div>
+                </t>
+                <Orderline
+                    basic_receipt="props.basic_receipt"
+                    line="omit(scope.line, 'customerNote')"
+                    class="{ 'px-0': true }"
+                    showTaxGroupLabels="showTaxGroupLabels">
+                    <li t-if="line.customerNote" class="customer-note w-100 p-2 my-1 rounded text-break">
+                        <i class="fa fa-sticky-note me-1" role="img" aria-label="Customer Note" title="Customer Note"/>
+                        <t t-esc="line.customerNote"/>
+                    </li>
+                </Orderline>
+                <t t-if="line.discount">
+                    <div class="u-line-discount">Discount / خصم: <t t-esc="line.discount"/>%</div>
+                </t>
+            </OrderWidget>
+
+            <!-- TOTALS -->
+            <t t-if="!props.basic_receipt">
+                <t t-set="taxTotals" t-value="props.data.taxTotals"/>
+
+                <div t-if="taxTotals and taxTotals.has_tax_groups" class="pos-receipt-taxes">
+                    <div class="u-dashed-center">--------------------------------</div>
+                    <t t-foreach="taxTotals.subtotals" t-as="subtotal" t-key="subtotal.name">
+                        <div class="d-flex">
+                            <span t-if="showTaxGroupLabels" class="me-2" style="visibility:hidden;">A</span>
+                            <span class="fw-bolder text-nowrap mw-100" t-out="subtotal.name"/>
+                            <span t-esc="props.formatCurrency(subtotal.base_amount_currency)" class="ms-auto"/>
+                        </div>
+                        <div t-foreach="subtotal.tax_groups" t-as="tax_group" t-key="tax_group.id" class="d-flex">
+                            <t t-if="showTaxGroupLabels">
+                                <span t-if="tax_group.group_label" t-out="tax_group.group_label" class="me-2"/>
+                                <span t-else="" class="me-2" style="visibility:hidden;">A</span>
+                            </t>
+                            <span>
+                                <span t-esc="tax_group.group_name"/>
+                                <t t-if="!taxTotals.same_tax_base">
+                                    on <span t-esc="props.formatCurrency(tax_group.base_amount_currency)"/>
+                                </t>
+                            </span>
+                            <span t-esc="props.formatCurrency(tax_group.tax_amount_currency)" class="ms-auto"/>
+                        </div>
+                    </t>
+                </div>
+
+                <div class="u-dashed-center">--------------------------------</div>
+
+                <!-- Discount total -->
+                <t t-if="props.data.total_discount">
+                    <div class="u-discount-total">
+                        <span><t t-out="props.data.label_discounts"/>&#160;<span class="u-pay-ar">إجمالي الخصم</span></span>
+                        <span t-esc="props.formatCurrency(props.data.total_discount)" class="pos-receipt-right-align"/>
+                    </div>
+                </t>
+
+                <!-- Grand Total -->
+                <div class="u-grand-total">
+                    <span><t t-out="props.data.label_total"/>&#160;<span class="u-grand-ar">الإجمالي</span></span>
+                    <span t-esc="props.formatCurrency(taxTotals.order_sign * taxTotals.order_total)" class="pos-receipt-right-align"/>
+                </div>
+
+                <!-- Rounding -->
+                <t t-if="props.data.show_rounding">
+                    <div class="pos-receipt-amount receipt-rounding">
+                        <t t-out="props.data.label_rounding"/>
+                        <span t-esc="props.formatCurrency(taxTotals.order_sign * taxTotals.order_rounding)" class="pos-receipt-right-align"/>
+                    </div>
+                    <div class="pos-receipt-amount receipt-to-pay">
+                        To Pay
+                        <span t-esc="props.formatCurrency(taxTotals.order_sign * (taxTotals.order_total + taxTotals.order_rounding))" class="pos-receipt-right-align"/>
+                    </div>
+                </t>
+
+                <!-- Payment Lines -->
+                <div class="u-payment-lines">
+                    <div t-foreach="props.data.paymentlines" t-as="line" t-key="line_index" class="u-payment-row">
+                        <span class="u-pay-name"><t t-esc="line.name"/>&#160;<span class="u-pay-ar">طريقة الدفع</span></span>
+                        <span t-esc="props.formatCurrency(line.amount)" class="pos-receipt-right-align"/>
+                    </div>
+                </div>
+
+                <!-- Change -->
+                <div t-if="props.data.show_change" class="pos-receipt-amount receipt-change u-change-row">
+                    <span><t t-out="props.data.label_change"/>&#160;<span class="u-pay-ar">الباقي</span></span>
+                    <span t-esc="props.formatCurrency(props.data.order_change)" class="pos-receipt-right-align"/>
+                </div>
+
+                <!-- LOYALTY POINTS -->
+                <t t-if="props.data.loyalty_points and props.data.loyalty_points.length">
+                    <div class="u-loyalty-section" style="background:#f0f0f0;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                        <div class="u-loyalty-header">
+                            <span>Loyalty Points</span>
+                            <span class="u-loyalty-ar">نقاط الولاء</span>
+                        </div>
+                        <t t-foreach="props.data.loyalty_points" t-as="lp" t-key="lp_index">
+                            <t t-if="lp.card_name or lp.program_name">
+                                <div class="u-loyalty-card-name"><t t-esc="lp.card_name or lp.program_name"/></div>
+                            </t>
+                            <t t-if="lp.points_won">
+                                <div class="u-loyalty-row">
+                                    <span>Won / مكتسبة</span>
+                                    <span class="u-loyalty-won">+<t t-esc="lp.points_won"/></span>
+                                </div>
+                            </t>
+                            <t t-if="lp.points_used">
+                                <div class="u-loyalty-row">
+                                    <span>Used / مستخدمة</span>
+                                    <span class="u-loyalty-used">-<t t-esc="lp.points_used"/></span>
+                                </div>
+                            </t>
+                            <t t-if="lp.balance !== undefined and lp.balance !== null">
+                                <div class="u-loyalty-row u-loyalty-balance-row">
+                                    <span>Balance / الرصيد</span>
+                                    <span class="u-loyalty-balance" style="background:#ddd;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                                        <t t-esc="lp.balance"/>
+                                    </span>
+                                </div>
+                            </t>
+                        </t>
+                    </div>
+                </t>
+
+                <div class="before-footer"/>
+                <div class="pos-receipt-order-data"/>
+
+                <!-- QR CODE -->
+                <t t-if="props.data.pos_qr_code">
+                    <div class="u-qr-section">
+                        <div class="u-qr-ask-en">Need an invoice for your purchase?</div>
+                        <div class="u-qr-ask-ar">هل تحتاج فاتورة لمشترياتك؟</div>
+                        <t t-if="props.data.headerData and props.data.headerData.company and ['qr_code', 'qr_code_and_url'].includes(props.data.headerData.company.point_of_sale_ticket_portal_url_display_mode)">
+                            <div class="u-qr-wrap">
+                                <div class="u-qr-border">
+                                    <img id="posqrcode" t-att-src="props.data.pos_qr_code" class="pos-receipt-logo"/>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-if="props.data.ticket_code">
+                            <div class="u-unique-code">Unique Code:&#160;<strong><t t-esc="props.data.ticket_code"/></strong></div>
+                        </t>
+                    </div>
+                </t>
+
+            </t>
+
+            <!-- RETURN POLICY -->
+            <div class="u-policy" style="background:#ebebeb;-webkit-print-color-adjust:exact;print-color-adjust:exact;">
+                <div class="u-policy-header">
+                    <span>Return Policy</span>
+                    <span class="u-pol-ar">سياسة الاسترجاع</span>
+                </div>
+                <div class="u-policy-grid">
+                    <div class="u-policy-en">
+                        &#x2022; Returns within <strong>14 days</strong> of purchase date.<br/>
+                        &#x2022; Original receipt required.<br/>
+                        &#x2022; Unused, original packaging only.
+                    </div>
+                    <div class="u-policy-ar">
+                        &#x2022; الاسترجاع خلال <strong>١٤ يوماً</strong> من تاريخ الشراء.<br/>
+                        &#x2022; الإيصال الأصلي مطلوب.<br/>
+                        &#x2022; منتج غير مستخدم بعبوته.
+                    </div>
+                </div>
+            </div>
+
+            <!-- SYSTEM FOOTER -->
+            <div t-if="props.data.footer" class="pos-receipt-center-align" style="white-space:pre-line">
+                <br/><t t-esc="props.data.footer"/><br/>
+            </div>
+
+            <div class="after-footer">
+                <t t-foreach="props.data.paymentlines" t-as="line" t-key="line_index">
+                    <t t-if="line.ticket">
+                        <br/>
+                        <div class="pos-payment-terminal-receipt"><pre t-esc="line.ticket"/></div>
+                    </t>
+                </t>
+            </div>
+
+            <!-- ORDER FOOTER -->
+            <div class="u-order-footer">
+                <div><t t-esc="props.data.name"/></div>
+                <div id="order-date"><t t-esc="props.data.date"/></div>
+            </div>
+
+            <!-- BOTTOM BAR -->
+            <div class="u-bar" style="height:4px;background:#333;width:100%;"/>
+
+        </div>
+        </xpath>
+
+    </t>
+
+</templates>

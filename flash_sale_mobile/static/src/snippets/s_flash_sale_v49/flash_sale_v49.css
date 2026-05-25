@@ -1,0 +1,231 @@
+/* Flash Sale Ultimate V49 START */
+html[dir="rtl"] .uellow-v49-wrapper { direction: rtl !important; text-align: right !important; }
+html[dir="ltr"] .uellow-v49-wrapper { direction: ltr !important; text-align: left !important; }
+
+/* ✅ إصلاح المحاذاة — توسيط البلوك في الصفحة */
+section.uellow-v49-wrapper,
+.uellow-v49-wrapper {
+    width: 100%;
+    max-width: 480px;       /* حد أقصى لشاشات الموبايل */
+    margin: 10px auto !important;  /* توسيط أفقي */
+    padding: 0 4px;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: block;
+}
+
+.v49-unified-canvas {
+    width: 100%;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #ffc107 0%, #ff8a00 100%);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.v49-pattern-bg::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-image: radial-gradient(rgba(255,255,255,0.2) 0.8px, transparent 0.8px);
+    background-size: 12px 12px;
+    z-index: 1;
+}
+
+.v49-header {
+    padding: 10px 10px 4px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+.v49-header-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.v49-title-text {
+    color: #2c3e50;
+    font-size: 12px;
+    font-weight: 900;
+    margin: 0;
+}
+
+.v49-timer-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    direction: ltr !important;
+}
+
+.v49-t-box {
+    background: #ffffff;
+    color: #d32f2f;
+    width: 22px;
+    height: 19px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.v49-t-sep {
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 9px;
+}
+
+.v49-btn-more {
+    background: #2c3e50;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    text-decoration: none !important;
+}
+
+.v49-product-area {
+    padding: 8px 6px 12px 6px;
+    position: relative;
+    z-index: 2;
+}
+
+.v49-card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 7px;
+    text-decoration: none !important;
+    display: block;
+    border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.v49-img-box {
+    height: 140px;
+    background: #fafafa;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 6px;
+}
+
+.v49-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.v49-p-title {
+    font-size: 10px;
+    color: #333;
+    height: 26px;
+    overflow: hidden;
+    margin-bottom: 5px;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.v49-p-new {
+    color: #000;
+    font-weight: 900;
+    font-size: 1.05rem;
+    display: inline-block;
+}
+
+.v49-p-old {
+    color: #aaa;
+    font-size: 0.8rem;
+    text-decoration: line-through;
+    margin: 0 4px;
+}
+
+.v49-save-badge {
+    display: inline-flex;
+    align-items: center;
+    background: linear-gradient(135deg, #fff3d0 0%, #ffe08a 100%);
+    color: #855d00;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-top: 5px;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    white-space: nowrap;
+}
+
+.v49-loader {
+    text-align: center;
+    padding: 40px 0;
+    width: 100%;
+}
+
+.v49-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #fff;
+    border-top: 2px solid #2c3e50;
+    border-radius: 50%;
+    animation: v49-spin 1s linear infinite;
+    display: inline-block;
+}
+
+@keyframes v49-spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+/* Flash Sale Ultimate V49 END */
+
+/* ✅ منع Odoo من إخفاء البلوك على الديسكتوب */
+.uellow-v49-wrapper.o_snippet_desktop_invisible,
+.uellow-v49-wrapper[data-invisible="1"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* ✅ تصغير السعر ليستوعب السعر والمخصوم */
+.v49-price-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+}
+.v49-p-new {
+    font-size: 0.82rem !important;
+    font-weight: 900;
+    color: #000;
+    white-space: nowrap;
+}
+.v49-p-old {
+    font-size: 0.72rem !important;
+    color: #aaa;
+    text-decoration: line-through;
+    white-space: nowrap;
+}
+/* ✅ البلوك يظهر دائماً حتى لو Odoo يخفيه */
+.uellow-v49-wrapper {
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* ✅ يظهر فقط على الموبايل — مخفي على الديسكتوب دائماً */
+@media (min-width: 768px) {
+    .uellow-v49-wrapper {
+        display: none !important;
+    }
+}
+@media (max-width: 767px) {
+    .uellow-v49-wrapper {
+        display: block !important;
+        visibility: visible !important;
+    }
+}

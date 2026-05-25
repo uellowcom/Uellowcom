@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_barcode" name="Barcode Receiving"
+            parent="uellow_fulfillment.menu_fbu_root"
+            action="action_barcode_sessions" sequence="51"/>
+</odoo>

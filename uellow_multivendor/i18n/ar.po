@@ -1,0 +1,189 @@
+# Translation of Odoo Server.
+# * uellow_multivendor
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: uellow_multivendor
+#: model:ir.model,name:uellow_multivendor.model_uellow_vendor
+msgid "Marketplace Vendor"
+msgstr "تاجر المنصة"
+
+#. module: uellow_multivendor
+#: model_terms:ir.ui.menu,name:uellow_multivendor.menu_marketplace_root
+msgid "Marketplace"
+msgstr "المنصة"
+
+#. module: uellow_multivendor
+#: model_terms:ir.ui.menu,name:uellow_multivendor.menu_marketplace_vendors
+msgid "Vendors"
+msgstr "التجار"
+
+#. module: uellow_multivendor
+#: model_terms:ir.ui.menu,name:uellow_multivendor.menu_marketplace_plans
+msgid "Commission Plans"
+msgstr "خطط العمولة"
+
+#. module: uellow_multivendor
+#: model_terms:ir.ui.menu,name:uellow_multivendor.menu_marketplace_commissions
+msgid "Commissions"
+msgstr "العمولات"
+
+#. module: uellow_multivendor
+#: model_terms:ir.ui.menu,name:uellow_multivendor.menu_marketplace_payouts
+msgid "Payouts"
+msgstr "المدفوعات"
+
+#. module: uellow_multivendor
+#: model_terms:ir.ui.menu,name:uellow_multivendor.menu_marketplace_wallets
+msgid "Wallets"
+msgstr "المحافظ"
+
+#. module: uellow_multivendor
+#: model_terms:ir.ui.menu,name:uellow_multivendor.menu_marketplace_flash
+msgid "Flash Sales"
+msgstr "عروض فلاش"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor__state__draft
+msgid "Draft"
+msgstr "مسودة"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor__state__pending
+msgid "Pending Review"
+msgstr "بانتظار المراجعة"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor__state__active
+msgid "Active"
+msgstr "نشط"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor__state__suspended
+msgid "Suspended"
+msgstr "موقوف"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor__state__rejected
+msgid "Rejected"
+msgstr "مرفوض"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor__tier__bronze
+msgid "Bronze"
+msgstr "برونزي"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor__tier__silver
+msgid "Silver"
+msgstr "فضي"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor__tier__gold
+msgid "Gold"
+msgstr "ذهبي"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor__tier__platinum
+msgid "Platinum"
+msgstr "بلاتيني"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_vendor__store_name_en
+msgid "Store Name (English)"
+msgstr "اسم المتجر (إنجليزي)"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_vendor__store_name_ar
+msgid "Store Name (Arabic)"
+msgstr "اسم المتجر (عربي)"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_vendor__country_id
+msgid "Country"
+msgstr "الدولة"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_vendor__currency_id
+msgid "Payout Currency"
+msgstr "عملة المدفوعات"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_vendor__wallet_balance
+msgid "Wallet Balance"
+msgstr "رصيد المحفظة"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_vendor__follower_count
+msgid "Followers"
+msgstr "المتابعون"
+
+#. module: uellow_multivendor
+#: model:ir.model,name:uellow_multivendor.model_uellow_commission_plan
+msgid "Vendor Commission Plan"
+msgstr "خطة عمولة التاجر"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_commission_plan__monthly_fee
+msgid "Monthly Fee"
+msgstr "الرسوم الشهرية"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_commission_plan__commission_rate
+msgid "Default Commission Rate (%)"
+msgstr "نسبة العمولة الافتراضية (%)"
+
+#. module: uellow_multivendor
+#: model:ir.model,name:uellow_multivendor.model_uellow_flash_sale
+msgid "Flash Sale"
+msgstr "عرض فلاش"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_flash_sale__discount_pct
+msgid "Discount (%)"
+msgstr "نسبة الخصم (%)"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields,field_description:uellow_multivendor.field_uellow_flash_sale__extra_commission
+msgid "Extra Commission (%)"
+msgstr "عمولة إضافية (%)"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor_commission__state__pending
+msgid "Pending"
+msgstr "معلق"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor_commission__state__hold
+msgid "On Hold"
+msgstr "في الانتظار"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor_commission__state__released
+msgid "Released"
+msgstr "تم الإفراج"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor_commission__state__paid
+msgid "Paid"
+msgstr "مدفوع"
+
+#. module: uellow_multivendor
+#: model:ir.model.fields.selection,name:uellow_multivendor.selection__uellow_vendor_commission__state__refunded
+msgid "Refunded"
+msgstr "مُسترد"
+
+#. module: uellow_multivendor
+#: model:res.groups,name:uellow_multivendor.group_marketplace_manager
+msgid "Marketplace Manager"
+msgstr "مدير المنصة"
+
+#. module: uellow_multivendor
+#: model:res.groups,name:uellow_multivendor.group_vendor_user
+msgid "Vendor User"
+msgstr "مستخدم تاجر"

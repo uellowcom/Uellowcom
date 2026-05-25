@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+
+<record id="action_report_delivery_trip" model="ir.actions.report">
+  <field name="name">Delivery Trip Report</field>
+  <field name="model">delivery.trip</field>
+  <field name="report_type">qweb-pdf</field>
+  <field name="report_name">delivery_carrier_portal.report_delivery_trip_template</field>
+  <field name="report_file">delivery_carrier_portal.report_delivery_trip_template</field>
+</record>
+
+<template id="report_delivery_trip_template">
+  <t t-call="web.html_container">
+    <t t-foreach="docs" t-as="trip">
+      <div class="page" style="font-family:'Segoe UI',Arial,sans-serif;font-size:11px;color:#1a1a2e;padding:0;margin:0;">
+
+        <!-- ═══ HEADER ═══════════════════════════════════════════ -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:0;">
+          <tr>
+            <td style="width:140px;vertical-align:middle;padding:10px 16px 10px 16px;">
+              <img src="/web/image/res.company/1/logo" style="max-height:55px;max-width:130px;" alt="Logo"/>
+            </td>
+            <td style="vertical-align:middle;padding:10px 0;">
+              <div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;">
+                FROM WORLD TO YOU
+              </div>
+              <div style="font-size:10px;color:#475569;margin-top:2px;">Uellow W.L.L — Kuwait</div>
+            </td>
+            <td style="text-align:right;padding:10px 16px 10px 0;vertical-align:middle;">
+              <div style="display:inline-block;background:#0A1628;color:white;border-radius:8px;padding:10px 18px;text-align:left;">
+                <div style="font-size:17px;font-weight:800;letter-spacing:0.5px;font-family:monospace;">
+                  <t t-esc="trip.name"/>
+                </div>
+                <div style="font-size:10px;color:#94a3b8;margin-top:2px;">
+                  <t t-esc="trip.date_trip"/>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Blue divider -->
+        <div style="height:4px;background:linear-gradient(90deg,#2D6BE4,#1B4F96);margin:0 0 14px 0;border-radius:2px;"></div>
+
+        <!-- ═══ TRIP INFO BAR ════════════════════════════════════ -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#F0F6FF;border-radius:8px;margin-bottom:14px;border:1px solid #BFDBFE;">
+          <tr>
+            <td style="padding:9px 14px;border-right:1px solid #BFDBFE;width:25%;">
+              <div style="font-size:9px;color:#6B7280;text-transform:uppercase;font-weight:600;margin-bottom:2px;">Carrier Company</div>
+              <div style="font-size:12px;font-weight:700;color:#1B4F96;"><t t-esc="trip.carrier_company_id.name"/></div>
+            </td>
+            <td style="padding:9px 14px;border-right:1px solid #BFDBFE;width:25%;">
+              <div style="font-size:9px;color:#6B7280;text-transform:uppercase;font-weight:600;margin-bottom:2px;">Driver</div>
+              <div style="font-size:12px;font-weight:700;color:#1a1a2e;">
+                <t t-esc="', '.join(set(l.driver_id.name for l in trip.line_ids if l.driver_id)) or '—'"/>
+              </div>
+            </td>
+            <td style="padding:9px 14px;border-right:1px solid #BFDBFE;width:25%;">
+              <div style="font-size:9px;color:#6B7280;text-transform:uppercase;font-weight:600;margin-bottom:2px;">Total Orders</div>
+              <div style="font-size:20px;font-weight:800;color:#2D6BE4;line-height:1;">
+                <t t-esc="len(trip.line_ids)"/>
+              </div>
+            </td>
+            <td style="padding:9px 14px;width:25%;">
+              <div style="font-size:9px;color:#6B7280;text-transform:uppercase;font-weight:600;margin-bottom:2px;">Trip Status</div>
+              <div style="font-size:11px;font-weight:700;">
+                <t t-if="trip.state == 'done'">
+                  <span style="background:#DCFCE7;color:#15803D;padding:2px 8px;border-radius:12px;">✓ Done</span>
+                </t>
+                <t t-elif="trip.state == 'in_progress'">
+                  <span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:12px;">⟳ In Progress</span>
+                </t>
+                <t t-elif="trip.state == 'assigned'">
+                  <span style="background:#DBEAFE;color:#1D4ED8;padding:2px 8px;border-radius:12px;">● Assigned</span>
+                </t>
+                <t t-else="">
+                  <span style="background:#F1F5F9;color:#64748B;padding:2px 8px;border-radius:12px;"><t t-esc="trip.state"/></span>
+                </t>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- ═══ ORDERS TABLE ═════════════════════════════════════ -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:14px;border-radius:8px;overflow:hidden;border:1px solid #E2E8F0;">
+          <thead>
+            <tr style="background:#0A1628;color:white;">
+              <th style="padding:8px 6px;text-align:center;font-size:10px;font-weight:600;width:28px;">#</th>
+              <th style="padding:8px 6px;font-size:10px;font-weight:600;width:64px;">Order</th>
+              <th style="padding:8px 6px;font-size:10px;font-weight:600;">Customer</th>
+              <th style="padding:8px 6px;font-size:10px;font-weight:600;width:90px;" dir="ltr">Phone</th>
+              <th style="padding:8px 6px;font-size:10px;font-weight:600;width:60px;">City</th>
+              <th style="padding:8px 6px;font-size:10px;font-weight:600;">Address</th>
+              <th style="padding:8px 6px;font-size:10px;font-weight:600;text-align:right;width:58px;">KD</th>
+              <th style="padding:8px 6px;font-size:10px;font-weight:600;text-align:center;width:48px;">Pay</th>
+              <th style="padding:8px 6px;font-size:10px;font-weight:600;text-align:center;width:50px;">Status</th>
+              <th style="padding:8px 6px;font-size:10px;font-weight:600;text-align:center;width:38px;">Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <t t-foreach="trip.line_ids" t-as="line">
+              <tr t-attf-style="background:#{('#F8FAFC' if line_index % 2 == 0 else '#FFFFFF')};border-bottom:1px solid #E9EEF4;">
+                <!-- # -->
+                <td style="padding:9px 6px;text-align:center;color:#94A3B8;font-size:10px;font-weight:600;">
+                  <t t-esc="line_index + 1"/>
+                </td>
+                <!-- Order -->
+                <td style="padding:9px 6px;font-weight:800;font-family:monospace;color:#1B4F96;font-size:11px;">
+                  <t t-esc="line.sale_order_id.name"/>
+                </td>
+                <!-- Customer -->
+                <td style="padding:9px 6px;font-weight:500;">
+                  <t t-esc="line.partner_name or '—'"/>
+                </td>
+                <!-- Phone -->
+                <td style="padding:9px 6px;color:#334155;" dir="ltr">
+                  <t t-esc="line.partner_phone or '—'"/>
+                </td>
+                <!-- City -->
+                <td style="padding:9px 6px;color:#475569;font-size:10px;">
+                  <t t-esc="line.sale_order_id.partner_id.city or line.sale_order_id.partner_id.state_id.name or '—'"/>
+                </td>
+                <!-- Address -->
+                <td style="padding:9px 6px;font-size:10px;color:#475569;max-width:140px;">
+                  <t t-esc="line.delivery_address_text or line.sale_order_id.partner_id.street or '—'"/>
+                </td>
+                <!-- Amount -->
+                <td style="padding:9px 6px;text-align:right;font-weight:800;color:#0F172A;font-size:11px;">
+                  <t t-esc="'%.3f' % line.amount_total"/>
+                </td>
+                <!-- Payment -->
+                <td style="padding:9px 6px;text-align:center;">
+                  <t t-if="line.payment_method_type == 'cash'">
+                    <span style="background:#FEE2E2;color:#B91C1C;padding:2px 5px;border-radius:6px;font-size:9px;font-weight:700;">CASH</span>
+                  </t>
+                  <t t-else="">
+                    <span style="background:#DCFCE7;color:#15803D;padding:2px 5px;border-radius:6px;font-size:9px;font-weight:700;">ONLINE</span>
+                  </t>
+                </td>
+                <!-- Status -->
+                <td style="padding:9px 6px;text-align:center;">
+                  <t t-if="line.delivery_status == 'delivered'">
+                    <span style="background:#DCFCE7;color:#15803D;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;">✓ Done</span>
+                  </t>
+                  <t t-elif="line.delivery_status == 'failed'">
+                    <span style="background:#FEE2E2;color:#B91C1C;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;">✗ Failed</span>
+                  </t>
+                  <t t-elif="line.delivery_status == 'failed_returned'">
+                    <span style="background:#FEF3C7;color:#92400E;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;">↩ Returned</span>
+                  </t>
+                  <t t-elif="line.delivery_status == 'arrived_sorting'">
+                    <span style="background:#CCFBF1;color:#0F766E;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;">📦 Sorting</span>
+                  </t>
+                  <t t-elif="line.delivery_status == 'out_for_delivery'">
+                    <span style="background:#DBEAFE;color:#1D4ED8;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;">⟳ Transit</span>
+                  </t>
+                  <t t-else="">
+                    <span style="background:#F1F5F9;color:#64748B;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:700;">Pending</span>
+                  </t>
+                </td>
+                <!-- Notes blank -->
+                <td style="padding:9px 6px;"></td>
+              </tr>
+            </t>
+          </tbody>
+          <tfoot>
+            <tr style="background:#EFF6FF;border-top:2px solid #BFDBFE;">
+              <td colspan="6" style="padding:9px 6px;text-align:right;font-weight:700;font-size:11px;color:#1B4F96;">
+                Total (<t t-esc="len(trip.line_ids)"/> orders)
+              </td>
+              <td style="padding:9px 6px;text-align:right;font-weight:800;font-size:13px;color:#1B4F96;">
+                <t t-esc="'%.3f' % sum(trip.line_ids.mapped('amount_total'))"/>
+              </td>
+              <td colspan="3" style="background:#EFF6FF;"></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <!-- ═══ SUMMARY BOXES ════════════════════════════════════ -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+          <tr>
+            <td style="padding:0 5px 0 0;width:25%;">
+              <div style="background:#DCFCE7;border:1px solid #86EFAC;border-radius:10px;padding:10px;text-align:center;">
+                <div style="font-size:26px;font-weight:800;color:#15803D;line-height:1;">
+                  <t t-esc="len(trip.line_ids.filtered(lambda l: l.delivery_status == 'delivered'))"/>
+                </div>
+                <div style="font-size:10px;color:#15803D;font-weight:600;margin-top:3px;">Delivered / تم التوصيل</div>
+              </div>
+            </td>
+            <td style="padding:0 5px;width:25%;">
+              <div style="background:#FEE2E2;border:1px solid #FCA5A5;border-radius:10px;padding:10px;text-align:center;">
+                <div style="font-size:26px;font-weight:800;color:#B91C1C;line-height:1;">
+                  <t t-esc="len(trip.line_ids.filtered(lambda l: l.delivery_status in ('failed','failed_returned')))"/>
+                </div>
+                <div style="font-size:10px;color:#B91C1C;font-weight:600;margin-top:3px;">Failed / فشل</div>
+              </div>
+            </td>
+            <td style="padding:0 5px;width:25%;">
+              <div style="background:#FEF3C7;border:1px solid #FDE68A;border-radius:10px;padding:10px;text-align:center;">
+                <div style="font-size:26px;font-weight:800;color:#92400E;line-height:1;">
+                  <t t-esc="len(trip.line_ids.filtered(lambda l: l.delivery_status == 'out_for_delivery'))"/>
+                </div>
+                <div style="font-size:10px;color:#92400E;font-weight:600;margin-top:3px;">In Transit / قيد التوصيل</div>
+              </div>
+            </td>
+            <td style="padding:0 0 0 5px;width:25%;">
+              <div style="background:#DBEAFE;border:1px solid #93C5FD;border-radius:10px;padding:10px;text-align:center;">
+                <div style="font-size:18px;font-weight:800;color:#1D4ED8;line-height:1.2;">
+                  KD <t t-esc="'%.3f' % sum(trip.line_ids.filtered(lambda l: l.payment_method_type == 'cash' and l.delivery_status == 'delivered').mapped('amount_total'))"/>
+                </div>
+                <div style="font-size:10px;color:#1D4ED8;font-weight:600;margin-top:3px;">Cash Collected / كاش محصّل</div>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- ═══ SIGNATURE SECTION ════════════════════════════════ -->
+        <div style="border-top:2px solid #E2E8F0;padding-top:16px;margin-top:4px;">
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="width:45%;padding:0 10px 0 0;">
+                <div style="border:1.5px solid #CBD5E1;border-radius:10px;padding:14px;background:#FAFAFA;">
+                  <div style="font-size:9px;color:#94A3B8;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;margin-bottom:8px;">
+                    Driver Signature / توقيع المندوب
+                  </div>
+                  <t t-if="any(l.driver_id for l in trip.line_ids)">
+                    <div style="font-size:10px;color:#334155;font-weight:600;margin-bottom:10px;">
+                      <t t-esc="'، '.join(set(l.driver_id.name for l in trip.line_ids if l.driver_id))"/> <t t-esc="'، '.join(set(l.driver_id.phone or '' for l in trip.line_ids if l.driver_id))"/>
+                    </div>
+                  </t>
+                  <div style="height:55px;border-bottom:1.5px dashed #94A3B8;"></div>
+                </div>
+              </td>
+              <td style="width:10%;text-align:center;vertical-align:middle;">
+                <div style="font-size:18px;color:#CBD5E1;">●</div>
+              </td>
+              <td style="width:45%;padding:0 0 0 10px;">
+                <div style="border:1.5px solid #CBD5E1;border-radius:10px;padding:14px;background:#FAFAFA;">
+                  <div style="font-size:9px;color:#94A3B8;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;margin-bottom:8px;">
+                    Uellow Representative / ممثل يلو
+                  </div>
+                  <div style="font-size:10px;color:#334155;font-weight:600;margin-bottom:10px;">
+                    Uellow W.L.L
+                  </div>
+                  <div style="height:55px;border-bottom:1.5px dashed #94A3B8;"></div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- ═══ FOOTER ═══════════════════════════════════════════ -->
+        <div style="margin-top:16px;padding-top:10px;border-top:1px solid #E2E8F0;text-align:center;">
+          <div style="font-size:8px;color:#94A3B8;line-height:1.6;">
+            Kuwait - Uellow W.L.L – Mirqab – Hamad Al-Mobarak St – Enmaa Tower – M1 – Office 7 | TEL: +96597170939<br/>
+            UNITED STATES - Uellow LLC - 1309 Coffeen Avenue STE 1200, Sheridan Wyoming 82801, USA | TEL: +1(929)243-9965<br/>
+            SUPPORT: Help@uellow.com
+          </div>
+        </div>
+
+      </div>
+    </t>
+  </t>
+</template>
+
+  </data>
+</odoo>

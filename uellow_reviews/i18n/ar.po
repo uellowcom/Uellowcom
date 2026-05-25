@@ -1,0 +1,82 @@
+# Translation: uellow_reviews
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0?0:n==1?1:n==2?2:n%100>=3&&n%100<=10?3:n%100>=11&&n%100<=99?4:5;\n"
+
+#. module: uellow_reviews
+#: model:ir.model,name:uellow_reviews.model_uellow_product_review
+msgid "Product Review"
+msgstr "تقييم المنتج"
+
+#. module: uellow_reviews
+#: model:ir.model.fields.selection,name:uellow_reviews.selection__uellow_product_review__reason__defective
+msgid "Defective / Damaged"
+msgstr "معطوب / تالف"
+
+#. module: uellow_reviews
+#: model:ir.model.fields.selection,name:uellow_reviews.selection__uellow_product_review__state__pending
+msgid "Pending Moderation"
+msgstr "بانتظار المراجعة"
+
+#. module: uellow_reviews
+#: model:ir.model.fields.selection,name:uellow_reviews.selection__uellow_product_review__state__approved
+msgid "Approved"
+msgstr "معتمد"
+
+#. module: uellow_reviews
+#: model:ir.model.fields.selection,name:uellow_reviews.selection__uellow_product_review__state__rejected
+msgid "Rejected"
+msgstr "مرفوض"
+
+#. module: uellow_reviews
+#: model:ir.model.fields,field_description:uellow_reviews.field_uellow_product_review__is_verified
+msgid "Verified Purchase"
+msgstr "شراء موثّق"
+
+#. module: uellow_reviews
+#: model:ir.model.fields,field_description:uellow_reviews.field_uellow_product_review__points_awarded
+msgid "Points Awarded"
+msgstr "النقاط الممنوحة"
+
+#. module: uellow_reviews
+#: model:ir.model.fields,field_description:uellow_reviews.field_uellow_product_review__helpful_count
+msgid "Helpful Votes"
+msgstr "أفاد"
+
+#. module: uellow_reviews
+#: model:ir.model.fields,field_description:uellow_reviews.field_uellow_product_review__vendor_reply
+msgid "Vendor Reply"
+msgstr "رد التاجر"
+
+#. module: uellow_reviews
+#: model:ir.model.fields,field_description:uellow_reviews.field_uellow_review_config__points_text
+msgid "Points for Text Review"
+msgstr "نقاط مقابل تقييم نصي"
+
+#. module: uellow_reviews
+#: model:ir.model.fields,field_description:uellow_reviews.field_uellow_review_config__points_photo
+msgid "Points for Photo Review"
+msgstr "نقاط مقابل تقييم بصورة"
+
+#. module: uellow_reviews
+#: model:ir.model.fields,field_description:uellow_reviews.field_uellow_review_config__points_video
+msgid "Points for Video Review"
+msgstr "نقاط مقابل تقييم بفيديو"
+
+#. module: uellow_reviews
+#: model_terms:ir.ui.menu,name:uellow_reviews.menu_reviews_root
+msgid "Reviews"
+msgstr "التقييمات"
+
+#. module: uellow_reviews
+#: model_terms:ir.ui.menu,name:uellow_reviews.menu_reviews
+msgid "All Reviews"
+msgstr "كل التقييمات"
+
+#. module: uellow_reviews
+#: model_terms:ir.ui.menu,name:uellow_reviews.menu_review_config
+msgid "Review Settings"
+msgstr "إعدادات التقييمات"

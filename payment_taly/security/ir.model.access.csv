@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_payment_taly_log_user,payment.taly.log.user,model_payment_taly_log,account.group_account_user,1,0,0,0
+access_payment_taly_log_manager,payment.taly.log.manager,model_payment_taly_log,account.group_account_manager,1,1,1,1
+access_taly_refund_wizard,payment.taly.refund.wizard,model_payment_taly_refund_wizard,account.group_account_user,1,1,1,1

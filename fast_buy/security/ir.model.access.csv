@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_fast_buy_user,fast.buy.user,model_fast_buy,base.group_user,1,1,1,1
+access_fast_buy_portal,fast.buy.portal,model_fast_buy,base.group_portal,1,0,1,0
+access_fast_buy_public,fast.buy.public,model_fast_buy,base.group_public,1,0,1,0

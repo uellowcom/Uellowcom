@@ -1,34 +1,23 @@
 # -*- coding: utf-8 -*-
 {
-    "name": "Yellow Mobile API",
-    "version": "1.0.0",
+    "name": "Uellow Mobile API",
+    "version": "18.0.1.0.0",
     "category": "API/Mobile",
-    "summary": "Mobile API endpoints for Yellow e-commerce platform",
+    "summary": "Mobile API endpoints and models for Uellow e-commerce platform",
     "description": """
-        Yellow Mobile API Module
+        Uellow Mobile API Module
         ========================
-        
-        This module provides comprehensive REST API endpoints for mobile applications
-        using Odoo models as the database backend:
-        
-        Features:
-        ---------
-        * Authentication (JWT, OAuth, Firebase)
-        * Product Management via product.product
-        * Order Processing via sale.order
-        * User Profiles via res.partner
-        * Wallet System
-        * Notifications
-        * Reviews & Ratings
-        * Wishlist Management
-        
-        API Documentation available at /mobile/v1/docs
+        Provides REST API endpoints and data models for the Uellow Flutter mobile app:
+        - Authentication (JWT, Firebase, Social Login)
+        - Device Registration & Push Notifications
+        - Wallet System
+        - Wishlist Management
+        - Product View History
     """,
-    "author": "Yellow Development Team",
+    "author": "Uellow",
     "website": "https://uellow.com",
     "depends": [
         "base",
-        "fastapi",
         "contacts",
         "website",
         "sale",
@@ -36,16 +25,13 @@
         "auth_signup",
         "website_sale",
         "stock",
-        "payment",
         "portal",
     ],
     "data": [
         "security/ir.model.access.csv",
         "data/sequences.xml",
-        "data/fastapi_endpoint.xml",
         "views/mobile_api_views.xml",
     ],
-    "external_dependencies": {},
     "installable": True,
     "application": False,
     "auto_install": False,

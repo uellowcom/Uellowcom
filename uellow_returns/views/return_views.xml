@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_return_list" model="ir.ui.view">
+    <field name="name">uellow.return.request.list</field>
+    <field name="model">uellow.return.request</field>
+    <field name="arch" type="xml">
+      <list string="Return Requests" decoration-warning="state=='submitted'" decoration-success="state=='refunded'">
+        <field name="name"/><field name="partner_id"/><field name="product_id"/>
+        <field name="reason"/><field name="refund_amount"/><field name="refund_method" widget="badge"/>
+        <field name="state" widget="badge" decoration-warning="state in ('submitted','reviewing')" decoration-success="state in ('refunded','approved')"/>
+        <button name="action_approve" string="Approve" type="object" icon="fa-check" invisible="state!='submitted'"/>
+        <button name="action_reject" string="Reject" type="object" icon="fa-times" invisible="state!='submitted'"/>
+      </list>
+    </field>
+  </record>
+  <record id="view_return_config_form" model="ir.ui.view">
+    <field name="name">uellow.return.config.form</field>
+    <field name="model">uellow.return.config</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <group><field name="return_window_days"/><field name="require_photo"/><field name="auto_approve_threshold"/><field name="restocking_fee_pct"/></group>
+            <group><field name="refund_method"/></group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="action_returns" model="ir.actions.act_window">
+    <field name="name">Return Requests</field><field name="res_model">uellow.return.request</field><field name="view_mode">list,form</field>
+    <field name="domain">[('state','in',('submitted','reviewing','approved','received'))]</field>
+  </record>
+  <record id="action_return_config" model="ir.actions.act_window">
+    <field name="name">Return Policy</field><field name="res_model">uellow.return.config</field><field name="view_mode">form</field>
+  </record>
+</odoo>

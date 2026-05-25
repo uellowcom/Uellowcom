@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+
+    <!-- خيارات الـ Snippet في محرر أودو -->
+    <t t-name="new_user_bonus.s_new_user_bonus_options">
+        <div class="snippet-option-section">
+            <we-title>New User Bonus</we-title>
+            <we-row>
+                <we-input
+                    string="Tag ID"
+                    data-select-class=""
+                    data-attribute-name="data-tag-id"
+                    data-unit=""
+                    title="Product Tag ID to display"
+                    placeholder="17"/>
+            </we-row>
+            <we-row>
+                <we-input
+                    string="Coupon Code"
+                    data-attribute-name="data-coupon"
+                    title="Coupon code shown on the banner"
+                    placeholder="WELCOME5"/>
+            </we-row>
+            <we-row>
+                <we-input
+                    string="Discount Label AR"
+                    data-attribute-name="data-disc-ar"
+                    placeholder="5% خصم"/>
+            </we-row>
+            <we-row>
+                <we-input
+                    string="Discount Label EN"
+                    data-attribute-name="data-disc-en"
+                    placeholder="5% OFF"/>
+            </we-row>
+        </div>
+    </t>
+
+</templates>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Reviewer Portal Main Page ── -->
+    <template id="reviewer_dashboard_page" name="Reviewer Dashboard">
+        <t t-call="website.layout">
+            <t t-set="title">Reviewer Dashboard</t>
+            <div id="reviewer-portal-root" style="min-height:80vh;background:var(--body-bg,#F5F4F2)">
+                <!-- Rendered by reviewers_portal.js -->
+            </div>
+        </t>
+    </template>
+
+    <!-- ── Reviewer Registration Page ── -->
+    <template id="reviewer_register_page" name="Reviewer Registration">
+        <t t-call="website.layout">
+            <t t-set="title">سجّل كريفيور</t>
+            <div id="reviewer-register-root" style="min-height:80vh;background:var(--body-bg,#F5F4F2)">
+            </div>
+        </t>
+    </template>
+
+</odoo>
+
+    <!-- ── Add reviewer links to website nav (optional) ── -->
+    <template id="reviewer_nav_links" inherit_id="website.layout" name="Reviewer Nav Links">
+        <xpath expr="//footer" position="inside">
+            <div style="display:none" id="rv-portal-links">
+                <!-- Links available at /reviewer/dashboard and /reviewer/register -->
+            </div>
+        </xpath>
+    </template>
+

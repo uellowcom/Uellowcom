@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- LIST VIEW -->
+    <record id="mobile_product_slider_view_list" model="ir.ui.view">
+        <field name="name">mobile.product.slider.list</field>
+        <field name="model">mobile.product.slider</field>
+        <field name="arch" type="xml">
+            <list string="Home Page Sections" default_order="sequence">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="section_type" widget="badge"
+                       decoration-success="section_type == 'flash_sale'"
+                       decoration-info="section_type == 'brand'"
+                       decoration-warning="section_type == 'new_arrivals'"/>
+                <field name="display_style"/>
+                <field name="max_products"/>
+                <field name="show_timer"/>
+                <field name="active" widget="toggle_button"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- FORM VIEW -->
+    <record id="mobile_product_slider_view_form" model="ir.ui.view">
+        <field name="name">mobile.product.slider.form</field>
+        <field name="model">mobile.product.slider</field>
+        <field name="arch" type="xml">
+            <form string="Home Page Section">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <label class="o_form_label" for="name">Section Title</label>
+                        <h1>
+                            <field name="name" placeholder="e.g. Flash Sale, ANKER Products..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="General">
+                            <field name="name_ar"/>
+                            <field name="sequence"/>
+                            <field name="active"/>
+                            <field name="website_id"/>
+                            <field name="section_type"/>
+                            <field name="display_style"/>
+                            <field name="max_products"/>
+                        </group>
+                        <group string="Display Options">
+                            <field name="show_discount_badge"/>
+                            <field name="show_sold_count"/>
+                            <field name="show_rating"/>
+                            <field name="show_view_more"/>
+                            <field name="show_timer"/>
+                            <field name="timer_end" invisible="not show_timer"/>
+                        </group>
+                    </group>
+
+                    <!-- Source config by type -->
+                    <group string="Products Source" invisible="section_type not in ['category', 'brand', 'tag', 'manual']">
+                        <field name="category_id"
+                               invisible="section_type != 'category'"/>
+                        <field name="brand_attribute_value_id"
+                               invisible="section_type != 'brand'"/>
+                        <field name="product_tag_id"
+                               invisible="section_type != 'tag'"/>
+                        <field name="product_ids"
+                               invisible="section_type != 'manual'"
+                               widget="many2many_tags"/>
+                    </group>
+
+                    <!-- Manual products table -->
+                    <notebook>
+                        <page string="Manual Products" invisible="section_type != 'manual'">
+                            <field name="product_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="list_price"/>
+                                    <field name="default_code"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="View More Button">
+                            <group>
+                                <field name="more_action_type" widget="radio"/>
+                                <field name="more_category_id" invisible="more_action_type != 'category'"/>
+                                <field name="more_url" invisible="more_action_type != 'url'"/>
+                                <field name="more_search" invisible="more_action_type != 'search'"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ACTION -->
+    <record id="action_mobile_product_slider" model="ir.actions.act_window">
+        <field name="name">Home Sections</field>
+        <field name="res_model">mobile.product.slider</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add your first home section!</p>
+            <p>Sections appear on the home page below the category icons: Flash Sale, Brand sections, New Arrivals, etc.</p>
+        </field>
+    </record>
+
+</odoo>

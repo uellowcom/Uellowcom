@@ -1,0 +1,311 @@
+/* ═══════════════════════════════════════════
+   Uellow Analytics Dashboard CSS
+   ═══════════════════════════════════════════ */
+
+#uellow-analytics-root {
+    font-family: inherit;
+    padding: 20px;
+    direction: rtl;
+    background: var(--o-view-background-color, #F5F4F2);
+    min-height: 80vh;
+}
+
+.an-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.an-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+
+.an-period-btns {
+    display: flex;
+    gap: 5px;
+}
+
+.an-period-btn {
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: 0.5px solid rgba(0,0,0,.12);
+    background: #fff;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    color: #888;
+    transition: all .15s;
+}
+
+.an-period-btn:hover  { border-color: #F5C320; color: #1A1A1A; }
+.an-period-btn.active { background: #F5C320; color: #1A1A1A; border-color: #F5C320; font-weight: 600; }
+
+/* ── KPI Cards ────────────────────────────── */
+.an-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 900px) { .an-kpi-grid { grid-template-columns: 1fr 1fr; } }
+
+.an-kpi {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    border: 0.5px solid rgba(0,0,0,.07);
+}
+
+.an-kpi-label {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.an-kpi-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1A1A1A;
+    line-height: 1;
+}
+
+.an-kpi-sub {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+}
+
+.an-kpi-up   { color: #1D9E75; font-weight: 600; }
+.an-kpi-down { color: #E24B4A; font-weight: 600; }
+
+/* ── Charts Grid ──────────────────────────── */
+.an-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 800px) { .an-charts-grid { grid-template-columns: 1fr; } }
+
+.an-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    border: 0.5px solid rgba(0,0,0,.07);
+}
+
+.an-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+/* ── Mini Bar Chart ───────────────────────── */
+.an-bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 80px;
+}
+
+.an-bar-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    height: 100%;
+    justify-content: flex-end;
+}
+
+.an-bar {
+    width: 100%;
+    border-radius: 4px 4px 0 0;
+    background: #F5C320;
+    min-height: 3px;
+    transition: height .4s ease;
+}
+
+.an-bar-label {
+    font-size: 9px;
+    color: #aaa;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* ── Donut Chart ──────────────────────────── */
+.an-donut-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.an-donut-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.an-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #888;
+}
+
+.an-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* ── Top Products ─────────────────────────── */
+.an-product-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 0.5px solid rgba(0,0,0,.05);
+    font-size: 12px;
+}
+
+.an-product-row:last-child { border: none; }
+
+.an-product-rank {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #F5F4F2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #888;
+    flex-shrink: 0;
+}
+
+.an-product-rank.top { background: #F5C320; color: #1A1A1A; }
+
+.an-product-name {
+    flex: 1;
+    color: #1A1A1A;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.an-product-rev {
+    color: #1D9E75;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ── State Bars ───────────────────────────── */
+.an-state-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 11px;
+}
+
+.an-state-label {
+    width: 70px;
+    color: #888;
+    flex-shrink: 0;
+}
+
+.an-state-bar {
+    flex: 1;
+    height: 6px;
+    background: #F0EFE8;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.an-state-fill {
+    height: 100%;
+    border-radius: 3px;
+}
+
+.an-state-pct {
+    width: 35px;
+    text-align: left;
+    font-weight: 600;
+    color: #1A1A1A;
+}
+
+/* ── Loyalty Levels ───────────────────────── */
+.an-level-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    font-size: 12px;
+    border-bottom: 0.5px solid rgba(0,0,0,.05);
+}
+
+.an-level-row:last-child { border: none; }
+
+.an-level-badge {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 700;
+    width: 60px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* ── Loading ──────────────────────────────── */
+.an-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    color: #aaa;
+    font-size: 14px;
+    gap: 10px;
+}
+
+.an-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #F0EFE8;
+    border-top-color: #F5C320;
+    border-radius: 50%;
+    animation: an-spin .8s linear infinite;
+}
+
+@keyframes an-spin { to { transform: rotate(360deg); } }
+
+/* ── Fix scroll and overflow ──────────────── */
+#uellow-analytics-root {
+    overflow-y: auto;
+    max-height: calc(100vh - 60px);
+    padding-bottom: 40px;
+}
+
+.o_action_manager,
+.o_view_controller,
+.o_form_view .o_form_sheet_bg {
+    overflow: auto !important;
+}

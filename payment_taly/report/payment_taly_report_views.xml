@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Pivot View -->
+    <record id="view_taly_transaction_pivot" model="ir.ui.view">
+        <field name="name">payment.transaction.taly.pivot</field>
+        <field name="model">payment.transaction</field>
+        <field name="arch" type="xml">
+            <pivot string="Taly Transactions Analysis">
+                <field name="create_date" type="row" interval="month"/>
+                <field name="state" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Graph View (Bar Chart) -->
+    <record id="view_taly_transaction_graph" model="ir.ui.view">
+        <field name="name">payment.transaction.taly.graph</field>
+        <field name="model">payment.transaction</field>
+        <field name="arch" type="xml">
+            <graph string="Taly Transactions" type="bar">
+                <field name="create_date" type="row" interval="day"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Report Action -->
+    <record id="action_taly_report" model="ir.actions.act_window">
+        <field name="name">Taly Payment Report</field>
+        <field name="res_model">payment.transaction</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="domain">[('provider_code', '=', 'taly')]</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,273 @@
+/* ═══════════════════════════════════════════
+   Uellow Loyalty Brain CSS
+   ═══════════════════════════════════════════ */
+
+/* ── Float Badge ──────────────────────────── */
+#loyalty-float-badge {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    z-index: 9990;
+    background: #F5C320;
+    border-radius: 0 10px 10px 0;
+    padding: 10px 8px;
+    cursor: pointer;
+    writing-mode: vertical-rl;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1A1A1A;
+    box-shadow: 2px 0 8px rgba(0,0,0,.1);
+    transition: transform .2s, left .2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+body[dir="rtl"] #loyalty-float-badge {
+    left: auto;
+    right: 0;
+    border-radius: 10px 0 0 10px;
+    writing-mode: vertical-rl;
+    transform: translateY(-50%) rotate(180deg);
+}
+
+#loyalty-float-badge:hover {
+    left: 4px;
+}
+
+body[dir="rtl"] #loyalty-float-badge:hover {
+    right: 4px;
+    left: auto;
+}
+
+#loyalty-float-points {
+    font-size: 14px;
+    font-weight: 800;
+}
+
+/* ── Loyalty Panel ────────────────────────── */
+#loyalty-panel {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 300px;
+    max-height: 80vh;
+    background: #fff;
+    border-radius: 0 14px 14px 0;
+    box-shadow: 4px 0 20px rgba(0,0,0,.12);
+    z-index: 9991;
+    overflow-y: auto;
+    transition: left .25s ease;
+}
+
+#loyalty-panel.closed { left: -310px; }
+
+body[dir="rtl"] #loyalty-panel {
+    left: auto;
+    right: 0;
+    border-radius: 14px 0 0 14px;
+    transform: translateY(-50%);
+    transition: right .25s ease;
+}
+
+body[dir="rtl"] #loyalty-panel.closed {
+    right: -310px;
+    left: auto;
+}
+
+/* ── Panel Header ─────────────────────────── */
+.lp-header {
+    background: #F5C320;
+    padding: 14px 16px;
+    position: relative;
+}
+
+.lp-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #1A1A1A;
+    opacity: .6;
+    line-height: 1;
+}
+
+body[dir="rtl"] .lp-close {
+    left: auto;
+    right: 10px;
+}
+
+.lp-level-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    background: rgba(0,0,0,.1);
+    color: #1A1A1A;
+}
+
+.lp-points {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1A1A1A;
+    line-height: 1;
+}
+
+.lp-points-label {
+    font-size: 11px;
+    color: #854F0B;
+    margin-top: 2px;
+}
+
+/* ── Progress Bar ─────────────────────────── */
+.lp-progress-wrap {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid rgba(0,0,0,.07);
+}
+
+.lp-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.lp-progress-bar {
+    height: 6px;
+    background: #F0EFE8;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.lp-progress-fill {
+    height: 100%;
+    background: #F5C320;
+    border-radius: 3px;
+    transition: width .5s ease;
+}
+
+/* ── Earn Ways ────────────────────────────── */
+.lp-section {
+    padding: 12px 16px;
+    border-bottom: 0.5px solid rgba(0,0,0,.07);
+}
+
+.lp-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 8px;
+}
+
+.lp-earn-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 12px;
+    color: #888;
+    border-bottom: 0.5px solid rgba(0,0,0,.04);
+}
+
+.lp-earn-row:last-child { border: none; }
+.lp-earn-pts {
+    font-weight: 700;
+    color: #F5C320;
+    font-size: 12px;
+}
+
+/* ── Redeem ───────────────────────────────── */
+.lp-redeem-wrap {
+    padding: 12px 16px;
+}
+
+.lp-redeem-info {
+    background: #FEFDF0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: #854F0B;
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.lp-redeem-input {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.lp-redeem-input input {
+    flex: 1;
+    border: 0.5px solid rgba(0,0,0,.12);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+}
+
+.lp-redeem-btn {
+    background: #F5C320;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    color: #1A1A1A;
+    white-space: nowrap;
+}
+
+/* ── Perks ────────────────────────────────── */
+.lp-perk {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #1D9E75;
+    padding: 3px 0;
+}
+
+.lp-perk::before {
+    content: '✓';
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ── Checkout widget ──────────────────────── */
+#loyalty-checkout-widget {
+    background: #FEFDF0;
+    border: 1px solid #F5C320;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 10px 0;
+    font-family: inherit;
+    direction: rtl;
+}
+
+.lcy-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ── Portal Page ──────────────────────────── */
+#loyalty-portal-root {
+    direction: rtl;
+    font-family: inherit;
+}

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_kpi_list" model="ir.ui.view">
+    <field name="name">uellow.kpi.snapshot.list</field>
+    <field name="model">uellow.kpi.snapshot</field>
+    <field name="arch" type="xml">
+      <list string="KPI Snapshots" default_order="snapshot_at desc">
+        <field name="snapshot_at"/><field name="period" widget="badge"/>
+        <field name="gmv" string="GMV"/><field name="take_rate" string="Take Rate%"/>
+        <field name="order_count"/><field name="avg_order_value"/>
+        <field name="cancel_rate" string="Cancel%"/>
+        <field name="vendor_count_active" string="Active Vendors"/>
+        <field name="customer_count_new" string="New Customers"/>
+        <field name="commission_earned" string="Commission"/>
+      </list>
+    </field>
+  </record>
+  <record id="view_kpi_form" model="ir.ui.view">
+    <field name="name">uellow.kpi.snapshot.form</field>
+    <field name="model">uellow.kpi.snapshot</field>
+    <field name="arch" type="xml">
+      <form string="KPI Snapshot">
+        <sheet>
+          <group>
+            <group string="Revenue">
+              <field name="snapshot_at" readonly="1"/>
+              <field name="period" readonly="1"/>
+              <field name="gmv" readonly="1"/>
+              <field name="commission_earned" readonly="1"/>
+              <field name="take_rate" readonly="1"/>
+            </group>
+            <group string="Orders">
+              <field name="order_count" readonly="1"/>
+              <field name="avg_order_value" readonly="1"/>
+              <field name="cancelled_count" readonly="1"/>
+              <field name="cancel_rate" readonly="1"/>
+            </group>
+          </group>
+          <group>
+            <group string="Vendors">
+              <field name="vendor_count_active" readonly="1"/>
+              <field name="vendor_count_new" readonly="1"/>
+            </group>
+            <group string="Customers">
+              <field name="customer_count_new" readonly="1"/>
+              <field name="customer_count_returning" readonly="1"/>
+              <field name="avg_ltv" readonly="1"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="action_kpi_dashboard" model="ir.actions.act_window">
+    <field name="name">KPI Dashboard</field>
+    <field name="res_model">uellow.kpi.snapshot</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('period','=','today')]</field>
+  </record>
+</odoo>

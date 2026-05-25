@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pers_rule,pers.rule,model_uellow_personalization_rule,base.group_system,1,1,1,1
+access_behavior_user,behavior.user,model_uellow_customer_behavior,base.group_user,1,1,1,0
+access_behavior_admin,behavior.admin,model_uellow_customer_behavior,base.group_system,1,1,1,1

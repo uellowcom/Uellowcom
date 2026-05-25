@@ -1,0 +1,122 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* fast_buy
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 16.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-05-16 17:30+0000\n"
+"PO-Revision-Date: 2025-05-16 17:30+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: fast_buy
+#: model:ir.model.fields,field_description:fast_buy.field_sale_order__is_fast_buy
+msgid "Is Quick Checkout"
+msgstr "هل هو الدفع السريع"
+
+#. module: fast_buy
+#: model:ir.model.fields,field_description:fast_buy.field_sale_order__fast_buy_id
+msgid "Quick Checkout"
+msgstr "الدفع السريع"
+
+#. module: fast_buy
+#: model:ir.model,name:fast_buy.model_fast_buy
+msgid "Quick Checkout"
+msgstr "الدفع السريع"
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.product_fast_buy_button
+msgid "Quick Checkout"
+msgstr "الدفع السريع"
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.fast_buy_form
+msgid "Quick Checkout"
+msgstr "الدفع السريع"
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.view_sales_order_filter_inherit_fast_buy
+msgid "Quick Checkout Orders"
+msgstr "طلبات الدفع السريع"
+
+#. module: fast_buy
+#: model:ir.model.fields,field_description:fast_buy.field_fast_buy__name
+msgid "Name"
+msgstr "الاسم"
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.fast_buy_form
+msgid "Name"
+msgstr "الاسم"
+
+#. module: fast_buy
+#: model:ir.model.fields,field_description:fast_buy.field_fast_buy__phone
+msgid "Phone"
+msgstr "الهاتف"
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.fast_buy_form
+msgid "Phone"
+msgstr "الهاتف"
+
+#. module: fast_buy
+#: model:ir.model.fields,field_description:fast_buy.field_fast_buy__sale_order_id
+msgid "Sale Order"
+msgstr "أمر البيع"
+
+#. module: fast_buy
+#: model:ir.model.fields,field_description:fast_buy.field_fast_buy__partner_id
+msgid "Customer"
+msgstr "العميل"
+
+#. module: fast_buy
+#: model:ir.model.fields,field_description:fast_buy.field_fast_buy__date
+msgid "Date"
+msgstr "التاريخ"
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.fast_buy_form
+msgid "Complete Quick Checkout"
+msgstr "إتمام الدفع السريع"
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.fast_buy_success
+msgid "Thank you for your order!"
+msgstr "شكراً لطلبك!"
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.fast_buy_success
+msgid "Your order has been received and is being processed."
+msgstr "تم استلام طلبك وجاري معالجته."
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.fast_buy_success
+msgid "We will contact you shortly at"
+msgstr "سنتصل بك قريباً على"
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.fast_buy_success
+msgid "to confirm your order."
+msgstr "لتأكيد طلبك."
+
+#. module: fast_buy
+#: model_terms:ir.ui.view,arch_db:fast_buy.fast_buy_success
+msgid "Continue Shopping"
+msgstr "مواصلة التسوق"
+
+#. module: fast_buy
+#: code:addons/fast_buy/models/fast_buy.py:29
+#, python-format
+msgid "Sale order not found"
+msgstr "لم يتم العثور على أمر البيع"
+
+#. module: fast_buy
+#: model:ir.model,name:fast_buy.model_sale_order
+msgid "Sales Order"
+msgstr "أمر المبيعات"

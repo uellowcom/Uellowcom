@@ -1,0 +1,245 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# * uellow_fulfillment
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-05-23 00:00+0000\n"
+"PO-Revision-Date: 2026-05-23 00:00+0000\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: uellow_fulfillment
+#: model:ir.model,name:uellow_fulfillment.model_uellow_vendor_location
+msgid "Vendor Sub-Warehouse Location"
+msgstr "موقع المخزن الفرعي للتاجر"
+
+#. module: uellow_fulfillment
+#: model_terms:ir.ui.menu,name:uellow_fulfillment.menu_fbu_root
+msgid "Fulfillment by Uellow"
+msgstr "Fulfillment by Uellow"
+
+#. module: uellow_fulfillment
+#: model_terms:ir.ui.menu,name:uellow_fulfillment.menu_fbu_restock
+msgid "Restock Requests"
+msgstr "طلبات التزويد"
+
+#. module: uellow_fulfillment
+#: model_terms:ir.ui.menu,name:uellow_fulfillment.menu_fbu_vendor_locations
+msgid "Vendor Warehouses"
+msgstr "مخازن التجار"
+
+#. module: uellow_fulfillment
+#: model_terms:ir.ui.menu,name:uellow_fulfillment.menu_fbu_product_state
+msgid "Products FBU Status"
+msgstr "حالة FBU للمنتجات"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_uellow_vendor_location__partner_id
+msgid "Vendor"
+msgstr "التاجر"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_uellow_vendor_location__location_id
+msgid "Sub-warehouse Location"
+msgstr "موقع المخزن الفرعي"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_vendor_location__state__active
+msgid "Active"
+msgstr "نشط"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_vendor_location__state__suspended
+msgid "Suspended"
+msgstr "موقوف"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_vendor_location__state__closed
+msgid "Closed"
+msgstr "مغلق"
+
+#. module: uellow_fulfillment
+#: model:ir.model,name:uellow_fulfillment.model_uellow_restock_request
+msgid "Restock Request"
+msgstr "طلب تزويد المخزون"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request__state__draft
+msgid "Draft"
+msgstr "مسودة"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request__state__submitted
+msgid "Submitted"
+msgstr "بانتظار الموافقة"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request__state__approved
+msgid "Approved"
+msgstr "موافق — بانتظار التسليم"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request__state__received
+msgid "Received"
+msgstr "تم الاستلام"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request__state__cancelled
+msgid "Cancelled"
+msgstr "ملغي"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request__transport_method__self
+msgid "Vendor delivers"
+msgstr "التاجر يوصّل بنفسه"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request__transport_method__carrier
+msgid "Carrier (vendor pays)"
+msgstr "شركة شحن (التاجر يدفع)"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request__transport_method__uellow
+msgid "Uellow picks up"
+msgstr "Uellow تستلم"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_uellow_restock_request__expected_date
+msgid "Expected Delivery Date"
+msgstr "تاريخ التسليم المتوقع"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_uellow_restock_request__notes
+msgid "Notes for Warehouse"
+msgstr "ملاحظات للمستودع"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_uellow_restock_request__purchase_order_id
+msgid "Linked Purchase Order"
+msgstr "طلب الشراء المرتبط"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_uellow_restock_request_line__variant_description
+msgid "Color/Size"
+msgstr "اللون/الحجم"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_uellow_restock_request_line__qty_requested
+msgid "Requested Qty"
+msgstr "الكمية المطلوبة"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_uellow_restock_request_line__qty_received
+msgid "Received Qty"
+msgstr "الكمية المستلمة"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_uellow_restock_request_line__qty_damaged
+msgid "Damaged/Missing"
+msgstr "التالف/الناقص"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request_line__difference_reason__shortage
+msgid "Shortage in shipment"
+msgstr "نقص في الشحنة"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request_line__difference_reason__damaged
+msgid "Damaged on receipt"
+msgstr "تالف عند الاستلام"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request_line__difference_reason__count_error
+msgid "Count error"
+msgstr "خطأ في العد"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__uellow_restock_request_line__difference_reason__other
+msgid "Other"
+msgstr "أخرى"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_product_product__vendor_qty
+msgid "External Vendor Qty (Continue Selling)"
+msgstr "كمية التاجر الخارجية"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_product_product__fbu_state
+msgid "Stock Status"
+msgstr "حالة المخزون"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__product_product__fbu_state__on_hand
+msgid "On Hand"
+msgstr "متوفر في Uellow"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__product_product__fbu_state__continue_selling
+msgid "Continue Selling"
+msgstr "يباع من التاجر"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__product_product__fbu_state__out_of_stock
+msgid "Out of Stock"
+msgstr "نفد المخزون"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_res_partner__is_uellow_vendor
+msgid "Uellow Vendor"
+msgstr "تاجر Uellow"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields,field_description:uellow_fulfillment.field_res_partner__vendor_state
+msgid "Vendor Status"
+msgstr "حالة التاجر"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__res_partner__vendor_state__pending
+msgid "Pending"
+msgstr "بانتظار الموافقة"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__res_partner__vendor_state__active
+msgid "Active"
+msgstr "نشط"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__res_partner__vendor_state__suspended
+msgid "Suspended"
+msgstr "موقوف"
+
+#. module: uellow_fulfillment
+#: model:ir.model.fields.selection,name:uellow_fulfillment.selection__res_partner__vendor_state__rejected
+msgid "Rejected"
+msgstr "مرفوض"
+
+#. module: uellow_fulfillment
+#: model:ir.ui.view,arch_db:uellow_fulfillment.view_restock_request_form
+msgid "Submit for Approval"
+msgstr "إرسال للموافقة"
+
+#. module: uellow_fulfillment
+#: model:ir.ui.view,arch_db:uellow_fulfillment.view_restock_request_form
+msgid "Approve + Create PO"
+msgstr "موافقة + إنشاء PO"
+
+#. module: uellow_fulfillment
+#: model:ir.ui.view,arch_db:uellow_fulfillment.view_restock_request_form
+msgid "Receive Stock"
+msgstr "استلام المخزون"
+
+#. module: uellow_fulfillment
+#: model:ir.ui.view,arch_db:uellow_fulfillment.view_warehouse_receive_wizard_form
+msgid "Confirm & Update Stock"
+msgstr "تأكيد وتحديث المخزون"
+
+#. module: uellow_fulfillment
+#: model:res.groups,name:uellow_fulfillment.group_fbu_manager
+msgid "FBU Manager"
+msgstr "مدير FBU"

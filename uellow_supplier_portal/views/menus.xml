@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_suppliers" name="Suppliers"
+            parent="uellow_multivendor.menu_marketplace_main"
+            action="action_suppliers" sequence="47"/>
+</odoo>

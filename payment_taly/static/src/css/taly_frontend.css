@@ -1,0 +1,24 @@
+/* Taly Frontend Widget Styles */
+
+.taly-inline-banner {
+    transition: background .2s, box-shadow .2s;
+}
+.taly-inline-banner:hover {
+    background: #f0e8ff !important;
+    box-shadow: 0 2px 8px rgba(123,47,247,.15);
+}
+
+.taly-cart-banner {
+    animation: taly-pulse 3s ease-in-out infinite;
+}
+@keyframes taly-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .92; }
+}
+
+/* RTL support */
+[dir="rtl"] .taly-inline-banner,
+html[lang^="ar"] .taly-inline-banner {
+    direction: rtl;
+    text-align: right;
+}

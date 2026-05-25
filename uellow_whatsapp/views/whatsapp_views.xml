@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_wa_config_form" model="ir.ui.view">
+    <field name="name">uellow.whatsapp.config.form</field>
+    <field name="model">uellow.whatsapp.config</field>
+    <field name="arch" type="xml">
+      <form string="WhatsApp Settings">
+        <sheet>
+          <group>
+            <group string="API"><field name="provider"/><field name="api_key" password="True"/><field name="api_url"/><field name="sender_number"/></group>
+            <group string="Triggers"><field name="send_order_confirm"/><field name="send_shipping"/><field name="send_flash_sale"/><field name="send_cart_recovery"/><field name="send_low_stock"/></group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="view_wa_template_list" model="ir.ui.view">
+    <field name="name">uellow.whatsapp.template.list</field>
+    <field name="model">uellow.whatsapp.template</field>
+    <field name="arch" type="xml">
+      <list><field name="name"/><field name="trigger"/><field name="language"/><field name="active" widget="boolean_toggle"/></list>
+    </field>
+  </record>
+  <record id="view_wa_log_list" model="ir.ui.view">
+    <field name="name">uellow.whatsapp.log.list</field>
+    <field name="model">uellow.whatsapp.log</field>
+    <field name="arch" type="xml">
+      <list><field name="sent_at"/><field name="partner_id"/><field name="phone"/><field name="trigger"/><field name="status" widget="badge" decoration-success="status=='sent'" decoration-danger="status=='failed'"/></list>
+    </field>
+  </record>
+  <record id="action_wa_config" model="ir.actions.act_window">
+    <field name="name">WhatsApp Settings</field><field name="res_model">uellow.whatsapp.config</field><field name="view_mode">form</field>
+  </record>
+  <record id="action_wa_templates" model="ir.actions.act_window">
+    <field name="name">WhatsApp Templates</field><field name="res_model">uellow.whatsapp.template</field><field name="view_mode">list,form</field>
+  </record>
+  <record id="action_wa_logs" model="ir.actions.act_window">
+    <field name="name">Message Logs</field><field name="res_model">uellow.whatsapp.log</field><field name="view_mode">list</field>
+  </record>
+</odoo>

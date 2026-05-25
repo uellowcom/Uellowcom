@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_analytics_dashboard" model="ir.ui.view">
+        <field name="name">uellow.analytics.dashboard</field>
+        <field name="model">ir.ui.menu</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div id="uellow-analytics-root" style="min-height:80vh"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_analytics_dashboard" model="ir.actions.client">
+        <field name="name">📊 Beena Analytics</field>
+        <field name="tag">uellow_analytics.dashboard</field>
+    </record>
+
+    <menuitem id="menu_analytics_root"
+              name="📊 Analytics"
+              sequence="95"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_analytics_dashboard"
+              name="Dashboard"
+              parent="menu_analytics_root"
+              action="action_analytics_dashboard"
+              sequence="10"/>
+
+</odoo>

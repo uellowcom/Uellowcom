@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+    <record id="view_carrier_company_form" model="ir.ui.view">
+        <field name="name">delivery.carrier.company.form</field>
+        <field name="model">delivery.carrier.company</field>
+        <field name="arch" type="xml">
+            <form string="Carrier Company">
+                <sheet>
+                    <field name="logo" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="Company Name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="phone"/>
+                            <field name="email"/>
+                            <field name="cash_settlement_mode"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="driver_count" string="Drivers"/>
+                            <field name="order_count" string="Orders"/>
+                            <field name="pending_cash" string="Pending Cash (KD)"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Portal Managers" name="portal_managers">
+                            <field name="portal_user_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Drivers" name="drivers">
+                            <field name="driver_ids">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="phone"/>
+                                    <field name="status"/>
+                                    <field name="portal_user_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Pricing Rules" name="pricing_rules">
+                            <field name="pricing_rule_ids">
+                                <list editable="bottom">
+                                    <field name="zone_name" string="Zone"/>
+                                    <field name="governorate"/>
+                                    <field name="delivery_fee"          string="Del. Fee KD"/>
+                                    <field name="cash_commission_type"  string="Comm. Type"/>
+                                    <field name="cash_commission_value" string="Comm. %/KD"/>
+                                    <field name="cancel_fee_full"       string="Cancel Full KD"/>
+                                    <field name="cancel_fee_only"       string="Cancel Only KD"/>
+                                    <field name="return_fee"            string="Return KD"/>
+                                    <field name="exchange_fee"          string="Exchange KD"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_carrier_company_list" model="ir.ui.view">
+        <field name="name">delivery.carrier.company.list</field>
+        <field name="model">delivery.carrier.company</field>
+        <field name="arch" type="xml">
+            <list string="Carrier Companies">
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="cash_settlement_mode"/>
+                <field name="driver_count"/>
+                <field name="order_count"/>
+                <field name="pending_cash"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_carrier_company" model="ir.actions.act_window">
+        <field name="name">Carrier Companies</field>
+        <field name="res_model">delivery.carrier.company</field>
+        <field name="view_mode">list,form</field>
+    </record>
+  </data>
+</odoo>

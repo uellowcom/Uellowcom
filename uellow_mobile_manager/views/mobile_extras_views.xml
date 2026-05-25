@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP ORDERS
+══════════════════════════════════════════════════════════════ -->
+<record id="mobile_app_order_view_list" model="ir.ui.view">
+    <field name="name">mobile.app.order.list</field>
+    <field name="model">mobile.app.order</field>
+    <field name="arch" type="xml">
+        <list string="App Orders" create="false" default_order="create_date desc">
+            <field name="sale_order_id"/>
+            <field name="partner_id"/>
+            <field name="amount_total" widget="monetary"/>
+            <field name="platform" widget="badge"
+                   decoration-success="platform == 'android'"
+                   decoration-info="platform == 'ios'"/>
+            <field name="order_source" widget="badge"/>
+            <field name="app_version" optional="show"/>
+            <field name="device_model" optional="hide"/>
+            <field name="state" widget="badge"
+                   decoration-success="state == 'sale'"
+                   decoration-warning="state == 'draft'"
+                   decoration-danger="state == 'cancel'"/>
+            <field name="order_date"/>
+        </list>
+    </field>
+</record>
+
+<record id="mobile_app_order_view_search" model="ir.ui.view">
+    <field name="name">mobile.app.order.search</field>
+    <field name="model">mobile.app.order</field>
+    <field name="arch" type="xml">
+        <search>
+            <field name="sale_order_id"/>
+            <field name="partner_id"/>
+            <filter string="Today" name="today"
+                    domain="[('order_date','&gt;=', (datetime.datetime.now()).strftime('%Y-%m-%d 00:00:00'))]"/>
+            <filter string="Android" name="android" domain="[('platform','=','android')]"/>
+            <filter string="iOS" name="ios" domain="[('platform','=','ios')]"/>
+            <filter string="Confirmed" name="confirmed" domain="[('state','=','sale')]"/>
+            <group expand="1" string="Group By">
+                <filter string="Platform" name="grp_platform" context="{'group_by':'platform'}"/>
+                <filter string="Source" name="grp_source" context="{'group_by':'order_source'}"/>
+                <filter string="Day" name="grp_day" context="{'group_by':'order_date:day'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+<record id="action_mobile_app_order" model="ir.actions.act_window">
+    <field name="name">App Orders</field>
+    <field name="res_model">mobile.app.order</field>
+    <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">No app orders yet!</p>
+        <p>Orders placed through the Flutter app will appear here automatically.</p>
+    </field>
+</record>
+
+<!-- ═══════════════════════════════════════════════════════════
+     ONBOARDING SCREENS
+══════════════════════════════════════════════════════════════ -->
+<record id="mobile_onboarding_view_kanban" model="ir.ui.view">
+    <field name="name">mobile.onboarding.screen.kanban</field>
+    <field name="model">mobile.onboarding.screen</field>
+    <field name="arch" type="xml">
+        <kanban default_order="sequence">
+            <field name="name"/>
+            <field name="image"/>
+            <field name="sequence"/>
+            <field name="active"/>
+            <field name="is_last"/>
+            <templates>
+                <t t-name="kanban-box">
+                    <div class="oe_kanban_card oe_kanban_global_click text-center" style="min-width:200px;">
+                        <div style="height:160px;overflow:hidden;border-radius:10px 10px 0 0;background:#f5f5f5;">
+                            <img t-att-src="kanban_image('mobile.onboarding.screen','image',record.id.raw_value)"
+                                 style="width:100%;height:100%;object-fit:cover;" alt=""/>
+                        </div>
+                        <div class="p-2">
+                            <strong><field name="name"/></strong>
+                            <div class="mt-1">
+                                <span class="badge bg-secondary">#<field name="sequence"/></span>
+                                <span t-if="record.is_last.raw_value" class="badge bg-success ms-1">Last</span>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </templates>
+        </kanban>
+    </field>
+</record>
+
+<record id="mobile_onboarding_view_form" model="ir.ui.view">
+    <field name="name">mobile.onboarding.screen.form</field>
+    <field name="model">mobile.onboarding.screen</field>
+    <field name="arch" type="xml">
+        <form string="Onboarding Screen">
+            <sheet>
+                <group>
+                    <group string="Screen Image">
+                        <field name="image" widget="image" options="{'size':[300,500]}" nolabel="1"/>
+                    </group>
+                    <group string="Content">
+                        <field name="name" placeholder="Title (English)"/>
+                        <field name="name_ar" placeholder="العنوان بالعربي"/>
+                        <field name="description" placeholder="Description..."/>
+                        <field name="description_ar" placeholder="الوصف بالعربي..."/>
+                        <field name="button_label"/>
+                        <field name="button_label_ar"/>
+                        <field name="sequence"/>
+                        <field name="is_last"/>
+                        <field name="active"/>
+                        <field name="website_id"/>
+                    </group>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<record id="action_mobile_onboarding" model="ir.actions.act_window">
+    <field name="name">Onboarding Screens</field>
+    <field name="res_model">mobile.onboarding.screen</field>
+    <field name="view_mode">kanban,list,form</field>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">Add your first onboarding screen!</p>
+        <p>These screens are shown to new users the first time they open the app.</p>
+    </field>
+</record>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SEARCH ANALYTICS
+══════════════════════════════════════════════════════════════ -->
+<record id="mobile_search_analytic_view_list" model="ir.ui.view">
+    <field name="name">mobile.search.analytic.list</field>
+    <field name="model">mobile.search.analytic</field>
+    <field name="arch" type="xml">
+        <list string="Search Logs" create="false" default_order="create_date desc">
+            <field name="keyword"/>
+            <field name="results_count" widget="badge"
+                   decoration-danger="results_count == 0"
+                   decoration-success="results_count &gt; 0"/>
+            <field name="platform" optional="show"/>
+            <field name="clicked_product_id" optional="show"/>
+            <field name="led_to_order" widget="boolean_toggle"/>
+            <field name="create_date"/>
+        </list>
+    </field>
+</record>
+
+<record id="mobile_search_analytic_view_search" model="ir.ui.view">
+    <field name="name">mobile.search.analytic.search</field>
+    <field name="model">mobile.search.analytic</field>
+    <field name="arch" type="xml">
+        <search>
+            <field name="keyword"/>
+            <filter string="No Results" name="no_results" domain="[('results_count','=',0)]"/>
+            <filter string="Led to Order" name="converted" domain="[('led_to_order','=',True)]"/>
+            <group expand="1" string="Group By">
+                <filter string="Keyword" name="grp_keyword" context="{'group_by':'keyword'}"/>
+                <filter string="Platform" name="grp_platform" context="{'group_by':'platform'}"/>
+            </group>
+        </search>
+    </field>
+</record>
+
+<record id="action_mobile_search_analytic" model="ir.actions.act_window">
+    <field name="name">Search Analytics</field>
+    <field name="res_model">mobile.search.analytic</field>
+    <field name="view_mode">list</field>
+    <field name="context">{'search_default_grp_keyword': 1}</field>
+</record>
+
+<!-- ═══════════════════════════════════════════════════════════
+     A/B TESTS
+══════════════════════════════════════════════════════════════ -->
+<record id="mobile_ab_test_view_list" model="ir.ui.view">
+    <field name="name">mobile.ab.test.list</field>
+    <field name="model">mobile.ab.test</field>
+    <field name="arch" type="xml">
+        <list string="A/B Tests">
+            <field name="name"/>
+            <field name="test_type"/>
+            <field name="impressions_a"/>
+            <field name="impressions_b"/>
+            <field name="ctr_a" string="CTR A %" widget="percentage"/>
+            <field name="ctr_b" string="CTR B %" widget="percentage"/>
+            <field name="winner" widget="badge"
+                   decoration-success="winner == 'a' or winner == 'b'"
+                   decoration-warning="winner == 'tie'"/>
+            <field name="state" widget="badge"
+                   decoration-success="state == 'running'"
+                   decoration-muted="state == 'completed'"/>
+        </list>
+    </field>
+</record>
+
+<record id="mobile_ab_test_view_form" model="ir.ui.view">
+    <field name="name">mobile.ab.test.form</field>
+    <field name="model">mobile.ab.test</field>
+    <field name="arch" type="xml">
+        <form string="A/B Test">
+            <header>
+                <button name="action_start" string="Start Test" type="object"
+                        class="btn-primary" invisible="state != 'draft'"/>
+                <button name="action_complete" string="Mark Complete" type="object"
+                        invisible="state != 'running'"/>
+                <field name="state" widget="statusbar" statusbar_visible="draft,running,completed"/>
+            </header>
+            <sheet>
+                <div class="oe_title">
+                    <h1><field name="name" placeholder="Test Name..."/></h1>
+                </div>
+                <group>
+                    <group string="Test Config">
+                        <field name="test_type"/>
+                        <field name="slider_a_id" invisible="test_type != 'slider'"/>
+                        <field name="slider_b_id" invisible="test_type != 'slider'"/>
+                        <field name="start_date"/>
+                        <field name="end_date"/>
+                        <field name="website_id"/>
+                    </group>
+                    <group string="Winner">
+                        <field name="winner" readonly="1"/>
+                        <field name="ctr_a" readonly="1"/>
+                        <field name="ctr_b" readonly="1"/>
+                    </group>
+                </group>
+                <group string="Results">
+                    <group string="Variant A">
+                        <field name="impressions_a"/>
+                        <field name="clicks_a"/>
+                        <field name="orders_a"/>
+                    </group>
+                    <group string="Variant B">
+                        <field name="impressions_b"/>
+                        <field name="clicks_b"/>
+                        <field name="orders_b"/>
+                    </group>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<record id="action_mobile_ab_test" model="ir.actions.act_window">
+    <field name="name">A/B Tests</field>
+    <field name="res_model">mobile.ab.test</field>
+    <field name="view_mode">list,form</field>
+</record>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FEATURE FLAGS
+══════════════════════════════════════════════════════════════ -->
+<record id="mobile_feature_flag_view_list" model="ir.ui.view">
+    <field name="name">mobile.feature.flag.list</field>
+    <field name="model">mobile.feature.flag</field>
+    <field name="arch" type="xml">
+        <list string="Feature Flags" editable="top">
+            <field name="key" readonly="1"/>
+            <field name="label"/>
+            <field name="category" widget="badge"/>
+            <field name="platforms"/>
+            <field name="min_app_version" optional="show"/>
+            <field name="enabled" widget="toggle_button"/>
+        </list>
+    </field>
+</record>
+
+<record id="mobile_feature_flag_view_form" model="ir.ui.view">
+    <field name="name">mobile.feature.flag.form</field>
+    <field name="model">mobile.feature.flag</field>
+    <field name="arch" type="xml">
+        <form string="Feature Flag">
+            <sheet>
+                <widget name="web_ribbon" title="Disabled" bg_color="text-bg-danger"
+                        invisible="enabled"/>
+                <group>
+                    <group>
+                        <field name="key" placeholder="e.g. chat_enabled"/>
+                        <field name="label"/>
+                        <field name="category"/>
+                        <field name="platforms"/>
+                        <field name="min_app_version"/>
+                        <field name="enabled"/>
+                        <field name="website_id"/>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1"/>
+                    </group>
+                </group>
+                <div class="alert alert-info mt-2">
+                    <i class="fa fa-code me-2"/>
+                    <strong>Flutter Usage:</strong>
+                    <code style="display:block;margin-top:8px;padding:8px;background:#f8f9fa;border-radius:4px;">
+                        final flags = await AppConfig.getFeatureFlags();
+                        if (flags['<field name="key" readonly="1"/>'] == true) { ... }
+                    </code>
+                </div>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<record id="action_mobile_feature_flag" model="ir.actions.act_window">
+    <field name="name">Feature Flags</field>
+    <field name="res_model">mobile.feature.flag</field>
+    <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">Add your first feature flag!</p>
+        <p>Toggle app features on/off instantly without releasing a new app update.</p>
+    </field>
+</record>
+
+<!-- ═══════════════════════════════════════════════════════════
+     APP COUPONS
+══════════════════════════════════════════════════════════════ -->
+<record id="mobile_app_coupon_view_list" model="ir.ui.view">
+    <field name="name">mobile.app.coupon.list</field>
+    <field name="model">mobile.app.coupon</field>
+    <field name="arch" type="xml">
+        <list string="App Coupons" default_order="create_date desc">
+            <field name="code" widget="copy_clipboard"/>
+            <field name="name"/>
+            <field name="discount_type" widget="badge"/>
+            <field name="discount_value"/>
+            <field name="uses_count"/>
+            <field name="max_uses"/>
+            <field name="valid_from"/>
+            <field name="valid_until"/>
+            <field name="new_users_only" widget="boolean_toggle"/>
+            <field name="active" widget="toggle_button"/>
+        </list>
+    </field>
+</record>
+
+<record id="mobile_app_coupon_view_form" model="ir.ui.view">
+    <field name="name">mobile.app.coupon.form</field>
+    <field name="model">mobile.app.coupon</field>
+    <field name="arch" type="xml">
+        <form string="App Coupon">
+            <sheet>
+                <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                        invisible="active"/>
+                <div class="oe_title">
+                    <h1><field name="code" placeholder="COUPON CODE"/></h1>
+                    <h4><field name="name" placeholder="Coupon Name..."/></h4>
+                </div>
+                <group>
+                    <group string="Discount">
+                        <field name="discount_type" widget="radio"/>
+                        <field name="discount_value"
+                               invisible="discount_type == 'free_shipping'"/>
+                        <field name="min_order_amount"/>
+                        <field name="currency_id"/>
+                    </group>
+                    <group string="Limits">
+                        <field name="max_uses"/>
+                        <field name="uses_count" readonly="1"/>
+                        <field name="per_user_limit"/>
+                        <field name="valid_from"/>
+                        <field name="valid_until"/>
+                        <field name="new_users_only"/>
+                        <field name="platform"/>
+                        <field name="website_id"/>
+                    </group>
+                </group>
+                <group string="App Display">
+                    <field name="show_in_app"/>
+                    <field name="description" placeholder="Short description shown to users..."/>
+                    <field name="banner_image" widget="image" options="{'size':[300,120]}"
+                           invisible="not show_in_app"/>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+
+<record id="action_mobile_app_coupon" model="ir.actions.act_window">
+    <field name="name">App Coupons</field>
+    <field name="res_model">mobile.app.coupon</field>
+    <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+        <p class="o_view_nocontent_smiling_face">Create your first app-exclusive coupon!</p>
+    </field>
+</record>
+
+</odoo>

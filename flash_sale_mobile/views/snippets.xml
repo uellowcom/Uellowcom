@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="s_flash_sale_v49" name="Flash Sale Mobile">
+
+        <!-- ✅ واجهة البلوك الظاهرة -->
+        <section class="uellow-v49-wrapper"
+                 data-snippet="s_flash_sale_v49"
+                 data-name="Flash Sale Mobile"
+                 data-category-id="871">
+            <div class="v49-unified-canvas v49-pattern-bg">
+                <div class="v49-header">
+                    <div class="v49-header-left">
+                        <h2 class="v49-title-text">⚡ Flash Deals</h2>
+                        <div class="v49-timer-row">
+                            <div id="v49_d" class="v49-t-box">00</div>
+                            <span class="v49-t-sep">:</span>
+                            <div id="v49_h" class="v49-t-box">00</div>
+                            <span class="v49-t-sep">:</span>
+                            <div id="v49_m" class="v49-t-box">00</div>
+                            <span class="v49-t-sep">:</span>
+                            <div id="v49_s" class="v49-t-box">00</div>
+                        </div>
+                    </div>
+                    <a class="v49-btn-more" href="/shop?category=871">More</a>
+                </div>
+                <div class="v49-product-area">
+                    <div class="swiper uellowV49Swiper">
+                        <div class="swiper-wrapper">
+                            <div class="swiper-slide v49-loader">
+                                <div class="v49-spinner"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </template>
+
+    <!-- REGISTER — Odoo 18 Enterprise -->
+    <template id="snippets_flash_sale_mobile" inherit_id="website.snippets" name="Flash Sale Mobile Snippet">
+        <xpath expr="//snippets[@id='snippet_groups']/*[1]" position="before">
+            <t snippet-group="uw_flash_mobile"
+               t-snippet="website.s_snippet_group"
+               string="Flash Mobile"
+               t-thumbnail="/flash_sale_mobile/static/src/snippets/s_flash_sale_v49/thumbnail.png"/>
+        </xpath>
+        <xpath expr="//snippets[@id='snippet_structure']/*[1]" position="before">
+            <t t-snippet="flash_sale_mobile.s_flash_sale_v49"
+               t-thumbnail="/flash_sale_mobile/static/src/snippets/s_flash_sale_v49/thumbnail.png"
+               group="uw_flash_mobile"/>
+        </xpath>
+    </template>
+
+</odoo>

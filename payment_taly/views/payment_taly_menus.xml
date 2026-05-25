@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <menuitem
+            id="menu_taly_root"
+            name="Taly - تالي"
+            parent="account.menu_finance"
+            sequence="99"
+        />
+
+        <menuitem
+            id="menu_taly_dashboard"
+            name="📊 Dashboard"
+            parent="menu_taly_root"
+            action="action_taly_dashboard"
+            sequence="1"
+        />
+
+        <menuitem
+            id="menu_taly_transactions"
+            name="💳 Transactions"
+            parent="menu_taly_root"
+            action="action_taly_transactions"
+            sequence="2"
+        />
+
+        <menuitem
+            id="menu_taly_report"
+            name="📈 Reports"
+            parent="menu_taly_root"
+            action="action_taly_report"
+            sequence="3"
+        />
+
+        <menuitem
+            id="menu_taly_logs"
+            name="📜 API Logs"
+            parent="menu_taly_root"
+            action="action_taly_logs"
+            sequence="4"
+        />
+</odoo>

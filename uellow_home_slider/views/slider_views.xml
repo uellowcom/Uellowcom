@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_uellow_home_slider_list" model="ir.ui.view">
+        <field name="name">uellow.home.slider.list</field>
+        <field name="model">uellow.home.slider</field>
+        <field name="arch" type="xml">
+            <list string="السلايدرات" decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="coupon_code"/>
+                <field name="coupon_discount"/>
+                <field name="slide_count" string="الشرائح"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_uellow_home_slider_form" model="ir.ui.view">
+        <field name="name">uellow.home.slider.form</field>
+        <field name="model">uellow.home.slider</field>
+        <field name="arch" type="xml">
+            <form string="إعدادات السلايدر">
+                <header>
+                    <button name="action_view_slides" type="object"
+                            string="عرض الشرائح" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_slides" type="object"
+                                class="oe_stat_button" icon="fa-images">
+                            <field name="slide_count" widget="statinfo" string="شريحة"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" string="اسم السلايدر"/>
+                        <h1><field name="name" placeholder="السلايدر الرئيسي"/></h1>
+                    </div>
+                    <notebook>
+
+                        <page string="الإعدادات العامة" name="general">
+                            <group>
+                                <group string="الشعار">
+                                    <field name="logo_image" widget="image"
+                                           options="{'size': [220,80], 'preview_image': 'logo_image'}"/>
+                                    <field name="logo_url" placeholder="رابط الشعار بديل"/>
+                                </group>
+                                <group string="إعدادات">
+                                    <field name="sequence"/>
+                                    <field name="active"/>
+                                    <field name="signup_url"/>
+                                    <field name="login_url"/>
+                                </group>
+                            </group>
+                            <group string="الكوبون الترحيبي">
+                                <group>
+                                    <field name="show_coupon"/>
+                                    <field name="coupon_code" invisible="not show_coupon"/>
+                                    <field name="coupon_discount" invisible="not show_coupon"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="بنرات عربي" name="banners_ar">
+                            <div class="alert alert-info" role="alert">
+                                تظهر هذه البنرات في العمود الجانبي الأيمن عند اللغة العربية.
+                            </div>
+                            <group>
+                                <group string="البنر الأول">
+                                    <field name="ar_banner1_image" widget="image"
+                                           options="{'size': [320,150], 'preview_image': 'ar_banner1_image'}"/>
+                                    <field name="ar_banner1_url"/>
+                                    <field name="ar_banner1_alt"/>
+                                </group>
+                                <group string="البنر الثاني">
+                                    <field name="ar_banner2_image" widget="image"
+                                           options="{'size': [320,150], 'preview_image': 'ar_banner2_image'}"/>
+                                    <field name="ar_banner2_url"/>
+                                    <field name="ar_banner2_alt"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="English Banners" name="banners_en">
+                            <div class="alert alert-info" role="alert">
+                                These banners appear in the right column when language is English.
+                            </div>
+                            <group>
+                                <group string="Banner 1">
+                                    <field name="en_banner1_image" widget="image"
+                                           options="{'size': [320,150], 'preview_image': 'en_banner1_image'}"/>
+                                    <field name="en_banner1_url"/>
+                                    <field name="en_banner1_alt"/>
+                                </group>
+                                <group string="Banner 2">
+                                    <field name="en_banner2_image" widget="image"
+                                           options="{'size': [320,150], 'preview_image': 'en_banner2_image'}"/>
+                                    <field name="en_banner2_url"/>
+                                    <field name="en_banner2_alt"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="الشرائح" name="slides">
+                            <div class="alert alert-warning" role="alert">
+                                أضف شريحة منفصلة لكل <strong>لغة + جهاز</strong>.
+                                إذا لم توجد صور موبايل تُستخدم صور الديسك توب تلقائياً.
+                            </div>
+                            <field name="slide_ids">
+                                <list editable="bottom" decoration-muted="not active">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="language"/>
+                                    <field name="device"/>
+                                    <field name="image" widget="image" options="{'size': [100,50]}"/>
+                                    <field name="image_url" optional="show" placeholder="رابط خارجي"/>
+                                    <field name="link_url"/>
+                                    <field name="open_new_tab" optional="hide"/>
+                                    <field name="show_overlay" optional="hide"/>
+                                    <field name="alt_text" optional="hide"/>
+                                    <field name="active"/>
+                                </list>
+                                <form string="تفاصيل الشريحة">
+                                    <group>
+                                        <group string="معلومات الشريحة">
+                                            <field name="name"/>
+                                            <field name="sequence"/>
+                                            <field name="language"/>
+                                            <field name="device"/>
+                                            <field name="active"/>
+                                            <field name="link_url"/>
+                                            <field name="open_new_tab"/>
+                                            <field name="alt_text"/>
+                                        </group>
+                                        <group string="الصورة">
+                                            <field name="image" widget="image"
+                                                   options="{'size': [420,210], 'preview_image': 'image'}"/>
+                                            <field name="image_url" placeholder="أو رابط الصورة مباشرة"/>
+                                        </group>
+                                    </group>
+                                    <group string="نص فوق الصورة (Overlay)">
+                                        <field name="show_overlay"/>
+                                        <group invisible="not show_overlay">
+                                            <field name="overlay_title"/>
+                                            <field name="overlay_sub"/>
+                                            <field name="overlay_btn"/>
+                                            <field name="overlay_btn_url"/>
+                                        </group>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_uellow_home_slider" model="ir.actions.act_window">
+        <field name="name">Home Slider</field>
+        <field name="res_model">uellow.home.slider</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">أنشئ أول سلايدر للصفحة الرئيسية</p>
+        </field>
+    </record>
+
+    <record id="action_uellow_home_slide" model="ir.actions.act_window">
+        <field name="name">الشرائح</field>
+        <field name="res_model">uellow.home.slide</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_uellow_root" name="Uellow" sequence="99"/>
+    <menuitem id="menu_uellow_home_slider" name="Home Slider" parent="menu_uellow_root" action="action_uellow_home_slider" sequence="10"/>
+    <menuitem id="menu_uellow_slides" name="الشرائح" parent="menu_uellow_root" action="action_uellow_home_slide" sequence="20"/>
+    <menuitem id="menu_uellow_website_conf" name="Uellow Home Slider" parent="website.menu_website_configuration" action="action_uellow_home_slider" sequence="50"/>
+
+</odoo>

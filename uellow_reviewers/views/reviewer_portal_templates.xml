@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="reviewer_dashboard_page" name="Reviewer Dashboard">
+        <t t-call="website.layout">
+            <t t-set="title">Reviewer Dashboard</t>
+            <div id="reviewer-portal-root" style="min-height:80vh"/>
+        </t>
+    </template>
+
+    <template id="reviewer_register_page" name="Reviewer Registration">
+        <t t-call="website.layout">
+            <t t-set="title">سجّل كريفيور</t>
+            <div id="reviewer-register-root" style="min-height:80vh"/>
+        </t>
+    </template>
+
+</odoo>

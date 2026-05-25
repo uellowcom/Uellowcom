@@ -1,0 +1,42 @@
+{
+    'name': 'Uellow Smart Connector',
+    'version': '18.0.2.0.0',
+    'category': 'Inventory/Products',
+    'summary': 'Smart Product Import, AI Enrichment, Price Intelligence & Dead Stock Monitor',
+    'author': 'Uellow W.L.L',
+    'website': 'https://uellow.com',
+    'depends': [
+        'product',
+        'stock',
+        'website_sale',
+        'purchase',
+        'mail',
+    ],
+    'external_dependencies': {
+        'python': ['requests', 'openpyxl', 'thefuzz', 'anthropic'],
+    },
+    'data': [
+        'security/ir.model.access.csv',
+        'security/security.xml',
+        'data/sequence_data.xml',
+        'data/cron_data.xml',
+        'views/dashboard_views.xml',
+        'views/import_job_views.xml',
+        'views/import_job_line_views.xml',
+        'views/price_intelligence_views.xml',
+        'views/dead_stock_views.xml',
+        'views/connector_settings_views.xml',
+        'views/menus.xml',
+        'wizard/review_wizard_views.xml',
+    ],
+    'assets': {
+        'web.assets_backend': [
+            'uellow_smart_connector/static/src/css/dashboard.css',
+            'uellow_smart_connector/static/src/js/dashboard.js',
+        ],
+    },
+    'post_init_hook': 'post_init_hook',
+    'installable': True,
+    'application': True,
+    'license': 'LGPL-3',
+}

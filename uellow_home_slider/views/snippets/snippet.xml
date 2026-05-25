@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ===== القالب الرئيسي ===== -->
+    <template id="uellow_home_slider_block" name="Uellow Home Slider">
+        <section class="s_uellow_home_slider uellow-hero-section">
+            <div class="uhs-desktop d-none d-lg-flex" dir="rtl">
+                <div class="uhs-banners-col">
+                    <a class="uhs-banner-link" id="uhs_b1_link" href="/shop">
+                        <img id="uhs_b1_img" src="/uellow_home_slider/static/src/img/placeholder.svg" alt="Banner 1" loading="lazy"/>
+                    </a>
+                    <a class="uhs-banner-link" id="uhs_b2_link" href="/shop">
+                        <img id="uhs_b2_img" src="/uellow_home_slider/static/src/img/placeholder.svg" alt="Banner 2" loading="lazy"/>
+                    </a>
+                </div>
+                <div class="uhs-slider-col" id="uhs_desktop_wrap">
+                    <img class="uhs-slide-img" id="uhs_desktop_img" src="/uellow_home_slider/static/src/img/placeholder_wide.svg" alt="slide"/>
+                    <button type="button" class="uhs-arrow uhs-right" id="uhs_d_prev">&#8250;</button>
+                    <button type="button" class="uhs-arrow uhs-left"  id="uhs_d_next">&#8249;</button>
+                    <div class="uhs-dots" id="uhs_d_dots"></div>
+                    <div class="uhs-overlay" id="uhs_d_overlay" style="display:none;">
+                        <h2 class="uhs-overlay-title" id="uhs_d_title"></h2>
+                        <p  class="uhs-overlay-sub"   id="uhs_d_sub"></p>
+                        <a  class="uhs-overlay-btn"   id="uhs_d_btn" href="/shop"></a>
+                    </div>
+                </div>
+                <div class="uhs-info-col">
+                    <div class="uhs-logo-box">
+                        <img id="uhs_logo" src="/web/image/website/1/logo/Uellow?unique=13b1cfb" alt="Logo" onerror="this.style.display=&apos;none&apos;"/>
+                    </div>
+                    <p class="uhs-welcome" id="uhs_welcome">&#x645;&#x631;&#x62D;&#x628;&#x627;&#x064B; &#x628;&#x643; &#x641;&#x64A; &#x64A;&#x644;&#x648;! &#x1F49B;</p>
+                    <div class="uhs-ticket" id="uhs_ticket_wrap">
+                        <div class="uhs-ticket-body">
+                            <span class="uhs-ticket-label" id="uhs_voucher_label">&#x643;&#x648;&#x62F; &#x627;&#x644;&#x62E;&#x635;&#x645;</span>
+                            <div class="uhs-code-row">
+                                <span class="uhs-code-val" id="uhs_coupon_code">WELCOME05</span>
+                                <button type="button" class="uhs-copy-btn" id="uhs_copy_btn" data-code="WELCOME05">&#x646;&#x633;&#x62E;</button>
+                            </div>
+                        </div>
+                        <div class="uhs-ticket-badge">
+                            <div class="uhs-badge-inner"><span id="uhs_discount">5%</span><small>OFF</small></div>
+                        </div>
+                    </div>
+                    <div class="uhs-actions">
+                        <a id="uhs_signup_btn" href="/web/signup" class="uhs-btn-main">&#x627;&#x646;&#x636;&#x645; &#x625;&#x644;&#x64A;&#x646;&#x627; &#x627;&#x644;&#x622;&#x646;</a>
+                        <a id="uhs_login_btn"  href="/web/login"  class="uhs-btn-link">&#x644;&#x62F;&#x64A;&#x643; &#x62D;&#x633;&#x627;&#x628;&#x61F; &#x633;&#x62C;&#x644; &#x62F;&#x62E;&#x648;&#x644;</a>
+                    </div>
+                </div>
+            </div>
+            <div class="uhs-mobile d-lg-none" id="uhs_mobile_wrap">
+                <img class="uhs-slide-img" id="uhs_mobile_img" src="/uellow_home_slider/static/src/img/placeholder_wide.svg" alt="slide"/>
+                <button type="button" class="uhs-arrow uhs-right" id="uhs_m_prev">&#8250;</button>
+                <button type="button" class="uhs-arrow uhs-left"  id="uhs_m_next">&#8249;</button>
+                <div class="uhs-dots" id="uhs_m_dots"></div>
+                <div class="uhs-overlay" id="uhs_m_overlay" style="display:none;">
+                    <h2 class="uhs-overlay-title" id="uhs_m_title"></h2>
+                    <p  class="uhs-overlay-sub"   id="uhs_m_sub"></p>
+                    <a  class="uhs-overlay-btn"   id="uhs_m_btn" href="/shop"></a>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!--
+        ===== تسجيل البلوك في قائمة السنيبتات - Odoo 18 =====
+        الطريقة: إنشاء ir.ui.view مباشرة بنوع "qweb"
+        بدلاً من الـ xpath على website.snippets الذي تغيّر في Odoo 18
+    -->
+    <record id="snippet_uellow_home_slider" model="ir.ui.view">
+        <field name="name">s_uellow_home_slider</field>
+        <field name="type">qweb</field>
+        <field name="key">uellow_home_slider.s_uellow_home_slider</field>
+        <field name="arch" type="xml">
+            <t t-name="uellow_home_slider.s_uellow_home_slider">
+                <section class="s_uellow_home_slider uellow-hero-section">
+                    <t t-call="uellow_home_slider.uellow_home_slider_block"/>
+                </section>
+            </t>
+        </field>
+    </record>
+
+    <!--
+        تسجيل في قائمة البلوكات عبر snippet_groups (الطريقة المضمونة في Odoo 18)
+    -->
+    <template id="uellow_snippets"
+              inherit_id="website.snippets"
+              name="Uellow Snippets">
+        <xpath expr="//snippets[@id='snippet_structure']" position="before">
+            <snippets id="snippet_uellow" string="Uellow">
+                <t t-snippet="uellow_home_slider.s_uellow_home_slider"
+                   t-thumbnail="/uellow_home_slider/static/src/img/thumbnail.svg"/>
+            </snippets>
+        </xpath>
+    </template>
+
+</odoo>

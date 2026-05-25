@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Remittance List -->
+  <record id="view_cash_remittance_list" model="ir.ui.view">
+    <field name="name">delivery.cash.remittance.list</field>
+    <field name="model">delivery.cash.remittance</field>
+    <field name="arch" type="xml">
+      <list string="Financial Remitting"
+            decoration-info="state == 'draft'"
+            decoration-warning="state == 'pending'"
+            decoration-success="state == 'remitted'"
+            decoration-danger="state == 'rejected'"
+            decoration-muted="state == 'partial'">
+        <field name="name"/>
+        <field name="carrier_company_id"/>
+        <field name="total_amount" string="Total KD"/>
+        <field name="state" widget="badge"/>
+        <field name="remittance_date"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- Remittance Form -->
+  <record id="view_cash_remittance_form" model="ir.ui.view">
+    <field name="name">delivery.cash.remittance.form</field>
+    <field name="model">delivery.cash.remittance</field>
+    <field name="arch" type="xml">
+      <form string="Cash Remittance">
+        <header>
+          <button name="action_submit" string="Submit to Uellow"
+                  type="object" class="btn btn-primary"
+                  invisible="state != 'draft'"/>
+          <button name="action_approve_all" string="✅ Approve All"
+                  type="object" class="btn btn-success"
+                  invisible="state != 'pending'"/>
+          <button name="action_reject" string="❌ Reject"
+                  type="object" class="btn btn-danger"
+                  invisible="state != 'pending'"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="draft,pending,remitted"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name" readonly="1"/></h1>
+          </div>
+          <group>
+            <group>
+              <field name="carrier_company_id"/>
+              <field name="settlement_mode"/>
+              <field name="total_amount"           readonly="1" string="Total Cash KD"/>
+            </group>
+            <group>
+              <field name="state" readonly="1"/>
+              <field name="remittance_date"/>
+              <field name="reference_no"/>
+              <field name="carrier_ref"/>
+            </group>
+          </group>
+          <group string="Cost Breakdown" col="4">
+            <field name="total_delivery_fees"    readonly="1" string="Delivery Fees KD"/>
+            <field name="total_cash_commission"  readonly="1" string="Cash Commission KD"/>
+            <field name="total_cancel_fees"      readonly="1" string="Cancel Fees KD"/>
+            <field name="total_return_exch_fees" readonly="1" string="Return/Exchange KD"/>
+            <field name="total_carrier_cost"     readonly="1" string="Total Carrier Cost KD"/>
+            <field name="cash_collected"         readonly="1" string="Cash Collected KD"/>
+            <field name="net_to_uellow"          readonly="1" string="Net to Uellow KD"/>
+          </group>
+          <notebook>
+            <page string="Order Lines" name="lines">
+              <field name="line_ids" widget="one2many">
+                <list editable="bottom"
+                      decoration-success="approval_state == 'approved'"
+                      decoration-warning="approval_state == 'noted'"
+                      decoration-danger="approval_state == 'rejected'">
+                  <field name="order_id"/>
+                  <field name="carrier_order_ref" string="Carrier Ref" optional="show"/>
+                  <field name="amount" string="Amount KD"/>
+                  <field name="delivery_status" string="Delivery"/>
+                  <field name="return_status" string="Return"/>
+                  <field name="approval_state" widget="badge"/>
+                  <field name="uellow_notes" string="Notes"/>
+                  <button name="action_approve" string="✅ Approve"
+                          type="object" class="btn btn-success btn-sm"
+                          invisible="approval_state != 'pending'"/>
+                  <button name="action_approve_with_note" string="⚠️ With Note"
+                          type="object" class="btn btn-warning btn-sm"
+                          invisible="approval_state != 'pending'"/>
+                  <button name="action_reject_line" string="❌"
+                          type="object" class="btn btn-danger btn-sm"
+                          invisible="approval_state != 'pending'"/>
+                </list>
+              </field>
+            </page>
+            <page string="Notes">
+              <field name="notes" placeholder="Additional notes…"/>
+              <field name="rejection_reason" placeholder="Rejection reason…"
+                     invisible="state != 'rejected'"/>
+            </page>
+          </notebook>
+        </sheet>
+
+      </form>
+    </field>
+  </record>
+
+  <!-- Action -->
+  <record id="action_delivery_cash_remittance" model="ir.actions.act_window">
+    <field name="name">Financial Remitting</field>
+    <field name="res_model">delivery.cash.remittance</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+</odoo>

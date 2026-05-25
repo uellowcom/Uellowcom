@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_seo_config_form" model="ir.ui.view">
+    <field name="name">uellow.seo.config.form</field>
+    <field name="model">uellow.seo.config</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <group><field name="active" widget="boolean_toggle"/><field name="anthropic_api_key" password="True"/><field name="auto_generate_new"/><field name="overwrite_existing"/><field name="schema_markup"/></group>
+            <group string="Branding"><field name="site_name_en"/><field name="site_name_ar"/><field name="default_suffix_en"/><field name="default_suffix_ar"/></group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+  <record id="view_seo_product_list" model="ir.ui.view">
+    <field name="name">uellow.seo.product.list</field>
+    <field name="model">uellow.seo.product</field>
+    <field name="arch" type="xml">
+      <list string="Product SEO" decoration-warning="needs_update or score &lt; 50">
+        <field name="product_id"/>
+        <field name="meta_title_en" string="Title (EN)"/>
+        <field name="meta_title_ar" string="Title (AR)"/>
+        <field name="score" string="SEO Score"/>
+        <field name="ai_generated" widget="boolean"/>
+        <field name="last_generated"/>
+        <field name="needs_update" widget="boolean"/>
+      </list>
+    </field>
+  </record>
+  <record id="action_seo_config" model="ir.actions.act_window">
+    <field name="name">SEO Settings</field><field name="res_model">uellow.seo.config</field><field name="view_mode">form</field>
+  </record>
+  <record id="action_seo_products" model="ir.actions.act_window">
+    <field name="name">Product SEO</field><field name="res_model">uellow.seo.product</field><field name="view_mode">list,form</field>
+  </record>
+</odoo>

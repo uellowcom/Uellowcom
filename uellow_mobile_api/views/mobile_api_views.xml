@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_mobile_api_settings" model="ir.ui.view">
+        <field name="name">mobile.api.settings.form</field>
+        <field name="model">mobile.api.settings</field>
+        <field name="arch" type="xml">
+            <form string="إعدادات Mobile API">
+                <header>
+                    <button string="حفظ التغييرات" type="object" name="execute" class="btn-primary"/>
+                    <button string="إلغاء" type="object" name="cancel" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="o_setting_container">
+
+                        <div class="o_settings_header">
+                            <h1>📱 Uellow Mobile API</h1>
+                        </div>
+
+                        <!-- General -->
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="enabled" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="enabled" string="تفعيل الـ API"/>
+                                <div class="text-muted">تشغيل/إيقاف كل endpoints الموبايل</div>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="maintenance_mode" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="maintenance_mode" string="وضع الصيانة"/>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="maintenance_msg" string="رسالة الصيانة"/>
+                                <field name="maintenance_msg"/>
+                            </div>
+                        </div>
+
+                        <group string="إعدادات عامة">
+                            <field name="token_ttl_days" string="مدة صلاحية التوكن (يوم)"/>
+                            <field name="max_products_per_page" string="أقصى عدد منتجات/صفحة"/>
+                            <field name="min_app_version" string="أدنى إصدار مدعوم"/>
+                            <field name="active_tokens_count" string="التوكنات النشطة" readonly="1"/>
+                        </group>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <button string="إلغاء كل التوكنات" type="object"
+                                        name="action_revoke_all_tokens"
+                                        class="btn btn-warning"/>
+                            </div>
+                        </div>
+
+                        <!-- Authentication -->
+                        <div class="o_settings_header">
+                            <h2>التسجيل والمصادقة</h2>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="allow_register" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="allow_register" string="السماح بالتسجيل من التطبيق"/>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="welcome_points" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="welcome_points" string="نقاط ترحيبية عند التسجيل"/>
+                                <div class="text-muted">100 نقطة عند إنشاء الحساب</div>
+                            </div>
+                        </div>
+
+                        <!-- Push Notifications -->
+                        <div class="o_settings_header">
+                            <h2>Push Notifications</h2>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="fcm_server_key" string="FCM Server Key"/>
+                                <field name="fcm_server_key" password="True"/>
+                                <div class="text-muted">من Firebase Console - Cloud Messaging</div>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <button string="إرسال إشعار تجريبي" type="object"
+                                        name="action_test_push"
+                                        class="btn btn-secondary"/>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="push_order_confirm" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="push_order_confirm" string="إشعار تأكيد الطلب"/>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="push_order_shipped" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="push_order_shipped" string="إشعار شحن الطلب"/>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="push_order_delivered" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="push_order_delivered" string="إشعار تسليم الطلب"/>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="push_promo" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="push_promo" string="إشعارات العروض"/>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="push_reviewer" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="push_reviewer" string="إشعار رد الريفيور"/>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="push_loyalty" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="push_loyalty" string="إشعار نقاط الولاء"/>
+                            </div>
+                        </div>
+
+                        <!-- Home Screen -->
+                        <div class="o_settings_header">
+                            <h2>الصفحة الرئيسية للتطبيق</h2>
+                        </div>
+
+                        <group>
+                            <field name="home_new_arrivals_count" string="عدد الوصول الجديد"/>
+                            <field name="home_best_sellers_count" string="عدد الأكثر مبيعاً"/>
+                            <field name="home_categories_count"   string="عدد الفئات"/>
+                        </group>
+
+                        <!-- App Links -->
+                        <div class="o_settings_header">
+                            <h2>روابط التطبيق</h2>
+                        </div>
+
+                        <group>
+                            <field name="app_store_url"  string="App Store (iOS)"/>
+                            <field name="play_store_url" string="Play Store (Android)"/>
+                        </group>
+
+                        <!-- Security -->
+                        <div class="o_settings_header">
+                            <h2>الأمان</h2>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <label for="cors_origins" string="CORS Origins"/>
+                                <field name="cors_origins"/>
+                                <div class="text-muted">* للسماح بالكل</div>
+                            </div>
+                        </div>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="rate_limit_enabled" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="rate_limit_enabled" string="تفعيل Rate Limiting"/>
+                            </div>
+                        </div>
+
+                        <group>
+                            <field name="rate_limit_per_min" string="الحد الأقصى للطلبات/دقيقة"/>
+                        </group>
+
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mobile_api_settings" model="ir.actions.act_window">
+        <field name="name">إعدادات Mobile API</field>
+        <field name="res_model">mobile.api.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
+    </record>
+
+    <menuitem id="menu_mobile_api_root"
+              name="📱 Mobile API"
+              sequence="94"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_mobile_api_settings"
+              name="الاعدادات"
+              parent="menu_mobile_api_root"
+              action="action_mobile_api_settings"
+              sequence="10"/>
+
+</odoo>

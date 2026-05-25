@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_bnpl_root" name="BNPL" parent="uellow_multivendor.menu_marketplace_finance_root" sequence="25"/>
+  <menuitem id="menu_bnpl_apps" name="Applications" parent="menu_bnpl_root" action="action_bnpl_apps" sequence="1"/>
+  <menuitem id="menu_bnpl_plans" name="Plans" parent="menu_bnpl_root" action="action_bnpl_plans" sequence="2"/>
+</odoo>

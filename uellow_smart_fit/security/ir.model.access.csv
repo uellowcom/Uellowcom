@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_body_profile_public,customer.body.profile public,model_customer_body_profile,,1,0,0,0
+access_body_profile_user,customer.body.profile user,model_customer_body_profile,base.group_user,1,1,1,0
+access_body_profile_admin,customer.body.profile admin,model_customer_body_profile,base.group_system,1,1,1,1
+access_fit_history_user,customer.fit.history user,model_customer_fit_history,base.group_user,1,1,1,0
+access_fit_history_admin,customer.fit.history admin,model_customer_fit_history,base.group_system,1,1,1,1

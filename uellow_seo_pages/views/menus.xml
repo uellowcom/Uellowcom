@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_seo_pages" name="SEO Landing Pages"
+            parent="uellow_multivendor.menu_marketplace_main"
+            action="action_seo_pages" sequence="58"/>
+</odoo>

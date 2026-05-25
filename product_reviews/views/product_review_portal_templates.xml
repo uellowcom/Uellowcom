@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="reviews_widget" name="Customer Reviews Widget">
+        <t t-set="sp" t-value="product.sudo()"/>
+        <t t-set="reviews_all" t-value="sp.rating_ids.filtered(lambda r: r.consumed and r.rating > 0).sorted(key=lambda r: r.write_date, reverse=True)"/>
+        <t t-set="is_logged" t-value="not request.env.user._is_public()"/>
+        <t t-set="photo_count" t-value="len(reviews_all.filtered(lambda r: r.review_image_ids))"/>
+        <t t-set="verified_count" t-value="len(reviews_all.filtered(lambda r: r.is_verified_purchase))"/>
+
+        <div class="prw" t-att-data-product-id="sp.id"
+             t-att-data-logged="'1' if is_logged else '0'"
+             t-att-data-login-url="'/web/login?redirect=' + request.httprequest.path">
+
+            <!-- HEADER: split panel -->
+            <div class="prw-header">
+                <div class="prw-header-left">
+                    <div class="prw-big-score"><t t-esc="str(sp.pr_avg)"/></div>
+                    <div class="prw-big-stars">
+                        <t t-set="ai" t-value="int(sp.pr_avg)"/>
+                        <t t-foreach="[1,2,3,4,5]" t-as="s">
+                            <span t-att-class="'prw-s on' if s &lt;= ai else 'prw-s'">&#9733;</span>
+                        </t>
+                    </div>
+                    <div class="prw-big-lbl"><t t-esc="sp.pr_total"/> reviews</div>
+                    <div class="prw-stats-row">
+                        <div class="prw-stat">
+                            <div class="prw-stat-num"><t t-esc="photo_count"/></div>
+                            <div class="prw-stat-lbl">Photos</div>
+                        </div>
+                        <div class="prw-stat">
+                            <div class="prw-stat-num"><t t-esc="verified_count"/></div>
+                            <div class="prw-stat-lbl">Verified</div>
+                        </div>
+                        <div class="prw-stat">
+                            <t t-set="pos_pct" t-value="str(int(sp.pr_star_5 * 100 // (sp.pr_total or 1)))"/>
+                            <div class="prw-stat-num"><t t-esc="pos_pct"/>%</div>
+                            <div class="prw-stat-lbl">Positive</div>
+                        </div>
+                    </div>
+                    <button class="prw-btn-write" id="prwWriteBtn">&#9998; Write a Review</button>
+                </div>
+                <div class="prw-header-right">
+                    <div class="prw-bars">
+                        <t t-set="tot" t-value="sp.pr_total or 1"/>
+                        <t t-foreach="[(5,sp.pr_star_5,'prw-bar-5',True),(4,sp.pr_star_4,'prw-bar-4',False),(3,sp.pr_star_3,'prw-bar-3',False),(2,sp.pr_star_2,'prw-bar-2',False),(1,sp.pr_star_1,'prw-bar-1',False)]" t-as="row">
+                            <t t-set="pct" t-value="int(row[1]*100//tot)"/>
+                            <div class="prw-bar-row">
+                                <span class="prw-bar-l"><t t-esc="row[0]"/> &#9733;</span>
+                                <div class="prw-bar-t"><div t-att-class="'prw-bar-f '+row[2]" t-att-style="'width:'+str(pct)+'%'"/></div>
+                                <span t-att-class="'prw-bar-c ' + ('hi' if row[3] else 'lo')"><t t-esc="row[1]"/></span>
+                            </div>
+                        </t>
+                    </div>
+                    <div class="prw-chips">
+                        <button class="prw-chip prw-chip-all" data-filter="all">All (<t t-esc="sp.pr_total"/>)</button>
+                        <button class="prw-chip prw-chip-5star" data-filter="5star">5&#9733; (<t t-esc="sp.pr_star_5"/>)</button>
+                        <t t-if="photo_count > 0">
+                            <button class="prw-chip prw-chip-photo" data-filter="photo">&#128247; Photos (<t t-esc="photo_count"/>)</button>
+                        </t>
+                        <t t-if="verified_count > 0">
+                            <button class="prw-chip prw-chip-ver" data-filter="verified">&#10003; Verified (<t t-esc="verified_count"/>)</button>
+                        </t>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REVIEWS -->
+            <div class="prw-list-wrap">
+                <div class="prw-list" id="prwList">
+                    <t t-if="reviews_all">
+                        <t t-foreach="reviews_all" t-as="rv">
+                            <div class="prw-card"
+                                 t-att-data-img="'1' if rv.review_image_ids else '0'"
+                                 t-att-data-rating="str(int(rv.rating or 0))"
+                                 t-att-data-verified="'1' if rv.is_verified_purchase else '0'">
+                                <div class="prw-accent-bar"></div>
+                                <div class="prw-card-inner">
+                                    <div class="prw-card-head">
+                                        <div class="prw-avatar">
+                                            <t t-set="rn" t-value="rv.partner_id.name or 'A'"/>
+                                            <span><t t-esc="rn[0].upper()"/></span>
+                                        </div>
+                                        <div class="prw-card-info">
+                                            <div class="prw-card-name">
+                                                <t t-esc="rv.partner_id.name or 'Anonymous'"/>
+                                                <t t-if="rv.is_verified_purchase"><span class="prw-v">&#10003; Verified</span></t>
+                                            </div>
+                                            <t t-if="rv.partner_id.country_id">
+                                                <div class="prw-country">
+                                                    <img t-attf-src="/web/image/res.country/#{rv.partner_id.country_id.id}/image_32" class="prw-flag" loading="lazy"/>
+                                                    <t t-esc="rv.partner_id.country_id.name"/>
+                                                </div>
+                                            </t>
+                                        </div>
+                                        <div class="prw-card-right">
+                                            <div class="prw-card-stars">
+                                                <t t-set="ri" t-value="int(rv.rating or 0)"/>
+                                                <t t-foreach="[1,2,3,4,5]" t-as="s">
+                                                    <span t-att-class="'prw-s on' if s &lt;= ri else 'prw-s'">&#9733;</span>
+                                                </t>
+                                            </div>
+                                            <div class="prw-card-date"><t t-esc="rv.write_date" t-options='{"widget":"date"}'/></div>
+                                        </div>
+                                    </div>
+                                    <t t-if="rv.review_title"><div class="prw-card-title"><t t-esc="rv.review_title"/></div></t>
+                                    <div class="prw-card-body">
+                                        <p class="prw-card-text"><t t-esc="rv.feedback or ''"/></p>
+                                        <t t-if="rv.review_image_ids">
+                                            <div class="prw-card-imgs">
+                                                <t t-foreach="rv.review_image_ids" t-as="img">
+                                                    <a class="prw-thumb" href="#" t-attf-data-src="/web/image/rating.review.image/#{img.id}/image">
+                                                        <img t-attf-src="/web/image/rating.review.image/#{img.id}/image" loading="lazy"/>
+                                                    </a>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <div class="prw-card-foot">
+                                        <button class="prw-helpful" t-att-data-id="rv.id">&#128077; Helpful (<t t-esc="rv.helpful_count"/>)</button>
+                                        <span class="prw-tag prw-tag-stars"><t t-esc="str(int(rv.rating or 0))"/>&#9733;</span>
+                                        <t t-if="rv.review_image_ids"><span class="prw-tag prw-tag-photo">&#128247;</span></t>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                    <t t-else=""><div class="prw-empty">No reviews yet.</div></t>
+                </div>
+                <!-- Show More overlay -->
+                <div class="prw-showmore-overlay" id="prwShowMoreOverlay">
+                    <button class="prw-showmore-btn" id="prwShowMoreBtn">See More Reviews</button>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="prw-pager" id="prwPager" style="display:none">
+                <button class="prw-pg-btn" id="prwPrev">&#8592; Prev</button>
+                <span class="prw-pg-info" id="prwPgInfo"></span>
+                <button class="prw-pg-btn" id="prwNext">Next &#8594;</button>
+            </div>
+        </div>
+
+        <!-- DIALOG -->
+        <div class="prw-overlay" id="prwOverlay" style="display:none">
+            <div class="prw-dialog">
+                <button class="prw-dlg-close" id="prwDlgClose">&#10005;</button>
+                <div id="prwDlgContent">
+                    <div class="prw-dlg-title">Write a Review</div>
+                    <div class="prw-dlg-sub">for <strong><t t-esc="sp.name"/></strong></div>
+                    <form id="prwForm">
+                        <div class="prw-fld">
+                            <label>Rating *</label>
+                            <div class="prw-star-pick" id="prwStarPick">
+                                <span data-v="1">&#9733;</span><span data-v="2">&#9733;</span>
+                                <span data-v="3">&#9733;</span><span data-v="4">&#9733;</span>
+                                <span data-v="5">&#9733;</span>
+                            </div>
+                            <input type="hidden" id="prwRating" name="rating"/>
+                        </div>
+                        <div class="prw-fld">
+                            <label>Review Title</label>
+                            <input type="text" name="review_title" class="prw-inp" placeholder="Summarize your experience"/>
+                        </div>
+                        <div class="prw-fld">
+                            <label>Your Review *</label>
+                            <textarea name="feedback" class="prw-txt" rows="4" required="required" placeholder="Share your experience..."/>
+                        </div>
+                        <div class="prw-fld">
+                            <label>Photos (optional)</label>
+                            <div class="prw-drop" id="prwDrop">
+                                <span>&#128247; Click or drag photos here</span>
+                                <input type="file" name="images" multiple="multiple" accept="image/*" id="prwFiles"/>
+                            </div>
+                            <div class="prw-prevs" id="prwPrevs"/>
+                        </div>
+                        <button type="submit" class="prw-dlg-submit">Submit Review</button>
+                    </form>
+                </div>
+                <div class="prw-success" id="prwSuccessMsg" style="display:none">
+                    <div class="prw-success-icon">&#10003;</div>
+                    <h4>Thank you!</h4>
+                    <p>Your review is pending approval.</p>
+                    <button class="prw-dlg-submit" id="prwSuccessClose">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIGHTBOX -->
+        <div class="prw-lb" id="prwLb" style="display:none">
+            <button class="prw-lb-close">&#10005;</button>
+            <img id="prwLbImg" src=""/>
+        </div>
+    </template>
+
+    <template id="product_comment_override" name="Discussion and Rating"
+              inherit_id="website_sale.product_comment" priority="20">
+        <xpath expr="//t[@t-call='portal.message_thread']" position="replace" optional="True">
+            <t t-call="product_reviews.reviews_widget">
+                <t t-set="product" t-value="product"/>
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

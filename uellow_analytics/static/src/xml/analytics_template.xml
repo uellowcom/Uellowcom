@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="uellow_analytics.Dashboard">
+<div id="uellow-analytics-root">
+
+    <div class="an-header">
+        <div class="an-title">📊 Beena Analytics</div>
+        <div class="an-period-btns">
+            <button t-attf-class="an-period-btn #{state.period==='today'?'active':''}" t-on-click="()=>setPeriod('today')">اليوم</button>
+            <button t-attf-class="an-period-btn #{state.period==='week'?'active':''}"  t-on-click="()=>setPeriod('week')">أسبوع</button>
+            <button t-attf-class="an-period-btn #{state.period==='month'?'active':''}" t-on-click="()=>setPeriod('month')">شهر</button>
+            <button t-attf-class="an-period-btn #{state.period==='quarter'?'active':''}" t-on-click="()=>setPeriod('quarter')">ربع سنة</button>
+        </div>
+    </div>
+
+    <t t-if="state.loading">
+        <div class="an-loading"><div class="an-spinner"/>جاري تحميل البيانات...</div>
+    </t>
+
+    <t t-elif="state.error">
+        <div style="text-align:center;padding:40px;color:#E24B4A">
+            <div style="font-size:24px;margin-bottom:8px">⚠️</div>
+            <div t-esc="state.error"/>
+        </div>
+    </t>
+
+    <t t-elif="state.data">
+        <t t-set="d" t-value="state.data"/>
+
+        <!-- KPI Cards -->
+        <div class="an-kpi-grid">
+            <div class="an-kpi">
+                <div class="an-kpi-label">💬 محادثات Beena</div>
+                <div class="an-kpi-value" t-esc="d.ai.total_sessions"/>
+                <div class="an-kpi-sub">جلسة خلال الفترة</div>
+            </div>
+            <div class="an-kpi">
+                <div class="an-kpi-label">📈 معدل التحويل</div>
+                <div class="an-kpi-value" t-esc="d.ai.conversion_rate + '%'"/>
+                <div class="an-kpi-sub">محادثات أفضت لشراء</div>
+            </div>
+            <div class="an-kpi">
+                <div class="an-kpi-label">💰 إجمالي المبيعات</div>
+                <div class="an-kpi-value" t-esc="d.sales.total_revenue.toFixed(3) + ' KD'"/>
+                <div class="an-kpi-sub" t-esc="d.sales.total_orders + ' طلب'"/>
+            </div>
+            <div class="an-kpi">
+                <div class="an-kpi-label">🛒 متوسط الطلب</div>
+                <div class="an-kpi-value" t-esc="d.sales.avg_order_value.toFixed(3) + ' KD'"/>
+                <div class="an-kpi-sub">لكل طلب</div>
+            </div>
+        </div>
+
+        <!-- Charts Row 1 -->
+        <div class="an-charts-grid">
+
+            <div class="an-card">
+                <div class="an-card-title">💬 المحادثات اليومية</div>
+                <div class="an-bar-chart">
+                    <t t-foreach="d.ai.sessions_chart" t-as="item" t-key="item.date">
+                        <div class="an-bar-wrap">
+                            <div class="an-bar" t-attf-style="height:#{barHeight(item.count,maxVal(d.ai.sessions_chart,'count'))}px;background:#534AB7"/>
+                            <div class="an-bar-label" t-esc="fmtDate(item.date)"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <div class="an-card">
+                <div class="an-card-title">💰 المبيعات اليومية (KD)</div>
+                <div class="an-bar-chart">
+                    <t t-foreach="d.sales.revenue_chart" t-as="item" t-key="item.date">
+                        <div class="an-bar-wrap">
+                            <div class="an-bar" t-attf-style="height:#{barHeight(item.amount,maxVal(d.sales.revenue_chart,'amount'))}px"/>
+                            <div class="an-bar-label" t-esc="fmtDate(item.date)"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+
+            <div class="an-card">
+                <div class="an-card-title">🐝 حالات Beena</div>
+                <t t-foreach="Object.entries(d.ai.state_dist||{})" t-as="entry" t-key="entry[0]">
+                    <div class="an-state-row">
+                        <span class="an-state-label" t-esc="stateLabel(entry[0])"/>
+                        <div class="an-state-bar">
+                            <div class="an-state-fill"
+                                 t-attf-style="width:#{statePct(d.ai.state_dist,entry[0])}%;background:#{stateColor(entry[0])}"/>
+                        </div>
+                        <span class="an-state-pct" t-esc="statePct(d.ai.state_dist,entry[0])+'%'"/>
+                    </div>
+                </t>
+            </div>
+
+            <div class="an-card">
+                <div class="an-card-title">👥 إحصائيات الريفيورز</div>
+                <t t-if="d.reviewers.total > 0">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <div style="background:#F9F8F5;border-radius:8px;padding:10px;text-align:center">
+                            <div style="font-size:22px;font-weight:800;color:#1A1A1A" t-esc="d.reviewers.total"/>
+                            <div style="font-size:10px;color:#888;margin-top:2px">جلسة</div>
+                        </div>
+                        <div style="background:#E1F5EE;border-radius:8px;padding:10px;text-align:center">
+                            <div style="font-size:22px;font-weight:800;color:#085041" t-esc="d.reviewers.conversion + '%'"/>
+                            <div style="font-size:10px;color:#1D9E75;margin-top:2px">تحويل</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px">
+                        <div class="an-state-row">
+                            <span class="an-state-label">مكتملة</span>
+                            <div class="an-state-bar"><div class="an-state-fill" t-attf-style="width:#{d.reviewers.total?Math.round(d.reviewers.completed/d.reviewers.total*100):0}%;background:#1D9E75"/></div>
+                            <span class="an-state-pct" t-esc="d.reviewers.completed"/>
+                        </div>
+                        <div class="an-state-row">
+                            <span class="an-state-label">أنصح بشراء</span>
+                            <div class="an-state-bar"><div class="an-state-fill" t-attf-style="width:#{d.reviewers.completed?Math.round(d.reviewers.recommend/d.reviewers.completed*100):0}%;background:#F5C320"/></div>
+                            <span class="an-state-pct" t-esc="d.reviewers.recommend"/>
+                        </div>
+                    </div>
+                </t>
+                <t t-else=""><div style="text-align:center;color:#aaa;padding:20px;font-size:12px">لا توجد جلسات ريفيورز</div></t>
+            </div>
+
+        </div>
+
+        <!-- Charts Row 2 -->
+        <div class="an-charts-grid">
+
+            <div class="an-card">
+                <div class="an-card-title">🏆 أفضل المنتجات مبيعاً</div>
+                <t t-foreach="d.sales.top_products.slice(0,8)" t-as="prod" t-key="prod.name">
+                    <div class="an-product-row">
+                        <div t-attf-class="an-product-rank #{prod_index &lt; 3 ? 'top' : ''}" t-esc="prod_index+1"/>
+                        <div class="an-product-name" t-esc="prod.name"/>
+                        <div class="an-product-rev" t-esc="prod.revenue.toFixed(3)+' KD'"/>
+                    </div>
+                </t>
+                <t t-if="!d.sales.top_products.length">
+                    <div style="text-align:center;color:#aaa;padding:20px;font-size:12px">لا توجد مبيعات</div>
+                </t>
+            </div>
+
+            <div class="an-card">
+                <div class="an-card-title">⭐ توزيع مستويات الولاء</div>
+                <t t-if="d.loyalty.total_accounts > 0">
+                    <div style="margin-bottom:12px;font-size:12px;color:#888">
+                        <span style="font-weight:700;color:#1A1A1A;font-size:16px" t-esc="d.loyalty.total_accounts"/>
+                        عميل · نقاط صادرة:
+                        <span style="font-weight:700;color:#F5C320" t-esc="(d.loyalty.points_issued||0).toLocaleString()"/>
+                    </div>
+                    <t t-foreach="Object.entries(d.loyalty.levels||{})" t-as="lvl" t-key="lvl[0]">
+                        <div class="an-level-row">
+                            <div class="an-level-badge" t-attf-style="background:#{levelBg(lvl[0])};color:#{levelText(lvl[0])}" t-esc="levelName(lvl[0])"/>
+                            <div style="flex:1;margin:0 8px">
+                                <div style="height:5px;background:#F0EFE8;border-radius:3px;overflow:hidden">
+                                    <div t-attf-style="width:#{d.loyalty.total_accounts?Math.round(lvl[1]/d.loyalty.total_accounts*100):0}%;height:100%;border-radius:3px;background:#{levelText(lvl[0])}"/>
+                                </div>
+                            </div>
+                            <div style="font-size:12px;font-weight:700;color:#1A1A1A;min-width:25px" t-esc="lvl[1]"/>
+                        </div>
+                    </t>
+                </t>
+                <t t-else=""><div style="text-align:center;color:#aaa;padding:20px;font-size:12px">لا توجد بيانات ولاء</div></t>
+            </div>
+
+        </div>
+
+    </t>
+
+</div>
+</t>
+
+</templates>

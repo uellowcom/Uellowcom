@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_taly_provider_form_inherit" model="ir.ui.view">
+        <field name="name">payment.provider.form.taly</field>
+        <field name="model">payment.provider</field>
+        <field name="inherit_id" ref="payment.payment_provider_form"/>
+        <field name="arch" type="xml">
+
+            <!-- Add Taly tabs after the last existing page in the notebook -->
+            <xpath expr="//notebook" position="inside">
+
+                <page string="🔑 Taly Credentials" name="taly_credentials"
+                      invisible="code != 'taly'">
+                    <group>
+                        <group string="API Authentication">
+                            <field name="taly_api_username" placeholder="your-merchant-username"/>
+                            <field name="taly_api_password" password="True" placeholder="••••••••"/>
+                            <field name="taly_webhook_secret" password="True"
+                                   placeholder="Secret from onboarding email"/>
+                        </group>
+                        <group string="Connection Test">
+                            <div class="o_td_label"/>
+                            <div>
+                                <button name="action_test_connection"
+                                        string="🔌 Test Connection"
+                                        type="object"
+                                        class="btn btn-secondary"/>
+                                <small class="d-block text-muted mt-1">
+                                    Get credentials: Taly Partners Portal → Settings → Keys
+                                </small>
+                            </div>
+                        </group>
+                    </group>
+                </page>
+
+                <page string="🎨 Widget Settings" name="taly_widget"
+                      invisible="code != 'taly'">
+                    <group>
+                        <group string="On-Site Messaging">
+                            <field name="taly_installment_type"/>
+                            <field name="taly_widget_lang"/>
+                            <field name="taly_show_widget_product"/>
+                            <field name="taly_show_widget_cart"/>
+                        </group>
+                        <group string="Order Amount Limits">
+                            <field name="taly_min_order_amount"
+                                   help="0 = no minimum limit"/>
+                            <field name="taly_max_order_amount"
+                                   help="0 = no maximum limit"/>
+                        </group>
+                    </group>
+                </page>
+
+                <page string="📊 Statistics" name="taly_stats"
+                      invisible="code != 'taly'">
+                    <group>
+                        <group string="Transaction Overview">
+                            <field name="taly_tx_count"/>
+                            <field name="taly_tx_done_count"/>
+                            <field name="taly_tx_pending_count"/>
+                            <field name="taly_tx_cancel_count"/>
+                            <field name="taly_total_amount"/>
+                        </group>
+                        <group string="Quick Actions">
+                            <div class="o_td_label"/>
+                            <div class="d-flex flex-column gap-2">
+                                <button name="action_view_taly_transactions"
+                                        string="📋 View All Transactions"
+                                        type="object"
+                                        class="btn btn-primary btn-sm"/>
+                                <button name="action_view_taly_logs"
+                                        string="📜 View API Logs"
+                                        type="object"
+                                        class="btn btn-secondary btn-sm"/>
+                                <button name="action_taly_dashboard"
+                                        string="📊 Open Dashboard"
+                                        type="object"
+                                        class="btn btn-info btn-sm"/>
+                            </div>
+                        </group>
+                    </group>
+                </page>
+
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

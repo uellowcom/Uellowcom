@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="loyalty_enabled" model="ir.config_parameter">
+            <field name="key">uellow_loyalty.enabled</field>
+            <field name="value">True</field>
+        </record>
+        <record id="loyalty_show_widget" model="ir.config_parameter">
+            <field name="key">uellow_loyalty.show_widget</field>
+            <field name="value">True</field>
+        </record>
+        <record id="loyalty_earn_purchase" model="ir.config_parameter">
+            <field name="key">uellow_loyalty.earn_purchase</field>
+            <field name="value">10</field>
+        </record>
+        <record id="loyalty_earn_review" model="ir.config_parameter">
+            <field name="key">uellow_loyalty.earn_review</field>
+            <field name="value">50</field>
+        </record>
+        <record id="loyalty_earn_referral" model="ir.config_parameter">
+            <field name="key">uellow_loyalty.earn_referral</field>
+            <field name="value">200</field>
+        </record>
+        <record id="loyalty_redeem_rate" model="ir.config_parameter">
+            <field name="key">uellow_loyalty.redeem_rate</field>
+            <field name="value">0.001</field>
+        </record>
+    </data>
+</odoo>

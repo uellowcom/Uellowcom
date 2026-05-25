@@ -1,0 +1,225 @@
+/* ═══════════════════════════════════════════
+   Uellow Smart Fit Engine CSS
+   ═══════════════════════════════════════════ */
+
+:root {
+    --fit-yellow: #F5C320;
+    --fit-green:  #1D9E75;
+    --fit-orange: #EF9F27;
+    --fit-red:    #E24B4A;
+    --fit-radius: 10px;
+}
+
+/* ── Widget Container ─────────────────────── */
+#smart-fit-widget {
+    font-family: inherit;
+    margin-top: 20px;
+    direction: rtl;
+}
+
+/* ── Size Grid ────────────────────────────── */
+.sf-size-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 10px 0;
+}
+
+.sf-size-btn {
+    min-width: 46px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1.5px solid rgba(0,0,0,.1);
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    transition: all .15s;
+    position: relative;
+    font-family: inherit;
+    color: #1A1A1A;
+}
+
+.sf-size-btn:hover { border-color: var(--fit-yellow); }
+
+.sf-size-btn.recommended {
+    border: 2px solid var(--fit-yellow);
+    background: #FEFDF0;
+}
+
+.sf-size-btn.recommended::after {
+    content: 'AI';
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    background: var(--fit-yellow);
+    color: #1A1A1A;
+    font-size: 8px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+.sf-size-btn.fit-green  { background: #E1F5EE; border-color: #9FE1CB; color: #085041; }
+.sf-size-btn.fit-yellow { background: #FEFDF0; border-color: var(--fit-yellow); color: #854F0B; }
+.sf-size-btn.fit-orange { background: #FAEEDA; border-color: #FAC775; color: #633806; }
+.sf-size-btn.fit-red    { background: #FCEBEB; border-color: #F7C1C1; color: #791F1F; opacity: .6; }
+
+/* ── Fit Card ─────────────────────────────── */
+.sf-fit-card {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: var(--fit-radius);
+    padding: 12px 14px;
+    margin-top: 8px;
+    animation: sf-slide-in .2s ease;
+}
+
+@keyframes sf-slide-in {
+    from { opacity: 0; transform: translateY(5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.sf-fit-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sf-verdict {
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sf-verdict.green  { background: #E1F5EE; }
+.sf-verdict.yellow { background: #FEFDF0; }
+.sf-verdict.orange { background: #FAEEDA; }
+.sf-verdict.red    { background: #FCEBEB; }
+
+.sf-verdict-icon { font-size: 18px; }
+.sf-verdict-text { font-size: 12px; font-weight: 600; }
+.sf-verdict.green  .sf-verdict-text { color: #085041; }
+.sf-verdict.yellow .sf-verdict-text { color: #854F0B; }
+.sf-verdict.orange .sf-verdict-text { color: #633806; }
+.sf-verdict.red    .sf-verdict-text { color: #791F1F; }
+
+/* ── Progress bars ────────────────────────── */
+.sf-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+.sf-detail-label {
+    font-size: 11px;
+    color: #888;
+    width: 60px;
+    flex-shrink: 0;
+}
+
+.sf-detail-bar {
+    flex: 1;
+    height: 5px;
+    border-radius: 3px;
+    background: #F0EFE8;
+    overflow: hidden;
+}
+
+.sf-detail-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: var(--fit-yellow);
+}
+.sf-detail-fill.green  { background: var(--fit-green); }
+.sf-detail-fill.orange { background: var(--fit-orange); }
+.sf-detail-fill.red    { background: var(--fit-red); }
+
+.sf-detail-value {
+    font-size: 10px;
+    color: #888;
+    width: 80px;
+    text-align: left;
+    flex-shrink: 0;
+}
+
+/* ── Profile Mini Form ────────────────────── */
+.sf-profile-form {
+    background: #F9F8F5;
+    border-radius: var(--fit-radius);
+    padding: 12px;
+    margin-top: 8px;
+}
+
+.sf-profile-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 10px;
+}
+
+.sf-input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.sf-input-group label {
+    font-size: 11px;
+    color: #888;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.sf-input-group input,
+.sf-input-group select {
+    width: 100%;
+    border: 0.5px solid rgba(0,0,0,.12);
+    border-radius: 7px;
+    padding: 7px 10px;
+    font-size: 12px;
+    font-family: inherit;
+    outline: none;
+    background: #fff;
+    direction: ltr;
+}
+
+.sf-save-btn {
+    width: 100%;
+    background: var(--fit-yellow);
+    border: none;
+    border-radius: 8px;
+    padding: 9px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    color: #1A1A1A;
+}
+
+/* ── Toggle ───────────────────────────────── */
+.sf-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #888;
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-family: inherit;
+    padding: 4px 0;
+    margin-top: 4px;
+}
+
+.sf-toggle-btn:hover { color: #1A1A1A; }

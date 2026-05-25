@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_vendor_store_form" model="ir.ui.view">
+    <field name="name">uellow.vendor.store.form</field>
+    <field name="model">uellow.vendor.store</field>
+    <field name="arch" type="xml">
+      <form string="Store Page Settings">
+        <sheet>
+          <group>
+            <group string="Visibility">
+              <field name="store_page_enabled"/>
+              <field name="hidden_temporarily"/>
+              <field name="show_products_tab"/>
+              <field name="show_about_tab"/>
+              <field name="show_reviews_tab"/>
+              <field name="show_follow_button"/>
+            </group>
+            <group string="Layout">
+              <field name="layout"/>
+              <field name="meta_title"/>
+            </group>
+          </group>
+          <field name="featured_product_ids" widget="many2many_tags"/>
+          <field name="meta_description"/>
+        </sheet>
+      </form>
+    </field>
+  </record>
+</odoo>

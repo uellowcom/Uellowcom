@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════
+         SNIPPET TEMPLATE
+         Settings stored in hidden <script type="application/json">
+         Odoo saves the full HTML on Save → settings persist automatically
+    ══════════════════════════════════════════════ -->
+    <template id="uw_hot_cats_snippet" name="Hot Categories">
+        <section
+            class="uw_hot_cats"
+            data-snippet="uw_hot_cats"
+            data-name="Hot Categories">
+
+            <!-- ✅ Settings stored here — Odoo saves this with the page HTML -->
+            <script type="application/json" class="uw_hc_config">
+            {
+                "mainCat": 603,
+                "subs": [861, 488, 770, 619, 526, 775],
+                "mainBgStart": "#1a365d",
+                "mainBgEnd": "#2b6cb0",
+                "subColors": ["#e0f2fe","#dcfce7","#f3e8ff","#fee2e2","#e0e7ff","#fef9c3"],
+                "sectionBg": "#f8f9fa",
+                "btnColor": "#f7d117",
+                "btnTextColor": "#000000",
+                "showMore": true,
+                "showMain": true,
+                "imgSize": "image_512"
+            }
+            </script>
+
+            <div class="container">
+                <div class="uw_f_header_flex">
+                    <h2 class="uw_f_main_title">H<span class="uw_f_flame">🔥</span>T CATEGORIES</h2>
+                    <a href="/shop" class="uw_f_more_btn">More ❯</a>
+                </div>
+                <div class="uw_f_grid_box uw_f_grid">
+                    <div class="uw_f_loader">Loading...</div>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <!-- ══════════════════════════════════════════════
+         REGISTER IN SNIPPETS PANEL — Odoo 18
+    ══════════════════════════════════════════════ -->
+    <template id="snippets" inherit_id="website.snippets" name="UW Hot Categories Snippet">
+        <xpath expr="//snippets[@id='snippet_groups']/*[1]" position="before">
+            <t snippet-group="uw_uellow"
+               t-snippet="website.s_snippet_group"
+               string="Uellow"
+               t-thumbnail="/uw_hot_categories/static/src/img/thumb.svg"/>
+        </xpath>
+        <xpath expr="//snippets[@id='snippet_structure']/*[1]" position="before">
+            <t t-snippet="uw_hot_categories.uw_hot_cats_snippet"
+               string="Hot Categories"
+               group="uw_uellow"
+               t-thumbnail="/uw_hot_categories/static/src/img/thumb.svg">
+                <keywords>Hot Categories Shop Products</keywords>
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

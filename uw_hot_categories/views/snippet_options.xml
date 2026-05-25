@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════
+         SNIPPET OPTIONS — data-js="UwHotCats"
+         JS handles reading/writing to the JSON config script tag
+    ══════════════════════════════════════════════ -->
+    <template id="uw_hot_cats_options" inherit_id="website.snippet_options" name="UW Hot Cats Options">
+        <xpath expr="." position="inside">
+            <div data-js="UwHotCats" data-selector=".uw_hot_cats">
+
+                <we-title>🗂 Categories</we-title>
+
+                <we-input string="Main Category ID"
+                    data-uw-field="mainCat"
+                    data-no-preview="true"/>
+
+                <we-input string="Sub Category 1"
+                    data-uw-field="subs.0"
+                    data-no-preview="true"/>
+
+                <we-input string="Sub Category 2"
+                    data-uw-field="subs.1"
+                    data-no-preview="true"/>
+
+                <we-input string="Sub Category 3"
+                    data-uw-field="subs.2"
+                    data-no-preview="true"/>
+
+                <we-input string="Sub Category 4"
+                    data-uw-field="subs.3"
+                    data-no-preview="true"/>
+
+                <we-input string="Sub Category 5"
+                    data-uw-field="subs.4"
+                    data-no-preview="true"/>
+
+                <we-input string="Sub Category 6"
+                    data-uw-field="subs.5"
+                    data-no-preview="true"/>
+
+                <we-title>👁 Display</we-title>
+
+                <we-select string="Show Main Block" data-uw-field="showMain">
+                    <we-button data-uw-value="true">Yes</we-button>
+                    <we-button data-uw-value="false">No</we-button>
+                </we-select>
+
+                <we-select string="Show More Button" data-uw-field="showMore">
+                    <we-button data-uw-value="true">Yes</we-button>
+                    <we-button data-uw-value="false">No</we-button>
+                </we-select>
+
+                <we-select string="Image Quality" data-uw-field="imgSize">
+                    <we-button data-uw-value="image_256">Normal</we-button>
+                    <we-button data-uw-value="image_512">High</we-button>
+                    <we-button data-uw-value="image_1024">Ultra</we-button>
+                </we-select>
+
+                <we-title>🎨 Colors</we-title>
+
+                <we-input string="Section Background"
+                    data-uw-field="sectionBg"
+                    data-no-preview="true"
+                    placeholder="#f8f9fa"/>
+
+                <we-input string="Main Card Start"
+                    data-uw-field="mainBgStart"
+                    data-no-preview="true"
+                    placeholder="#1a365d"/>
+
+                <we-input string="Main Card End"
+                    data-uw-field="mainBgEnd"
+                    data-no-preview="true"
+                    placeholder="#2b6cb0"/>
+
+                <we-input string="Sub 1 Color"
+                    data-uw-field="subColors.0"
+                    data-no-preview="true"
+                    placeholder="#e0f2fe"/>
+
+                <we-input string="Sub 2 Color"
+                    data-uw-field="subColors.1"
+                    data-no-preview="true"
+                    placeholder="#dcfce7"/>
+
+                <we-input string="Sub 3 Color"
+                    data-uw-field="subColors.2"
+                    data-no-preview="true"
+                    placeholder="#f3e8ff"/>
+
+                <we-input string="Sub 4 Color"
+                    data-uw-field="subColors.3"
+                    data-no-preview="true"
+                    placeholder="#fee2e2"/>
+
+                <we-input string="Sub 5 Color"
+                    data-uw-field="subColors.4"
+                    data-no-preview="true"
+                    placeholder="#e0e7ff"/>
+
+                <we-input string="Sub 6 Color"
+                    data-uw-field="subColors.5"
+                    data-no-preview="true"
+                    placeholder="#fef9c3"/>
+
+                <we-input string="Button Color"
+                    data-uw-field="btnColor"
+                    data-no-preview="true"
+                    placeholder="#f7d117"/>
+
+                <we-input string="Button Text Color"
+                    data-uw-field="btnTextColor"
+                    data-no-preview="true"
+                    placeholder="#000000"/>
+
+                <we-title>🔄 Actions</we-title>
+
+                <we-button string="↺ Reload Products"
+                    data-uw-reload="true">
+                    ↺ Reload Products
+                </we-button>
+
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

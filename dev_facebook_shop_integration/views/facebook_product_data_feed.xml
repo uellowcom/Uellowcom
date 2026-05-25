@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_facebook_product_data_feed_list" model="ir.ui.view">
+        <field name="name">facebook.product.data.feed.list</field>
+        <field name="model">facebook.product.data.feed</field>
+        <field name="arch" type="xml">
+            <list string="Facebook Data Feed">
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_facebook_product_data_feed_form" model="ir.ui.view">
+        <field name="name">facebook.product.data.feed.form</field>
+        <field name="model">facebook.product.data.feed</field>
+        <field name="arch" type="xml">
+            <form string="Facebook Data Feed">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" required="1"/>
+                            <field name="feed_url" widget="CopyClipboardChar" options="{'string': 'Copy URL'}" class="w-100 pb-2"/>
+                            <field name="file_format"/>
+                            <button name="action_create_feed_token" string="Get URL" type="object"/>
+                        </group>
+                        <group>
+                            <field name="shop_model_name" invisible="1" />
+                            <field name="shop_model_id" widget="radio" options="{'horizontal': true}"/>
+                             <field
+                                name="shop_model_domain"
+                                widget="domain"
+                                options="{'model': 'shop_model_name', 'in_dialog': True}"
+                            />
+                        </group>
+                    </group>
+                    <notebook>
+                         <page string="Fields">
+                            <field name="shop_fields_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="field_id" domain="[('model', '=', parent.shop_model_name)]"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Configuration">
+                            <group>
+                                <field name="sale_pricelist_id"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_facebook_product_data_feed" model="ir.actions.act_window">
+        <field name="name">Facebook Data Feed</field>
+        <field name="res_model">facebook.product.data.feed</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="oe_view_nocontent_create">Click to create add new page.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_facebook_shop" name="Facebook Shop" sequence="27"/>
+
+    <menuitem action="action_facebook_product_data_feed"
+              id="fb_product_data_feed_menu"
+              name="Feed Configuration"
+              parent="menu_facebook_shop" sequence="1"/>
+</odoo>

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ── Pricing Rule List ─────────────────────────────────────────────── -->
+  <record id="view_carrier_pricing_rule_list" model="ir.ui.view">
+    <field name="name">carrier.pricing.rule.list</field>
+    <field name="model">carrier.pricing.rule</field>
+    <field name="arch" type="xml">
+      <list string="Carrier Pricing Rules" editable="bottom">
+        <field name="carrier_company_id"/>
+        <field name="zone_name"/>
+        <field name="governorate"/>
+        <field name="delivery_fee"          string="Del. Fee KD"/>
+        <field name="cash_commission_type"  string="Comm. Type"/>
+        <field name="cash_commission_value" string="Comm. Value"/>
+        <field name="cancel_fee_full"       string="Cancel Full KD"/>
+        <field name="cancel_fee_only"       string="Cancel Only KD"/>
+        <field name="return_fee"            string="Return KD"/>
+        <field name="exchange_fee"          string="Exchange KD"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- ── Pricing Rule Form ─────────────────────────────────────────────── -->
+  <record id="view_carrier_pricing_rule_form" model="ir.ui.view">
+    <field name="name">carrier.pricing.rule.form</field>
+    <field name="model">carrier.pricing.rule</field>
+    <field name="arch" type="xml">
+      <form string="Carrier Pricing Rule">
+        <sheet>
+          <group>
+            <group string="Zone">
+              <field name="carrier_company_id"/>
+              <field name="zone_name"/>
+              <field name="governorate"/>
+            </group>
+            <group string="Standard Delivery">
+              <field name="delivery_fee" string="Delivery Fee (KD)"/>
+              <field name="cash_commission_type"/>
+              <field name="cash_commission_value"
+                     string="Commission Value (% or KD)"/>
+            </group>
+          </group>
+          <group>
+            <group string="Failed / Cancellation">
+              <field name="cancel_fee_full"
+                     string="Option A — Full (delivery + cancel) KD"
+                     help="Used when delivery was attempted"/>
+              <field name="cancel_fee_only"
+                     string="Option B — Cancel only KD"
+                     help="Used when cancelled before pickup"/>
+            </group>
+            <group string="Return / Exchange">
+              <field name="return_fee"   string="Return Fee (KD)"/>
+              <field name="exchange_fee" string="Return/Exchange Fee (KD)"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- ── Inline view inside carrier company ───────────────────────────── -->
+  <record id="view_carrier_pricing_rule_inline" model="ir.ui.view">
+    <field name="name">carrier.pricing.rule.inline</field>
+    <field name="model">carrier.pricing.rule</field>
+    <field name="arch" type="xml">
+      <list string="Pricing Rules" editable="bottom">
+        <field name="zone_name"/>
+        <field name="governorate"/>
+        <field name="delivery_fee"          string="Del. Fee"/>
+        <field name="cash_commission_type"  string="Comm. Type"/>
+        <field name="cash_commission_value" string="Comm. %/KD"/>
+        <field name="cancel_fee_full"       string="Cancel Full"/>
+        <field name="cancel_fee_only"       string="Cancel Only"/>
+        <field name="return_fee"            string="Return"/>
+        <field name="exchange_fee"          string="Exchange"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- ── Action ────────────────────────────────────────────────────────── -->
+  <record id="action_carrier_pricing_rules" model="ir.actions.act_window">
+    <field name="name">Carrier Pricing Rules</field>
+    <field name="res_model">carrier.pricing.rule</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+
+
+<record id="view_delivery_trip_form" model="ir.ui.view">
+    <field name="name">delivery.trip.form</field>
+    <field name="model">delivery.trip</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_assign" string="Assign" type="object"
+                  invisible="state != 'draft'" class="btn-primary"/>
+          <button name="action_start" string="Start Trip" type="object"
+                  invisible="state != 'assigned'" class="btn-primary"/>
+          <button name="action_done" string="Mark Done" type="object"
+                  invisible="state != 'in_progress'" class="btn-success"/>
+          <button name="action_cancel" string="Cancel" type="object"
+                  invisible="state in ('done','cancelled')"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="draft,assigned,in_progress,done"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name" readonly="1"/></h1>
+          </div>
+          <group>
+            <group>
+              <field name="carrier_company_id" readonly="1"/>
+              <field name="date_trip" readonly="1"/>
+              <field name="line_count" string="Orders"/>
+            </group>
+            <group>
+              <field name="notes" readonly="1"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Orders" name="orders">
+              <field name="line_ids" readonly="1">
+                <list editable="bottom">
+                  <field name="sequence" widget="handle"/>
+                  <field name="sale_order_id"
+                         domain="[('delivery_carrier_company_id', '=', parent.carrier_company_id)]"
+                         options="{'no_create': True, 'no_quick_create': True}"/>
+                  <field name="driver_id" readonly="1"/>
+                  <field name="delivery_status" readonly="1"/>
+                  <field name="partner_name" readonly="1"/>
+                  <field name="amount_total" readonly="1"/>
+                  <field name="currency_id" column_invisible="True"/>
+                  <field name="payment_method_type" readonly="1"/>
+                  <field name="delivery_date_actual" readonly="1"/>
+                </list>
+              </field>
+            </page>
+          </notebook>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+<record id="view_delivery_trip_list" model="ir.ui.view">
+    <field name="name">delivery.trip.list</field>
+    <field name="model">delivery.trip</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name" readonly="1"/>
+        <field name="carrier_company_id" readonly="1"/>
+        <field name="date_trip" readonly="1"/>
+        <field name="line_count" readonly="1"/>
+        <field name="state" readonly="1"/>
+      </list>
+    </field>
+  </record>
+
+</odoo>

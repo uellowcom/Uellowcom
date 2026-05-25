@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_ltv_list" model="ir.ui.view">
+    <field name="name">uellow.customer.ltv.list</field>
+    <field name="model">uellow.customer.ltv</field>
+    <field name="arch" type="xml">
+      <list string="Customer LTV" decoration-danger="segment in ('lost','at_risk')" decoration-success="segment=='vip'">
+        <field name="partner_id"/><field name="segment" widget="badge"
+          decoration-success="segment=='vip'" decoration-info="segment=='active'"
+          decoration-warning="segment=='at_risk'" decoration-danger="segment in ('dormant','lost')"/>
+        <field name="ltv_score" string="LTV Score"/>
+        <field name="total_revenue"/><field name="order_count"/>
+        <field name="avg_order_value"/><field name="days_since_last_order"/>
+        <field name="churn_probability" string="Churn%"/>
+        <field name="last_order_date"/>
+      </list>
+    </field>
+  </record>
+  <record id="action_ltv" model="ir.actions.act_window">
+    <field name="name">Customer LTV</field><field name="res_model">uellow.customer.ltv</field>
+    <field name="view_mode">list,form</field>
+  </record>
+</odoo>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Fast Order Button on product page -->
+    <template id="zo_product_button" inherit_id="website_sale.product"
+              active="True" customize_show="True" name="ZOrder Fast Button">
+        <xpath expr="//div[@id='add_to_cart_wrap']" position="inside">
+            <div class="zo-wrap"
+                 style="display:inline-block;margin-top:8px;position:relative;vertical-align:middle;"
+                 t-att-data-template-id="product.id">
+                <span style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+                    background:#e53935;color:#fff;font-size:9px;font-weight:800;
+                    padding:2px 7px;border-radius:15px;white-space:nowrap;z-index:1;
+                    box-shadow:0 1px 4px rgba(229,57,53,.4)">
+                    <t t-if="request.lang.code.startswith('ar')">في 5 ثوانٍ</t>
+                    <t t-else="">in 5 Sec</t>
+                </span>
+                <button type="button" class="btn btn-primary zo-btn-open"
+                        style="font-weight:800;font-size:15px;white-space:nowrap;
+                               border:none;cursor:pointer;border-radius:8px;color:#3e2000;
+                               background:linear-gradient(135deg,#fdd835,#ffb300);
+                               box-shadow:0 4px 14px rgba(253,216,53,.45);">
+                    <i class="fa fa-bolt me-1"/>
+                    <t t-if="request.lang.code.startswith('ar')">طلب سريع</t>
+                    <t t-else="">Fast Order</t>
+                </button>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Load JS directly from static (bypasses bundle define() wrapper) -->
+    <template id="zo_script" inherit_id="website.layout"
+              active="True" name="ZOrder Script">
+        <xpath expr="//body" position="inside">
+            <script type="text/javascript" src="/zorder/static/src/js/zorder.js?v=2"/>
+        </xpath>
+    </template>
+
+</odoo>

@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Reviewer Profile List ── -->
+    <record id="view_reviewer_profile_list" model="ir.ui.view">
+        <field name="name">reviewer.profile.list</field>
+        <field name="model">reviewer.profile</field>
+        <field name="arch" type="xml">
+            <list string="الريفيورز" default_order="rating desc">
+                <field name="display_name"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'approved'"
+                       decoration-warning="state == 'pending'"
+                       decoration-danger="state in ('suspended','rejected')"/>
+                <field name="is_online" widget="boolean_toggle"/>
+                <field name="level"/>
+                <field name="rating"/>
+                <field name="review_count"/>
+                <field name="conversion_rate" string="التحويل %"/>
+                <field name="wallet_balance" string="المحفظة"/>
+                <field name="verified_purchase" widget="boolean"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Reviewer Profile Form ── -->
+    <record id="view_reviewer_profile_form" model="ir.ui.view">
+        <field name="name">reviewer.profile.form</field>
+        <field name="model">reviewer.profile</field>
+        <field name="arch" type="xml">
+            <form string="ريفيور">
+                <header>
+                    <button name="action_approve"  string="موافقة"  type="object" class="btn-primary"
+                            invisible="state != 'pending'"/>
+                    <button name="action_suspend"  string="إيقاف"   type="object" class="btn-warning"
+                            invisible="state != 'approved'"/>
+                    <button name="action_reject"   string="رفض"     type="object" class="btn-danger"
+                            invisible="state == 'rejected'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,approved,suspended"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button type="object" name="toggle_online" class="oe_stat_button" icon="fa-wifi">
+                            <field name="is_online" widget="boolean_toggle" string="أونلاين"/>
+                        </button>
+                    </div>
+                    <field name="avatar" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1><field name="display_name" placeholder="اسم الريفيور"/></h1>
+                    </div>
+                    <group>
+                        <group string="المعلومات الأساسية">
+                            <field name="partner_id"/>
+                            <field name="level" readonly="1"/>
+                            <field name="rating"/>
+                            <field name="review_count" readonly="1"/>
+                            <field name="conversion_rate" readonly="1" string="معدل التحويل %"/>
+                            <field name="verified"/>
+                            <field name="verified_purchase"/>
+                        </group>
+                        <group string="الأسعار">
+                            <field name="price_written"/>
+                            <field name="price_chat"/>
+                        </group>
+                    </group>
+                    <group string="التخصصات">
+                        <field name="specialty_ids" widget="many2many_tags"/>
+                        <field name="specialty_text" placeholder="مثال: موضة رجالي، إلكترونيات"/>
+                    </group>
+                    <group string="أنواع الجلسات المسموح بها">
+                        <field name="allow_written"/>
+                        <field name="allow_chat"/>
+                        <field name="allow_photo"/>
+                        <field name="allow_video"/>
+                    </group>
+                    <group string="النبذة الشخصية">
+                        <field name="bio" nolabel="1" placeholder="اكتب نبذة مختصرة..."/>
+                    </group>
+                    <group string="المالية">
+                        <field name="wallet_balance" readonly="1"/>
+                        <field name="total_earned" readonly="1"/>
+                        <field name="complaint_count" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="الطلبات">
+                            <field name="request_ids" readonly="1">
+                                <list>
+                                    <field name="token"/>
+                                    <field name="session_type"/>
+                                    <field name="state"/>
+                                    <field name="customer_id"/>
+                                    <field name="product_id"/>
+                                    <field name="reviewer_verdict"/>
+                                    <field name="create_date"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Review Requests List ── -->
+    <record id="view_review_request_list" model="ir.ui.view">
+        <field name="name">review.request.list</field>
+        <field name="model">review.request</field>
+        <field name="arch" type="xml">
+            <list string="طلبات المراجعة" default_order="create_date desc">
+                <field name="token"/>
+                <field name="reviewer_id"/>
+                <field name="customer_id"/>
+                <field name="product_id"/>
+                <field name="session_type"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'completed'"
+                       decoration-info="state == 'active'"
+                       decoration-warning="state == 'pending'"
+                       decoration-danger="state in ('expired','cancelled')"/>
+                <field name="reviewer_verdict"/>
+                <field name="fee"/>
+                <field name="commission_amt"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Commission List ── -->
+    <record id="view_reviewer_commission_list" model="ir.ui.view">
+        <field name="name">reviewer.commission.list</field>
+        <field name="model">reviewer.commission</field>
+        <field name="arch" type="xml">
+            <list string="العمولات">
+                <field name="reviewer_id"/>
+                <field name="period_start"/>
+                <field name="period_end"/>
+                <field name="request_count"/>
+                <field name="amount"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'paid'"
+                       decoration-warning="state == 'pending'"/>
+                <field name="paid_date"/>
+                <button name="action_mark_paid" string="تم الدفع" type="object"
+                        icon="fa-check" invisible="state == 'paid'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Settings Form ── -->
+    <record id="view_reviewer_settings_form" model="ir.ui.view">
+        <field name="name">reviewer.settings.form</field>
+        <field name="model">reviewer.settings</field>
+        <field name="arch" type="xml">
+            <form string="إعدادات الريفيورز">
+                <header>
+                    <button string="حفظ" type="object" name="execute" class="btn-primary"/>
+                    <button string="إلغاء" type="object" name="cancel" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="o_setting_container">
+                        <h2>إعدادات نظام الريفيورز</h2>
+
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="enabled" widget="boolean_toggle"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="enabled" string="تفعيل نظام الريفيورز"/>
+                            </div>
+                        </div>
+
+                        <h3 class="mt16">أنواع الجلسات</h3>
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane"><field name="allow_written" widget="boolean_toggle"/></div>
+                            <div class="o_setting_right_pane"><label for="allow_written" string="رأي مكتوب"/></div>
+                        </div>
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane"><field name="allow_chat" widget="boolean_toggle"/></div>
+                            <div class="o_setting_right_pane"><label for="allow_chat" string="شات مباشر"/></div>
+                        </div>
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane"><field name="allow_photo" widget="boolean_toggle"/></div>
+                            <div class="o_setting_right_pane"><label for="allow_photo" string="صورة + رأي"/></div>
+                        </div>
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane"><field name="allow_video" widget="boolean_toggle"/></div>
+                            <div class="o_setting_right_pane"><label for="allow_video" string="مكالمة فيديو (قيد التطوير)"/></div>
+                        </div>
+
+                        <h3 class="mt16">الحدود والمدد</h3>
+                        <group>
+                            <field name="max_reviewers_per_request"/>
+                            <field name="request_expiry_minutes"/>
+                            <field name="chat_duration_minutes"/>
+                        </group>
+
+                        <h3 class="mt16">العمولات</h3>
+                        <group>
+                            <field name="commission_written"/>
+                            <field name="commission_chat"/>
+                            <field name="commission_bonus_1h"/>
+                            <field name="commission_window_h"/>
+                            <field name="min_payout"/>
+                            <field name="payout_cycle"/>
+                        </group>
+
+                        <h3 class="mt16">الحماية والموافقة</h3>
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane"><field name="require_approval" widget="boolean_toggle"/></div>
+                            <div class="o_setting_right_pane"><label for="require_approval" string="موافقة يدوية على الريفيورز الجدد"/></div>
+                        </div>
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane"><field name="require_verified_purchase" widget="boolean_toggle"/></div>
+                            <div class="o_setting_right_pane"><label for="require_verified_purchase" string="اشتراط Verified Purchase"/></div>
+                        </div>
+                        <group>
+                            <field name="auto_suspend_complaints"/>
+                        </group>
+                        <div class="o_setting_box">
+                            <div class="o_setting_left_pane"><field name="share_tryon_with_reviewer" widget="boolean_toggle"/></div>
+                            <div class="o_setting_right_pane"><label for="share_tryon_with_reviewer" string="مشاركة Try-On مع الريفيور"/></div>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Actions ── -->
+    <record id="action_reviewer_profiles" model="ir.actions.act_window">
+        <field name="name">الريفيورز</field>
+        <field name="res_model">reviewer.profile</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_review_requests" model="ir.actions.act_window">
+        <field name="name">طلبات المراجعة</field>
+        <field name="res_model">review.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_reviewer_commissions" model="ir.actions.act_window">
+        <field name="name">العمولات</field>
+        <field name="res_model">reviewer.commission</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_reviewer_settings" model="ir.actions.act_window">
+        <field name="name">الإعدادات</field>
+        <field name="res_model">reviewer.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+    </record>
+
+    <!-- ── Menu ── -->
+    <menuitem id="menu_reviewers_root"
+              name="👥 Reviewers"
+              sequence="91"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_reviewers_list"
+              name="الريفيورز"
+              parent="menu_reviewers_root"
+              action="action_reviewer_profiles"
+              sequence="10"/>
+
+    <menuitem id="menu_review_requests"
+              name="الطلبات"
+              parent="menu_reviewers_root"
+              action="action_review_requests"
+              sequence="20"/>
+
+    <menuitem id="menu_reviewer_commissions"
+              name="العمولات"
+              parent="menu_reviewers_root"
+              action="action_reviewer_commissions"
+              sequence="30"/>
+
+    <menuitem id="menu_reviewer_settings"
+              name="الإعدادات"
+              parent="menu_reviewers_root"
+              action="action_reviewer_settings"
+              sequence="40"/>
+
+</odoo>

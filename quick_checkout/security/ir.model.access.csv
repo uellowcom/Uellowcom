@@ -1,4 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_quick_checkout_user,quick.checkout.user,model_quick_checkout,base.group_user,1,1,1,1
-access_quick_checkout_portal,quick.checkout.portal,model_quick_checkout,base.group_portal,1,0,1,0
-access_quick_checkout_public,quick.checkout.public,model_quick_checkout,base.group_public,1,0,1,0

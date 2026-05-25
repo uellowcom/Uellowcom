@@ -1,0 +1,81 @@
+# Translation: uellow_returns
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0?0:n==1?1:n==2?2:n%100>=3&&n%100<=10?3:n%100>=11&&n%100<=99?4:5;\n"
+#. module: uellow_returns
+#: model:ir.model,name:uellow_returns.model_uellow_return_request
+msgid "Return Request"
+msgstr "طلب إرجاع"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__reason__defective
+msgid "Defective / Damaged"
+msgstr "معطوب / تالف"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__reason__wrong_item
+msgid "Wrong Item Received"
+msgstr "منتج خاطئ"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__reason__changed_mind
+msgid "Changed Mind"
+msgstr "تغيير الرأي"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__state__submitted
+msgid "Submitted"
+msgstr "مُقدَّم"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__state__approved
+msgid "Approved"
+msgstr "معتمد"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__state__refunded
+msgid "Refunded"
+msgstr "مُسترد"
+
+#. module: uellow_returns
+#: model:ir.model.fields,field_description:uellow_returns.field_uellow_return_request__refund_amount
+msgid "Refund Amount"
+msgstr "مبلغ الاسترداد"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__refund_method__wallet
+msgid "Store Wallet"
+msgstr "محفظة المتجر"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__stock_destination__resell
+msgid "Return to Stock"
+msgstr "إعادة للمخزون"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__stock_destination__vendor
+msgid "Return to Vendor"
+msgstr "إرجاع للتاجر"
+
+#. module: uellow_returns
+#: model:ir.model.fields.selection,name:uellow_returns.selection__uellow_return_request__stock_destination__discard
+msgid "Discard"
+msgstr "إتلاف"
+
+#. module: uellow_returns
+#: model_terms:ir.ui.menu,name:uellow_returns.menu_returns_root
+msgid "Returns"
+msgstr "المرتجعات"
+
+#. module: uellow_returns
+#: model_terms:ir.ui.menu,name:uellow_returns.menu_returns
+msgid "Return Requests"
+msgstr "طلبات الإرجاع"
+
+#. module: uellow_returns
+#: model_terms:ir.ui.menu,name:uellow_returns.menu_return_config
+msgid "Return Policy"
+msgstr "سياسة الإرجاع"

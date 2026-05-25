@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+
+    <t t-name="dept_spotlight.s_dept_spotlight_options">
+        <div class="snippet-option-section">
+            <we-title>Department Spotlight</we-title>
+
+            <we-row>
+                <we-input
+                    string="Category IDs (comma-separated)"
+                    data-attribute-name="data-categ-ids"
+                    title="Leave empty = auto random. Add IDs from /dsp/category-helper"
+                    placeholder="e.g. 603,855,412"/>
+            </we-row>
+
+            <we-row>
+                <we-button
+                    string="🔗 Browse Categories"
+                    data-link="/dsp/category-helper"
+                    title="Open category list with IDs and product counts"/>
+            </we-row>
+
+            <we-row>
+                <we-input
+                    string="Badge AR"
+                    data-attribute-name="data-badge-ar"
+                    placeholder="عروض القسم"/>
+            </we-row>
+            <we-row>
+                <we-input
+                    string="Badge EN"
+                    data-attribute-name="data-badge-en"
+                    placeholder="Selected Deals"/>
+            </we-row>
+            <we-row>
+                <we-input
+                    string="CTA Label AR"
+                    data-attribute-name="data-cta-ar"
+                    placeholder="عرض الكل"/>
+            </we-row>
+            <we-row>
+                <we-input
+                    string="CTA Label EN"
+                    data-attribute-name="data-cta-en"
+                    placeholder="View All"/>
+            </we-row>
+        </div>
+    </t>
+
+</templates>

@@ -1,0 +1,86 @@
+<odoo noupdate="1">
+    <record id="shop_field_demo_1" model="shop.fields">
+        <field name="name">id</field>
+    </record>
+    <record id="shop_field_demo_2" model="shop.fields">
+        <field name="name">title</field>
+    </record>
+    <record id="shop_field_demo_3" model="shop.fields">
+        <field name="name">description</field>
+    </record>
+    <record id="shop_field_demo_4" model="shop.fields">
+        <field name="name">availability</field>
+    </record>
+    <record id="shop_field_demo_5" model="shop.fields">
+        <field name="name">condition</field>
+    </record>
+     <record id="shop_field_demo_6" model="shop.fields">
+        <field name="name">price</field>
+    </record>
+    <record id="shop_field_demo_7" model="shop.fields">
+        <field name="name">link</field>
+    </record>
+    <record id="shop_field_demo_8" model="shop.fields">
+        <field name="name">image_link</field>
+    </record>
+    <record id="shop_field_demo_9" model="shop.fields">
+        <field name="name">brand</field>
+    </record>
+    <record id="shop_field_demo_10" model="shop.fields">
+        <field name="name">quantity_to_sell_on_facebook</field>
+    </record>
+    <record id="shop_field_demo_11" model="shop.fields">
+        <field name="name">size</field>
+    </record>
+    <record id="shop_field_demo_12" model="shop.fields">
+        <field name="name">sale_price</field>
+    </record>
+    <record id="shop_field_demo_13" model="shop.fields">
+        <field name="name">sale_price_effective_date</field>
+    </record>
+     <record id="shop_field_demo_14" model="shop.fields">
+        <field name="name">item_group_id</field>
+    </record>
+    <record id="shop_field_demo_15" model="shop.fields">
+        <field name="name">status</field>
+    </record>
+    <record id="shop_field_demo_16" model="shop.fields">
+        <field name="name">additional_image_link</field>
+    </record>
+    <record id="shop_field_demo_17" model="shop.fields">
+        <field name="name">gtin</field>
+    </record>
+    <record id="shop_field_demo_18" model="shop.fields">
+        <field name="name">mpn</field>
+    </record>
+    <record id="shop_field_demo_19" model="shop.fields">
+        <field name="name">google_product_category</field>
+    </record>
+     <record id="shop_field_demo_20" model="shop.fields">
+        <field name="name">fb_product_category</field>
+    </record>
+    <record id="shop_field_demo_21" model="shop.fields">
+        <field name="name">shipping</field>
+    </record>
+     <record id="shop_field_demo_22" model="shop.fields">
+        <field name="name">shipping_weight</field>
+    </record>
+    <record id="shop_field_demo_23" model="shop.fields">
+        <field name="name">availability_date</field>
+    </record>
+    <record id="shop_field_demo_24" model="shop.fields">
+        <field name="name">cost_of_goods_sold</field>
+    </record>
+    <record id="shop_field_demo_25" model="shop.fields">
+        <field name="name">product_type</field>
+    </record>
+    <record id="shop_field_demo_26" model="shop.fields">
+        <field name="name">product_detail</field>
+    </record>
+     <record id="shop_field_demo_27" model="shop.fields">
+        <field name="name">video_url</field>
+    </record>
+    <record id="shop_field_demo_28" model="shop.fields">
+        <field name="name">rich_text_description</field>
+    </record>
+</odoo>

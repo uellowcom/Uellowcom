@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- خيارات الـ snippet في الـ sidebar -->
+    <template id="snippet_options" inherit_id="website.snippet_options">
+        <xpath expr="." position="inside">
+            <div data-js="UellowNewArrivals"
+                 data-selector=".s_uellow_new_arrivals">
+            </div>
+        </xpath>
+    </template>
+</odoo>

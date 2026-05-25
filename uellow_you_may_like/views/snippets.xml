@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         1. SNIPPET GROUP (category tab in the editor sidebar)
+    ══════════════════════════════════════════════════════════════════ -->
+    <template id="snippets_group_uellow"
+              inherit_id="website.snippets"
+              name="Uellow: Snippet Group">
+        <xpath expr="//t[@id='installed_snippets_hook']" position="after">
+            <t snippet-group="uellow"
+               t-snippet="website.s_snippet_group"
+               string="Uellow"/>
+        </xpath>
+    </template>
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         2. BLOCK TEMPLATE
+    ══════════════════════════════════════════════════════════════════ -->
+    <template id="s_uellow_you_may_like" name="You May Like">
+        <section class="s_uellow_you_may_like o_colored_level"
+                 data-snippet="s_uellow_you_may_like"
+                 data-name="You May Like">
+            <div class="uyw_wrap">
+
+                <div class="uyw_header">
+                    <h4 class="uyw_title">You May Like</h4>
+                    <a href="/shop" class="uyw_view_all">More →</a>
+                </div>
+
+                <div class="uyw_grid" id="uyw_grid"></div>
+
+                <div id="uyw_sentinel" style="height:1px;"></div>
+                <div class="uyw_footer_action">
+                    <div class="uyw_spinner" id="uyw_spinner" style="display:none;"></div>
+                    <button class="uyw_btn_more" id="uyw_btn_more" style="display:none;">Load More</button>
+                </div>
+
+            </div>
+        </section>
+    </template>
+
+
+    <!-- ══════════════════════════════════════════════════════════════
+         3. REGISTER BLOCK INSIDE THE GROUP
+    ══════════════════════════════════════════════════════════════════ -->
+    <template id="snippets_uellow_you_may_like"
+              inherit_id="website.snippets"
+              name="Uellow: You May Like Snippet">
+        <xpath expr="//snippets[@id='snippet_structure']" position="inside">
+            <t t-snippet="uellow_you_may_like.s_uellow_you_may_like"
+               t-thumbnail="/uellow_you_may_like/static/src/img/thumb_yml.svg"
+               string="You May Like"
+               group="uellow"/>
+        </xpath>
+    </template>
+
+</odoo>

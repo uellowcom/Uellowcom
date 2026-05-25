@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <data>
+    <record id="module_category_delivery_portal" model="ir.module.category">
+        <field name="name">Delivery Portal</field>
+        <field name="sequence">100</field>
+    </record>
+
+    <!-- Group: Carrier Manager (مسؤول شركة التوصيل) -->
+    <record id="group_carrier_manager" model="res.groups">
+        <field name="name">Carrier Manager</field>
+        <field name="category_id" ref="module_category_delivery_portal"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
+    </record>
+
+    <!-- Group: Carrier Driver (السائق) -->
+    <record id="group_carrier_driver" model="res.groups">
+        <field name="name">Carrier Driver</field>
+        <field name="category_id" ref="module_category_delivery_portal"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_portal'))]"/>
+    </record>
+  </data>
+</odoo>

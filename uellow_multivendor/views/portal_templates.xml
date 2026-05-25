@@ -1,0 +1,2186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- ══════════════════════════════════════════════════════════════════
+     BASE LAYOUT — Sidebar + Topbar (inherited by all vendor pages)
+═══════════════════════════════════════════════════════════════════ -->
+<template id="portal_vendor_layout" name="Vendor Portal Layout">
+  <t t-call="website.layout">
+    <t t-set="no_header" t-value="True"/>
+    <t t-set="no_footer" t-value="True"/>
+    <!-- Inject vendor portal CSS -->
+    <t t-set="head_vendor_css">
+      <style>
+        /* ── Reset portal header for vendor ── */
+        .o_main_navbar { display: none !important; }
+        header#top, #top, .tp-custom-header, .tp-preheader,
+        .tp-bottombar-component, footer, .o_footer,
+        [data-name="Header"], [data-name="Footer"],
+        #top_menu_collapse_mobile { display: none !important; }
+        body.o_portal { background: #f4f6f8 !important; padding: 0 !important; }
+        #wrapwrap { padding: 0 !important; margin: 0 !important; }
+
+        /* ── Topbar ── */
+        .vp-topbar {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+          height: 54px;
+          background: #fff;
+          border-bottom: 0.5px solid #e8e8e8;
+          display: flex; align-items: center;
+          padding: 0 16px; gap: 12px;
+        }
+        .vp-logo { font-size: 16px; font-weight: 600; color: #1A7A6E; flex-shrink: 0; }
+        .vp-logo span { font-weight: 400; color: #888; font-size: 12px; margin-left: 6px; }
+        .vp-spacer { flex: 1; }
+        .vp-tier-badge {
+          font-size: 10px; font-weight: 600; padding: 3px 9px;
+          border-radius: 20px; background: #faeeda; color: #854f0b;
+        }
+        .vp-notif-btn {
+          position: relative; width: 32px; height: 32px;
+          border-radius: 8px; border: 0.5px solid #e8e8e8;
+          background: transparent; cursor: pointer;
+          display: flex; align-items: center; justify-content: center;
+          color: #666; transition: all .15s;
+        }
+        .vp-notif-btn:hover { background: #f5f5f5; color: #333; }
+        .vp-notif-dot {
+          position: absolute; top: 4px; right: 4px;
+          width: 8px; height: 8px; border-radius: 50%;
+          background: #e24b4a; border: 2px solid #fff;
+          display: none;
+        }
+        .vp-notif-dot.show { display: block; animation: vp-pulse 1.5s infinite; }
+        @keyframes vp-pulse {
+          0% { box-shadow: 0 0 0 0 rgba(226,75,74,.4); }
+          70% { box-shadow: 0 0 0 5px rgba(226,75,74,0); }
+          100% { box-shadow: 0 0 0 0 rgba(226,75,74,0); }
+        }
+        .vp-avatar {
+          width: 30px; height: 30px; border-radius: 50%;
+          background: #1A7A6E; color: #fff;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 11px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+        }
+        .vp-hamburger {
+          display: flex; flex-direction: column; gap: 4px;
+          cursor: pointer; padding: 5px; border-radius: 6px;
+          transition: background .15s;
+        }
+        .vp-hamburger:hover { background: #f5f5f5; }
+        .vp-hamburger span {
+          width: 18px; height: 2px; background: #333;
+          border-radius: 2px; display: block; transition: all .25s;
+        }
+
+        /* ── Notification panel ── */
+        .vp-notif-panel {
+          position: fixed; top: 54px; right: 12px;
+          width: 300px; background: #fff;
+          border: 0.5px solid #e8e8e8; border-radius: 12px;
+          z-index: 2000; box-shadow: 0 8px 24px rgba(0,0,0,.08);
+          display: none;
+        }
+        .vp-notif-panel.open { display: block; animation: vp-slide-down .2s ease; }
+        @keyframes vp-slide-down {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .vp-notif-header {
+          padding: 10px 14px; border-bottom: 0.5px solid #f0f0f0;
+          display: flex; align-items: center; justify-content: space-between;
+        }
+        .vp-notif-title { font-size: 13px; font-weight: 600; color: #333; }
+        .vp-notif-clear { font-size: 11px; color: #1A7A6E; background: none; border: none; cursor: pointer; }
+        .vp-notif-item {
+          display: flex; gap: 8px; align-items: flex-start;
+          padding: 10px 14px; border-bottom: 0.5px solid #f8f8f8;
+          cursor: pointer; transition: background .1s;
+        }
+        .vp-notif-item:hover { background: #fafafa; }
+        .vp-notif-item.unread { background: #e8f5f3; }
+        .vp-ni-icon {
+          width: 30px; height: 30px; border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; flex-shrink: 0;
+        }
+        .vp-ni-text strong { font-size: 12px; font-weight: 600; display: block; color: #333; }
+        .vp-ni-text span { font-size: 11px; color: #888; }
+        .vp-ni-time { font-size: 10px; color: #aaa; flex-shrink: 0; margin-top: 2px; }
+
+        /* ── Layout ── */
+        .vp-layout {
+          display: flex;
+          padding-top: 54px;
+          min-height: 100vh;
+        }
+
+        /* ── Sidebar ── */
+        .vp-sidebar {
+          width: 220px; flex-shrink: 0;
+          background: #fff;
+          border-right: 0.5px solid #e8e8e8;
+          padding: 12px 0;
+          position: fixed;
+          top: 54px; left: 0; bottom: 0;
+          overflow-y: auto;
+          transition: transform .25s ease;
+          z-index: 900;
+        }
+        .vp-sidebar-label {
+          font-size: 10px; font-weight: 600;
+          letter-spacing: .07em; color: #aaa;
+          text-transform: uppercase;
+          padding: 10px 16px 5px;
+        }
+        .vp-nav-item {
+          display: flex; align-items: center; gap: 9px;
+          padding: 8px 12px;
+          border-radius: 8px;
+          font-size: 13px; color: #666;
+          cursor: pointer; transition: all .15s;
+          margin: 0 8px 1px;
+          text-decoration: none !important;
+        }
+        .vp-nav-item:hover { background: #f5f5f5; color: #333; }
+        .vp-nav-item.active { background: #e8f5f3; color: #1A7A6E; font-weight: 600; }
+        .vp-nav-item i { font-size: 16px; flex-shrink: 0; }
+        .vp-nav-badge {
+          margin-left: auto; background: #e24b4a; color: #fff;
+          font-size: 9px; padding: 1px 5px; border-radius: 20px;
+        }
+        .vp-nav-badge.green { background: #1A7A6E; }
+        .vp-sidebar-divider {
+          border: none; border-top: 0.5px solid #f0f0f0; margin: 6px 0;
+        }
+
+        /* ── Main content ── */
+        .vp-main {
+          flex: 1;
+          margin-left: 220px;
+          padding: 20px;
+          min-width: 0;
+          transition: margin-left .25s;
+        }
+
+        /* ── Breadcrumb ── */
+        .vp-breadcrumb {
+          display: flex; align-items: center; gap: 5px;
+          font-size: 12px; color: #aaa; margin-bottom: 16px;
+        }
+        .vp-breadcrumb a { color: #1A7A6E; text-decoration: none; }
+        .vp-breadcrumb a:hover { text-decoration: underline; }
+
+        /* ── Page header ── */
+        .vp-page-header {
+          display: flex; align-items: center; justify-content: space-between;
+          margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+        }
+        .vp-page-title { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+        .vp-page-sub { font-size: 13px; color: #888; margin-top: 2px; }
+
+        /* ── Stat cards ── */
+        .vp-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+        .vp-stat {
+          background: #f8f9fa; border-radius: 10px;
+          padding: 14px; cursor: pointer; transition: all .15s;
+          border: 0.5px solid transparent;
+        }
+        .vp-stat:hover { background: #fff; border-color: #e0e0e0; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+        .vp-stat-icon {
+          width: 32px; height: 32px; border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 16px; margin-bottom: 8px;
+        }
+        .vp-stat-val { font-size: 20px; font-weight: 700; color: #1a1a1a; }
+        .vp-stat-sub { font-size: 10px; font-weight: 600; margin-top: 1px; }
+        .vp-stat-lbl { font-size: 11px; color: #888; margin-top: 2px; }
+
+        /* ── Hero card ── */
+        .vp-hero {
+          background: #1A7A6E; border-radius: 12px;
+          padding: 20px; margin-bottom: 20px;
+          position: relative; overflow: hidden;
+        }
+        .vp-hero::before {
+          content: ''; position: absolute; right: -30px; top: -30px;
+          width: 120px; height: 120px; border-radius: 50%;
+          background: rgba(255,255,255,.05);
+        }
+        .vp-hero-content { position: relative; z-index: 1; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .vp-store-name { font-size: 20px; font-weight: 700; color: #fff; }
+        .vp-store-ar { font-size: 13px; color: rgba(255,255,255,.65); margin-top: 2px; }
+        .vp-hero-meta { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+        .vp-hero-meta span { font-size: 11px; color: rgba(255,255,255,.75); display: flex; align-items: center; gap: 4px; }
+        .vp-hero-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .vp-btn-white {
+          background: #fff; color: #1A7A6E; border: none;
+          padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;
+          cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+          transition: opacity .15s; text-decoration: none;
+        }
+        .vp-btn-white:hover { opacity: .9; color: #1A7A6E; }
+        .vp-btn-ghost {
+          background: rgba(255,255,255,.15); color: #fff; border: none;
+          padding: 6px 12px; border-radius: 8px; font-size: 12px;
+          cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+          transition: background .15s; text-decoration: none;
+        }
+        .vp-btn-ghost:hover { background: rgba(255,255,255,.25); color: #fff; }
+        .vp-live-badge {
+          display: inline-flex; align-items: center; gap: 5px;
+          background: rgba(255,255,255,.15); color: #fff;
+          font-size: 11px; padding: 3px 9px; border-radius: 20px;
+        }
+        .vp-live-dot {
+          width: 6px; height: 6px; border-radius: 50%; background: #4ade80;
+          animation: vp-blink 1.5s infinite;
+        }
+        @keyframes vp-blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        /* ── Refresh bar ── */
+        .vp-refresh-bar {
+          display: flex; align-items: center; gap: 8px;
+          font-size: 11px; color: #aaa; margin-bottom: 14px;
+        }
+        .vp-refresh-progress {
+          flex: 1; height: 2px; background: #eee; border-radius: 2px; overflow: hidden;
+        }
+        .vp-refresh-fill {
+          height: 100%; border-radius: 2px; background: #1A7A6E; transition: width linear;
+        }
+
+        /* ── Quick actions ── */
+        .vp-actions { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 20px; }
+        .vp-action {
+          background: #fff; border: 0.5px solid #e8e8e8;
+          border-radius: 12px; padding: 14px 10px;
+          text-align: center; cursor: pointer; transition: all .15s;
+          text-decoration: none !important; display: block;
+        }
+        .vp-action:hover { border-color: #1A7A6E; background: #e8f5f3; transform: translateY(-2px); }
+        .vp-action:hover .vp-action-icon { background: #1A7A6E; color: #fff; }
+        .vp-action-icon {
+          width: 36px; height: 36px; border-radius: 8px;
+          background: #f5f5f5; display: flex; align-items: center;
+          justify-content: center; font-size: 17px;
+          margin: 0 auto 7px; transition: all .15s; color: #666;
+        }
+        .vp-action-lbl { font-size: 11px; color: #666; font-weight: 600; }
+
+        /* ── Cards ── */
+        .vp-card {
+          background: #fff; border: 0.5px solid #e8e8e8;
+          border-radius: 12px; overflow: hidden; margin-bottom: 16px;
+        }
+        .vp-card-header {
+          padding: 12px 16px; border-bottom: 0.5px solid #f0f0f0;
+          display: flex; align-items: center; justify-content: space-between;
+        }
+        .vp-card-title { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+        .vp-card-link { font-size: 12px; color: #1A7A6E; text-decoration: none; }
+        .vp-card-link:hover { text-decoration: underline; }
+        .vp-card-body { padding: 16px; }
+
+        /* ── Charts ── */
+        .vp-chart-bars { display: flex; align-items: flex-end; gap: 5px; height: 72px; }
+        .vp-bar {
+          flex: 1; border-radius: 3px 3px 0 0;
+          background: #e8f5f3; transition: all .2s; cursor: pointer; min-width: 0;
+        }
+        .vp-bar:hover { background: #1A7A6E; }
+        .vp-bar.active { background: #1A7A6E; opacity: .9; }
+        .vp-bar-row { display: flex; gap: 5px; }
+        .vp-bar-lbl { flex: 1; font-size: 9px; color: #aaa; text-align: center; margin-top: 3px; }
+
+        /* ── Performance ── */
+        .vp-perf-row {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 8px 0; border-bottom: 0.5px solid #f5f5f5;
+        }
+        .vp-perf-row:last-child { border-bottom: none; }
+        .vp-perf-label { font-size: 12px; color: #666; }
+        .vp-perf-right { display: flex; align-items: center; gap: 8px; }
+        .vp-perf-val { font-size: 12px; font-weight: 700; }
+        .vp-perf-bar { width: 70px; height: 4px; background: #eee; border-radius: 2px; overflow: hidden; }
+        .vp-perf-fill { height: 100%; border-radius: 2px; background: #1A7A6E; }
+
+        /* ── Activity feed ── */
+        .vp-activity-item {
+          display: flex; gap: 9px; align-items: flex-start;
+          padding: 9px 0; border-bottom: 0.5px solid #f5f5f5;
+        }
+        .vp-activity-item:last-child { border-bottom: none; }
+        .vp-activity-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+        .vp-activity-text { flex: 1; font-size: 12px; color: #333; }
+        .vp-activity-time { font-size: 10px; color: #aaa; flex-shrink: 0; }
+
+        /* ── Tables ── */
+        .vp-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .vp-table th {
+          padding: 9px 14px; text-align: left;
+          font-size: 10px; font-weight: 700; letter-spacing: .05em;
+          color: #aaa; text-transform: uppercase;
+          background: #fafafa; border-bottom: 0.5px solid #f0f0f0;
+        }
+        .vp-table td { padding: 11px 14px; color: #333; border-bottom: 0.5px solid #f5f5f5; }
+        .vp-table tr:last-child td { border-bottom: none; }
+        .vp-table tr:hover td { background: #fafafa; }
+
+        /* ── Badges ── */
+        .vp-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+        .vp-b-ok { background: #e8f5f3; color: #0f5049; }
+        .vp-b-warn { background: #faeeda; color: #854f0b; }
+        .vp-b-err { background: #fcebeb; color: #a32d2d; }
+        .vp-b-info { background: #e6f1fb; color: #185fa5; }
+        .vp-b-gray { background: #f5f5f5; color: #666; }
+
+        /* ── Buttons ── */
+        .vp-btn-primary {
+          background: #1A7A6E; color: #fff; border: none;
+          padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+          cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+          transition: all .15s; text-decoration: none;
+        }
+        .vp-btn-primary:hover { background: #0f5049; color: #fff; }
+        .vp-btn-primary:active { transform: scale(.97); }
+        .vp-btn-outline {
+          background: transparent; color: #1A7A6E;
+          border: 0.5px solid #1A7A6E;
+          padding: 7px 14px; border-radius: 8px; font-size: 12px;
+          cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+          transition: all .15s; text-decoration: none;
+        }
+        .vp-btn-outline:hover { background: #e8f5f3; color: #1A7A6E; }
+        .vp-btn-sm { padding: 5px 10px; font-size: 11px; }
+
+        /* ── Stock bar ── */
+        .vp-stock-bar { height: 4px; background: #eee; border-radius: 2px; overflow: hidden; width: 80px; margin-top: 3px; }
+        .vp-stock-fill { height: 100%; border-radius: 2px; transition: width .3s; }
+
+        /* ── Forms ── */
+        .vp-form-group { margin-bottom: 14px; }
+        .vp-form-label { font-size: 12px; font-weight: 600; color: #333; margin-bottom: 5px; display: block; }
+        .vp-form-input {
+          width: 100%; padding: 8px 12px;
+          border: 0.5px solid #e0e0e0; border-radius: 8px;
+          background: #fff; font-size: 13px; color: #333;
+          outline: none; transition: border-color .15s;
+        }
+        .vp-form-input:focus { border-color: #1A7A6E; }
+        .vp-form-hint { font-size: 11px; color: #aaa; margin-top: 3px; }
+
+        /* ── Two column ── */
+        .vp-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+        /* ── Alert ── */
+        .vp-alert {
+          border-radius: 8px; padding: 10px 14px;
+          display: flex; align-items: center; gap: 8px;
+          font-size: 12px; margin-bottom: 14px;
+        }
+        .vp-alert-warn { background: #faeeda; color: #854f0b; border: 0.5px solid #fac775; }
+        .vp-alert-info { background: #e6f1fb; color: #185fa5; border: 0.5px solid #b5d4f4; }
+        .vp-alert-success { background: #e8f5f3; color: #0f5049; border: 0.5px solid #9fe1cb; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+          .vp-sidebar { transform: translateX(-100%); }
+          .vp-sidebar.open { transform: translateX(0); }
+          .vp-main { margin-left: 0; }
+          .vp-stats { grid-template-columns: 1fr 1fr; }
+          .vp-actions { grid-template-columns: 1fr 1fr; }
+          .vp-two-col { grid-template-columns: 1fr; }
+        }
+      </style>
+    </t>
+    <t t-out="head_vendor_css"/>
+
+    <!-- Force remove header/footer -->
+    <script>
+    (function(){
+      function clean(){
+        ['header#top','#top','.tp-custom-header','.tp-preheader',
+         '.tp-bottombar-component','footer','.o_footer',
+         '[data-name="Header"]','[data-name="Footer"]',
+         '#top_menu_collapse_mobile'].forEach(function(sel){
+          document.querySelectorAll(sel).forEach(function(el){ el.remove(); });
+        });
+        document.body.style.paddingTop = '0';
+        var w = document.getElementById('wrapwrap');
+        if(w){ w.style.paddingTop = '0'; }
+      }
+      clean();
+      document.addEventListener('DOMContentLoaded', clean);
+      window.addEventListener('load', clean);
+      setTimeout(clean, 500);
+      setTimeout(clean, 1500);
+    })();
+    </script>
+
+    <script>
+    (function(){
+      function rm(){
+        document.querySelectorAll('header,header#top,.tp-custom-header,.tp-preheader,.tp-bottombar-component,footer,.o_footer,[data-name="Header"],[data-name="Footer"],#top_menu_collapse_mobile').forEach(function(e){e.remove();});
+        document.body.style.cssText += 'padding:0!important;margin:0!important;';
+        var w=document.getElementById('wrapwrap');if(w)w.style.cssText+='padding:0!important;';
+      }
+      rm();
+      document.addEventListener('DOMContentLoaded',rm);
+      window.addEventListener('load',rm);
+      setTimeout(rm,300);setTimeout(rm,800);setTimeout(rm,2000);
+    })();
+    </script>
+    <!-- Topbar -->
+    <div class="vp-topbar">
+      <div class="vp-hamburger" id="vp-hamburger" onclick="vpToggleSidebar()" aria-label="Toggle menu">
+        <span id="vph1"></span><span id="vph2"></span><span id="vph3"></span>
+      </div>
+      <div class="vp-logo">Uellow <span>/ Vendor</span></div>
+      <div class="vp-spacer"></div>
+
+
+
+      <t t-if="vendor">
+        <span class="vp-tier-badge">
+          <t t-esc="vendor.tier.upper() if vendor.tier else 'VENDOR'"/>
+        </span>
+      </t>
+
+      <!-- Notifications -->
+      <div style="position:relative">
+        <button class="vp-notif-btn" onclick="vpToggleNotif()" aria-label="Notifications">
+          <i class="fa fa-bell" style="font-size:15px"></i>
+          <span class="vp-notif-dot" id="vp-notif-dot"></span>
+        </button>
+        <div class="vp-notif-panel" id="vp-notif-panel">
+          <div class="vp-notif-header">
+            <span class="vp-notif-title">Notifications
+              <span id="vp-notif-badge" style="background:#e24b4a;color:#fff;font-size:9px;padding:1px 5px;border-radius:20px;margin-left:4px;display:none"></span>
+            </span>
+            <button class="vp-notif-clear" onclick="vpClearNotif()">Mark all read</button>
+          </div>
+          <div id="vp-notif-list" style="max-height:280px;overflow-y:auto">
+            <div style="padding:24px;text-align:center;color:#aaa;font-size:12px">
+              <i class="fa fa-bell-o fa-2x" style="display:block;margin-bottom:6px;opacity:.3"></i>
+              No new notifications
+            </div>
+          </div>
+          <div style="padding:8px 14px;border-top:0.5px solid #f0f0f0;text-align:center">
+            <a href="/my/vendor/notifications" style="font-size:11px;color:#1A7A6E;text-decoration:none">View all</a>
+          </div>
+        </div>
+      </div>
+
+      <t t-if="vendor">
+        <div class="vp-avatar" title="Your store">
+          <t t-esc="(vendor.store_name_en or 'V')[:2].upper()"/>
+        </div>
+      </t>
+    </div>
+
+    <!-- Layout -->
+    <div class="vp-layout">
+
+      <!-- Sidebar -->
+      <nav class="vp-sidebar" id="vp-sidebar">
+        <div style="padding:0 8px">
+
+          <div class="vp-sidebar-label">Main</div>
+          <a class="vp-nav-item" t-attf-class="vp-nav-item #{page_name == 'vendor_dashboard' and 'active' or ''}"
+             href="/my/vendor">
+            <i class="fa fa-home"></i> Dashboard
+          </a>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_orders' and 'active' or ''}"
+             href="/my/vendor/orders">
+            <i class="fa fa-shopping-bag"></i> Orders
+          </a>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_products' and 'active' or ''}"
+             href="/my/vendor/products">
+            <i class="fa fa-box"></i> Products
+          </a>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_stock' and 'active' or ''}"
+             href="/my/vendor/stock">
+            <i class="fa fa-warehouse"></i> Stock / FBU
+          </a>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_wallet' and 'active' or ''}"
+             href="/my/vendor/wallet">
+            <i class="fa fa-wallet"></i> Wallet
+          </a>
+
+          <div class="vp-sidebar-label" style="margin-top:6px">Marketing</div>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_flash' and 'active' or ''}"
+             href="/my/vendor/flash-sale">
+            <i class="fa fa-bolt"></i> Flash Sales
+          </a>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_reviews' and 'active' or ''}"
+             href="/my/vendor/reviews">
+            <i class="fa fa-star"></i> Reviews
+          </a>
+
+          <div class="vp-sidebar-label" style="margin-top:6px">Store</div>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_settings' and 'active' or ''}"
+             href="/my/vendor/settings">
+            <i class="fa fa-cog"></i> Settings
+          </a>
+          <t t-if="vendor">
+            <a class="vp-nav-item"
+               t-attf-href="/store/#{vendor.store_slug}" target="_blank">
+              <i class="fa fa-external-link"></i> View Store
+            </a>
+          </t>
+
+          <hr class="vp-sidebar-divider"/>
+          <a href="/web/session/logout?redirect=/" class="vp-nav-item" style="color:#e24b4a">
+            <i class="fa fa-sign-out"></i> Sign out
+          </a>
+        </div>
+      </nav>
+
+      <!-- Main content area -->
+      <main class="vp-main" id="vp-main">
+        <t t-out="0"/>
+      </main>
+    </div>
+
+    <!-- Auto-refresh + notification polling script -->
+    <script>
+    (function(){
+      var sidebarOpen = window.innerWidth &gt; 768;
+      var notifOpen = false;
+      var refreshSec = 30;
+      var remaining = refreshSec;
+
+      // Init sidebar on mobile
+      if(window.innerWidth &lt;= 768){
+        var sb2=document.getElementById('vp-sidebar');
+        var mn=document.getElementById('vp-main');
+        if(sb2)sb2.style.transform='translateX(-100%)';
+        if(mn)mn.style.marginLeft='0';
+      }
+      var vov=document.createElement('div');
+      vov.id='vp-ov';vov.style.cssText='display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:800;';
+      vov.onclick=function(){if(sidebarOpen)window.vpToggleSidebar();};
+      document.body.appendChild(vov);
+      // Init sidebar on mobile
+      if(window.innerWidth &lt;= 768){
+        var sb = document.getElementById('vp-sidebar');
+        var main = document.getElementById('vp-main');
+        if(sb) sb.style.transform = 'translateX(-100%)';
+        if(main) main.style.marginLeft = '0';
+      }
+      // Overlay for mobile
+      var ov = document.createElement('div');
+      ov.id = 'vp-ov';
+      ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:800;';
+      ov.onclick = function(){ if(sidebarOpen) window.vpToggleSidebar(); };
+      document.body.appendChild(ov);
+
+      window.vpToggleSidebar = function(){
+        var sb = document.getElementById('vp-sidebar');
+        var main = document.getElementById('vp-main');
+        var h1 = document.getElementById('vph1');
+        var h2 = document.getElementById('vph2');
+        var h3 = document.getElementById('vph3');
+        sidebarOpen = !sidebarOpen;
+        var overlay = document.getElementById('vp-ov');
+        if(sidebarOpen){
+          sb.style.transform = '';
+          if(window.innerWidth &gt; 768) main.style.marginLeft = '220px';
+          else if(overlay) overlay.style.display = 'block';
+          if(h1){ h1.style.transform=''; h2.style.opacity='1'; h3.style.transform=''; }
+        } else {
+          sb.style.transform = 'translateX(-100%)';
+          if(window.innerWidth &gt; 768) main.style.marginLeft = '0';
+          if(overlay) overlay.style.display = 'none';
+          if(h1){ h1.style.transform='rotate(45deg) translate(4px,4px)'; h2.style.opacity='0'; h3.style.transform='rotate(-45deg) translate(4px,-4px)'; }
+        }
+      };
+
+      window.vpToggleNotif = function(){
+        notifOpen = !notifOpen;
+        var panel = document.getElementById('vp-notif-panel');
+        if(panel) panel.classList.toggle('open', notifOpen);
+      };
+
+      window.vpClearNotif = function(){
+        document.querySelectorAll('.vp-notif-item.unread').forEach(function(i){ i.classList.remove('unread'); });
+        var dot = document.getElementById('vp-notif-dot');
+        var badge = document.getElementById('vp-notif-badge');
+        if(dot) dot.classList.remove('show');
+        if(badge) badge.style.display = 'none';
+      };
+
+              if(notifOpen) window.vpToggleNotif();
+        }
+      });
+    })();
+    </script>
+  </t>
+</template>
+
+
+<template id="portal_vendor_dashboard" name="Vendor Dashboard">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_dashboard'"/>
+
+    <!-- Hero -->
+    <div style="border-radius:16px;padding:24px 28px;margin-bottom:16px;position:relative;overflow:hidden;background:#E1F5EE;border:0.5px solid #9FE1CB">
+      <svg style="position:absolute;inset:0;pointer-events:none" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="vp-dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="#9FE1CB" opacity="0.5"/></pattern>
+          <pattern id="vp-lines" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M0 40 L40 0" stroke="#9FE1CB" stroke-width="0.8" opacity="0.3"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#vp-lines)"/>
+        <rect width="100%" height="100%" fill="url(#vp-dots)"/>
+        <circle cx="85%" cy="-10" r="80" fill="#9FE1CB" opacity="0.15"/>
+        <circle cx="5%" cy="110%" r="50" fill="#9FE1CB" opacity="0.12"/>
+      </svg>
+      <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+        <div style="display:flex;gap:16px;align-items:flex-start">
+          <t t-if="vendor.logo_attachment_id">
+            <img t-attf-src="/web/content/#{vendor.logo_attachment_id.id}/datas" style="width:56px;height:56px;border-radius:14px;object-fit:cover;border:1.5px solid #9FE1CB;background:#fff"/>
+          </t>
+          <t t-else="">
+            <div style="width:56px;height:56px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500;color:#085041;border:1.5px solid #9FE1CB;flex-shrink:0">
+              <t t-esc="(vendor.store_name_en or 'U')[:1].upper()"/>
+            </div>
+          </t>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:20px;font-weight:500;color:#085041"><t t-esc="vendor.store_name_en or vendor.partner_id.name"/></span>
+              <t t-if="vendor.tier"><span style="background:#EEEDFE;color:#3C3489;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;text-transform:capitalize"><t t-esc="vendor.tier"/></span></t>
+              <span style="background:#fff;color:#085041;border:1px solid #9FE1CB;font-size:11px;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:50%;background:#1D9E75;display:inline-block"></span>Live</span>
+            </div>
+            <t t-if="vendor.store_name_ar"><div style="font-size:13px;color:#0F6E56;margin-top:2px"><t t-esc="vendor.store_name_ar"/></div></t>
+            <div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">
+              <span style="font-size:12px;color:#0F6E56"><i class="fa fa-star"></i> <t t-esc="'%.1f' % (vendor.avg_rating or 0)"/> rating</span>
+              <span style="font-size:12px;color:#0F6E56"><i class="fa fa-users"></i> <t t-esc="vendor.follower_count or 0"/> followers</span>
+              <span style="font-size:12px;color:#0F6E56"><i class="fa fa-map-marker"></i> Kuwait</span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:30px;font-weight:500;color:#085041"><t t-esc="'%.3f' % (vendor.wallet_balance or 0)"/> <span style="font-size:15px;color:#0F6E56">KD</span></div>
+          <div style="font-size:11px;color:#0F6E56;margin-top:2px">Wallet balance</div>
+          <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+            <a t-attf-href="/store/#{vendor.store_slug}" style="background:#fff;color:#085041;border:1px solid #9FE1CB;border-radius:8px;padding:6px 14px;font-size:12px;display:flex;align-items:center;gap:5px;text-decoration:none"><i class="fa fa-external-link"></i> View store</a>
+            <a href="/my/vendor/settings" style="background:#1A7A6E;color:#fff;border-radius:8px;padding:6px 14px;font-size:12px;display:flex;align-items:center;gap:5px;text-decoration:none"><i class="fa fa-edit"></i> Edit</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Row 1 -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px">
+      <a href="/my/vendor/wallet" style="background:#E1F5EE;border-radius:12px;padding:16px;text-decoration:none;display:block">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;color:#085041;margin-bottom:10px"><i class="fa fa-money fa-lg"></i></div>
+        <div style="font-size:22px;font-weight:500;color:#085041"><t t-esc="'%.3f' % (vendor.wallet_balance or 0)"/></div>
+        <div style="font-size:11px;color:#0F6E56;margin-top:4px">Wallet</div>
+        <div style="font-size:11px;color:#085041;margin-top:3px;font-weight:500">KD balance</div>
+      </a>
+      <a href="/my/vendor/orders" style="background:#FAEEDA;border-radius:12px;padding:16px;text-decoration:none;display:block">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;color:#633806;margin-bottom:10px"><i class="fa fa-shopping-bag fa-lg"></i></div>
+        <div style="font-size:22px;font-weight:500;color:#633806"><t t-esc="vendor.order_count or 0"/></div>
+        <div style="font-size:11px;color:#854F0B;margin-top:4px">Orders</div>
+        <div style="font-size:11px;color:#633806;margin-top:3px;font-weight:500"><t t-esc="'%.3f' % (vendor.total_sales or 0)"/> KD total</div>
+      </a>
+      <a href="/my/vendor/products" style="background:#E6F1FB;border-radius:12px;padding:16px;text-decoration:none;display:block">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;color:#0C447C;margin-bottom:10px"><i class="fa fa-cube fa-lg"></i></div>
+        <div style="font-size:22px;font-weight:500;color:#0C447C"><t t-esc="total_products or 0"/></div>
+        <div style="font-size:11px;color:#185FA5;margin-top:4px">Products</div>
+        <div style="font-size:11px;color:#0C447C;margin-top:3px;font-weight:500"><t t-esc="pending_products or 0"/> pending review</div>
+      </a>
+      <div style="background:#FBEAF0;border-radius:12px;padding:16px">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;color:#72243E;margin-bottom:10px"><i class="fa fa-star fa-lg"></i></div>
+        <div style="font-size:22px;font-weight:500;color:#72243E"><t t-esc="'%.1f' % (vendor.avg_rating or 0)"/></div>
+        <div style="font-size:11px;color:#993556;margin-top:4px">Rating</div>
+        <div style="font-size:11px;color:#72243E;margin-top:3px;font-weight:500">out of 5.0</div>
+      </div>
+    </div>
+
+    <!-- KPI Row 2 -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px">
+      <div style="background:#EEEDFE;border-radius:12px;padding:16px">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;color:#3C3489;margin-bottom:10px"><i class="fa fa-users fa-lg"></i></div>
+        <div style="font-size:22px;font-weight:500;color:#3C3489"><t t-esc="vendor.follower_count or 0"/></div>
+        <div style="font-size:11px;color:#534AB7;margin-top:4px">Followers</div>
+        <div style="font-size:11px;color:#3C3489;margin-top:3px;font-weight:500">Store followers</div>
+      </div>
+      <div style="background:#EAF3DE;border-radius:12px;padding:16px">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;color:#27500A;margin-bottom:10px"><i class="fa fa-trophy fa-lg"></i></div>
+        <div style="font-size:18px;font-weight:500;color:#27500A;text-transform:capitalize"><t t-esc="vendor.tier or '—'"/></div>
+        <div style="font-size:11px;color:#3B6D11;margin-top:4px">Vendor tier</div>
+        <div style="font-size:11px;color:#27500A;margin-top:3px;font-weight:500">Current level</div>
+      </div>
+      <a href="/my/vendor/stock" style="background:#FCEBEB;border-radius:12px;padding:16px;text-decoration:none;display:block">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;color:#791F1F;margin-bottom:10px"><i class="fa fa-exclamation-circle fa-lg"></i></div>
+        <div style="font-size:22px;font-weight:500;color:#791F1F"><t t-esc="low_stock_count or 0"/></div>
+        <div style="font-size:11px;color:#A32D2D;margin-top:4px">Low stock</div>
+        <div style="font-size:11px;color:#791F1F;margin-top:3px;font-weight:500">Need restock</div>
+      </a>
+      <div style="background:#F1EFE8;border-radius:12px;padding:16px">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;color:#444441;margin-bottom:10px"><i class="fa fa-times-circle fa-lg"></i></div>
+        <div style="font-size:22px;font-weight:500;color:#2C2C2A"><t t-esc="'%.1f' % (vendor.cancel_rate or 0)"/>%</div>
+        <div style="font-size:11px;color:#5F5E5A;margin-top:4px">Cancel rate</div>
+        <div style="font-size:11px;color:#444441;margin-top:3px;font-weight:500">All time</div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+      <a href="/my/vendor/orders" style="background:#fff;border:0.5px solid #e8e8e8;border-radius:10px;padding:12px 8px;text-align:center;text-decoration:none;display:block">
+        <div style="width:34px;height:34px;border-radius:8px;background:#FAEEDA;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;color:#633806"><i class="fa fa-shopping-bag"></i></div>
+        <div style="font-size:11px;font-weight:500;color:#666">Orders</div>
+      </a>
+      <a href="/my/vendor/flash-sale" style="background:#fff;border:0.5px solid #e8e8e8;border-radius:10px;padding:12px 8px;text-align:center;text-decoration:none;display:block">
+        <div style="width:34px;height:34px;border-radius:8px;background:#FBEAF0;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;color:#72243E"><i class="fa fa-bolt"></i></div>
+        <div style="font-size:11px;font-weight:500;color:#666">Flash Sale</div>
+      </a>
+      <a href="/my/vendor/wallet/payout" style="background:#fff;border:0.5px solid #e8e8e8;border-radius:10px;padding:12px 8px;text-align:center;text-decoration:none;display:block">
+        <div style="width:34px;height:34px;border-radius:8px;background:#E6F1FB;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;color:#0C447C"><i class="fa fa-download"></i></div>
+        <div style="font-size:11px;font-weight:500;color:#666">Payout</div>
+      </a>
+      <a href="/my/vendor/stock" style="background:#fff;border:0.5px solid #e8e8e8;border-radius:10px;padding:12px 8px;text-align:center;text-decoration:none;display:block">
+        <div style="width:34px;height:34px;border-radius:8px;background:#E1F5EE;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;color:#085041"><i class="fa fa-cubes"></i></div>
+        <div style="font-size:11px;font-weight:500;color:#666">Stock</div>
+      </a>
+    </div>
+
+    <!-- Sales Chart + Order Status -->
+    <div style="display:grid;grid-template-columns:7fr 5fr;gap:12px;margin-bottom:12px">
+      <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:0.5px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;font-weight:500;color:#1a1a1a"><i class="fa fa-bar-chart" style="color:#1A7A6E;margin-right:5px"></i>Sales &#8212; last 7 days</span>
+          <span style="font-size:11px;color:#888">KD</span>
+        </div>
+        <div style="padding:14px 16px">
+          <div style="display:flex;align-items:flex-end;gap:5px;height:80px">
+            <t t-foreach="['Sun','Mon','Tue','Wed','Thu','Fri','Sat']" t-as="day">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+                <div style="width:100%;border-radius:4px 4px 0 0;background:#9FE1CB;min-height:4px;height:20px"></div>
+                <span style="font-size:9px;color:#888"><t t-esc="day"/></span>
+              </div>
+            </t>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:0.5px solid #f0f0f0">
+            <div style="text-align:center">
+              <div style="font-size:16px;font-weight:500;color:#1a1a1a"><t t-esc="vendor.order_count or 0"/></div>
+              <div style="font-size:11px;color:#888">Total orders</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:16px;font-weight:500;color:#085041"><t t-esc="'%.3f' % (vendor.total_sales or 0)"/> KD</div>
+              <div style="font-size:11px;color:#888">Revenue</div>
+            </div>
+            <div style="text-align:center">
+              <div style="font-size:16px;font-weight:500;color:#1a1a1a">0.000 KD</div>
+              <div style="font-size:11px;color:#888">Avg order</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:0.5px solid #f0f0f0">
+          <span style="font-size:13px;font-weight:500;color:#1a1a1a"><i class="fa fa-circle" style="color:#1A7A6E;margin-right:5px;font-size:11px"></i>Order status</span>
+        </div>
+        <div style="padding:14px 16px">
+          <div style="display:flex;align-items:center;gap:16px;justify-content:center;padding:8px 0">
+            <svg width="90" height="90" viewBox="0 0 90 90">
+              <circle cx="45" cy="45" r="35" fill="none" stroke="#E1F5EE" stroke-width="14"/>
+              <circle cx="45" cy="45" r="35" fill="none" stroke="#1A7A6E" stroke-width="14" stroke-dasharray="0 220" stroke-linecap="round" transform="rotate(-90 45 45)"/>
+              <text x="45" y="50" text-anchor="middle" font-size="14" font-weight="500" fill="#085041"><t t-esc="vendor.order_count or 0"/></text>
+            </svg>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#666"><span style="width:8px;height:8px;border-radius:50%;background:#1A7A6E;display:inline-block"></span>Confirmed</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#666"><span style="width:8px;height:8px;border-radius:50%;background:#FAEEDA;border:1px solid #BA7517;display:inline-block"></span>Pending</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#666"><span style="width:8px;height:8px;border-radius:50%;background:#E6F1FB;border:1px solid #185FA5;display:inline-block"></span>Shipped</div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#666"><span style="width:8px;height:8px;border-radius:50%;background:#FCEBEB;border:1px solid #A32D2D;display:inline-block"></span>Cancelled</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Orders + Performance -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:0.5px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;font-weight:500;color:#1a1a1a"><i class="fa fa-clock-o" style="color:#1A7A6E;margin-right:5px"></i>Recent Orders</span>
+          <a href="/my/vendor/orders" style="font-size:12px;color:#1A7A6E;text-decoration:none">View all &#8594;</a>
+        </div>
+        <div style="padding:14px 16px">
+          <t t-if="recent_orders">
+            <t t-foreach="recent_orders" t-as="order">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid #f5f5f5">
+                <div>
+                  <div style="font-size:12px;font-weight:500;color:#1a1a1a"><t t-esc="order.name"/></div>
+                  <div style="font-size:11px;color:#888;margin-top:1px"><t t-esc="order.partner_id.name"/></div>
+                </div>
+                <div style="font-size:12px;font-weight:500;color:#085041"><t t-esc="'%.3f' % order.amount_total"/> KD</div>
+              </div>
+            </t>
+          </t>
+          <t t-else="">
+            <div style="text-align:center;padding:24px;color:#aaa;font-size:12px">
+              <i class="fa fa-shopping-bag" style="display:block;font-size:24px;margin-bottom:6px;opacity:.3"></i>No orders yet
+            </div>
+          </t>
+        </div>
+      </div>
+      <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:0.5px solid #f0f0f0">
+          <span style="font-size:13px;font-weight:500;color:#1a1a1a"><i class="fa fa-bar-chart" style="color:#1A7A6E;margin-right:5px"></i>Performance</span>
+        </div>
+        <div style="padding:14px 16px">
+          <t t-set="fulfil_pct" t-value="100 - (vendor.cancel_rate or 0)"/>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid #f5f5f5">
+            <span style="font-size:12px;color:#666">Order fulfilment</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:12px;font-weight:500;color:#085041"><t t-esc="'%.1f' % fulfil_pct"/>%</span>
+              <div style="width:80px;height:4px;background:#eee;border-radius:2px;overflow:hidden"><div t-attf-style="height:100%;border-radius:2px;background:#1A7A6E;width:#{min(fulfil_pct,100)}%"></div></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid #f5f5f5">
+            <span style="font-size:12px;color:#666">On-time delivery</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:12px;font-weight:500;color:#085041">100%</span>
+              <div style="width:80px;height:4px;background:#eee;border-radius:2px;overflow:hidden"><div style="height:100%;border-radius:2px;background:#1A7A6E;width:100%"></div></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid #f5f5f5">
+            <span style="font-size:12px;color:#666">Cancel rate</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:12px;font-weight:500"><t t-esc="'%.1f' % (vendor.cancel_rate or 0)"/>%</span>
+              <div style="width:80px;height:4px;background:#eee;border-radius:2px;overflow:hidden"><div t-attf-style="height:100%;border-radius:2px;background:#e24b4a;width:#{min(vendor.cancel_rate or 0,100)}%"></div></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid #f5f5f5">
+            <span style="font-size:12px;color:#666">Avg rating</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:12px;font-weight:500"><t t-esc="'%.1f' % (vendor.avg_rating or 0)"/> / 5</span>
+              <div style="width:80px;height:4px;background:#eee;border-radius:2px;overflow:hidden"><div t-attf-style="height:100%;border-radius:2px;background:#f59e0b;width:#{(vendor.avg_rating or 0)/5*100}%"></div></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:0.5px solid #f5f5f5">
+            <span style="font-size:12px;color:#666">Response rate</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:12px;font-weight:500;color:#888">&#8212;</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0">
+            <span style="font-size:12px;color:#666">Total sales</span>
+            <span style="font-size:12px;font-weight:500"><t t-esc="'%.3f' % (vendor.total_sales or 0)"/> KD</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Products + Recent Activity -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+      <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:0.5px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:13px;font-weight:500;color:#1a1a1a"><i class="fa fa-fire" style="color:#BA7517;margin-right:5px"></i>Top products</span>
+          <a href="/my/vendor/products" style="font-size:12px;color:#1A7A6E;text-decoration:none">View all &#8594;</a>
+        </div>
+        <div style="padding:14px 16px">
+          <t t-foreach="recent_products" t-as="product">
+            <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid #f5f5f5">
+              <t t-if="product.image_128">
+                <img t-attf-src="/web/image/product.template/#{product.id}/image_128" style="width:34px;height:34px;border-radius:8px;object-fit:cover;border:1px solid #eee"/>
+              </t>
+              <t t-else="">
+                <div style="width:34px;height:34px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa fa-box" style="color:#ccc"></i></div>
+              </t>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;font-weight:500;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><t t-esc="product.name"/></div>
+                <div style="font-size:11px;color:#0F6E56;margin-top:1px"><t t-esc="'%.3f' % product.list_price"/> KD</div>
+              </div>
+              <span t-attf-class="vp-badge #{product.vendor_approval_state == 'approved' and 'vp-b-ok' or product.vendor_approval_state == 'rejected' and 'vp-b-err' or 'vp-b-warn'}" style="font-size:10px;padding:2px 6px;border-radius:20px;font-weight:500;white-space:nowrap">
+                <t t-esc="product.vendor_approval_state == 'approved' and 'Live' or product.vendor_approval_state == 'rejected' and 'Rejected' or 'Pending'"/>
+              </span>
+            </div>
+          </t>
+          <t t-if="not recent_products">
+            <div style="text-align:center;padding:20px;color:#aaa;font-size:12px">
+              <i class="fa fa-box" style="display:block;font-size:20px;margin-bottom:4px;opacity:.3"></i>
+              <a href="/my/vendor/products/new" style="color:#1A7A6E">Add your first product</a>
+            </div>
+          </t>
+        </div>
+      </div>
+      <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:0.5px solid #f0f0f0">
+          <span style="font-size:13px;font-weight:500;color:#1a1a1a"><i class="fa fa-history" style="color:#185FA5;margin-right:5px"></i>Recent activity</span>
+        </div>
+        <div style="padding:14px 16px">
+          <div style="display:flex;gap:10px;padding:8px 0;border-bottom:0.5px solid #f5f5f5;align-items:flex-start">
+            <div style="width:30px;height:30px;border-radius:8px;background:#E1F5EE;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa fa-check-circle" style="color:#085041;font-size:14px"></i></div>
+            <div style="flex:1">
+              <div style="font-size:12px;font-weight:500;color:#1a1a1a">Account activated</div>
+              <div style="font-size:11px;color:#888;margin-top:1px">Store is live and ready</div>
+            </div>
+            <span style="font-size:10px;padding:2px 6px;border-radius:20px;background:#E1F5EE;color:#085041;font-weight:500;white-space:nowrap">Done</span>
+          </div>
+          <t t-if="recent_products">
+            <div style="display:flex;gap:10px;padding:8px 0;border-bottom:0.5px solid #f5f5f5;align-items:flex-start">
+              <div style="width:30px;height:30px;border-radius:8px;background:#FAEEDA;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa fa-box" style="color:#633806;font-size:14px"></i></div>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:500;color:#1a1a1a">Product submitted</div>
+                <div style="font-size:11px;color:#888;margin-top:1px"><t t-esc="recent_products[0].name"/> &#8212; pending review</div>
+              </div>
+              <span style="font-size:10px;padding:2px 6px;border-radius:20px;background:#FAEEDA;color:#633806;font-weight:500;white-space:nowrap">Pending</span>
+            </div>
+          </t>
+          <t t-if="vendor.tier">
+            <div style="display:flex;gap:10px;padding:8px 0;align-items:flex-start">
+              <div style="width:30px;height:30px;border-radius:8px;background:#EEEDFE;display:flex;align-items:center;justify-content:center;flex-shrink:0"><i class="fa fa-trophy" style="color:#3C3489;font-size:14px"></i></div>
+              <div style="flex:1">
+                <div style="font-size:12px;font-weight:500;color:#1a1a1a">Tier upgraded</div>
+                <div style="font-size:11px;color:#888;margin-top:1px">Welcome to <t t-esc="vendor.tier.title()"/></div>
+              </div>
+              <span style="font-size:10px;padding:2px 6px;border-radius:20px;background:#EEEDFE;color:#3C3489;font-weight:500;white-space:nowrap;text-transform:capitalize"><t t-esc="vendor.tier"/></span>
+            </div>
+          </t>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stock + Flash + Reviews -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:0.5px solid #f0f0f0">
+          <span style="font-size:13px;font-weight:500;color:#1a1a1a"><i class="fa fa-cubes" style="color:#1A7A6E;margin-right:5px"></i>Stock Summary</span>
+        </div>
+        <div style="padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:#E1F5EE;border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:18px;font-weight:500;color:#085041"><t t-esc="total_products or 0"/></div>
+            <div style="font-size:11px;color:#0F6E56;margin-top:2px">Total SKUs</div>
+          </div>
+          <div style="background:#FCEBEB;border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:18px;font-weight:500;color:#791F1F"><t t-esc="low_stock_count or 0"/></div>
+            <div style="font-size:11px;color:#A32D2D;margin-top:2px">Low stock</div>
+          </div>
+          <div style="background:#FAEEDA;border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:18px;font-weight:500;color:#633806"><t t-esc="pending_products or 0"/></div>
+            <div style="font-size:11px;color:#854F0B;margin-top:2px">Pending</div>
+          </div>
+          <div style="background:#E6F1FB;border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:18px;font-weight:500;color:#0C447C"><t t-esc="approved_products or 0"/></div>
+            <div style="font-size:11px;color:#185FA5;margin-top:2px">Approved</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:0.5px solid #f0f0f0">
+          <span style="font-size:13px;font-weight:500;color:#1a1a1a"><i class="fa fa-bolt" style="color:#993556;margin-right:5px"></i>Flash Sales</span>
+        </div>
+        <div style="padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:#FBEAF0;border-radius:8px;margin-bottom:8px">
+            <span style="font-size:12px;color:#72243E;font-weight:500">Active sales</span>
+            <span style="font-size:18px;font-weight:500;color:#72243E"><t t-esc="active_flash_sales or 0"/></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px;background:#F1EFE8;border-radius:8px;margin-bottom:10px">
+            <span style="font-size:12px;color:#444441;font-weight:500">Total sales</span>
+            <span style="font-size:18px;font-weight:500;color:#444441"><t t-esc="total_flash_sales or 0"/></span>
+          </div>
+          <a href="/my/vendor/flash-sale" style="display:block;text-align:center;background:#1A7A6E;color:#fff;border-radius:8px;padding:7px;font-size:12px;text-decoration:none"><i class="fa fa-plus"></i> New Flash Sale</a>
+        </div>
+      </div>
+      <div style="background:#fff;border:0.5px solid #e8e8e8;border-radius:12px;overflow:hidden">
+        <div style="padding:11px 16px;border-bottom:0.5px solid #f0f0f0">
+          <span style="font-size:13px;font-weight:500;color:#1a1a1a"><i class="fa fa-star" style="color:#BA7517;margin-right:5px"></i>Reviews</span>
+        </div>
+        <div style="padding:14px">
+          <div style="text-align:center;padding:8px 0">
+            <div style="font-size:36px;font-weight:500;color:#1a1a1a"><t t-esc="'%.1f' % (vendor.avg_rating or 0)"/></div>
+            <div style="display:flex;justify-content:center;gap:3px;margin:6px 0">
+              <t t-foreach="range(5)" t-as="s">
+                <i t-attf-class="fa fa-star" t-attf-style="color:#{s &lt; int(vendor.avg_rating or 0) and '#f59e0b' or '#ddd'};font-size:14px"></i>
+              </t>
+            </div>
+          </div>
+          <a href="/my/vendor/reviews" style="display:block;text-align:center;border:0.5px solid #e0e0e0;color:#1A7A6E;border-radius:8px;padding:6px;font-size:12px;text-decoration:none;margin-top:6px">View all reviews &#8594;</a>
+        </div>
+      </div>
+    </div>
+
+  </t>
+</template>
+
+
+
+<!-- ══ ORDERS ══════════════════════════════════════════════════════ -->
+<template id="portal_vendor_orders" name="Vendor Orders">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_orders'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Orders
+    </div>
+    <div class="vp-page-header">
+      <div><div class="vp-page-title">Orders</div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <a t-attf-href="/my/vendor/orders?state=all"   t-attf-class="vp-btn-outline vp-btn-sm #{state=='all' and 'vp-btn-primary' or ''}">All</a>
+        <a t-attf-href="/my/vendor/orders?state=sale"  t-attf-class="vp-btn-outline vp-btn-sm #{state=='sale' and 'vp-btn-primary' or ''}">Pending</a>
+        <a t-attf-href="/my/vendor/orders?state=done"  t-attf-class="vp-btn-outline vp-btn-sm #{state=='done' and 'vp-btn-primary' or ''}">Done</a>
+        <a t-attf-href="/my/vendor/orders?state=cancel" t-attf-class="vp-btn-outline vp-btn-sm #{state=='cancel' and 'vp-btn-primary' or ''}">Cancelled</a>
+      </div>
+    </div>
+    <div class="vp-card">
+      <table class="vp-table">
+        <thead>
+          <tr>
+            <th>Order</th><th>Date</th><th>Customer</th>
+            <th>Amount</th><th>Status</th><th>Delivery</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <t t-foreach="orders" t-as="order">
+            <t t-set="picking" t-value="order.picking_ids and order.picking_ids.filtered(lambda p: p.picking_type_code == 'outgoing') and order.picking_ids.filtered(lambda p: p.picking_type_code == 'outgoing')[0] or False"/>
+            <tr>
+              <td style="font-weight:700"><t t-esc="order.name"/></td>
+              <td style="font-size:11px;color:#888"><t t-esc="order.date_order.strftime('%d/%m/%Y')"/></td>
+              <td><t t-esc="order.partner_id.name"/></td>
+              <td style="font-weight:700;color:#1A7A6E"><t t-esc="'%.3f' % order.amount_total"/> KD</td>
+              <td>
+                <span t-attf-class="vp-badge #{order.state == 'done' and 'vp-b-ok' or order.state == 'cancel' and 'vp-b-err' or 'vp-b-warn'}">
+                  <t t-esc="order.state == 'sale' and 'Confirmed' or order.state == 'done' and 'Delivered' or order.state == 'cancel' and 'Cancelled' or order.state"/>
+                </span>
+              </td>
+              <td>
+                <t t-if="picking">
+                  <span t-attf-class="vp-badge #{picking.state == 'done' and 'vp-b-ok' or picking.state == 'assigned' and 'vp-b-info' or 'vp-b-warn'}">
+                    <t t-esc="picking.state == 'done' and 'Shipped' or picking.state == 'assigned' and 'Ready' or picking.state == 'confirmed' and 'Waiting' or picking.state"/>
+                  </span>
+                </t>
+                <t t-else=""><span style="color:#ccc;font-size:11px">—</span></t>
+              </td>
+              <td>
+                <div style="display:flex;gap:5px;flex-wrap:wrap">
+                  <t t-if="picking and picking.state == 'assigned'">
+                    <form t-attf-action="/my/vendor/orders/validate/#{picking.id}" method="post" style="display:inline">
+                      <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                      <button type="submit" class="vp-btn-primary vp-btn-sm">
+                        <i class="fa fa-check"></i> Validate
+                      </button>
+                    </form>
+                  </t>
+                  <t t-if="picking and picking.carrier_id">
+                    <a t-attf-href="/delivery_label/print/#{picking.id}" target="_blank" class="vp-btn-outline vp-btn-sm">
+                      <i class="fa fa-print"></i> Label
+                    </a>
+                  </t>
+                  <t t-if="picking and not picking.carrier_id and picking.state not in ('done','cancel')">
+                    <a t-attf-href="/my/vendor/orders/prepare/#{picking.id}" class="vp-btn-outline vp-btn-sm">
+                      <i class="fa fa-truck"></i> Prepare
+                    </a>
+                  </t>
+                </div>
+              </td>
+            </tr>
+          </t>
+          <t t-if="not orders">
+            <tr><td colspan="7" style="text-align:center;padding:32px;color:#aaa;font-size:12px">
+              <i class="fa fa-shopping-bag fa-2x" style="display:block;margin-bottom:6px;opacity:.2"></i>
+              No orders yet
+            </td></tr>
+          </t>
+        </tbody>
+      </table>
+    </div>
+  </t>
+</template>
+
+<!-- ══ STOCK ════════════════════════════════════════════════════════ -->
+<template id="portal_vendor_stock" name="Vendor Stock">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_stock'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Stock / FBU
+    </div>
+    <div class="vp-page-header">
+      <div><div class="vp-page-title">FBU Stock</div><div class="vp-page-sub">Monitor and manage your Fulfillment by Uellow inventory</div></div>
+      <a href="/my/vendor/stock/restock" class="vp-btn-primary">
+        <i class="fa fa-plus"></i> Request Restock
+      </a>
+    </div>
+
+    <!-- Stock stats -->
+    <div class="vp-stats" style="grid-template-columns:repeat(4,1fr)">
+      <div class="vp-stat">
+        <div class="vp-stat-icon" style="background:#e8f5f3;color:#0f5049"><i class="fa fa-box"></i></div>
+        <div class="vp-stat-val"><t t-esc="total_products"/></div>
+        <div class="vp-stat-lbl">Total Products</div>
+      </div>
+      <div class="vp-stat">
+        <div class="vp-stat-icon" style="background:#e6f1fb;color:#185fa5"><i class="fa fa-warehouse"></i></div>
+        <div class="vp-stat-val"><t t-esc="fbu_count"/></div>
+        <div class="vp-stat-lbl">In FBU</div>
+      </div>
+      <div class="vp-stat">
+        <div class="vp-stat-icon" style="background:#faeeda;color:#854f0b"><i class="fa fa-exclamation-circle"></i></div>
+        <div class="vp-stat-val"><t t-esc="low_count"/></div>
+        <div class="vp-stat-lbl">Low Stock</div>
+      </div>
+      <div class="vp-stat">
+        <div class="vp-stat-icon" style="background:#fcebeb;color:#a32d2d"><i class="fa fa-times-circle"></i></div>
+        <div class="vp-stat-val"><t t-esc="out_count"/></div>
+        <div class="vp-stat-lbl">Out of Stock</div>
+      </div>
+    </div>
+
+    <t t-if="low_count or out_count">
+      <div class="vp-alert vp-alert-warn">
+        <i class="fa fa-exclamation-triangle"></i>
+        <strong><t t-esc="low_count + out_count"/> products</strong> need attention.
+        <a href="/my/vendor/stock/restock" style="color:#854f0b;margin-left:auto;font-weight:600;text-decoration:none">Request restock →</a>
+      </div>
+    </t>
+
+    <div class="vp-card">
+      <div class="vp-card-header">
+        <span class="vp-card-title">Products</span>
+        <div style="display:flex;gap:6px">
+          <a href="?filter=all"   t-attf-class="vp-btn-outline vp-btn-sm #{filter=='all' and 'vp-btn-primary' or ''}">All</a>
+          <a href="?filter=low"   t-attf-class="vp-btn-outline vp-btn-sm #{filter=='low' and 'vp-btn-primary' or ''}">Low</a>
+          <a href="?filter=out"   t-attf-class="vp-btn-outline vp-btn-sm #{filter=='out' and 'vp-btn-primary' or ''}">Out</a>
+        </div>
+      </div>
+      <table class="vp-table">
+        <thead>
+          <tr><th>Product</th><th>FBU Stock</th><th>Vendor Stock</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          <t t-foreach="products" t-as="product">
+            <tr>
+              <td style="font-weight:600"><t t-esc="product.display_name"/></td>
+              <td>
+                <div style="font-weight:600"><t t-esc="int(product.qty_available or 0)"/> units</div>
+                <div class="vp-stock-bar">
+                  <div class="vp-stock-fill"
+                    t-attf-style="width:#{min((product.qty_available or 0)/20*100,100)}%;background:#{(product.qty_available or 0) > 5 and '#1A7A6E' or (product.qty_available or 0) > 0 and '#f59e0b' or '#e24b4a'}">
+                  </div>
+                </div>
+              </td>
+              <td style="color:#888"><t t-esc="int(product.vendor_qty or 0)"/></td>
+              <td>
+                <span t-attf-class="vp-badge #{product.fbu_state == 'on_hand' and 'vp-b-ok' or product.fbu_state == 'continue_selling' and 'vp-b-info' or 'vp-b-err'}">
+                  <t t-esc="product.fbu_state == 'on_hand' and 'On Hand' or product.fbu_state == 'continue_selling' and 'Continue Selling' or 'Out of Stock'"/>
+                </span>
+              </td>
+              <td>
+                <a t-attf-href="/my/vendor/stock/restock?product_id=#{product.id}" class="vp-btn-outline vp-btn-sm">
+                  <i class="fa fa-plus"></i> Restock
+                </a>
+              </td>
+            </tr>
+          </t>
+          <t t-if="not products">
+            <tr><td colspan="5" style="text-align:center;padding:24px;color:#aaa;font-size:12px">No products found</td></tr>
+          </t>
+        </tbody>
+      </table>
+    </div>
+  </t>
+</template>
+
+<!-- ══ RESTOCK REQUEST ═══════════════════════════════════════════════ -->
+<template id="portal_vendor_restock" name="Restock Request">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_stock'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i>
+      <a href="/my/vendor/stock">Stock</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Restock Request
+    </div>
+    <div class="vp-page-header">
+      <div class="vp-page-title">Request FBU Restock</div>
+    </div>
+    <div class="vp-card" style="max-width:600px">
+      <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-arrow-up"></i> Restock Details</span></div>
+      <div class="vp-card-body">
+        <form action="/my/vendor/stock/restock/submit" method="post">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Product</label>
+            <select name="product_id" class="vp-form-input">
+              <option value="">-- Select product --</option>
+              <t t-foreach="products" t-as="product">
+                <option t-att-value="product.id" t-att-selected="selected_product and selected_product.id == product.id">
+                  <t t-esc="product.display_name"/>
+                </option>
+              </t>
+            </select>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Quantity to send to FBU</label>
+            <input type="number" name="qty" class="vp-form-input" value="20" min="1" placeholder="Enter quantity"/>
+            <div class="vp-form-hint">Minimum: 5 units per shipment</div>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Priority</label>
+            <select name="priority" class="vp-form-input">
+              <option value="normal">Normal (3-5 business days)</option>
+              <option value="urgent">Urgent (1-2 business days)</option>
+            </select>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Notes (optional)</label>
+            <input type="text" name="notes" class="vp-form-input" placeholder="Any special instructions..."/>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button type="submit" class="vp-btn-primary"><i class="fa fa-check"></i> Submit Request</button>
+            <a href="/my/vendor/stock" class="vp-btn-outline"><i class="fa fa-arrow-left"></i> Back</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </t>
+</template>
+
+
+<!-- ══ WALLET ══════════════════════════════════════════════════════ -->
+<template id="portal_vendor_wallet" name="Vendor Wallet">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_wallet'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Wallet
+    </div>
+    <div class="vp-page-title" style="margin-bottom:16px">Wallet</div>
+
+    <!-- Balance hero -->
+    <div class="vp-hero" style="margin-bottom:16px">
+      <div class="vp-hero-content">
+        <div>
+          <div style="font-size:12px;color:rgba(255,255,255,.65)">Available Balance</div>
+          <div style="font-size:32px;font-weight:700;color:#fff;margin-top:4px">
+            <t t-esc="'%.3f' % (vendor.wallet_balance or 0)"/>
+            <span style="font-size:16px;opacity:.7"> KD</span>
+          </div>
+          <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:4px">
+            Pending: <t t-esc="'%.3f' % (vendor.wallet_id.pending_balance or 0)"/> KD
+          </div>
+          <div class="vp-hero-actions" id="payout">
+            <a href="/my/vendor/wallet/payout" class="vp-btn-white">
+              <i class="fa fa-download"></i> Request Payout
+            </a>
+            <a href="/my/vendor/wallet/statement" class="vp-btn-ghost">
+              <i class="fa fa-file-text"></i> Statement
+            </a>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:rgba(255,255,255,.6)">Total Earned</div>
+          <div style="font-size:20px;font-weight:700;color:#fff"><t t-esc="'%.3f' % (vendor.wallet_id.total_earned or 0)"/> KD</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wallet summary card -->
+    <div class="vp-card">
+      <div class="vp-card-header"><span class="vp-card-title">Recent Transactions</span></div>
+      <table class="vp-table">
+        <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr></thead>
+        <tbody>
+          <t t-foreach="transactions" t-as="txn">
+            <tr>
+              <td style="font-size:11px;color:#888"><t t-esc="txn.date"/></td>
+              <td><t t-esc="txn.description or txn.name or ''"/></td>
+              <td>
+                <span t-attf-class="vp-badge #{txn.tx_type == 'credit' and 'vp-b-ok' or 'vp-b-err'}">
+                  <t t-esc="txn.tx_type and txn.tx_type.title() or 'Credit'"/>
+                </span>
+              </td>
+              <td t-attf-style="font-weight:700;color:#{txn.tx_type == 'credit' and '#1A7A6E' or '#e24b4a'}">
+                <t t-esc="txn.tx_type == 'credit' and '+' or '-'"/>
+                <t t-esc="'%.3f' % txn.amount"/> KD
+              </td>
+            </tr>
+          </t>
+          <t t-if="not transactions">
+            <tr><td colspan="4" style="text-align:center;padding:24px;color:#aaa;font-size:12px">No transactions yet</td></tr>
+          </t>
+        </tbody>
+      </table>
+    </div>
+  </t>
+</template>
+
+<!-- ══ PAYOUT REQUEST ═══════════════════════════════════════════════ -->
+<template id="portal_vendor_payout" name="Payout Request">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_wallet'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i>
+      <a href="/my/vendor/wallet">Wallet</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Request Payout
+    </div>
+    <div class="vp-page-title" style="margin-bottom:16px">Request Payout</div>
+
+    <div class="vp-alert vp-alert-info">
+      <i class="fa fa-info-circle"></i>
+      Available balance: <strong><t t-esc="'%.3f' % (vendor.wallet_balance or 0)"/> KD</strong>
+    </div>
+
+    <div class="vp-card" style="max-width:560px">
+      <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-building"></i> Bank Details</span></div>
+      <div class="vp-card-body">
+        <form action="/my/vendor/wallet/payout/submit" method="post">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Amount to withdraw (KD)</label>
+            <input type="number" name="amount" class="vp-form-input"
+                   t-att-max="vendor.wallet_balance or 0"
+                   step="0.001" placeholder="0.000"/>
+            <div class="vp-form-hint">Maximum: <t t-esc="'%.3f' % (vendor.wallet_balance or 0)"/> KD</div>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Bank Name</label>
+            <input type="text" name="bank_name" class="vp-form-input"
+                   t-att-value="vendor.bank_name or ''" placeholder="e.g. NBK, Gulf Bank"/>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">IBAN</label>
+            <input type="text" name="iban" class="vp-form-input"
+                   t-att-value="vendor.bank_iban or ''" placeholder="KW81CBKU0000000000001234560101"/>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Account Holder Name</label>
+            <input type="text" name="account_name" class="vp-form-input"
+                   t-att-value="vendor.partner_id.name or ''" placeholder="Full name as on bank account"/>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button type="submit" class="vp-btn-primary"><i class="fa fa-paper-plane"></i> Submit Request</button>
+            <a href="/my/vendor/wallet" class="vp-btn-outline"><i class="fa fa-arrow-left"></i> Back</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </t>
+</template>
+
+<!-- ══ PRODUCTS ═════════════════════════════════════════════════════ -->
+<template id="portal_vendor_products" name="Vendor Products">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_products'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Products
+    </div>
+    <div class="vp-page-header">
+      <div class="vp-page-title">Products</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <!-- View toggle -->
+        <div style="display:flex;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden">
+          <a t-attf-href="/my/vendor/products?view=list"
+             t-attf-style="padding:6px 10px;background:#{(view_mode or 'list')!='grid' and '#1A7A6E' or '#fff'};color:#{(view_mode or 'list')!='grid' and '#fff' or '#666'};text-decoration:none">
+            <i class="fa fa-list"></i>
+          </a>
+          <a t-attf-href="/my/vendor/products?view=grid"
+             t-attf-style="padding:6px 10px;background:#{(view_mode or 'list')=='grid' and '#1A7A6E' or '#fff'};color:#{(view_mode or 'list')=='grid' and '#fff' or '#666'};text-decoration:none">
+            <i class="fa fa-th"></i>
+          </a>
+        </div>
+        <a href="/my/vendor/products/import" class="vp-btn-outline">
+          <i class="fa fa-upload"></i> Import
+        </a>
+        <a href="/my/vendor/products/new" class="vp-btn-primary">
+          <i class="fa fa-plus"></i> Add Product
+        </a>
+      </div>
+    </div>
+
+    <!-- LIST VIEW -->
+    <t t-if="(view_mode or 'list') != 'grid'">
+      <div class="vp-card">
+        <div style="overflow-x:auto">
+          <table class="vp-table" style="min-width:600px">
+            <thead>
+              <tr>
+                <th style="width:44px"></th>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Approval</th>
+                <th>Store</th>
+                <th>Submitted</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <t t-foreach="products" t-as="product">
+                <tr>
+                  <td style="padding:8px 6px">
+                    <t t-if="product.image_128">
+                      <img t-attf-src="/web/image/product.template/#{product.id}/image_128"
+                           style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid #eee"
+                           t-att-alt="product.name"/>
+                    </t>
+                    <t t-else="">
+                      <div style="width:36px;height:36px;border-radius:6px;background:#f5f5f5;display:flex;align-items:center;justify-content:center">
+                        <i class="fa fa-box" style="color:#ccc;font-size:14px"></i>
+                      </div>
+                    </t>
+                  </td>
+                  <td>
+                    <a t-attf-href="/my/vendor/products/edit/#{product.id}"
+                       style="font-weight:600;color:#1A7A6E;text-decoration:none">
+                      <t t-esc="product.name"/>
+                    </a>
+                    <t t-if="product.vendor_approval_state == 'rejected' and product.vendor_rejection_reason">
+                      <div style="font-size:11px;color:#e24b4a;margin-top:2px">
+                        <i class="fa fa-times-circle"></i> <t t-esc="product.vendor_rejection_reason"/>
+                      </div>
+                    </t>
+                  </td>
+                  <td style="color:#1A7A6E;font-weight:600;white-space:nowrap">
+                    <t t-esc="'%.3f' % product.list_price"/> KD
+                  </td>
+                  <td>
+                    <span t-attf-class="vp-badge #{product.vendor_approval_state == 'approved' and 'vp-b-ok' or product.vendor_approval_state == 'rejected' and 'vp-b-err' or 'vp-b-warn'}">
+                      <i t-attf-class="fa #{product.vendor_approval_state == 'approved' and 'fa-check-circle' or product.vendor_approval_state == 'rejected' and 'fa-times-circle' or 'fa-clock-o'}"></i>
+                      <t t-esc="product.vendor_approval_state == 'approved' and 'Approved' or product.vendor_approval_state == 'rejected' and 'Rejected' or 'Pending'"/>
+                    </span>
+                  </td>
+                  <td>
+                    <span t-attf-class="vp-badge #{product.website_published and 'vp-b-ok' or 'vp-b-gray'}">
+                      <t t-esc="product.website_published and 'Live' or 'Hidden'"/>
+                    </span>
+                  </td>
+                  <td style="font-size:11px;color:#aaa;white-space:nowrap">
+                    <t t-if="product.vendor_submitted_date">
+                      <t t-esc="product.vendor_submitted_date.strftime('%d/%m/%Y')"/>
+                    </t>
+                    <t t-else="">—</t>
+                  </td>
+                  <td>
+                    <div style="display:flex;gap:4px;flex-wrap:wrap">
+                      <a t-attf-href="/my/vendor/products/edit/#{product.id}" class="vp-btn-outline vp-btn-sm">
+                        <i class="fa fa-edit"></i>
+                      </a>
+                      <t t-if="product.vendor_approval_state == 'approved'">
+                        <form t-attf-action="/my/vendor/products/revoke/#{product.id}" method="post" style="display:inline">
+                          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                          <button type="submit" class="vp-btn-outline vp-btn-sm"
+                                  style="color:#854f0b;border-color:#fac775"
+                                  onclick="return confirm('Revoke this product?')">
+                            <i class="fa fa-undo"></i>
+                          </button>
+                        </form>
+                      </t>
+                      <t t-if="product.vendor_approval_state == 'rejected'">
+                        <a t-attf-href="/my/vendor/products/edit/#{product.id}"
+                           class="vp-btn-outline vp-btn-sm" style="color:#185fa5;border-color:#b5d4f4">
+                          <i class="fa fa-refresh"></i>
+                        </a>
+                      </t>
+                    </div>
+                  </td>
+                </tr>
+              </t>
+              <t t-if="not products">
+                <tr><td colspan="7" style="text-align:center;padding:32px;color:#aaa;font-size:12px">
+                  <i class="fa fa-box fa-2x" style="display:block;margin-bottom:6px;opacity:.2"></i>
+                  No products yet. <a href="/my/vendor/products/new" style="color:#1A7A6E">Add your first product</a>
+                </td></tr>
+              </t>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:10px 16px;border-top:0.5px solid #f0f0f0;display:flex;gap:12px;font-size:11px;color:#888;flex-wrap:wrap">
+          <span><span class="vp-badge vp-b-warn">Pending</span> Awaiting approval</span>
+          <span><span class="vp-badge vp-b-ok">Approved</span> Live on store</span>
+          <span><span class="vp-badge vp-b-err">Rejected</span> Edit and resubmit</span>
+        </div>
+      </div>
+    </t>
+
+    <!-- GRID VIEW -->
+    <t t-if="(view_mode or 'list') == 'grid'">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px">
+        <t t-foreach="products" t-as="product">
+          <div style="background:#fff;border-radius:12px;border:1px solid #eee;overflow:hidden">
+            <a t-attf-href="/my/vendor/products/edit/#{product.id}" style="display:block">
+              <div style="aspect-ratio:1;background:#f8f8f8;display:flex;align-items:center;justify-content:center;position:relative">
+                <t t-if="product.image_128">
+                  <img t-attf-src="/web/image/product.template/#{product.id}/image_256"
+                       style="width:100%;height:100%;object-fit:cover" t-att-alt="product.name"/>
+                </t>
+                <t t-else="">
+                  <i class="fa fa-box" style="font-size:32px;color:#ddd"></i>
+                </t>
+                <span t-attf-class="vp-badge #{product.vendor_approval_state == 'approved' and 'vp-b-ok' or product.vendor_approval_state == 'rejected' and 'vp-b-err' or 'vp-b-warn'}"
+                      style="position:absolute;top:5px;right:5px;font-size:9px">
+                  <t t-esc="product.vendor_approval_state == 'approved' and 'Live' or product.vendor_approval_state == 'rejected' and 'Rejected' or 'Pending'"/>
+                </span>
+              </div>
+            </a>
+            <div style="padding:8px">
+              <div style="font-size:12px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                <t t-esc="product.name"/>
+              </div>
+              <div style="font-size:12px;font-weight:700;color:#1A7A6E;margin-top:2px">
+                <t t-esc="'%.3f' % product.list_price"/> KD
+              </div>
+              <a t-attf-href="/my/vendor/products/edit/#{product.id}"
+                 class="vp-btn-outline vp-btn-sm" style="width:100%;justify-content:center;margin-top:6px;display:flex">
+                <i class="fa fa-edit"></i> Edit
+              </a>
+            </div>
+          </div>
+        </t>
+        <t t-if="not products">
+          <div style="grid-column:1/-1;text-align:center;padding:48px;color:#aaa">
+            <i class="fa fa-box fa-3x" style="display:block;margin-bottom:12px;opacity:.2"></i>
+            No products yet. <a href="/my/vendor/products/new" style="color:#1A7A6E">Add first</a>
+          </div>
+        </t>
+      </div>
+    </t>
+
+  </t>
+</template>
+
+<!-- ══ FLASH SALES ══════════════════════════════════════════════════ -->
+<template id="portal_vendor_flash_sale" name="Vendor Flash Sales">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_flash'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Flash Sales
+    </div>
+    <div class="vp-page-header">
+      <div class="vp-page-title">Flash Sales</div>
+      <a href="/my/vendor/flash-sale/new" class="vp-btn-primary"><i class="fa fa-plus"></i> New Flash Sale</a>
+    </div>
+    <div class="vp-card">
+      <table class="vp-table">
+        <thead><tr><th>Name</th><th>Discount</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+        <tbody>
+          <t t-foreach="flash_sales" t-as="sale">
+            <tr>
+              <td style="font-weight:600"><t t-esc="sale.name"/></td>
+              <td style="color:#e24b4a;font-weight:600"><t t-esc="int(sale.discount_pct or 0)"/>% OFF</td>
+              <td style="font-size:11px;color:#888"><t t-esc="sale.start_datetime"/></td>
+              <td style="font-size:11px;color:#888"><t t-esc="sale.end_datetime"/></td>
+              <td>
+                <span t-attf-class="vp-badge #{sale.state == 'active' and 'vp-b-ok' or sale.state == 'upcoming' and 'vp-b-info' or 'vp-b-gray'}">
+                  <t t-esc="sale.state.title() if sale.state else ''"/>
+                </span>
+              </td>
+            </tr>
+          </t>
+          <t t-if="not flash_sales">
+            <tr><td colspan="5" style="text-align:center;padding:32px;color:#aaa;font-size:12px">
+              <i class="fa fa-bolt fa-2x" style="display:block;margin-bottom:6px;opacity:.2"></i>
+              No flash sales yet. <a href="/my/vendor/flash-sale/new" style="color:#1A7A6E">Create your first</a>
+            </td></tr>
+          </t>
+        </tbody>
+      </table>
+    </div>
+  </t>
+</template>
+
+<!-- ══ FLASH SALE FORM ══════════════════════════════════════════════ -->
+<template id="portal_vendor_flash_sale_form" name="New Flash Sale">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_flash'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i>
+      <a href="/my/vendor/flash-sale">Flash Sales</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> New
+    </div>
+    <div class="vp-page-title" style="margin-bottom:16px">New Flash Sale</div>
+    <div class="vp-card" style="max-width:600px">
+      <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-bolt"></i> Flash Sale Details</span></div>
+      <div class="vp-card-body">
+        <form action="/my/vendor/flash-sale/create" method="post">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Sale Name (EN)</label>
+            <input type="text" name="name_en" class="vp-form-input" placeholder="e.g. Summer Electronics Sale" required="1"/>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Sale Name (AR)</label>
+            <input type="text" name="name_ar" class="vp-form-input" placeholder="مثال: تخفيضات الإلكترونيات الصيفية"/>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Discount Percentage</label>
+            <input type="number" name="discount_pct" class="vp-form-input" min="1" max="90" placeholder="20" required="1"/>
+            <div class="vp-form-hint">1% – 90%</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="vp-form-group">
+              <label class="vp-form-label">Start Date</label>
+              <input type="datetime-local" name="start_date" class="vp-form-input" required="1"/>
+            </div>
+            <div class="vp-form-group">
+              <label class="vp-form-label">End Date</label>
+              <input type="datetime-local" name="end_date" class="vp-form-input" required="1"/>
+            </div>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Apply to Products</label>
+            <select name="product_ids" class="vp-form-input" multiple="1" style="height:100px">
+              <t t-foreach="products" t-as="product">
+                <option t-att-value="product.id"><t t-esc="product.name"/></option>
+              </t>
+            </select>
+            <div class="vp-form-hint">Hold Ctrl to select multiple</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button type="submit" class="vp-btn-primary"><i class="fa fa-rocket"></i> Launch Flash Sale</button>
+            <a href="/my/vendor/flash-sale" class="vp-btn-outline"><i class="fa fa-arrow-left"></i> Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </t>
+</template>
+
+<!-- ══ SETTINGS ═════════════════════════════════════════════════════ -->
+<template id="portal_vendor_settings" name="Vendor Settings">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_settings'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Settings
+    </div>
+    <div class="vp-page-title" style="margin-bottom:16px">Store Settings</div>
+
+    <div class="vp-card" style="max-width:680px">
+      <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-store"></i> Store Information</span></div>
+      <div class="vp-card-body">
+        <form action="/my/vendor/settings/save" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="vp-form-group">
+              <label class="vp-form-label">Store Name (EN)</label>
+              <input type="text" name="store_name_en" class="vp-form-input" t-att-value="vendor.store_name_en or ''" required="1"/>
+            </div>
+            <div class="vp-form-group">
+              <label class="vp-form-label">Store Name (AR)</label>
+              <input type="text" name="store_name_ar" class="vp-form-input" t-att-value="vendor.store_name_ar or ''" dir="rtl"/>
+            </div>
+          </div>
+
+          <div class="vp-form-group">
+            <label class="vp-form-label">Store Description (EN)</label>
+            <textarea name="desc_en" class="vp-form-input" rows="3" placeholder="Describe your store in English..."><t t-esc="vendor.store_description_en or ''"/></textarea>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Store Description (AR)</label>
+            <textarea name="desc_ar" class="vp-form-input" rows="3" dir="rtl" placeholder="وصف متجرك بالعربية..."><t t-esc="vendor.store_description_ar or ''"/></textarea>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="vp-form-group">
+              <label class="vp-form-label">Tagline (EN)</label>
+              <input type="text" name="tagline_en" class="vp-form-input" t-att-value="vendor.store_tagline_en or ''" placeholder="e.g. Best electronics in Kuwait"/>
+            </div>
+            <div class="vp-form-group">
+              <label class="vp-form-label">Tagline (AR)</label>
+              <input type="text" name="tagline_ar" class="vp-form-input" t-att-value="vendor.store_tagline_ar or ''" dir="rtl" placeholder="أفضل إلكترونيات في الكويت"/>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="vp-form-group">
+              <label class="vp-form-label">Contact Phone</label>
+              <input type="text" name="contact_phone" class="vp-form-input" t-att-value="vendor.contact_phone or ''"/>
+            </div>
+            <div class="vp-form-group">
+              <label class="vp-form-label">Contact Email</label>
+              <input type="email" name="contact_email" class="vp-form-input" t-att-value="vendor.contact_email or ''"/>
+            </div>
+          </div>
+
+          <div class="vp-form-group">
+            <label class="vp-form-label">Brand Color</label>
+            <input type="color" name="brand_color" class="vp-form-input" style="height:40px;padding:4px"
+                   t-att-value="vendor.brand_color or '#1A7A6E'"/>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button type="submit" class="vp-btn-primary"><i class="fa fa-save"></i> Save Changes</button>
+            <a href="/my/vendor" class="vp-btn-outline"><i class="fa fa-arrow-left"></i> Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </t>
+</template>
+
+<!-- ══ PREPARE SHIPMENT ═════════════════════════════════════════════ -->
+<template id="portal_vendor_prepare" name="Prepare Shipment">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_orders'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i>
+      <a href="/my/vendor/orders">Orders</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Prepare Shipment
+    </div>
+    <div class="vp-page-title" style="margin-bottom:16px">Prepare Shipment</div>
+
+    <div class="vp-alert vp-alert-info" style="max-width:600px">
+      <i class="fa fa-info-circle"></i>
+      Order: <strong><t t-esc="picking.sale_id.name or picking.name"/></strong> —
+      <t t-esc="picking.partner_id.name"/> · <t t-esc="picking.partner_id.street or ''"/>
+    </div>
+
+    <div class="vp-card" style="max-width:560px">
+      <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-truck"></i> Shipment Details</span></div>
+      <div class="vp-card-body">
+        <form t-attf-action="/my/vendor/orders/prepare/#{picking.id}/save" method="post">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Shipping Carrier</label>
+            <select name="carrier_id" class="vp-form-input">
+              <option value="">-- Select carrier --</option>
+              <t t-foreach="carriers" t-as="carrier">
+                <option t-att-value="carrier.id"><t t-esc="carrier.name"/></option>
+              </t>
+            </select>
+          </div>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Tracking Number (optional)</label>
+            <input type="text" name="tracking_ref" class="vp-form-input"
+                   t-att-value="picking.carrier_tracking_ref or ''"
+                   placeholder="Enter tracking number from carrier"/>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button type="submit" class="vp-btn-primary"><i class="fa fa-print"></i> Save &amp; Print Label</button>
+            <a href="/my/vendor/orders" class="vp-btn-outline"><i class="fa fa-arrow-left"></i> Back</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </t>
+</template>
+
+<!-- ══ STORE PUBLIC PAGE ════════════════════════════════════════════ -->
+<template id="store_page" name="Vendor Store">
+  <t t-call="website.layout">
+    <div class="container py-5" style="max-width:1200px">
+      <!-- Store header -->
+      <div style="background:#1A7A6E;border-radius:16px;padding:32px;margin-bottom:32px;position:relative;overflow:hidden">
+        <div style="position:relative;z-index:1">
+          <h1 style="color:#fff;font-size:28px;font-weight:700;margin-bottom:4px">
+            <t t-esc="vendor.store_name_en"/>
+          </h1>
+          <t t-if="vendor.store_name_ar">
+            <div style="color:rgba(255,255,255,.7);font-size:16px;margin-bottom:12px">
+              <t t-esc="vendor.store_name_ar"/>
+            </div>
+          </t>
+          <t t-if="vendor.store_tagline_en">
+            <div style="color:rgba(255,255,255,.8);font-size:14px;margin-bottom:12px">
+              <t t-esc="vendor.store_tagline_en"/>
+            </div>
+          </t>
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <span style="color:rgba(255,255,255,.75);font-size:13px">
+              <i class="fa fa-star" style="color:#fbbf24"></i>
+              <t t-esc="'%.1f' % (vendor.avg_rating or 0)"/> rating
+            </span>
+            <span style="color:rgba(255,255,255,.75);font-size:13px">
+              <i class="fa fa-users"></i>
+              <t t-esc="vendor.follower_count or 0"/> followers
+            </span>
+            <span style="color:rgba(255,255,255,.75);font-size:13px">
+              <i class="fa fa-box"></i>
+              <t t-esc="len(products)"/> products
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products grid -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">
+        <t t-foreach="products" t-as="product">
+          <a t-att-href="product.website_url" style="text-decoration:none">
+            <div style="background:#fff;border-radius:12px;border:0.5px solid #e8e8e8;overflow:hidden;transition:all .15s"
+                 onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 16px rgba(0,0,0,.08)'"
+                 onmouseout="this.style.transform='';this.style.boxShadow=''">
+              <div style="aspect-ratio:1;background:#f8f8f8;display:flex;align-items:center;justify-content:center">
+                <t t-if="product.image_128">
+                  <img t-attf-src="/web/image/product.template/#{product.id}/image_256"
+                       style="width:100%;height:100%;object-fit:cover" t-att-alt="product.name"/>
+                </t>
+                <t t-else="">
+                  <i class="fa fa-box" style="font-size:32px;color:#ddd"></i>
+                </t>
+              </div>
+              <div style="padding:12px">
+                <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  <t t-esc="product.name"/>
+                </div>
+                <div style="font-size:15px;font-weight:700;color:#1A7A6E">
+                  <t t-esc="'%.3f' % product.list_price"/> KD
+                </div>
+              </div>
+            </div>
+          </a>
+        </t>
+        <t t-if="not products">
+          <div style="grid-column:1/-1;text-align:center;padding:48px;color:#aaa">
+            <i class="fa fa-box fa-3x" style="display:block;margin-bottom:12px;opacity:.2"></i>
+            No products available yet.
+          </div>
+        </t>
+      </div>
+    </div>
+  </t>
+</template>
+
+<template id="portal_vendor_product_manual" name="Add Product Manually">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_products'"/>
+    <div class="vp-breadcrumb">
+      <a href="/my/vendor">Dashboard</a>
+      <i class="fa fa-chevron-right" style="font-size:9px"></i>
+      <a href="/my/vendor/products">Products</a>
+      <i class="fa fa-chevron-right" style="font-size:9px"></i>
+      <t t-if="product"><t t-esc="product.name"/></t>
+      <t t-else="">Add Product</t>
+    </div>
+    <div class="vp-page-title" style="margin-bottom:16px">
+      <t t-if="product">Edit Product</t>
+      <t t-else="">Add New Product</t>
+    </div>
+
+    <t t-set="form_action" t-value="'/my/vendor/products/manual/submit' if not product else '/my/vendor/products/edit/%d/submit' % product.id"/>
+
+    <form t-att-action="form_action" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+      <div class="vp-two-col" style="align-items:start">
+
+        <!-- Left column -->
+        <div>
+          <!-- Basic Info -->
+          <div class="vp-card" style="margin-bottom:14px">
+            <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-info-circle"></i> Basic Information</span></div>
+            <div class="vp-card-body">
+              <div class="vp-form-group">
+                <label class="vp-form-label">Product Name (English) *</label>
+                <input type="text" name="name_en" class="vp-form-input" required="1"
+                       t-att-value="product.name if product else ''"
+                       placeholder="e.g. iPhone 15 Pro"/>
+              </div>
+              <div class="vp-form-group">
+                <label class="vp-form-label">Product Name (Arabic)</label>
+                <input type="text" name="name_ar" class="vp-form-input" dir="rtl"
+                       t-att-value="product.name if product else ''"
+                       placeholder="مثال: آيفون 15 برو"/>
+              </div>
+              <div class="vp-form-group">
+                <label class="vp-form-label">Category</label>
+                <select name="categ_id" class="vp-form-input">
+                  <option value="">-- Select Category --</option>
+                  <t t-foreach="categories" t-as="cat">
+                    <option t-att-value="cat.id"
+                            t-att-selected="product and product.categ_id.id == cat.id">
+                      <t t-esc="cat.name"/>
+                    </option>
+                  </t>
+                </select>
+              </div>
+              <div class="vp-form-group">
+                <label class="vp-form-label">Barcode / SKU</label>
+                <input type="text" name="barcode" class="vp-form-input"
+                       t-att-value="product.barcode if product else ''"
+                       placeholder="e.g. 190199524092"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pricing -->
+          <div class="vp-card" style="margin-bottom:14px">
+            <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-tag"></i> Pricing</span></div>
+            <div class="vp-card-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                <div class="vp-form-group">
+                  <label class="vp-form-label">Sale Price (KD) *</label>
+                  <input type="number" name="list_price" class="vp-form-input"
+                         step="0.001" min="0" required="1"
+                         t-att-value="'%.3f' % product.list_price if product else '0.000'"
+                         placeholder="0.000"/>
+                </div>
+                <div class="vp-form-group">
+                  <label class="vp-form-label">Cost Price (KD)</label>
+                  <input type="number" name="standard_price" class="vp-form-input"
+                         step="0.001" min="0"
+                         t-att-value="'%.3f' % product.standard_price if product else '0.000'"
+                         placeholder="0.000"/>
+                </div>
+              </div>
+              <div class="vp-form-group">
+                <label class="vp-form-label">Initial Stock Quantity</label>
+                <input type="number" name="qty" class="vp-form-input" min="0" value="0"/>
+                <div class="vp-form-hint">Leave 0 if managed by FBU</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="vp-card">
+            <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-align-left"></i> Description</span></div>
+            <div class="vp-card-body">
+              <div class="vp-form-group">
+                <label class="vp-form-label">Description (English)</label>
+                <textarea name="description_en" class="vp-form-input" rows="4"
+                          placeholder="Product description in English..."><t t-if="product"><t t-esc="product.description_sale or ''"/></t></textarea>
+              </div>
+              <div class="vp-form-group">
+                <label class="vp-form-label">Description (Arabic)</label>
+                <textarea name="description_ar" class="vp-form-input" rows="4" dir="rtl"
+                          placeholder="وصف المنتج بالعربية..."><t t-if="product"><t t-esc="product.description or ''"/></t></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div>
+          <!-- Main Image -->
+          <div class="vp-card" style="margin-bottom:14px">
+            <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-image"></i> Main Image</span></div>
+            <div class="vp-card-body">
+              <t t-if="product and product.image_128">
+                <div style="margin-bottom:10px;text-align:center">
+                  <img t-attf-src="/web/image/product.template/#{product.id}/image_256"
+                       style="max-width:160px;border-radius:8px;border:1px solid #eee"/>
+                </div>
+              </t>
+              <div class="vp-form-group">
+                <label class="vp-form-label">Upload Main Image</label>
+                <input type="file" name="image" class="vp-form-input" accept="image/*"/>
+                <div class="vp-form-hint">JPG, PNG, WebP — Max 5MB</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extra Images Gallery -->
+          <div class="vp-card" style="margin-bottom:14px">
+            <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-images"></i> Gallery Images</span></div>
+            <div class="vp-card-body">
+              <t t-if="product and product.product_template_image_ids">
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+                  <t t-foreach="product.product_template_image_ids" t-as="img">
+                    <img t-attf-src="/web/image/product.image/#{img.id}/image_256"
+                         style="width:54px;height:54px;border-radius:6px;object-fit:cover;border:1px solid #eee"/>
+                  </t>
+                </div>
+              </t>
+              <div class="vp-form-group">
+                <label class="vp-form-label">Upload Gallery Images</label>
+                <input type="file" name="extra_images" class="vp-form-input"
+                       accept="image/*" multiple="1"/>
+                <div class="vp-form-hint">Select multiple images at once — max 10 images</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Attributes (Brand, Color, etc.) -->
+          <div class="vp-card" style="margin-bottom:14px">
+            <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-tags"></i> Product Attributes</span></div>
+            <div class="vp-card-body">
+              <t t-foreach="attributes" t-as="attr">
+                <div class="vp-form-group">
+                  <label class="vp-form-label"><t t-esc="attr.name"/></label>
+                  <t t-if="attr.display_type == 'select' or attr.display_type == 'radio'">
+                    <select t-attf-name="attr_#{attr.id}" class="vp-form-input">
+                      <option value="">-- Select <t t-esc="attr.name"/> --</option>
+                      <t t-foreach="attr.value_ids" t-as="val">
+                        <option t-att-value="val.id"><t t-esc="val.name"/></option>
+                      </t>
+                    </select>
+                  </t>
+                  <t t-else="">
+                    <input type="text" t-attf-name="attr_text_#{attr.id}"
+                           class="vp-form-input"
+                           t-attf-placeholder="Enter #{attr.name}..."/>
+                  </t>
+                </div>
+              </t>
+              <t t-if="not attributes">
+                <div style="font-size:12px;color:#aaa;text-align:center;padding:10px">
+                  No attributes configured. Ask admin to add attributes.
+                </div>
+              </t>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div style="display:flex;gap:8px">
+            <button type="submit" class="vp-btn-primary" style="flex:1;justify-content:center">
+              <i class="fa fa-paper-plane"></i>
+              <t t-if="product">Update &amp; Resubmit</t>
+              <t t-else="">Submit for Approval</t>
+            </button>
+            <a href="/my/vendor/products" class="vp-btn-outline">
+              <i class="fa fa-arrow-left"></i>
+            </a>
+          </div>
+          <div style="font-size:11px;color:#aaa;text-align:center;margin-top:8px">
+            <i class="fa fa-info-circle"></i>
+            Product will be reviewed by Uellow admin before going live
+          </div>
+        </div>
+
+      </div>
+    </form>
+  </t>
+</template>
+
+<template id="portal_vendor_reviews" name="Vendor Reviews">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_reviews'"/>
+    <div class="vp-breadcrumb"><a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Reviews</div>
+    <div class="vp-page-title" style="margin-bottom:16px">Customer Reviews</div>
+    <div class="vp-card">
+      <table class="vp-table">
+        <thead><tr><th>Customer</th><th>Rating</th><th>Comment</th><th>Date</th></tr></thead>
+        <tbody>
+          <t t-foreach="reviews" t-as="review">
+            <tr>
+              <td style="font-weight:600"><t t-esc="review.partner_id.name or 'Anonymous'"/></td>
+              <td style="color:#f59e0b"><t t-esc="int(review.rating or 0)"/> / 5</td>
+              <td style="font-size:12px;color:#555"><t t-esc="review.feedback or '—'"/></td>
+              <td style="font-size:11px;color:#aaa"><t t-esc="str(review.create_date)[:10] if review.create_date else '—'"/></td>
+            </tr>
+          </t>
+          <t t-if="not reviews">
+            <tr><td colspan="4" style="text-align:center;padding:32px;color:#aaa">No reviews yet</td></tr>
+          </t>
+        </tbody>
+      </table>
+    </div>
+  </t>
+</template>
+
+<template id="portal_vendor_statement" name="Wallet Statement">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_wallet'"/>
+    <div class="vp-breadcrumb"><a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> <a href="/my/vendor/wallet">Wallet</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Statement</div>
+    <div class="vp-page-header">
+      <div class="vp-page-title">Monthly Statement</div>
+      <button onclick="window.print()" class="vp-btn-primary"><i class="fa fa-print"></i> Print</button>
+    </div>
+    <div class="vp-card">
+      <table class="vp-table">
+        <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr></thead>
+        <tbody>
+          <t t-foreach="transactions" t-as="txn">
+            <tr>
+              <td style="font-size:11px;color:#888"><t t-esc="str(txn.date)[:10] if txn.date else '—'"/></td>
+              <td><t t-esc="txn.name or ''"/></td>
+              <td><span class="vp-badge vp-b-ok"><t t-esc="txn.tx_type or 'Credit'"/></span></td>
+              <td style="font-weight:700"><t t-esc="'%.3f' % txn.amount"/> KD</td>
+            </tr>
+          </t>
+          <t t-if="not transactions">
+            <tr><td colspan="4" style="text-align:center;padding:24px;color:#aaa">No transactions</td></tr>
+          </t>
+        </tbody>
+      </table>
+    </div>
+  </t>
+</template>
+
+<template id="portal_vendor_product_new" name="New Product">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_products'"/>
+    <div class="vp-breadcrumb"><a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> <a href="/my/vendor/products">Products</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> New</div>
+    <div class="vp-page-title" style="margin-bottom:16px">Add New Product</div>
+    <div class="vp-card" style="max-width:600px">
+      <div class="vp-card-header"><span class="vp-card-title">Choose Method</span></div>
+      <div class="vp-card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <a href="/my/vendor/products/manual" class="vp-action" style="padding:20px">
+            <div class="vp-action-icon" style="width:48px;height:48px;font-size:22px;background:#e8f5f3;color:#0f5049"><i class="fa fa-pencil"></i></div>
+            <div class="vp-action-lbl" style="font-size:13px;margin-top:4px">Add Manually</div>
+            <div style="font-size:11px;color:#aaa;margin-top:4px">Fill product form</div>
+          </a>
+          <a href="/my/vendor/products/import" class="vp-action" style="padding:20px">
+            <div class="vp-action-icon" style="width:48px;height:48px;font-size:22px"><i class="fa fa-file-excel-o"></i></div>
+            <div class="vp-action-lbl" style="font-size:13px;margin-top:4px">Import Excel</div>
+            <div style="font-size:11px;color:#aaa;margin-top:4px">Bulk spreadsheet</div>
+          </a>
+          <a href="/my/vendor/products/url" class="vp-action" style="padding:20px">
+            <div class="vp-action-icon" style="width:48px;height:48px;font-size:22px"><i class="fa fa-link"></i></div>
+            <div class="vp-action-lbl" style="font-size:13px;margin-top:4px">Import URL</div>
+            <div style="font-size:11px;color:#aaa;margin-top:4px">From product link</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </t>
+</template>
+
+<template id="portal_vendor_import" name="Import Products">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_products'"/>
+    <div class="vp-breadcrumb"><a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> <a href="/my/vendor/products">Products</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Import</div>
+    <div class="vp-page-title" style="margin-bottom:16px">Import Products</div>
+    <div class="vp-card" style="max-width:600px">
+      <div class="vp-card-header"><span class="vp-card-title"><i class="fa fa-upload"></i> Upload File</span></div>
+      <div class="vp-card-body">
+        <form action="/my/vendor/products/import/submit" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+          <div class="vp-form-group">
+            <label class="vp-form-label">Excel or CSV File *</label>
+            <input type="file" name="import_file" class="vp-form-input" accept=".xlsx,.xls,.csv" required="1"/>
+            <div class="vp-form-hint">Supported: .xlsx, .xls, .csv</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:16px">
+            <button type="submit" class="vp-btn-primary"><i class="fa fa-upload"></i> Import</button>
+            <a href="/my/vendor/products" class="vp-btn-outline"><i class="fa fa-arrow-left"></i> Back</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </t>
+</template>
+
+<template id="portal_vendor_notifications" name="Vendor Notifications">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_notifications'"/>
+    <div class="vp-breadcrumb"><a href="/my/vendor">Dashboard</a> <i class="fa fa-chevron-right" style="font-size:9px"></i> Notifications</div>
+    <div class="vp-page-header">
+      <div class="vp-page-title">Notifications</div>
+      <button onclick="clearNotifs()" class="vp-btn-outline"><i class="fa fa-check-all"></i> Mark all read</button>
+    </div>
+    <div class="vp-card">
+      <div id="notif-list" style="min-height:200px">
+        <div style="text-align:center;padding:48px;color:#aaa">
+          <i class="fa fa-bell fa-2x" style="display:block;margin-bottom:8px;opacity:.2"></i>
+          Loading notifications...
+        </div>
+      </div>
+    </div>
+    <script>
+    function loadNotifs(){
+      fetch('/my/vendor/notifications/poll',{headers:{'X-Requested-With':'XMLHttpRequest'}})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        var list = document.getElementById('notif-list');
+        if(!list) return;
+        if(!data.items || data.items.length === 0){
+          list.innerHTML = '&lt;div style="text-align:center;padding:48px;color:#aaa"&gt;&lt;i class="fa fa-bell fa-2x" style="display:block;margin-bottom:8px;opacity:.2"&gt;&lt;/i&gt;No notifications yet&lt;/div&gt;';
+          return;
+        }
+        list.innerHTML = data.items.map(function(item){
+          return '&lt;div class="vp-notif-item unread" style="padding:14px 16px;border-bottom:1px solid #f5f5f5;display:flex;gap:10px;align-items:flex-start"&gt;'+
+            '&lt;div style="width:36px;height:36px;border-radius:8px;background:'+item.bg+';color:'+item.color+';display:flex;align-items:center;justify-content:center;flex-shrink:0"&gt;&lt;i class="fa '+item.icon+'"&gt;&lt;/i&gt;&lt;/div&gt;'+
+            '&lt;div style="flex:1"&gt;&lt;div style="font-weight:600;font-size:13px"&gt;'+item.title+'&lt;/div&gt;&lt;div style="font-size:12px;color:#888;margin-top:2px"&gt;'+item.body+'&lt;/div&gt;&lt;/div&gt;'+
+            '&lt;span style="font-size:11px;color:#aaa;flex-shrink:0"&gt;'+item.time+'&lt;/span&gt;'+
+          '&lt;/div&gt;';
+        }).join('');
+      }).catch(function(){});
+    }
+    function clearNotifs(){
+      var dot = document.getElementById('vp-notif-dot');
+      if(dot) dot.classList.remove('show');
+      var list = document.getElementById('notif-list');
+      if(list) list.innerHTML = '&lt;div style="text-align:center;padding:48px;color:#aaa"&gt;No notifications&lt;/div&gt;';
+    }
+    loadNotifs();
+    </script>
+  </t>
+</template>
+</odoo>

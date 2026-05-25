@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="uc_order_list" model="ir.ui.view">
+    <field name="name">uc.order.list</field>
+    <field name="model">uc.order</field>
+    <field name="arch" type="xml">
+      <list string="Checkout Orders" default_order="date desc">
+        <field name="date"/>
+        <field name="name"/>
+        <field name="phone"/>
+        <field name="email"/>
+        <field name="governorate"/>
+        <field name="city"/>
+        <field name="payment_method"/>
+        <field name="sale_order_id"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="uc_order_form" model="ir.ui.view">
+    <field name="name">uc.order.form</field>
+    <field name="model">uc.order</field>
+    <field name="arch" type="xml">
+      <form string="Checkout Order">
+        <sheet>
+          <group>
+            <group string="Customer">
+              <field name="name"/>
+              <field name="phone"/>
+              <field name="email"/>
+              <field name="partner_id"/>
+              <field name="sale_order_id"/>
+              <field name="payment_method"/>
+              <field name="date"/>
+            </group>
+            <group string="Location">
+              <field name="governorate"/>
+              <field name="city"/>
+              <field name="street"/>
+              <field name="latitude"/>
+              <field name="longitude"/>
+              <field name="map_url" widget="url" string="📍 Map"/>
+            </group>
+          </group>
+          <group string="Delivery Address">
+            <field name="full_address" nolabel="1"/>
+          </group>
+          <group string="Order Notes">
+            <field name="order_notes" nolabel="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="uc_order_action" model="ir.actions.act_window">
+    <field name="name">Checkout Orders</field>
+    <field name="res_model">uc.order</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <menuitem id="uc_order_menu"
+            name="Checkout Orders"
+            parent="sale.sale_menu_root"
+            action="uc_order_action"
+            sequence="26"/>
+
+</odoo>

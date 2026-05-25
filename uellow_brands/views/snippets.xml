@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="uellow_brands_snippet" name="Brands Slider">
+        <section
+            class="uellow-brands-section"
+            data-snippet="s_uellow_brands"
+            data-name="Brands Slider">
+            <div class="uellow-slider-wrapper">
+                <button class="uellow-nav-btn uellow-btn-prev" aria-label="Previous">&#10094;</button>
+                <div class="uellow-frame">
+                    <div class="uellow-track"></div>
+                </div>
+                <button class="uellow-nav-btn uellow-btn-next" aria-label="Next">&#10095;</button>
+            </div>
+        </section>
+    </template>
+
+    <template id="uellow_brands_register"
+              inherit_id="website.snippets"
+              name="Uellow Brands — Register Block">
+        <xpath expr="//snippets[@id='snippet_groups']/*[1]" position="before">
+            <t snippet-group="uellow"
+               t-snippet="website.s_snippet_group"
+               string="Uellow"
+               t-thumbnail="/uellow_brands/static/src/img/snippet_thumb.svg"/>
+        </xpath>
+        <xpath expr="//snippets[@id='snippet_structure']/*[1]" position="before">
+            <t t-snippet="uellow_brands.uellow_brands_snippet"
+               string="Brands Slider"
+               group="uellow">
+                <keywords>brands slider logo</keywords>
+            </t>
+        </xpath>
+    </template>
+
+</odoo>

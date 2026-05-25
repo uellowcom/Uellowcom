@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<t t-name="mobile_manager.DashboardTemplate" owl="1">
+    <div class="o_mobile_dashboard" t-ref="root">
+
+        <t t-if="state.loading">
+            <div class="d_loading">
+                <div class="spinner-border text-warning" role="status"/>
+                <p class="mt-3 text-muted">Loading dashboard...</p>
+            </div>
+        </t>
+
+        <t t-elif="state.error">
+            <div class="alert alert-danger m-4">
+                <i class="fa fa-exclamation-triangle me-2"/>
+                <t t-esc="state.error"/>
+            </div>
+        </t>
+
+        <t t-elif="state.data">
+            <div class="d_wrapper">
+
+                <!-- Header -->
+                <div class="d_header">
+                    <div class="d_header_left">
+                        <div class="d_logo">📱</div>
+                        <div>
+                            <h1 class="d_title">Uellow App Dashboard</h1>
+                            <p class="d_subtitle">Mobile Application Control Center</p>
+                        </div>
+                    </div>
+                    <div class="d_header_right">
+                        <div class="d_live_badge">
+                            <span class="d_live_dot"/>
+                            <t t-esc="state.data.sessions.active_now"/> Active Now
+                        </div>
+                        <div class="d_update_time">Updated <t t-esc="state.lastUpdate"/></div>
+                    </div>
+                </div>
+
+                <!-- Sessions KPIs -->
+                <div class="d_section_title">📊 Sessions</div>
+                <div class="d_kpi_row">
+                    <div class="d_kpi d_kpi_green">
+                        <div class="d_kpi_icon">🟢</div>
+                        <div class="d_kpi_value"><t t-esc="state.data.sessions.active_now"/></div>
+                        <div class="d_kpi_label">Active Right Now</div>
+                    </div>
+                    <div class="d_kpi d_kpi_yellow">
+                        <div class="d_kpi_icon">📅</div>
+                        <div class="d_kpi_value"><t t-esc="state.data.sessions.today"/></div>
+                        <div class="d_kpi_label">Sessions Today</div>
+                    </div>
+                    <div class="d_kpi d_kpi_blue">
+                        <div class="d_kpi_icon">📆</div>
+                        <div class="d_kpi_value"><t t-esc="state.data.sessions.week"/></div>
+                        <div class="d_kpi_label">This Week</div>
+                    </div>
+                    <div class="d_kpi d_kpi_purple">
+                        <div class="d_kpi_icon">🗓️</div>
+                        <div class="d_kpi_value"><t t-esc="state.data.sessions.month"/></div>
+                        <div class="d_kpi_label">This Month</div>
+                    </div>
+                </div>
+
+                <!-- Orders & Revenue KPIs -->
+                <div class="d_section_title">🛒 Orders &amp; Revenue</div>
+                <div class="d_kpi_row">
+                    <div class="d_kpi d_kpi_orange">
+                        <div class="d_kpi_icon">📦</div>
+                        <div class="d_kpi_value"><t t-esc="state.data.orders.today"/></div>
+                        <div class="d_kpi_label">Orders Today</div>
+                    </div>
+                    <div class="d_kpi d_kpi_red">
+                        <div class="d_kpi_icon">💰</div>
+                        <div class="d_kpi_value"><t t-esc="formatCurrency(state.data.orders.revenue_today)"/></div>
+                        <div class="d_kpi_label">Revenue Today</div>
+                    </div>
+                    <div class="d_kpi d_kpi_teal">
+                        <div class="d_kpi_icon">📈</div>
+                        <div class="d_kpi_value"><t t-esc="formatCurrency(state.data.orders.revenue_month)"/></div>
+                        <div class="d_kpi_label">Revenue This Month</div>
+                    </div>
+                    <div class="d_kpi d_kpi_indigo">
+                        <div class="d_kpi_icon">🧮</div>
+                        <div class="d_kpi_value"><t t-esc="formatCurrency(state.data.orders.avg_order_value)"/></div>
+                        <div class="d_kpi_label">Avg Order Value</div>
+                    </div>
+                </div>
+
+                <!-- Charts -->
+                <div class="d_section_title">📉 Analytics</div>
+                <div class="d_charts_row">
+
+                    <div class="d_card">
+                        <div class="d_card_title">Sessions — last 7 days</div>
+                        <div class="d_bar_chart">
+                            <t t-foreach="state.data.sessions.chart" t-as="day" t-key="day.day">
+                                <div class="d_bar_col">
+                                    <div class="d_bar_val"><t t-esc="day.count"/></div>
+                                    <div class="d_bar" t-att-style="'height:' + Math.max(6, Math.min(110, day.count * 2)) + 'px'"/>
+                                    <div class="d_bar_label"><t t-esc="day.day.slice(5)"/></div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <div class="d_card">
+                        <div class="d_card_title">Platform split</div>
+                        <div class="d_donut_wrapper">
+                            <div class="d_donut" t-att-style="platformChartStyle">
+                                <div class="d_donut_hole">
+                                    <div class="d_donut_pct"><t t-esc="state.data.users.android_pct + '%'"/></div>
+                                    <div class="d_donut_sub">Android</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d_legend">
+                            <div class="d_legend_item">
+                                <span class="d_dot" style="background:#3DDC84"/>
+                                Android — <strong><t t-esc="state.data.users.android"/></strong>
+                            </div>
+                            <div class="d_legend_item">
+                                <span class="d_dot" style="background:#007AFF"/>
+                                iOS — <strong><t t-esc="state.data.users.ios"/></strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d_card">
+                        <div class="d_card_title">Orders by source</div>
+                        <div class="d_source_list">
+                            <t t-foreach="state.data.orders.by_source" t-as="src" t-key="src.order_source">
+                                <div class="d_source_item">
+                                    <span class="d_source_label"><t t-esc="src.order_source || 'direct'"/></span>
+                                    <span class="badge bg-warning text-dark"><t t-esc="src.count"/></span>
+                                </div>
+                            </t>
+                            <t t-if="!state.data.orders.by_source.length">
+                                <div class="text-muted text-center py-3" style="font-size:13px;">No app orders yet</div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Row -->
+                <div class="d_bottom_row">
+
+                    <div class="d_card">
+                        <div class="d_card_title">👥 Users</div>
+                        <div class="d_stat_list">
+                            <div class="d_stat_item"><span>Registered users</span><strong><t t-esc="state.data.users.total_registered"/></strong></div>
+                            <div class="d_stat_item"><span>Guest sessions</span><strong><t t-esc="state.data.users.guests"/></strong></div>
+                            <div class="d_stat_item"><span>Orders this month</span><strong><t t-esc="state.data.orders.month"/></strong></div>
+                            <div class="d_stat_item"><span>Notifications sent</span><strong><t t-esc="state.data.notifications.sent"/></strong></div>
+                        </div>
+                    </div>
+
+                    <div class="d_card">
+                        <div class="d_card_title">🔍 Top Searches (Last 30 Days)</div>
+                        <t t-if="state.data.top_searches and state.data.top_searches.length">
+                            <div class="d_search_tags">
+                                <t t-foreach="state.data.top_searches" t-as="s" t-key="s.keyword">
+                                    <span class="d_search_tag">
+                                        <span><t t-esc="s.keyword"/></span>
+                                        <span class="d_search_count"><t t-esc="s.count"/></span>
+                                    </span>
+                                </t>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="text-muted text-center py-3" style="font-size:13px;">
+                                No search data yet. Connect the search API to start tracking.
+                            </div>
+                        </t>
+                    </div>
+
+                    <div class="d_card">
+                        <div class="d_card_title">🔖 App Versions</div>
+                        <div class="d_stat_list">
+                            <t t-foreach="state.data.users.version_breakdown" t-as="v" t-key="v.app_version">
+                                <div class="d_stat_item">
+                                    <span>v<t t-esc="v.app_version or 'unknown'"/></span>
+                                    <strong><t t-esc="v.count"/></strong>
+                                </div>
+                            </t>
+                            <t t-if="!state.data.users.version_breakdown.length">
+                                <div class="text-muted text-center py-2" style="font-size:13px;">No version data yet</div>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Marketing row -->
+                <div class="d_section_title">🔔 Marketing &amp; Growth</div>
+                <div class="d_notif_row">
+                    <div class="d_notif_card">
+                        <div class="d_notif_icon" style="background:#E1F5EE;">📤</div>
+                        <div><strong><t t-esc="state.data.notifications.sent"/></strong><span>Notifications sent</span></div>
+                    </div>
+                    <div class="d_notif_card">
+                        <div class="d_notif_icon" style="background:#FFF8E1;">⏰</div>
+                        <div><strong><t t-esc="state.data.notifications.draft"/></strong><span>Scheduled / draft</span></div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="d_section_title">⚡ Quick Actions</div>
+                <div class="d_quick_actions">
+                    <a class="d_action_btn" href="/web#action=action_mobile_slider">🖼️ Edit Sliders</a>
+                    <a class="d_action_btn" href="/web#action=action_mobile_notification">🔔 Send Notification</a>
+                    <a class="d_action_btn" href="/web#action=action_mobile_product_slider">📋 Home Sections</a>
+                    <a class="d_action_btn" href="/web#action=action_mobile_app_setting">⚙️ App Settings</a>
+                    <a class="d_action_btn" href="/web#action=action_mobile_feature_flag">🚩 Feature Flags</a>
+                    <a class="d_action_btn" href="/web#action=action_mobile_app_coupon">🎟️ Coupons</a>
+                    <a class="d_action_btn" href="/web#action=action_mobile_ab_test">🧪 A/B Tests</a>
+                    <a class="d_action_btn" href="/web#action=action_mobile_search_analytic">🔍 Search Analytics</a>
+                </div>
+
+            </div>
+        </t>
+
+    </div>
+</t>
+
+</templates>

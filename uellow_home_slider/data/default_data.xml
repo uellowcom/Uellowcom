@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="default_slider" model="uellow.home.slider">
+            <field name="name">السلايدر الرئيسي</field>
+            <field name="sequence">10</field><field name="active">True</field>
+            <field name="show_coupon">True</field>
+            <field name="coupon_code">WELCOME05</field><field name="coupon_discount">5%</field>
+            <field name="logo_url">/web/image/website/1/logo/Uellow?unique=13b1cfb</field>
+            <field name="signup_url">/web/signup</field><field name="login_url">/web/login</field>
+            <field name="ar_banner1_url">/ar/shop</field><field name="ar_banner1_alt">بنر 1</field>
+            <field name="ar_banner2_url">/ar/shop</field><field name="ar_banner2_alt">بنر 2</field>
+            <field name="en_banner1_url">/en/shop</field><field name="en_banner1_alt">Banner 1</field>
+            <field name="en_banner2_url">/en/shop</field><field name="en_banner2_alt">Banner 2</field>
+        </record>
+        <record id="slide_ar_d1" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">عربي - ديسك توب 1</field>
+            <field name="sequence">10</field>
+            <field name="language">ar</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/ar/shop</field>
+        </record>
+        <record id="slide_ar_d2" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">عربي - ديسك توب 2</field>
+            <field name="sequence">20</field>
+            <field name="language">ar</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/ar/shop</field>
+        </record>
+        <record id="slide_ar_d3" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">عربي - ديسك توب 3</field>
+            <field name="sequence">30</field>
+            <field name="language">ar</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/ar/shop</field>
+        </record>
+        <record id="slide_ar_d4" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">عربي - ديسك توب 4</field>
+            <field name="sequence">40</field>
+            <field name="language">ar</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/ar/shop</field>
+        </record>
+        <record id="slide_ar_d5" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">عربي - ديسك توب 5</field>
+            <field name="sequence">50</field>
+            <field name="language">ar</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/ar/shop</field>
+        </record>
+        <record id="slide_ar_m1" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">عربي - موبايل 1</field>
+            <field name="sequence">10</field>
+            <field name="language">ar</field>
+            <field name="device">mobile</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/ar/shop</field>
+        </record>
+        <record id="slide_ar_m2" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">عربي - موبايل 2</field>
+            <field name="sequence">20</field>
+            <field name="language">ar</field>
+            <field name="device">mobile</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/ar/shop</field>
+        </record>
+        <record id="slide_en_d1" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">EN - Desktop 1</field>
+            <field name="sequence">10</field>
+            <field name="language">en</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/en/shop</field>
+        </record>
+        <record id="slide_en_d2" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">EN - Desktop 2</field>
+            <field name="sequence">20</field>
+            <field name="language">en</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/en/shop</field>
+        </record>
+        <record id="slide_en_d3" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">EN - Desktop 3</field>
+            <field name="sequence">30</field>
+            <field name="language">en</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/en/shop</field>
+        </record>
+        <record id="slide_en_d4" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">EN - Desktop 4</field>
+            <field name="sequence">40</field>
+            <field name="language">en</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/en/shop</field>
+        </record>
+        <record id="slide_en_d5" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">EN - Desktop 5</field>
+            <field name="sequence">50</field>
+            <field name="language">en</field>
+            <field name="device">desktop</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/en/shop</field>
+        </record>
+        <record id="slide_en_m1" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">EN - Mobile 1</field>
+            <field name="sequence">10</field>
+            <field name="language">en</field>
+            <field name="device">mobile</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/en/shop</field>
+        </record>
+        <record id="slide_en_m2" model="uellow.home.slide">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="name">EN - Mobile 2</field>
+            <field name="sequence">20</field>
+            <field name="language">en</field>
+            <field name="device">mobile</field>
+            <field name="image_url">https://uellow.com/web/image/product.image/9979/image_1024/slider1.webp</field>
+            <field name="link_url">/en/shop</field>
+        </record>
+    </data>
+</odoo>

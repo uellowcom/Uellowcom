@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="beena_enabled" model="ir.config_parameter">
+            <field name="key">uellow_ai.enabled</field>
+            <field name="value">True</field>
+        </record>
+        <record id="beena_name" model="ir.config_parameter">
+            <field name="key">uellow_ai.assistant_name</field>
+            <field name="value">Beena</field>
+        </record>
+        <record id="beena_subtitle" model="ir.config_parameter">
+            <field name="key">uellow_ai.assistant_subtitle</field>
+            <field name="value">مساعدة Uellow الذكية</field>
+        </record>
+        <record id="beena_welcome" model="ir.config_parameter">
+            <field name="key">uellow_ai.welcome_message</field>
+            <field name="value">أهلاً! أنا Beena 🐝 كيف أقدر أساعدك اليوم؟</field>
+        </record>
+        <record id="beena_color" model="ir.config_parameter">
+            <field name="key">uellow_ai.button_color</field>
+            <field name="value">#F5C320</field>
+        </record>
+        <record id="beena_model" model="ir.config_parameter">
+            <field name="key">uellow_ai.claude_model</field>
+            <field name="value">claude-sonnet-4-6</field>
+        </record>
+        <record id="beena_max_tokens" model="ir.config_parameter">
+            <field name="key">uellow_ai.max_tokens</field>
+            <field name="value">1024</field>
+        </record>
+        <record id="beena_float" model="ir.config_parameter">
+            <field name="key">uellow_ai.float_button</field>
+            <field name="value">True</field>
+        </record>
+        <record id="beena_buy_with_ai" model="ir.config_parameter">
+            <field name="key">uellow_ai.buy_with_ai</field>
+            <field name="value">True</field>
+        </record>
+        <record id="beena_nudge" model="ir.config_parameter">
+            <field name="key">uellow_ai.proactive_nudge</field>
+            <field name="value">True</field>
+        </record>
+        <record id="beena_nudge_delay" model="ir.config_parameter">
+            <field name="key">uellow_ai.nudge_delay</field>
+            <field name="value">30</field>
+        </record>
+        <record id="beena_language" model="ir.config_parameter">
+            <field name="key">uellow_ai.default_language</field>
+            <field name="value">auto</field>
+        </record>
+        <record id="beena_session_ttl" model="ir.config_parameter">
+            <field name="key">uellow_ai.session_ttl</field>
+            <field name="value">24</field>
+        </record>
+        <record id="beena_cod_enabled" model="ir.config_parameter">
+            <field name="key">uellow_ai.cod_enabled</field>
+            <field name="value">True</field>
+        </record>
+    </data>
+</odoo>

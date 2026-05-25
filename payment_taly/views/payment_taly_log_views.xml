@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_taly_log_list" model="ir.ui.view">
+        <field name="name">payment.taly.log.list</field>
+        <field name="model">payment.taly.log</field>
+        <field name="arch" type="xml">
+            <list string="Taly API Logs"
+                  decoration-success="status == 'success'"
+                  decoration-danger="status == 'error'"
+                  decoration-warning="status == 'warning'">
+                <field name="create_date" string="Date"/>
+                <field name="action" string="Action"/>
+                <field name="status" string="Status"
+                       widget="badge"
+                       decoration-success="status == 'success'"
+                       decoration-danger="status == 'error'"
+                       decoration-warning="status == 'warning'"/>
+                <field name="message" string="Message"/>
+                <field name="provider_id" string="Provider"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_taly_log_form" model="ir.ui.view">
+        <field name="name">payment.taly.log.form</field>
+        <field name="model">payment.taly.log</field>
+        <field name="arch" type="xml">
+            <form string="Taly API Log">
+                <sheet>
+                    <group col="2">
+                        <field name="create_date" readonly="1"/>
+                        <field name="provider_id" readonly="1"/>
+                        <field name="action" readonly="1"/>
+                        <field name="status" readonly="1"
+                               widget="badge"
+                               decoration-success="status == 'success'"
+                               decoration-danger="status == 'error'"/>
+                    </group>
+                    <group string="Request Payload">
+                        <field name="payload" nolabel="1" readonly="1"/>
+                    </group>
+                    <group string="Response / Message">
+                        <field name="message" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_taly_log_search" model="ir.ui.view">
+        <field name="name">payment.taly.log.search</field>
+        <field name="model">payment.taly.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Logs">
+                <field name="action"/>
+                <field name="message"/>
+                <separator/>
+                <filter string="Errors"  name="errors"  domain="[('status', '=', 'error')]"/>
+                <filter string="Success" name="success" domain="[('status', '=', 'success')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="gb_status" context="{'group_by': 'status'}"/>
+                    <filter string="Action" name="gb_action" context="{'group_by': 'action'}"/>
+                    <filter string="Date"   name="gb_date"   context="{'group_by': 'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_taly_logs" model="ir.actions.act_window">
+        <field name="name">Taly API Logs</field>
+        <field name="res_model">payment.taly.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

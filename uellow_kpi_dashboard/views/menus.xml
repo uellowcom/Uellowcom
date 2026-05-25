@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_kpi" name="KPI Dashboard"
+            parent="uellow_multivendor.menu_marketplace_main"
+            action="action_kpi_dashboard" sequence="1"/>
+</odoo>

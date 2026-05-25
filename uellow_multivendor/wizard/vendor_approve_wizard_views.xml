@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_vendor_approve_wizard" model="ir.ui.view">
+    <field name="name">uellow.vendor.approve.wizard.form</field>
+    <field name="model">uellow.vendor.approve.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Approve Vendor">
+        <sheet>
+          <group>
+            <field name="vendor_id" readonly="1"/>
+            <field name="plan_id" options="{'no_create': True}"/>
+            <field name="confirmed_date"/>
+            <field name="admin_note" placeholder="Optional note to vendor..."/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_approve" string="Approve &amp; Activate"
+                  type="object" class="oe_highlight"/>
+          <button string="Cancel" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_vendor_reject_wizard" model="ir.ui.view">
+    <field name="name">uellow.vendor.reject.wizard.form</field>
+    <field name="model">uellow.vendor.reject.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Reject Vendor">
+        <sheet>
+          <group>
+            <field name="vendor_id" readonly="1"/>
+            <field name="reason"/>
+            <field name="note" placeholder="Details..."/>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_reject" string="Reject"
+                  type="object" class="btn-danger"/>
+          <button string="Cancel" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+</odoo>

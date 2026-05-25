@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="seq_fraud_case" model="ir.sequence">
+    <field name="name">Fraud Case</field>
+    <field name="code">uellow.fraud.case</field>
+    <field name="prefix">FRD/%(year)s/</field>
+    <field name="padding">4</field>
+  </record>
+  <record id="cron_fraud_scan" model="ir.cron">
+    <field name="name">Uellow: Fraud Detection Scan</field>
+    <field name="model_id" ref="model_uellow_fraud_case"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_scan_orders()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+</odoo>

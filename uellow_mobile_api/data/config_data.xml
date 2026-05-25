@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="mobile_api_enabled" model="ir.config_parameter">
+            <field name="key">uellow_mobile_api.enabled</field>
+            <field name="value">True</field>
+        </record>
+    </data>
+</odoo>

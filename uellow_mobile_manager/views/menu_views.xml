@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_mobile_root" name="Mobile App" sequence="85" web_icon="uellow_mobile_manager,static/src/img/menu_icon.png"/>
+    <menuitem id="menu_mobile_dashboard" name="Dashboard" parent="menu_mobile_root" action="mobile_dashboard_client_action" sequence="1"/>
+    <menuitem id="menu_mobile_homepage" name="Home Page" parent="menu_mobile_root" sequence="10"/>
+    <menuitem id="menu_mobile_slider" name="Hero Sliders" parent="menu_mobile_homepage" action="action_mobile_slider" sequence="10"/>
+    <menuitem id="menu_mobile_category_icon" name="Category Icons" parent="menu_mobile_homepage" action="action_mobile_category_icon" sequence="20"/>
+    <menuitem id="menu_mobile_product_slider" name="Home Sections" parent="menu_mobile_homepage" action="action_mobile_product_slider" sequence="30"/>
+    <menuitem id="menu_mobile_feature_banner" name="Feature Banners" parent="menu_mobile_homepage" action="action_mobile_feature_banner" sequence="40"/>
+    <menuitem id="menu_mobile_popup" name="Popups" parent="menu_mobile_homepage" action="action_mobile_popup" sequence="50"/>
+    <menuitem id="menu_mobile_onboarding" name="Onboarding Screens" parent="menu_mobile_homepage" action="action_mobile_onboarding" sequence="60"/>
+    <menuitem id="menu_mobile_marketing" name="Marketing" parent="menu_mobile_root" sequence="20"/>
+    <menuitem id="menu_mobile_notification" name="Push Notifications" parent="menu_mobile_marketing" action="action_mobile_notification" sequence="10"/>
+    <menuitem id="menu_mobile_app_coupon" name="App Coupons" parent="menu_mobile_marketing" action="action_mobile_app_coupon" sequence="20"/>
+    <menuitem id="menu_mobile_ab_test" name="A/B Tests" parent="menu_mobile_marketing" action="action_mobile_ab_test" sequence="30"/>
+    <menuitem id="menu_mobile_orders" name="Orders" parent="menu_mobile_root" sequence="25"/>
+    <menuitem id="menu_mobile_app_order" name="App Orders" parent="menu_mobile_orders" action="action_mobile_app_order" sequence="10"/>
+    <menuitem id="menu_mobile_analytics" name="Analytics" parent="menu_mobile_root" sequence="30"/>
+    <menuitem id="menu_mobile_session" name="Active Sessions" parent="menu_mobile_analytics" action="action_mobile_session" sequence="10"/>
+    <menuitem id="menu_mobile_search_analytic" name="Search Analytics" parent="menu_mobile_analytics" action="action_mobile_search_analytic" sequence="20"/>
+    <menuitem id="menu_mobile_settings" name="Settings" parent="menu_mobile_root" sequence="99"/>
+    <menuitem id="menu_mobile_feature_flag" name="Feature Flags" parent="menu_mobile_settings" action="action_mobile_feature_flag" sequence="10"/>
+    <menuitem id="menu_mobile_app_setting" name="App Settings" parent="menu_mobile_settings" action="action_mobile_app_setting" sequence="20"/>
+</odoo>
