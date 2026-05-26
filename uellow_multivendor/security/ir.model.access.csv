@@ -24,3 +24,6 @@ access_follower_user,follower.user,model_uellow_vendor_follower,base.group_user,
 access_approve_wizard,approve.wizard,model_uellow_vendor_approve_wizard,base.group_system,1,1,1,1
 access_reject_wizard,reject.wizard,model_uellow_vendor_reject_wizard,base.group_system,1,1,1,1
 access_payout_wizard,payout.wizard,model_uellow_payout_wizard,base.group_system,1,1,1,1
+access_product_reject_wizard,access.product.reject.wizard,model_uellow_product_reject_wizard,base.group_user,1,1,1,1
+access_marketplace_dashboard,access.marketplace.dashboard,model_uellow_marketplace_dashboard,base.group_user,1,1,1,1
+access_marketplace_dashboard,access.marketplace.dashboard,model_uellow_marketplace_dashboard,base.group_user,1,1,1,1

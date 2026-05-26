@@ -1,3 +1,4 @@
+from . import marketplace_dashboard
 from . import vendor
 from . import vendor_commission
 from . import vendor_wallet
