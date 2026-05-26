@@ -1,204 +1,248 @@
 /** @odoo-module **/
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { Component, onMounted, useState, xml } from "@odoo/owl";
+import { Component, useState, onMounted, xml } from "@odoo/owl";
 
 class MarketplaceDashboard extends Component {
     setup() {
         this.orm = useService("orm");
         this.action = useService("action");
-        this.state = useState({
-            loading: true,
-            stats: {
-                vendor_active: 0,
-                vendor_pending: 0,
-                vendor_total: 0,
-                order_today: 0,
-                revenue_today: 0.0,
-                commission_today: 0.0,
-                flash_active: 0,
-                fraud_open: 0,
-                loyalty_accounts: 0,
-                abandoned_pending: 0,
-            }
-        });
-        onMounted(() => this.loadStats());
+        this.state = useState({ loading: true, data: null });
+        onMounted(() => this.loadData());
     }
 
-    async loadStats() {
+    async loadData() {
         try {
-            // Vendors
-            const active = await this.orm.searchCount("uellow.vendor", [["state","=","active"]]);
-            const pending = await this.orm.searchCount("uellow.vendor", [["state","=","pending"]]);
-            const total = await this.orm.searchCount("uellow.vendor", []);
-
-            // Orders today
-            const today = new Date().toISOString().split('T')[0];
-            const orders = await this.orm.searchCount("sale.order", [
-                ["state","in",["sale","done"]],
-                ["date_order",">=", today + " 00:00:00"],
-            ]);
-
-            // Flash sales active
-            let flash = 0;
-            try {
-                flash = await this.orm.searchCount("uellow.flash.sale", [["state","=","active"]]);
-            } catch(e) {}
-
-            // Fraud cases open
-            let fraud = 0;
-            try {
-                fraud = await this.orm.searchCount("uellow.fraud.case", [["state","in",["open","reviewing"]]]);
-            } catch(e) {}
-
-            // Loyalty accounts
-            let loyalty = 0;
-            try {
-                loyalty = await this.orm.searchCount("uellow.loyalty.account", []);
-            } catch(e) {}
-
-            // Abandoned carts pending
-            let abandoned = 0;
-            try {
-                abandoned = await this.orm.searchCount("uellow.abandoned.cart", [["state","=","pending"]]);
-            } catch(e) {}
-
-            this.state.stats = {
-                vendor_active: active,
-                vendor_pending: pending,
-                vendor_total: total,
-                order_today: orders,
-                flash_active: flash,
-                fraud_open: fraud,
-                loyalty_accounts: loyalty,
-                abandoned_pending: abandoned,
-            };
+            const data = await this.orm.call("uellow.marketplace.dashboard", "get_dashboard_data", []);
+            this.state.data = data;
         } catch(e) {
-            console.error("Dashboard stats error:", e);
+            console.error(e);
+        } finally {
+            this.state.loading = false;
         }
-        this.state.loading = false;
     }
 
-    openVendors(state) {
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            name: "Vendors",
-            res_model: "uellow.vendor",
-            view_mode: "list,form",
-            domain: state ? [["state","=",state]] : [],
-        });
+    go(action) {
+        this.action.doAction(action);
     }
 
-    openAction(model, domain, name) {
+    goTo(model, domain, name) {
         this.action.doAction({
             type: "ir.actions.act_window",
             name: name,
             res_model: model,
-            view_mode: "list,form",
+            views: [[false, "list"], [false, "form"]],
             domain: domain || [],
+            target: "current",
         });
     }
+
+    static template = xml`
+<div style="padding:16px;background:#f4f6f8;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif">
+    <t t-if="state.loading">
+        <div style="display:flex;align-items:center;justify-content:center;padding:60px;color:#888;gap:8px">
+            <i class="fa fa-spinner fa-spin"></i> Loading dashboard...
+        </div>
+    </t>
+    <t t-elif="state.data">
+        <t t-set="d" t-value="state.data"/>
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <div>
+                <div style="font-size:20px;font-weight:700;color:#1a1a1a">Marketplace Dashboard</div>
+                <div style="font-size:12px;color:#888;margin-top:2px">Real-time overview of all modules</div>
+            </div>
+            <button t-on-click="() => this.loadData()"
+                    style="background:#1A7A6E;color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">
+                <i class="fa fa-refresh"></i> Refresh
+            </button>
+        </div>
+
+        <!-- Section: Marketplace -->
+        <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;display:flex;align-items:center;gap:5px">
+            <i class="fa fa-building" style="color:#1A7A6E"></i> Marketplace
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px">
+            <div t-on-click="() => this.go('uellow_multivendor.action_sale_orders')"
+                 style="background:#E1F5EE;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-money" style="color:#085041"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#085041"><t t-esc="d.gmv.toFixed(3)"/></div>
+                <div style="font-size:11px;color:#0F6E56;margin-top:3px">GMV this month (KD)</div>
+            </div>
+            <div t-on-click="() => this.goTo('sale.order', [['state','in',['sale','done']]], 'Orders')"
+                 style="background:#FAEEDA;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-shopping-bag" style="color:#633806"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#633806"><t t-esc="d.order_count"/></div>
+                <div style="font-size:11px;color:#854F0B;margin-top:3px">Orders this month</div>
+            </div>
+            <div t-on-click="() => this.goTo('uellow.vendor', [['state','=','active']], 'Active Vendors')"
+                 style="background:#E6F1FB;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-users" style="color:#0C447C"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#0C447C"><t t-esc="d.active_vendors"/></div>
+                <div style="font-size:11px;color:#185FA5;margin-top:3px">Active vendors</div>
+                <div t-if="d.pending_vendors > 0" style="font-size:10px;padding:1px 5px;border-radius:20px;background:#FAEEDA;color:#633806;display:inline-block;margin-top:3px">
+                    <t t-esc="d.pending_vendors"/> pending
+                </div>
+            </div>
+            <div t-on-click="() => this.goTo('uellow.vendor.commission', [], 'Commissions')"
+                 style="background:#EAF3DE;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-percent" style="color:#27500A"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#27500A"><t t-esc="d.commission.toFixed(3)"/></div>
+                <div style="font-size:11px;color:#3B6D11;margin-top:3px">Commissions (KD)</div>
+                <div style="font-size:10px;color:#3B6D11;margin-top:2px">Take rate: <t t-esc="d.take_rate"/>%</div>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+            <div t-on-click="() => this.go('uellow_multivendor.action_vendor_product_approval')"
+                 style="background:#EEEDFE;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-cube" style="color:#3C3489"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#3C3489"><t t-esc="d.approved_products"/></div>
+                <div style="font-size:11px;color:#534AB7;margin-top:3px">Approved products</div>
+                <div t-if="d.pending_products > 0" style="font-size:10px;padding:1px 5px;border-radius:20px;background:#FAEEDA;color:#633806;display:inline-block;margin-top:3px">
+                    <t t-esc="d.pending_products"/> pending
+                </div>
+            </div>
+            <div t-on-click="() => this.goTo('uellow.vendor.payout', [['state','=','pending']], 'Pending Payouts')"
+                 style="background:#FBEAF0;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-download" style="color:#72243E"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#72243E"><t t-esc="d.pending_payout_amount.toFixed(3)"/></div>
+                <div style="font-size:11px;color:#993556;margin-top:3px">Pending payouts (KD)</div>
+                <div style="font-size:10px;color:#993556;margin-top:2px"><t t-esc="d.pending_payouts"/> requests</div>
+            </div>
+            <div style="background:#FCEBEB;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-times-circle" style="color:#791F1F"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#791F1F"><t t-esc="d.cancel_rate"/>%</div>
+                <div style="font-size:11px;color:#A32D2D;margin-top:3px">Cancel rate</div>
+            </div>
+            <div style="background:#FAEEDA;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-star" style="color:#633806"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#633806"><t t-esc="d.avg_rating"/></div>
+                <div style="font-size:11px;color:#854F0B;margin-top:3px">Avg vendor rating</div>
+            </div>
+        </div>
+
+        <!-- Charts row -->
+        <div style="display:grid;grid-template-columns:3fr 2fr;gap:10px;margin-bottom:14px">
+            <div style="background:#fff;border:0.5px solid #eee;border-radius:12px;overflow:hidden">
+                <div style="padding:10px 14px;border-bottom:0.5px solid #f0f0f0;font-size:13px;font-weight:700;color:#1a1a1a">
+                    <i class="fa fa-bar-chart" style="color:#1A7A6E;margin-right:5px"></i>GMV — last 7 days
+                </div>
+                <div style="padding:14px">
+                    <canvas id="gmvChart" style="width:100%;height:140px"></canvas>
+                </div>
+            </div>
+            <div style="background:#fff;border:0.5px solid #eee;border-radius:12px;overflow:hidden">
+                <div style="padding:10px 14px;border-bottom:0.5px solid #f0f0f0;font-size:13px;font-weight:700;color:#1a1a1a">
+                    <i class="fa fa-trophy" style="color:#BA7517;margin-right:5px"></i>Top vendors
+                </div>
+                <div style="padding:10px 14px">
+                    <t t-foreach="d.top_vendors" t-as="v" t-key="v.name">
+                        <div t-on-click="() => this.goTo('uellow.vendor', [['store_name_en','=',v.name]], v.name)"
+                             style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid #f5f5f5;cursor:pointer">
+                            <span style="font-size:12px;font-weight:600;color:#1a1a1a"><t t-esc="v.name"/></span>
+                            <span style="font-size:12px;font-weight:600;color:#085041"><t t-esc="v.gmv.toFixed(3)"/> KD</span>
+                        </div>
+                    </t>
+                    <t t-if="!d.top_vendors.length">
+                        <div style="text-align:center;padding:20px;color:#aaa;font-size:12px">No data</div>
+                    </t>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Smart Connector -->
+        <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;display:flex;align-items:center;gap:5px">
+            <i class="fa fa-plug" style="color:#534AB7"></i> Smart Connector
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
+            <div t-on-click="() => this.go('uellow_smart_connector.action_import_job')"
+                 style="background:#EEEDFE;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-download" style="color:#3C3489"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#3C3489"><t t-esc="d.sc_total"/></div>
+                <div style="font-size:11px;color:#534AB7;margin-top:3px">Import jobs</div>
+                <div t-if="d.sc_review > 0" style="font-size:10px;padding:1px 5px;border-radius:20px;background:#FAEEDA;color:#633806;display:inline-block;margin-top:3px">
+                    <t t-esc="d.sc_review"/> to review
+                </div>
+            </div>
+            <div t-on-click="() => this.go('uellow_smart_connector.action_import_job')"
+                 style="background:#E1F5EE;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-cube" style="color:#085041"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#085041"><t t-esc="d.sc_imported"/></div>
+                <div style="font-size:11px;color:#0F6E56;margin-top:3px">Products imported</div>
+            </div>
+            <div t-on-click="() => this.go('uellow_smart_connector.action_price_intel')"
+                 style="background:#FCEBEB;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-line-chart" style="color:#791F1F"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#791F1F"><t t-esc="d.sc_price_alerts"/></div>
+                <div style="font-size:11px;color:#A32D2D;margin-top:3px">Price alerts</div>
+            </div>
+            <div t-on-click="() => this.go('uellow_smart_connector.action_dead_stock')"
+                 style="background:#FAEEDA;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-archive" style="color:#633806"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#633806"><t t-esc="d.sc_dead"/></div>
+                <div style="font-size:11px;color:#854F0B;margin-top:3px">Dead stock items</div>
+            </div>
+        </div>
+
+        <!-- Section: Reviews & Products -->
+        <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px;display:flex;align-items:center;gap:5px">
+            <i class="fa fa-star" style="color:#BA7517"></i> Reviews
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+            <div style="background:#FAEEDA;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-comment" style="color:#633806"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#633806"><t t-esc="d.month_reviews"/></div>
+                <div style="font-size:11px;color:#854F0B;margin-top:3px">Reviews this month</div>
+            </div>
+            <div style="background:#FBEAF0;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-star" style="color:#72243E"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#72243E"><t t-esc="d.avg_product_rating"/></div>
+                <div style="font-size:11px;color:#993556;margin-top:3px">Avg product rating</div>
+            </div>
+            <div style="background:#FCEBEB;border-radius:12px;padding:14px;cursor:pointer">
+                <div style="width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.5);display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+                    <i class="fa fa-clock-o" style="color:#791F1F"></i>
+                </div>
+                <div style="font-size:20px;font-weight:700;color:#791F1F"><t t-esc="d.pending_reviews"/></div>
+                <div style="font-size:11px;color:#A32D2D;margin-top:3px">Pending reviews</div>
+            </div>
+        </div>
+
+    </t>
+</div>
+    `;
 }
 
-MarketplaceDashboard.template = xml`
-<div class="o_marketplace_dashboard" style="padding:24px;background:#f8f9fa;min-height:100vh">
+registry.category("actions").add("marketplace_dashboard_action", MarketplaceDashboard);
 
-  <!-- Header -->
-  <div style="margin-bottom:24px">
-    <h2 style="font-weight:700;margin:0;color:#1A7A6E">
-      <i class="fa fa-store me-2"/>Marketplace Dashboard
-    </h2>
-    <p style="color:#666;margin:4px 0 0">Uellow Multi-Vendor Platform</p>
-  </div>
-
-  <t t-if="state.loading">
-    <div class="text-center py-5">
-      <i class="fa fa-spinner fa-spin fa-2x text-muted"/>
-      <p class="text-muted mt-2">Loading stats...</p>
-    </div>
-  </t>
-
-  <t t-else="">
-
-    <!-- Row 1: Vendor Stats -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px">
-
-      <div class="o_dashboard_card" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border-left:4px solid #1A7A6E"
-           t-on-click="() => this.openVendors('active')">
-        <div style="font-size:32px;font-weight:700;color:#1A7A6E"><t t-esc="state.stats.vendor_active"/></div>
-        <div style="color:#666;font-size:13px;margin-top:4px"><i class="fa fa-check-circle me-1"/>Active Vendors</div>
-      </div>
-
-      <div class="o_dashboard_card" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border-left:4px solid #f59e0b"
-           t-on-click="() => this.openVendors('pending')">
-        <div style="font-size:32px;font-weight:700;color:#f59e0b"><t t-esc="state.stats.vendor_pending"/></div>
-        <div style="color:#666;font-size:13px;margin-top:4px"><i class="fa fa-clock me-1"/>Pending Approval</div>
-      </div>
-
-      <div class="o_dashboard_card" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border-left:4px solid #6366f1"
-           t-on-click="() => this.openVendors(false)">
-        <div style="font-size:32px;font-weight:700;color:#6366f1"><t t-esc="state.stats.vendor_total"/></div>
-        <div style="color:#666;font-size:13px;margin-top:4px"><i class="fa fa-users me-1"/>Total Vendors</div>
-      </div>
-
-      <div class="o_dashboard_card" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border-left:4px solid #10b981"
-           t-on-click="() => this.openAction('sale.order',[['state','in',['sale','done']]],'Orders Today')">
-        <div style="font-size:32px;font-weight:700;color:#10b981"><t t-esc="state.stats.order_today"/></div>
-        <div style="color:#666;font-size:13px;margin-top:4px"><i class="fa fa-shopping-cart me-1"/>Orders Today</div>
-      </div>
-
-    </div>
-
-    <!-- Row 2: Operations -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px">
-
-      <div class="o_dashboard_card" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border-left:4px solid #ef4444"
-           t-on-click="() => this.openAction('uellow.flash.sale',[['state','=','active']],'Active Flash Sales')">
-        <div style="font-size:32px;font-weight:700;color:#ef4444"><t t-esc="state.stats.flash_active"/></div>
-        <div style="color:#666;font-size:13px;margin-top:4px"><i class="fa fa-bolt me-1"/>Flash Sales Active</div>
-      </div>
-
-      <div class="o_dashboard_card" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border-left:4px solid #dc2626"
-           t-on-click="() => this.openAction('uellow.fraud.case',[['state','in',['open','reviewing']]],'Open Fraud Cases')">
-        <div style="font-size:32px;font-weight:700;color:#dc2626"><t t-esc="state.stats.fraud_open"/></div>
-        <div style="color:#666;font-size:13px;margin-top:4px"><i class="fa fa-shield-alt me-1"/>Fraud Cases Open</div>
-      </div>
-
-      <div class="o_dashboard_card" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border-left:4px solid #8b5cf6"
-           t-on-click="() => this.openAction('uellow.loyalty.account',[],'Loyalty Accounts')">
-        <div style="font-size:32px;font-weight:700;color:#8b5cf6"><t t-esc="state.stats.loyalty_accounts"/></div>
-        <div style="color:#666;font-size:13px;margin-top:4px"><i class="fa fa-star me-1"/>Loyalty Members</div>
-      </div>
-
-      <div class="o_dashboard_card" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;border-left:4px solid #f97316"
-           t-on-click="() => this.openAction('uellow.abandoned.cart',[['state','=','pending']],'Abandoned Carts')">
-        <div style="font-size:32px;font-weight:700;color:#f97316"><t t-esc="state.stats.abandoned_pending"/></div>
-        <div style="color:#666;font-size:13px;margin-top:4px"><i class="fa fa-shopping-basket me-1"/>Abandoned Carts</div>
-      </div>
-
-    </div>
-
-    <!-- Quick Actions -->
-    <div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)">
-      <h5 style="font-weight:600;margin-bottom:16px;color:#374151">Quick Actions</h5>
-      <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" t-on-click="() => this.openVendors('pending')">
-          <i class="fa fa-user-check me-1"/>Review Pending Vendors
-        </button>
-        <button class="btn btn-success btn-sm" t-on-click="() => this.openAction('uellow.vendor.commission',[['state','=','released']],'Released Commissions')">
-          <i class="fa fa-money-bill me-1"/>Process Payouts
-        </button>
-        <button class="btn btn-warning btn-sm" t-on-click="() => this.openAction('uellow.fraud.case',[['state','=','open']],'Open Fraud Cases')">
-          <i class="fa fa-exclamation-triangle me-1"/>Review Fraud Cases
-        </button>
-        <button class="btn btn-info btn-sm" t-on-click="() => this.openAction('uellow.flash.sale',[],'Flash Sales')">
-          <i class="fa fa-bolt me-1"/>Manage Flash Sales
-        </button>
-      </div>
-    </div>
-
-  </t>
-</div>
-`;
-
-registry.category("actions").add("marketplace_dashboard", MarketplaceDashboard);
+MarketplaceDashboard.components = {};
