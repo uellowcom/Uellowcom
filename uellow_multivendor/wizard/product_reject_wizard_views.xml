@@ -7,8 +7,8 @@
       <form string="Reject Product">
         <sheet>
           <group>
-            <field name="product_ids" widget="many2many_tags" readonly="1"/>
-            <field name="rejection_reason" placeholder="Enter rejection reason..."/>
+            <field name="product_ids" widget="many2many_tags" readonly="1" string="Products"/>
+            <field name="rejection_reason" string="Rejection Reason"/>
           </group>
         </sheet>
         <footer>

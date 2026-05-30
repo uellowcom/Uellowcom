@@ -93,4 +93,22 @@
             sequence="92"
             groups="uellow_multivendor.group_marketplace_manager"/>
 
+
+  <!-- Products Approval Menu -->
+  <menuitem id="menu_marketplace_products_root"
+            name="Products"
+            parent="menu_marketplace_main"
+            sequence="25"/>
+
+  <menuitem id="menu_marketplace_product_approvals"
+            name="Pending Approvals"
+            parent="menu_marketplace_products_root"
+            action="uellow_multivendor.action_vendor_product_approval"
+            sequence="10"/>
+
+  <menuitem id="menu_marketplace_all_vendor_products"
+            name="All Vendor Products"
+            parent="menu_marketplace_products_root"
+            action="uellow_multivendor.action_vendor_product_approval"
+            sequence="20"/>
 </odoo>

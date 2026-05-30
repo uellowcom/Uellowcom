@@ -1,7 +1,87 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-  <!-- Pending Products List for Admin -->
+  <!-- ══ Kanban View ══════════════════════════════════════════════ -->
+  <record id="view_vendor_product_approval_kanban" model="ir.ui.view">
+    <field name="name">product.template.vendor.approval.kanban</field>
+    <field name="model">product.template</field>
+    <field name="arch" type="xml">
+      <kanban default_group_by="vendor_approval_state"
+              class="o_kanban_small_column"
+              records_draggable="0">
+        <field name="id"/>
+        <field name="name"/>
+        <field name="list_price"/>
+        <field name="image_128"/>
+        <field name="vendor_id"/>
+        <field name="vendor_approval_state"/>
+        <field name="vendor_rejection_reason"/>
+        <field name="vendor_submitted_date"/>
+        <field name="vendor_reviewed_date"/>
+        <templates>
+          <t t-name="kanban-box">
+            <div class="oe_kanban_card oe_kanban_global_click" style="border-radius:10px;overflow:hidden">
+              <div class="o_kanban_image" style="background:#f8f9fa;display:flex;align-items:center;justify-content:center;height:80px">
+                <t t-if="record.image_128.raw_value">
+                  <img t-att-src="kanban_image('product.template', 'image_128', record.id.raw_value)"
+                       style="max-height:80px;object-fit:contain" alt="product"/>
+                </t>
+                <t t-else="">
+                  <i class="fa fa-cube fa-2x" style="color:#ddd"/>
+                </t>
+              </div>
+              <div style="padding:10px 12px">
+                <div style="font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  <t t-esc="record.name.value"/>
+                </div>
+                <div style="font-size:12px;color:#1A7A6E;font-weight:600;margin-bottom:6px">
+                  <t t-esc="record.list_price.value"/> KD
+                </div>
+                <!-- Vendor -->
+                <div style="font-size:11px;color:#888;margin-bottom:8px;display:flex;align-items:center;gap:4px">
+                  <i class="fa fa-store" style="font-size:11px"/>
+                  <t t-esc="record.vendor_id.value or 'No vendor'"/>
+                </div>
+                <!-- Rejection reason -->
+                <t t-if="record.vendor_approval_state.raw_value == 'rejected'">
+                  <div style="background:#FCEBEB;border-radius:6px;padding:6px 8px;font-size:11px;color:#791F1F;margin-bottom:8px">
+                    <i class="fa fa-exclamation-circle"/> <t t-esc="record.vendor_rejection_reason.value or 'Rejected'"/>
+                  </div>
+                </t>
+                <!-- Dates -->
+                <div style="font-size:10px;color:#aaa;margin-bottom:8px">
+                  <t t-if="record.vendor_submitted_date.value">
+                    Submitted: <t t-esc="record.vendor_submitted_date.value"/>
+                  </t>
+                </div>
+                <!-- Actions -->
+                <t t-if="record.vendor_approval_state.raw_value == 'pending'">
+                  <div style="display:flex;gap:5px">
+                    <button name="action_vendor_approve" type="object"
+                            style="flex:1;background:#E1F5EE;color:#085041;border:1px solid #9FE1CB;border-radius:6px;padding:4px;font-size:11px;cursor:pointer">
+                      <i class="fa fa-check"/> Approve
+                    </button>
+                    <button name="action_vendor_reject" type="object"
+                            style="flex:1;background:#FCEBEB;color:#791F1F;border:1px solid #F7C1C1;border-radius:6px;padding:4px;font-size:11px;cursor:pointer">
+                      <i class="fa fa-times"/> Reject
+                    </button>
+                  </div>
+                </t>
+                <t t-if="record.vendor_approval_state.raw_value == 'rejected'">
+                  <button name="action_vendor_set_pending" type="object"
+                          style="width:100%;background:#E6F1FB;color:#0C447C;border:1px solid #B5D4F4;border-radius:6px;padding:4px;font-size:11px;cursor:pointer">
+                    <i class="fa fa-refresh"/> Reset to draft
+                  </button>
+                </t>
+              </div>
+            </div>
+          </t>
+        </templates>
+      </kanban>
+    </field>
+  </record>
+
+  <!-- ══ List View ══════════════════════════════════════════════════ -->
   <record id="view_vendor_product_approval_list" model="ir.ui.view">
     <field name="name">product.template.vendor.approval.list</field>
     <field name="model">product.template</field>
@@ -10,26 +90,33 @@
             decoration-warning="vendor_approval_state=='pending'"
             decoration-success="vendor_approval_state=='approved'"
             decoration-danger="vendor_approval_state=='rejected'">
+        <field name="image_128" widget="image" options="{'size': [40,40]}" string=" "/>
         <field name="name" string="Product"/>
         <field name="vendor_id" string="Vendor"/>
-        <field name="list_price" string="Price (KD)"/>
+        <field name="list_price" string="Price (KD)" widget="monetary"/>
+        <field name="categ_id" string="Category"/>
         <field name="vendor_submitted_date" string="Submitted"/>
+        <field name="vendor_reviewed_date" string="Reviewed"/>
         <field name="vendor_approval_state" widget="badge"
                decoration-warning="vendor_approval_state=='pending'"
                decoration-success="vendor_approval_state=='approved'"
                decoration-danger="vendor_approval_state=='rejected'"
                string="Status"/>
+        <field name="vendor_rejection_reason" string="Rejection Reason" optional="show"/>
         <button name="action_vendor_approve" string="Approve"
-                type="object" icon="fa-check" class="text-success"
+                type="object" icon="fa-check" class="btn-success"
                 invisible="vendor_approval_state != 'pending'"/>
         <button name="action_vendor_reject" string="Reject"
-                type="object" icon="fa-times" class="text-danger"
+                type="object" icon="fa-times" class="btn-danger"
                 invisible="vendor_approval_state != 'pending'"/>
+        <button name="action_vendor_set_pending" string="Reset"
+                type="object" icon="fa-refresh"
+                invisible="vendor_approval_state == 'pending'"/>
       </list>
     </field>
   </record>
 
-  <!-- Form View with approval buttons -->
+  <!-- ══ Form View (inherit) ════════════════════════════════════════ -->
   <record id="view_vendor_product_approval_form" model="ir.ui.view">
     <field name="name">product.template.vendor.approval.form</field>
     <field name="model">product.template</field>
@@ -54,23 +141,26 @@
                invisible="not vendor_id"/>
       </xpath>
       <xpath expr="//sheet" position="before">
-        <!-- Rejection notice banner -->
         <div class="alert alert-danger" role="alert"
              invisible="vendor_approval_state != 'rejected'">
           <strong>Rejected:</strong>
           <field name="vendor_rejection_reason" readonly="1" nolabel="1"/>
         </div>
+        <div class="alert alert-warning" role="alert"
+             invisible="vendor_approval_state != 'pending' or not vendor_id">
+          <i class="fa fa-clock-o"/> This product is pending admin approval.
+        </div>
       </xpath>
     </field>
   </record>
 
-  <!-- Search for vendor products -->
+  <!-- ══ Search View ════════════════════════════════════════════════ -->
   <record id="view_vendor_product_approval_search" model="ir.ui.view">
     <field name="name">product.template.vendor.approval.search</field>
     <field name="model">product.template</field>
     <field name="arch" type="xml">
       <search string="Vendor Products">
-        <field name="name"/>
+        <field name="name" string="Product"/>
         <field name="vendor_id" string="Vendor"/>
         <filter string="Pending Review" name="pending"
                 domain="[('vendor_approval_state','=','pending')]"/>
@@ -78,10 +168,10 @@
                 domain="[('vendor_approval_state','=','approved')]"/>
         <filter string="Rejected" name="rejected"
                 domain="[('vendor_approval_state','=','rejected')]"/>
+        <separator/>
         <filter string="Has Vendor" name="has_vendor"
                 domain="[('vendor_id','!=',False)]"/>
-        <separator/>
-        <group expand="0" string="Group By">
+        <group expand="1" string="Group By">
           <filter string="Vendor" name="group_vendor"
                   context="{'group_by': 'vendor_id'}"/>
           <filter string="Status" name="group_state"
@@ -91,17 +181,22 @@
     </field>
   </record>
 
-  <!-- Action -->
+  <!-- ══ Action ═════════════════════════════════════════════════════ -->
   <record id="action_vendor_product_approval" model="ir.actions.act_window">
     <field name="name">Product Approvals</field>
     <field name="res_model">product.template</field>
-    <field name="view_mode">list,form</field>
-    <field name="view_id" ref="view_vendor_product_approval_list"/>
+    <field name="view_mode">kanban,list,form</field>
+    <field name="views" eval="[
+      (ref('view_vendor_product_approval_kanban'), 'kanban'),
+      (ref('view_vendor_product_approval_list'),   'list'),
+      (False, 'form'),
+    ]"/>
     <field name="search_view_id" ref="view_vendor_product_approval_search"/>
     <field name="domain">[('vendor_id','!=',False)]</field>
     <field name="context">{'search_default_pending': 1}</field>
     <field name="help" type="html">
       <p class="o_view_nocontent_smiling_face">No vendor products pending review</p>
+      <p>When vendors submit products they will appear here for approval.</p>
     </field>
   </record>
 
