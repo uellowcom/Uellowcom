@@ -7,6 +7,11 @@ import 'package:flutter/material.dart';
 import '../screens/splash_screen.dart';
 import '../screens/home_screen.dart';
 import '../screens/product_screen.dart';
+import '../screens/cart_screen.dart';
+import '../screens/checkout_screen.dart';
+import '../screens/account_screen.dart';
+import '../screens/category_screen.dart';
+import '../screens/search_screen.dart';
 
 class Routes {
   Routes._();
@@ -38,8 +43,13 @@ class UellowRouter {
   /// Routes registered for named navigation. Concrete pages that need
   /// arguments use [generate] below.
   static Map<String, WidgetBuilder> routes = {
-    Routes.splash: (ctx) => const SplashScreen(),
-    Routes.home:   (ctx) => const HomeScreen(),
+    Routes.splash:   (ctx) => const SplashScreen(),
+    Routes.home:     (ctx) => const HomeScreen(),
+    Routes.cart:     (ctx) => const CartScreen(),
+    Routes.checkout: (ctx) => const CheckoutScreen(),
+    Routes.account:  (ctx) => const AccountScreen(),
+    Routes.category: (ctx) => const CategoryScreen(),
+    Routes.search:   (ctx) => const SearchScreen(),
   };
 
   /// Handles dynamic routes that take arguments (e.g. /product with id).
