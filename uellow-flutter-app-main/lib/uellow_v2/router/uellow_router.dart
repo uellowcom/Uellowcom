@@ -12,6 +12,10 @@ import '../screens/checkout_screen.dart';
 import '../screens/account_screen.dart';
 import '../screens/category_screen.dart';
 import '../screens/search_screen.dart';
+import '../screens/auth_screen.dart';
+import '../screens/order_screen.dart';
+import '../screens/wishlist_screen.dart';
+import '../screens/notifications_screen.dart';
 
 class Routes {
   Routes._();
@@ -43,13 +47,16 @@ class UellowRouter {
   /// Routes registered for named navigation. Concrete pages that need
   /// arguments use [generate] below.
   static Map<String, WidgetBuilder> routes = {
-    Routes.splash:   (ctx) => const SplashScreen(),
-    Routes.home:     (ctx) => const HomeScreen(),
-    Routes.cart:     (ctx) => const CartScreen(),
-    Routes.checkout: (ctx) => const CheckoutScreen(),
-    Routes.account:  (ctx) => const AccountScreen(),
-    Routes.category: (ctx) => const CategoryScreen(),
-    Routes.search:   (ctx) => const SearchScreen(),
+    Routes.splash:        (ctx) => const SplashScreen(),
+    Routes.auth:          (ctx) => const AuthScreen(),
+    Routes.home:          (ctx) => const HomeScreen(),
+    Routes.cart:          (ctx) => const CartScreen(),
+    Routes.checkout:      (ctx) => const CheckoutScreen(),
+    Routes.account:       (ctx) => const AccountScreen(),
+    Routes.category:      (ctx) => const CategoryScreen(),
+    Routes.search:        (ctx) => const SearchScreen(),
+    Routes.wishlist:      (ctx) => const WishlistScreen(),
+    Routes.notifications: (ctx) => const NotificationsScreen(),
   };
 
   /// Handles dynamic routes that take arguments (e.g. /product with id).
@@ -60,6 +67,12 @@ class UellowRouter {
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => ProductScreen(productId: id),
+        );
+      case Routes.order:
+        final id = (settings.arguments as Map?)?['id'] as int? ?? 0;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => OrderScreen(orderId: id),
         );
     }
     return null;
