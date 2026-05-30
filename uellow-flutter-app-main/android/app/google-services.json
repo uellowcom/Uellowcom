@@ -1,0 +1,98 @@
+{
+  "project_info": {
+    "project_number": "334210243041",
+    "project_id": "yellow-stores-main",
+    "storage_bucket": "yellow-stores-main.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:334210243041:android:2a82b4ff84827e4bea5aa0",
+        "android_client_info": {
+          "package_name": "yellow.stores.arabia"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "334210243041-g1vv18jegq3pflnu7a2chnuloujo16hp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "yellow.stores.arabia",
+            "certificate_hash": "ee35cd7df6d22e8471ab7c2fff98b26a719f83bd"
+          }
+        },
+        {
+          "client_id": "334210243041-ptv73mdqdfe782u915bgutatdvpkficb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "yellow.stores.arabia",
+            "certificate_hash": "d95eeec18f1459f4af062755db6b9910c82a1dd6"
+          }
+        },
+        {
+          "client_id": "334210243041-7l97rkrqouh5rfj915p1f4f8lubrdph9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzI4ytHm3DTx4-irHZo7Z0NCJaYL5yUg8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "334210243041-7l97rkrqouh5rfj915p1f4f8lubrdph9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "334210243041-g26u6jfes0qijebkh596vlho3sh7e9o4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "yellow.stores.arabia"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:334210243041:android:0ecff9597d03f77dea5aa0",
+        "android_client_info": {
+          "package_name": "yellow.storesarabia.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "334210243041-7l97rkrqouh5rfj915p1f4f8lubrdph9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDzI4ytHm3DTx4-irHZo7Z0NCJaYL5yUg8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "334210243041-7l97rkrqouh5rfj915p1f4f8lubrdph9.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "334210243041-g26u6jfes0qijebkh596vlho3sh7e9o4.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "yellow.stores.arabia"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
