@@ -19,6 +19,11 @@ import '../screens/notifications_screen.dart';
 import '../screens/loyalty_screen.dart';
 import '../screens/wallet_screen.dart';
 import '../screens/coupons_screen.dart';
+import '../screens/brands_screen.dart';
+import '../screens/vendor_screen.dart';
+import '../screens/flash_screen.dart';
+import '../screens/tryon_screen.dart';
+import '../screens/beena_screen.dart';
 
 class Routes {
   Routes._();
@@ -63,6 +68,9 @@ class UellowRouter {
     Routes.loyalty:       (ctx) => const LoyaltyScreen(),
     Routes.wallet:        (ctx) => const WalletScreen(),
     Routes.coupons:       (ctx) => const CouponsScreen(),
+    Routes.brands:        (ctx) => const BrandsScreen(),
+    Routes.flash:         (ctx) => const FlashScreen(),
+    Routes.beena:         (ctx) => const BeenaScreen(),
   };
 
   /// Handles dynamic routes that take arguments (e.g. /product with id).
@@ -80,9 +88,27 @@ class UellowRouter {
           settings: settings,
           builder: (_) => OrderScreen(orderId: id),
         );
+      case Routes.vendor:
+        final id = (settings.arguments as Map?)?['id'] as int? ?? 0;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => VendorScreen(vendorId: id),
+        );
+      case Routes.tryOn:
+        final id = (settings.arguments as Map?)?['id'] as int?;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => TryOnScreen(productId: id),
+        );
     }
     return null;
   }
+
+  static void goVendor(BuildContext context, int vendorId) =>
+      Navigator.of(context).pushNamed(Routes.vendor, arguments: {'id': vendorId});
+
+  static void goTryOn(BuildContext context, {int? productId}) =>
+      Navigator.of(context).pushNamed(Routes.tryOn, arguments: {'id': productId});
 
   /// Convenience helpers — strongly-typed nav wrappers.
   static Future<T?> push<T>(BuildContext context, Widget page) =>
