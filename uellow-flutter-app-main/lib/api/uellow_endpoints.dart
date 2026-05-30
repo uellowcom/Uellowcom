@@ -78,9 +78,39 @@ class EP {
   static const beenaChat   = '/api/mobile/v2/beena/chat';
 
   // ── App settings
-  static const appSettings     = '/api/mobile/v2/app/settings';
-  static const appLanguages    = '/api/mobile/v2/app/languages';
-  static const appCountries    = '/api/mobile/v2/app/countries';
-  static const appStates       = '/api/mobile/v2/app/states';
-  static const appVersionCheck = '/api/mobile/v2/app/version-check';
+  static const appSettings       = '/api/mobile/v2/app/settings';
+  static const appLanguages      = '/api/mobile/v2/app/languages';
+  static const appCountries      = '/api/mobile/v2/app/countries';
+  static const appStates         = '/api/mobile/v2/app/states';
+  static const appVersionCheck   = '/api/mobile/v2/app/version-check';
+
+  // ── Multi-country / multi-website routing
+  static String appGeo()           => '/api/mobile/v2/app/geo';
+  static String appCountriesList() => '/api/mobile/v2/app/countries-list';
+  static String appSetCountry()    => '/api/mobile/v2/app/set-country';
+
+  // ── Flash sale
+  static String flashSales()       => '/api/mobile/v2/flash-sales';
+
+  // ── Vendors
+  static String vendors()          => '/api/mobile/v2/vendors';
+  static String vendor(int id)     => '/api/mobile/v2/vendors/$id';
+  static String vendorProducts(int id) => '/api/mobile/v2/vendors/$id/products';
+
+  // ── Search v2
+  static String searchBarcode()    => '/api/mobile/v2/search/barcode';
+  static String searchImage()      => '/api/mobile/v2/search/image';
+
+  // ── Account aggregate
+  static String accountOverview()  => '/api/mobile/v2/account/overview';
+
+  // ── Shipping
+  static String shippingZones()    => '/api/mobile/v2/shipping/zones';
+  static String shippingCompanies() => '/api/mobile/v2/shipping/companies';
+  static String shippingTrack(int orderId) => '/api/mobile/v2/shipping/track/$orderId';
+  static String shippingPrefs()    => '/api/mobile/v2/shipping/preferences';
+  static String shippingPrefsSave() => '/api/mobile/v2/shipping/preferences/save';
+
+  // ── Product extra
+  static String productReviewers(int id) => '/api/mobile/v2/products/$id/reviewers';
 }
