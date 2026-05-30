@@ -16,6 +16,9 @@ import '../screens/auth_screen.dart';
 import '../screens/order_screen.dart';
 import '../screens/wishlist_screen.dart';
 import '../screens/notifications_screen.dart';
+import '../screens/loyalty_screen.dart';
+import '../screens/wallet_screen.dart';
+import '../screens/coupons_screen.dart';
 
 class Routes {
   Routes._();
@@ -57,6 +60,9 @@ class UellowRouter {
     Routes.search:        (ctx) => const SearchScreen(),
     Routes.wishlist:      (ctx) => const WishlistScreen(),
     Routes.notifications: (ctx) => const NotificationsScreen(),
+    Routes.loyalty:       (ctx) => const LoyaltyScreen(),
+    Routes.wallet:        (ctx) => const WalletScreen(),
+    Routes.coupons:       (ctx) => const CouponsScreen(),
   };
 
   /// Handles dynamic routes that take arguments (e.g. /product with id).
