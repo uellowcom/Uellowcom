@@ -1,4 +1,4 @@
-# RevoShop
+# Uellow APP
 
 Mobile Application using Flutter Framework, this app is compatible with WooCommerce.
 
