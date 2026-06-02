@@ -2632,6 +2632,41 @@ function itemImage(arrayKey, idx, field, item){
       ${url ? `<button data-i-image-clear="${arrayKey}|${idx}|${field}" style="padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:11px;cursor:pointer">✕</button>` : ''}
     </div></div>`;
 }
+// v2.0.75 — renders an EN (default) image picker + an optional AR override
+// picker for the same item. Stored as `<field>` (default/EN) and
+// `<field>_ar`. Flutter renderers pick the AR one when the app is in
+// Arabic mode AND it's set, otherwise fall back to the default.
+function itemBilingualImage(arrayKey, idx, field, item, label){
+  const arField = field + '_ar';
+  const arUrl = item[arField] || '';
+  const baseLabel = label || 'Image';
+  return `
+    <div class="field"><label>🇬🇧 ${baseLabel} (English / default)</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div data-i-image="${arrayKey}|${idx}|${field}"
+             style="flex:1;height:54px;border:1px dashed var(--border-2);border-radius:8px;
+                    display:flex;align-items:center;justify-content:center;cursor:pointer;
+                    background:${(item[field]||'') ? `center/cover no-repeat url('${item[field]}')` : 'var(--bg-2)'};
+                    color:#fff;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.6);font-size:11px">
+          ${(item[field]||'') ? '✎ Change' : '+ Pick image'}
+        </div>
+        ${(item[field]||'') ? `<button data-i-image-clear="${arrayKey}|${idx}|${field}" style="padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:11px;cursor:pointer">✕</button>` : ''}
+      </div>
+    </div>
+    <div class="field"><label>🇰🇼 ${baseLabel} (Arabic — optional override)</label>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div data-i-image="${arrayKey}|${idx}|${arField}"
+             style="flex:1;height:54px;border:1px dashed var(--border-2);border-radius:8px;
+                    display:flex;align-items:center;justify-content:center;cursor:pointer;
+                    background:${arUrl ? `center/cover no-repeat url('${arUrl}')` : 'var(--bg-2)'};
+                    color:#fff;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.6);font-size:11px">
+          ${arUrl ? '✎ Change' : '+ Pick AR image'}
+        </div>
+        ${arUrl ? `<button data-i-image-clear="${arrayKey}|${idx}|${arField}" style="padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:11px;cursor:pointer">✕</button>` : ''}
+      </div>
+      <div class="hint">Leave empty to reuse the English image when the app is in Arabic mode.</div>
+    </div>`;
+}
 function itemLink(arrayKey, idx, field, item){
   const lk = item[field];
   const ic = {page:'📄', product:'🛍', category:'📁', url:'🔗', collection:'📦', screen:'📱'}[(lk||{}).type] || '🔗';
@@ -2793,7 +2828,7 @@ function renderContent(b){
             ${itemMl('cards', i, 'titleEn', 'titleAr', 'Title', it)}
             ${itemMl('cards', i, 'subtitleEn', 'subtitleAr', 'Subtitle', it)}
             ${itemColor('cards', i, 'color', it)}
-            ${itemImage('cards', i, 'image_url', it)}
+            ${itemBilingualImage('cards', i, 'image_url', it, 'Card image')}
             ${itemLink('cards', i, 'link', it)}
           </div>`).join('')}
         ${addItemBtn('cards', 'Add card')}`;
@@ -2808,7 +2843,7 @@ function renderContent(b){
             ${itemMl('cards', i, 'titleEn', 'titleAr', 'Title', it)}
             ${itemMl('cards', i, 'subtitleEn', 'subtitleAr', 'Subtitle', it)}
             ${itemColor('cards', i, 'color', it)}
-            ${itemImage('cards', i, 'image_url', it)}
+            ${itemBilingualImage('cards', i, 'image_url', it, 'Card image')}
             ${itemLink('cards', i, 'link', it)}
           </div>`).join('')}
         ${addItemBtn('cards', 'Add card')}`;
@@ -3005,7 +3040,7 @@ function renderContent(b){
                 <option value="countdown" ${it.kind==='countdown'?'selected':''}>⏰ Countdown timer</option>
                 <option value="text"      ${it.kind==='text'?'selected':''}>📝 Text only (no media)</option>
               </select></div>
-            ${(it.kind!=='text' && it.kind!=='product' && it.kind!=='countdown') ? itemImage('slides', i, 'image_url', it) : ''}
+            ${(it.kind!=='text' && it.kind!=='product' && it.kind!=='countdown') ? itemBilingualImage('slides', i, 'image_url', it, 'Slide image') : ''}
             ${it.kind==='video' ? itemText('slides', i, 'video_url', 'Video URL (mp4 or YouTube)', it) : ''}
             ${it.kind==='product' ? itemText('slides', i, 'product_id', 'Product ID', it) : ''}
             ${it.kind==='countdown' ? itemText('slides', i, 'countdown_to', 'Countdown to (ISO: 2026-12-31T23:59)', it) : ''}
@@ -3124,7 +3159,7 @@ function renderContent(b){
           <div class="item-card">
             ${itemHeader('Bubble', 'bubbles', i, bubbles.length)}
             ${itemIcon('bubbles', i, 'icon', it)}
-            ${itemImage('bubbles', i, 'image_url', it)}
+            ${itemBilingualImage('bubbles', i, 'image_url', it, 'Bubble image')}
             ${itemMl('bubbles', i, 'labelEn', 'labelAr', 'Label', it)}
             ${itemLink('bubbles', i, 'link', it)}
           </div>`).join('')}
@@ -3147,7 +3182,7 @@ function renderContent(b){
         ${images.map((it,i)=>`
           <div class="item-card">
             ${itemHeader('Image', 'images', i, images.length)}
-            ${itemImage('images', i, 'image_url', it)}
+            ${itemBilingualImage('images', i, 'image_url', it, 'Image')}
             ${itemLink('images', i, 'link', it)}
           </div>`).join('')}
         ${addItemBtn('images', 'Add image')}`;
@@ -3218,11 +3253,7 @@ function renderContent(b){
         ${banners.map((it,i)=>`
           <div class="item-card">
             ${itemHeader('Banner', 'banners', i, banners.length)}
-            <div class="field"><label>🇬🇧 Image (English / default)</label>
-              ${itemImage('banners', i, 'image_url', it)}</div>
-            <div class="field"><label>🇰🇼 Image (Arabic — optional override)</label>
-              ${itemImage('banners', i, 'image_url_ar', it)}
-              <div class="hint">Leave empty to reuse the English image when the app is in Arabic mode.</div></div>
+            ${itemBilingualImage('banners', i, 'image_url', it, 'Banner')}
             ${itemMl('banners', i, 'altEn', 'altAr', 'Alt text (accessibility)', it)}
             ${itemLink('banners', i, 'link', it)}
           </div>`).join('')}
@@ -3537,20 +3568,32 @@ function sourceSelect(b, prop, options, defaultVal){
 
 /* ─── Picker buttons — open the right modal ────────────────────── */
 function imageFieldBtn(b, idProp, urlProp, label){
-  const url = b.props[urlProp];
-  const id  = b.props[idProp];
-  return `<div class="field"><label>${label}</label>
-    <div style="display:flex;gap:6px;align-items:center">
-      <div onclick="openImagePicker(${JSON.stringify(idProp)}, ${JSON.stringify(urlProp)})"
+  // v2.0.75 — block-level image fields are now bilingual by default:
+  // EN (the existing field) + an optional AR override stored on
+  // `<urlProp>_ar`. Flutter picks the AR variant when the app is in
+  // Arabic mode and the field is set, otherwise falls back to EN.
+  const arUrlProp = urlProp + '_ar';
+  const arIdProp  = (idProp || '') + '_ar';
+  const arUrl = b.props[arUrlProp];
+  const url   = b.props[urlProp];
+  const tile  = (u, ip, up, ph) => `
+    <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+      <div onclick="openImagePicker(${JSON.stringify(ip)}, ${JSON.stringify(up)})"
            style="flex:1;height:60px;border:1px dashed var(--border-2);border-radius:8px;
                   display:flex;align-items:center;justify-content:center;cursor:pointer;
-                  background:${url ? `center/cover no-repeat url('${url}')` : 'var(--bg-2)'};
+                  background:${u ? `center/cover no-repeat url('${u}')` : 'var(--bg-2)'};
                   color:#fff;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.6)">
-        ${url ? '✎ Change image' : '+ Upload / pick image'}
+        ${u ? '✎ Change image' : ph}
       </div>
-      ${url ? `<button onclick="clearImageProp(${JSON.stringify(idProp)}, ${JSON.stringify(urlProp)})"
+      ${u ? `<button onclick="clearImageProp(${JSON.stringify(ip)}, ${JSON.stringify(up)})"
              style="padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:11px;cursor:pointer">✕</button>` : ''}
-    </div>
+    </div>`;
+  return `<div class="field"><label>🇬🇧 ${label} (English / default)</label>
+    ${tile(url, idProp, urlProp, '+ Upload / pick image')}
+  </div>
+  <div class="field"><label>🇰🇼 ${label} (Arabic — optional override)</label>
+    ${tile(arUrl, arIdProp, arUrlProp, '+ Pick AR image')}
+    <div class="hint">Leave empty to reuse the English image when the app is in Arabic mode.</div>
   </div>`;
 }
 function clearImageProp(idProp, urlProp){
