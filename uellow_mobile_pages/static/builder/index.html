@@ -1618,9 +1618,18 @@ function describeTarget(t){
 function renderLeftTheme(host){
   const p = cur();
   const cur_t = theme(p.theme);
+  // v2.0.59 — read existing overrides JSON (may be undefined on old pages).
+  // Shape: {primary, page_bg, header_style, font, confetti, parallax, lanterns}
+  const ov = p.themeOverride || {};
+  const _bgOpts = ['cream','white','gray','lanterns','confetti','custom'];
+  const _bgLabel = (k) => ({cream:'Cream (default)',white:'Pure white',gray:'Soft gray',lanterns:'Pattern: lanterns',confetti:'Pattern: confetti',custom:'Custom image…'}[k]||k);
+  const _headerOpts = ['sticky_search','translucent','hidden','custom_logo'];
+  const _headerLabel = (k) => ({sticky_search:'Sticky search header',translucent:'Translucent / blur',hidden:'Hidden (full-bleed hero)',custom_logo:'Custom logo + nav'}[k]||k);
+  const _fontOpts = ['inter','cairo','tajawal_bold','sf_pro'];
+  const _fontLabel = (k) => ({inter:'Inter / Tajawal (default)',cairo:'Cairo',tajawal_bold:'Tajawal Bold',sf_pro:'SF Pro / Noto Sans Arabic'}[k]||k);
   host.innerHTML = `
     <div class="panel-h">
-      <div><h3>Theme · v2.0.35</h3><div class="sub">Per-page colors & background · ${cur_t.name}</div></div>
+      <div><h3>Theme · v2.0.59</h3><div class="sub">Per-page colors & background · ${cur_t.name}</div></div>
       <button class="btn btn-primary" id="themeSaveBtn" style="padding:7px 14px;font-size:12px;font-weight:700">💾 Save Theme</button>
     </div>
     <div class="left-body pad">
@@ -1633,45 +1642,95 @@ function renderLeftTheme(host){
           <div class="preset ${p.theme===t.id?'on':''}" style="background:${t.gradient}" data-theme="${t.id}">${t.name}</div>
         `).join('')}
       </div>
-      <div class="sub-h">Or customize</div>
-      <div class="field"><label>Primary color</label>
+      <div class="sub-h">Or customize · saved automatically</div>
+      <div class="field"><label>Primary color override</label>
         <div class="swatch-row">
           ${['#F5C320','#FFD700','#D4AF37','#FF4500','#1F8A40','#C0392B','#1D6FB7','#6E4AB0'].map(c=>`
-            <div class="sw" style="background:${c}" data-color="${c}"></div>`).join('')}
+            <div class="sw ${ov.primary===c?'on':''}" style="background:${c}${ov.primary===c?';outline:3px solid #000;outline-offset:2px':''}" data-ov-key="primary" data-ov-val="${c}"></div>`).join('')}
+          <div class="sw ${!ov.primary?'on':''}" style="background:linear-gradient(45deg,#fff 49%,#ddd 50%);border:1px dashed #999;color:#333;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center" data-ov-key="primary" data-ov-val="">×</div>
         </div>
       </div>
       <div class="field"><label>Background</label>
-        <select>
-          <option>Cream (default)</option>
-          <option>Pure white</option>
-          <option>Soft gray</option>
-          <option>Pattern: lanterns</option>
-          <option>Pattern: confetti</option>
-          <option>Custom image…</option>
+        <select data-ov-key="page_bg">
+          ${_bgOpts.map(k=>`<option value="${k}" ${ov.page_bg===k?'selected':''}>${_bgLabel(k)}</option>`).join('')}
         </select>
       </div>
       <div class="field"><label>Header style</label>
-        <select>
-          <option>Sticky search header</option>
-          <option>Translucent / blur</option>
-          <option>Hidden (full-bleed hero)</option>
-          <option>Custom logo + nav</option>
+        <select data-ov-key="header_style">
+          ${_headerOpts.map(k=>`<option value="${k}" ${ov.header_style===k?'selected':''}>${_headerLabel(k)}</option>`).join('')}
         </select>
       </div>
       <div class="field"><label>Body font</label>
-        <select>
-          <option>Inter / Tajawal (default)</option>
-          <option>Cairo</option>
-          <option>Tajawal Bold</option>
-          <option>SF Pro / Noto Sans Arabic</option>
+        <select data-ov-key="font">
+          ${_fontOpts.map(k=>`<option value="${k}" ${ov.font===k?'selected':''}>${_fontLabel(k)}</option>`).join('')}
         </select>
       </div>
       <div class="sub-h">Animations</div>
-      <div class="toggle"><div class="nm">Confetti on page open<small>Eid · Mother's Day</small></div><div class="switch ${p.theme==='eid'?'on':''}"></div></div>
-      <div class="toggle"><div class="nm">Parallax hero</div><div class="switch on"></div></div>
-      <div class="toggle"><div class="nm">Falling lanterns (background)</div><div class="switch ${p.theme==='ramadan'?'on':''}"></div></div>
+      <div class="toggle" data-ov-key="confetti"><div class="nm">Confetti on page open<small>Eid · Mother's Day</small></div><div class="switch ${ov.confetti?'on':''}"></div></div>
+      <div class="toggle" data-ov-key="parallax"><div class="nm">Parallax hero</div><div class="switch ${ov.parallax!==false?'on':''}"></div></div>
+      <div class="toggle" data-ov-key="lanterns"><div class="nm">Falling lanterns (background)</div><div class="switch ${ov.lanterns?'on':''}"></div></div>
     </div>
   `;
+
+  // ── v2.0.59: persist each override change to theme_override ─────────
+  function _persistOverride(key, value){
+    const pNow = cur();
+    if (!pNow || !pNow._serverId) {
+      toast('⚠ Page not saved — refresh');
+      return;
+    }
+    pNow.themeOverride = Object.assign({}, pNow.themeOverride||{}, {[key]: value});
+    if (value === '' || value == null || value === false) {
+      delete pNow.themeOverride[key];
+    }
+    _setThemeStatus('⌛ Saving override · ' + key + ' = ' + JSON.stringify(value) + ' …', 'pending');
+    setSavedPill('Saving override…', false);
+    fetch('/api/admin/v2/pages/' + pNow._serverId, {
+      method:'PUT', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({theme_override: pNow.themeOverride||{}}),
+    }).then(r => r.json()).then(j => {
+      if (!j.success) throw new Error((j.error&&j.error.message)||'save failed');
+      pNow._currentVersion = j.data.current_version;
+      const ts = new Date().toLocaleTimeString();
+      _setThemeStatus('✓ Override <strong>'+key+'</strong> saved at ' + ts, 'ok');
+      setSavedPill('Override saved · ' + ts, true);
+      toast('🎨 ' + key + ' saved');
+    }).catch(e => {
+      console.error('[theme override] save failed:', e);
+      _setThemeStatus('✗ Override save failed — ' + (e.message||e), 'err');
+      toast('⚠ ' + (e.message||e));
+    });
+  }
+
+  // Primary color swatch click
+  host.querySelectorAll('.sw[data-ov-key="primary"]').forEach(el => {
+    el.addEventListener('click', () => {
+      _persistOverride('primary', el.dataset.ovVal);
+      host.querySelectorAll('.sw[data-ov-key="primary"]').forEach(o =>
+        o.classList.toggle('on', o.dataset.ovVal === el.dataset.ovVal));
+    });
+  });
+  // Selects (page_bg, header_style, font)
+  host.querySelectorAll('select[data-ov-key]').forEach(el => {
+    el.addEventListener('change', () => {
+      const val = el.value === _defaultOvValue(el.dataset.ovKey) ? '' : el.value;
+      _persistOverride(el.dataset.ovKey, val);
+    });
+  });
+  // Animation toggles
+  host.querySelectorAll('.toggle[data-ov-key]').forEach(el => {
+    el.addEventListener('click', () => {
+      const sw = el.querySelector('.switch');
+      const newVal = !sw.classList.contains('on');
+      sw.classList.toggle('on', newVal);
+      _persistOverride(el.dataset.ovKey, newVal);
+    });
+  });
+  function _defaultOvValue(key){
+    return {page_bg:'cream', header_style:'sticky_search', font:'inter'}[key];
+  }
+
   function _setThemeStatus(html, color){
     const s = host.querySelector('#themeStatus');
     if (!s) return;
@@ -4420,6 +4479,9 @@ function mapAdminPage(p){
     countries: p.country_codes || [],
     langs: (p.lang_codes || ['en','ar']).map(c => (c||'').split('_')[0]),
     theme: (p.theme && p.theme.id) || 'uellow',
+    // v2.0.59 — preserve overrides on reload so the customize section
+    // shows what was previously saved
+    themeOverride: (p.theme && p.theme.override) || {},
     status: p.status,
     pinned: !!p.pinned,
     updatedAt: p.updated_at ? new Date(p.updated_at).toLocaleString() : '',

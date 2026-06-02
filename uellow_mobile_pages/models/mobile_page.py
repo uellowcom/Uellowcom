@@ -191,11 +191,14 @@ class MobilePage(models.Model):
             ov = json.loads(self.theme_override or '{}')
         except Exception:
             ov = {}
+        # v2.0.59 — surface the raw override dict separately so the builder
+        # can show what was set without merging back into the preset.
         base.update({k: v for k, v in ov.items() if v})
         if not base:
             base = {'id': 'uellow', 'primary': '#F5C320', 'dark': '#412402',
                     'page_bg': '#FAF6EB',
                     'hero_bg': 'linear-gradient(135deg,#412402,#6b3a05 60%,#F5C320)'}
+        base['override'] = ov
         return base
 
     def _public_blocks(self, lang):
