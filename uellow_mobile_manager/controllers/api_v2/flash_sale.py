@@ -1,5 +1,5 @@
 """Flash sale — /api/mobile/v2/flash-sale/*"""
-from odoo import http
+from odoo import fields, http
 from odoo.http import request
 
 from ._common import safe_endpoint, ok, fail, get_lang, bilingual, img_url  # noqa: F401
@@ -62,7 +62,10 @@ class MobileFlashSaleAPI(http.Controller):
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
     def list_flash_sales(self, **kw):
-        """All live flash sales for the current website."""
+        """Flash sales for the current website. Returns live sales by
+        default; pass ?period=upcoming|ended|all to widen the scope so the
+        FlashScreen's period chips (now / upcoming / ended) work even when
+        no sale is currently live."""
         lang = get_lang()
         website = request.env['website'].sudo().search([], limit=1)
         Sale = request.env['mobile.flash.sale'].sudo()
@@ -70,8 +73,17 @@ class MobileFlashSaleAPI(http.Controller):
             ('active', '=', True),
             '|', ('website_id', '=', False), ('website_id', '=', website.id),
         ], order='sequence asc')
-        live = sales.filtered(lambda s: s.is_live)
-        return ok([_serialize_sale(s, lang) for s in live])
+        period = (kw.get('period') or 'all').lower()
+        now = fields.Datetime.now()
+        if period == 'live':
+            sales = sales.filtered(lambda s: s.is_live)
+        elif period == 'upcoming':
+            sales = sales.filtered(lambda s: s.start_date and s.start_date > now)
+        elif period == 'ended':
+            sales = sales.filtered(lambda s: s.end_date and s.end_date < now)
+        # period == 'all' (and the default) returns everything so the UI
+        # can render sane empty states + period chips without re-fetching.
+        return ok([_serialize_sale(s, lang) for s in sales])
 
     @http.route('/api/mobile/v2/flash-sales/<int:sale_id>', type='http',
                 auth='public', methods=['GET', 'OPTIONS'], csrf=False)
