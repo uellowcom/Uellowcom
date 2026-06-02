@@ -2175,12 +2175,21 @@ function renderBlockContent(b){
         <div style="background:linear-gradient(135deg,#1F8A40,#5BC97A);font-size:9px">Tabby</div>
         <div style="background:linear-gradient(135deg,#C0392B,#F08080);font-size:9px">COD</div>
       </div></div>`;
-    case 'products':case 'bestsellers':case 'rec-ai':case 'recent':case 'grid':
-      return `
-        <div class="b-products">
-          <div class="head"><div class="ttl">${p.titleEn || labelFor(b.kind)}</div><div class="more">See all →</div></div>
-          <div class="row">${[1,2,3,4].map(i=>`<div class="card"><div class="img">📷</div><div class="ttl">Product ${i}</div><div class="price">${(i*4.5).toFixed(3)} KD</div></div>`).join('')}</div>
-        </div>`;
+    case 'products':case 'bestsellers':case 'rec-ai':case 'recent':case 'grid': {
+      // v2.0.68 — preview adapts to chosen variant
+      const v = p.variant || (b.kind === 'grid' ? 'grid_2' : 'carousel');
+      const accentP = p.accent || '#C0392B';
+      const radP = (p.card_radius != null) ? p.card_radius : 10;
+      const headP = `<div class="head"><div class="ttl">${p.titleEn || labelFor(b.kind)}</div><div class="more">See all →</div></div>`;
+      const sk = (w, withDisc) => `<div style="flex:0 0 ${w}px;background:#fff;border-radius:${radP}px;overflow:hidden;border:1px solid #f3edde"><div style="height:${w*0.95}px;background:#f5e8dd;position:relative">${withDisc?`<div style="position:absolute;top:4px;left:4px;background:${accentP};color:#fff;font-size:9px;font-weight:900;padding:1px 4px;border-radius:3px">-30%</div>`:''}</div><div style="padding:5px 6px"><div style="font-size:9.5px;color:#999">Product name…</div><div style="font-size:11px;font-weight:900;color:var(--dark)">KWD 5.250</div></div></div>`;
+      if (v === 'grid_2') return `<div class="b-products"><div class="head"><div class="ttl">${p.titleEn || labelFor(b.kind)}</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 4px">${[0,1,2,3].map(i=>sk(120, i%2===0)).join('')}</div></div>`;
+      if (v === 'grid_3') return `<div class="b-products"><div class="head"><div class="ttl">${p.titleEn || labelFor(b.kind)}</div></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:0 4px">${[0,1,2,3,4,5].map(i=>sk(80, i%3===0)).join('')}</div></div>`;
+      if (v === 'spotlight') return `<div class="b-products">${headP}<div style="display:flex;flex-direction:column;gap:5px;padding:0 4px"><div style="background:#fff;border-radius:${radP}px;overflow:hidden;border:1px solid #f3edde;height:180px;display:flex"><div style="flex:1;background:linear-gradient(135deg,#f5e8dd,#f1d8c7);position:relative"><div style="position:absolute;top:6px;left:6px;background:${accentP};color:#fff;font-size:10px;font-weight:900;padding:2px 6px;border-radius:4px">-30%</div></div></div><div style="display:flex;gap:5px;overflow:hidden">${[0,1,2,3].map(i=>sk(80, i===0)).join('')}</div></div></div>`;
+      if (v === 'tall_split') return `<div class="b-products">${headP}<div style="display:flex;gap:5px;padding:0 4px;height:200px"><div style="flex:1;display:flex;flex-direction:column;gap:5px"><div style="flex:1;background:#fff;border-radius:${radP}px;border:1px solid #f3edde;background:#f5e8dd"></div><div style="flex:1;background:#fff;border-radius:${radP}px;border:1px solid #f3edde;background:#f1d8c7"></div></div><div style="flex:1;background:#fff;border-radius:${radP}px;border:1px solid #f3edde;background:linear-gradient(135deg,#f5e8dd,#f1d8c7);position:relative"><div style="position:absolute;top:6px;left:6px;background:${accentP};color:#fff;font-size:10px;font-weight:900;padding:2px 6px;border-radius:4px">HOT</div></div></div></div>`;
+      if (v === 'masonry') return `<div class="b-products">${headP}<div style="display:flex;gap:5px;padding:0 4px"><div style="flex:1;display:flex;flex-direction:column;gap:5px">${sk(120,true)}${sk(120,false)}</div><div style="flex:1;display:flex;flex-direction:column;gap:5px;margin-top:14px">${sk(120,false)}${sk(120,true)}</div></div></div>`;
+      // carousel (default)
+      return `<div class="b-products">${headP}<div class="row" style="display:flex;gap:6px;overflow:hidden">${[0,1,2,3].map(i=>sk(118, i%2===0)).join('')}</div></div>`;
+    }
     case 'vendors':case 'vendor-feat': return `
       <div class="b-vendors">
         <div style="display:flex;justify-content:space-between;margin-bottom:8px">
@@ -3285,13 +3294,43 @@ function renderContent(b){
           <div class="switch ${(p.scroll_snap)?'on':''}" data-toggle-prop="scroll_snap"></div></div>
         <div class="toggle"><div class="nm">✨ Fade-in animation</div>
           <div class="switch ${(p.animate_in)?'on':''}" data-toggle-prop="animate_in"></div></div>`;
-    case 'flash':case 'products':case 'bestsellers':case 'rec-ai':case 'recent':case 'grid':
+    case 'flash':case 'products':case 'bestsellers':case 'rec-ai':case 'recent':case 'grid': {
+      // v2.0.68 — rich PRO config for Product Grid / Carousel / etc.
+      const isFlash = b.kind === 'flash';
+      const PRODUCT_VARIANTS = [
+        ['carousel',   '🎠', 'Carousel',     'Horizontal scroll (default)'],
+        ['grid_2',     '⊞',  '2-col grid',   'Symmetric 2 columns'],
+        ['grid_3',     '⊟',  '3-col grid',   'Denser 3 columns'],
+        ['spotlight',  '⭐', 'Spotlight',    '1 big hero + 4 small'],
+        ['tall_split', '◧',  'Tall split',   '1 hero + 2 stacked'],
+        ['masonry',    '▦',  'Masonry',      'Offset 2-col alt heights'],
+      ];
+      const CARD_STYLES = [
+        ['shadow','Shadow'],['flat','Flat'],['outlined','Outlined'],
+        ['minimal','Minimal'],['gradient','Gradient'],
+      ];
+      const curVar = p.variant || (b.kind === 'grid' ? 'grid_2' : 'carousel');
       return `
         ${mlField(b,'title','Section title')}
-        ${b.kind==='flash' ? flashVariantPicker(b) : ''}
-        <div class="field"><label>Source</label>
+        ${isFlash ? flashVariantPicker(b) : ''}
+
+        ${!isFlash ? `
+        <div class="sub-h">Layout</div>
+        <div class="field"><label>Variant</label>
+          <div class="variant-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px">
+            ${PRODUCT_VARIANTS.map(([v,ic,lbl,sub])=>`
+              <div class="variant-card ${curVar===v?'on':''}" data-prop="variant" data-prop-val="${v}"
+                   style="cursor:pointer;padding:8px 6px;border:1px solid ${curVar===v?'var(--brand)':'#e6dec8'};border-radius:8px;background:${curVar===v?'#FFF6E0':'#fff'};text-align:center">
+                <div style="font-size:18px;line-height:1">${ic}</div>
+                <div style="font-size:10.5px;font-weight:900;color:var(--dark);margin-top:3px">${lbl}</div>
+                <div style="font-size:9px;opacity:.6;margin-top:1px">${sub}</div>
+              </div>`).join('')}
+          </div></div>` : ''}
+
+        <div class="sub-h">Source</div>
+        <div class="field"><label>Where products come from</label>
           ${sourceSelect(b, 'source', [
-            ...(b.kind==='flash' ? [
+            ...(isFlash ? [
               ['flash_sale','🔥 Linked vendor flash sale (auto-timer)'],
             ] : []),
             ['discounted','⚡ Active discount'],
@@ -3307,10 +3346,46 @@ function renderContent(b){
         ${(p.source==='manual') ? productsPickerBtn(b) : ''}
         ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
         ${(p.source==='vendor') ? vendorPickerBtn(b) : ''}
-        ${(b.kind==='flash' && p.source==='flash_sale') ? flashSalePickerBtn(b) : ''}
-        <div class="field"><label>Maximum items</label><input type="number" data-prop="limit" value="${p.limit||12}"/></div>
-        ${(b.kind==='flash' && p.source!=='flash_sale') ? `<div class="field"><label>Countdown ends at</label><input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/></div>` : ''}
-        ${(b.kind==='flash' && p.source==='flash_sale') ? `<p class="hint" style="background:#e6f7ef;padding:8px 12px;border-left:3px solid #2cb67d;border-radius:6px;margin-top:6px">⏰ Timer + products come automatically from the selected flash sale(s). The earliest end_datetime is used as the countdown.</p>` : ''}`;
+        ${(isFlash && p.source==='flash_sale') ? flashSalePickerBtn(b) : ''}
+        <div class="field"><label>Maximum items</label>
+          <input type="number" data-prop="limit" value="${p.limit||12}"/></div>
+        ${(isFlash && p.source!=='flash_sale') ? `<div class="field"><label>Countdown ends at</label><input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/></div>` : ''}
+        ${(isFlash && p.source==='flash_sale') ? `<p class="hint" style="background:#e6f7ef;padding:8px 12px;border-left:3px solid #2cb67d;border-radius:6px;margin-top:6px">⏰ Timer + products come automatically from the selected flash sale(s). The earliest end_datetime is used as the countdown.</p>` : ''}
+
+        ${!isFlash ? `
+        <div class="sub-h">Card style</div>
+        <div class="field"><label>Card style</label>
+          <select data-prop="card_style">
+            ${CARD_STYLES.map(([v,l])=>`<option value="${v}" ${(p.card_style||'shadow')===v?'selected':''}>${l}</option>`).join('')}
+          </select></div>
+        <div class="field"><label>Card radius</label>
+          <input type="number" data-prop="card_radius" value="${p.card_radius||12}" min="0" max="32"/></div>
+        <div class="field"><label>Accent color (discount badge)</label>
+          <div class="swatch-row">
+            ${['#C0392B','#E63946','#F5C320','#1F8A40','#1D6FB7','#6E4AB0','#FF4500','#412402'].map(c=>`
+              <div class="sw ${p.accent===c?'on':''}" style="background:${c}" data-color-prop="${c}" data-color-target="accent"></div>`).join('')}
+          </div></div>
+        <div class="field"><label>Name lines</label>
+          <select data-prop="name_lines">
+            <option value="1" ${(p.name_lines||2)==1?'selected':''}>1 line (compact)</option>
+            <option value="2" ${(p.name_lines||2)==2?'selected':''}>2 lines (default)</option>
+            <option value="3" ${(p.name_lines||2)==3?'selected':''}>3 lines (long titles)</option>
+          </select></div>
+        <div class="field"><label>Price size</label>
+          <select data-prop="price_emphasis">
+            <option value="small" ${p.price_emphasis==='small'?'selected':''}>Small</option>
+            <option value="medium" ${(p.price_emphasis||'medium')==='medium'?'selected':''}>Medium (default)</option>
+            <option value="large" ${p.price_emphasis==='large'?'selected':''}>Large (bold price-led)</option>
+          </select></div>
+
+        <div class="sub-h">What to show on each card</div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_compare_price" ${p.show_compare_price!==false?'checked':''}/> Strikethrough old price</label></div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_save_badge" ${p.show_save_badge!==false?'checked':''}/> "Save X KD" pill</label></div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_rating" ${p.show_rating!==false?'checked':''}/> Star rating &amp; reviews count</label></div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_wishlist" ${p.show_wishlist!==false?'checked':''}/> Wishlist heart button</label></div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_brand" ${p.show_brand?'checked':''}/> Vendor / brand name</label></div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="quick_add" ${p.quick_add?'checked':''}/> Quick-add (+) button</label></div>` : ''}`;
+    }
     case 'banner-1':case 'banner-2':case 'banner-3':
       return `
         ${mlField(b,'title','Banner text')}
