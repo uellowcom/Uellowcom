@@ -3692,6 +3692,22 @@ function renderStyle(b){
     <div class="field"><label>Title-to-content gap (px)</label>
       <input type="number" min="0" max="40" value="${titleGap}" data-prop-num="title_gap"/></div>
 
+    <div class="sub-h">Header icon / image</div>
+    <p class="hint">Show a small icon (emoji) or image next to the section title — or replace the title with the image entirely.</p>
+    <div class="field"><label>Icon (emoji)</label>
+      <input type="text" placeholder="🔥  🎁  ⭐  ⚡  🛒" value="${(p.header_icon||'').replace(/"/g,'&quot;')}" data-prop="header_icon" maxlength="4"/></div>
+    <div class="field"><label>OR image (URL / upload)</label>
+      <input type="text" placeholder="https://… or pick" value="${(p.header_image_url||'').replace(/"/g,'&quot;')}" data-prop="header_image_url" />
+      <button class="btn btn-secondary" style="margin-top:6px;font-size:11px;padding:5px 9px"
+              onclick="openImagePicker('header_image_id','header_image_url')">📁 Pick image…</button></div>
+    <div class="field"><label>Icon / image size (px)</label>
+      <input type="number" min="12" max="64" value="${p.header_icon_size||22}" data-prop-num="header_icon_size"/></div>
+    <div class="field"><label>Display mode</label>
+      <select data-prop="header_image_mode">
+        <option value="beside" ${(p.header_image_mode||'beside')==='beside'?'selected':''}>Beside the title (default)</option>
+        <option value="replace" ${p.header_image_mode==='replace'?'selected':''}>Replace title (image only)</option>
+      </select></div>
+
     <div class="sub-h">Spacing between blocks</div>
     <div class="field"><label>Block vertical padding (px)</label>
       <input type="number" min="0" max="40" value="${padY}" data-prop-num="pad_y"/></div>
@@ -3717,10 +3733,16 @@ function renderStyle(b){
               onclick="openImagePicker('bg_image_id','bg_image')">📁 Pick image…</button>
     </div>
 
-    <div class="sub-h">Appearance (legacy)</div>
-    <div class="field"><label>Corner radius</label><input type="number" value="14"/></div>
-    <div class="toggle"><div class="nm">Drop shadow</div><div class="switch on"></div></div>
-    <div class="toggle"><div class="nm">Border</div><div class="switch"></div></div>
+    <div class="sub-h">Background frame (when colored/patterned)</div>
+    <p class="hint">v2.0.69 — the colored panel is rounded and inset so content has breathing room from its edges.</p>
+    <div class="field"><label>Corner radius (px)</label>
+      <input type="number" min="0" max="32" value="${p.bg_radius!=null?p.bg_radius:14}" data-prop-num="bg_radius"/></div>
+    <div class="field"><label>Outer inset — gap to screen edge (px)</label>
+      <input type="number" min="0" max="40" value="${p.bg_inset_x!=null?p.bg_inset_x:10}" data-prop-num="bg_inset_x"/></div>
+    <div class="field"><label>Inner padding — gap to inside content (X, px)</label>
+      <input type="number" min="0" max="40" value="${p.bg_pad_x!=null?p.bg_pad_x:6}" data-prop-num="bg_pad_x"/></div>
+    <div class="field"><label>Inner padding — top/bottom (Y, px)</label>
+      <input type="number" min="0" max="40" value="${p.bg_pad_y!=null?p.bg_pad_y:8}" data-prop-num="bg_pad_y"/></div>
     `;
 }
 
