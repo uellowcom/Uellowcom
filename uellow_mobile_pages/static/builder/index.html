@@ -2668,58 +2668,182 @@ function renderContent(b){
         <div class="field"><label>Maximum items</label>
           <input type="number" data-prop="limit" value="${p.limit||10}"/></div>`;
     case 'slider': {
+      // v2.0.61 — Professional Slider with layouts, transitions, per-slide
+      // media kinds, 9-anchor text positioning, badges, schedule + A/B.
       const slides = p.slides || [];
-      return `<p class="hint">Multi-slide hero carousel — each slide can be image / video / text-only with rich overlay. Built for big eye-catching announcements.</p>
-        <div class="sub-h">Playback</div>
-        <div class="toggle"><div class="nm">▶ Autoplay</div>
-          <div class="switch ${(p.autoplay!==false)?'on':''}" data-toggle-prop="autoplay"></div></div>
-        <div class="field"><label>Duration per slide (seconds)</label>
-          <input type="number" min="2" max="20" data-prop-num="duration" value="${p.duration||4}"/></div>
-        <div class="field"><label>Transition</label>
-          ${sourceSelect(b, 'transition', [['slide','◀▶ Slide'],['fade','✨ Fade'],['zoom','🔍 Zoom']], 'slide')}
-        </div>
-        <div class="toggle"><div class="nm">↻ Loop</div>
-          <div class="switch ${(p.loop!==false)?'on':''}" data-toggle-prop="loop"></div></div>
+      const POS9 = [
+        ['tl','↖'],['tc','↑'],['tr','↗'],
+        ['ml','←'],['mc','·'],['mr','→'],
+        ['bl','↙'],['bc','↓'],['br','↘'],
+      ];
+      return `<p class="hint">Professional multi-slide carousel — 5 layouts, 5 transitions, per-slide media (image/video/product/countdown), 9-anchor text positioning, badges, schedule + A/B targeting.</p>
+
         <div class="sub-h">Layout</div>
+        <div class="field"><label>Layout</label>
+          ${sourceSelect(b, 'layout', [
+            ['full','🆎 Full-width hero'],['card','🃏 Card carousel'],
+            ['cinema','🎬 Cinema (immersive)'],['peek','👁 Peek next/prev'],
+            ['coverflow','🌊 Coverflow (3D)']
+          ], 'full')}
+        </div>
         <div class="field"><label>Aspect ratio</label>
           ${sourceSelect(b, 'aspect', [
-            ['16_9','📺 16:9 (wide)'],['4_3','🖼 4:3'],['1_1','◼ 1:1 square'],['3_4','📱 3:4 (portrait)'],['full','🆎 Full bleed (auto)']
+            ['16_9','📺 16:9 wide'],['2_1','🎞 2:1 panorama'],
+            ['4_3','🖼 4:3'],['1_1','◼ 1:1 square'],
+            ['3_4','📱 3:4 portrait'],['full','🆎 Auto full-bleed']
           ], '16_9')}
         </div>
         <div class="toggle"><div class="nm">⤢ Full-bleed (no side padding)</div>
           <div class="switch ${(p.full_bleed)?'on':''}" data-toggle-prop="full_bleed"></div></div>
         <div class="field"><label>Corner radius (px)</label>
           <input type="number" min="0" max="40" data-prop-num="radius" value="${p.radius??12}"/></div>
-        <div class="toggle"><div class="nm">● Show dots indicator</div>
+        <div class="field"><label>Gap between slides (px, peek/card only)</label>
+          <input type="number" min="0" max="40" data-prop-num="gap" value="${p.gap??10}"/></div>
+        ${itemColor('', '', 'accent_color', p, ['#F5C320','#412402','#FF4500','#1F8A40','#C0392B','#1D6FB7','#6E4AB0','#fff'])}
+
+        <div class="sub-h">Playback</div>
+        <div class="toggle"><div class="nm">▶ Autoplay</div>
+          <div class="switch ${(p.autoplay!==false)?'on':''}" data-toggle-prop="autoplay"></div></div>
+        <div class="field"><label>Duration per slide (seconds)</label>
+          <input type="number" min="2" max="20" data-prop-num="duration" value="${p.duration||4}"/></div>
+        <div class="field"><label>Transition style</label>
+          ${sourceSelect(b, 'transition', [
+            ['slide','◀▶ Slide'],['fade','✨ Fade'],['zoom','🔍 Zoom'],
+            ['stack','🃏 Stack'],['parallax','🌌 Parallax']
+          ], 'slide')}
+        </div>
+        <div class="toggle"><div class="nm">↻ Loop</div>
+          <div class="switch ${(p.loop!==false)?'on':''}" data-toggle-prop="loop"></div></div>
+        <div class="toggle"><div class="nm">✋ Pause on touch / hover</div>
+          <div class="switch ${(p.pause_on_touch!==false)?'on':''}" data-toggle-prop="pause_on_touch"></div></div>
+        <div class="toggle"><div class="nm">🎞 Default Ken Burns (slow zoom on all slides)</div>
+          <div class="switch ${(p.kenburns_default)?'on':''}" data-toggle-prop="kenburns_default"></div></div>
+        <div class="toggle"><div class="nm">♿ Respect reduced-motion (disable animations for users who need it)</div>
+          <div class="switch ${(p.respect_reduced_motion!==false)?'on':''}" data-toggle-prop="respect_reduced_motion"></div></div>
+        <div class="toggle"><div class="nm">⚡ Eager-load first slide (LCP boost)</div>
+          <div class="switch ${(p.eager_first!==false)?'on':''}" data-toggle-prop="eager_first"></div></div>
+
+        <div class="sub-h">Indicators</div>
+        <div class="toggle"><div class="nm">● Show indicator</div>
           <div class="switch ${(p.show_dots!==false)?'on':''}" data-toggle-prop="show_dots"></div></div>
+        <div class="field"><label>Indicator style</label>
+          ${sourceSelect(b, 'dots_style', [
+            ['dots','● Dots'],['bars','▬ Bars (expanding)'],
+            ['numbers','① Numbers'],['fraction','¼ Fraction (1/4)'],
+            ['progress','▱ Progress bar']
+          ], 'dots')}
+        </div>
+        <div class="field"><label>Indicator position</label>
+          ${sourceSelect(b, 'dots_position', [
+            ['bottom','↓ Bottom inside'],['top','↑ Top inside'],
+            ['outside_bottom','⬇ Outside bottom']
+          ], 'bottom')}
+        </div>
+
+        <div class="sub-h">Arrows</div>
         <div class="toggle"><div class="nm">‹ › Show arrows</div>
           <div class="switch ${(p.show_arrows)?'on':''}" data-toggle-prop="show_arrows"></div></div>
+        <div class="field"><label>Arrow style</label>
+          ${sourceSelect(b, 'arrows_style', [
+            ['round','◯ Round'],['square','◻ Square'],['minimal','· Minimal']
+          ], 'round')}
+        </div>
+
         <div class="sub-h">Slides (${slides.length})</div>
         ${slides.map((it,i)=>`
           <div class="item-card">
             ${itemHeader('Slide', 'slides', i, slides.length)}
-            <div class="field"><label>Type</label>
+            <div class="field"><label>Media type</label>
               <select data-i-prop="slides|${i}|kind">
-                <option value="image" ${it.kind==='image'?'selected':''}>🖼 Image</option>
-                <option value="video" ${it.kind==='video'?'selected':''}>🎬 Video</option>
-                <option value="text" ${it.kind==='text'?'selected':''}>📝 Text only</option>
+                <option value="image"     ${it.kind==='image'?'selected':''}>🖼 Image</option>
+                <option value="video"     ${it.kind==='video'?'selected':''}>🎬 Video</option>
+                <option value="product"   ${it.kind==='product'?'selected':''}>🛍 Product (auto-pulls data)</option>
+                <option value="countdown" ${it.kind==='countdown'?'selected':''}>⏰ Countdown timer</option>
+                <option value="text"      ${it.kind==='text'?'selected':''}>📝 Text only (no media)</option>
               </select></div>
-            ${(it.kind!=='text') ? itemImage('slides', i, 'image_url', it) : ''}
-            ${it.kind==='video' ? itemText('slides', i, 'video_url', 'Video URL', it) : ''}
+            ${(it.kind!=='text' && it.kind!=='product' && it.kind!=='countdown') ? itemImage('slides', i, 'image_url', it) : ''}
+            ${it.kind==='video' ? itemText('slides', i, 'video_url', 'Video URL (mp4 or YouTube)', it) : ''}
+            ${it.kind==='product' ? itemText('slides', i, 'product_id', 'Product ID', it) : ''}
+            ${it.kind==='countdown' ? itemText('slides', i, 'countdown_to', 'Countdown to (ISO: 2026-12-31T23:59)', it) : ''}
+
+            <div class="sub-h" style="margin-top:8px">Content</div>
+            ${itemMl('slides', i, 'eyebrowEn', 'eyebrowAr', 'Eyebrow (small label above title)', it)}
             ${itemMl('slides', i, 'titleEn', 'titleAr', 'Title', it)}
+            <div class="field"><label>Title size</label>
+              <select data-i-prop="slides|${i}|title_size">
+                <option value="sm" ${it.title_size==='sm'?'selected':''}>Small</option>
+                <option value="md" ${(!it.title_size||it.title_size==='md')?'selected':''}>Medium (default)</option>
+                <option value="lg" ${it.title_size==='lg'?'selected':''}>Large</option>
+                <option value="xl" ${it.title_size==='xl'?'selected':''}>Extra large</option>
+              </select></div>
             ${itemMl('slides', i, 'subtitleEn', 'subtitleAr', 'Subtitle', it)}
-            ${itemMl('slides', i, 'ctaEn', 'ctaAr', 'CTA button text', it)}
+            ${itemMl('slides', i, 'ctaEn', 'ctaAr', 'Primary CTA text', it)}
+            <div class="field"><label>CTA shape</label>
+              <select data-i-prop="slides|${i}|cta_shape">
+                <option value="pill"      ${(!it.cta_shape||it.cta_shape==='pill')?'selected':''}>⬭ Pill</option>
+                <option value="rect"      ${it.cta_shape==='rect'?'selected':''}>▭ Rectangle</option>
+                <option value="ghost"     ${it.cta_shape==='ghost'?'selected':''}>◌ Ghost (outline)</option>
+                <option value="underline" ${it.cta_shape==='underline'?'selected':''}>‗ Underline only</option>
+              </select></div>
             ${itemLink('slides', i, 'link', it)}
-            <div class="field"><label>Text align</label>
+            ${itemMl('slides', i, 'cta2En', 'cta2Ar', 'Secondary CTA text (optional)', it)}
+            ${itemLink('slides', i, 'cta2_link', it)}
+
+            <div class="sub-h" style="margin-top:8px">Position &amp; styling</div>
+            <div class="field"><label>Text anchor (9-position grid)</label>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;max-width:160px">
+                ${POS9.map(([k,arrow])=>`<button class="${(it.text_position||'mc')===k?'btn-primary':'btn-secondary'}" style="padding:8px 0;font-size:14px;cursor:pointer;border:1px solid ${(it.text_position||'mc')===k?'#412402':'#ddd'};background:${(it.text_position||'mc')===k?'#F5C320':'#fff'};border-radius:6px" data-i-set="slides|${i}|text_position|${k}">${arrow}</button>`).join('')}
+              </div></div>
+            <div class="field"><label>Text alignment</label>
               <select data-i-prop="slides|${i}|text_align">
-                <option value="left"   ${it.text_align==='left'?'selected':''}>◀ Left</option>
+                <option value="start"  ${it.text_align==='start'||it.text_align==='left'?'selected':''}>◀ Start</option>
                 <option value="center" ${(!it.text_align||it.text_align==='center')?'selected':''}>● Center</option>
-                <option value="right"  ${it.text_align==='right'?'selected':''}>▶ Right</option>
+                <option value="end"    ${it.text_align==='end'||it.text_align==='right'?'selected':''}>▶ End</option>
+              </select></div>
+            <div class="field"><label>Text max width (% of slide)</label>
+              <input type="number" min="40" max="100" data-i-prop="slides|${i}|text_max_width" value="${it.text_max_width??80}"/></div>
+            ${itemColor('slides', i, 'text_color', it, ['#fff','#000','#F5C320','#FFD700','#C0392B','#1F8A40'])}
+            ${itemColor('slides', i, 'cta_color', it, ['#F5C320','#412402','#FF4500','#1F8A40','#C0392B','#fff'])}
+
+            <div class="sub-h" style="margin-top:8px">Overlay</div>
+            <div class="field"><label>Overlay style</label>
+              <select data-i-prop="slides|${i}|overlay_kind">
+                <option value="solid"          ${(!it.overlay_kind||it.overlay_kind==='solid')?'selected':''}>▮ Solid color</option>
+                <option value="gradient_v"     ${it.overlay_kind==='gradient_v'?'selected':''}>⬇ Gradient vertical</option>
+                <option value="gradient_h"     ${it.overlay_kind==='gradient_h'?'selected':''}>➡ Gradient horizontal</option>
+                <option value="gradient_diag"  ${it.overlay_kind==='gradient_diag'?'selected':''}>↘ Gradient diagonal</option>
+                <option value="vignette"       ${it.overlay_kind==='vignette'?'selected':''}>◉ Vignette (dark corners)</option>
               </select></div>
             ${itemColor('slides', i, 'overlay_color', it, ['#000','#412402','#1F1206','#fff','#1F8A40','#C0392B','#6E4AB0','#1D6FB7'])}
+            ${itemColor('slides', i, 'overlay_color2', it, ['#000','#412402','#fff','#F5C320','#FF4500','#1F8A40'])}
             <div class="field"><label>Overlay opacity (0-100)</label>
               <input type="number" min="0" max="100" data-i-prop="slides|${i}|overlay_opacity" value="${it.overlay_opacity??30}"/></div>
-            ${itemColor('slides', i, 'text_color', it, ['#fff','#000','#F5C320','#FFD700','#C0392B','#1F8A40'])}
+
+            <div class="sub-h" style="margin-top:8px">Badge (optional)</div>
+            ${itemMl('slides', i, 'badge_textEn', 'badge_textAr', 'Badge text', it)}
+            ${itemColor('slides', i, 'badge_color', it, ['#E63946','#1F8A40','#F5C320','#6E4AB0','#000','#fff'])}
+            <div class="field"><label>Badge position</label>
+              <select data-i-prop="slides|${i}|badge_position">
+                <option value="tl" ${(!it.badge_position||it.badge_position==='tl')?'selected':''}>↖ Top-left</option>
+                <option value="tr" ${it.badge_position==='tr'?'selected':''}>↗ Top-right</option>
+                <option value="bl" ${it.badge_position==='bl'?'selected':''}>↙ Bottom-left</option>
+                <option value="br" ${it.badge_position==='br'?'selected':''}>↘ Bottom-right</option>
+              </select></div>
+
+            <div class="sub-h" style="margin-top:8px">Animation (per slide)</div>
+            <div class="field"><label>Ken Burns (slow zoom + pan)</label>
+              <select data-i-prop="slides|${i}|kenburns">
+                <option value="auto" ${(!it.kenburns||it.kenburns==='auto')?'selected':''}>Use global default</option>
+                <option value="on"   ${it.kenburns==='on'?'selected':''}>Force ON</option>
+                <option value="off"  ${it.kenburns==='off'?'selected':''}>Force OFF</option>
+              </select></div>
+
+            <div class="sub-h" style="margin-top:8px">Visibility (advanced)</div>
+            ${itemText('slides', i, 'schedule_start', 'Show from (ISO: 2026-06-01T00:00)', it)}
+            ${itemText('slides', i, 'schedule_end',   'Hide after (ISO: 2026-12-31T23:59)', it)}
+            ${itemText('slides', i, 'target_countries', 'Only countries (CSV: KW,SA,AE)', it)}
+            ${itemText('slides', i, 'target_langs',     'Only languages (CSV: en,ar)', it)}
+            ${itemText('slides', i, 'variant',          'A/B variant label (e.g. A, B, control)', it)}
           </div>`).join('')}
         ${addItemBtn('slides', 'Add slide')}`;
     }
@@ -2900,19 +3024,71 @@ function renderContent(b){
         ${imageFieldBtn(b, 'image_attachment_id', 'image_url', 'Background image')}
         <div class="toggle"><div class="nm">Inherit page theme<small>Use this page's theme colors when no image is set</small></div><div class="switch on"></div></div>`;
     case 'cats-grid':case 'cats-strip':
+      // v2.0.61 — Pro Categories Grid: layout/rows/columns/shape/spacing.
       return `
         ${mlField(b,'title','Section title')}
-        <div class="field"><label>Source</label>
+        <p class="hint">Professional category showcase — pick layout, rows, shape, spacing. Stunning on both mobile and tablet.</p>
+        <div class="sub-h">Source</div>
+        <div class="field"><label>Categories source</label>
           ${sourceSelect(b, 'source', [
             ['auto','All top-level categories (auto)'],
             ['manual','Hand-picked categories…'],
           ])}
         </div>
         ${(p.source==='manual') ? categoriesPickerBtn(b) : ''}
-        <div class="field"><label>Columns</label>
-          ${sourceSelect(b, 'columns', [['3','3 — large'],['4','4 — balanced'],['5','5 — compact']], '4')}
+        <div class="field"><label>Maximum items</label><input type="number" data-prop="limit" value="${p.limit||12}"/></div>
+
+        <div class="sub-h">Layout</div>
+        <div class="field"><label>Layout style</label>
+          ${sourceSelect(b, 'layout', [
+            ['strip',     '◀▶ Horizontal strip (scroll)'],
+            ['grid',      '▦ Fixed grid (no scroll)'],
+            ['grid_2row', '▦▦ Two-row grid (scroll)'],
+            ['staggered', '◫ Staggered (featured items larger)'],
+          ], 'strip')}
         </div>
-        <div class="field"><label>Maximum items</label><input type="number" data-prop="limit" value="${p.limit||12}"/></div>`;
+        <div class="field"><label>Items per row</label>
+          ${sourceSelect(b, 'columns', [
+            ['3','3 — large icons'],['4','4 — balanced'],
+            ['5','5 — compact'],['6','6 — very compact']
+          ], '4')}
+        </div>
+        <div class="field"><label>Icon shape</label>
+          ${sourceSelect(b, 'shape', [
+            ['circle',  '○ Circle'],
+            ['square',  '□ Square'],
+            ['rounded', '▢ Rounded square'],
+            ['capsule', '⬭ Capsule (vertical)']
+          ], 'circle')}
+        </div>
+        <div class="field"><label>Icon size (px)</label>
+          <input type="number" min="36" max="100" data-prop-num="icon_size" value="${p.icon_size||56}"/></div>
+        <div class="field"><label>Gap between items (px)</label>
+          <input type="number" min="4" max="24" data-prop-num="gap" value="${p.gap||10}"/></div>
+
+        <div class="sub-h">Display</div>
+        <div class="toggle"><div class="nm">📝 Show label under icon</div>
+          <div class="switch ${(p.show_label!==false)?'on':''}" data-toggle-prop="show_label"></div></div>
+        <div class="field"><label>Label position</label>
+          ${sourceSelect(b, 'label_position', [
+            ['below',   '↓ Below icon (default)'],
+            ['overlay', '◉ Overlay on icon (white text)']
+          ], 'below')}
+        </div>
+        <div class="toggle"><div class="nm">🎨 Colored backgrounds (different soft color per item)</div>
+          <div class="switch ${(p.colored_bg)?'on':''}" data-toggle-prop="colored_bg"></div></div>
+        <div class="toggle"><div class="nm">⭕ Ring border around icon</div>
+          <div class="switch ${(p.show_ring!==false)?'on':''}" data-toggle-prop="show_ring"></div></div>
+        <div class="toggle"><div class="nm">🔢 Show product count badge</div>
+          <div class="switch ${(p.show_count)?'on':''}" data-toggle-prop="show_count"></div></div>
+
+        <div class="sub-h">Behavior</div>
+        <div class="toggle"><div class="nm">‹ › Show navigation arrows (strip layout)</div>
+          <div class="switch ${(p.show_arrows)?'on':''}" data-toggle-prop="show_arrows"></div></div>
+        <div class="toggle"><div class="nm">🧲 Snap to item on scroll</div>
+          <div class="switch ${(p.scroll_snap)?'on':''}" data-toggle-prop="scroll_snap"></div></div>
+        <div class="toggle"><div class="nm">✨ Fade-in animation</div>
+          <div class="switch ${(p.animate_in)?'on':''}" data-toggle-prop="animate_in"></div></div>`;
     case 'flash':case 'products':case 'bestsellers':case 'rec-ai':case 'recent':case 'grid':
       return `
         ${mlField(b,'title','Section title')}
@@ -3284,6 +3460,17 @@ function wirePropsBody(b){
       if (inp.type === 'number') v = Number(v) || 0;
       it[key] = v;
       renderCanvas(); scheduleSave();
+    });
+  });
+  // Array-item button SETTERS — for buttons that set a specific value on click.
+  // Pattern: data-i-set="arrayKey|idx|key|value"
+  document.querySelectorAll('[data-i-set]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const [arr, idxS, key, val] = btn.dataset.iSet.split('|');
+      const list = (b.props[arr] = b.props[arr] || []);
+      const it = list[+idxS]; if (!it) return;
+      it[key] = val;
+      renderRight(); renderCanvas(); scheduleSave();
     });
   });
   // Array-item color swatches
