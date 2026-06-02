@@ -1286,6 +1286,21 @@ const KIND_DEFAULTS = {
     titleEn:'Hot deals', titleAr:'صفقات ساخنة',
     title_gap:4, pad_y:8,
     source:'discounted', limit:10,
+    // v2.0.67 PRO: variant, filters, styles
+    variant:'compact',          // compact | hero | mega | grid_2col | ticker | countdown
+    min_discount_pct:0,
+    sort:'discount_desc',       // discount_desc | newest | price_asc
+    card_style:'flat',          // flat | outlined | gradient | glass
+    card_radius:10,
+    accent:'#E63946',
+    bg_strip:'transparent',
+    show_discount_badge:true,
+    show_save_amount:true,
+    show_compare_price:true,
+    show_brand:false,
+    show_urgency:false,
+    urgency_threshold:30,       // show "Selling fast" if discount >= this
+    ticker_speed:30,            // seconds per loop for ticker variant
   }),
   // v2.0.38 new blocks
   'slider': () => ({
@@ -2197,7 +2212,29 @@ function renderBlockContent(b){
     case 'themed-promo': return `<div style="padding:8px 10px;display:flex;gap:8px;overflow:hidden">${(p.cards||[]).slice(0,2).map(c=>`<div style="flex:1;background:${c.color||'#EAF7C9'};border-radius:12px;padding:8px;height:120px"><div style="font-size:11.5px;font-weight:900;color:var(--dark)">${c.titleEn||''}</div><div style="font-size:9.5px;opacity:.65;margin-top:2px">${c.subtitleEn||''}</div><div style="height:50px;background:#fff5;margin-top:6px;border-radius:6px"></div></div>`).join('')}</div>`;
     case 'mini-cats': return `<div style="padding:8px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">${(p.cards||[]).slice(0,4).map(c=>`<div style="background:${c.color||'#FFE9D6'};border-radius:10px;padding:8px;position:relative;height:60px;overflow:hidden"><div style="font-size:11px;font-weight:900;color:var(--dark)">${c.titleEn||''}</div><div style="font-size:9px;opacity:.65;margin-top:1px">${c.subtitleEn||''}</div></div>`).join('')}</div>`;
     case 'welcome-deal': return `<div style="padding:8px 10px"><div style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #f3edde"><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:6px">${[1,2,3,4].map(()=>`<div style="height:42px;background:#f5e8dd;border-radius:6px"></div>`).join('')}</div><div style="background:${p.accent||'#E63946'};color:#fff;padding:8px 12px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;font-weight:900">${p.stickerEn||'WELCOME DEAL'}</div><div style="font-size:9.5px;opacity:.92">${p.stickerSubEn||'Free shipping'}</div></div><div style="font-size:16px">›</div></div></div></div>`;
-    case 'discount-strip': return `<div style="padding:6px 10px">${p.titleEn?`<div style="font-size:12px;font-weight:900;color:var(--dark);padding:0 4px 6px">${p.titleEn}</div>`:''}<div style="display:flex;gap:6px;overflow:hidden">${[0,1,2,3].map(()=>`<div style="flex:0 0 90px;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #f3edde"><div style="height:80px;background:#f5e8dd"></div><div style="padding:5px 6px"><div style="font-size:11px;font-weight:900;color:var(--dark)">KWD 0.32</div><div style="display:inline-block;background:#E63946;color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:900;margin-top:2px">-50%</div></div></div>`).join('')}</div></div>`;
+    case 'discount-strip': {
+      const dsAccent = p.accent || '#E63946';
+      const dsBg = (!p.bg_strip || p.bg_strip==='transparent') ? '' : `background:${p.bg_strip};`;
+      const dsRad = (p.card_radius!=null) ? p.card_radius : 10;
+      const dsTitle = p.titleEn || (p.title && (p.title.en || p.title.ar)) || '';
+      const dsHeader = dsTitle ? `<div style="font-size:12px;font-weight:900;color:var(--dark);padding:0 4px 6px;display:flex;align-items:center;gap:6px"><span>${dsTitle}</span>${(p.variant==='countdown')?'<span style="font-size:9px;background:#ffe7e7;color:#c0392b;padding:1px 5px;border-radius:6px;font-weight:900">⏰ 02:14:09</span>':''}</div>`:'';
+      const dsBadge = p.show_discount_badge!==false ? `<div style="display:inline-block;background:${dsAccent};color:#fff;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:900;margin-top:2px">-50%</div>`:'';
+      const dsSave = p.show_save_amount!==false ? `<div style="display:inline-block;background:linear-gradient(180deg,#E6F7EF,#D4F0DD);border:1px solid #b9e6c8;color:#1F8A40;font-size:9px;font-weight:900;padding:1px 5px;border-radius:3px;margin-top:3px">SAVE 0.30 KD</div>`:'';
+      const dsCompare = p.show_compare_price!==false ? `<div style="font-size:9px;color:#999;text-decoration:line-through;margin-top:2px">KWD 0.64</div>` : '';
+      const v = p.variant || 'compact';
+      // --- HERO ---
+      if (v==='hero') return `<div style="padding:6px 10px;${dsBg}">${dsHeader}<div style="display:flex;gap:6px;height:140px"><div style="flex:1.4;background:#fff;border-radius:${dsRad}px;overflow:hidden;border:1px solid #f3edde;position:relative"><div style="height:75%;background:linear-gradient(135deg,#f5e8dd,#f1d8c7)"></div><div style="position:absolute;top:6px;left:6px;background:${dsAccent};color:#fff;font-size:9px;font-weight:900;padding:1px 5px;border-radius:3px">-50%</div><div style="padding:4px 6px"><div style="font-size:10px;font-weight:900;color:var(--dark)">KWD 0.32</div></div></div><div style="flex:1;display:flex;flex-direction:column;gap:4px">${[0,1].map(()=>`<div style="flex:1;background:#fff;border-radius:${Math.max(6,dsRad-2)}px;overflow:hidden;border:1px solid #f3edde;display:flex"><div style="width:42%;background:#f5e8dd"></div><div style="padding:4px 5px;flex:1"><div style="font-size:9px;font-weight:900;color:var(--dark)">KWD 0.32</div>${dsCompare}</div></div>`).join('')}</div></div></div>`;
+      // --- MEGA list (vertical) ---
+      if (v==='mega') return `<div style="padding:6px 10px;${dsBg}">${dsHeader}<div style="display:flex;flex-direction:column;gap:5px">${[0,1,2].map(()=>`<div style="display:flex;background:#fff;border-radius:${dsRad}px;overflow:hidden;border:1px solid #f3edde"><div style="width:54px;height:54px;background:#f5e8dd"></div><div style="flex:1;padding:5px 7px"><div style="font-size:10px;font-weight:800;color:var(--dark)">Product name…</div><div style="display:flex;gap:5px;margin-top:3px;align-items:center"><div style="font-size:11px;font-weight:900;color:var(--dark)">KWD 0.32</div>${dsCompare}${dsBadge}</div></div></div>`).join('')}</div></div>`;
+      // --- GRID 2-col ---
+      if (v==='grid_2col') return `<div style="padding:6px 10px;${dsBg}">${dsHeader}<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">${[0,1,2,3].map(()=>`<div style="background:#fff;border-radius:${dsRad}px;overflow:hidden;border:1px solid #f3edde"><div style="height:60px;background:#f5e8dd"></div><div style="padding:4px 6px"><div style="font-size:10px;font-weight:900;color:var(--dark)">KWD 0.32</div>${dsBadge}</div></div>`).join('')}</div></div>`;
+      // --- TICKER ---
+      if (v==='ticker') return `<div style="padding:6px 10px;${dsBg}">${dsHeader}<div style="display:flex;gap:5px;overflow:hidden;opacity:.9">${[0,1,2,3,4,5].map(()=>`<div style="flex:0 0 60px;display:flex;flex-direction:column;align-items:center"><div style="width:50px;height:50px;background:#fff;border-radius:50%;border:2px solid ${dsAccent};overflow:hidden"><div style="height:100%;background:#f5e8dd"></div></div><div style="font-size:9px;font-weight:900;color:${dsAccent};margin-top:3px">-50%</div></div>`).join('')}</div></div>`;
+      // --- COUNTDOWN ---
+      if (v==='countdown') return `<div style="padding:6px 10px;${dsBg}">${dsHeader}<div style="display:flex;gap:5px;overflow:hidden">${[0,1,2].map(()=>`<div style="flex:0 0 108px;background:#fff;border-radius:${dsRad}px;overflow:hidden;border:1px solid #f3edde;position:relative"><div style="height:90px;background:#f5e8dd"></div><div style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.7);color:#fff;font-size:9px;font-weight:900;padding:2px 5px;border-radius:4px">02:14:09</div><div style="padding:5px 6px"><div style="font-size:10px;font-weight:900;color:var(--dark)">KWD 0.32</div>${dsBadge}</div></div>`).join('')}</div></div>`;
+      // --- COMPACT (default) ---
+      return `<div style="padding:6px 10px;${dsBg}">${dsHeader}<div style="display:flex;gap:6px;overflow:hidden">${[0,1,2,3].map(()=>`<div style="flex:0 0 90px;background:#fff;border-radius:${dsRad}px;overflow:hidden;border:1px solid #f3edde"><div style="height:80px;background:#f5e8dd"></div><div style="padding:5px 6px"><div style="font-size:11px;font-weight:900;color:var(--dark)">KWD 0.32</div>${dsBadge}${dsSave}</div></div>`).join('')}</div></div>`;
+    }
     case 'slider': {
       const slides = p.slides || [];
       const first = slides[0] || {};
@@ -2742,8 +2779,36 @@ function renderContent(b){
         ${productsPickerBtn(b)}
         <div class="field"><label>Maximum items</label>
           <input type="number" data-prop="limit" value="${p.limit||4}"/></div>`;
-    case 'discount-strip':
-      return `${mlField(b,'title','Section title')}
+    case 'discount-strip': {
+      // v2.0.67 — PRO Discount Strip with 6 variants + filtering + styling
+      const VARIANTS = [
+        ['compact',    '⚡', 'Compact strip',  'Small cards, horizontal scroll'],
+        ['hero',       '🎯', 'Hero + side',    '1 big featured + 2 stacked side'],
+        ['mega',       '📋', 'Mega list',      'Vertical list, full price compare'],
+        ['grid_2col',  '⊞',  '2-col grid',     'Fixed 2 cols, no scroll'],
+        ['ticker',     '🎞', 'Auto ticker',    'Infinite auto-scrolling marquee'],
+        ['countdown',  '⏰', 'With countdowns','Each card has its own timer'],
+      ];
+      const STYLES = [
+        ['flat','Flat'],['outlined','Outlined'],['gradient','Gradient'],['glass','Glass'],
+      ];
+      return `<p class="hint">Pro discount carousel — 6 variants, price-savings pill, urgency tags, sortable & filterable.</p>
+
+        <div class="sub-h">Layout</div>
+        <div class="field"><label>Variant</label>
+          <div class="variant-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px">
+            ${VARIANTS.map(([v,ic,lbl,sub])=>`
+              <div class="variant-card ${p.variant===v?'on':''}" data-prop="variant" data-prop-val="${v}"
+                   style="cursor:pointer;padding:8px 6px;border:1px solid ${p.variant===v?'var(--brand)':'#e6dec8'};border-radius:8px;background:${p.variant===v?'#FFF6E0':'#fff'};text-align:center">
+                <div style="font-size:18px;line-height:1">${ic}</div>
+                <div style="font-size:10.5px;font-weight:900;color:var(--dark);margin-top:3px">${lbl}</div>
+                <div style="font-size:9px;opacity:.6;margin-top:1px">${sub}</div>
+              </div>`).join('')}
+          </div></div>
+
+        ${mlField(b,'title','Section title')}
+
+        <div class="sub-h">Source & filtering</div>
         <div class="field"><label>Source</label>
           ${sourceSelect(b, 'source', [
             ['discounted','⚡ Active discount'],
@@ -2756,7 +2821,48 @@ function renderContent(b){
         ${(p.source==='manual') ? productsPickerBtn(b) : ''}
         ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
         <div class="field"><label>Maximum items</label>
-          <input type="number" data-prop="limit" value="${p.limit||10}"/></div>`;
+          <input type="number" data-prop="limit" value="${p.limit||10}"/></div>
+        <div class="field"><label>Minimum discount % (filter)</label>
+          <input type="number" data-prop="min_discount_pct" value="${p.min_discount_pct||0}" min="0" max="99"/>
+          <div class="hint">Only show products with at least this much off. 0 = no filter.</div></div>
+        <div class="field"><label>Sort by</label>
+          <select data-prop="sort">
+            <option value="discount_desc" ${p.sort==='discount_desc'?'selected':''}>🔥 Biggest discount first</option>
+            <option value="newest" ${p.sort==='newest'?'selected':''}>✨ Newest</option>
+            <option value="price_asc" ${p.sort==='price_asc'?'selected':''}>⬆️ Lowest price</option>
+            <option value="price_desc" ${p.sort==='price_desc'?'selected':''}>⬇️ Highest price</option>
+          </select></div>
+
+        <div class="sub-h">Card style</div>
+        <div class="field"><label>Card style</label>
+          <select data-prop="card_style">
+            ${STYLES.map(([v,l])=>`<option value="${v}" ${p.card_style===v?'selected':''}>${l}</option>`).join('')}
+          </select></div>
+        <div class="field"><label>Card radius</label>
+          <input type="number" data-prop="card_radius" value="${p.card_radius||10}" min="0" max="32"/></div>
+        <div class="field"><label>Accent color (badges)</label>
+          <div class="swatch-row">
+            ${['#E63946','#FF4500','#F5C320','#1F8A40','#6E4AB0','#1D6FB7','#C0392B','#412402'].map(c=>`
+              <div class="sw ${p.accent===c?'on':''}" style="background:${c}" data-color-prop="${c}" data-color-target="accent"></div>`).join('')}
+          </div></div>
+        <div class="field"><label>Strip background</label>
+          <div class="swatch-row">
+            ${['transparent','#FAF6EB','#FFF6E0','#FFEFE0','#FFEAEA','#412402'].map(c=>`
+              <div class="sw ${p.bg_strip===c?'on':''}" style="background:${c==='transparent'?'#fff':c};${c==='transparent'?'background-image:repeating-linear-gradient(45deg,#eee,#eee 4px,#fff 4px,#fff 8px);':''}" data-color-prop="${c}" data-color-target="bg_strip"></div>`).join('')}
+          </div></div>
+
+        <div class="sub-h">What to show</div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_discount_badge" ${p.show_discount_badge!==false?'checked':''}/> Show -X% badge</label></div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_save_amount" ${p.show_save_amount!==false?'checked':''}/> Show "Save X KD" pill</label></div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_compare_price" ${p.show_compare_price!==false?'checked':''}/> Show old (strikethrough) price</label></div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_brand" ${p.show_brand?'checked':''}/> Show brand name</label></div>
+        <div class="field"><label><input type="checkbox" data-toggle-prop="show_urgency" ${p.show_urgency?'checked':''}/> Show "Selling fast" tag on big discounts</label></div>
+        ${p.show_urgency?`<div class="field"><label>"Selling fast" threshold (% off)</label>
+          <input type="number" data-prop="urgency_threshold" value="${p.urgency_threshold||30}" min="0" max="99"/></div>`:''}
+        ${p.variant==='ticker'?`<div class="field"><label>Ticker loop speed (seconds)</label>
+          <input type="number" data-prop="ticker_speed" value="${p.ticker_speed||30}" min="10" max="120"/>
+          <div class="hint">Lower = faster scroll.</div></div>`:''}`;
+    }
     case 'slider': {
       // v2.0.61 — Professional Slider with layouts, transitions, per-slide
       // media kinds, 9-anchor text positioning, badges, schedule + A/B.
@@ -3591,12 +3697,31 @@ function wirePropsBody(b){
   });
   // Boolean toggles on a switch element
   document.querySelectorAll('[data-toggle-prop]').forEach(sw => {
+    // Skip checkboxes — they have their own change handler via the input element
+    if (sw.tagName === 'INPUT' && sw.type === 'checkbox') {
+      sw.addEventListener('change', () => {
+        b.props[sw.dataset.toggleProp] = sw.checked;
+        renderRight(); renderCanvas(); scheduleSave();
+      });
+      return;
+    }
     sw.addEventListener('click', () => {
       const key = sw.dataset.toggleProp;
       const wasOn = sw.classList.contains('on');
       b.props[key] = !wasOn;
       sw.classList.toggle('on', !wasOn);
       renderCanvas(); scheduleSave();
+    });
+  });
+  // Click-to-set on a non-input element — pattern: data-prop="key" data-prop-val="value"
+  // v2.0.67 — used by Discount Strip variant cards
+  document.querySelectorAll('[data-prop-val]').forEach(el => {
+    el.addEventListener('click', () => {
+      const key = el.dataset.prop;
+      const val = el.dataset.propVal;
+      if (!key) return;
+      b.props[key] = val;
+      renderRight(); renderCanvas(); scheduleSave();
     });
   });
   // Background color swatches

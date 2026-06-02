@@ -207,7 +207,23 @@ def resolve_products(env, props, lang, block=None):
     else:
         recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
 
-    return {'items': [_product_brief(env, p, lang) for p in recs]}
+    items = [_product_brief(env, p, lang) for p in recs]
+    # v2.0.67 — optional post-filter + sort for Discount Strip & friends
+    try:
+        min_disc = int(props.get('min_discount_pct') or 0)
+    except Exception:
+        min_disc = 0
+    if min_disc > 0:
+        items = [x for x in items if (x.get('discount_pct') or 0) >= min_disc]
+    sort_by = (props.get('sort') or '').strip()
+    if sort_by == 'discount_desc':
+        items.sort(key=lambda x: -(x.get('discount_pct') or 0))
+    elif sort_by == 'price_asc':
+        items.sort(key=lambda x: (x.get('price') or {}).get('amount') or 0)
+    elif sort_by == 'price_desc':
+        items.sort(key=lambda x: -((x.get('price') or {}).get('amount') or 0))
+    # 'newest' is already the default order from search
+    return {'items': items}
 
 
 def _product_brief(env, p, lang):
