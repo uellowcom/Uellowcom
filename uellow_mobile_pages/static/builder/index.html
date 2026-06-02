@@ -1621,15 +1621,25 @@ function renderLeftTheme(host){
   // v2.0.59 — read existing overrides JSON (may be undefined on old pages).
   // Shape: {primary, page_bg, header_style, font, confetti, parallax, lanterns}
   const ov = p.themeOverride || {};
-  const _bgOpts = ['cream','white','gray','lanterns','confetti','custom'];
-  const _bgLabel = (k) => ({cream:'Cream (default)',white:'Pure white',gray:'Soft gray',lanterns:'Pattern: lanterns',confetti:'Pattern: confetti',custom:'Custom image…'}[k]||k);
+  // v2.0.60 — Background options now save REAL HEX colors so Flutter's
+  // hex regex matches. (Old version saved keywords like 'gray' which the
+  // app couldn't parse → fell back to the preset cream.)
+  const _bgOpts = [
+    {val:'',        label:'Preset default'},
+    {val:'#FFFFFF', label:'Pure white'},
+    {val:'#E5E7EB', label:'Soft gray'},
+    {val:'#F3F4F6', label:'Lighter gray'},
+    {val:'#FAF6EB', label:'Cream'},
+    {val:'#FFF8E1', label:'Warm beige'},
+    {val:'#0F0F0F', label:'Black'},
+  ];
   const _headerOpts = ['sticky_search','translucent','hidden','custom_logo'];
   const _headerLabel = (k) => ({sticky_search:'Sticky search header',translucent:'Translucent / blur',hidden:'Hidden (full-bleed hero)',custom_logo:'Custom logo + nav'}[k]||k);
   const _fontOpts = ['inter','cairo','tajawal_bold','sf_pro'];
   const _fontLabel = (k) => ({inter:'Inter / Tajawal (default)',cairo:'Cairo',tajawal_bold:'Tajawal Bold',sf_pro:'SF Pro / Noto Sans Arabic'}[k]||k);
   host.innerHTML = `
     <div class="panel-h">
-      <div><h3>Theme · v2.0.59</h3><div class="sub">Per-page colors & background · ${cur_t.name}</div></div>
+      <div><h3>Theme · v2.0.60</h3><div class="sub">Per-page colors & background · ${cur_t.name}</div></div>
       <button class="btn btn-primary" id="themeSaveBtn" style="padding:7px 14px;font-size:12px;font-weight:700">💾 Save Theme</button>
     </div>
     <div class="left-body pad">
@@ -1650,10 +1660,14 @@ function renderLeftTheme(host){
           <div class="sw ${!ov.primary?'on':''}" style="background:linear-gradient(45deg,#fff 49%,#ddd 50%);border:1px dashed #999;color:#333;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center" data-ov-key="primary" data-ov-val="">×</div>
         </div>
       </div>
-      <div class="field"><label>Background</label>
+      <div class="field"><label>Background (live in app)</label>
         <select data-ov-key="page_bg">
-          ${_bgOpts.map(k=>`<option value="${k}" ${ov.page_bg===k?'selected':''}>${_bgLabel(k)}</option>`).join('')}
+          ${_bgOpts.map(o=>`<option value="${o.val}" ${(ov.page_bg||'')===o.val?'selected':''}>${o.label}</option>`).join('')}
         </select>
+        <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+          ${_bgOpts.filter(o=>o.val).map(o=>`<div title="${o.label}" style="width:20px;height:20px;border-radius:4px;background:${o.val};border:1px solid #d0d0d0;cursor:pointer" data-bg-quick="${o.val}"></div>`).join('')}
+          <small style="color:#888;align-self:center">↑ click a swatch to apply quickly</small>
+        </div>
       </div>
       <div class="field"><label>Header style</label>
         <select data-ov-key="header_style">
@@ -1714,8 +1728,17 @@ function renderLeftTheme(host){
   // Selects (page_bg, header_style, font)
   host.querySelectorAll('select[data-ov-key]').forEach(el => {
     el.addEventListener('change', () => {
-      const val = el.value === _defaultOvValue(el.dataset.ovKey) ? '' : el.value;
-      _persistOverride(el.dataset.ovKey, val);
+      // value already empty-string for "Preset default" / "Use default"
+      _persistOverride(el.dataset.ovKey, el.value || '');
+    });
+  });
+  // Quick background swatches
+  host.querySelectorAll('[data-bg-quick]').forEach(el => {
+    el.addEventListener('click', () => {
+      const val = el.dataset.bgQuick;
+      _persistOverride('page_bg', val);
+      const sel = host.querySelector('select[data-ov-key="page_bg"]');
+      if (sel) sel.value = val;
     });
   });
   // Animation toggles
@@ -1728,7 +1751,7 @@ function renderLeftTheme(host){
     });
   });
   function _defaultOvValue(key){
-    return {page_bg:'cream', header_style:'sticky_search', font:'inter'}[key];
+    return {header_style:'sticky_search', font:'inter'}[key];
   }
 
   function _setThemeStatus(html, color){
