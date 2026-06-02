@@ -1,29 +1,207 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
 <template id="seo_landing_page" name="SEO Landing Page">
-  <t t-call="website.layout">
-    <div class="container py-5">
-      <h1 class="fw-bold mb-2"><t t-esc="h1"/></h1>
-      <p t-if="intro" class="lead text-muted mb-4"><t t-esc="intro"/></p>
-      <div class="row g-3">
-        <t t-foreach="products" t-as="product">
-          <div class="col-6 col-md-3">
-            <div class="card h-100 shadow-sm">
-              <div class="card-body">
-                <h6 class="fw-bold"><t t-esc="product.name"/></h6>
-                <div class="text-success fw-bold">
-                  <t t-esc="'%.3f' % product.list_price"/> KD
-                </div>
-              </div>
-              <div class="card-footer p-2">
-                <a t-att-href="product.website_url" class="btn btn-sm btn-outline-primary w-100">View</a>
-              </div>
-            </div>
-          </div>
+    <t t-set="additional_title" t-value="title"/>
+    <!-- Push the SEO fields into Odoo's seo_object slot so Odoo's own
+         <head> renderer emits them on top of the global hreflang/JSON-LD
+         from uellow_seo_auto. -->
+    <t t-set="meta_description" t-value="meta_desc"/>
+
+    <t t-call="website.layout">
+
+        <!-- ════════════════════════════════════════════════════════════
+             Page-specific <head> injections — meta description, canonical,
+             OG tags, BreadcrumbList + ItemList + FAQPage JSON-LD.
+             ════════════════════════════════════════════════════════════ -->
+        <t t-set="_base" t-value="(request.env['ir.config_parameter'].sudo().get_param('web.base.url') or '').rstrip('/')"/>
+        <t t-set="_lang_path" t-value="('/' + (request.lang.url_code or request.lang.code[:2])) if (request.lang and not request.website.default_lang_id == request.lang) else ''"/>
+        <t t-set="_canonical" t-value="_base + _lang_path + '/guides/' + page.slug"/>
+        <t t-set="_og_img"
+           t-value="_base + '/web/image/uellow.seo.page/' + str(page.id) + '/og_image' if page.og_image else (_base + '/web/image/product.template/' + str(products[0].id) + '/image_1920' if products else '')"/>
+
+        <div t-att-data-prw-seo-canonical="_canonical" style="display:none"/>
+
+        <!-- Bootstrap doesn't let us inject into <head> from inside layout
+             body, but website.layout already exposes meta_description /
+             additional_title above. For canonical + OG + JSON-LD we use a
+             hidden block that the website module collects, plus inline
+             JSON-LD scripts (Google reads JSON-LD anywhere in the doc). -->
+        <link rel="canonical" t-att-href="_canonical" style="display:none"/>
+        <meta property="og:type"        content="article" style="display:none"/>
+        <meta property="og:title"       t-att-content="title" style="display:none"/>
+        <meta property="og:description" t-att-content="meta_desc" style="display:none"/>
+        <meta property="og:url"         t-att-content="_canonical" style="display:none"/>
+        <t t-if="_og_img">
+            <meta property="og:image"        t-att-content="_og_img" style="display:none"/>
+            <meta property="og:image:width"  content="1200" style="display:none"/>
+            <meta property="og:image:height" content="630"  style="display:none"/>
+            <meta name="twitter:image"       t-att-content="_og_img" style="display:none"/>
         </t>
-      </div>
-      <div t-if="not products" class="text-center py-5 text-muted">No products available.</div>
-    </div>
-  </t>
+        <meta name="twitter:card"  content="summary_large_image" style="display:none"/>
+        <meta name="twitter:title" t-att-content="title" style="display:none"/>
+        <meta name="twitter:description" t-att-content="meta_desc" style="display:none"/>
+
+        <!-- BreadcrumbList JSON-LD -->
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {"@type":"ListItem","position":1,"name":"<t t-esc="'Home' if not is_arabic else 'الرئيسية'"/>","item":"<t t-esc="_base"/>"},
+                    {"@type":"ListItem","position":2,"name":"<t t-esc="'Guides' if not is_arabic else 'الأدلة'"/>","item":"<t t-esc="_base"/>/guides"},
+                    {"@type":"ListItem","position":3,"name":"<t t-esc="title"/>","item":"<t t-esc="_canonical"/>"}
+                ]
+            }
+        </script>
+
+        <!-- ItemList JSON-LD — products on the page -->
+        <t t-if="products">
+            <script type="application/ld+json">
+                {
+                    "@context": "https://schema.org",
+                    "@type": "ItemList",
+                    "itemListElement": [<t t-foreach="products" t-as="p">
+                        {
+                            "@type": "ListItem",
+                            "position": <t t-esc="p_index + 1"/>,
+                            "url": "<t t-esc="_base + (p.website_url or '')"/>",
+                            "name": "<t t-esc="(p.name or '').replace('&quot;', '')"/>"
+                        }<t t-if="not p_last">,</t></t>]
+                }
+            </script>
+        </t>
+
+        <!-- FAQPage JSON-LD (F13) -->
+        <t t-if="page.faq_ids">
+            <script type="application/ld+json">
+                {
+                    "@context": "https://schema.org",
+                    "@type": "FAQPage",
+                    "mainEntity": [<t t-foreach="page.faq_ids" t-as="f">
+                        {
+                            "@type": "Question",
+                            "name": "<t t-esc="(f.question_ar if is_arabic and f.question_ar else f.question_en).replace('&quot;','')"/>",
+                            "acceptedAnswer": {
+                                "@type": "Answer",
+                                "text": "<t t-esc="(f.answer_ar if is_arabic and f.answer_ar else f.answer_en).replace('&quot;','').replace(chr(10),' ')"/>"
+                            }
+                        }<t t-if="not f_last">,</t></t>]
+                }
+            </script>
+        </t>
+
+        <!-- ═════════════════ Visible content ═════════════════ -->
+        <div class="container py-4 py-md-5">
+            <t t-if="preview">
+                <div class="alert alert-warning">
+                    <strong>Preview mode</strong> — this page is currently
+                    <span t-esc="page.state"/>. Visitors won't see it until you publish.
+                </div>
+            </t>
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-3">
+                    <li class="breadcrumb-item"><a href="/">
+                        <t t-if="is_arabic">الرئيسية</t><t t-else="">Home</t>
+                    </a></li>
+                    <li class="breadcrumb-item"><a href="/guides">
+                        <t t-if="is_arabic">الأدلة</t><t t-else="">Guides</t>
+                    </a></li>
+                    <li class="breadcrumb-item active"><t t-esc="title"/></li>
+                </ol>
+            </nav>
+
+            <h1 class="fw-bold mb-2" t-esc="h1"/>
+            <p t-if="intro" class="lead text-muted mb-4" t-esc="intro"/>
+
+            <div class="row g-3">
+                <t t-foreach="products" t-as="product">
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <a t-att-href="product.website_url" class="text-decoration-none">
+                            <div class="card h-100 shadow-sm">
+                                <t t-if="product.image_1920">
+                                    <img t-attf-src="/web/image/product.template/{{product.id}}/image_512"
+                                         class="card-img-top object-fit-contain p-3"
+                                         style="height:180px"
+                                         t-att-alt="product.name"
+                                         loading="lazy"/>
+                                </t>
+                                <div class="card-body">
+                                    <h6 class="fw-bold text-dark" t-esc="product.name"/>
+                                    <div class="text-success fw-bold">
+                                        <span t-esc="'%.3f' % (product.list_price or 0)"/> KD
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </t>
+            </div>
+            <div t-if="not products" class="text-center py-5 text-muted">
+                <t t-if="is_arabic">لا توجد منتجات.</t>
+                <t t-else="">No products available.</t>
+            </div>
+
+            <!-- FAQ visible accordion -->
+            <t t-if="page.faq_ids">
+                <h2 class="mt-5 mb-3">
+                    <t t-if="is_arabic">الأسئلة الشائعة</t>
+                    <t t-else="">Frequently Asked Questions</t>
+                </h2>
+                <div class="accordion" id="seoFAQ">
+                    <t t-foreach="page.faq_ids" t-as="f">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse"
+                                        t-attf-data-bs-target="#faq{{f.id}}">
+                                    <t t-esc="f.question_ar if is_arabic and f.question_ar else f.question_en"/>
+                                </button>
+                            </h2>
+                            <div t-attf-id="faq{{f.id}}" class="accordion-collapse collapse"
+                                 data-bs-parent="#seoFAQ">
+                                <div class="accordion-body" t-esc="f.answer_ar if is_arabic and f.answer_ar else f.answer_en"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </div>
+    </t>
 </template>
+
+<!-- /guides index page — lists all published landing pages -->
+<template id="seo_guides_index" name="SEO Guides Index">
+    <t t-call="website.layout">
+        <div class="container py-4 py-md-5">
+            <h1 class="fw-bold mb-4">
+                <t t-set="_is_ar" t-value="(request.env.lang or '').startswith('ar')"/>
+                <t t-if="_is_ar">دليل التسوق</t>
+                <t t-else="">Shopping Guides</t>
+            </h1>
+            <div class="row g-3">
+                <t t-foreach="pages" t-as="p">
+                    <t t-set="_t" t-value="(p.title_ar or p.title_en) if _is_ar else (p.title_en or p.title_ar)"/>
+                    <t t-set="_d" t-value="(p.meta_desc_ar or p.meta_desc_en or '') if _is_ar else (p.meta_desc_en or p.meta_desc_ar or '')"/>
+                    <div class="col-md-6 col-lg-4">
+                        <a t-attf-href="/guides/{{p.slug}}" class="text-decoration-none">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="fw-bold text-dark" t-esc="_t"/>
+                                    <p class="text-muted small mb-0" t-esc="_d[:160]"/>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </t>
+            </div>
+            <div t-if="not pages" class="text-muted text-center py-5">
+                <t t-if="_is_ar">لا توجد أدلة منشورة بعد.</t>
+                <t t-else="">No guides published yet.</t>
+            </div>
+        </div>
+    </t>
+</template>
+
 </odoo>

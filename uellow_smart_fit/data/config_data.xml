@@ -9,5 +9,19 @@
             <field name="key">uellow_fit.show_on_product</field>
             <field name="value">True</field>
         </record>
+
+        <!-- Keywords used to detect which product attribute is the "Size" attribute.
+             Comma-separated, case-insensitive, matched as substring. -->
+        <record id="fit_size_attribute_keywords" model="ir.config_parameter">
+            <field name="key">uellow_fit.size_attribute_keywords</field>
+            <field name="value">size,مقاس,حجم,size eu,size us,clothing size</field>
+        </record>
+
+        <!-- Site-wide default measurement unit shown to customers.
+             Storage stays in cm. Possible: cm | inch -->
+        <record id="fit_default_unit" model="ir.config_parameter">
+            <field name="key">uellow_fit.default_unit</field>
+            <field name="value">cm</field>
+        </record>
     </data>
 </odoo>

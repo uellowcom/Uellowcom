@@ -41,6 +41,66 @@ FIT_TOLERANCE = {
     'loose':    1,   # Prefer larger
 }
 
+# ── Per-area analysis constants ───────────────────────────────────────────────
+# Comfort ease (in cm) — how much bigger the garment should be than the body.
+# (min_ease, max_ease). Below min = tight; above max = loose; within = comfortable.
+EASE_RANGES = {
+    'chest':    (4.0,  12.0),
+    'waist':    (2.0,  10.0),
+    'hip':      (3.0,  10.0),
+    'shoulder': (-1.0,  1.5),
+    'length':   (-3.0,  5.0),
+    'sleeve':   (-1.0,  3.0),
+    'inseam':   (-2.0,  3.0),
+    'thigh':    (2.0,   8.0),
+    # Shoes: shoe inner length minus foot length. Want a little wiggle room.
+    'foot_length': (0.5, 1.5),
+}
+
+# Weight of each area when computing the overall match score.
+AREA_WEIGHTS = {
+    'chest': 35, 'shoulder': 25, 'sleeve': 10, 'length': 15,
+    'waist': 30, 'hip': 25, 'inseam': 10, 'thigh': 10,
+    'foot_length': 100,
+}
+
+# Bilingual labels for the UI.
+AREA_LABELS = {
+    'chest':       {'ar': 'الصدر',     'en': 'Chest'},
+    'shoulder':    {'ar': 'الكتف',     'en': 'Shoulder'},
+    'sleeve':      {'ar': 'الكم',      'en': 'Sleeve'},
+    'length':      {'ar': 'الطول',     'en': 'Length'},
+    'waist':       {'ar': 'الوسط',     'en': 'Waist'},
+    'hip':         {'ar': 'الورك',     'en': 'Hip'},
+    'inseam':      {'ar': 'الساق',     'en': 'Inseam'},
+    'thigh':       {'ar': 'الفخذ',     'en': 'Thigh'},
+    'foot_length': {'ar': 'طول القدم', 'en': 'Foot length'},
+}
+
+# Which areas matter for which category.
+RELEVANT_AREAS_BY_CATEGORY = {
+    'shirt':   ['chest', 'shoulder', 'sleeve', 'length'],
+    'tshirt':  ['chest', 'shoulder', 'sleeve', 'length'],
+    'top':     ['chest', 'shoulder', 'sleeve', 'length'],
+    'jacket':  ['chest', 'shoulder', 'sleeve', 'length'],
+    'sweater': ['chest', 'shoulder', 'sleeve', 'length'],
+    'hoodie':  ['chest', 'shoulder', 'sleeve', 'length'],
+    'coat':    ['chest', 'shoulder', 'sleeve', 'length'],
+    'dress':   ['chest', 'waist', 'hip', 'length'],
+    'gown':    ['chest', 'waist', 'hip', 'length'],
+    'abaya':   ['chest', 'shoulder', 'length'],
+    'pants':   ['waist', 'hip', 'inseam', 'thigh'],
+    'jeans':   ['waist', 'hip', 'inseam', 'thigh'],
+    'shorts':  ['waist', 'hip', 'thigh'],
+    'skirt':   ['waist', 'hip', 'length'],
+    'shoe':    ['foot_length'],
+    'sneaker': ['foot_length'],
+    'boot':    ['foot_length'],
+    'sandal':  ['foot_length'],
+    'slipper': ['foot_length'],
+    'generic': ['chest', 'shoulder', 'waist', 'hip', 'length'],
+}
+
 
 class SmartFitController(http.Controller):
 
@@ -220,6 +280,198 @@ class SmartFitController(http.Controller):
 
         return results
 
+    # ── Per-area analysis using the per-product size chart ───────────────────
+
+    def _classify_area(self, body_value, garment_value, area, tolerance=0.0):
+        """Compare one body region to a garment dimension.
+        Returns dict {fit, diff_cm, pct} or None if missing data."""
+        if not body_value or not garment_value:
+            return None
+        diff = round(garment_value - body_value, 1)
+        lo, hi = EASE_RANGES.get(area, (-2.0, 5.0))
+        lo -= (tolerance or 0)
+        hi += (tolerance or 0)
+
+        if diff < lo:
+            gap = lo - diff
+            pct = max(0, int(round(100 - gap * 20)))
+            return {'fit': 'tight', 'diff_cm': diff, 'pct': pct,
+                    'garment_cm': garment_value, 'body_cm': body_value}
+        if diff > hi:
+            gap = diff - hi
+            pct = max(0, int(round(100 - gap * 15)))
+            return {'fit': 'loose', 'diff_cm': diff, 'pct': pct,
+                    'garment_cm': garment_value, 'body_cm': body_value}
+
+        mid = (lo + hi) / 2
+        rng = max((hi - lo) / 2, 0.1)
+        pct = max(85, int(round(100 - abs(diff - mid) / rng * 15)))
+        return {'fit': 'comfortable', 'diff_cm': diff, 'pct': pct,
+                'garment_cm': garment_value, 'body_cm': body_value}
+
+    def _analyze_chart_size(self, profile, chart_row, category):
+        """Compute per-area verdict + overall % for one size row."""
+        relevant = RELEVANT_AREAS_BY_CATEGORY.get(category, RELEVANT_AREAS_BY_CATEGORY['generic'])
+        # Mapping: profile field → chart field
+        profile_field = {
+            'chest': 'chest', 'shoulder': 'shoulder',
+            'waist': 'waist', 'hip': 'hip',
+            'sleeve': 'arm_length',
+            'inseam': 'inseam', 'thigh': 'thigh',
+            'length': None,   # no direct body measure
+            'foot_length': 'foot_length_cm',
+        }
+
+        areas = []
+        weighted = 0
+        wsum = 0
+
+        for area in relevant:
+            body_attr = profile_field.get(area)
+            body_val  = getattr(profile, body_attr, 0) if body_attr else 0
+            chart_attr = f'{area}_cm'
+            garment_val = getattr(chart_row, chart_attr, 0)
+            if not garment_val:
+                continue
+            # If no body value, just report garment dimension (no comparison)
+            if not body_val:
+                areas.append({
+                    'key': area, 'label': AREA_LABELS[area]['ar'],
+                    'fit': 'unknown', 'pct': None,
+                    'diff_cm': None, 'garment_cm': round(garment_val, 1),
+                    'body_cm': None,
+                    'note': 'مقاسك غير موجود — أكمل بروفايلك',
+                })
+                continue
+            info = self._classify_area(body_val, garment_val, area, chart_row.tolerance_cm)
+            if not info:
+                continue
+            info['key']   = area
+            info['label'] = AREA_LABELS[area]['ar']
+            areas.append(info)
+            w = AREA_WEIGHTS.get(area, 10)
+            weighted += info['pct'] * w
+            wsum     += w
+
+        overall = int(round(weighted / wsum)) if wsum else 0
+        # Fit label & color from overall
+        if overall >= 85:
+            fit_label, fit_color = 'مناسب تماماً', 'green'
+        elif overall >= 70:
+            fit_label, fit_color = 'مناسب', 'yellow'
+        elif overall >= 50:
+            fit_label, fit_color = 'مقبول', 'orange'
+        else:
+            fit_label, fit_color = 'غير مناسب', 'red'
+
+        return {
+            'size':         chart_row.size_label,
+            'overall_pct':  overall,
+            'fit_label':    fit_label,
+            'fit_color':    fit_color,
+            'areas':        areas,
+            'recommended':  False,
+        }
+
+    def _analyze_with_chart(self, profile, product, category):
+        """Loop product.size.chart rows. Returns sorted list + recommended index."""
+        rows = product.size_chart_ids.sorted('sequence')
+        if not rows:
+            return None
+        results = [self._analyze_chart_size(profile, r, category) for r in rows]
+        results.sort(key=lambda x: x['overall_pct'], reverse=True)
+        if results:
+            results[0]['recommended'] = True
+        return results
+
+    def _save_fit_check(self, profile, product, analysis, source='beena_check'):
+        """Persist a fit-check snapshot to customer.fit.history."""
+        if not profile or not product or not analysis:
+            return False
+        area_map = {a['key']: a for a in (analysis.get('areas') or [])}
+        def _fit(k):  return (area_map.get(k) or {}).get('fit') or False
+        def _diff(k): return (area_map.get(k) or {}).get('diff_cm') or 0.0
+        vals = {
+            'profile_id':        profile.id,
+            'product_id':        product.id,
+            'size_chosen':       analysis.get('size'),
+            'overall_match_pct': analysis.get('overall_pct') or 0,
+            'category':          analysis.get('category') or '',
+            'source':            source,
+            'chest_fit':    _fit('chest'),
+            'waist_fit':    _fit('waist'),
+            'hip_fit':      _fit('hip'),
+            'shoulder_fit': _fit('shoulder'),
+            'length_fit':   _fit('length'),
+            'sleeve_fit':   _fit('sleeve'),
+            'inseam_fit':   _fit('inseam'),
+            'chest_diff_cm':    _diff('chest'),
+            'waist_diff_cm':    _diff('waist'),
+            'hip_diff_cm':      _diff('hip'),
+            'shoulder_diff_cm': _diff('shoulder'),
+            'length_diff_cm':   _diff('length'),
+            'sleeve_diff_cm':   _diff('sleeve'),
+            'inseam_diff_cm':   _diff('inseam'),
+            'details_json':     json.dumps(analysis, ensure_ascii=False),
+        }
+        try:
+            return request.env['customer.fit.history'].sudo().create(vals)
+        except Exception as e:
+            _logger.warning('save_fit_check failed: %s', e)
+            return False
+
+    def _last_fit_check(self, profile, product):
+        """Return latest fit-check record for this customer+product or None."""
+        if not profile or not product:
+            return None
+        return request.env['customer.fit.history'].sudo().search([
+            ('profile_id', '=', profile.id),
+            ('product_id', '=', product.id),
+        ], order='create_date desc', limit=1) or None
+
+    # ── Variant resolution ──────────────────────────────────────────────
+    def _resolve_variant_id(self, product, chart_row):
+        """Resolve the exact product.product (variant) for a chart row.
+
+        Priority:
+          1. chart_row.attribute_value_id  → match via product_template_attribute_value
+          2. legacy fallback: substring match of chart_row.size_label in variant.display_name
+
+        Returns variant id (int) or False.
+        """
+        if not product or not chart_row:
+            return False
+
+        # 1. Strict link via attribute value
+        if chart_row.attribute_value_id:
+            ptav = product.attribute_line_ids.product_template_value_ids.filtered(
+                lambda v: v.product_attribute_value_id == chart_row.attribute_value_id
+            )
+            if ptav:
+                variant = product.product_variant_ids.filtered(
+                    lambda v: ptav in v.product_template_attribute_value_ids
+                )
+                if variant:
+                    return variant[:1].id
+
+        # 2. Fallback for legacy rows without attribute link
+        size_label = (chart_row.size_label or '').strip().lower()
+        if not size_label:
+            return False
+        for variant in product.product_variant_ids:
+            display = (variant.display_name or '').lower()
+            # Try exact match within parentheses or after colon first
+            if (f'({size_label})' in display
+                    or f': {size_label}' in display
+                    or f'- {size_label}' in display
+                    or display.endswith(' ' + size_label)):
+                return variant.id
+        # Last resort: substring (least reliable)
+        for variant in product.product_variant_ids:
+            if size_label in (variant.display_name or '').lower():
+                return variant.id
+        return False
+
     def _detect_category(self, product):
         """Detect product category for fit analysis."""
         name     = (product.name or '').lower()
@@ -387,3 +639,138 @@ class SmartFitController(http.Controller):
             'recommended': results[0]['size'] if results else None,
             'category':    category,
         }
+
+    # ── Modal endpoints (product page button) ────────────────────────────
+
+    @http.route('/fit/eligibility', type='json', auth='public', methods=['POST'], csrf=False)
+    def eligibility(self, **kwargs):
+        """Lightweight check used by the product page to decide whether to
+        show the 'Check fit' button.
+
+        Returns:
+          eligible: bool  – show the button?
+          reason:   str   – why not (logged_out | no_profile | no_chart | not_fashion)
+          completion_pct: int (when applicable)
+        """
+        product_id = kwargs.get('product_id')
+        public_user = request.env.ref('base.public_user')
+        if request.env.user.id == public_user.id:
+            return {'eligible': False, 'reason': 'logged_out'}
+
+        if not product_id:
+            return {'eligible': False, 'reason': 'no_product'}
+
+        product = request.env['product.template'].sudo().browse(int(product_id))
+        if not product.exists():
+            return {'eligible': False, 'reason': 'product_not_found'}
+
+        if not product.is_fashion_item:
+            return {'eligible': False, 'reason': 'not_fashion'}
+
+        if not product.size_chart_ids:
+            return {'eligible': False, 'reason': 'no_chart',
+                    'is_fashion': True}
+
+        partner = request.env.user.partner_id
+        profile = request.env['customer.body.profile'].sudo().search(
+            [('partner_id', '=', partner.id)], limit=1)
+        completion = int(profile.completion_pct or 0) if profile else 0
+        if not profile or completion < 40:
+            return {'eligible': False, 'reason': 'no_profile',
+                    'completion_pct': completion,
+                    'measurements_url': '/my/measurements'}
+
+        return {
+            'eligible':       True,
+            'completion_pct': completion,
+            'product_name':   product.name,
+            'has_chart':      True,
+        }
+
+    @http.route('/fit/check', type='json', auth='user', methods=['POST'], csrf=False)
+    def check_fit_modal(self, **kwargs):
+        """Full per-area fit check for the product page modal.
+
+        Returns the same shape as the Beena tool — the modal renders it.
+        """
+        product_id = kwargs.get('product_id')
+        requested_size = (kwargs.get('size') or '').strip()
+
+        if not product_id:
+            return {'state': 'no_product'}
+
+        product = request.env['product.template'].sudo().browse(int(product_id))
+        if not product.exists():
+            return {'state': 'product_not_found'}
+
+        partner = request.env.user.partner_id
+        profile = request.env['customer.body.profile'].sudo().search(
+            [('partner_id', '=', partner.id)], limit=1)
+        if not profile or (profile.completion_pct or 0) < 40:
+            return {'state': 'no_profile',
+                    'measurements_url': '/my/measurements'}
+
+        if not product.size_chart_ids:
+            return {'state': 'no_chart', 'product_id': product.id}
+
+        try:
+            category = self._detect_category(product)
+            results  = self._analyze_with_chart(profile, product, category)
+            if not results:
+                return {'state': 'error'}
+
+            chosen = None
+            if requested_size:
+                chosen = next((r for r in results if (r['size'] or '').lower() == requested_size.lower()), None)
+            if not chosen:
+                chosen = next((r for r in results if r.get('recommended')), results[0])
+            chosen['category'] = category
+
+            self._save_fit_check(profile, product, chosen, source='beena_check')
+
+            # Resolve variant via the new attribute-aware resolver
+            chart_row = product.size_chart_ids.filtered(
+                lambda r: (r.size_label or '').strip().lower() == (chosen['size'] or '').strip().lower()
+            )[:1]
+            variant_id = self._resolve_variant_id(product, chart_row) if chart_row else False
+
+            # ALL sizes (for in-modal size selector). Ordered by the chart's
+            # natural sequence, not score, so the picker matches the product page.
+            ordered_rows = product.size_chart_ids.sorted('sequence')
+            by_size = {(r['size'] or '').strip().lower(): r for r in results}
+            all_sizes = []
+            for row in ordered_rows:
+                key = (row.size_label or '').strip().lower()
+                r = by_size.get(key)
+                if not r:
+                    continue
+                all_sizes.append({
+                    'size':        r['size'],
+                    'overall_pct': r['overall_pct'],
+                    'fit_label':   r['fit_label'],
+                    'fit_color':   r['fit_color'],
+                    'recommended': r.get('recommended', False),
+                })
+            # Alts kept for backward compatibility (cards that still use it)
+            alts = [s for s in all_sizes if s['size'] != chosen['size']][:3]
+
+            return {
+                'state':             'ready',
+                'product_id':        product.id,
+                'product_name':      product.name,
+                'product_image_url': '/web/image/product.template/%s/image_512' % product.id,
+                'product_price_kd':  float(product.list_price or 0.0),
+                'category':          category,
+                'size':              chosen['size'],
+                'overall_pct':       chosen['overall_pct'],
+                'fit_label':         chosen['fit_label'],
+                'fit_color':         chosen['fit_color'],
+                'areas':             chosen['areas'],
+                'all_sizes':         all_sizes,
+                'alternates':        alts,
+                'variant_id':        variant_id,
+                'preferred_unit':    profile.preferred_unit or 'cm',
+            }
+        except Exception as e:
+            _logger.warning('check_fit modal failed: %s', e)
+            return {'state': 'error'}

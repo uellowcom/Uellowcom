@@ -6,14 +6,14 @@
 /* ── Page background ── */
 
 /* Hide Odoo UI elements */
-body.uellow-checkout-page #wrapwrap>header,
-body.uellow-checkout-page #wrapwrap>footer,
-body.uellow-checkout-page footer.o_footer,
-body.uellow-checkout-page .o_main_navbar,
-body.uellow-checkout-page .o_livechat_button,
-body.uellow-checkout-page [class*="bottom_nav"],
-body.uellow-checkout-page [class*="bottom-nav"],
-body.uellow-checkout-page .o_bottom_fixed_element { display:none !important; }
+body.uellow-checkout-active #wrapwrap>header,
+body.uellow-checkout-active #wrapwrap>footer,
+body.uellow-checkout-active footer.o_footer,
+body.uellow-checkout-active .o_main_navbar,
+body.uellow-checkout-active .o_livechat_button,
+body.uellow-checkout-active [class*="bottom_nav"],
+body.uellow-checkout-active [class*="bottom-nav"],
+body.uellow-checkout-active .o_bottom_fixed_element { display:none !important; }
 
 /* Mobile: show mobile, hide desktop */
 .uc-mobile-wrap { display:flex !important; flex-direction:column; }
@@ -24,8 +24,8 @@ body.uellow-checkout-page .o_bottom_fixed_element { display:none !important; }
   .uc-mobile-wrap { display:none  !important; }
   .uc-desk-wrap   { display:block !important; }
   /* Show header/footer on desktop */
-  body.uellow-checkout-page #wrapwrap>header,
-  body.uellow-checkout-page .o_main_navbar { display:block !important; }
+  body.uellow-checkout-active #wrapwrap>header,
+  body.uellow-checkout-active .o_main_navbar { display:block !important; }
 }
 
 /* ── App shell ── */
@@ -241,103 +241,228 @@ textarea.uc-field-inp{resize:vertical;min-height:68px;line-height:1.5;}
 .uc-pay-icon { min-width:54px; min-height:36px; }
 .uc-pay-icon img { max-width:100%; max-height:32px; object-fit:contain; }
 
-/* ═══ COLOR VARIETY ═══ */
-/* Cart header — amber/orange */
-.uc-topnav { background:linear-gradient(135deg,#FF8F00,#FFB300) !important; }
-/* Cart stepper done — teal */
-.uc-step-bar.done { background:#43A047 !important; }
-/* Subtotal row */
-.uc-sum-row.tot .v { color:#B35C00 !important; }
-/* Item price — deep orange */
-.uc-item__price { color:#E65100 !important; }
-/* Delete button — light red bg */
-.uc-del { background:#FFEBEE !important; border-color:#FFCDD2 !important; color:#C62828 !important; }
-.uc-del:hover { background:#FFCDD2 !important; }
-/* Shipping selected — green (defined above) */
-/* Payment selected — deep purple */
-.uc-pay-opt.sel { border-color:#6A1B9A !important; background:#F3E5F5 !important; box-shadow:0 0 0 3px rgba(106,27,154,.12) !important; }
-.uc-pay-opt.sel .uc-pay-check { background:#6A1B9A !important; border-color:#6A1B9A !important; }
-/* Pay summary card — deep teal gradient */
-.uc-pay-summary { background:linear-gradient(135deg,#2E7D32,#43A047,#66BB6A) !important; color:#fff !important; }
-.uc-pay-summary__lbl { color:rgba(255,255,255,.75) !important; }
-.uc-pay-summary__total { color:#fff !important; }
-.uc-pay-summary__row { color:rgba(255,255,255,.8) !important; }
-.uc-pay-summary__row .v { color:#fff !important; }
-/* Confirm btn — deep orange */
-.uc-confirm-btn { background:linear-gradient(135deg,#E65100,#FF6D00) !important; color:#fff !important; box-shadow:0 4px 16px rgba(230,81,0,.4) !important; }
-/* Progress done dots — teal */
-.uc-prog-item.done .uc-prog-dot { background:#43A047 !important; border-color:#2E7D32 !important; color:#fff !important; }
-.uc-prog-item.done .uc-prog-lbl { color:#2E7D32 !important; }
-/* Success icon — teal */
-.uc-success-icon { background:linear-gradient(135deg,#2E7D32,#43A047,#66BB6A) !important; color:#fff !important; box-shadow:0 6px 22px rgba(0,105,92,.4) !important; }
-/* WhatsApp btn */
-.uc-wa-btn { background:linear-gradient(135deg,#25D366,#128C7E) !important; }
-/* Continue shopping — amber */
-.uc-shop-btn { background:linear-gradient(135deg,#FF8F00,#FFB300) !important; color:#fff !important; }
+/* ═══════════════════════════════════════════════════════════════════
+   UELLOW BRAND PALETTE — single source of truth
+   Replaces three competing "COLOR VARIETY" blocks that had !important
+   wars. One palette, used everywhere.
+   ═══════════════════════════════════════════════════════════════════ */
+:root {
+    --uc-brand:        #F5C320;  /* primary yellow */
+    --uc-brand-l:      #ffd84a;  /* lighter yellow */
+    --uc-brand-d:      #c69b00;  /* darker yellow */
+    --uc-brand-soft:   #fce99a;  /* yellow tint */
+    --uc-brand-faint:  #fff8dc;  /* page tint */
+    --uc-dark:         #412402;  /* brand dark */
+    --uc-dark-soft:    #5c3508;
+    --uc-cream:        #fffdf5;  /* card bg */
+    --uc-line:         #ebe2c8;  /* border */
+    --uc-muted:        #8c7a55;
+    --uc-ok:           #10b981;
+    --uc-ok-soft:      #d1fae5;
+    --uc-error:        #ef4444;
+    --uc-error-soft:   #fee2e2;
+    --uc-shadow:       0 4px 14px rgba(65,36,2,.10);
+}
 
-/* Required field indicator */
-.uc-field-lbl.required::after { content:' *'; color:#E65100; }
+/* ── Top nav — brand-dark on light bg ── */
+.uc-topnav {
+    background: linear-gradient(135deg, var(--uc-brand-l), var(--uc-brand) 60%, var(--uc-brand-d)) !important;
+    color: var(--uc-dark) !important;
+}
 
-/* Auto-filled indicator */
+/* ── Mobile stepper — brand-dark with yellow accents ── */
+.uc-stepper {
+    background: linear-gradient(135deg, var(--uc-dark), var(--uc-dark-soft)) !important;
+}
+.uc-step-bar.act  { background: var(--uc-brand) !important; }
+.uc-step-bar.done { background: var(--uc-brand-l) !important; }
+.uc-step-lbl.act  { color: var(--uc-brand) !important; font-weight: 800; }
+.uc-step-lbl.done { color: rgba(245,195,32,.85) !important; }
+
+/* ── Desktop stepper — numbered circles, brand colors ── */
+.uc-dstep.act .uc-dstep__num {
+    background: var(--uc-brand) !important;
+    border-color: var(--uc-brand-d) !important;
+    color: var(--uc-dark) !important;
+    box-shadow: 0 0 0 3px rgba(245,195,32,.20);
+}
+.uc-dstep.done .uc-dstep__num {
+    background: var(--uc-dark) !important;
+    border-color: var(--uc-dark) !important;
+    color: var(--uc-brand-l) !important;
+}
+.uc-dstep-line.done { background: var(--uc-brand-d) !important; }
+
+/* ── Cart line ── */
+.uc-sum-row.tot .v { color: var(--uc-dark) !important; font-weight: 900; }
+.uc-item__price   { color: var(--uc-dark) !important; font-weight: 800; }
+.uc-del {
+    background: var(--uc-error-soft) !important;
+    border-color: var(--uc-error) !important;
+    color: var(--uc-error) !important;
+}
+.uc-del:hover { background: var(--uc-error) !important; color: #fff !important; }
+
+/* ── Shipping/payment cards ── */
+.uc-pay-opt {
+    transition: all .12s ease;
+}
+.uc-pay-opt.sel {
+    border-color: var(--uc-brand) !important;
+    background: var(--uc-brand-faint) !important;
+    box-shadow: 0 0 0 3px rgba(245,195,32,.20) !important;
+}
+.uc-pay-opt.sel .uc-pay-check {
+    background: var(--uc-brand) !important;
+    border-color: var(--uc-brand-d) !important;
+    color: var(--uc-dark) !important;
+}
+
+/* ── PAY SUMMARY — brand-dark card for premium feel ── */
+.uc-pay-summary {
+    background: linear-gradient(135deg, var(--uc-dark) 0%, var(--uc-dark-soft) 100%) !important;
+    color: #fff !important;
+    border: 1px solid var(--uc-dark) !important;
+    box-shadow: 0 8px 24px -8px rgba(65,36,2,.30) !important;
+}
+.uc-pay-summary__lbl   { color: rgba(255,255,255,.7) !important; }
+.uc-pay-summary__total { color: var(--uc-brand-l) !important; font-weight: 900; }
+.uc-pay-summary__row   { color: rgba(255,255,255,.85) !important; }
+.uc-pay-summary__row .v { color: #fff !important; font-weight: 700; }
+
+/* ── Primary CTAs ── */
+.uc-btn,
+.uc-desk-btn {
+    background: linear-gradient(135deg, var(--uc-brand-l), var(--uc-brand) 60%, var(--uc-brand-d)) !important;
+    color: var(--uc-dark) !important;
+    font-weight: 800 !important;
+    border: 1px solid rgba(65,36,2,.18) !important;
+    box-shadow: 0 4px 14px -6px var(--uc-brand) !important;
+}
+.uc-confirm-btn {
+    background: linear-gradient(135deg, var(--uc-brand-l), var(--uc-brand) 55%, var(--uc-brand-d)) !important;
+    color: var(--uc-dark) !important;
+    font-weight: 900 !important;
+    box-shadow: 0 4px 16px -6px var(--uc-brand) !important;
+}
+.uc-confirm-btn:hover { transform: translateY(-1px); }
+
+/* ── Progress dots ── */
+.uc-prog-item.done .uc-prog-dot {
+    background: var(--uc-dark) !important;
+    border-color: var(--uc-dark) !important;
+    color: var(--uc-brand-l) !important;
+}
+.uc-prog-item.done .uc-prog-lbl { color: var(--uc-dark) !important; font-weight: 700; }
+.uc-prog-track::before { background: var(--uc-brand-soft) !important; }
+
+/* ── Success page hero ── */
+.uc-success-icon {
+    background: linear-gradient(135deg, var(--uc-brand-l), var(--uc-brand) 60%, var(--uc-brand-d)) !important;
+    color: var(--uc-dark) !important;
+    box-shadow: 0 8px 24px -8px var(--uc-brand) !important;
+}
+
+/* ── WhatsApp button — keep green (semantic, not brand) ── */
+.uc-wa-btn { background: linear-gradient(135deg, #25D366, #128C7E) !important; color: #fff !important; }
+
+/* ── Continue shopping ── */
+.uc-shop-btn {
+    background: var(--uc-dark) !important;
+    color: var(--uc-brand-l) !important;
+    border: 1px solid var(--uc-dark) !important;
+}
+
+/* ── Geo banner ── */
+.uc-geo-banner {
+    border-color: var(--uc-brand) !important;
+    background: var(--uc-brand-faint) !important;
+}
+.uc-geo-banner__lbl { color: var(--uc-dark) !important; font-weight: 700; }
+
+/* ── Form fields ── */
+.uc-field-lbl.required::after { content: ' *'; color: var(--uc-error); }
 .uc-field-inp.auto-filled,
-.uc-field-sel.auto-filled { border-color:#43A047 !important; background:#E8F5E9 !important; }
+.uc-field-sel.auto-filled {
+    border-color: var(--uc-ok) !important;
+    background: var(--uc-ok-soft) !important;
+}
+.uc-field-inp:focus,
+.uc-field-sel:focus {
+    outline: none !important;
+    border-color: var(--uc-brand) !important;
+    box-shadow: 0 0 0 3px rgba(245,195,32,.20) !important;
+}
 
-/* Blue accents */
-.uc-stepper { background:linear-gradient(135deg,#43A047,#66BB6A,#A5D6A7) !important; }
-.uc-step-bar.act  { background:rgba(255,255,255,.6) !important; }
-.uc-step-bar.done { background:rgba(255,255,255,.9) !important; }
-.uc-step-lbl.act  { color:#fff !important; font-weight:800; }
-.uc-step-lbl.done { color:rgba(255,255,255,.85) !important; }
+/* ── Skeleton loader (for payment methods list) ── */
+.uc-skeleton {
+    background: linear-gradient(90deg, #f3f3f3, #ebe2c8, #f3f3f3);
+    background-size: 200% 100%;
+    animation: uc-shimmer 1.3s linear infinite;
+    border-radius: 8px;
+    min-height: 56px;
+    margin-bottom: 8px;
+}
+@keyframes uc-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-/* Desk steps active - blue */
-.uc-dstep.act .uc-dstep__num { background:#1565C0 !important; border-color:#1565C0 !important; color:#fff !important; }
-.uc-dstep.done .uc-dstep__num { background:#43A047 !important; border-color:#2E7D32 !important; color:#fff !important; }
-.uc-dstep-line.done { background:#43A047 !important; }
+/* ── Submit overlay spinner (for payment confirmation) ── */
+.uc-submit-overlay {
+    position: fixed; inset: 0;
+    background: rgba(65,36,2,.45);
+    backdrop-filter: blur(4px);
+    z-index: 99999;
+    display: none;
+    align-items: center; justify-content: center;
+}
+.uc-submit-overlay.on { display: flex; }
+.uc-submit-overlay__box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 28px 36px;
+    text-align: center;
+    box-shadow: 0 20px 60px -20px rgba(0,0,0,.5);
+    color: var(--uc-dark);
+}
+.uc-submit-overlay__spinner {
+    width: 48px; height: 48px;
+    border: 4px solid var(--uc-brand-soft);
+    border-top-color: var(--uc-brand);
+    border-radius: 50%;
+    margin: 0 auto 14px;
+    animation: uc-spin .8s linear infinite;
+}
+@keyframes uc-spin { to { transform: rotate(360deg); } }
 
-/* Map geo banner - blue tint */
-.uc-geo-banner { border-color:#90CAF9 !important; background:#E3F2FD !important; }
-.uc-geo-banner__lbl { color:#1565C0 !important; }
-
-/* Shipping selected - green (defined above) */
-
-/* Payment selected - blue */
-.uc-pay-opt.sel { border-color:#1565C0 !important; background:#E3F2FD !important; box-shadow:0 0 0 3px rgba(21,101,192,.12) !important; }
-.uc-pay-opt.sel .uc-pay-check { background:#1565C0 !important; border-color:#1565C0 !important; }
-
-/* Payment summary - blue gradient */
-.uc-pay-summary { background:linear-gradient(135deg,#2E7D32,#43A047,#66BB6A) !important; color:#fff !important; }
-.uc-pay-summary__lbl { color:rgba(255,255,255,.8) !important; }
-.uc-pay-summary__total { color:#fff !important; }
-.uc-pay-summary__row { color:rgba(255,255,255,.85) !important; }
-.uc-pay-summary__row .v { color:#fff !important; font-weight:700 !important; }
-
-/* Confirm button - blue */
-.uc-confirm-btn { background:linear-gradient(135deg,#1565C0,#1976D2) !important; color:#fff !important; box-shadow:0 4px 16px rgba(21,101,192,.4) !important; }
-
-/* Progress done - light green */
-.uc-prog-item.done .uc-prog-dot { background:#43A047 !important; border-color:#2E7D32 !important; color:#fff !important; }
-.uc-prog-item.done .uc-prog-lbl { color:#2E7D32 !important; }
-.uc-prog-track::before { background:#C8E6C9 !important; }
-
-/* Success icon - light green */
-.uc-success-icon { background:linear-gradient(135deg,#2E7D32,#43A047,#66BB6A) !important; color:#fff !important; box-shadow:0 6px 22px rgba(67,160,71,.35) !important; }
-
-/* Auto-filled - blue */
-.uc-field-inp.auto-filled,
-.uc-field-sel.auto-filled { border-color:#1976D2 !important; background:#E3F2FD !important; }
-
-/* Main btn stays yellow/amber */
-.uc-btn { background:linear-gradient(135deg,#FDD835,#FFB300) !important; color:#3E2000 !important; }
-.uc-desk-btn { background:linear-gradient(135deg,#FDD835,#FFB300) !important; color:#3E2000 !important; }
+/* ── Coupon chip (applied state) ── */
+.uc-coupon-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--uc-ok-soft);
+    color: #047857;
+    font-size: 12px; font-weight: 700;
+    margin-top: 8px;
+}
+.uc-coupon-chip__x {
+    background: rgba(0,0,0,.10);
+    border: none;
+    color: #047857;
+    width: 18px; height: 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+}
+.uc-coupon-chip__x:hover { background: rgba(0,0,0,.20); }
 
 /* ═══ HIDE THEME NAVBAR ON CHECKOUT ═══ */
-body.uellow-checkout-page .o_bottom_bar,
-body.uellow-checkout-page .bottombar,
-body.uellow-checkout-page [class*="bottom_nav"],
-body.uellow-checkout-page [class*="bottom-nav"],
-body.uellow-checkout-page nav.navbar:not(.uc-topnav),
-body.uellow-checkout-page .navbar-fixed-bottom,
-body.uellow-checkout-page .o_bottom_fixed_element { display:none !important; }
+body.uellow-checkout-active .o_bottom_bar,
+body.uellow-checkout-active .bottombar,
+body.uellow-checkout-active [class*="bottom_nav"],
+body.uellow-checkout-active [class*="bottom-nav"],
+body.uellow-checkout-active nav.navbar:not(.uc-topnav),
+body.uellow-checkout-active .navbar-fixed-bottom,
+body.uellow-checkout-active .o_bottom_fixed_element { display:none !important; }
 
 /* Also target by position */
 /* removed dangerous fixed-bottom hider */

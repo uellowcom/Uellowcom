@@ -62,7 +62,12 @@
     // ── Init ──────────────────────────────────────────────────────────────────
 
     async function init() {
-        // Only run on product pages
+        // Disabled per ali@uellow.com (2026-05-28). This widget rendered the
+        // standalone "اطلب رأي متخصص" block above "You May Also Like" — the
+        // product page now uses the compact reviewer-summary card injected
+        // by reviewer_product.js (below the Add-to-Cart area) instead.
+        return;
+        // eslint-disable-next-line no-unreachable
         const isProductPage = location.pathname.includes('/shop/product/') ||
                               document.querySelector('.js_product, #product_detail, .product_detail');
         if (!isProductPage) return;

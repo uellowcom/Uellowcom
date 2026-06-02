@@ -1,0 +1,425 @@
+// =============================================================================
+//   Uellow Marketplace Footer (style 9)  —  light palette, desktop only
+// =============================================================================
+//
+//   Light, premium, magazine-grade footer. Strips alternate between pure
+//   white and a barely-tinted off-white so the page reads as a quiet,
+//   credible footer without the heavy "dark slab" feel of the previous
+//   revision.
+//
+//   Brand yellow is reserved for accents (icon discs, link underlines,
+//   newsletter button) — keeps it premium without shouting.
+
+$uf-bg          : #ffffff;             // main column slab
+$uf-bg-soft     : #fafbfc;             // trust strip + payments + bottom
+$uf-bg-warm     : #fffaee;             // gentle warm wash behind brand col
+$uf-text        : #1d2530;
+$uf-text-soft   : #444c57;
+$uf-muted       : #6c757d;
+$uf-line        : #ecedf1;
+$uf-line-soft   : #f1f3f5;
+$uf-yellow      : #F5C320;
+$uf-yellow-deep : #b58200;             // accessible on light backgrounds
+$uf-brand-dark  : #412402;
+
+#footer.uc-footer-shell {
+    background: $uf-bg !important;
+    color: $uf-text;
+    width: 100vw;
+    margin-inline-start: calc(50% - 50vw);
+    margin-inline-end: calc(50% - 50vw);
+    max-width: none !important;
+    min-width: 100vw !important;
+    padding: 0 !important;
+    border: 0;
+    box-shadow: 0 -1px 0 $uf-line;
+    font-size: 13px;
+    line-height: 1.6;
+
+    a { color: $uf-text-soft; text-decoration: none; transition: color .12s ease; }
+    a:hover { color: $uf-yellow-deep; }
+}
+
+.uc-foot-bleed { width: 100%; background: $uf-bg; }
+.uc-foot-inner {
+    width: 100%;
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: 16px;
+}
+
+// ============================================================================
+//   1. Trust strip — five mini cards on a faint warm wash
+// ============================================================================
+.uc-foot-trust {
+    background: $uf-bg-warm;
+    border-bottom: 1px solid $uf-line;
+}
+.uc-foot-trust-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    padding: 18px 0;
+}
+.uc-foot-trust-card {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: $uf-bg;
+    border: 1px solid $uf-line;
+    transition: border-color .15s ease, transform .15s ease,
+                box-shadow .15s ease;
+
+    &:hover {
+        border-color: rgba($uf-yellow, .55);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 18px -10px rgba($uf-yellow-deep, .35);
+    }
+}
+.uc-foot-trust-icon {
+    width: 38px; height: 38px;
+    border-radius: 999px;
+    background: rgba($uf-yellow, .14);
+    color: $uf-yellow-deep;
+    display: grid; place-items: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.uc-foot-trust-body {
+    display: flex; flex-direction: column;
+    line-height: 1.25;
+
+    strong { color: $uf-text; font-size: 13px; font-weight: 700; }
+    small  { color: $uf-muted; font-size: 11.5px; }
+}
+
+// ============================================================================
+//   2. Main grid
+// ============================================================================
+.uc-foot-main {
+    padding: 36px 0 28px;
+}
+.uc-foot-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1fr 1.4fr;
+    gap: 32px;
+
+    @media (max-width: 1199.98px) {
+        grid-template-columns: 1fr 1fr 1fr;
+        .uc-foot-cta  { grid-column: span 3; }
+        .uc-foot-brand{ grid-column: span 3; }
+    }
+}
+.uc-foot-col {
+    display: flex; flex-direction: column; gap: 10px;
+}
+.uc-foot-head {
+    color: $uf-text !important;
+    font-size: 12.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
+    margin: 0 0 8px;
+    position: relative;
+    padding-bottom: 8px;
+
+    &::after {
+        content: "";
+        position: absolute;
+        bottom: 0; inset-inline-start: 0;
+        width: 32px; height: 3px;
+        border-radius: 2px;
+        background: $uf-yellow;
+    }
+}
+.uc-foot-links {
+    list-style: none; margin: 0; padding: 0;
+    display: flex; flex-direction: column; gap: 4px;
+
+    li a {
+        display: inline-block;
+        font-size: 13px;
+        line-height: 1.4;
+        padding: 2px 0;
+        position: relative;
+        transition: color .12s ease, padding-inline-start .12s ease;
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset-inline-start: -10px;
+            top: 50%;
+            width: 4px; height: 4px;
+            background: $uf-yellow;
+            border-radius: 999px;
+            opacity: 0;
+            transform: translateY(-50%);
+            transition: opacity .12s ease, inset-inline-start .12s ease;
+        }
+        &:hover {
+            color: $uf-text;
+            padding-inline-start: 10px;
+            &::before { opacity: 1; inset-inline-start: 0; }
+        }
+    }
+}
+
+// ----- Brand column -----
+.uc-foot-brand {
+    .uc-foot-logo {
+        display: inline-flex; align-items: center;
+        margin-bottom: 6px;
+
+        img {
+            height: 44px;
+            max-height: 56px;
+            width: auto;
+            object-fit: contain;
+            // The site logo is typically light-on-dark; we drop it onto
+            // a deep slate chip so it still reads on the white footer.
+            background: #131921;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+    }
+    .uc-foot-tagline {
+        color: $uf-text-soft;
+        font-size: 13px; line-height: 1.6;
+        margin: 0 0 4px;
+    }
+}
+.uc-foot-contact {
+    list-style: none; margin: 8px 0 4px; padding: 0;
+    display: flex; flex-direction: column; gap: 6px;
+
+    li {
+        display: flex; align-items: flex-start; gap: 8px;
+        color: $uf-text-soft;
+        font-size: 12.5px; line-height: 1.5;
+        i {
+            color: $uf-yellow-deep;
+            margin-top: 3px;
+            width: 14px; text-align: center;
+        }
+        a {
+            color: $uf-text-soft;
+            &:hover { color: $uf-yellow-deep; }
+        }
+    }
+}
+.uc-foot-social {
+    display: flex; gap: 8px;
+    margin-top: 8px;
+
+    a {
+        width: 34px; height: 34px;
+        border-radius: 999px;
+        border: 1px solid $uf-line;
+        background: $uf-bg;
+        color: $uf-text-soft;
+        display: grid; place-items: center;
+        font-size: 14px;
+        transition: background .12s ease, border-color .12s ease,
+                    color .12s ease, transform .12s ease;
+        &:hover {
+            background: $uf-yellow;
+            border-color: $uf-yellow;
+            color: $uf-brand-dark !important;
+            transform: translateY(-2px);
+        }
+    }
+}
+
+// ----- CTA column -----
+.uc-foot-cta {
+    .uc-foot-mini {
+        color: $uf-text-soft;
+        font-size: 12.5px; line-height: 1.5;
+        margin: 0 0 6px;
+    }
+}
+.uc-foot-app-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    .uc-foot-app-badge:only-child { grid-column: span 2; }
+}
+.uc-foot-app-badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    background: #1d2530;
+    border: 1px solid #1d2530;
+    border-radius: 8px;
+    color: #fff !important;
+    transition: background .15s ease, border-color .15s ease,
+                transform .15s ease;
+
+    &:hover {
+        background: #2a3447;
+        border-color: $uf-yellow;
+        color: #fff !important;
+        transform: translateY(-2px);
+    }
+    i { font-size: 22px; color: #fff; }
+    span { display: flex; flex-direction: column; line-height: 1.1; }
+    small { font-size: 9px; opacity: .8; text-transform: uppercase; letter-spacing: .5px; }
+    b { font-size: 13px; font-weight: 700; }
+}
+
+// Newsletter — pill-shaped input with brand-yellow button
+.uc-foot-news {
+    display: flex;
+    background: $uf-bg;
+    border: 1px solid $uf-line;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .03);
+    transition: border-color .12s ease, box-shadow .12s ease;
+
+    &:focus-within {
+        border-color: rgba($uf-yellow, .55);
+        box-shadow: 0 0 0 3px rgba($uf-yellow, .18);
+    }
+
+    input {
+        flex: 1;
+        background: transparent;
+        border: 0;
+        outline: 0;
+        color: $uf-text;
+        padding: 9px 14px;
+        font-size: 12.5px;
+        &::placeholder { color: $uf-muted; }
+    }
+    button {
+        background: $uf-yellow;
+        color: $uf-brand-dark;
+        border: 0;
+        font-weight: 700;
+        font-size: 12.5px;
+        padding: 0 16px;
+        cursor: pointer;
+        transition: filter .12s ease;
+        &:hover { filter: brightness(.94); }
+    }
+}
+
+// ============================================================================
+//   3. Payments + storefront strip
+// ============================================================================
+.uc-foot-pay {
+    background: $uf-bg-soft;
+    border-top: 1px solid $uf-line;
+}
+.uc-foot-pay-row {
+    padding: 14px 0;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.uc-foot-pay-left {
+    display: flex; align-items: center;
+    gap: 12px;
+}
+.uc-foot-pay-label {
+    color: $uf-muted;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    font-weight: 700;
+}
+.uc-foot-pay-icons {
+    display: flex; align-items: center; gap: 6px;
+    flex-wrap: wrap;
+}
+.uc-foot-pay-chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 44px; height: 28px;
+    padding: 0 8px;
+    background: $uf-bg;
+    color: $uf-text;
+    border: 1px solid $uf-line;
+    border-radius: 5px;
+    font-size: 18px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+}
+.uc-foot-pay-chip-text {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .3px;
+}
+.uc-foot-storefront {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid $uf-line;
+    background: $uf-bg;
+    color: $uf-text-soft !important;
+    font-size: 12.5px;
+    i { color: $uf-yellow-deep; }
+    strong { color: $uf-text; }
+    &:hover { border-color: rgba($uf-yellow, .55); color: $uf-text !important; }
+}
+
+// ============================================================================
+//   4. Copyright bar
+// ============================================================================
+.uc-foot-bottom {
+    background: $uf-bg-soft;
+    border-top: 1px solid $uf-line;
+}
+.uc-foot-bottom-row {
+    padding: 14px 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 14px;
+
+    @media (max-width: 991.98px) {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+}
+.uc-foot-copy {
+    color: $uf-muted;
+    font-size: 12.5px;
+    display: inline-flex; align-items: center; gap: 6px;
+    strong { color: $uf-text; }
+}
+.uc-foot-policies {
+    display: flex; align-items: center;
+    gap: 18px;
+    justify-content: center;
+    a {
+        font-size: 12.5px;
+        padding: 2px 0;
+        position: relative;
+        &::after {
+            content: "";
+            position: absolute;
+            left: 0; right: 0; bottom: -1px;
+            height: 2px;
+            background: $uf-yellow;
+            transform: scaleX(0);
+            transition: transform .15s ease;
+        }
+        &:hover::after { transform: scaleX(1); }
+    }
+}
+.uc-foot-credit {
+    color: $uf-muted;
+    font-size: 12.5px;
+    display: inline-flex; align-items: center; gap: 6px;
+    justify-content: flex-end;
+    i { color: #e0245e; }
+}
+
+// ============================================================================
+//   Hide on mobile — entire footer
+// ============================================================================
+@media (max-width: 991.98px) {
+    #footer.uc-footer-shell { display: none !important; }
+}

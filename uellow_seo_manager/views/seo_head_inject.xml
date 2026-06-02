@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Inject Organization + WebSite JSON-LD on every page,
+       plus Product JSON-LD on product detail pages. -->
+  <template id="seo_manager_head_extra" inherit_id="website.layout" name="Uellow SEO Manager — JSON-LD">
+    <xpath expr="//head" position="inside">
+      <!-- Organization (every page) -->
+      <script type="application/ld+json" data-uellow-seo="organization"
+              t-out="website.seo_dump_json(website.seo_get_organization_jsonld())"/>
+
+      <!-- WebSite + SearchAction (every page) -->
+      <script type="application/ld+json" data-uellow-seo="website"
+              t-out="website.seo_dump_json(website.seo_get_website_jsonld())"/>
+
+      <!-- Product schema on product detail pages only. -->
+      <t t-set="_seo_product"
+         t-value="main_object if (main_object and main_object._name == 'product.template') else False"/>
+      <t t-if="_seo_product">
+        <script type="application/ld+json" data-uellow-seo="product"
+                t-out="website.seo_dump_json(_seo_product._get_seo_jsonld())"/>
+        <script type="application/ld+json" data-uellow-seo="breadcrumb"
+                t-out="website.seo_dump_json(_seo_product._get_breadcrumb_jsonld())"/>
+      </t>
+    </xpath>
+  </template>
+</odoo>

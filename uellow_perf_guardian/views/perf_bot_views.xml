@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_perf_bot_class_list" model="ir.ui.view">
+    <field name="name">uellow.perf.bot.class.list</field>
+    <field name="model">uellow.perf.bot.class</field>
+    <field name="arch" type="xml">
+      <list string="Bot classes"
+            decoration-success="is_search_engine"
+            decoration-danger="is_blocked or over_quota"
+            decoration-warning="(daily_req_budget > 0 and req_today &gt;= (daily_req_budget * 0.8)) and not over_quota">
+        <field name="sequence" widget="handle"/>
+        <field name="name"/>
+        <field name="ua_pattern"/>
+        <field name="is_search_engine"/>
+        <field name="is_blocked"/>
+        <field name="daily_req_budget"/>
+        <field name="req_today"/>
+        <field name="daily_bytes_budget_mb"/>
+        <field name="bytes_today_mb"/>
+        <field name="over_quota"/>
+        <field name="last_seen"/>
+        <button name="action_reset_today" type="object" icon="fa-refresh"
+                string="Reset counters"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_perf_bot_class_form" model="ir.ui.view">
+    <field name="name">uellow.perf.bot.class.form</field>
+    <field name="model">uellow.perf.bot.class</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_reset_today" type="object"
+                  string="Reset today counters" class="btn-secondary"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name" placeholder="Bot name…"/></h1>
+          </div>
+          <group>
+            <group string="Matching">
+              <field name="ua_pattern" placeholder="Googlebot, AhrefsBot…"/>
+              <field name="sequence"/>
+              <field name="is_search_engine"/>
+              <field name="require_verified"/>
+              <field name="is_blocked"/>
+            </group>
+            <group string="Daily quota">
+              <field name="daily_req_budget" string="Requests / day"/>
+              <field name="daily_bytes_budget_mb" string="Bandwidth (MB) / day"/>
+              <field name="per_ip_req_budget" string="Requests / day per IP"/>
+            </group>
+          </group>
+          <group string="Live counters">
+            <group>
+              <field name="req_today"/>
+              <field name="bytes_today_mb"/>
+            </group>
+            <group>
+              <field name="last_seen"/>
+              <field name="over_quota"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_perf_bot_class" model="ir.actions.act_window">
+    <field name="name">Bot classes</field>
+    <field name="res_model">uellow.perf.bot.class</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <record id="view_perf_bot_hit_list" model="ir.ui.view">
+    <field name="name">uellow.perf.bot.hit.list</field>
+    <field name="model">uellow.perf.bot.hit</field>
+    <field name="arch" type="xml">
+      <list string="Bot hits (1-min buckets)">
+        <field name="bucket_at"/>
+        <field name="bot_class_id"/>
+        <field name="req_count" sum="Total"/>
+        <field name="bytes_total" sum="Total"/>
+        <field name="over_quota_count" sum="Total"/>
+        <field name="sample_path"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_perf_bot_hit" model="ir.actions.act_window">
+    <field name="name">Bot traffic timeline</field>
+    <field name="res_model">uellow.perf.bot.hit</field>
+    <field name="view_mode">list</field>
+  </record>
+
+  <record id="view_perf_bot_ip_list" model="ir.ui.view">
+    <field name="name">uellow.perf.bot.ip.list</field>
+    <field name="model">uellow.perf.bot.ip</field>
+    <field name="arch" type="xml">
+      <list string="Per-IP bot counters">
+        <field name="bot_class_id"/>
+        <field name="ip"/>
+        <field name="req_today" sum="Total"/>
+        <field name="bytes_today" sum="Total"/>
+        <field name="last_seen"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_perf_bot_ip" model="ir.actions.act_window">
+    <field name="name">Bot IPs (today)</field>
+    <field name="res_model">uellow.perf.bot.ip</field>
+    <field name="view_mode">list</field>
+  </record>
+</odoo>

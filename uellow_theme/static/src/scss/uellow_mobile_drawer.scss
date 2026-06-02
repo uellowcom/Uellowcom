@@ -1,0 +1,685 @@
+// =============================================================================
+//   Uellow Mobile Drawer — premium hamburger off-canvas
+//   --------------------------------------------------------------------------
+//   Renders the off-canvas built by `uellow_mobile_drawer.xml`. Layout is a
+//   vertical stack: dark slate hero up top, white scrollable body, light
+//   footer pinned to the bottom of the drawer. Width sits between 86vw
+//   and 360px so it always feels generous on phones without spilling on
+//   small tablets.
+// =============================================================================
+
+$md-bg          : #ffffff;
+$md-bg-soft     : #f8f9fb;
+$md-bg-warm     : #fffbf2;
+$md-slate       : #131921;
+$md-slate-soft  : #1a232e;
+$md-slate-deep  : #0d1421;
+$md-text        : #1a232e;
+$md-text-soft   : #4a525e;
+$md-muted       : #6c757d;
+$md-line        : #eef0f3;
+$md-yellow      : #F5C320;
+$md-yellow-deep : #b58200;
+$md-brand-dark  : #412402;
+$md-red         : #d6332c;
+
+// ─── Off-canvas shell ───────────────────────────────────────────────────────
+.uc-mobdrawer.offcanvas {
+    // Use unquote() so SCSS hands the `min()` straight to CSS instead of
+    // trying to evaluate it (Sass can't mix vw + px in its own min()).
+    width: unquote('min(86vw, 360px)') !important;
+    background: $md-bg;
+    color: $md-text;
+    border: 0;
+    box-shadow: 12px 0 36px -12px rgba(0, 0, 0, .25);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+
+    a { color: $md-text; text-decoration: none; }
+}
+[dir="rtl"] .uc-mobdrawer.offcanvas {
+    box-shadow: -12px 0 36px -12px rgba(0, 0, 0, .25);
+}
+
+// =============================================================================
+// 1. HERO — slate gradient with user block + sign-in / dashboard CTA
+// =============================================================================
+.uc-mobdrawer-hero {
+    position: relative;
+    padding: 18px 18px 16px;
+    color: #fff;
+    background: $md-slate;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    .uc-mobdrawer-hero-bg {
+        position: absolute; inset: 0;
+        background:
+            radial-gradient(circle at 18% 18%, rgba($md-yellow, .35), transparent 55%),
+            radial-gradient(circle at 92% 80%, rgba($md-yellow, .18), transparent 50%),
+            linear-gradient(165deg, $md-slate-soft 0%, $md-slate-deep 100%);
+        pointer-events: none;
+    }
+    > *:not(.uc-mobdrawer-hero-bg) { position: relative; z-index: 1; }
+}
+
+.uc-mobdrawer-close {
+    position: absolute;
+    top: 12px;
+    inset-inline-end: 12px;
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .12);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, .16);
+    display: grid; place-items: center;
+    cursor: pointer;
+    font-size: 13px;
+    z-index: 2;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+
+    &:hover { background: rgba(255, 255, 255, .18); transform: rotate(90deg); }
+}
+
+.uc-mobdrawer-userblock {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 14px;
+}
+.uc-mobdrawer-avatar {
+    width: 52px; height: 52px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .15);
+    border: 2px solid rgba($md-yellow, .55);
+    color: $md-yellow;
+    display: grid; place-items: center;
+    font-size: 22px;
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+
+    img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+}
+.uc-mobdrawer-user-info {
+    display: flex; flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+
+    .uc-mobdrawer-greet {
+        color: rgba(255, 255, 255, .7);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        font-weight: 700;
+    }
+    .uc-mobdrawer-user-name {
+        color: #fff;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+.uc-mobdrawer-user-meta {
+    margin-top: 4px;
+    display: flex; gap: 6px;
+    .uc-mobdrawer-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: rgba($md-yellow, .18);
+        color: $md-yellow;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 10.5px;
+        font-weight: 700;
+        i { font-size: 9.5px; }
+    }
+}
+
+// CTA row
+.uc-mobdrawer-cta {
+    display: flex; gap: 8px;
+    > * { flex: 1; }
+}
+.uc-mobdrawer-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px;
+    height: 40px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: .25px;
+    text-decoration: none !important;
+    border: 1px solid transparent;
+    transition: filter .15s ease, transform .15s ease, background .15s ease;
+
+    &:hover { transform: translateY(-1px); }
+    &:active { transform: translateY(0); }
+}
+.uc-mobdrawer-btn-primary {
+    background: $md-yellow;
+    color: $md-brand-dark !important;
+    box-shadow: 0 6px 14px -6px rgba($md-yellow, .55),
+                inset 0 1px 0 rgba(255, 255, 255, .35);
+    &:hover { filter: brightness(.96); color: $md-brand-dark !important; }
+}
+.uc-mobdrawer-btn-ghost {
+    background: rgba(255, 255, 255, .08);
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, .16);
+    &:hover { background: rgba(255, 255, 255, .14); color: #fff !important; }
+}
+
+// =============================================================================
+// 2. SEARCH TRIGGER
+// =============================================================================
+.uc-mobdrawer-search {
+    display: flex; align-items: center; gap: 10px;
+    margin: -10px 14px 0;
+    padding: 12px 14px;
+    background: $md-bg;
+    border: 1px solid $md-line;
+    border-radius: 12px;
+    color: $md-muted;
+    font-size: 13px;
+    box-shadow: 0 6px 14px -8px rgba(0, 0, 0, .2);
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    text-decoration: none !important;
+
+    i { color: $md-yellow-deep; font-size: 14px; }
+    span {
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    &:hover, &:focus { border-color: rgba($md-yellow, .55); color: $md-text-soft; }
+}
+
+// =============================================================================
+// BODY — sections (white surface, generous spacing)
+// =============================================================================
+.uc-mobdrawer-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;       // never let nested strips bleed a body-level scrollbar
+    background: $md-bg;
+    padding: 14px 0 8px;
+
+    // Slim branded scrollbar
+    scrollbar-width: thin;
+    scrollbar-color: rgba($md-yellow, .55) transparent;
+    &::-webkit-scrollbar { width: 5px; }
+    &::-webkit-scrollbar-thumb { background: rgba($md-yellow, .55); border-radius: 4px; }
+}
+
+.uc-mobdrawer-section {
+    padding: 0 14px;
+    margin: 14px 0;
+
+    &:first-child { margin-top: 6px; }
+}
+.uc-mobdrawer-section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 0 0 10px;
+}
+.uc-mobdrawer-h3 {
+    color: $md-text;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    margin: 0 0 10px;
+    position: relative;
+    padding-bottom: 6px;
+    &::after {
+        content: "";
+        position: absolute;
+        bottom: 0; inset-inline-start: 0;
+        width: 28px; height: 3px;
+        background: $md-yellow;
+        border-radius: 2px;
+    }
+}
+.uc-mobdrawer-see-all {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: $md-yellow-deep !important;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: $md-bg-warm;
+    padding: 4px 10px;
+    border-radius: 999px;
+    text-decoration: none;
+    &:hover { background: lighten($md-yellow, 36%); }
+}
+[dir="rtl"] .uc-mobdrawer-see-all .fa-arrow-right { transform: scaleX(-1); }
+
+// =============================================================================
+// 3. QUICK ACTIONS GRID
+// =============================================================================
+.uc-mobdrawer-quick {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.uc-mobdrawer-quick-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px;
+    padding: 12px 6px;
+    background: $md-bg;
+    border: 1px solid $md-line;
+    border-radius: 12px;
+    text-decoration: none !important;
+    transition: all .15s ease;
+    text-align: center;
+
+    // Icon disc — darker so it reads cleanly against the yellow soft bg
+    i {
+        width: 36px; height: 36px;
+        border-radius: 999px;
+        background: $md-slate;
+        color: $md-yellow;
+        display: grid; place-items: center;
+        font-size: 15px;
+        box-shadow:
+            0 4px 10px -4px rgba($md-slate, .45),
+            inset 0 1px 0 rgba(255, 255, 255, .08);
+    }
+    span {
+        color: $md-text;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    &:hover, &:active {
+        border-color: rgba($md-yellow, .45);
+        background: $md-bg-warm;
+        transform: translateY(-2px);
+    }
+}
+.uc-mobdrawer-badge {
+    position: absolute;
+    top: 6px;
+    inset-inline-end: 6px;
+    background: $md-red;
+    color: #fff;
+    border-radius: 999px;
+    min-width: 17px; height: 17px;
+    padding: 0 5px;
+    font-size: 9.5px;
+    font-weight: 800;
+    line-height: 17px;
+    text-align: center;
+    border: 2px solid $md-bg;
+}
+
+// =============================================================================
+// 4. SHOP BY CATEGORY
+// =============================================================================
+.uc-mobdrawer-cats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));   // each col can shrink past content
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+}
+.uc-mobdrawer-cat {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 5px;
+    padding: 8px 4px;
+    background: $md-bg;
+    border: 1px solid $md-line;
+    border-radius: 10px;
+    text-decoration: none !important;
+    transition: all .15s ease;
+    text-align: center;
+
+    .uc-mobdrawer-cat-img {
+        width: 44px; height: 44px;
+        border-radius: 999px;
+        background: $md-bg-soft;
+        display: grid; place-items: center;
+        overflow: hidden;
+        border: 1px solid $md-line;
+        flex-shrink: 0;
+
+        img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+        i { color: $md-yellow-deep; font-size: 18px; }
+    }
+    .uc-mobdrawer-cat-name {
+        font-size: 10.5px;
+        color: $md-text;
+        font-weight: 700;
+        line-height: 1.2;
+        width: 100%;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    &:hover {
+        border-color: rgba($md-yellow, .45);
+        background: $md-bg-warm;
+        transform: translateY(-2px);
+    }
+}
+
+// =============================================================================
+// 5. BROWSE — flat menu list with chevrons
+// =============================================================================
+.uc-mobdrawer-nav {
+    display: flex; flex-direction: column;
+    border: 1px solid $md-line;
+    border-radius: 12px;
+    overflow: hidden;
+    background: $md-bg;
+}
+.uc-mobdrawer-nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    color: $md-text;
+    text-decoration: none !important;
+    border-bottom: 1px solid $md-line;
+    transition: background .12s ease;
+
+    > i:first-child {
+        width: 22px;
+        color: $md-yellow-deep;
+        font-size: 13px;
+        text-align: center;
+    }
+    span {
+        flex: 1;
+        font-size: 13.5px;
+        font-weight: 600;
+    }
+    .uc-mobdrawer-nav-chev {
+        color: $md-muted;
+        font-size: 11px;
+        transition: transform .15s ease;
+    }
+    &:last-child { border-bottom: 0; }
+    &:hover, &:active { background: $md-bg-warm; }
+    &:hover .uc-mobdrawer-nav-chev { transform: translateX(3px); color: $md-yellow-deep; }
+}
+[dir="rtl"] .uc-mobdrawer-nav-item .uc-mobdrawer-nav-chev { transform: scaleX(-1); }
+[dir="rtl"] .uc-mobdrawer-nav-item:hover .uc-mobdrawer-nav-chev { transform: scaleX(-1) translateX(3px); }
+
+// =============================================================================
+// 6. POPULAR BRANDS — horizontal scroll strip (contained, no body bleed)
+// =============================================================================
+.uc-mobdrawer-brands {
+    display: flex; gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 2px 6px;
+    margin: 0;
+    max-width: 100%;
+    scroll-snap-type: x proximity;
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+
+    > * { scroll-snap-align: start; }
+}
+.uc-mobdrawer-brand {
+    flex: 0 0 auto;
+    min-width: 88px; height: 56px;
+    background: $md-bg;
+    border: 1px solid $md-line;
+    border-radius: 10px;
+    display: grid; place-items: center;
+    padding: 8px;
+    text-decoration: none !important;
+    color: $md-text;
+    transition: all .15s ease;
+
+    img { max-width: 100%; max-height: 100%; object-fit: contain; filter: grayscale(.15); }
+    span {
+        font-size: 11.5px;
+        font-weight: 700;
+        text-align: center;
+    }
+    &:hover {
+        border-color: rgba($md-yellow, .45);
+        background: $md-bg-warm;
+        transform: translateY(-2px);
+        img { filter: grayscale(0); }
+    }
+}
+
+// =============================================================================
+// 7. CUSTOMER SERVICE LINKS
+// =============================================================================
+.uc-mobdrawer-links {
+    list-style: none;
+    margin: 0; padding: 0;
+    background: $md-bg;
+    border: 1px solid $md-line;
+    border-radius: 12px;
+    overflow: hidden;
+
+    li {
+        border-bottom: 1px solid $md-line;
+        &:last-child { border-bottom: 0; }
+    }
+    li a {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px 14px;
+        color: $md-text;
+        text-decoration: none !important;
+        font-size: 13px;
+        font-weight: 600;
+        transition: background .12s ease;
+
+        i {
+            width: 30px; height: 30px;
+            border-radius: 999px;
+            background: rgba($md-yellow, .1);
+            color: $md-yellow-deep;
+            display: grid; place-items: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        span { flex: 1; }
+        &::after {
+            content: "\f054";
+            font-family: FontAwesome;
+            color: $md-muted;
+            font-size: 11px;
+        }
+        &:hover { background: $md-bg-warm; }
+    }
+}
+[dir="rtl"] .uc-mobdrawer-links li a::after { transform: scaleX(-1); }
+
+// =============================================================================
+// 8. SETTINGS — country / language / currency / deliver-to
+// =============================================================================
+.uc-mobdrawer-settings {
+    background: $md-bg;
+    border: 1px solid $md-line;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+}
+.uc-mobdrawer-setting {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid $md-line;
+    font-size: 13px;
+    &:last-child { border-bottom: 0; }
+
+    .uc-mobdrawer-setting-label {
+        display: inline-flex; align-items: center; gap: 10px;
+        color: $md-muted;
+        font-size: 11.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+
+        i { color: $md-yellow-deep; font-size: 13px; }
+    }
+    strong { color: $md-text; font-weight: 700; font-size: 13px; }
+}
+
+// The standard Odoo language + pricelist dropdown — make it match the
+// drawer setting rows so it doesn't look orphaned.
+.uc-mobdrawer-lp {
+    padding: 4px 14px 4px 14px !important;
+    border-bottom: 1px solid $md-line !important;
+    background: transparent !important;
+    border: 0 !important;
+
+    .btn, button {
+        background: transparent !important;
+        border: 0 !important;
+        color: $md-text !important;
+        padding: 8px 0 !important;
+        font-size: 13px !important;
+        font-weight: 700;
+    }
+    .dropdown-menu {
+        border: 1px solid $md-line !important;
+        border-radius: 10px !important;
+        box-shadow: 0 12px 24px -8px rgba(0, 0, 0, .15) !important;
+    }
+}
+
+// =============================================================================
+// 9. APP DOWNLOAD CARD
+// =============================================================================
+.uc-mobdrawer-app {
+    background: linear-gradient(135deg, $md-slate-soft 0%, $md-slate 100%);
+    border-radius: 14px;
+    padding: 14px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 18px -10px rgba(0, 0, 0, .45);
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: -40px; inset-inline-end: -30px;
+        width: 120px; height: 120px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba($md-yellow, .35), transparent 65%);
+        pointer-events: none;
+    }
+    > * { position: relative; z-index: 1; }
+
+    .uc-mobdrawer-app-body {
+        display: flex; flex-direction: column; gap: 2px;
+        margin-bottom: 12px;
+        strong { color: $md-yellow; font-size: 14px; font-weight: 800; }
+        small  { color: rgba(255, 255, 255, .7); font-size: 11.5px; }
+    }
+    .uc-mobdrawer-app-badges {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    .uc-mobdrawer-app-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 8px;
+        padding: 9px 12px;
+        background: rgba(255, 255, 255, .08);
+        border: 1px solid rgba(255, 255, 255, .14);
+        border-radius: 8px;
+        color: #fff !important;
+        font-size: 12px;
+        font-weight: 800;
+        text-decoration: none !important;
+        transition: all .15s ease;
+
+        i { font-size: 16px; color: $md-yellow; }
+        &:hover {
+            background: rgba($md-yellow, .15);
+            border-color: rgba($md-yellow, .55);
+            color: #fff !important;
+        }
+    }
+}
+
+// =============================================================================
+// 10. SOCIALS
+// =============================================================================
+.uc-mobdrawer-socials {
+    display: flex; gap: 8px; flex-wrap: wrap;
+}
+.uc-mobdrawer-social {
+    width: 38px; height: 38px;
+    border-radius: 999px;
+    background: $md-bg-soft;
+    border: 1px solid $md-line;
+    color: $md-text-soft;
+    display: grid; place-items: center;
+    font-size: 14px;
+    text-decoration: none !important;
+    transition: all .15s ease;
+
+    &:hover {
+        background: $md-yellow;
+        border-color: $md-yellow;
+        color: $md-brand-dark !important;
+        transform: translateY(-2px);
+    }
+}
+
+// =============================================================================
+// FOOTER — policies + sign out
+// =============================================================================
+.uc-mobdrawer-foot {
+    background: $md-bg-soft;
+    border-top: 1px solid $md-line;
+    padding: 12px 16px env(safe-area-inset-bottom, 12px);
+    display: flex; flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+}
+.uc-mobdrawer-foot-links {
+    display: flex; gap: 6px; align-items: center; justify-content: center;
+    font-size: 11.5px;
+    color: $md-muted;
+
+    a { color: $md-text-soft; text-decoration: none; font-weight: 600; }
+    a:hover { color: $md-yellow-deep; }
+    span { opacity: .5; }
+}
+.uc-mobdrawer-logout {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: $md-bg;
+    border: 1px solid $md-line;
+    border-radius: 10px;
+    color: $md-red !important;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: all .15s ease;
+
+    &:hover {
+        background: lighten($md-red, 45%);
+        border-color: rgba($md-red, .4);
+        color: $md-red !important;
+    }
+}
+
+// =============================================================================
+// Suppress theme_prime's old offcanvas chrome that previously rendered
+// inside this drawer — we replaced the whole inner DOM, so any leftover
+// classes shouldn't paint backgrounds or borders that fight ours.
+// =============================================================================
+.uc-mobdrawer.tp-menu-sidebar,
+.uc-mobdrawer.tp-offcanvas-sidebar {
+    background: $md-bg !important;
+    .tp-hook-category,
+    .tp-hook-account-info { display: none !important; }
+}

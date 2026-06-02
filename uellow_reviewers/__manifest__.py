@@ -10,12 +10,15 @@
         'data/config_data.xml',
         'views/reviewer_views.xml',
         'views/reviewer_portal_templates.xml',
+        'views/reviewer_product_templates.xml',
     ],
     'assets': {
         'web.assets_frontend': [
             'uellow_reviewers/static/src/css/reviewers.css',
             'uellow_reviewers/static/src/js/reviewers.js',
             'uellow_reviewers/static/src/js/reviewers_portal.js',
+            'uellow_reviewers/static/src/css/reviewer_product.css',
+            'uellow_reviewers/static/src/js/reviewer_product.js',
         ],
     },
     'installable': True,

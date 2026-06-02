@@ -1,0 +1,74 @@
+/* Smart banner — mobile only, brand colours, dismissible. */
+#uellow-app-banner {
+    position: sticky;
+    top: 0;
+    z-index: 1080;
+    background: linear-gradient(90deg, #412402 0%, #5a330a 100%);
+    color: #F5C320;
+    padding: 8px 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+}
+#uellow-app-banner .uab-inner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    max-width: 720px;
+    margin: 0 auto;
+}
+#uellow-app-banner .uab-logo img {
+    width: 38px; height: 38px;
+    border-radius: 9px;
+    background: #fff;
+    padding: 4px;
+    object-fit: contain;
+}
+#uellow-app-banner .uab-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    min-width: 0;
+}
+#uellow-app-banner .uab-title { font-size: 13.5px; font-weight: 900; color: #F5C320; }
+#uellow-app-banner .uab-sub {
+    font-size: 11px;
+    color: #EFE7C8;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+#uellow-app-banner .uab-cta {
+    background: #F5C320;
+    color: #412402;
+    font-weight: 900;
+    font-size: 13px;
+    padding: 7px 18px;
+    border-radius: 999px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+#uellow-app-banner .uab-cta:hover { background: #FFD950; color: #412402; }
+#uellow-app-banner .uab-close {
+    background: transparent;
+    color: #F5C320;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    padding: 2px 6px;
+    cursor: pointer;
+    opacity: .8;
+}
+#uellow-app-banner .uab-close:hover { opacity: 1; }
+
+/* Bilingual switch — show only the matching language */
+html[lang^="ar"] #uellow-app-banner .en,
+html:not([lang^="ar"]) #uellow-app-banner .ar { display: none; }
+
+/* RTL flip for Arabic */
+html[lang^="ar"] #uellow-app-banner .uab-inner { direction: rtl; }
+
+/* Hide on desktop */
+@media (min-width: 769px) {
+    #uellow-app-banner { display: none !important; }
+}

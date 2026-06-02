@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!--  Template list & form                                         -->
+    <!-- ============================================================ -->
+    <record id="view_size_chart_template_list" model="ir.ui.view">
+        <field name="name">product.size.chart.template.list</field>
+        <field name="model">product.size.chart.template</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="applied_product_count" string="# products"/>
+                <field name="is_active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_size_chart_template_form" model="ir.ui.view">
+        <field name="name">product.size.chart.template.form</field>
+        <field name="model">product.size.chart.template</field>
+        <field name="arch" type="xml">
+            <form string="Size Chart Template">
+                <header>
+                    <button name="action_apply_to_products" type="object"
+                            string="📤 Apply to products" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object"
+                                name="action_view_applied_products" icon="fa-cubes">
+                            <field string="Applied products" name="applied_product_count" widget="statinfo"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Men's T-Shirts — Standard 2026"/></h1>
+                    </div>
+                    <group>
+                        <field name="category_id" options="{'no_create': True}"/>
+                        <field name="is_active"/>
+                    </group>
+                    <field name="description" placeholder="Notes about this size chart..."/>
+
+                    <notebook>
+                        <page string="Sizes" name="sizes">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="size_label" string="Size"/>
+                                    <field name="chest_cm"    string="Chest"/>
+                                    <field name="shoulder_cm" string="Shoulder"/>
+                                    <field name="sleeve_cm"   string="Sleeve"/>
+                                    <field name="length_cm"   string="Length"/>
+                                    <field name="waist_cm"    string="Waist"/>
+                                    <field name="hip_cm"      string="Hip"/>
+                                    <field name="inseam_cm"   string="Inseam"/>
+                                    <field name="thigh_cm"    string="Thigh" optional="hide"/>
+                                    <field name="foot_length_cm" string="Foot length" optional="hide"/>
+                                    <field name="tolerance_cm" string="Tolerance ±" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_size_chart_templates" model="ir.actions.act_window">
+        <field name="name">Size Chart Templates</field>
+        <field name="res_model">product.size.chart.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiley_face">
+                Create a reusable size chart that you can apply to many products at once.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_size_chart_templates"
+              name="Size Chart Templates"
+              parent="menu_smart_fit_root"
+              action="action_size_chart_templates"
+              sequence="15"/>
+
+    <!-- ============================================================ -->
+    <!--  Apply wizard                                                 -->
+    <!-- ============================================================ -->
+    <record id="view_size_chart_template_apply_wizard" model="ir.ui.view">
+        <field name="name">product.size.chart.template.apply.wizard.form</field>
+        <field name="model">product.size.chart.template.apply.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Apply Size Chart Template">
+                <sheet>
+                    <div class="alert alert-info">
+                        <strong>📤 Apply <field name="template_id" readonly="1" class="oe_inline"/></strong>
+                        — copies its size rows into each target product. You can
+                        merge with existing rows (default) or replace them.
+                    </div>
+                    <group>
+                        <field name="mode" widget="radio"/>
+                        <field name="product_ids" widget="many2many_tags"
+                               invisible="mode != 'selected'"
+                               domain="[('is_fashion_item', '=', True)]"/>
+                        <field name="category_id" options="{'no_create': True}"
+                               invisible="mode != 'category'"/>
+                        <field name="replace_existing"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_apply" type="object"
+                            string="Apply" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

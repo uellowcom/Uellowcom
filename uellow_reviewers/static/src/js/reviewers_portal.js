@@ -172,9 +172,9 @@
 
     <!-- Tabs -->
     <div style="display:flex;gap:4px;margin-bottom:14px;background:#fff;border-radius:10px;padding:4px;border:0.5px solid rgba(0,0,0,.08)">
-        ${['dashboard','chat','requests','earnings','settings'].map(tab => {
-            const labels = {dashboard:'الرئيسية', chat:'الشات', requests:'الطلبات', earnings:'الأرباح', settings:'الإعدادات'};
-            const icons  = {dashboard:'ti-layout-dashboard', chat:'ti-messages', requests:'ti-bell', earnings:'ti-coin', settings:'ti-settings'};
+        ${['dashboard','chat','requests','history','earnings','settings'].map(tab => {
+            const labels = {dashboard:'الرئيسية', chat:'الشات', requests:'الطلبات', history:'سجلّي', earnings:'الأرباح', settings:'الإعدادات'};
+            const icons  = {dashboard:'ti-layout-dashboard', chat:'ti-messages', requests:'ti-bell', history:'ti-history', earnings:'ti-coin', settings:'ti-settings'};
             return `<button id="rv-tab-${tab}"
                 onclick="window._rvSwitchTab('${tab}')"
                 style="flex:1;padding:8px 6px;border:none;border-radius:7px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;transition:background .15s;background:${currentTab===tab?'#F5C320':'transparent'};color:${currentTab===tab?'#1A1A1A':'#888'}">
@@ -197,11 +197,90 @@
             case 'dashboard': return renderDashboardTab();
             case 'chat':      return renderChatTab();
             case 'requests':  return renderRequestsTab();
+            case 'history':   return renderHistoryTab();
             case 'earnings':  return renderEarningsTab();
             case 'settings':  return renderSettingsTab();
             default:          return renderDashboardTab();
         }
     }
+
+    // ── History: every review/opinion this reviewer has completed ──────────
+    let historyRequests   = null;     // null = not loaded yet
+    let historyLoading    = false;
+
+    async function loadHistoryIfNeeded() {
+        if (historyRequests !== null || historyLoading) return;
+        historyLoading = true;
+        try {
+            const r = await fetch('/reviewers/history', {
+                method: 'POST',
+                headers:{'Content-Type':'application/json'},
+                body:   JSON.stringify({jsonrpc:'2.0',method:'call',id:1,params:{limit:80}}),
+            });
+            const j = await r.json();
+            historyRequests = (j && j.result && Array.isArray(j.result.requests)) ? j.result.requests : [];
+        } catch (e) {
+            historyRequests = [];
+        }
+        historyLoading = false;
+        // Re-render only if the user is still on the history tab
+        if (currentTab === 'history') {
+            const host = document.getElementById('rv-tab-content');
+            if (host) host.innerHTML = renderHistoryTab();
+        }
+    }
+
+    function renderHistoryTab() {
+        loadHistoryIfNeeded();
+        if (historyRequests === null) {
+            return '<div style="background:#fff;border-radius:12px;padding:28px;text-align:center;border:0.5px solid rgba(0,0,0,.08)"><div style="font-size:32px;margin-bottom:8px">⏳</div><div style="font-size:14px;color:#888">جاري تحميل سجلّك...</div></div>';
+        }
+        if (!historyRequests.length) {
+            return `<div style="background:#fff;border-radius:12px;padding:28px;text-align:center;border:0.5px solid rgba(0,0,0,.08)">
+                        <div style="font-size:32px;margin-bottom:8px">📜</div>
+                        <div style="font-size:14px;color:#888">ما عندك مراجعات سابقة بعد</div>
+                        <div style="font-size:12px;color:#aaa;margin-top:4px">كل ريفيو أو رأي تنهيه راح يظهر هنا</div>
+                    </div>`;
+        }
+        // Group by verdict for a nice header bar
+        const stats = { recommend: 0, neutral: 0, not_recommend: 0 };
+        historyRequests.forEach(r => { if (stats[r.verdict] != null) stats[r.verdict]++; });
+
+        return `
+<div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+        <div style="background:#E1F5EE;color:#085041;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">${stats.recommend||0}</div><div style="font-size:11px">أنصح</div></div>
+        <div style="background:#FEF3DC;color:#7A4D08;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">${stats.neutral||0}</div><div style="font-size:11px">محايد</div></div>
+        <div style="background:#FCEBEB;color:#791F1F;border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:800">${stats.not_recommend||0}</div><div style="font-size:11px">لا أنصح</div></div>
+    </div>
+    ${historyRequests.map(r => renderHistoryCard(r)).join('')}
+</div>`;
+    }
+
+    function renderHistoryCard(r) {
+        const v = r.verdict || '';
+        const badge = v === 'recommend'      ? {bg:'#E1F5EE', c:'#085041', t:'أنصح'} :
+                      v === 'not_recommend'  ? {bg:'#FCEBEB', c:'#791F1F', t:'لا أنصح'} :
+                      v === 'neutral'        ? {bg:'#FEF3DC', c:'#7A4D08', t:'محايد'} :
+                                                {bg:'#F2F1ED', c:'#5F5E5A', t:'مراجعة'};
+        const pImg = r.product && (r.product.image_url || (r.product.id ? '/web/image/product.template/'+r.product.id+'/image_128' : ''));
+        const tImg = r.tryon_image_url || '';
+        return `
+<div style="background:#fff;border:0.5px solid rgba(0,0,0,.08);border-radius:10px;padding:12px;margin-bottom:8px">
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+        ${pImg ? `<img src="${pImg}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : ''}
+        <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:#1A1A1A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${(r.product && r.product.name) || '—'}</div>
+            <div style="font-size:11px;color:#888">${r.kind === 'tryon_opinion' ? 'رأي على تجربة افتراضية' : 'مراجعة منتج'}${r.create_date ? ' · ' + r.create_date.split('T')[0] : ''}</div>
+        </div>
+        <span style="background:${badge.bg};color:${badge.c};padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700">${badge.t}</span>
+    </div>
+    ${tImg ? `<img src="${tImg}" style="width:100%;max-height:140px;object-fit:contain;border-radius:8px;background:#fafaf7;cursor:zoom-in" onclick="window.open(this.src,'_blank')" onerror="this.style.display='none'">` : ''}
+    ${r.notes ? `<div style="background:#FAFAF7;border-radius:8px;padding:8px 10px;margin-top:8px;font-size:12px;color:#412402">${escapeHtml(r.notes)}</div>` : ''}
+</div>`;
+    }
+
+    function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]);}
 
     function renderDashboardTab() {
         const pending = pendingRequests.slice(0, 5);
@@ -254,7 +333,53 @@
         const typeIcon = {written:'ti-writing', chat:'ti-messages', photo:'ti-camera', video:'ti-video'};
         const typeLabel = {written:'رأي مكتوب', chat:'شات مباشر', photo:'صورة + رأي', video:'فيديو'};
         const timeAgo = req.create_date ? 'منذ قليل' : '';
+        const isTryon = req.kind === 'tryon_opinion' || req.tryon_image_url;
 
+        // ── Try-on opinion card: show product + try-on side by side ──
+        if (isTryon) {
+            const productImg = req.product && req.product.image_url
+                ? req.product.image_url
+                : (req.product && req.product.id ? `/web/image/product.template/${req.product.id}/image_256` : '');
+            return `
+<div style="background:#fff;border:1.5px solid #F5C320;border-radius:11px;padding:12px;margin-bottom:9px">
+    <div style="display:flex;gap:9px;align-items:center;margin-bottom:9px">
+        <div style="width:32px;height:32px;border-radius:8px;background:#FFFDF5;color:#854F0B;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🎨</div>
+        <div style="flex:1">
+            <div style="font-size:13px;font-weight:700;color:#412402">رأيك في تجربة افتراضية</div>
+            <div style="font-size:11px;color:#888">${req.product && req.product.name ? req.product.name : 'منتج'}</div>
+        </div>
+        <div style="font-size:10px;color:#888">${timeAgo}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="background:#FAFAF7;border-radius:8px;padding:5px;text-align:center">
+            <img src="${productImg}" alt="product" style="width:100%;max-height:140px;object-fit:contain;border-radius:6px;background:#fff" onerror="this.style.display='none'">
+            <div style="font-size:10px;color:#888;margin-top:4px">المنتج</div>
+        </div>
+        <div style="background:#FAFAF7;border-radius:8px;padding:5px;text-align:center">
+            <img src="${req.tryon_image_url}" alt="try-on" style="width:100%;max-height:140px;object-fit:contain;border-radius:6px;background:#fff;cursor:zoom-in" onclick="window.open(this.src,'_blank')" onerror="this.style.display='none'">
+            <div style="font-size:10px;color:#888;margin-top:4px">على العميل</div>
+        </div>
+    </div>
+    <textarea id="rv-tryon-note-${req.id}" placeholder="اكتب ملاحظة قصيرة (اختياري)..." rows="2"
+              style="width:100%;border:0.5px solid rgba(0,0,0,.15);border-radius:7px;padding:7px 9px;font-size:12px;font-family:inherit;margin-bottom:9px;resize:vertical;box-sizing:border-box"></textarea>
+    <div style="display:flex;gap:6px">
+        <button onclick="window._rvQuickVerdict(${req.id}, 'recommend')"
+                style="flex:1;background:#1D9E75;color:#fff;border:none;border-radius:7px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+            ✓ أنصح
+        </button>
+        <button onclick="window._rvQuickVerdict(${req.id}, 'not_recommend')"
+                style="flex:1;background:#E24B4A;color:#fff;border:none;border-radius:7px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+            ✗ لا أنصح
+        </button>
+        <button onclick="window._rvDeclineRequest(${req.id})"
+                style="background:#F5F4F2;border:none;border-radius:7px;padding:8px 12px;font-size:11px;cursor:pointer;font-family:inherit;color:#888">
+            تجاهل
+        </button>
+    </div>
+</div>`;
+        }
+
+        // ── Default review request card ──
         return `
 <div style="background:#fff;border:0.5px solid rgba(0,0,0,.08);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;gap:11px;align-items:flex-start">
     <div style="width:38px;height:38px;border-radius:8px;background:#F9F8F5;display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -550,6 +675,25 @@
             switchTab('dashboard');
             const root = document.getElementById('reviewer-portal-root');
             if (root) await loadDashboard(root);
+        }
+    };
+
+    // Try-on quick verdict (used by the try-on card in the Requests tab):
+    // skips the chat session and posts the verdict directly with an optional note.
+    window._rvQuickVerdict = async function(requestId, verdict) {
+        const noteEl = document.getElementById(`rv-tryon-note-${requestId}`);
+        const note   = noteEl ? noteEl.value.trim() : '';
+        const data = await post('/reviewers/quick_verdict', {
+            request_id: requestId,
+            verdict,
+            notes:      note,
+        });
+        if (data && data.success) {
+            alert(verdict === 'recommend' ? 'تم إرسال رأيك ✓ أنصح' : 'تم إرسال رأيك ✗ لا أنصح');
+            const root = document.getElementById('reviewer-portal-root');
+            if (root) await loadDashboard(root);
+        } else {
+            alert('تعذّر إرسال الرأي. حاول مرة ثانية.');
         }
     };
 

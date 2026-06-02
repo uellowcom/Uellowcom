@@ -1,178 +1,339 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!--
+        Beena AI — Settings page (notebook-tabbed layout).
+
+        Tabs (left → right):
+          1. 🐝 General         — Identity, Claude API, default language
+          2. 🎯 Behavior        — Float / Buy / Nudge / Auto-open
+          3. 🛒 Commerce        — COD, Web search, Delivery time, Company location
+          4. 👗 Try-On & Fit    — Replicate, FASHN, routing, feature toggles, caps
+          5. 🎙 Voice           — 4-provider stack, smart routing, caps
+          6. 💰 Cost & Cache    — Daily cap, prompt cache, answer cache, history limit
+          7. ⚙ Advanced        — DB routing, archive, search translations, variable keywords
+    -->
     <record id="view_ai_config_settings" model="ir.ui.view">
         <field name="name">ai.config.settings.form</field>
         <field name="model">ai.config.settings</field>
         <field name="arch" type="xml">
-            <form string="Beena AI Settings">
+            <form string="Beena AI Settings" class="beena-settings-form">
                 <header>
-                    <button string="حفظ التغييرات" type="object" name="execute" class="btn-primary"/>
-                    <button string="إلغاء" type="object" name="cancel" class="btn-secondary"/>
+                    <button string="💾 Save Changes" type="object" name="execute" class="btn-primary"/>
+                    <button string="Cancel"          type="object" name="cancel"  class="btn-secondary"/>
                 </header>
                 <sheet>
-                    <div class="o_setting_container">
-                        <div class="o_settings_header">
-                            <h1>Beena AI Engine</h1>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="ai_enabled" widget="boolean_toggle"/>
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="ai_enabled" string="تفعيل Beena"/>
-                                <div class="text-muted">تشغيل/إيقاف المساعد على الموقع</div>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="ai_assistant_name" string="اسم المساعد"/>
-                                <field name="ai_assistant_name"/>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="ai_assistant_subtitle" string="العنوان التوضيحي"/>
-                                <field name="ai_assistant_subtitle"/>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="ai_welcome_message" string="رسالة الترحيب"/>
-                                <field name="ai_welcome_message"/>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="ai_button_color" string="لون الزر (Hex)"/>
-                                <field name="ai_button_color"/>
-                                <div class="text-muted">مثال: #F5C320</div>
-                            </div>
-                        </div>
-
-                        <div class="o_settings_header">
-                            <h2>Claude API</h2>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="ai_claude_api_key" string="Claude API Key"/>
-                                <field name="ai_claude_api_key" password="True"/>
-                                <div class="text-muted">من console.anthropic.com</div>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="ai_claude_model" string="نموذج Claude"/>
-                                <field name="ai_claude_model"/>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="ai_max_tokens" string="Max Tokens"/>
-                                <field name="ai_max_tokens"/>
-                            </div>
-                        </div>
-
-                        <div class="o_settings_header">
-                            <h2>السلوك</h2>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="ai_float_button" widget="boolean_toggle"/>
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="ai_float_button" string="زر Float في كل الصفحات"/>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="ai_buy_with_ai" widget="boolean_toggle"/>
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="ai_buy_with_ai" string="زر Buy with AI"/>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="ai_proactive_nudge" widget="boolean_toggle"/>
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="ai_proactive_nudge" string="Proactive Nudge"/>
-                                <div class="text-muted">Beena تظهر تلقائياً بعد فترة تصفح</div>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="ai_nudge_delay" string="تأخير Nudge (ثانية)"/>
-                                <field name="ai_nudge_delay"/>
-                            </div>
-                        </div>
-
-                        <div class="o_setting_box">
-                            <div class="o_setting_right_pane">
-                                <label for="ai_default_language" string="لغة الرد"/>
-                                <field name="ai_default_language"/>
-                            </div>
-                        </div>
+                    <!-- ════════════════════════════════════════════════════
+                         Top status banner — at a glance: what's ON
+                         ════════════════════════════════════════════════════ -->
+                    <div class="oe_title" style="margin-bottom:12px">
+                        <h1 style="margin:0;color:#412402">🐝 Beena AI Engine</h1>
+                        <small class="text-muted">
+                            Conversational AI · Smart Fit · Virtual Try-On · Voice
+                        </small>
                     </div>
+                    <group col="4" style="background:#FFFDF5;border:1px solid #F0E7C8;border-radius:8px;padding:8px;margin-bottom:14px">
+                        <field name="ai_enabled"        widget="boolean_toggle" string="Engine"/>
+                        <field name="ai_tryon_enabled"  widget="boolean_toggle" string="Try-On"/>
+                        <field name="ai_voice_enabled"  widget="boolean_toggle" string="Voice"/>
+                        <field name="ai_proactive_nudge" widget="boolean_toggle" string="Nudge"/>
+                    </group>
+
+                    <notebook>
+
+                        <!-- ════════════════════════════════════════════════
+                             1. GENERAL — Identity + Claude
+                             ════════════════════════════════════════════════ -->
+                        <page string="🐝 General" name="general">
+                            <group string="Identity">
+                                <field name="ai_assistant_name"     string="Assistant name"/>
+                                <field name="ai_assistant_subtitle" string="Subtitle"/>
+                                <field name="ai_welcome_message"    string="Welcome message"/>
+                                <field name="ai_button_color"       string="Brand color" widget="color"/>
+                            </group>
+                            <group string="Claude API">
+                                <field name="ai_claude_api_key" string="Claude API key" password="True"/>
+                                <field name="ai_claude_model"   string="Claude model"/>
+                                <field name="ai_max_tokens"     string="Max tokens per reply"/>
+                            </group>
+                            <group string="Language">
+                                <field name="ai_default_language" string="Default reply language"/>
+                            </group>
+                        </page>
+
+                        <!-- ════════════════════════════════════════════════
+                             2. BEHAVIOR — Floating button, Buy-with-AI, Nudges
+                             ════════════════════════════════════════════════ -->
+                        <page string="🎯 Behavior" name="behavior">
+                            <group string="Visibility">
+                                <field name="ai_float_button" widget="boolean_toggle"
+                                       string="Floating button on every page"/>
+                                <field name="ai_buy_with_ai"  widget="boolean_toggle"
+                                       string="'Buy with AI' button on product pages"/>
+                            </group>
+
+                            <group string="Proactive nudge">
+                                <field name="ai_proactive_nudge" widget="boolean_toggle"
+                                       string="Enable proactive nudge"/>
+                                <field name="ai_nudge_mode"      string="Nudge style"/>
+                                <field name="ai_nudge_anim"      string="Float-button animation"/>
+                                <field name="ai_nudge_delay"     string="Legacy delay (sec)"
+                                       help="Used when device-specific delays are off."/>
+                                <field name="ai_nudge_auto_open" widget="boolean_toggle"
+                                       string="Auto-open panel on product pages"/>
+                                <field name="ai_nudge_message"   widget="boolean_toggle"
+                                       string="Greet with contextual message"/>
+                            </group>
+
+                            <group string="Auto-open per device">
+                                <label for="ai_autoopen_desktop_enabled" string="Desktop"/>
+                                <div class="o_row">
+                                    <field name="ai_autoopen_desktop_enabled" widget="boolean_toggle"/>
+                                    <field name="ai_autoopen_desktop_seconds" class="oe_inline" string=" seconds delay"/>
+                                </div>
+                                <label for="ai_autoopen_mobile_enabled" string="Mobile"/>
+                                <div class="o_row">
+                                    <field name="ai_autoopen_mobile_enabled" widget="boolean_toggle"/>
+                                    <field name="ai_autoopen_mobile_seconds" class="oe_inline" string=" seconds delay"/>
+                                </div>
+                            </group>
+                        </page>
+
+                        <!-- ════════════════════════════════════════════════
+                             3. COMMERCE — COD, web search, delivery, location
+                             ════════════════════════════════════════════════ -->
+                        <page string="🛒 Commerce" name="commerce">
+                            <group string="Order options">
+                                <field name="ai_cod_enabled" widget="boolean_toggle"
+                                       string="Cash-on-delivery available"/>
+                            </group>
+
+                            <group string="External search">
+                                <field name="ai_web_search_enabled" widget="boolean_toggle"
+                                       string="Web search via Brave"/>
+                                <field name="ai_brave_api_key" string="Brave Search API key" password="True"
+                                       invisible="not ai_web_search_enabled"/>
+                            </group>
+
+                            <group string="Delivery time policy"
+                                   help="Beena uses this verbatim when customers ask 'how long until delivery?'">
+                                <field name="ai_delivery_time_text" nolabel="1" widget="text"
+                                       placeholder="Same-day in Kuwait City before 2pm. 24–48h elsewhere. 5–7 days international."/>
+                            </group>
+
+                            <group string="Company location (shown when a customer asks where Uellow is)">
+                                <field name="ai_company_name"    string="Company name"/>
+                                <field name="ai_company_address" string="Address" widget="text"/>
+                                <field name="ai_company_phone"   string="Phone"/>
+                                <field name="ai_company_whatsapp" string="WhatsApp number"/>
+                                <field name="ai_company_hours"   string="Working hours"/>
+                                <field name="ai_company_lat"     string="Latitude"/>
+                                <field name="ai_company_lng"     string="Longitude"/>
+                                <field name="ai_company_map_url" string="Google Maps URL"/>
+                                <field name="ai_company_photo_urls" string="Photo URLs (1 per line)" widget="text"/>
+                            </group>
+                        </page>
+
+                        <!-- ════════════════════════════════════════════════
+                             4. TRY-ON & FIT
+                             ════════════════════════════════════════════════ -->
+                        <page string="👗 Try-On &amp; Fit" name="tryon">
+                            <group string="Master">
+                                <field name="ai_tryon_enabled" widget="boolean_toggle"
+                                       string="Enable Virtual Try-On"/>
+                            </group>
+
+                            <group string="Replicate (legacy / cheaper)" col="2">
+                                <field name="ai_tryon_replicate_token" string="Replicate API token" password="True"/>
+                                <field name="ai_tryon_replicate_model" string="Replicate model"/>
+                            </group>
+
+                            <group string="FASHN AI (premium)" col="2">
+                                <field name="ai_tryon_fashn_enabled" widget="boolean_toggle"
+                                       string="Enable FASHN AI"/>
+                                <field name="ai_tryon_fashn_token" string="FASHN API key" password="True"/>
+                                <field name="ai_tryon_fashn_model" string="FASHN model"/>
+                            </group>
+
+                            <group string="Provider routing">
+                                <field name="ai_tryon_provider_primary"  string="Primary"/>
+                                <field name="ai_tryon_provider_fallback" string="Fallback"/>
+                            </group>
+
+                            <group string="Eligibility &amp; caps">
+                                <field name="ai_tryon_min_price_kd"          string="Min product price (KD)"/>
+                                <field name="ai_tryon_eligible_categories"   string="Eligible categories" widget="text"
+                                       placeholder="shirt, tshirt, dress, …"/>
+                                <field name="ai_tryon_monthly_usd_cap"       string="Monthly USD cap"/>
+                                <field name="ai_tryon_monthly_gen_cap"       string="Monthly generation cap"/>
+                                <field name="ai_tryon_daily_per_customer_cap" string="Daily cap per customer"/>
+                            </group>
+
+                            <group string="Result-card features"
+                                   help="What buttons appear under a generated try-on image.">
+                                <field name="ai_tryon_feat_color_swap"        widget="boolean_toggle" string="🎨 Color swap"/>
+                                <field name="ai_tryon_feat_styling_tips"      widget="boolean_toggle" string="💡 AI styling tips"/>
+                                <field name="ai_tryon_feat_save_wishlist"     widget="boolean_toggle" string="💾 Save to wishlist"/>
+                                <field name="ai_tryon_feat_pdf_download"      widget="boolean_toggle" string="📄 PDF download"/>
+                                <field name="ai_tryon_feat_reviewer_opinion"  widget="boolean_toggle" string="👥 Ask reviewer"/>
+                                <field name="ai_tryon_feat_background_swap"   widget="boolean_toggle" string="🏞 Background swap"/>
+                                <field name="ai_tryon_feat_outfit_composer"   widget="boolean_toggle" string="👔 Outfit composer"/>
+                                <field name="ai_tryon_feat_compare_models"    widget="boolean_toggle" string="🔄 Compare FASHN models"/>
+                            </group>
+                        </page>
+
+                        <!-- ════════════════════════════════════════════════
+                             5. VOICE — TTS + STT + Realtime
+                             ════════════════════════════════════════════════ -->
+                        <page string="🎙 Voice" name="voice">
+                            <group string="Master switches">
+                                <field name="ai_voice_enabled"          widget="boolean_toggle"
+                                       string="Master switch — Enable voice"/>
+                                <field name="ai_voice_phase_a_enabled"  widget="boolean_toggle"
+                                       string="Phase A — Button-based (record / play)"/>
+                                <field name="ai_voice_phase_b_enabled"  widget="boolean_toggle"
+                                       string="Phase B — Realtime call (📞)"/>
+                                <field name="ai_voice_autoplay_replies" widget="boolean_toggle"
+                                       string="Auto-play Beena's replies"/>
+                            </group>
+
+                            <group string="Cache &amp; caps">
+                                <field name="ai_voice_cache_enabled"             widget="boolean_toggle"
+                                       string="Cache generated audio (MD5)"/>
+                                <field name="ai_voice_cache_days"                string="Cache TTL (days)"/>
+                                <field name="ai_voice_max_monthly_minutes"       string="Monthly minute cap"/>
+                                <field name="ai_voice_max_per_customer_minutes"  string="Per-customer monthly cap"/>
+                                <field name="ai_voice_short_text_threshold"      string="Short-text threshold (chars)"/>
+                                <field name="ai_voice_long_text_threshold"       string="Long-text threshold (chars)"/>
+                            </group>
+
+                            <group string="🔀 Smart routing">
+                                <field name="ai_voice_tts_primary_ar"  string="TTS primary (Arabic)"/>
+                                <field name="ai_voice_tts_fallback_ar" string="TTS fallback (Arabic)"/>
+                                <field name="ai_voice_tts_primary_en"  string="TTS primary (English)"/>
+                                <field name="ai_voice_tts_fallback_en" string="TTS fallback (English)"/>
+                                <field name="ai_voice_stt_primary"     string="STT primary"/>
+                                <field name="ai_voice_stt_fallback"    string="STT fallback"/>
+                                <field name="ai_voice_realtime_provider"    string="Realtime provider"/>
+                                <field name="ai_voice_realtime_max_seconds" string="Realtime max duration (sec)"/>
+                            </group>
+
+                            <group string="ElevenLabs">
+                                <field name="ai_voice_eleven_enabled"   widget="boolean_toggle" string="Enable"/>
+                                <field name="ai_voice_eleven_api_key"   password="True" string="API key (sk_…)"/>
+                                <field name="ai_voice_eleven_voice_ar"  string="Voice ID — Arabic"/>
+                                <field name="ai_voice_eleven_voice_en"  string="Voice ID — English"/>
+                                <field name="ai_voice_eleven_model"     string="Model"/>
+                            </group>
+
+                            <group string="OpenAI"
+                                   help="For Arabic content, the legacy tts-1-hd model often sounds more natural than gpt-4o-mini-tts. For the highest Arabic quality overall, enable ElevenLabs (multilingual_v2 model) and set it as the Arabic primary in the routing section above.">
+                                <field name="ai_voice_openai_enabled"   widget="boolean_toggle" string="Enable"/>
+                                <field name="ai_voice_openai_api_key"   password="True" string="API key (sk-…)"/>
+                                <field name="ai_voice_openai_tts_model" string="TTS model"/>
+                                <field name="ai_voice_openai_tts_voice" string="TTS voice"/>
+                                <field name="ai_voice_openai_tts_instructions"
+                                       string="Voice style instructions"
+                                       widget="text"
+                                       placeholder="Speak in a warm, friendly Kuwaiti customer-support tone. Calm pace."
+                                       invisible="ai_voice_openai_tts_model != 'gpt-4o-mini-tts'"/>
+                                <field name="ai_voice_openai_stt_model" string="STT model"/>
+                            </group>
+
+                            <group string="Azure Neural">
+                                <field name="ai_voice_azure_enabled"  widget="boolean_toggle" string="Enable"/>
+                                <field name="ai_voice_azure_key"      password="True" string="Speech key"/>
+                                <field name="ai_voice_azure_region"   string="Region (e.g. eastus)"/>
+                                <field name="ai_voice_azure_voice_ar" string="Voice — Arabic"/>
+                                <field name="ai_voice_azure_voice_en" string="Voice — English"/>
+                            </group>
+
+                            <group string="Google Cloud Voice">
+                                <field name="ai_voice_google_enabled"     widget="boolean_toggle" string="Enable"/>
+                                <field name="ai_voice_google_credentials" widget="text"
+                                       placeholder='{ "type": "service_account", "project_id": "…" }'
+                                       string="Service-account JSON"/>
+                                <field name="ai_voice_google_voice_ar"    string="Voice — Arabic"/>
+                                <field name="ai_voice_google_voice_en"    string="Voice — English"/>
+                            </group>
+                        </page>
+
+                        <!-- ════════════════════════════════════════════════
+                             6. COST & CACHE
+                             ════════════════════════════════════════════════ -->
+                        <page string="💰 Cost &amp; Cache" name="cost">
+                            <group string="Spend control">
+                                <field name="ai_daily_cost_limit" string="Daily cost limit (USD)"
+                                       help="0 = unlimited"/>
+                                <field name="ai_price_in"  string="Input price per 1M tokens (USD)"/>
+                                <field name="ai_price_out" string="Output price per 1M tokens (USD)"/>
+                            </group>
+
+                            <group string="Prompt caching (Claude side)">
+                                <field name="ai_prompt_cache_enabled" widget="boolean_toggle"
+                                       string="Enable Anthropic prompt caching"/>
+                            </group>
+
+                            <group string="Answer cache (Beena side)">
+                                <field name="ai_cache_enabled"   widget="boolean_toggle"
+                                       string="Cache verbatim answers"/>
+                                <field name="ai_cache_similarity" string="Match threshold (%)"/>
+                                <field name="ai_generic_keywords"  widget="text"
+                                       placeholder="Store-wide questions: hours, address, return policy, …"
+                                       string="Generic keywords"/>
+                                <field name="ai_variable_keywords" widget="text"
+                                       placeholder="Live-only: price, stock, color"
+                                       string="Variable keywords (never cached)"/>
+                            </group>
+
+                            <group string="Conversation history sent to Claude">
+                                <field name="ai_history_limit" string="Max past messages per call"
+                                       help="Lower = cheaper. 0 = send all."/>
+                            </group>
+                        </page>
+
+                        <!-- ════════════════════════════════════════════════
+                             7. ADVANCED
+                             ════════════════════════════════════════════════ -->
+                        <page string="⚙ Advanced" name="advanced">
+                            <group string="Database routing">
+                                <field name="ai_routing_enabled" widget="boolean_toggle"
+                                       string="Route questions to specialized handlers"/>
+                            </group>
+
+                            <group string="Conversation archive">
+                                <field name="ai_archive_enabled"         widget="boolean_toggle"
+                                       string="Archive conversations"/>
+                                <field name="ai_archive_retention_days" string="Retention (days)"/>
+                            </group>
+
+                            <group string="Search translations (one AR=EN pair per line)">
+                                <field name="ai_search_translations" widget="text" nolabel="1"
+                                       placeholder="سماعة=headphone&#10;فلاش ميموري=usb flash"/>
+                            </group>
+                        </page>
+
+                    </notebook>
                 </sheet>
             </form>
         </field>
     </record>
 
     <record id="action_ai_config_settings" model="ir.actions.act_window">
-        <field name="name">إعدادات Beena AI</field>
+        <field name="name">Settings</field>
         <field name="res_model">ai.config.settings</field>
         <field name="view_mode">form</field>
         <field name="target">current</field>
         <field name="groups_id" eval="[(4, ref('base.group_system'))]"/>
     </record>
 
-    <record id="view_ai_chat_session_list" model="ir.ui.view">
-        <field name="name">ai.chat.session.list</field>
-        <field name="model">ai.chat.session</field>
-        <field name="arch" type="xml">
-            <list string="محادثات Beena" default_order="write_date desc">
-                <field name="session_id"/>
-                <field name="partner_id"/>
-                <field name="product_id"/>
-                <field name="last_state"/>
-                <field name="write_date" string="آخر نشاط"/>
-            </list>
-        </field>
-    </record>
-
-    <record id="action_ai_chat_sessions" model="ir.actions.act_window">
-        <field name="name">محادثات Beena</field>
-        <field name="res_model">ai.chat.session</field>
-        <field name="view_mode">list</field>
-    </record>
-
-    <menuitem id="menu_ai_root"
-              name="Beena AI"
-              sequence="90"
-              groups="base.group_system"/>
-
-    <menuitem id="menu_ai_sessions"
-              name="المحادثات"
-              parent="menu_ai_root"
-              action="action_ai_chat_sessions"
-              sequence="10"/>
-
-    <menuitem id="menu_ai_settings"
-              name="الاعدادات"
+    <!-- ════════════════════════════════════════════════
+         Menu — under 🐝 Beena AI root (defined in ai_session_views.xml)
+         ════════════════════════════════════════════════ -->
+    <menuitem id="menu_ai_config_settings"
+              name="⚙ Settings"
               parent="menu_ai_root"
               action="action_ai_config_settings"
-              sequence="20"/>
+              sequence="10"
+              groups="base.group_system"/>
+
 </odoo>

@@ -4,6 +4,11 @@ import publicWidget from '@web/legacy/js/public/public_widget';
 function runSlider(cfg) {
     var wrap=cfg.wrap,imgEl=cfg.img,prevBtn=cfg.prev,nextBtn=cfg.next,dotsEl=cfg.dots,overlay=cfg.overlay||null,slides=cfg.slides||[];
     if(!wrap||!imgEl||!prevBtn||!nextBtn||!dotsEl||!slides.length)return;
+    // Hero is the LCP element — force eager fetch + high priority even if
+    // some Odoo widget tried to set loading="lazy" on it.
+    imgEl.setAttribute('loading','eager');
+    imgEl.setAttribute('fetchpriority','high');
+    imgEl.setAttribute('decoding','async');
     var idx=0,timer,dots=[];
     dotsEl.innerHTML='';
     slides.forEach(function(_,i){var d=document.createElement('div');d.className='uhs-dot'+(i===0?' on':'');d.addEventListener('click',function(){goTo(i);});dotsEl.appendChild(d);dots.push(d);});

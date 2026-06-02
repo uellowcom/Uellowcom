@@ -1,38 +1,250 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <record id="view_seo_config_form" model="ir.ui.view">
-    <field name="name">uellow.seo.config.form</field>
-    <field name="model">uellow.seo.config</field>
-    <field name="arch" type="xml">
-      <form>
-        <sheet>
-          <group>
-            <group><field name="active" widget="boolean_toggle"/><field name="anthropic_api_key" password="True"/><field name="auto_generate_new"/><field name="overwrite_existing"/><field name="schema_markup"/></group>
-            <group string="Branding"><field name="site_name_en"/><field name="site_name_ar"/><field name="default_suffix_en"/><field name="default_suffix_ar"/></group>
-          </group>
-        </sheet>
-      </form>
-    </field>
-  </record>
-  <record id="view_seo_product_list" model="ir.ui.view">
-    <field name="name">uellow.seo.product.list</field>
-    <field name="model">uellow.seo.product</field>
-    <field name="arch" type="xml">
-      <list string="Product SEO" decoration-warning="needs_update or score &lt; 50">
-        <field name="product_id"/>
-        <field name="meta_title_en" string="Title (EN)"/>
-        <field name="meta_title_ar" string="Title (AR)"/>
-        <field name="score" string="SEO Score"/>
-        <field name="ai_generated" widget="boolean"/>
-        <field name="last_generated"/>
-        <field name="needs_update" widget="boolean"/>
-      </list>
-    </field>
-  </record>
-  <record id="action_seo_config" model="ir.actions.act_window">
-    <field name="name">SEO Settings</field><field name="res_model">uellow.seo.config</field><field name="view_mode">form</field>
-  </record>
-  <record id="action_seo_products" model="ir.actions.act_window">
-    <field name="name">Product SEO</field><field name="res_model">uellow.seo.product</field><field name="view_mode">list,form</field>
-  </record>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         SEO CONFIG — full settings form
+         ════════════════════════════════════════════════════════════════ -->
+    <record id="view_seo_config_form" model="ir.ui.view">
+        <field name="name">uellow.seo.config.form</field>
+        <field name="model">uellow.seo.config</field>
+        <field name="arch" type="xml">
+            <form string="SEO Settings">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <notebook>
+                        <page string="AI" name="ai">
+                            <group>
+                                <group string="Anthropic">
+                                    <field name="active" widget="boolean_toggle"/>
+                                    <field name="anthropic_api_key" password="True"
+                                           groups="base.group_system,uellow_seo_auto.group_seo_manager"/>
+                                    <field name="ai_model"/>
+                                </group>
+                                <group string="Behaviour">
+                                    <field name="auto_generate_new"/>
+                                    <field name="overwrite_existing"/>
+                                    <field name="schema_markup"/>
+                                </group>
+                            </group>
+                            <group string="Length windows">
+                                <field name="max_title_chars"/>
+                                <field name="max_desc_chars"/>
+                            </group>
+                            <group string="Cost guards">
+                                <field name="cron_batch_size"/>
+                                <field name="daily_call_cap"/>
+                            </group>
+                        </page>
+
+                        <page string="Branding" name="branding">
+                            <group>
+                                <group>
+                                    <field name="site_name_en"/>
+                                    <field name="default_suffix_en"/>
+                                </group>
+                                <group>
+                                    <field name="site_name_ar"/>
+                                    <field name="default_suffix_ar"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Organization JSON-LD" name="org">
+                            <group>
+                                <field name="org_legal_name"/>
+                                <field name="org_logo_url"/>
+                                <field name="org_phone"/>
+                                <field name="org_email"/>
+                                <field name="org_social_urls" placeholder="One URL per line — Instagram, X, Facebook…"/>
+                            </group>
+                        </page>
+
+                        <page string="Search Console" name="verification">
+                            <group>
+                                <field name="google_verification"/>
+                                <field name="bing_verification"/>
+                                <field name="yandex_verification"/>
+                                <field name="pinterest_verification"/>
+                                <field name="facebook_app_id"/>
+                            </group>
+                        </page>
+
+                        <page string="robots.txt" name="robots">
+                            <field name="robots_txt" widget="text"
+                                   placeholder="User-agent: *&#10;Disallow: /web/login&#10;…"/>
+                            <div class="text-muted mt-2">
+                                Served at <a href="/robots.txt" target="_blank">/robots.txt</a>.
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_seo_config" model="ir.actions.act_window">
+        <field name="name">SEO Settings</field>
+        <field name="res_model">uellow.seo.config</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" ref="seo_config_singleton"/>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         SEO PRODUCT — list + form + search
+         ════════════════════════════════════════════════════════════════ -->
+    <record id="view_seo_product_list" model="ir.ui.view">
+        <field name="name">uellow.seo.product.list</field>
+        <field name="model">uellow.seo.product</field>
+        <field name="arch" type="xml">
+            <list string="Product SEO"
+                  decoration-warning="needs_update or score &lt; 50"
+                  decoration-danger="score &lt; 30"
+                  decoration-success="score &gt;= 75">
+                <header>
+                    <button name="action_generate_now" type="object"
+                            string="Regenerate selected"/>
+                    <button name="action_mark_needs_update" type="object"
+                            string="Mark needs update"/>
+                </header>
+                <field name="product_id"/>
+                <field name="meta_title_en" string="Title (EN)"/>
+                <field name="meta_title_ar" string="Title (AR)"/>
+                <field name="score" widget="progressbar"/>
+                <field name="ai_generated" widget="boolean"/>
+                <field name="last_generated"/>
+                <field name="needs_update" widget="boolean"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_seo_product_form" model="ir.ui.view">
+        <field name="name">uellow.seo.product.form</field>
+        <field name="model">uellow.seo.product</field>
+        <field name="arch" type="xml">
+            <form string="Product SEO">
+                <header>
+                    <button name="action_generate_now" type="object"
+                            class="oe_highlight" string="Regenerate with AI"/>
+                    <button name="action_mark_needs_update" type="object"
+                            string="Mark needs update"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="product_id" options="{'no_create':1}"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="ai_generated" widget="boolean_toggle" readonly="1"/>
+                            <field name="last_generated"/>
+                        </group>
+                        <group>
+                            <field name="score" widget="progressbar"/>
+                            <field name="needs_update"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Meta — English" name="meta_en">
+                            <group>
+                                <field name="meta_title_en" placeholder="≤ 60 chars"/>
+                                <field name="meta_desc_en" placeholder="≤ 160 chars" widget="text"/>
+                                <field name="keywords_en" placeholder="comma,separated,keywords"/>
+                            </group>
+                        </page>
+                        <page string="Meta — Arabic" name="meta_ar">
+                            <group>
+                                <field name="meta_title_ar" placeholder="≤ 60 حرف"/>
+                                <field name="meta_desc_ar" placeholder="≤ 160 حرف" widget="text"/>
+                                <field name="keywords_ar" placeholder="كلمات،مفتاحية،مفصولة بفاصلة"/>
+                            </group>
+                        </page>
+                        <page string="Schema JSON-LD" name="schema">
+                            <field name="schema_json" widget="ace" options="{'mode':'json'}"/>
+                        </page>
+                        <page string="Audit" name="audit">
+                            <field name="score_breakdown" widget="text" readonly="1"/>
+                            <field name="last_error" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_seo_product_search" model="ir.ui.view">
+        <field name="name">uellow.seo.product.search</field>
+        <field name="model">uellow.seo.product</field>
+        <field name="arch" type="xml">
+            <search string="Product SEO">
+                <field name="product_id"/>
+                <field name="meta_title_en"/>
+                <filter string="Needs update" name="needs_update" domain="[('needs_update','=',True)]"/>
+                <filter string="AI generated"  name="ai" domain="[('ai_generated','=',True)]"/>
+                <filter string="Low score (&lt;50)" name="low" domain="[('score','&lt;',50)]"/>
+                <filter string="With errors" name="err" domain="[('last_error','!=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Generated" name="g_gen" context="{'group_by':'ai_generated'}"/>
+                    <filter string="Needs update" name="g_nu" context="{'group_by':'needs_update'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_seo_products" model="ir.actions.act_window">
+        <field name="name">Product SEO</field>
+        <field name="res_model">uellow.seo.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_seo_product_search"/>
+    </record>
+
+    <!-- Server action: launch bulk wizard from product.template list -->
+    <record id="action_seo_bulk_from_product" model="ir.actions.server">
+        <field name="name">Generate SEO meta (AI)</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="binding_model_id" ref="product.model_product_template"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'Bulk SEO Generation',
+    'res_model': 'uellow.seo.generate.wizard',
+    'view_mode': 'form',
+    'target': 'new',
+    'context': dict(env.context, default_scope='selected'),
+}
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         REDIRECT MANAGER
+         ════════════════════════════════════════════════════════════════ -->
+    <record id="view_seo_redirect_list" model="ir.ui.view">
+        <field name="name">uellow.seo.redirect.list</field>
+        <field name="model">uellow.seo.redirect</field>
+        <field name="arch" type="xml">
+            <list string="SEO Redirects" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="source_url"/>
+                <field name="target_url"/>
+                <field name="redirect_type"/>
+                <field name="hit_count" string="Hits"/>
+                <field name="last_hit"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="notes" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_seo_redirects" model="ir.actions.act_window">
+        <field name="name">SEO Redirects</field>
+        <field name="res_model">uellow.seo.redirect</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No redirects yet</p>
+            <p>Add 301/302 redirects to preserve SEO equity when URLs change.</p>
+        </field>
+    </record>
+
 </odoo>

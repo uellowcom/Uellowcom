@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="product_public_category_form_view_inherit_uellow_theme_common" model="ir.ui.view">
+        <field name="name">product.public.category.form.inherit.droggol.theme.common</field>
+        <field name="model">product.public.category</field>
+        <field name="inherit_id" ref="website_sale.product_public_category_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page name="theme_prime" string="Theme Prime">
+                        <group>
+                            <group>
+                                <field name="dr_category_label_id"/>
+                                <field name="dr_search_formulate" groups="base.group_no_one"/>
+                                <field name="ds_synonyms_ids" string="Synonyms">
+                                    <list editable="bottom">
+                                        <field name="name" required="1"/>
+                                    </list>
+                                </field>
+                            </group>
+                            <group>
+                                <field name="dr_category_cover_image" class="oe_avatar" widget="image"/>
+                                <field name="dr_category_icon" class="oe_avatar" widget="image"/>
+                                <field name="dr_category_sidebar_cover" class="oe_avatar" widget="image"/>
+                            </group>
+                        </group>
+                    </page>
+                    <page name="uellow_mega_menu" string="Mega Menu Card">
+                        <div class="alert alert-info" role="alert">
+                            <strong>Mega Menu Featured Promo</strong> — these settings
+                            control the card on the right side of the header mega menu
+                            when this category is hovered. Leave any field empty to use
+                            the regular category image / page.
+                        </div>
+                        <group>
+                            <group>
+                                <field name="uc_mega_eyebrow" placeholder="Featured"/>
+                                <field name="uc_mega_tagline"
+                                       placeholder="Discover handpicked deals..."/>
+                                <field name="uc_mega_link"
+                                       placeholder="/shop/category/X or any URL"/>
+                            </group>
+                            <group>
+                                <field name="uc_mega_image" widget="image"
+                                       options="{'size': [400, 300]}"/>
+                            </group>
+                        </group>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

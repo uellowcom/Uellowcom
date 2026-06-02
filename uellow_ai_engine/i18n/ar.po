@@ -1,0 +1,45 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* uellow_ai_engine
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: uellow_ai_engine
+msgid "My Account"
+msgstr "حسابي"
+
+#. module: uellow_ai_engine
+msgid "Chat History"
+msgstr "سجل المحادثات"
+
+#. module: uellow_ai_engine
+msgid "Beena Chat History"
+msgstr "سجل المحادثات مع بينا"
+
+#. module: uellow_ai_engine
+msgid "All your past conversations are saved here. Click any one to see its details."
+msgstr "كل محادثاتك السابقة محفوظة هنا. اضغط على أي واحدة لتشوف تفاصيلها."
+
+#. module: uellow_ai_engine
+msgid "No conversations yet. Open Beena from any page and start chatting."
+msgstr "ما عندك أي محادثة بعد. افتح بينا من أي صفحة وابدأ تكلّمها."
+
+#. module: uellow_ai_engine
+msgid "Conversation"
+msgstr "محادثة"
+
+#. module: uellow_ai_engine
+msgid "messages"
+msgstr "رسالة"
+
+#. module: uellow_ai_engine
+msgid "You"
+msgstr "أنت"

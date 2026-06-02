@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+  <!-- Default Home page — populated with enough blocks to look complete
+       the first time the user opens the app. Editable in the builder. -->
+  <record id="page_home" model="mobile.page">
+    <field name="name">Home</field>
+    <field name="slug">home</field>
+    <field name="kind">home</field>
+    <field name="status">published</field>
+    <field name="pinned" eval="True"/>
+    <field name="theme_preset_id" ref="theme_uellow"/>
+    <field name="blocks_json">[
+      {"id":"b1","kind":"carousel","props":{"titleEn":"Welcome to Uellow","titleAr":"مرحباً بك في يلو"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b2","kind":"cats-grid","props":{"titleEn":"Shop by category","titleAr":"تسوّق حسب الفئة"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b3","kind":"flash","props":{"titleEn":"⚡ Flash Deals","titleAr":"⚡ صفقات سريعة"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b4","kind":"banner-1","props":{"titleEn":"Free shipping above 10 KD","titleAr":"شحن مجاني على طلبات فوق 10 د.ك","color":"#1F8A40"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b5","kind":"products","props":{"titleEn":"Bestsellers this week","titleAr":"الأكثر مبيعاً هذا الأسبوع"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b6","kind":"vendors","props":{"titleEn":"Top sellers","titleAr":"أفضل التجّار"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b7","kind":"banner-1","props":{"titleEn":"Tabby — split in 4 · 0% interest","titleAr":"تابي — قسّم على 4 · 0% فائدة","color":"#412402"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b8","kind":"products","props":{"titleEn":"AI Recommended for you","titleAr":"مقترحة لك من بينة","source":"rec-ai"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b9","kind":"loyalty","props":{},"cond":{"countries":[],"languages":[],"segments":["customer","vip"],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b10","kind":"products","props":{"titleEn":"Recently viewed","titleAr":"شاهدتها مؤخراً","source":"recent"},"cond":{"countries":[],"languages":[],"segments":["customer","vip"],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b11","kind":"beena","props":{},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"b12","kind":"newsletter","props":{"titleEn":"Stay in the loop","titleAr":"تابع جديدنا","subEn":"New arrivals + private deals","subAr":"وصول جديد وعروض خاصة"},"cond":{"countries":[],"languages":[],"segments":["guest"],"schedule":{},"abVariant":"all"},"hidden":false}
+    ]</field>
+  </record>
+
+  <!-- Example Eid Sale page -->
+  <record id="page_eid_sale" model="mobile.page">
+    <field name="name">Eid Mega Sale</field>
+    <field name="slug">eid-sale</field>
+    <field name="kind">campaign</field>
+    <field name="status">draft</field>
+    <field name="theme_preset_id" ref="theme_eid"/>
+    <field name="blocks_json">[
+      {"id":"e1","kind":"hero","props":{"titleEn":"🌙 Eid Mubarak","titleAr":"عيد مبارك","subEn":"Celebrate with up to 70% off","ctaEn":"Shop the sale","ctaAr":"تسوّق التخفيضات"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"e2","kind":"countdown","props":{"titleEn":"Eid ends in"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"e3","kind":"cats-grid","props":{"titleEn":"Eid essentials"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"e4","kind":"flash","props":{"titleEn":"⚡ Eid Flash — 24h only"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"e5","kind":"products","props":{"titleEn":"Eid gift ideas"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false},
+      {"id":"e6","kind":"vendors","props":{"titleEn":"Featured for Eid"},"cond":{"countries":[],"languages":[],"segments":[],"schedule":{},"abVariant":"all"},"hidden":false}
+    ]</field>
+  </record>
+
+  <!-- Default navbar -->
+  <record id="navbar_default" model="mobile.navbar">
+    <field name="name">Default bottom nav</field>
+    <field name="items_json">[
+      {"id":"n1","icon":"🏠","label":{"en":"Home","ar":"الرئيسية"},"target":{"type":"page","value":"home"},"badge":null,"visible":true},
+      {"id":"n2","icon":"🛍","label":{"en":"Shop","ar":"تسوّق"},"target":{"type":"screen","value":"shop"},"badge":null,"visible":true},
+      {"id":"n3","icon":"❤","label":{"en":"Wishlist","ar":"المفضّلة"},"target":{"type":"screen","value":"wishlist"},"badge":"wishlist_count","visible":true},
+      {"id":"n4","icon":"🛒","label":{"en":"Cart","ar":"السلة"},"target":{"type":"screen","value":"cart"},"badge":"cart_count","visible":true},
+      {"id":"n5","icon":"👤","label":{"en":"Me","ar":"حسابي"},"target":{"type":"screen","value":"account"},"badge":null,"visible":true}
+    ]</field>
+  </record>
+</odoo>

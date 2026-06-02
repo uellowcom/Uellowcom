@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_uellow_seo_root" name="SEO Manager" sequence="86"
+            web_icon="uellow_seo_manager,static/description/icon.png"/>
+
+  <menuitem id="menu_uellow_seo_audits" name="Audits" sequence="10"
+            parent="menu_uellow_seo_root" action="action_uellow_seo_audit"/>
+
+  <menuitem id="menu_uellow_seo_run_audit" name="Run audit now" sequence="11"
+            parent="menu_uellow_seo_root" action="action_uellow_seo_audit_wizard"/>
+
+  <menuitem id="menu_uellow_seo_issues" name="All issues" sequence="20"
+            parent="menu_uellow_seo_root" action="action_uellow_seo_audit_issue"/>
+
+  <menuitem id="menu_uellow_seo_bulk" name="Bulk auto-fill missing meta" sequence="30"
+            parent="menu_uellow_seo_root" action="action_uellow_seo_bulk_wizard"/>
+
+  <!-- Phase 2 — AI Generator -->
+  <menuitem id="menu_uellow_seo_ai_section" name="AI Tools" sequence="40"
+            parent="menu_uellow_seo_root"/>
+  <menuitem id="menu_uellow_seo_ai_regen" sequence="41"
+            parent="menu_uellow_seo_ai_section" action="action_uellow_seo_ai_regen_missing"/>
+
+  <!-- Phase 4 — Search Console -->
+  <menuitem id="menu_uellow_seo_gsc_section" name="Search Console" sequence="50"
+            parent="menu_uellow_seo_root"/>
+  <menuitem id="menu_uellow_seo_gsc_rows" sequence="51" name="Queries / pages"
+            parent="menu_uellow_seo_gsc_section" action="action_uellow_seo_gsc_rows"/>
+  <menuitem id="menu_uellow_seo_gsc_sync" sequence="52"
+            parent="menu_uellow_seo_gsc_section" action="action_uellow_seo_gsc_sync"/>
+
+  <!-- Phase 5 — OG images -->
+  <menuitem id="menu_uellow_seo_og" name="Generate OG images (bulk)" sequence="60"
+            parent="menu_uellow_seo_ai_section" action="action_uellow_seo_og_generate"/>
+
+  <!-- One-time fix: relocate AI descriptions written to the wrong field -->
+  <menuitem id="menu_uellow_seo_fix_descriptions" sequence="61"
+            parent="menu_uellow_seo_ai_section"
+            action="action_uellow_seo_fix_descriptions"/>
+
+  <!-- Phase 6 — Link analyzer -->
+  <menuitem id="menu_uellow_seo_links_section" name="Link analyzer" sequence="70"
+            parent="menu_uellow_seo_root"/>
+  <menuitem id="menu_uellow_seo_link_scan" sequence="71"
+            parent="menu_uellow_seo_links_section" action="action_uellow_seo_link_scan"/>
+  <menuitem id="menu_uellow_seo_link_issues" sequence="72" name="Issues"
+            parent="menu_uellow_seo_links_section" action="action_uellow_seo_link_issues"/>
+
+  <!-- Phase 7 — Content gap -->
+  <menuitem id="menu_uellow_seo_content_section" name="Content strategy" sequence="80"
+            parent="menu_uellow_seo_root"/>
+  <menuitem id="menu_uellow_seo_content_suggest" sequence="81"
+            parent="menu_uellow_seo_content_section" action="action_uellow_seo_suggest_gaps"/>
+  <menuitem id="menu_uellow_seo_content_drafts" sequence="82" name="Suggested topics"
+            parent="menu_uellow_seo_content_section" action="action_uellow_seo_content_suggestions"/>
+
+  <!-- Settings — pulls the existing uellow_seo_auto config form with our
+       extra Manager tabs (AI Generator, Blog Generator, Search Console). -->
+  <menuitem id="menu_uellow_seo_settings" name="Settings" sequence="99"
+            parent="menu_uellow_seo_root"
+            action="uellow_seo_auto.action_seo_config"/>
+</odoo>

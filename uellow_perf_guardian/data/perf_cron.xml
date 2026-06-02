@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="ir_cron_perf_bot_rollover" model="ir.cron">
+    <field name="name">Perf Guardian — daily bot counter rollover</field>
+    <field name="model_id" ref="model_uellow_perf_bot_hit"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_rollover_daily()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+
+  <record id="ir_cron_perf_synthetic" model="ir.cron">
+    <field name="name">Perf Guardian — synthetic probes + cache health</field>
+    <field name="model_id" ref="model_uellow_perf_synthetic"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_run_synthetic()</field>
+    <field name="interval_number">5</field>
+    <field name="interval_type">minutes</field>
+    <field name="active">True</field>
+  </record>
+
+  <record id="ir_cron_perf_rum_prune" model="ir.cron">
+    <field name="name">Perf Guardian — prune old RUM samples</field>
+    <field name="model_id" ref="model_uellow_perf_metric"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_prune_old()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+
+  <record id="ir_cron_perf_slowq" model="ir.cron">
+    <field name="name">Perf Guardian — collect slow queries</field>
+    <field name="model_id" ref="model_uellow_perf_slow_query"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_collect()</field>
+    <field name="interval_number">30</field>
+    <field name="interval_type">minutes</field>
+    <field name="active">True</field>
+  </record>
+
+  <record id="ir_cron_perf_system" model="ir.cron">
+    <field name="name">Perf Guardian — system metrics</field>
+    <field name="model_id" ref="model_uellow_perf_system_metric"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_collect()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">minutes</field>
+    <field name="active">True</field>
+  </record>
+
+  <record id="ir_cron_perf_system_prune" model="ir.cron">
+    <field name="name">Perf Guardian — prune old system metrics</field>
+    <field name="model_id" ref="model_uellow_perf_system_metric"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_prune()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+
+  <record id="ir_cron_perf_image_scan" model="ir.cron">
+    <field name="name">Perf Guardian — image weight audit</field>
+    <field name="model_id" ref="model_uellow_perf_image_issue"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_scan(limit=200)</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+
+  <!-- NEW: SSL + Domain expiry check — daily -->
+  <record id="ir_cron_perf_ssl" model="ir.cron">
+    <field name="name">Perf Guardian — SSL + domain expiry</field>
+    <field name="model_id" ref="model_uellow_perf_ssl_monitor"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_check()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+
+  <!-- NEW: Incidents auto-close every 2 min -->
+  <record id="ir_cron_perf_incident_close" model="ir.cron">
+    <field name="name">Perf Guardian — auto-close resolved incidents</field>
+    <field name="model_id" ref="model_uellow_perf_incident"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_auto_close()</field>
+    <field name="interval_number">2</field>
+    <field name="interval_type">minutes</field>
+    <field name="active">True</field>
+  </record>
+
+  <!-- NEW: 5xx error rate evaluator — every minute -->
+  <record id="ir_cron_perf_error_eval" model="ir.cron">
+    <field name="name">Perf Guardian — 5xx error rate evaluator</field>
+    <field name="model_id" ref="model_uellow_perf_error_bucket"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_evaluate()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">minutes</field>
+    <field name="active">True</field>
+  </record>
+
+  <record id="ir_cron_perf_error_prune" model="ir.cron">
+    <field name="name">Perf Guardian — prune old 5xx buckets</field>
+    <field name="model_id" ref="model_uellow_perf_error_bucket"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_prune()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+
+  <!-- NEW: Bundle size monitor — daily -->
+  <record id="ir_cron_perf_bundle" model="ir.cron">
+    <field name="name">Perf Guardian — bundle size monitor</field>
+    <field name="model_id" ref="model_uellow_perf_bundle_size"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_collect()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+
+  <record id="ir_cron_perf_bundle_prune" model="ir.cron">
+    <field name="name">Perf Guardian — prune old bundle samples</field>
+    <field name="model_id" ref="model_uellow_perf_bundle_size"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_prune()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+
+  <!-- NEW: Anomaly detector — every 15 min -->
+  <record id="ir_cron_perf_anomaly" model="ir.cron">
+    <field name="name">Perf Guardian — anomaly detector</field>
+    <field name="model_id" ref="model_uellow_perf_system_metric"/>
+    <field name="state">code</field>
+    <field name="code">env['uellow.perf.anomaly'].cron_detect()</field>
+    <field name="interval_number">15</field>
+    <field name="interval_type">minutes</field>
+    <field name="active">True</field>
+  </record>
+
+  <!-- NEW: Self-check — every 30 min -->
+  <record id="ir_cron_perf_self_check" model="ir.cron">
+    <field name="name">Perf Guardian — self-check throttle middleware</field>
+    <field name="model_id" ref="model_uellow_perf_system_metric"/>
+    <field name="state">code</field>
+    <field name="code">env['uellow.perf.self.check'].cron_run()</field>
+    <field name="interval_number">30</field>
+    <field name="interval_type">minutes</field>
+    <field name="active">True</field>
+  </record>
+
+  <!-- NEW: CrUX fetcher — daily -->
+  <record id="ir_cron_perf_crux" model="ir.cron">
+    <field name="name">Perf Guardian — CrUX field data fetcher</field>
+    <field name="model_id" ref="model_uellow_perf_crux_sample"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_fetch()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+</odoo>

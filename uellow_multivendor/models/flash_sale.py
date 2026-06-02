@@ -15,6 +15,7 @@ class FlashSale(models.Model):
     _order = 'start_datetime desc'
 
     name = fields.Char('Sale Name', required=True, default='Flash Sale')
+    name_ar = fields.Char('Sale Name (Arabic)')
     vendor_id = fields.Many2one(
         'uellow.vendor', required=True, ondelete='cascade', index=True,
     )
@@ -86,9 +87,9 @@ class FlashSale(models.Model):
     def _apply_discounts(self):
         """Set sale price on products."""
         for product in self.product_ids:
-            if not product.lst_price:
+            if not product.list_price:
                 continue
-            sale_price = product.lst_price * (1 - self.discount_pct / 100)
+            sale_price = product.list_price * (1 - self.discount_pct / 100)
             product.write({
                 'flash_sale_id': self.id,
                 'flash_sale_price': sale_price,

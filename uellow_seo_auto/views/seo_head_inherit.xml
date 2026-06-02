@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         GLOBAL <head> INJECTIONS — once per page, on every website page.
+           1. Search-engine verification meta tags (F9)
+           2. hreflang per active website lang + x-default (F2)
+           3. Organization + WebSite + SearchAction JSON-LD (F4)
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="seo_global_head" inherit_id="website.layout" name="Uellow SEO — global head">
+        <xpath expr="//head" position="inside">
+            <t t-set="_seo_cfg" t-value="request.env['uellow.seo.config'].sudo().get_config()"/>
+
+            <!-- ── Perf: preconnect/preload + font-display: swap ────────
+                 Tells the browser to start TCP+TLS handshakes to every
+                 external origin BEFORE the parser hits the first asset.
+                 Saves 100-300ms on first paint per domain. -->
+            <link rel="preconnect" href="https://www.uellow.com"/>
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+            <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin=""/>
+            <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin=""/>
+            <link rel="dns-prefetch" href="https://www.googletagmanager.com"/>
+            <link rel="dns-prefetch" href="https://connect.facebook.net"/>
+            <link rel="dns-prefetch" href="https://analytics.tiktok.com"/>
+            <link rel="dns-prefetch" href="https://www.facebook.com"/>
+
+            <!-- Preload the main display font so it arrives in parallel
+                 with the HTML parse instead of waiting until the CSS
+                 bundle is downloaded and decoded. -->
+            <link rel="preload" as="font" type="font/woff2"
+                  href="https://fonts.gstatic.com/s/tajawal/v12/Iura6YBj_oCad4k1nzSBC45I.woff2"
+                  crossorigin=""/>
+
+            <style>
+                @font-face { font-display: swap; }
+                /* Reserve space for the hero so we don't get CLS while
+                   product image is still downloading. */
+                .product_detail_img { aspect-ratio: 1 / 1; }
+                /* Use composited transform animation instead of filter
+                   so the GPU handles it (no main-thread paint). */
+                #uhs_logo { will-change: transform, opacity; }
+            </style>
+
+            <!-- ── Search engine verification ──────────────────────── -->
+            <t t-if="_seo_cfg.google_verification">
+                <meta name="google-site-verification" t-att-content="_seo_cfg.google_verification"/>
+            </t>
+            <t t-if="_seo_cfg.bing_verification">
+                <meta name="msvalidate.01" t-att-content="_seo_cfg.bing_verification"/>
+            </t>
+            <t t-if="_seo_cfg.yandex_verification">
+                <meta name="yandex-verification" t-att-content="_seo_cfg.yandex_verification"/>
+            </t>
+            <t t-if="_seo_cfg.pinterest_verification">
+                <meta name="p:domain_verify" t-att-content="_seo_cfg.pinterest_verification"/>
+            </t>
+            <t t-if="_seo_cfg.facebook_app_id">
+                <meta property="fb:app_id" t-att-content="_seo_cfg.facebook_app_id"/>
+            </t>
+
+            <!-- ── hreflang for active website languages ─────────────
+                 v2.0.40 (SEO cleanup): exclude non-target locales so
+                 Google stops crawling auto-translated low-value pages.
+                 The list mirrors uellow_seo_auto/models/website_inherit.py
+                 (DEINDEX_LANG_PREFIXES). To re-enable a locale, both
+                 places must be updated. -->
+            <t t-set="_deindex_prefixes" t-value="['fa','et','it','hi','de','fr','sv','sq','tr','es','bn']"/>
+            <t t-set="_seo_path" t-value="request.httprequest.path or '/'"/>
+            <t t-set="_seo_base" t-value="(request.env['ir.config_parameter'].sudo().get_param('web.base.url') or '').rstrip('/')"/>
+            <t t-set="_all_langs" t-value="(request.website.language_ids if request.website else []).filtered(lambda l: (l.code or '').split('_')[0] not in _deindex_prefixes)"/>
+            <t t-set="_lang_codes" t-value="[l.url_code or l.code[:2] for l in _all_langs]"/>
+            <t t-set="_seo_clean_path">
+                <t t-foreach="_lang_codes" t-as="_lc">
+                    <t t-if="_seo_path.startswith('/' + _lc + '/') or _seo_path == '/' + _lc">
+                        <t t-set="_seo_path" t-value="_seo_path[len('/' + _lc):] or '/'"/>
+                    </t>
+                </t>
+            </t>
+            <t t-foreach="_all_langs" t-as="_lang">
+                <t t-set="_lc_url" t-value="_lang.url_code or _lang.code[:2]"/>
+                <t t-set="_alt_url" t-value="_seo_base + (('/' + _lc_url + _seo_path) if _seo_path != '/' else ('/' + _lc_url))"/>
+                <link rel="alternate" t-att-hreflang="(_lang.code or '').replace('_','-')" t-att-href="_alt_url"/>
+            </t>
+            <!-- x-default points at default lang (no prefix) -->
+            <link rel="alternate" hreflang="x-default" t-att-href="_seo_base + _seo_path"/>
+
+            <!-- ── Organization JSON-LD ────────────────────────────── -->
+            <script type="application/ld+json">
+                {
+                    "@context": "https://schema.org",
+                    "@type": "Organization",
+                    "name": "<t t-esc="_seo_cfg.site_name_en or 'Uellow'"/>",
+                    "alternateName": "<t t-esc="_seo_cfg.site_name_ar or ''"/>",
+                    "legalName": "<t t-esc="_seo_cfg.org_legal_name or ''"/>",
+                    "url": "<t t-esc="_seo_base"/>",
+                    "logo": "<t t-esc="(_seo_base + (_seo_cfg.org_logo_url or '/web/binary/company_logo'))"/>",
+                    "contactPoint": {
+                        "@type": "ContactPoint",
+                        "telephone": "<t t-esc="_seo_cfg.org_phone or ''"/>",
+                        "email": "<t t-esc="_seo_cfg.org_email or ''"/>",
+                        "contactType": "customer service",
+                        "areaServed": "KW",
+                        "availableLanguage": ["en", "ar"]
+                    },
+                    "sameAs": [<t t-foreach="(_seo_cfg.org_social_urls or '').splitlines()" t-as="_url">
+                        <t t-if="_url.strip()">"<t t-esc="_url.strip()"/>"<t t-if="not _url_last">,</t></t>
+                    </t>]
+                }
+            </script>
+
+            <!-- ── WebSite + SearchAction JSON-LD (enables sitelinks search box) ── -->
+            <script type="application/ld+json">
+                {
+                    "@context": "https://schema.org",
+                    "@type": "WebSite",
+                    "name": "<t t-esc="_seo_cfg.site_name_en or 'Uellow'"/>",
+                    "url": "<t t-esc="_seo_base"/>",
+                    "potentialAction": {
+                        "@type": "SearchAction",
+                        "target": "<t t-esc="_seo_base"/>/shop?search={search_term_string}",
+                        "query-input": "required name=search_term_string"
+                    }
+                }
+            </script>
+        </xpath>
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         PRODUCT page head — inject the per-product JSON-LD generated by
+         uellow.seo.product, plus OG tags wired to product image.
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="seo_product_head" inherit_id="website_sale.product" name="Uellow SEO — product head">
+        <xpath expr="//div[@id='wrap']" position="before">
+            <t t-set="_seo_p"  t-value="product.sudo()"/>
+            <t t-set="_seo_rec" t-value="request.env['uellow.seo.product'].sudo().search([('product_id','=',_seo_p.id)], limit=1)"/>
+            <t t-set="_seo_base" t-value="(request.env['ir.config_parameter'].sudo().get_param('web.base.url') or '').rstrip('/')"/>
+            <t t-set="_seo_img" t-value="_seo_base + '/web/image/product.template/' + str(_seo_p.id) + '/image_1920' if _seo_p.image_1920 else ''"/>
+            <t t-if="_seo_rec.schema_json">
+                <script type="application/ld+json" t-out="_seo_rec.schema_json"/>
+            </t>
+            <!-- Override OG/Twitter meta with our richer values -->
+            <t t-if="_seo_img">
+                <meta property="og:image"        t-att-content="_seo_img"/>
+                <meta property="og:image:width"  content="1200"/>
+                <meta property="og:image:height" content="1200"/>
+                <meta name="twitter:image"       t-att-content="_seo_img"/>
+                <!-- v2.0.53: preload hero image so it's fetched in parallel
+                     with HTML parsing. LCP improvement: typically 20-40%. -->
+                <link rel="preload" as="image" fetchpriority="high"
+                      t-att-href="_seo_base + '/web/image/product.template/' + str(_seo_p.id) + '/image_1024'"
+                      imagesrcset=""/>
+            </t>
+            <meta property="og:type" content="product"/>
+            <meta property="product:price:amount"   t-att-content="'%.3f' % (_seo_p.list_price or 0)"/>
+            <meta property="product:price:currency" t-att-content="request.env.company.currency_id.name or 'KWD'"/>
+        </xpath>
+    </template>
+
+</odoo>

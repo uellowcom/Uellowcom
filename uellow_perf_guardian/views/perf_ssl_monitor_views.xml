@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_perf_ssl_monitor_list" model="ir.ui.view">
+    <field name="name">uellow.perf.ssl.monitor.list</field>
+    <field name="model">uellow.perf.ssl.monitor</field>
+    <field name="arch" type="xml">
+      <list string="SSL + domain checks"
+            decoration-danger="cert_days_left &lt; 7"
+            decoration-warning="cert_days_left &lt; 30 and cert_days_left &gt;= 7">
+        <field name="create_date"/>
+        <field name="domain"/>
+        <field name="cert_not_after"/>
+        <field name="cert_days_left" string="SSL days left"/>
+        <field name="domain_expiry"/>
+        <field name="domain_days_left" string="Domain days left"/>
+        <field name="cert_issuer"/>
+        <field name="error"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_perf_ssl_monitor" model="ir.actions.act_window">
+    <field name="name">SSL + Domain Monitor</field>
+    <field name="res_model">uellow.perf.ssl.monitor</field>
+    <field name="view_mode">list</field>
+  </record>
+
+  <record id="action_perf_ssl_check_now" model="ir.actions.server">
+    <field name="name">Check SSL + domain now</field>
+    <field name="model_id" ref="model_uellow_perf_ssl_monitor"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_check()
+action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'SSL','message':'Checked','type':'success','sticky':False}}</field>
+  </record>
+</odoo>

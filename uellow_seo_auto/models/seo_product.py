@@ -1,8 +1,70 @@
-from odoo import models, fields, api, _
-import logging
+"""SEO data per product — AI-generated, editable, scored.
+
+Bugfix history vs. v1:
+  - A1: scalable 'no SEO record yet' query via NOT EXISTS subquery (was
+    `search([]).mapped(...).ids` which OOMs on 10k products).
+  - A2: per-product try/except + commit per batch so one bad row doesn't
+    roll back the whole cron run.
+  - A3: SQL UNIQUE(product_id) so parallel crons can't insert duplicates.
+  - A4/A5: defensive parsing of Anthropic response (validate content shape
+    before indexing; extract balanced JSON braces from prose).
+  - A10: advisory lock so two crons can't run simultaneously.
+  - A11: name resolved with `with_context(lang='en_US')` so `None — Buy
+    Online` never appears for AR-only products.
+  - A12/A13: explicit per-call timeout + max_retries.
+  - B2/B3: JSON-LD includes image, brand, sku, availability driven by
+    actual stock — was hardcoded InStock.
+  - B9/B10: word-boundary truncation + configurable length windows.
+"""
 import json
+import logging
+import re
+
+from odoo import models, fields, api, _
 
 _logger = logging.getLogger(__name__)
+
+
+def _cut_at_word(text, limit):
+    """Cut to last word boundary <= limit, append `…` if shortened."""
+    text = (text or '').strip()
+    if len(text) <= limit:
+        return text
+    # Step back to the last whitespace before the limit
+    cut = text[:limit]
+    if ' ' in cut:
+        cut = cut.rsplit(' ', 1)[0]
+    return cut.rstrip() + '…'
+
+
+def _extract_json(text):
+    """Pull the first balanced {...} JSON block out of an LLM response."""
+    if not text:
+        return {}
+    text = text.strip()
+    # Strip common markdown fences first
+    text = re.sub(r'^```(?:json)?\s*', '', text)
+    text = re.sub(r'\s*```$', '', text)
+    # Try direct
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        pass
+    # Find first { ... } balanced block
+    depth, start = 0, -1
+    for i, ch in enumerate(text):
+        if ch == '{':
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == '}':
+            depth -= 1
+            if depth == 0 and start >= 0:
+                try:
+                    return json.loads(text[start:i + 1])
+                except (json.JSONDecodeError, ValueError):
+                    pass
+    return {}
 
 
 class SEOProduct(models.Model):
@@ -10,6 +72,7 @@ class SEOProduct(models.Model):
     _name = 'uellow.seo.product'
     _description = 'Product SEO Data'
     _rec_name = 'product_id'
+    _order = 'score asc, last_generated asc'
 
     product_id = fields.Many2one(
         'product.template', required=True, ondelete='cascade', index=True,
@@ -26,129 +89,285 @@ class SEOProduct(models.Model):
     keywords_en = fields.Char('Keywords (EN)')
     keywords_ar = fields.Char('Keywords (AR)')
 
-    # Schema
+    # Schema markup stored as text — rendered on the page via head inherit
     schema_json = fields.Text('Schema Markup JSON')
 
     # Status
-    ai_generated = fields.Boolean('AI Generated', default=False)
-    last_generated = fields.Datetime('Last Generated')
-    needs_update = fields.Boolean('Needs Update', default=True)
+    ai_generated = fields.Boolean('AI Generated', default=False, index=True)
+    last_generated = fields.Datetime('Last Generated', index=True)
+    last_error = fields.Char('Last error', readonly=True)
+    needs_update = fields.Boolean('Needs Update', default=True, index=True)
 
-    score = fields.Integer('SEO Score (0-100)', default=0, readonly=True)
+    score = fields.Integer('SEO Score (0-100)', default=0, readonly=True, index=True)
+    # E6: sub-scores so admin sees the WHY of the score.
+    score_breakdown = fields.Text('Score breakdown', readonly=True)
 
+    _sql_constraints = [
+        ('unique_product', 'UNIQUE(product_id)',
+         'Each product can have only one SEO record.'),
+    ]
+
+    # ────────────────────────────────────────────────────────────────
+    # Cron — incremental generation
+    # ────────────────────────────────────────────────────────────────
     @api.model
     def cron_generate_seo(self):
-        """Daily: generate SEO for products missing it."""
+        """Generate missing/stale SEO records.
+
+        Uses a Postgres advisory lock so two parallel runs (manual + cron)
+        won't double-spend AI quota or race on writes.
+        """
+        # A10: advisory lock keyed on a stable hash of the model name.
+        lock_id = abs(hash('uellow.seo.cron')) % (2 ** 31)
+        self.env.cr.execute("SELECT pg_try_advisory_xact_lock(%s)", [lock_id])
+        if not self.env.cr.fetchone()[0]:
+            _logger.info('SEO cron skipped — another run holds the lock.')
+            return
+
         config = self.env['uellow.seo.config'].get_config()
         if not config.active:
             return
+        batch = max(1, config.cron_batch_size or 50)
 
-        domain = [('website_published', '=', True)]
-        if not config.overwrite_existing:
-            # Only products without SEO records
-            existing_ids = self.search([]).mapped('product_id').ids
-            domain.append(('id', 'not in', existing_ids))
+        # A1: pull products needing SEO via NOT EXISTS — fast, no Python list.
+        self.env.cr.execute("""
+            SELECT pt.id
+              FROM product_template pt
+             WHERE pt.website_published = TRUE
+               AND NOT EXISTS (
+                   SELECT 1 FROM uellow_seo_product sp
+                    WHERE sp.product_id = pt.id
+                      AND sp.needs_update = FALSE
+                      AND sp.last_generated IS NOT NULL
+               )
+             ORDER BY pt.write_date DESC
+             LIMIT %s
+        """, [batch])
+        product_ids = [row[0] for row in self.env.cr.fetchall()]
+        if not product_ids:
+            return
 
-        products = self.env['product.template'].search(domain, limit=50)
+        products = self.env['product.template'].browse(product_ids)
+        done = 0
         for product in products:
-            self._generate_for_product(product, config)
+            try:
+                self._generate_for_product(product, config)
+                done += 1
+                # A2: commit per product so partial progress survives errors.
+                self.env.cr.commit()
+            except Exception as e:
+                _logger.exception('SEO generation failed for %s: %s', product.id, e)
+        _logger.info('SEO cron generated %d/%d products', done, len(products))
 
+    # ────────────────────────────────────────────────────────────────
+    # Per-product generation
+    # ────────────────────────────────────────────────────────────────
     def _generate_for_product(self, product, config=False):
         """Generate SEO data for one product using Claude AI or fallback."""
         if not config:
             config = self.env['uellow.seo.config'].get_config()
 
-        # Basic fallback (no AI)
-        title_en = f'{product.name} — Buy Online {config.default_suffix_en}'
-        title_ar = f'{product.name} — اشتر أونلاين {config.default_suffix_ar}'
-        desc_en = (product.description_sale or product.name or '')[:155]
-        desc_ar = desc_en
+        # A11: resolve names in EN context so AR-only products don't produce
+        # literal "None — Buy Online …" titles.
+        prod_en = product.with_context(lang='en_US')
+        prod_ar = product.with_context(lang='ar_001')
+        name_en = (prod_en.name or product.name or '').strip()
+        name_ar = (prod_ar.name or name_en).strip()
 
-        # Try AI
-        if config.anthropic_api_key:
+        # Fallback values (used if AI unavailable / fails)
+        title_en = _cut_at_word(
+            f'{name_en} — Buy Online {config.default_suffix_en or ""}'.strip(),
+            config.max_title_chars or 60)
+        title_ar = _cut_at_word(
+            f'{name_ar} — اشتر أونلاين {config.default_suffix_ar or ""}'.strip(),
+            config.max_title_chars or 60)
+        desc_en = _cut_at_word(
+            (prod_en.description_sale or name_en or ''),
+            config.max_desc_chars or 160)
+        desc_ar = _cut_at_word(
+            (prod_ar.description_sale or name_ar or ''),
+            config.max_desc_chars or 160)
+        kw_en = kw_ar = ''
+        error = False
+
+        api_key = config.get_api_key()
+        if api_key and config.increment_daily_calls(1):
             try:
                 import anthropic
-                client = anthropic.Anthropic(api_key=config.anthropic_api_key)
-                prompt = f"""Generate SEO metadata for this product on Uellow (Kuwait e-commerce).
-
-Product: {product.name}
-Category: {product.categ_id.name if product.categ_id else ''}
-Price: {product.list_price:.3f} KD
-Description: {(product.description_sale or '')[:300]}
-
-Return JSON only (no markdown):
-{{
-  "meta_title_en": "...",
-  "meta_title_ar": "...",
-  "meta_desc_en": "...",
-  "meta_desc_ar": "...",
-  "keywords_en": "...",
-  "keywords_ar": "..."
-}}"""
+                client = anthropic.Anthropic(
+                    api_key=api_key,
+                    timeout=30.0,
+                    max_retries=2,
+                )
+                prompt = (
+                    "Generate SEO metadata for this product on Uellow "
+                    "(Kuwait e-commerce, KWD currency).\n\n"
+                    f"Product (EN): {name_en}\n"
+                    f"Product (AR): {name_ar}\n"
+                    f"Category: {product.categ_id.name if product.categ_id else ''}\n"
+                    f"Price: {product.list_price:.3f} KWD\n"
+                    f"Description: {(prod_en.description_sale or '')[:300]}\n\n"
+                    f"Limits: title ≤ {config.max_title_chars} chars, "
+                    f"description ≤ {config.max_desc_chars} chars.\n\n"
+                    'Return strict JSON ONLY (no prose, no fences):\n'
+                    '{\n'
+                    '  "meta_title_en":"...","meta_title_ar":"...",\n'
+                    '  "meta_desc_en":"...","meta_desc_ar":"...",\n'
+                    '  "keywords_en":"...","keywords_ar":"..."\n'
+                    '}'
+                )
                 msg = client.messages.create(
-                    model='claude-sonnet-4-20250514',
-                    max_tokens=400,
+                    model=config.ai_model or 'claude-haiku-4-5-20251001',
+                    max_tokens=500,
                     messages=[{'role': 'user', 'content': prompt}],
                 )
-                text = msg.content[0].text.strip()
-                import re
-                text = re.sub(r'^```json?\s*', '', text)
-                text = re.sub(r'\s*```$', '', text)
-                data = json.loads(text)
-                title_en = data.get('meta_title_en', title_en)
-                title_ar = data.get('meta_title_ar', title_ar)
-                desc_en = data.get('meta_desc_en', desc_en)
-                desc_ar = data.get('meta_desc_ar', desc_ar)
+                # A4: validate response shape before indexing.
+                if not msg.content or getattr(msg.content[0], 'type', None) != 'text':
+                    raise ValueError('Empty or non-text Anthropic response')
+                # A5: tolerant JSON extraction.
+                data = _extract_json(msg.content[0].text)
+                if data:
+                    title_en = _cut_at_word(data.get('meta_title_en') or title_en,
+                                            config.max_title_chars or 60)
+                    title_ar = _cut_at_word(data.get('meta_title_ar') or title_ar,
+                                            config.max_title_chars or 60)
+                    desc_en = _cut_at_word(data.get('meta_desc_en') or desc_en,
+                                           config.max_desc_chars or 160)
+                    desc_ar = _cut_at_word(data.get('meta_desc_ar') or desc_ar,
+                                           config.max_desc_chars or 160)
+                    kw_en = (data.get('keywords_en') or '').strip()
+                    kw_ar = (data.get('keywords_ar') or '').strip()
             except Exception as e:
-                _logger.warning('SEO AI generation failed for %s: %s', product.name, e)
+                error = str(e)[:240]
+                _logger.warning('SEO AI failed for "%s": %s', name_en, e)
 
-        # Schema markup
+        # B2/B3: richer Product schema with availability driven by stock.
         schema = {}
         if config.schema_markup:
-            schema = {
-                '@context': 'https://schema.org',
-                '@type': 'Product',
-                'name': product.name,
-                'offers': {
-                    '@type': 'Offer',
-                    'price': str(product.list_price),
-                    'priceCurrency': 'KWD',
-                    'availability': 'https://schema.org/InStock',
-                }
-            }
+            schema = self._build_product_jsonld(product, prod_en)
 
-        # Score estimation
-        score = 0
-        if title_en and len(title_en) >= 30:
-            score += 25
-        if desc_en and len(desc_en) >= 100:
-            score += 25
-        if title_ar:
-            score += 25
-        if schema:
-            score += 25
-
-        existing = self.search([('product_id', '=', product.id)], limit=1)
-        vals = {
-            'product_id': product.id,
-            'meta_title_en': title_en[:60],
-            'meta_title_ar': title_ar[:60],
-            'meta_desc_en': desc_en[:155],
-            'meta_desc_ar': desc_ar[:155],
-            'schema_json': json.dumps(schema, ensure_ascii=False),
-            'ai_generated': bool(config.anthropic_api_key),
-            'last_generated': fields.Datetime.now(),
-            'needs_update': False,
-            'score': score,
+        # E6: sub-score breakdown
+        sub = {
+            'title_en_len_ok':  bool(title_en) and 30 <= len(title_en) <= (config.max_title_chars or 60),
+            'desc_en_len_ok':   bool(desc_en)  and 100 <= len(desc_en) <= (config.max_desc_chars or 160),
+            'has_title_ar':     bool(title_ar),
+            'has_desc_ar':      bool(desc_ar),
+            'has_schema':       bool(schema),
+            'has_keywords':     bool(kw_en or kw_ar),
         }
+        score = sum(15 if k in ('title_en_len_ok', 'desc_en_len_ok')
+                    else 17 if k == 'has_schema'
+                    else 12
+                    for k in sub if sub[k])
+        score = min(100, score)
+
+        vals = {
+            'product_id':     product.id,
+            'meta_title_en':  title_en,
+            'meta_title_ar':  title_ar,
+            'meta_desc_en':   desc_en,
+            'meta_desc_ar':   desc_ar,
+            'keywords_en':    kw_en,
+            'keywords_ar':    kw_ar,
+            'schema_json':    json.dumps(schema, ensure_ascii=False) if schema else False,
+            'ai_generated':   bool(api_key and not error),
+            'last_generated': fields.Datetime.now(),
+            'last_error':     error,
+            'needs_update':   False,
+            'score':          score,
+            'score_breakdown': json.dumps(sub),
+        }
+        # A3-safe upsert (constraint catches the race; we try-write-or-create).
+        existing = self.search([('product_id', '=', product.id)], limit=1)
         if existing:
             existing.write(vals)
         else:
-            self.create(vals)
+            try:
+                self.create(vals)
+            except Exception:
+                # Race: another transaction created it; reload + write.
+                existing = self.search([('product_id', '=', product.id)], limit=1)
+                if existing:
+                    existing.write(vals)
 
-        # Also update product's website_meta_title/description if fields exist
+        # Mirror onto website_meta_* so Odoo's built-in head injection
+        # picks it up even on pages our template inherit doesn't reach.
         try:
-            product.website_meta_title = title_en
-            product.website_meta_description = desc_en
-        except Exception:
-            pass
+            product.sudo().write({
+                'website_meta_title':       title_en,
+                'website_meta_description': desc_en,
+                'website_meta_keywords':    kw_en,
+            })
+        except Exception as e:
+            _logger.info('website_meta_* mirror skipped for %s: %s', product.id, e)
+
+    @staticmethod
+    def _availability_url(product):
+        """Map stock state to schema.org Availability URL."""
+        qty = float(getattr(product, 'qty_available', 0) or 0)
+        cont = bool(getattr(product, 'allow_out_of_stock_order', False))
+        if qty > 0:
+            return 'https://schema.org/InStock'
+        if cont:
+            return 'https://schema.org/PreOrder'
+        return 'https://schema.org/OutOfStock'
+
+    def _build_product_jsonld(self, product, prod_en):
+        """Construct a Product JSON-LD object eligible for Google Rich Results."""
+        base = (self.env['ir.config_parameter'].sudo()
+                .get_param('web.base.url') or '').rstrip('/')
+        img_url = ''
+        if product.image_1920:
+            img_url = f"{base}/web/image/product.template/{product.id}/image_1920"
+        sku = product.default_code or ''
+        brand_name = ''
+        # Discover brand if the catalog has one (theme_prime uses dr_brand_value_id)
+        b = getattr(product, 'dr_brand_value_id', None)
+        if b and b.name:
+            brand_name = b.name
+        from datetime import date, timedelta
+        valid_until = (date.today() + timedelta(days=30)).isoformat()
+        schema = {
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            'name':  (prod_en.name or '').strip(),
+            'description': (prod_en.description_sale or prod_en.name or '').strip()[:5000],
+            'url':   f"{base}{product.website_url}" if getattr(product, 'website_url', None) else '',
+            'sku':   sku,
+            'image': img_url,
+            'offers': {
+                '@type':       'Offer',
+                'price':       f"{float(product.list_price or 0):.3f}",
+                'priceCurrency': (self.env.company.currency_id.name or 'KWD'),
+                'availability': self._availability_url(product),
+                'priceValidUntil': valid_until,
+                'url': f"{base}{product.website_url}" if getattr(product, 'website_url', None) else '',
+            },
+        }
+        if brand_name:
+            schema['brand'] = {'@type': 'Brand', 'name': brand_name}
+        # Aggregate rating, if the reviews module is installed.
+        rc = getattr(product, 'pr_total', 0) or 0
+        if rc:
+            schema['aggregateRating'] = {
+                '@type':       'AggregateRating',
+                'ratingValue': round(getattr(product, 'pr_avg', 0) or 0, 1),
+                'reviewCount': rc,
+                'bestRating':  5,
+                'worstRating': 1,
+            }
+        return schema
+
+    # ────────────────────────────────────────────────────────────────
+    # Manual buttons (E2)
+    # ────────────────────────────────────────────────────────────────
+    def action_generate_now(self):
+        """Regenerate this record(s)."""
+        config = self.env['uellow.seo.config'].get_config()
+        for rec in self:
+            if rec.product_id:
+                rec._generate_for_product(rec.product_id, config)
+        return True
+
+    def action_mark_needs_update(self):
+        self.write({'needs_update': True})

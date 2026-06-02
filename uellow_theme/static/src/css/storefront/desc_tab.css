@@ -1,0 +1,11 @@
+/* PPC - Description Tab CSS (frontend) — included via assets */
+/* Most styles are now in product_page.css for consolidation */
+/* This file handles the "See more" initial state check */
+
+.ppc-see-more-fade {
+    position: relative;
+    margin-top: -42px;
+    padding-top: 42px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 75%);
+    text-align: center;
+}

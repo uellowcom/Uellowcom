@@ -4,12 +4,12 @@
         <field name="name">ai.chat.session.list</field>
         <field name="model">ai.chat.session</field>
         <field name="arch" type="xml">
-            <list string="محادثات Beena" default_order="write_date desc">
+            <list string="Live Sessions" default_order="write_date desc">
                 <field name="session_id"/>
-                <field name="partner_id"/>
-                <field name="product_id"/>
-                <field name="last_state"/>
-                <field name="write_date" string="آخر نشاط"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="product_id" string="Product"/>
+                <field name="last_state" string="State"/>
+                <field name="write_date" string="Last Activity"/>
                 <field name="active"/>
             </list>
         </field>
@@ -19,16 +19,16 @@
         <field name="name">ai.chat.session.form</field>
         <field name="model">ai.chat.session</field>
         <field name="arch" type="xml">
-            <form string="محادثة Beena">
+            <form string="Live Session">
                 <sheet>
                     <group>
                         <field name="session_id" readonly="1"/>
-                        <field name="partner_id"/>
-                        <field name="product_id"/>
-                        <field name="last_state"/>
+                        <field name="partner_id" string="Customer"/>
+                        <field name="product_id" string="Product"/>
+                        <field name="last_state" string="State"/>
                         <field name="active"/>
                     </group>
-                    <group string="سجل المحادثة (JSON)">
+                    <group string="Conversation Log (JSON)">
                         <field name="messages_json" widget="text" readonly="1" nolabel="1"/>
                     </group>
                 </sheet>
@@ -37,19 +37,20 @@
     </record>
 
     <record id="action_ai_chat_sessions" model="ir.actions.act_window">
-        <field name="name">محادثات Beena</field>
+        <field name="name">Live Sessions</field>
         <field name="res_model">ai.chat.session</field>
         <field name="view_mode">list,form</field>
     </record>
 
+    <!-- Root menu (single source of truth) -->
     <menuitem id="menu_ai_root"
               name="🐝 Beena AI"
               sequence="90"
               groups="base.group_system"/>
 
     <menuitem id="menu_ai_sessions"
-              name="المحادثات"
+              name="Live Sessions"
               parent="menu_ai_root"
               action="action_ai_chat_sessions"
-              sequence="10"/>
+              sequence="60"/>
 </odoo>

@@ -20,6 +20,8 @@
         'views/restock_request_views.xml',
         'views/product_variant_stock_views.xml',
         'views/fbu_dashboard_views.xml',
+        'data/withdrawal_sequence.xml',
+        'views/stock_withdrawal_views.xml',
         'views/menus.xml',
         'wizard/warehouse_receive_wizard_views.xml',
     ],

@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_uellow_seo_audit_admin,uellow.seo.audit admin,model_uellow_seo_audit,base.group_system,1,1,1,1
+access_uellow_seo_audit_user,uellow.seo.audit user,model_uellow_seo_audit,base.group_user,1,0,0,0
+access_uellow_seo_audit_issue_admin,uellow.seo.audit.issue admin,model_uellow_seo_audit_issue,base.group_system,1,1,1,1
+access_uellow_seo_audit_issue_user,uellow.seo.audit.issue user,model_uellow_seo_audit_issue,base.group_user,1,0,0,0
+access_uellow_seo_audit_wizard,uellow.seo.audit.wizard,model_uellow_seo_audit_wizard,base.group_system,1,1,1,1
+access_uellow_seo_bulk_wizard,uellow.seo.bulk.wizard,model_uellow_seo_bulk_wizard,base.group_system,1,1,1,1
+access_uellow_seo_gsc_row_admin,uellow.seo.gsc.row admin,model_uellow_seo_gsc_row,base.group_system,1,1,1,1
+access_uellow_seo_gsc_row_user,uellow.seo.gsc.row user,model_uellow_seo_gsc_row,base.group_user,1,0,0,0
+access_uellow_seo_link_issue_admin,uellow.seo.link.issue admin,model_uellow_seo_link_issue,base.group_system,1,1,1,1
+access_uellow_seo_link_issue_user,uellow.seo.link.issue user,model_uellow_seo_link_issue,base.group_user,1,0,0,0
+access_uellow_seo_content_sugg_admin,uellow.seo.content.suggestion admin,model_uellow_seo_content_suggestion,base.group_system,1,1,1,1
+access_uellow_seo_content_sugg_user,uellow.seo.content.suggestion user,model_uellow_seo_content_suggestion,base.group_user,1,0,0,0

@@ -1,0 +1,1339 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Uellow Driver — App Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root{
+  --yellow:#F5C320; --yellow-soft:#FFE066; --yellow-faint:#FFF6D9;
+  --brown:#412402; --brown-soft:#5B3C00; --brown-faint:#7A5418;
+  --ink:#1B1B1F; --text:#3A3A40; --muted:#8B8B92;
+  --bg:#F4F2EE; --card:#FFFFFF; --border:#E7E3D9;
+  --success:#10B981; --success-bg:#D1FAE5; --success-dk:#047857;
+  --danger:#EF4444; --danger-bg:#FEE2E2; --danger-dk:#B91C1C;
+  --warn:#F59E0B; --warn-bg:#FEF3C7;
+  --info:#0EA5E9; --info-bg:#DBEAFE;
+  --shadow-1: 0 1px 2px rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
+  --shadow-2: 0 4px 8px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.08);
+  --shadow-3: 0 20px 50px rgba(0,0,0,.12), 0 8px 16px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; background:#1a1a1f; color:var(--ink); -webkit-font-smoothing:antialiased; min-height:100vh}
+body.ar{font-family:'Tajawal','Inter',sans-serif; direction:rtl}
+
+/* ── Top bar ─────────────────────────────── */
+.topbar{position:sticky; top:0; z-index:50; background:rgba(15,15,18,.7); backdrop-filter:blur(20px); border-bottom:1px solid rgba(255,255,255,.06); padding:14px 28px; display:flex; align-items:center; gap:20px}
+.brand{display:flex; align-items:center; gap:10px}
+.brand-logo{width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,#FFE066,#F5C320); display:flex; align-items:center; justify-content:center; font-weight:900; color:#412402; box-shadow:0 4px 14px rgba(245,195,32,.4)}
+.brand-text{color:#fff; font-weight:800; font-size:15px; letter-spacing:.2px}
+.brand-text small{font-weight:600; opacity:.55; font-size:11px; margin-left:6px}
+.brand-text small.ar{margin-right:6px; margin-left:0}
+.spacer{flex:1}
+.lang-pill{display:inline-flex; gap:0; border-radius:999px; background:rgba(255,255,255,.08); padding:4px; user-select:none}
+.lang-pill button{border:none; background:transparent; color:rgba(255,255,255,.6); padding:6px 14px; border-radius:999px; font-weight:700; font-size:12px; cursor:pointer; font-family:inherit}
+.lang-pill button.on{background:#F5C320; color:#412402}
+.theme-pill{display:inline-flex; align-items:center; gap:6px; color:rgba(255,255,255,.6); font-size:12px; font-weight:600}
+
+/* ── Layout ──────────────────────────────── */
+.layout{display:grid; grid-template-columns:280px 1fr 320px; gap:28px; padding:28px; min-height:calc(100vh - 64px)}
+@media (max-width:1200px){.layout{grid-template-columns:240px 1fr; gap:18px; padding:18px}.layout aside.notes{display:none}}
+@media (max-width:820px){.layout{grid-template-columns:1fr}.layout nav.screens{display:none}}
+
+/* ── Screen nav ───────────────────────────── */
+nav.screens{position:sticky; top:88px; align-self:start; max-height:calc(100vh - 110px); overflow:auto; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06); border-radius:18px; padding:14px}
+nav.screens h4{font-size:11px; letter-spacing:.7px; text-transform:uppercase; color:rgba(255,255,255,.45); margin:8px 6px 8px; font-weight:800}
+nav.screens .item{display:flex; gap:10px; align-items:center; padding:9px 11px; border-radius:11px; color:rgba(255,255,255,.75); font-weight:600; font-size:13px; cursor:pointer; border:1px solid transparent; transition:all .15s}
+nav.screens .item:hover{background:rgba(255,255,255,.06); color:#fff}
+nav.screens .item.active{background:linear-gradient(135deg,rgba(245,195,32,.18),rgba(245,195,32,.08)); color:#FFE066; border-color:rgba(245,195,32,.4)}
+nav.screens .item .ico{width:26px; height:26px; border-radius:7px; background:rgba(255,255,255,.06); display:flex; align-items:center; justify-content:center; font-size:13px}
+nav.screens .item.active .ico{background:rgba(245,195,32,.25)}
+nav.screens .count{margin-left:auto; font-size:10px; opacity:.7}
+body.ar nav.screens .count{margin-right:auto; margin-left:0}
+
+/* ── Stage with phone frame ───────────────── */
+.stage{display:flex; flex-direction:column; align-items:center; gap:18px}
+.stage-meta{color:rgba(255,255,255,.7); text-align:center}
+.stage-meta h2{font-size:22px; font-weight:800; color:#fff; margin-bottom:4px}
+.stage-meta p{font-size:13px; max-width:520px; line-height:1.55}
+.phones{display:flex; gap:34px; align-items:flex-start; flex-wrap:wrap; justify-content:center}
+.phone{width:340px; flex:0 0 340px}
+.phone-frame{
+  width:340px; height:706px;
+  border-radius:46px; background:#000;
+  padding:11px; box-shadow: 0 40px 90px rgba(0,0,0,.45), 0 12px 30px rgba(0,0,0,.25), 0 0 0 2px #2a2a30, inset 0 0 0 1px rgba(255,255,255,.05);
+  position:relative;
+}
+.phone-frame::before{content:""; position:absolute; top:11px; left:50%; transform:translateX(-50%); width:110px; height:28px; background:#000; border-radius:0 0 18px 18px; z-index:5}
+.phone-screen{
+  width:100%; height:100%; border-radius:36px; background:var(--bg); overflow:hidden;
+  position:relative; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+}
+.phone-status{position:absolute; top:0; left:0; right:0; padding:11px 24px 4px; display:flex; justify-content:space-between; align-items:center; z-index:4; font-size:13px; font-weight:600; color:var(--ink)}
+.phone-status .icons{display:flex; gap:4px; font-size:11px; opacity:.85}
+.phone-body{position:absolute; top:48px; left:0; right:0; bottom:0; overflow:hidden}
+.phone-caption{margin-top:14px; text-align:center; color:rgba(255,255,255,.55); font-size:11px; letter-spacing:.4px; font-weight:700; text-transform:uppercase}
+
+/* ── Notes panel ──────────────────────────── */
+aside.notes{position:sticky; top:88px; align-self:start; max-height:calc(100vh - 110px); overflow:auto; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:18px; padding:18px; color:rgba(255,255,255,.85)}
+aside.notes h3{font-size:13px; text-transform:uppercase; letter-spacing:.6px; color:#FFE066; margin-bottom:10px; font-weight:800}
+aside.notes h4{font-size:12px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.5px; margin:14px 0 6px; font-weight:800}
+aside.notes ul{list-style:none; font-size:12.5px; line-height:1.6}
+aside.notes ul li{padding:4px 0; padding-left:18px; position:relative}
+aside.notes ul li::before{content:"›"; position:absolute; left:4px; top:2px; color:#F5C320; font-weight:900}
+body.ar aside.notes ul li{padding-left:0; padding-right:18px}
+body.ar aside.notes ul li::before{left:auto; right:4px}
+aside.notes code{font-family:'JetBrains Mono',monospace; font-size:11.5px; background:rgba(245,195,32,.15); color:#FFE066; padding:1px 6px; border-radius:4px}
+aside.notes .chip{display:inline-flex; align-items:center; gap:5px; background:rgba(245,195,32,.15); color:#FFE066; font-size:10.5px; font-weight:700; padding:3px 8px; border-radius:999px; margin-right:4px; margin-top:4px}
+
+/* ── Phone screen common widgets ──────────── */
+.screen{display:none; width:100%; height:100%; padding-top:38px; overflow:auto; -webkit-overflow-scrolling:touch}
+.screen.show{display:block}
+.screen::-webkit-scrollbar{width:0; display:none}
+
+.appbar{padding:6px 16px 12px; display:flex; align-items:center; gap:10px; background:#fff}
+.appbar .back{width:32px; height:32px; border-radius:10px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:16px; color:var(--brown); cursor:pointer}
+.appbar .title{font-size:16px; font-weight:800; color:var(--ink); flex:1}
+.appbar .actions{display:flex; gap:6px}
+.appbar .actions .ic{width:32px; height:32px; border-radius:10px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-size:14px; cursor:pointer; color:var(--brown)}
+
+.section{padding:14px 14px 0}
+.h-row{display:flex; align-items:center; gap:8px; margin-bottom:10px}
+.h-row h3{font-size:13px; font-weight:900; color:var(--ink); letter-spacing:.2px}
+.h-row .more{margin-left:auto; font-size:11px; color:var(--brown); font-weight:700; cursor:pointer}
+body.ar .h-row .more{margin-left:0; margin-right:auto}
+
+.card{background:#fff; border-radius:14px; box-shadow:var(--shadow-1)}
+.card.bordered{border:1px solid var(--border); box-shadow:none}
+
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:10px 14px; border-radius:11px; font-weight:800; font-size:13px; cursor:pointer; border:none; font-family:inherit}
+.btn.primary{background:var(--yellow); color:var(--brown); box-shadow:0 4px 14px rgba(245,195,32,.35)}
+.btn.dark{background:var(--brown); color:var(--yellow-soft)}
+.btn.success{background:var(--success); color:#fff}
+.btn.danger{background:var(--danger); color:#fff}
+.btn.ghost{background:var(--bg); color:var(--ink)}
+.btn.outline{background:#fff; color:var(--brown); border:1.5px solid var(--border)}
+.btn.full{width:100%}
+.btn.lg{padding:14px 16px; font-size:14.5px; border-radius:13px}
+.btn.sm{padding:7px 12px; font-size:12px; border-radius:9px}
+
+.chip{display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:999px; font-size:10.5px; font-weight:800; letter-spacing:.2px}
+.chip.green{background:var(--success-bg); color:var(--success-dk)}
+.chip.red{background:var(--danger-bg); color:var(--danger-dk)}
+.chip.yellow{background:var(--warn-bg); color:#92400E}
+.chip.blue{background:var(--info-bg); color:#1E40AF}
+.chip.grey{background:var(--bg); color:var(--muted)}
+.chip.brown{background:var(--brown); color:var(--yellow-soft)}
+
+/* dot */
+.dot{display:inline-block; width:8px; height:8px; border-radius:50%}
+.dot.live{background:var(--success); box-shadow:0 0 0 0 rgba(16,185,129,.7); animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(16,185,129,.6)}70%{box-shadow:0 0 0 8px rgba(16,185,129,0)}100%{box-shadow:0 0 0 0 rgba(16,185,129,0)}}
+
+/* ── Login ───────────────────────────────── */
+.login-bg{background:linear-gradient(160deg,#FFE066 0%, #F5C320 45%, #C99000 100%); width:100%; height:100%; position:relative; overflow:hidden}
+.login-bg::before{content:""; position:absolute; top:-100px; right:-100px; width:300px; height:300px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,.5), transparent)}
+.login-bg::after{content:""; position:absolute; bottom:-50px; left:-50px; width:220px; height:220px; border-radius:50%; background:radial-gradient(circle, rgba(65,36,2,.18), transparent)}
+.login-inner{position:relative; z-index:2; padding:48px 28px 32px; height:100%; display:flex; flex-direction:column; align-items:center}
+.login-logo{width:74px; height:74px; border-radius:22px; background:#fff; box-shadow:0 12px 30px rgba(65,36,2,.25); display:flex; align-items:center; justify-content:center; margin-bottom:16px; font-size:32px}
+.login-title{color:#412402; font-weight:900; font-size:24px; letter-spacing:-.3px}
+.login-sub{color:#5B3C00; font-size:13px; margin-top:6px; text-align:center; max-width:240px}
+.login-card{margin-top:32px; width:100%; background:#fff; border-radius:20px; padding:18px; box-shadow:0 20px 50px rgba(65,36,2,.18)}
+.field{display:flex; align-items:center; gap:10px; padding:13px 14px; border-radius:12px; background:var(--bg); border:1.5px solid transparent; margin-bottom:10px; transition:all .15s}
+.field:focus-within{border-color:var(--yellow); background:#fff; box-shadow:0 0 0 4px rgba(245,195,32,.15)}
+.field .ic{color:var(--muted); font-size:14px}
+.field input{flex:1; border:none; outline:none; background:transparent; font-family:inherit; font-size:13.5px; color:var(--ink); font-weight:600}
+.login-help{margin-top:auto; padding-bottom:16px; color:#5B3C00; font-size:12px; text-align:center; font-weight:600}
+
+/* ── Dashboard ────────────────────────────── */
+.dash-hero{margin:0 14px 0; padding:18px 16px 16px; border-radius:18px; background:linear-gradient(135deg,#412402,#5B3C00); color:#FFE066; position:relative; overflow:hidden; margin-top:6px}
+.dash-hero::after{content:""; position:absolute; top:-30px; right:-30px; width:120px; height:120px; border-radius:50%; background:radial-gradient(circle,rgba(245,195,32,.2),transparent)}
+.dash-hero .hi{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; position:relative; z-index:2}
+.dash-hero h1{font-size:18px; font-weight:900; color:#fff}
+.dash-hero .status{display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,.2); padding:5px 11px; border-radius:999px; font-size:11px; font-weight:800; color:#A7F3D0; cursor:pointer; border:1px solid rgba(16,185,129,.4)}
+.kpi-row{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; position:relative; z-index:2}
+.kpi{background:rgba(255,255,255,.08); padding:10px; border-radius:11px; text-align:center; backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.08)}
+.kpi .v{font-size:22px; font-weight:900; color:#fff; line-height:1.1}
+.kpi .l{font-size:10px; color:rgba(255,224,102,.85); margin-top:2px; font-weight:700; text-transform:uppercase; letter-spacing:.4px}
+.cash-card{background:linear-gradient(135deg,#F5C320,#FFE066); padding:14px 16px; border-radius:14px; display:flex; align-items:center; gap:12px; margin:12px 0 4px; cursor:pointer; box-shadow:0 8px 20px rgba(245,195,32,.25); position:relative; z-index:2}
+.cash-card .ic{width:42px; height:42px; border-radius:12px; background:#412402; color:#FFE066; display:flex; align-items:center; justify-content:center; font-size:18px}
+.cash-card .lbl{color:#5B3C00; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.4px}
+.cash-card .val{color:#412402; font-size:18px; font-weight:900; margin-top:1px}
+.cash-card .chev{margin-left:auto; color:#412402; font-size:20px}
+body.ar .cash-card .chev{margin-left:0; margin-right:auto; transform:rotate(180deg)}
+
+.next-list{background:#fff; border-radius:14px; margin-top:8px; box-shadow:var(--shadow-1)}
+.next-row{display:flex; align-items:center; gap:11px; padding:12px 14px; border-bottom:1px solid var(--bg); cursor:pointer}
+.next-row:last-child{border-bottom:none}
+.next-row .num{width:30px; height:30px; border-radius:9px; background:var(--yellow-faint); color:var(--brown); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:11px}
+.next-row .info{flex:1; min-width:0}
+.next-row .info .top{font-size:12.5px; font-weight:800; color:var(--ink); display:flex; gap:6px; align-items:center}
+.next-row .info .top .small-mono{font-family:'JetBrains Mono',monospace; font-size:11.5px}
+.next-row .info .bot{font-size:11px; color:var(--muted); margin-top:2px}
+.next-row .amt{font-weight:900; color:var(--brown); font-size:13px}
+
+/* ── Tabs ────────────────────────────────── */
+.tab-bar{background:#fff; padding:0 14px; display:flex; gap:6px; border-bottom:1px solid var(--border); overflow-x:auto}
+.tab-bar .tab{padding:11px 12px; font-size:12.5px; font-weight:700; color:var(--muted); border-bottom:2px solid transparent; cursor:pointer; white-space:nowrap}
+.tab-bar .tab.on{color:var(--brown); border-bottom-color:var(--yellow); font-weight:900}
+.tab-bar .tab .count{display:inline-block; margin-left:4px; font-size:10px; background:var(--bg); padding:1px 6px; border-radius:999px; font-weight:700; color:var(--muted)}
+.tab-bar .tab.on .count{background:var(--yellow); color:var(--brown)}
+
+/* ── Order card ──────────────────────────── */
+.order-card{background:#fff; margin:10px 14px 0; border-radius:14px; padding:14px; box-shadow:var(--shadow-1); border:1px solid var(--border)}
+.order-card .hdr{display:flex; align-items:center; gap:8px; margin-bottom:6px}
+.order-card .ono{font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:800; color:var(--ink)}
+.order-card .time{font-size:11px; color:var(--muted)}
+.order-card .cust{font-weight:800; color:var(--ink); font-size:13px}
+.order-card .addr{font-size:11.5px; color:var(--muted); margin-top:1px; display:flex; gap:4px; align-items:center}
+.order-card .total{margin-top:8px; display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.order-card .total .amt{font-weight:900; color:var(--brown); font-size:14.5px}
+.order-card .actions{display:flex; gap:6px; margin-top:12px}
+.order-card .actions .btn{flex:1}
+
+/* ── Order detail ─────────────────────────── */
+.detail-section{background:#fff; padding:14px 16px; margin-top:8px}
+.detail-section .lbl{font-size:10.5px; font-weight:800; color:var(--muted); letter-spacing:.5px; text-transform:uppercase; margin-bottom:6px}
+.detail-section .row{display:flex; align-items:center; gap:10px; margin-bottom:6px}
+.detail-section .row .ic{width:32px; height:32px; border-radius:10px; background:var(--yellow-faint); color:var(--brown); display:flex; align-items:center; justify-content:center; font-size:14px}
+.detail-section .row .grow{flex:1; min-width:0}
+.detail-section .row .grow .pri{font-size:13.5px; font-weight:800; color:var(--ink)}
+.detail-section .row .grow .sec{font-size:11.5px; color:var(--muted); margin-top:1px}
+.call-row{display:flex; gap:8px; margin-top:10px}
+.call-row .btn{flex:1}
+
+.map-holder{width:100%; height:160px; border-radius:14px; overflow:hidden; margin-top:8px; background:#EFEAE0; position:relative}
+.map-holder .leafmap{width:100%; height:100%}
+.map-holder .open-maps{position:absolute; top:8px; right:8px; background:#fff; padding:6px 10px; border-radius:999px; font-size:10.5px; font-weight:800; color:var(--brown); box-shadow:0 4px 10px rgba(0,0,0,.15); display:inline-flex; align-items:center; gap:4px; z-index:1000}
+
+.items-list{background:#fff; padding:0 14px}
+.item-row{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--bg); align-items:center}
+.item-row:last-child{border-bottom:none}
+.item-row img{width:46px; height:46px; border-radius:9px; object-fit:cover; background:var(--bg)}
+.item-row .grow .name{font-size:12.5px; font-weight:700; color:var(--ink)}
+.item-row .grow .sub{font-size:10.5px; color:var(--muted); margin-top:2px}
+.item-row .qty{font-weight:800; font-size:12.5px; color:var(--brown); background:var(--yellow-faint); padding:3px 8px; border-radius:7px}
+
+.timeline{padding:10px 14px}
+.timeline .step{display:flex; gap:10px; padding:9px 0; position:relative}
+.timeline .step::before{content:""; position:absolute; left:11px; top:24px; bottom:-9px; width:2px; background:var(--border)}
+.timeline .step:last-child::before{display:none}
+.timeline .step.done::before{background:var(--success)}
+body.ar .timeline .step::before{left:auto; right:11px}
+.timeline .ic{width:24px; height:24px; border-radius:50%; background:var(--border); color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; z-index:2; flex:0 0 24px}
+.timeline .step.done .ic{background:var(--success)}
+.timeline .step.current .ic{background:var(--yellow); color:var(--brown); box-shadow:0 0 0 4px rgba(245,195,32,.25)}
+.timeline .info .lbl{font-size:12.5px; font-weight:800; color:var(--ink)}
+.timeline .info .ts{font-size:10.5px; color:var(--muted); margin-top:1px}
+
+/* ── Sheet (bottom modal) ─────────────────── */
+.sheet{position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:22px 22px 0 0; padding:14px 16px 20px; box-shadow:0 -10px 30px rgba(0,0,0,.18); z-index:10}
+.sheet::before{content:""; display:block; width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 14px}
+.sheet h3{font-size:16px; font-weight:900; color:var(--ink); margin-bottom:8px}
+.sheet .lbl{font-size:11px; font-weight:800; color:var(--muted); letter-spacing:.4px; text-transform:uppercase; margin:8px 0 6px}
+
+.photo-row{display:grid; grid-template-columns:1fr 1fr; gap:8px}
+.photo-tile{aspect-ratio:1.2; border-radius:11px; background:var(--yellow-faint); border:1.5px dashed var(--yellow); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:var(--brown); font-weight:800; font-size:11px; cursor:pointer}
+.photo-tile.has{background:#222 url("https://images.unsplash.com/photo-1547949003-9792a18a2601?auto=format&fit=crop&w=400&q=70") center/cover; color:transparent; border:none}
+.sig-pad{width:100%; aspect-ratio:3; background:var(--bg); border:1.5px dashed var(--border); border-radius:11px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:600; font-size:12px}
+.sig-pad svg{width:60%; height:60%}
+.cash-input{display:flex; align-items:center; gap:8px; background:var(--bg); padding:13px 14px; border-radius:11px; border:1.5px solid var(--border)}
+.cash-input input{flex:1; border:none; outline:none; background:transparent; font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:900; color:var(--ink)}
+.cash-input .cur{font-size:12px; color:var(--muted); font-weight:800}
+textarea.tarea{width:100%; min-height:54px; resize:none; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); font-family:inherit; font-size:12.5px}
+
+/* ── Reasons (fail) ──────────────────────── */
+.reason{display:flex; align-items:center; gap:10px; padding:10px; border-radius:11px; border:1.5px solid var(--border); margin-bottom:6px; cursor:pointer}
+.reason.on{border-color:var(--yellow); background:var(--yellow-faint)}
+.reason .ind{width:18px; height:18px; border-radius:50%; border:2px solid var(--border)}
+.reason.on .ind{background:var(--yellow); border-color:var(--yellow); box-shadow:inset 0 0 0 3px #fff}
+.reason .t{flex:1; font-weight:700; color:var(--ink); font-size:13px}
+
+/* ── Trip detail ─────────────────────────── */
+.stop{display:flex; gap:10px; padding:12px 14px; background:#fff; border-radius:12px; box-shadow:var(--shadow-1); margin:6px 14px 0; align-items:center}
+.stop .num{width:30px; height:30px; border-radius:50%; background:var(--bg); color:var(--muted); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px}
+.stop.done .num{background:var(--success); color:#fff}
+.stop.now .num{background:var(--yellow); color:var(--brown); box-shadow:0 0 0 4px rgba(245,195,32,.25)}
+.stop .grow{flex:1; min-width:0}
+.stop .grow .a{font-weight:800; font-size:12.5px; color:var(--ink)}
+.stop .grow .b{font-size:11px; color:var(--muted); margin-top:1px}
+.stop .badge{font-size:11px; font-weight:800; color:var(--brown)}
+
+/* ── Cash list ───────────────────────────── */
+.cash-row{display:flex; align-items:center; gap:10px; padding:10px 14px; background:#fff; border-bottom:1px solid var(--bg)}
+.cash-row .chk{width:22px; height:22px; border-radius:6px; border:2px solid var(--border); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px}
+.cash-row .chk.on{background:var(--success); border-color:var(--success)}
+.cash-row .grow{flex:1}
+.cash-row .ono{font-family:'JetBrains Mono',monospace; font-weight:800; font-size:12px; color:var(--ink)}
+.cash-row .ts{font-size:10.5px; color:var(--muted)}
+.cash-row .amt{font-weight:900; font-family:'JetBrains Mono',monospace; color:var(--brown); font-size:13px}
+.settle-summary{background:linear-gradient(135deg,#412402,#5B3C00); color:#FFE066; padding:14px 16px; margin:12px 14px 8px; border-radius:14px}
+.settle-summary .lbl{font-size:11px; opacity:.8; font-weight:700; text-transform:uppercase; letter-spacing:.4px}
+.settle-summary .val{font-size:26px; font-weight:900; color:#fff; margin-top:2px}
+.settle-summary .grid{display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:10px; font-size:11px}
+.settle-summary .grid .k{color:rgba(255,255,255,.7)}
+.settle-summary .grid .v{color:#FFE066; font-weight:800; text-align:right}
+body.ar .settle-summary .grid .v{text-align:left}
+
+/* ── Bottom nav (tabbar) ──────────────────── */
+.bottom-nav{position:absolute; left:0; right:0; bottom:0; height:62px; background:#fff; border-top:1px solid var(--border); display:flex; padding:6px 0 8px; box-shadow:0 -2px 12px rgba(0,0,0,.04)}
+.bottom-nav .b{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--muted); font-size:9.5px; font-weight:700; cursor:pointer}
+.bottom-nav .b.on{color:var(--brown)}
+.bottom-nav .b .ic{font-size:18px}
+
+/* ── Profile ─────────────────────────────── */
+.profile-hero{background:linear-gradient(135deg,var(--yellow),var(--yellow-soft)); padding:18px 16px 22px; color:var(--brown); position:relative}
+.profile-hero::after{content:""; position:absolute; top:-20px; right:-20px; width:90px; height:90px; border-radius:50%; background:radial-gradient(circle, rgba(255,255,255,.4), transparent)}
+.avatar{width:64px; height:64px; border-radius:18px; background:#fff; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:900; color:var(--brown); box-shadow:0 8px 20px rgba(65,36,2,.15); margin-bottom:10px; position:relative; z-index:2}
+.profile-hero .nm{font-size:18px; font-weight:900; position:relative; z-index:2}
+.profile-hero .ph{font-size:12.5px; color:#5B3C00; margin-top:2px; position:relative; z-index:2}
+.profile-hero .veh{margin-top:6px; display:inline-flex; align-items:center; gap:5px; background:rgba(65,36,2,.12); padding:4px 9px; border-radius:999px; font-size:10.5px; font-weight:800; position:relative; z-index:2}
+.menu-list{background:#fff; margin-top:8px}
+.menu-row{display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid var(--bg); cursor:pointer}
+.menu-row .ic{width:36px; height:36px; border-radius:11px; background:var(--yellow-faint); color:var(--brown); display:flex; align-items:center; justify-content:center; font-size:16px}
+.menu-row .lbl{flex:1; font-weight:700; color:var(--ink); font-size:13px}
+.menu-row .chev{color:var(--muted); font-size:14px}
+.menu-row.danger .lbl{color:var(--danger-dk)}
+.menu-row.danger .ic{background:var(--danger-bg); color:var(--danger-dk)}
+
+/* ── Notifications ───────────────────────── */
+.notif{display:flex; gap:10px; padding:12px 14px; background:#fff; border-bottom:1px solid var(--bg)}
+.notif .ic{width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; flex:0 0 36px}
+.notif.new .ic{background:var(--yellow); color:var(--brown)}
+.notif .ic.dlv{background:var(--info-bg); color:#1E40AF}
+.notif .ic.ok{background:var(--success-bg); color:var(--success-dk)}
+.notif .ic.warn{background:var(--warn-bg); color:#92400E}
+.notif .grow .ttl{font-size:13px; font-weight:800; color:var(--ink)}
+.notif .grow .sub{font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.4}
+.notif .grow .ts{font-size:10px; color:var(--muted); margin-top:3px}
+.notif.new::after{content:""; width:8px; height:8px; border-radius:50%; background:var(--yellow); margin-left:auto; margin-top:6px; flex:0 0 8px}
+body.ar .notif.new::after{margin-left:0; margin-right:auto}
+
+/* ── Settings ────────────────────────────── */
+.set-row{display:flex; align-items:center; gap:12px; padding:14px 16px; background:#fff; border-bottom:1px solid var(--bg)}
+.set-row .lbl{flex:1; font-weight:700; color:var(--ink); font-size:13px}
+.set-row .val{font-size:12px; color:var(--muted); font-weight:700}
+.toggle{width:38px; height:22px; border-radius:999px; background:var(--border); position:relative; cursor:pointer; transition:.18s}
+.toggle::after{content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); transition:.18s}
+.toggle.on{background:var(--yellow)}
+.toggle.on::after{left:18px}
+
+/* ── Sticky CTA bar ──────────────────────── */
+.cta-bar{position:absolute; left:0; right:0; bottom:0; padding:12px 14px 18px; background:#fff; border-top:1px solid var(--border); box-shadow:0 -6px 18px rgba(0,0,0,.06); display:flex; gap:8px}
+.cta-bar .btn{flex:1}
+
+/* Misc */
+.divider{height:8px; background:var(--bg)}
+.muted-text{color:var(--muted); font-size:12px; padding:14px 16px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-logo">U</div>
+    <div class="brand-text">Uellow Driver <small>Mockup v0.1 · Tap any screen on the left</small></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="theme-pill">Lang</div>
+  <div class="lang-pill" id="lang-toggle">
+    <button data-lang="en" class="on">EN</button>
+    <button data-lang="ar">AR</button>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="screens" id="screens-nav">
+  <h4 data-en="Onboarding" data-ar="بداية">Onboarding</h4>
+  <div class="item active" data-target="login"><span class="ico">🔐</span><span data-en="Login" data-ar="تسجيل الدخول">Login</span></div>
+
+  <h4 data-en="Daily flow" data-ar="العمليات اليومية" style="margin-top:14px">Daily flow</h4>
+  <div class="item" data-target="dashboard"><span class="ico">🏠</span><span data-en="Dashboard" data-ar="الرئيسية">Dashboard</span></div>
+  <div class="item" data-target="orders"><span class="ico">📦</span><span data-en="Orders" data-ar="الطلبات">Orders</span><span class="count">5</span></div>
+  <div class="item" data-target="order"><span class="ico">📄</span><span data-en="Order detail" data-ar="تفاصيل الطلب">Order detail</span></div>
+  <div class="item" data-target="confirm"><span class="ico">✅</span><span data-en="Confirm delivery" data-ar="تأكيد التسليم">Confirm delivery</span></div>
+  <div class="item" data-target="fail"><span class="ico">❌</span><span data-en="Fail / Return" data-ar="فشل / إرجاع">Fail / Return</span></div>
+  <div class="item" data-target="paylink"><span class="ico">💳</span><span data-en="Send payment link" data-ar="إرسال رابط دفع">Send payment link</span></div>
+
+  <h4 data-en="Trips" data-ar="الرحلات" style="margin-top:14px">Trips</h4>
+  <div class="item" data-target="trips"><span class="ico">🗺️</span><span data-en="Trips list" data-ar="قائمة الرحلات">Trips list</span></div>
+  <div class="item" data-target="trip"><span class="ico">🚚</span><span data-en="Trip detail + route" data-ar="تفاصيل الرحلة">Trip detail + route</span></div>
+
+  <h4 data-en="Cash" data-ar="النقد" style="margin-top:14px">Cash</h4>
+  <div class="item" data-target="cash"><span class="ico">💵</span><span data-en="Cash remittance" data-ar="تسوية النقد">Cash remittance</span></div>
+  <div class="item" data-target="cashhist"><span class="ico">📜</span><span data-en="Settlement history" data-ar="سجل التسويات">Settlement history</span></div>
+
+  <h4 data-en="Account" data-ar="الحساب" style="margin-top:14px">Account</h4>
+  <div class="item" data-target="profile"><span class="ico">👤</span><span data-en="Profile" data-ar="الملف الشخصي">Profile</span></div>
+  <div class="item" data-target="settings"><span class="ico">⚙️</span><span data-en="Settings" data-ar="الإعدادات">Settings</span></div>
+  <div class="item" data-target="notif"><span class="ico">🔔</span><span data-en="Notifications" data-ar="الإشعارات">Notifications</span><span class="count">3</span></div>
+  <div class="item" data-target="help"><span class="ico">💬</span><span data-en="Help / Ops chat" data-ar="مساعدة">Help / Ops chat</span></div>
+</nav>
+
+<main class="stage">
+  <div class="stage-meta">
+    <h2 id="stage-title">Login</h2>
+    <p id="stage-desc">Driver signs in with the phone number registered on their delivery.driver record. Same OTP/password flow as the portal but native.</p>
+  </div>
+  <div class="phones" id="phones">
+    <!-- All screens rendered into one phone; JS swaps which one is .show -->
+    <div class="phone">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="phone-status">
+            <span>9:41</span>
+            <span class="icons">📶  📡  🔋</span>
+          </div>
+          <div class="phone-body">
+
+          <!-- ═════════ LOGIN ═════════ -->
+          <div class="screen show" data-screen="login">
+            <div class="login-bg">
+              <div class="login-inner">
+                <div class="login-logo">🚚</div>
+                <div class="login-title" data-en="Uellow Driver" data-ar="سائق Uellow">Uellow Driver</div>
+                <div class="login-sub" data-en="Sign in to start your shift" data-ar="سجل دخولك لبدء وردية العمل">Sign in to start your shift</div>
+                <div class="login-card">
+                  <div class="field"><span class="ic">📞</span><input value="+965 9999 1234" readonly/></div>
+                  <div class="field"><span class="ic">🔒</span><input type="password" value="••••••••" readonly/></div>
+                  <button class="btn primary full lg" style="margin-top:6px" data-en="Sign in" data-ar="تسجيل الدخول">Sign in</button>
+                </div>
+                <div class="login-help" data-en="Trouble signing in? Contact operations" data-ar="تواجه مشكلة؟ تواصل مع العمليات">Trouble signing in? Contact operations</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═════════ DASHBOARD ═════════ -->
+          <div class="screen" data-screen="dashboard">
+            <div class="appbar">
+              <div class="title" data-en="Hi, Ahmad" data-ar="أهلاً، أحمد">Hi, Ahmad</div>
+              <div class="actions"><div class="ic">🔔</div><div class="ic">👤</div></div>
+            </div>
+            <div class="dash-hero">
+              <div class="hi">
+                <h1 data-en="Today" data-ar="اليوم">Today</h1>
+                <span class="status"><span class="dot live"></span> <span data-en="Available" data-ar="متاح">Available</span> ▾</span>
+              </div>
+              <div class="kpi-row">
+                <div class="kpi"><div class="v">12</div><div class="l" data-en="Done" data-ar="منجزة">Done</div></div>
+                <div class="kpi"><div class="v">5</div><div class="l" data-en="Pending" data-ar="قيد التنفيذ">Pending</div></div>
+                <div class="kpi"><div class="v">92%</div><div class="l" data-en="Rate" data-ar="معدل النجاح">Rate</div></div>
+              </div>
+              <div class="cash-card">
+                <div class="ic">💰</div>
+                <div>
+                  <div class="lbl" data-en="Cash to settle" data-ar="نقد للتسوية">Cash to settle</div>
+                  <div class="val">47.250 KD</div>
+                </div>
+                <div class="chev">›</div>
+              </div>
+            </div>
+            <div class="section">
+              <div class="h-row">
+                <h3 data-en="Next 3 deliveries" data-ar="التسليمات الـ 3 القادمة">Next 3 deliveries</h3>
+                <span class="more" data-en="See all" data-ar="عرض الكل">See all</span>
+              </div>
+              <div class="next-list">
+                <div class="next-row">
+                  <div class="num">1</div>
+                  <div class="info">
+                    <div class="top"><span class="small-mono">#S05879</span><span class="chip yellow" data-en="Pickup" data-ar="استلام">Pickup</span></div>
+                    <div class="bot">ALI ELSAYED · Hawally · 1.2 km</div>
+                  </div>
+                  <div class="amt">18.5</div>
+                </div>
+                <div class="next-row">
+                  <div class="num">2</div>
+                  <div class="info">
+                    <div class="top"><span class="small-mono">#S05876</span><span class="chip green" data-en="Paid" data-ar="مدفوع">Paid</span></div>
+                    <div class="bot">Sara Q · Salmiya · 3.8 km</div>
+                  </div>
+                  <div class="amt">23.9</div>
+                </div>
+                <div class="next-row">
+                  <div class="num">3</div>
+                  <div class="info">
+                    <div class="top"><span class="small-mono">#S05871</span><span class="chip yellow">COD</span></div>
+                    <div class="bot">Mubarak Al-K · 5.2 km</div>
+                  </div>
+                  <div class="amt">11.0</div>
+                </div>
+              </div>
+              <button class="btn dark full lg" style="margin-top:14px" data-en="Start next trip" data-ar="ابدأ الرحلة التالية">▶ Start next trip</button>
+            </div>
+            <div style="height:80px"></div>
+            <div class="bottom-nav">
+              <div class="b on"><div class="ic">🏠</div><span data-en="Home" data-ar="الرئيسية">Home</span></div>
+              <div class="b"><div class="ic">📦</div><span data-en="Orders" data-ar="الطلبات">Orders</span></div>
+              <div class="b"><div class="ic">🗺️</div><span data-en="Trips" data-ar="الرحلات">Trips</span></div>
+              <div class="b"><div class="ic">💵</div><span data-en="Cash" data-ar="النقد">Cash</span></div>
+              <div class="b"><div class="ic">👤</div><span data-en="Me" data-ar="حسابي">Me</span></div>
+            </div>
+          </div>
+
+          <!-- ═════════ ORDERS LIST ═════════ -->
+          <div class="screen" data-screen="orders">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title" data-en="My Orders" data-ar="طلباتي">My Orders</div>
+              <div class="actions"><div class="ic">🔍</div></div>
+            </div>
+            <div class="tab-bar">
+              <div class="tab on" data-en="Active" data-ar="نشطة">Active<span class="count">5</span></div>
+              <div class="tab" data-en="Done" data-ar="منجزة">Done<span class="count">12</span></div>
+              <div class="tab" data-en="Failed" data-ar="فاشلة">Failed<span class="count">1</span></div>
+              <div class="tab" data-en="Returned" data-ar="مرتجع">Returned<span class="count">0</span></div>
+            </div>
+            <!-- card 1 -->
+            <div class="order-card">
+              <div class="hdr">
+                <span class="ono">#S05879</span>
+                <span class="time">9:01 AM</span>
+                <span class="chip yellow" style="margin-left:auto" data-en="Awaiting pickup" data-ar="بانتظار الاستلام">Awaiting pickup</span>
+              </div>
+              <div class="cust">ALI ELSAYED</div>
+              <div class="addr">📍 Hawally, Salmiya St., Block 4</div>
+              <div class="total"><span class="amt">18.500 KD</span><span class="chip grey">COD</span><span class="chip blue">2 items</span></div>
+              <div class="actions"><button class="btn primary sm">⬇ <span data-en="Pickup" data-ar="استلام">Pickup</span></button><button class="btn ghost sm" data-en="Decline" data-ar="رفض">Decline</button></div>
+            </div>
+            <!-- card 2 -->
+            <div class="order-card">
+              <div class="hdr">
+                <span class="ono">#S05876</span>
+                <span class="time">8:45 AM</span>
+                <span class="chip green" style="margin-left:auto"><span class="dot live"></span> <span data-en="Out for delivery" data-ar="في الطريق">Out for delivery</span></span>
+              </div>
+              <div class="cust">Sara Q</div>
+              <div class="addr">📍 Salmiya, Block 12, Bldg 8</div>
+              <div class="total"><span class="amt">23.970 KD</span><span class="chip green" data-en="Paid (KNET)" data-ar="مدفوع (كي نت)">Paid (KNET)</span></div>
+              <div class="actions"><button class="btn success sm">✓ <span data-en="Delivered" data-ar="تم التسليم">Delivered</span></button><button class="btn ghost sm" data-en="Fail" data-ar="فشل">Fail</button></div>
+            </div>
+            <!-- card 3 -->
+            <div class="order-card">
+              <div class="hdr">
+                <span class="ono">#S05871</span>
+                <span class="time">8:14 AM</span>
+                <span class="chip yellow" style="margin-left:auto">COD</span>
+              </div>
+              <div class="cust">Mubarak Al-Khaleej</div>
+              <div class="addr">📍 Mubarak Al-Kabeer, Q3, St-7</div>
+              <div class="total"><span class="amt">11.000 KD</span><span class="chip grey">1 item</span></div>
+              <div class="actions"><button class="btn success sm">✓ <span data-en="Delivered" data-ar="تم التسليم">Delivered</span></button><button class="btn ghost sm" data-en="Fail" data-ar="فشل">Fail</button></div>
+            </div>
+            <!-- card 4 -->
+            <div class="order-card">
+              <div class="hdr">
+                <span class="ono">#S05867</span>
+                <span class="time">7:48 AM</span>
+                <span class="chip green" style="margin-left:auto" data-en="Picked up" data-ar="تم الاستلام">Picked up</span>
+              </div>
+              <div class="cust">Khalid M</div>
+              <div class="addr">📍 Jahra, Block 1, St-12</div>
+              <div class="total"><span class="amt">8.500 KD</span><span class="chip green" data-en="Paid" data-ar="مدفوع">Paid</span></div>
+              <div class="actions"><button class="btn dark sm">▶ <span data-en="Start delivery" data-ar="ابدأ التسليم">Start delivery</span></button></div>
+            </div>
+            <div style="height:60px"></div>
+          </div>
+
+          <!-- ═════════ ORDER DETAIL ═════════ -->
+          <div class="screen" data-screen="order">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title">#S05879</div>
+              <div class="actions"><div class="ic">⋯</div></div>
+            </div>
+            <div style="padding:0 14px"><span class="chip green"><span class="dot live"></span> <span data-en="Out for delivery" data-ar="في الطريق">Out for delivery</span></span></div>
+            <div class="detail-section">
+              <div class="lbl" data-en="Customer" data-ar="العميل">Customer</div>
+              <div class="row">
+                <div class="ic">👤</div>
+                <div class="grow"><div class="pri">ALI ELSAYED</div><div class="sec">+965 9470 9709</div></div>
+              </div>
+              <div class="call-row">
+                <button class="btn outline sm">📞 <span data-en="Call" data-ar="اتصال">Call</span></button>
+                <button class="btn outline sm">💬 <span data-en="WhatsApp" data-ar="واتساب">WhatsApp</span></button>
+                <button class="btn outline sm">✉️ <span data-en="SMS" data-ar="رسالة">SMS</span></button>
+              </div>
+            </div>
+            <div class="detail-section">
+              <div class="lbl" data-en="Deliver to" data-ar="عنوان التسليم">Deliver to</div>
+              <div class="row">
+                <div class="ic">📍</div>
+                <div class="grow"><div class="pri">Hawally, Salmiya St.</div><div class="sec">Block 4, Bldg 12, Flat 7</div></div>
+              </div>
+              <div class="map-holder">
+                <div class="leafmap" id="map-detail"></div>
+                <div class="open-maps">↗ <span data-en="Open in Maps" data-ar="افتح الخريطة">Open in Maps</span></div>
+              </div>
+            </div>
+            <div class="detail-section">
+              <div class="lbl" data-en="Items (2)" data-ar="العناصر (2)">Items (2)</div>
+              <div class="items-list">
+                <div class="item-row">
+                  <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=120&q=70"/>
+                  <div class="grow"><div class="name">HainoTeko RW-81 Smart Watch</div><div class="sub">Color: Black · Size: 44mm</div></div>
+                  <div class="qty">×1</div>
+                </div>
+                <div class="item-row">
+                  <img src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=120&q=70"/>
+                  <div class="grow"><div class="name">Earbuds Pro 2</div><div class="sub">White · 1-year warranty</div></div>
+                  <div class="qty">×1</div>
+                </div>
+              </div>
+            </div>
+            <div class="detail-section">
+              <div class="lbl" data-en="Payment" data-ar="الدفع">Payment</div>
+              <div class="row">
+                <div class="ic">💵</div>
+                <div class="grow"><div class="pri">Cash on Delivery</div><div class="sec" data-en="Collect 18.500 KD" data-ar="استلام 18.500 د.ك">Collect 18.500 KD</div></div>
+                <div class="chip yellow">COD</div>
+              </div>
+            </div>
+            <div class="detail-section">
+              <div class="lbl" data-en="Status timeline" data-ar="حالة الطلب">Status timeline</div>
+              <div class="timeline">
+                <div class="step done"><div class="ic">✓</div><div class="info"><div class="lbl" data-en="Confirmed" data-ar="مؤكد">Confirmed</div><div class="ts">May 31, 7:30 AM</div></div></div>
+                <div class="step done"><div class="ic">✓</div><div class="info"><div class="lbl" data-en="Picked up" data-ar="تم الاستلام">Picked up</div><div class="ts">May 31, 8:55 AM</div></div></div>
+                <div class="step current"><div class="ic">▸</div><div class="info"><div class="lbl" data-en="Out for delivery" data-ar="في الطريق">Out for delivery</div><div class="ts" data-en="Now" data-ar="الآن">Now</div></div></div>
+                <div class="step"><div class="ic">○</div><div class="info"><div class="lbl" data-en="Delivered" data-ar="تم التسليم">Delivered</div><div class="ts">—</div></div></div>
+              </div>
+            </div>
+            <div class="detail-section" style="padding-bottom:20px">
+              <div class="lbl" data-en="Quick actions" data-ar="إجراءات سريعة">Quick actions</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px">
+                <button class="btn outline" style="padding:14px 10px; flex-direction:column; height:auto; gap:4px" data-target-screen="paylink">
+                  <span style="font-size:18px">💳</span>
+                  <span style="font-size:11px; font-weight:800" data-en="Send payment link" data-ar="إرسال رابط دفع">Send payment link</span>
+                </button>
+                <button class="btn outline" style="padding:14px 10px; flex-direction:column; height:auto; gap:4px">
+                  <span style="font-size:18px">🧭</span>
+                  <span style="font-size:11px; font-weight:800" data-en="Navigate" data-ar="انتقال">Navigate</span>
+                </button>
+                <button class="btn outline" style="padding:14px 10px; flex-direction:column; height:auto; gap:4px">
+                  <span style="font-size:18px">📞</span>
+                  <span style="font-size:11px; font-weight:800" data-en="Call ops" data-ar="اتصل بالعمليات">Call ops</span>
+                </button>
+                <button class="btn outline" style="padding:14px 10px; flex-direction:column; height:auto; gap:4px">
+                  <span style="font-size:18px">🧾</span>
+                  <span style="font-size:11px; font-weight:800" data-en="Order PDF" data-ar="فاتورة PDF">Order PDF</span>
+                </button>
+              </div>
+            </div>
+            <div style="height:120px"></div>
+            <div class="cta-bar">
+              <button class="btn ghost"><span data-en="Fail" data-ar="فشل">Fail</span></button>
+              <button class="btn success" style="flex:2">✓ <span data-en="Confirm delivery" data-ar="تأكيد التسليم">Confirm delivery</span></button>
+            </div>
+          </div>
+
+          <!-- ═════════ CONFIRM SHEET ═════════ -->
+          <div class="screen" data-screen="confirm">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title">#S05879</div>
+            </div>
+            <div style="padding:0 14px"><span class="chip green"><span class="dot live"></span> <span data-en="Confirm proof" data-ar="تأكيد الإثبات">Confirm proof</span></span></div>
+            <div style="height:8px"></div>
+            <div class="sheet" style="position:relative; border-radius:18px; margin:0 14px; box-shadow:var(--shadow-2)">
+              <h3 data-en="Confirm delivery #S05879" data-ar="تأكيد تسليم #S05879">Confirm delivery #S05879</h3>
+              <div class="lbl" data-en="Proof photo (required)" data-ar="صورة الإثبات (مطلوبة)">Proof photo (required)</div>
+              <div class="photo-row">
+                <div class="photo-tile has"></div>
+                <div class="photo-tile">📷<div data-en="Add more" data-ar="أضف المزيد">Add more</div></div>
+              </div>
+              <div class="lbl" data-en="Customer signature (required)" data-ar="توقيع العميل (مطلوب)">Customer signature (required)</div>
+              <div class="sig-pad">
+                <svg viewBox="0 0 200 60" preserveAspectRatio="none">
+                  <path d="M5 40 Q 20 10, 35 35 T 60 30 Q 75 50 90 25 T 130 32 Q 155 12 175 38" stroke="#412402" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="lbl" data-en="Cash collected (COD)" data-ar="النقد المستلم (COD)">Cash collected (COD)</div>
+              <div class="cash-input">
+                <input value="18.500"/><span class="cur">KD</span>
+              </div>
+              <div class="lbl" data-en="Notes (optional)" data-ar="ملاحظات (اختياري)">Notes (optional)</div>
+              <textarea class="tarea" placeholder="Handed to neighbor / left at door / etc."></textarea>
+            </div>
+            <div style="height:90px"></div>
+            <div class="cta-bar">
+              <button class="btn ghost" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+              <button class="btn success" style="flex:2">✓ <span data-en="Mark delivered" data-ar="تم التسليم">Mark delivered</span></button>
+            </div>
+          </div>
+
+          <!-- ═════════ FAIL SHEET ═════════ -->
+          <div class="screen" data-screen="fail">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title">#S05879</div>
+            </div>
+            <div style="padding:0 14px"><span class="chip red" data-en="Mark as failed" data-ar="تسجيل فشل">Mark as failed</span></div>
+            <div style="height:8px"></div>
+            <div class="sheet" style="position:relative; border-radius:18px; margin:0 14px; box-shadow:var(--shadow-2)">
+              <h3 data-en="Why did delivery fail?" data-ar="ما سبب فشل التسليم؟">Why did delivery fail?</h3>
+              <div class="reason on"><span class="ind"></span><span class="t" data-en="Customer not reachable" data-ar="العميل غير متاح">Customer not reachable</span></div>
+              <div class="reason"><span class="ind"></span><span class="t" data-en="Wrong / incomplete address" data-ar="عنوان خاطئ أو ناقص">Wrong / incomplete address</span></div>
+              <div class="reason"><span class="ind"></span><span class="t" data-en="Customer refused" data-ar="رفض العميل">Customer refused</span></div>
+              <div class="reason"><span class="ind"></span><span class="t" data-en="Damaged on inspection" data-ar="تالف عند الفحص">Damaged on inspection</span></div>
+              <div class="reason"><span class="ind"></span><span class="t" data-en="Other (specify)" data-ar="سبب آخر">Other (specify)</span></div>
+              <textarea class="tarea" placeholder="Add details for the operations team…" style="margin-top:8px"></textarea>
+              <div style="display:flex; align-items:center; gap:10px; margin-top:12px; padding:10px; border:1.5px solid var(--border); border-radius:11px">
+                <div class="toggle on"></div>
+                <div style="flex:1; font-size:12.5px; font-weight:700; color:var(--ink)" data-en="Return parcel to Uellow warehouse" data-ar="إرجاع الطرد لمخزن يلو">Return parcel to Uellow warehouse</div>
+              </div>
+            </div>
+            <div class="cta-bar">
+              <button class="btn ghost" data-en="Cancel" data-ar="إلغاء">Cancel</button>
+              <button class="btn danger" style="flex:2">⚠ <span data-en="Submit failure" data-ar="إرسال الفشل">Submit failure</span></button>
+            </div>
+          </div>
+
+          <!-- ═════════ SEND PAYMENT LINK ═════════ -->
+          <div class="screen" data-screen="paylink">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title" data-en="Send payment link" data-ar="إرسال رابط دفع">Send payment link</div>
+              <div class="actions"><div class="ic">⋯</div></div>
+            </div>
+            <!-- Top context: which order, which customer, how much -->
+            <div style="padding:14px">
+              <div class="card" style="padding:14px; border:1px solid var(--border)">
+                <div style="display:flex; gap:10px; align-items:center">
+                  <div style="width:46px; height:46px; border-radius:13px; background:var(--yellow-faint); color:var(--brown); display:flex; align-items:center; justify-content:center; font-size:18px">📄</div>
+                  <div style="flex:1">
+                    <div style="font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:800; color:var(--ink)">#S05879</div>
+                    <div style="font-size:11.5px; color:var(--muted)">ALI ELSAYED · +965 9470 9709</div>
+                  </div>
+                  <div style="text-align:right">
+                    <div style="font-size:18px; font-weight:900; color:var(--brown); font-family:'JetBrains Mono',monospace">18.500</div>
+                    <div style="font-size:10px; color:var(--muted); font-weight:800">KWD</div>
+                  </div>
+                </div>
+                <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap">
+                  <span class="chip yellow">COD → KNET</span>
+                  <span class="chip grey" data-en="2 items" data-ar="2 عناصر">2 items</span>
+                  <span class="chip blue" data-en="Editable amount" data-ar="مبلغ قابل للتعديل">Editable amount</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Amount editor (optional override) -->
+            <div class="detail-section" style="margin-top:0">
+              <div class="lbl" data-en="Amount to collect" data-ar="المبلغ المطلوب">Amount to collect</div>
+              <div class="cash-input">
+                <input value="18.500"/><span class="cur">KWD</span>
+              </div>
+              <div style="display:flex; gap:6px; margin-top:8px">
+                <button class="btn ghost sm" style="flex:1" data-en="Full total" data-ar="المبلغ الكامل">Full total</button>
+                <button class="btn ghost sm" style="flex:1" data-en="50% deposit" data-ar="50% عربون">50% deposit</button>
+                <button class="btn ghost sm" style="flex:1" data-en="Custom" data-ar="مخصص">Custom</button>
+              </div>
+            </div>
+
+            <!-- Provider chooser (mirrors portal: UPayments preferred, Odoo fallback) -->
+            <div class="detail-section" style="margin-top:8px">
+              <div class="lbl" data-en="Payment gateway" data-ar="بوابة الدفع">Payment gateway</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+                <div style="padding:12px; border:2px solid var(--yellow); background:var(--yellow-faint); border-radius:12px; position:relative">
+                  <div style="position:absolute; top:6px; right:8px"><span class="chip brown" style="font-size:9px; padding:2px 6px" data-en="DEFAULT" data-ar="افتراضي">DEFAULT</span></div>
+                  <div style="display:flex; align-items:center; gap:8px">
+                    <div style="width:32px; height:32px; border-radius:9px; background:#fff; display:flex; align-items:center; justify-content:center; font-weight:900; color:#0066B2; font-size:11px">U</div>
+                    <div style="font-weight:900; font-size:13px; color:var(--brown)">UPayments</div>
+                  </div>
+                  <div style="font-size:10.5px; color:var(--brown-soft); margin-top:4px; font-weight:600" data-en="KNET · Visa · MC · Apple Pay" data-ar="كي نت · فيزا · ماستر · آبل باي">KNET · Visa · MC · Apple Pay</div>
+                  <div style="font-size:10px; color:var(--success-dk); margin-top:2px; font-weight:800">⚡ <span data-en="Instant payout" data-ar="تحويل فوري">Instant payout</span></div>
+                </div>
+                <div style="padding:12px; border:1px solid var(--border); background:#fff; border-radius:12px">
+                  <div style="display:flex; align-items:center; gap:8px">
+                    <div style="width:32px; height:32px; border-radius:9px; background:var(--brown); color:var(--yellow-soft); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:14px">O</div>
+                    <div style="font-weight:900; font-size:13px; color:var(--ink)">Odoo Pay</div>
+                  </div>
+                  <div style="font-size:10.5px; color:var(--muted); margin-top:4px; font-weight:600" data-en="Fallback gateway" data-ar="بوابة احتياطية">Fallback gateway</div>
+                  <div style="font-size:10px; color:var(--muted); margin-top:2px" data-en="Used automatically if UPayments fails" data-ar="تُستخدم تلقائياً إذا فشلت UPayments">Used automatically if UPayments fails</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Generated link card (the result of POST /api/driver/v1/orders/<id>/payment-link) -->
+            <div class="detail-section" style="margin-top:8px">
+              <div class="lbl" data-en="Generated payment link" data-ar="رابط الدفع">Generated payment link</div>
+              <div style="background:linear-gradient(135deg,#412402,#5B3C00); color:#FFE066; padding:14px; border-radius:14px; position:relative; overflow:hidden">
+                <div style="position:absolute; top:-30px; right:-30px; width:100px; height:100px; border-radius:50%; background:radial-gradient(circle,rgba(245,195,32,.2),transparent)"></div>
+                <div style="font-size:10px; opacity:.8; font-weight:800; text-transform:uppercase; letter-spacing:.5px; position:relative">UPAYMENTS · KNET</div>
+                <div style="margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#fff; word-break:break-all; line-height:1.4; padding:8px 10px; background:rgba(255,255,255,.08); border-radius:8px; position:relative">
+                  https://api.upayments.com/p/SXgQ4kRzL2bN8mYpVdF9
+                </div>
+                <div style="display:flex; gap:6px; margin-top:10px; position:relative">
+                  <button class="btn primary sm" style="flex:1">📋 <span data-en="Copy" data-ar="نسخ">Copy</span></button>
+                  <button class="btn primary sm" style="flex:1">📤 <span data-en="Share" data-ar="مشاركة">Share</span></button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Share targets (matches portal: WhatsApp / SMS / direct hand) -->
+            <div class="detail-section" style="margin-top:8px">
+              <div class="lbl" data-en="Send to customer via" data-ar="أرسل للعميل عبر">Send to customer via</div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+                <button class="btn outline" style="padding:14px; flex-direction:column; height:auto; gap:6px; background:#25D366; border-color:#25D366; color:#fff">
+                  <span style="font-size:22px">💬</span>
+                  <span style="font-size:12px; font-weight:900">WhatsApp</span>
+                  <span style="font-size:10px; opacity:.85; font-weight:600">+965 9470 9709</span>
+                </button>
+                <button class="btn outline" style="padding:14px; flex-direction:column; height:auto; gap:6px">
+                  <span style="font-size:22px">✉️</span>
+                  <span style="font-size:12px; font-weight:900" data-en="SMS" data-ar="رسالة">SMS</span>
+                  <span style="font-size:10px; opacity:.7; font-weight:600">+965 9470 9709</span>
+                </button>
+                <button class="btn outline" style="padding:14px; flex-direction:column; height:auto; gap:6px">
+                  <span style="font-size:22px">🔗</span>
+                  <span style="font-size:12px; font-weight:900" data-en="Copy link" data-ar="انسخ الرابط">Copy link</span>
+                  <span style="font-size:10px; opacity:.7; font-weight:600" data-en="To system clipboard" data-ar="للحافظة">To system clipboard</span>
+                </button>
+                <button class="btn outline" style="padding:14px; flex-direction:column; height:auto; gap:6px">
+                  <span style="font-size:22px">🟫</span>
+                  <span style="font-size:12px; font-weight:900" data-en="QR code" data-ar="رمز QR">QR code</span>
+                  <span style="font-size:10px; opacity:.7; font-weight:600" data-en="Show on screen" data-ar="اعرضه على الشاشة">Show on screen</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Status of this order's payment link (sale.order.pay_link_status) -->
+            <div class="detail-section" style="margin-top:8px">
+              <div class="lbl" data-en="Payment status" data-ar="حالة الدفع">Payment status</div>
+              <div class="timeline">
+                <div class="step done"><div class="ic">✓</div><div class="info"><div class="lbl" data-en="Link generated" data-ar="تم إنشاء الرابط">Link generated</div><div class="ts">May 31, 9:55 AM · Ahmad (you)</div></div></div>
+                <div class="step done"><div class="ic">✓</div><div class="info"><div class="lbl" data-en="Sent via WhatsApp" data-ar="أُرسل عبر واتساب">Sent via WhatsApp</div><div class="ts">May 31, 9:56 AM</div></div></div>
+                <div class="step current"><div class="ic">⏳</div><div class="info"><div class="lbl" data-en="Waiting for customer to pay" data-ar="بانتظار دفع العميل">Waiting for customer to pay</div><div class="ts" data-en="Auto-refresh every 8s" data-ar="تحديث تلقائي كل 8 ثوانٍ">Auto-refresh every 8s</div></div></div>
+                <div class="step"><div class="ic">○</div><div class="info"><div class="lbl" data-en="Paid" data-ar="مدفوع">Paid</div><div class="ts">—</div></div></div>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:6px">
+                <button class="btn ghost sm" style="flex:1">🔄 <span data-en="Check status now" data-ar="حدّث الحالة">Check status now</span></button>
+                <button class="btn ghost sm" style="flex:1; color:var(--danger-dk)">✕ <span data-en="Cancel link" data-ar="إلغاء الرابط">Cancel link</span></button>
+              </div>
+            </div>
+
+            <!-- History (every link previously sent for this order) -->
+            <div class="detail-section" style="margin-top:8px">
+              <div class="lbl" data-en="Previous attempts (2)" data-ar="المحاولات السابقة (2)">Previous attempts (2)</div>
+              <div style="background:#fff; border-radius:12px; border:1px solid var(--border)">
+                <div style="padding:11px 12px; border-bottom:1px solid var(--bg); display:flex; align-items:center; gap:10px">
+                  <div style="width:30px; height:30px; border-radius:9px; background:var(--danger-bg); color:var(--danger-dk); display:flex; align-items:center; justify-content:center; font-size:13px">⚠</div>
+                  <div style="flex:1">
+                    <div style="font-size:12px; font-weight:800; color:var(--ink)" data-en="UPayments · Expired (15 min)" data-ar="UPayments · انتهت (15 د)">UPayments · Expired (15 min)</div>
+                    <div style="font-size:10.5px; color:var(--muted)">May 31, 8:42 AM · 18.500 KD</div>
+                  </div>
+                  <span class="chip red" data-en="Expired" data-ar="منتهية">Expired</span>
+                </div>
+                <div style="padding:11px 12px; display:flex; align-items:center; gap:10px">
+                  <div style="width:30px; height:30px; border-radius:9px; background:var(--warn-bg); color:#92400E; display:flex; align-items:center; justify-content:center; font-size:13px">✕</div>
+                  <div style="flex:1">
+                    <div style="font-size:12px; font-weight:800; color:var(--ink)" data-en="Odoo · Customer cancelled" data-ar="Odoo · العميل ألغى">Odoo · Customer cancelled</div>
+                    <div style="font-size:10.5px; color:var(--muted)">May 31, 8:30 AM · 18.500 KD</div>
+                  </div>
+                  <span class="chip yellow" data-en="Cancelled" data-ar="مُلغاة">Cancelled</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="height:90px"></div>
+            <div class="cta-bar">
+              <button class="btn ghost" data-en="Back" data-ar="رجوع">Back</button>
+              <button class="btn primary" style="flex:2">⚡ <span data-en="Generate fresh link" data-ar="أنشئ رابط جديد">Generate fresh link</span></button>
+            </div>
+          </div>
+
+          <!-- ═════════ TRIPS LIST ═════════ -->
+          <div class="screen" data-screen="trips">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title" data-en="Trips" data-ar="الرحلات">Trips</div>
+              <div class="actions"><div class="ic">＋</div></div>
+            </div>
+            <div class="section">
+              <div class="h-row"><h3 data-en="TODAY" data-ar="اليوم">TODAY</h3></div>
+              <div class="card" style="padding:14px; cursor:pointer">
+                <div style="display:flex; align-items:center; gap:10px">
+                  <div style="width:46px; height:46px; border-radius:12px; background:var(--yellow-faint); display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--brown)">🚚</div>
+                  <div style="flex:1">
+                    <div style="font-size:13px; font-weight:900; color:var(--ink)">Trip T-243</div>
+                    <div style="font-size:11px; color:var(--muted); margin-top:1px">6 <span data-en="orders" data-ar="طلبات">orders</span> · 12.4 km · 4h estimated</div>
+                  </div>
+                  <span class="chip green"><span class="dot live"></span> <span data-en="Active" data-ar="نشطة">Active</span></span>
+                </div>
+                <div style="display:flex; gap:6px; margin-top:10px">
+                  <div style="flex:1; height:6px; border-radius:999px; background:var(--success)"></div>
+                  <div style="flex:1; height:6px; border-radius:999px; background:var(--success)"></div>
+                  <div style="flex:1; height:6px; border-radius:999px; background:var(--yellow)"></div>
+                  <div style="flex:1; height:6px; border-radius:999px; background:var(--border)"></div>
+                  <div style="flex:1; height:6px; border-radius:999px; background:var(--border)"></div>
+                  <div style="flex:1; height:6px; border-radius:999px; background:var(--border)"></div>
+                </div>
+                <div style="font-size:11px; color:var(--muted); margin-top:6px; font-weight:700" data-en="Started 8:30 · 2 of 6 delivered" data-ar="بدأت 8:30 · 2 من 6 تم تسليمها">Started 8:30 · 2 of 6 delivered</div>
+              </div>
+            </div>
+            <div class="section">
+              <div class="h-row"><h3 data-en="YESTERDAY" data-ar="أمس">YESTERDAY</h3></div>
+              <div class="card" style="padding:14px">
+                <div style="display:flex; align-items:center; gap:10px">
+                  <div style="width:46px; height:46px; border-radius:12px; background:var(--success-bg); display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--success-dk)">✓</div>
+                  <div style="flex:1"><div style="font-size:13px; font-weight:900; color:var(--ink)">Trip T-242</div><div style="font-size:11px; color:var(--muted); margin-top:1px">8 <span data-en="orders" data-ar="طلبات">orders</span> · 18.2 km · 4h 12m</div></div>
+                  <span class="chip green" data-en="Completed" data-ar="مكتملة">Completed</span>
+                </div>
+              </div>
+              <div class="card" style="padding:14px; margin-top:8px">
+                <div style="display:flex; align-items:center; gap:10px">
+                  <div style="width:46px; height:46px; border-radius:12px; background:var(--success-bg); display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--success-dk)">✓</div>
+                  <div style="flex:1"><div style="font-size:13px; font-weight:900; color:var(--ink)">Trip T-241</div><div style="font-size:11px; color:var(--muted); margin-top:1px">5 orders · 9.7 km · 2h 48m</div></div>
+                  <span class="chip green" data-en="Completed" data-ar="مكتملة">Completed</span>
+                </div>
+              </div>
+            </div>
+            <div style="height:40px"></div>
+          </div>
+
+          <!-- ═════════ TRIP DETAIL ═════════ -->
+          <div class="screen" data-screen="trip">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title">Trip T-243</div>
+              <div class="actions"><div class="ic">⋯</div></div>
+            </div>
+            <div class="map-holder" style="margin:0 14px; height:200px"><div class="leafmap" id="map-trip"></div></div>
+            <div style="padding:10px 14px; display:flex; gap:6px; font-size:11px; color:var(--muted); font-weight:700">
+              <span><span data-en="2 done" data-ar="2 تم">2 done</span></span>·<span><span data-en="3 left" data-ar="3 متبقي">3 left</span></span>·<span>ETA 12:35</span>
+            </div>
+            <div class="stop done"><div class="num">✓</div><div class="grow"><div class="a">#S05880 · Hawally</div><div class="b">Salmiya St, Block 2 · delivered 8:55</div></div><span class="badge">15.0</span></div>
+            <div class="stop done"><div class="num">✓</div><div class="grow"><div class="a">#S05879 · Hawally</div><div class="b">Salmiya St, Block 4 · delivered 9:18</div></div><span class="badge">18.5</span></div>
+            <div class="stop now"><div class="num">3</div><div class="grow"><div class="a">#S05876 · Salmiya</div><div class="b" data-en="Now arriving — 0.6 km" data-ar="جارٍ الوصول — 0.6 كم">Now arriving — 0.6 km</div></div><span class="badge">23.9</span></div>
+            <div class="stop"><div class="num">4</div><div class="grow"><div class="a">#S05871 · Mubarak Al-K</div><div class="b">Q3 St-7 · ETA 11:40</div></div><span class="badge">11.0</span></div>
+            <div class="stop"><div class="num">5</div><div class="grow"><div class="a">#S05870 · Mubarak Al-K</div><div class="b">Q5 St-12 · ETA 12:05</div></div><span class="badge">7.5</span></div>
+            <div style="height:90px"></div>
+            <div class="cta-bar">
+              <button class="btn outline">⏸ <span data-en="Pause" data-ar="إيقاف">Pause</span></button>
+              <button class="btn primary" style="flex:2">🧭 <span data-en="Navigate to next stop" data-ar="انتقل للمحطة التالية">Navigate to next stop</span></button>
+            </div>
+          </div>
+
+          <!-- ═════════ CASH REMITTANCE ═════════ -->
+          <div class="screen" data-screen="cash">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title" data-en="Cash to settle" data-ar="النقد للتسوية">Cash to settle</div>
+              <div class="actions"><div class="ic">📜</div></div>
+            </div>
+            <div class="tab-bar">
+              <div class="tab on" data-en="Ready" data-ar="جاهز">Ready<span class="count">7</span></div>
+              <div class="tab" data-en="Submitted" data-ar="تم الإرسال">Submitted<span class="count">2</span></div>
+              <div class="tab" data-en="Settled" data-ar="مسوى">Settled<span class="count">28</span></div>
+            </div>
+            <div class="settle-summary">
+              <div class="lbl" data-en="Total selected" data-ar="إجمالي المحدد">Total selected</div>
+              <div class="val">53.470 KD</div>
+              <div class="grid">
+                <span class="k" data-en="Cash collected" data-ar="نقد مستلم">Cash collected</span><span class="v">53.470</span>
+                <span class="k" data-en="Delivery fees" data-ar="رسوم التوصيل">Delivery fees</span><span class="v">−3.000</span>
+                <span class="k" data-en="Cash commission" data-ar="عمولة النقد">Cash commission</span><span class="v">−0.535</span>
+                <span class="k" data-en="Net to Uellow" data-ar="صافي لـ Uellow">Net to Uellow</span><span class="v" style="font-size:14px; color:#fff">49.935</span>
+              </div>
+            </div>
+            <div class="cash-row"><div class="chk on">✓</div><div class="grow"><div class="ono">#S05879 · ALI ELSAYED</div><div class="ts">Today 9:18 AM · Hawally</div></div><div class="amt">18.500</div></div>
+            <div class="cash-row"><div class="chk on">✓</div><div class="grow"><div class="ono">#S05876 · Sara Q</div><div class="ts">Today 9:42 AM · Salmiya</div></div><div class="amt">23.970</div></div>
+            <div class="cash-row"><div class="chk on">✓</div><div class="grow"><div class="ono">#S05871 · Mubarak Al-K</div><div class="ts">Today 10:14 AM · Mubarak</div></div><div class="amt">11.000</div></div>
+            <div class="cash-row"><div class="chk"></div><div class="grow"><div class="ono">#S05867 · Khalid M</div><div class="ts">Today 10:38 AM · Jahra</div></div><div class="amt">8.500</div></div>
+            <div class="cash-row"><div class="chk"></div><div class="grow"><div class="ono">#S05862 · Noor S</div><div class="ts">Today 11:02 AM · Salmiya</div></div><div class="amt">14.250</div></div>
+            <div style="padding:14px"><div class="cash-input"><input value="SLP-2026-05-31-001"/><span class="cur">REF</span></div></div>
+            <div style="height:90px"></div>
+            <div class="cta-bar">
+              <button class="btn outline" data-en="Pick all" data-ar="تحديد الكل">Pick all</button>
+              <button class="btn primary" style="flex:2">📤 <span data-en="Submit remittance" data-ar="إرسال التسوية">Submit remittance</span></button>
+            </div>
+          </div>
+
+          <!-- ═════════ CASH HISTORY ═════════ -->
+          <div class="screen" data-screen="cashhist">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title" data-en="Settlement history" data-ar="سجل التسويات">Settlement history</div>
+            </div>
+            <div class="muted-text" data-en="Past cash remittances submitted to your carrier company." data-ar="التسويات السابقة التي تم إرسالها للشركة الناقلة.">Past cash remittances submitted to your carrier company.</div>
+            <div class="cash-row"><div class="grow"><div class="ono">REM-00134 · 5 orders</div><div class="ts">May 30 · 18:42 · <span class="chip green" style="vertical-align:middle">Settled</span></div></div><div class="amt">88.500</div></div>
+            <div class="cash-row"><div class="grow"><div class="ono">REM-00131 · 7 orders</div><div class="ts">May 29 · 19:11 · <span class="chip green" style="vertical-align:middle">Settled</span></div></div><div class="amt">112.250</div></div>
+            <div class="cash-row"><div class="grow"><div class="ono">REM-00128 · 4 orders</div><div class="ts">May 28 · 17:55 · <span class="chip yellow" style="vertical-align:middle">Pending audit</span></div></div><div class="amt">64.000</div></div>
+            <div class="cash-row"><div class="grow"><div class="ono">REM-00125 · 9 orders</div><div class="ts">May 27 · 18:30 · <span class="chip green" style="vertical-align:middle">Settled</span></div></div><div class="amt">155.750</div></div>
+          </div>
+
+          <!-- ═════════ PROFILE ═════════ -->
+          <div class="screen" data-screen="profile">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title" data-en="My profile" data-ar="حسابي">My profile</div>
+              <div class="actions"><div class="ic">⚙️</div></div>
+            </div>
+            <div class="profile-hero">
+              <div class="avatar">A</div>
+              <div class="nm">Ahmad Al-Sayed</div>
+              <div class="ph">+965 9999 1234</div>
+              <div class="veh">🚗 KIA Picanto · KW-12345</div>
+            </div>
+            <div style="padding:14px; background:#fff; display:flex; gap:8px">
+              <div style="flex:1; padding:12px; background:var(--bg); border-radius:11px; text-align:center">
+                <div style="font-size:20px; font-weight:900; color:var(--brown)">47</div>
+                <div style="font-size:10px; color:var(--muted); font-weight:800; text-transform:uppercase" data-en="This week" data-ar="هذا الأسبوع">This week</div>
+              </div>
+              <div style="flex:1; padding:12px; background:var(--bg); border-radius:11px; text-align:center">
+                <div style="font-size:20px; font-weight:900; color:var(--success-dk)">96%</div>
+                <div style="font-size:10px; color:var(--muted); font-weight:800; text-transform:uppercase" data-en="Success rate" data-ar="معدل النجاح">Success rate</div>
+              </div>
+              <div style="flex:1; padding:12px; background:var(--bg); border-radius:11px; text-align:center">
+                <div style="font-size:20px; font-weight:900; color:var(--brown)">412</div>
+                <div style="font-size:10px; color:var(--muted); font-weight:800; text-transform:uppercase" data-en="KD earned" data-ar="د.ك مكسب">KD earned</div>
+              </div>
+            </div>
+            <div class="menu-list">
+              <div class="menu-row"><div class="ic">📊</div><div class="lbl" data-en="Performance" data-ar="الأداء">Performance</div><div class="chev">›</div></div>
+              <div class="menu-row"><div class="ic">💵</div><div class="lbl" data-en="Cash history" data-ar="سجل النقد">Cash history</div><div class="chev">›</div></div>
+              <div class="menu-row"><div class="ic">⚙️</div><div class="lbl" data-en="Settings" data-ar="الإعدادات">Settings</div><div class="chev">›</div></div>
+              <div class="menu-row"><div class="ic">💬</div><div class="lbl" data-en="Contact operations" data-ar="تواصل مع العمليات">Contact operations</div><div class="chev">›</div></div>
+              <div class="menu-row"><div class="ic">📄</div><div class="lbl" data-en="Documents" data-ar="المستندات">Documents</div><div class="chev">›</div></div>
+              <div class="menu-row danger"><div class="ic">⏻</div><div class="lbl" data-en="Sign out" data-ar="تسجيل الخروج">Sign out</div><div class="chev">›</div></div>
+            </div>
+            <div style="height:40px"></div>
+          </div>
+
+          <!-- ═════════ SETTINGS ═════════ -->
+          <div class="screen" data-screen="settings">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title" data-en="Settings" data-ar="الإعدادات">Settings</div>
+            </div>
+            <div class="muted-text" data-en="PREFERENCES" data-ar="التفضيلات">PREFERENCES</div>
+            <div class="set-row"><div class="ic" style="font-size:18px">🌐</div><div class="lbl" data-en="Language" data-ar="اللغة">Language</div><div class="val">English ▾</div></div>
+            <div class="set-row"><div class="ic" style="font-size:18px">🎨</div><div class="lbl" data-en="Theme" data-ar="السمة">Theme</div><div class="val" data-en="Light ▾" data-ar="فاتح ▾">Light ▾</div></div>
+            <div class="set-row"><div class="ic" style="font-size:18px">📍</div><div class="lbl" data-en="Background location" data-ar="تتبع الموقع">Background location</div><div class="toggle on"></div></div>
+            <div class="set-row"><div class="ic" style="font-size:18px">🔔</div><div class="lbl" data-en="Push notifications" data-ar="الإشعارات">Push notifications</div><div class="toggle on"></div></div>
+            <div class="muted-text" data-en="ACCOUNT" data-ar="الحساب">ACCOUNT</div>
+            <div class="set-row"><div class="ic" style="font-size:18px">🔑</div><div class="lbl" data-en="Change password" data-ar="تغيير كلمة المرور">Change password</div><div class="chev" style="color:var(--muted)">›</div></div>
+            <div class="set-row"><div class="ic" style="font-size:18px">🚗</div><div class="lbl" data-en="Vehicle info" data-ar="بيانات المركبة">Vehicle info</div><div class="chev" style="color:var(--muted)">›</div></div>
+            <div class="set-row"><div class="ic" style="font-size:18px">🆘</div><div class="lbl" data-en="Emergency contact" data-ar="جهة طوارئ">Emergency contact</div><div class="chev" style="color:var(--muted)">›</div></div>
+            <div class="muted-text" data-en="ABOUT" data-ar="حول">ABOUT</div>
+            <div class="set-row"><div class="ic" style="font-size:18px">ℹ️</div><div class="lbl" data-en="Version" data-ar="الإصدار">Version</div><div class="val">v1.0.0 (1)</div></div>
+            <div class="set-row"><div class="ic" style="font-size:18px">📋</div><div class="lbl" data-en="Terms & privacy" data-ar="الشروط والخصوصية">Terms &amp; privacy</div><div class="chev" style="color:var(--muted)">›</div></div>
+          </div>
+
+          <!-- ═════════ NOTIFICATIONS ═════════ -->
+          <div class="screen" data-screen="notif">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title" data-en="Notifications" data-ar="الإشعارات">Notifications</div>
+              <div class="actions"><div class="ic">✓</div></div>
+            </div>
+            <div class="notif new">
+              <div class="ic">📦</div>
+              <div class="grow"><div class="ttl" data-en="New order assigned" data-ar="طلب جديد">New order assigned</div><div class="sub" data-en="#S05882 · Hawally · 22.5 KD" data-ar="#S05882 · حولي · 22.5 د.ك">#S05882 · Hawally · 22.5 KD</div><div class="ts">2 min ago</div></div>
+            </div>
+            <div class="notif new">
+              <div class="ic warn">⚠️</div>
+              <div class="grow"><div class="ttl" data-en="Customer rescheduled #S05876" data-ar="العميل أجل الطلب">Customer rescheduled #S05876</div><div class="sub" data-en="New time: 2:00 PM today" data-ar="الموعد الجديد: 2:00 ظهراً">New time: 2:00 PM today</div><div class="ts">14 min ago</div></div>
+            </div>
+            <div class="notif new">
+              <div class="ic ok">✓</div>
+              <div class="grow"><div class="ttl" data-en="Cash settlement REM-00131 approved" data-ar="تمت الموافقة على REM-00131">Cash settlement REM-00131 approved</div><div class="sub">112.250 KD · May 29</div><div class="ts">1 hr ago</div></div>
+            </div>
+            <div class="notif">
+              <div class="ic dlv">🚚</div>
+              <div class="grow"><div class="ttl" data-en="Trip T-242 completed" data-ar="تم إكمال الرحلة T-242">Trip T-242 completed</div><div class="sub">8 orders · 18.2 km · 4h 12m</div><div class="ts">Yesterday</div></div>
+            </div>
+            <div class="notif">
+              <div class="ic warn">📋</div>
+              <div class="grow"><div class="ttl" data-en="Vehicle inspection due" data-ar="موعد فحص المركبة">Vehicle inspection due</div><div class="sub" data-en="Renew license by June 14" data-ar="جدد الرخصة قبل 14 يونيو">Renew license by June 14</div><div class="ts">2 days ago</div></div>
+            </div>
+          </div>
+
+          <!-- ═════════ HELP ═════════ -->
+          <div class="screen" data-screen="help">
+            <div class="appbar">
+              <div class="back">←</div>
+              <div class="title" data-en="Help" data-ar="مساعدة">Help</div>
+            </div>
+            <div class="section">
+              <div class="h-row"><h3 data-en="Chat with operations" data-ar="محادثة العمليات">Chat with operations</h3></div>
+              <div class="card" style="padding:14px">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px">
+                  <div style="width:42px; height:42px; border-radius:50%; background:var(--brown); color:var(--yellow-soft); display:flex; align-items:center; justify-content:center; font-size:18px">💬</div>
+                  <div style="flex:1"><div style="font-size:13px; font-weight:800; color:var(--ink)" data-en="Operations team" data-ar="فريق العمليات">Operations team</div><div style="font-size:11px; color:var(--success-dk); font-weight:700"><span class="dot live"></span> <span data-en="Online — replies in ~2 min" data-ar="متصل — يرد خلال ~2 دقيقة">Online — replies in ~2 min</span></div></div>
+                </div>
+                <button class="btn primary full" data-en="Start chat" data-ar="ابدأ المحادثة">💬 Start chat</button>
+              </div>
+              <div class="h-row" style="margin-top:18px"><h3 data-en="Quick answers" data-ar="إجابات سريعة">Quick answers</h3></div>
+              <div class="menu-list" style="border-radius:14px; overflow:hidden; box-shadow:var(--shadow-1)">
+                <div class="menu-row"><div class="ic">📦</div><div class="lbl" data-en="What if customer is unreachable?" data-ar="ماذا لو العميل غير متاح؟">What if customer is unreachable?</div><div class="chev">›</div></div>
+                <div class="menu-row"><div class="ic">💵</div><div class="lbl" data-en="How does cash settlement work?" data-ar="كيف تتم تسوية النقد؟">How does cash settlement work?</div><div class="chev">›</div></div>
+                <div class="menu-row"><div class="ic">🗺️</div><div class="lbl" data-en="Map / navigation issue" data-ar="مشكلة الخريطة">Map / navigation issue</div><div class="chev">›</div></div>
+                <div class="menu-row"><div class="ic">🆘</div><div class="lbl" data-en="Emergency: accident / theft" data-ar="طوارئ: حادث / سرقة">Emergency: accident / theft</div><div class="chev">›</div></div>
+              </div>
+            </div>
+            <div style="height:60px"></div>
+          </div>
+
+          </div><!-- /phone-body -->
+        </div><!-- /phone-screen -->
+      </div><!-- /phone-frame -->
+      <div class="phone-caption" id="screen-caption">Login</div>
+    </div>
+  </div>
+</main>
+
+<aside class="notes" id="notes-panel">
+  <h3 id="notes-title">About this screen</h3>
+  <div id="notes-body"></div>
+</aside>
+</div>
+
+<script>
+// ── Screen meta ───────────────────────────
+const META = {
+  login: {
+    title_en:"Login", title_ar:"تسجيل الدخول",
+    desc_en:"Driver signs in with the phone number registered on their delivery.driver record. Same OTP/password flow as the portal, native on mobile.",
+    desc_ar:"يسجل السائق دخوله برقم الهاتف المسجل في سجل delivery.driver. نفس تدفق OTP/كلمة المرور كالبورتال لكن أصلي على الجوال.",
+    backend:["POST /api/driver/v1/auth/login","POST /api/driver/v1/auth/otp/send","POST /api/driver/v1/auth/otp/verify"],
+    notes_en:["Token stored in a new driver.session table (sha256), kept separate from mobile.session.","After login we GET /api/driver/v1/me to hydrate driver + carrier company + today's KPIs.","Biometric unlock optional on second launch."],
+    notes_ar:["التوكن يُحفظ في جدول driver.session جديد (sha256)، منفصل عن mobile.session.","بعد الدخول نطلب GET /api/driver/v1/me لاسترجاع السائق + الشركة + مؤشرات اليوم.","الفتح بالبصمة اختياري بعد أول دخول."]
+  },
+  dashboard: {
+    title_en:"Dashboard", title_ar:"الرئيسية",
+    desc_en:"At-a-glance shift overview — KPIs, cash owed, next 3 stops, status toggle, Start-trip CTA.",
+    desc_ar:"نظرة شاملة على الوردية — المؤشرات، النقد المستحق، آخر 3 محطات، حالة السائق.",
+    backend:["GET /api/driver/v1/dashboard","PATCH /api/driver/v1/me/status"],
+    notes_en:["Status pill updates delivery.driver.status (available/busy/offline).","Cash card jumps to remittance.","Pulls today bucket only — historical stats live on Profile."],
+    notes_ar:["زر الحالة يحدث delivery.driver.status.","بطاقة النقد تنقلك لشاشة التسوية.","يعرض اليوم فقط — الإحصاءات التاريخية في الملف."]
+  },
+  orders: {
+    title_en:"Orders list", title_ar:"قائمة الطلبات",
+    desc_en:"Filterable tabs over orders assigned to this driver (or his trip lines). Pull-to-refresh, infinite scroll, search by S# or customer name.",
+    desc_ar:"تبويبات تصفية للطلبات المسندة للسائق. سحب للتحديث، تمرير لانهائي، بحث برقم الطلب أو اسم العميل.",
+    backend:["GET /api/driver/v1/orders?status=&search=&page="],
+    notes_en:["Status enum mirrors the portal: assigned / picked / out / delivered / failed / returned.","Inline actions: Pickup, Decline, Start delivery, Confirm, Fail — same handlers as portal."],
+    notes_ar:["تعداد الحالات نفس البورتال: مُسند / تم الاستلام / في الطريق / تم التسليم / فاشل / مرتجع.","إجراءات سريعة من البطاقة: استلام، رفض، بدء التسليم، تأكيد، فشل."]
+  },
+  order: {
+    title_en:"Order detail", title_ar:"تفاصيل الطلب",
+    desc_en:"Customer, address (with OSM map + Open-in-Maps), items, payment, status timeline, sticky action bar.",
+    desc_ar:"العميل، العنوان (مع خريطة OSM وزر فتح في الخرائط)، العناصر، الدفع، خط زمني للحالة، شريط إجراءات ثابت أسفل الشاشة.",
+    backend:["GET /api/driver/v1/orders/<id>","POST /api/driver/v1/orders/<id>/pickup","POST /api/driver/v1/orders/<id>/start","POST /api/driver/v1/orders/<id>/payment-link"],
+    notes_en:["Map is Leaflet + OSM tiles (same defensive WebView pattern we hardened in v2.0.20).","Open-in-Maps launches the OS map app for actual navigation.","WhatsApp/SMS deep-links into the customer phone.","Payment-link sends a KNET URL via SMS — same /delivery-portal/send-payment-link backend."],
+    notes_ar:["الخريطة Leaflet + OSM (نفس النمط الدفاعي الذي صلبناه في v2.0.20).","الفتح في الخرائط يطلق تطبيق الخرائط لتوجيه فعلي.","واتساب/SMS يفتح بيانات العميل مباشرة.","رابط الدفع يرسل عنوان KNET — نفس endpoint /delivery-portal/send-payment-link."]
+  },
+  confirm: {
+    title_en:"Confirm delivery", title_ar:"تأكيد التسليم",
+    desc_en:"Required: photo + signature + cash amount (if COD) + optional notes. Failing any required field disables the CTA.",
+    desc_ar:"إجباري: صورة + توقيع + المبلغ المستلم (لو COD) + ملاحظات اختيارية. أي حقل إجباري ناقص يعطل زر التأكيد.",
+    backend:["POST /api/driver/v1/orders/<id>/confirm  (multipart: photo, signature.png, cash, notes)"],
+    notes_en:["Signature is captured via signature_pad.js wrapped in Flutter (CustomPaint canvas).","Photo uses image_picker, max 1280×1280, quality 85 — same dial as the main app.","Cash field is required when payment.method == cod.","On success: server updates delivery.trip.line and sale.order.delivery_status."],
+    notes_ar:["التوقيع يُلتقط عبر signature_pad.js داخل Flutter.","الصورة عبر image_picker بدقة 1280×1280.","حقل النقد إجباري لو طريقة الدفع COD.","عند النجاح: السيرفر يحدث delivery.trip.line و sale.order.delivery_status."]
+  },
+  fail: {
+    title_en:"Fail / Return", title_ar:"فشل / إرجاع",
+    desc_en:"Pick a reason (radio list), optional free-text details, toggle 'return parcel to Uellow' (set failure_returned on the trip line).",
+    desc_ar:"اختر سبب الفشل (قائمة)، تفاصيل اختيارية، خيار إرجاع الطرد لـ Uellow.",
+    backend:["POST /api/driver/v1/orders/<id>/fail  {reason, details, return_to_uellow}"],
+    notes_en:["Reasons are the same enum used by the portal's fail-delivery endpoint.","If return-to-uellow is on, the order goes back into return queue and the driver loses commission for that drop."],
+    notes_ar:["نفس قائمة الأسباب الموجودة في endpoint fail-delivery في البورتال.","إذا فُعّل خيار الإرجاع، يدخل الطلب طابور الإرجاع ويفقد السائق عمولة هذا الطلب."]
+  },
+  paylink: {
+    title_en:"Send payment link", title_ar:"إرسال رابط دفع",
+    desc_en:"Driver triggers a hosted payment link for the customer (KNET via UPayments, with Odoo /payment/pay as fallback). Share over WhatsApp / SMS / QR / clipboard. Status polls live until the customer pays.",
+    desc_ar:"السائق يولّد رابط دفع مستضاف للعميل (KNET عبر UPayments مع تدفق Odoo /payment/pay كاحتياط). يُشارَك عبر واتساب / SMS / QR / نسخ. الحالة تُحدّث تلقائياً حتى يدفع العميل.",
+    backend:[
+      "POST /api/driver/v1/orders/<id>/payment-link  {amount?, provider:'upayments'|'odoo'}",
+      "GET  /api/driver/v1/orders/<id>/payment-link/status",
+      "POST /api/driver/v1/orders/<id>/payment-link/share  {channel:'whatsapp'|'sms'|'clipboard'|'qr'}",
+      "POST /api/driver/v1/orders/<id>/payment-link/cancel",
+    ],
+    notes_en:[
+      "Mirrors the portal endpoint /delivery-portal/get-payment-link exactly — same UPayments-first / Odoo-fallback ordering, same sale.order field writes (pay_link_status, pay_link_url, pay_link_sent_by, pay_link_sent_date, pay_link_provider).",
+      "Requires delivery.driver.can_send_payment_link == True — server returns 403 otherwise, app hides the button.",
+      "Amount is editable: full / 50% deposit / custom. The amount is sent to UPayments as a fresh charge with order.name as reference.",
+      "WhatsApp share uses wa.me/<phone>?text=<encoded link>; SMS uses smsto:<phone>?body=<link>; QR is rendered locally with qr_flutter so it works offline.",
+      "Status auto-polls every 8 seconds; when sale.order.payment_state flips to 'paid' a confirmation sheet pops with cash NO LONGER required at delivery time.",
+      "Cancel link writes pay_link_status='cancelled' and voids the UPayments charge via /api/v1/charge/<id>/cancel.",
+      "Every attempt is logged on sale.order.message_post — same audit trail the portal already has.",
+    ],
+    notes_ar:[
+      "مطابق تماماً لـ /delivery-portal/get-payment-link — نفس ترتيب UPayments-then-Odoo، نفس الحقول التي تُحفظ على sale.order (pay_link_status, pay_link_url, pay_link_sent_by, pay_link_sent_date, pay_link_provider).",
+      "يستلزم delivery.driver.can_send_payment_link = True — السيرفر يرد 403 وإلا، والتطبيق يخفي الزر.",
+      "المبلغ قابل للتعديل: كامل / 50% عربون / مخصص. يُرسل لـ UPayments كرسم جديد بـ order.name كمرجع.",
+      "زر واتساب يستخدم wa.me/<phone>?text=<link>; زر SMS يستخدم smsto:<phone>?body=<link>; QR يُرسم محلياً عبر qr_flutter حتى يعمل أوفلاين.",
+      "الحالة تُحدّث كل 8 ثوانٍ تلقائياً؛ عند تحول sale.order.payment_state إلى 'paid' تظهر شاشة تأكيد وزر النقد يختفي وقت التسليم.",
+      "إلغاء الرابط يكتب pay_link_status='cancelled' ويُلغي الرسم في UPayments عبر /api/v1/charge/<id>/cancel.",
+      "كل محاولة تُسجَّل في sale.order.message_post — نفس سجل التدقيق الموجود في البورتال.",
+    ],
+  },
+  trips: {
+    title_en:"Trips list", title_ar:"قائمة الرحلات",
+    desc_en:"Today's active trip with progress bar + history grouped by date. Tap any trip → trip detail.",
+    desc_ar:"رحلة اليوم النشطة مع شريط تقدم + السجل مرتب بالتاريخ.",
+    backend:["GET /api/driver/v1/trips?page="],
+    notes_en:["Trip = delivery.trip in Odoo. Lines = delivery.trip.line.","Progress is N delivered / N total — same compute as the portal dashboard."],
+    notes_ar:["delivery.trip = الرحلة. delivery.trip.line = محطاتها.","شريط التقدم: عدد المسلمة / الإجمالي."]
+  },
+  trip: {
+    title_en:"Trip detail + route", title_ar:"تفاصيل الرحلة + المسار",
+    desc_en:"Multi-stop route polyline + numbered stops with status, navigate-to-next CTA.",
+    desc_ar:"خط مسار متعدد المحطات + قائمة محطات مرقمة بحالاتها + زر التنقل للمحطة التالية.",
+    backend:["GET /api/driver/v1/trips/<id>","POST /api/driver/v1/trips/<id>/reorder (drag-to-resequence)"],
+    notes_en:["Route polyline is built client-side from stop coordinates using OSRM (Open Source Routing).","Drag-handle to re-sequence stops in case the driver wants to optimize manually.","'Navigate to next' opens the OS map app with the next un-delivered stop."],
+    notes_ar:["خط المسار يُحسب من إحداثيات المحطات عبر OSRM.","يمكن إعادة ترتيب المحطات بالسحب لو السائق يريد تحسين الترتيب يدوياً.","زر 'انتقل للمحطة التالية' يفتح خرائط النظام مع أول محطة لم تُسلّم."]
+  },
+  cash: {
+    title_en:"Cash remittance", title_ar:"تسوية النقد",
+    desc_en:"Pick which collected-COD orders to settle, see live totals (collected − fees − commission = net), submit with reference.",
+    desc_ar:"اختر طلبات COD التي ستسويها، شاهد المجاميع الحية (مستلم − رسوم − عمولة = صافي)، أرسل مع المرجع.",
+    backend:["GET /api/driver/v1/cash/ready","POST /api/driver/v1/cash/submit  {order_ids, carrier_ref}"],
+    notes_en:["Mirrors /delivery-portal/remittance/submit — creates a delivery.cash.remittance with the picked sale.order rows.","Totals computed server-side from carrier_pricing_rule.","Once submitted: orders flip to 'remittance_pending'."],
+    notes_ar:["مطابق لـ /delivery-portal/remittance/submit — ينشئ سجل delivery.cash.remittance.","المجاميع تُحسب على السيرفر من carrier_pricing_rule.","بعد الإرسال: الطلبات تتحول لحالة 'remittance_pending'."]
+  },
+  cashhist: {
+    title_en:"Settlement history", title_ar:"سجل التسويات",
+    desc_en:"Past remittances with state (submitted, pending audit, settled) and totals. Tap → full settlement detail (line-by-line PDF).",
+    desc_ar:"التسويات السابقة وحالاتها (مرسلة، قيد التدقيق، مسوّاة) والمجاميع. الضغط يفتح تفاصيل التسوية ومستند PDF.",
+    backend:["GET /api/driver/v1/cash/history?page=","GET /api/driver/v1/cash/<rem_id>"],
+    notes_en:["PDF uses the existing settlement_report from delivery_carrier_portal."],
+    notes_ar:["تقرير الـ PDF يستخدم settlement_report الموجود في delivery_carrier_portal."]
+  },
+  profile: {
+    title_en:"Profile", title_ar:"الملف الشخصي",
+    desc_en:"Driver identity, vehicle, weekly KPIs, menu of every account-level page (performance, cash, settings, ops chat, documents, sign-out).",
+    desc_ar:"بيانات السائق والمركبة، مؤشرات الأسبوع، وقائمة لكل صفحات الحساب.",
+    backend:["GET /api/driver/v1/me","GET /api/driver/v1/me/performance?range=week|month"],
+    notes_en:["Avatar uses res.partner.image_1920 (driver's portal user partner) — same base64 instant-render pattern from v2.0.19.","Documents lists driving license, vehicle registration, insurance — admin-uploadable in the delivery.driver model."],
+    notes_ar:["الصورة من res.partner.image_1920 — نفس نمط العرض الفوري base64 من v2.0.19.","المستندات تشمل رخصة القيادة، إجازة المركبة، التأمين."]
+  },
+  settings: {
+    title_en:"Settings", title_ar:"الإعدادات",
+    desc_en:"Language picker (all res.lang), theme, background-location toggle, push notifications toggle, change password, vehicle info, emergency contact.",
+    desc_ar:"اختيار اللغة (كل اللغات)، السمة، تتبع الموقع بالخلفية، الإشعارات، تغيير كلمة المرور، بيانات المركبة، جهة طوارئ.",
+    backend:["GET /api/driver/v1/app/languages","POST /api/driver/v1/me/preferences"],
+    notes_en:["Same flutter_localizations delegates fix we hardened in v2.0.17 — no Material crash on Arabic.","Background-location toggle requires the Always-Allow permission tier on Android 12+."],
+    notes_ar:["نفس delegates flutter_localizations الذي حُصِّن في v2.0.17 — لا يحصل تعطل Material في الواجهة العربية.","تتبع الموقع بالخلفية يحتاج إذن Always-Allow على Android 12+."]
+  },
+  notif: {
+    title_en:"Notifications", title_ar:"الإشعارات",
+    desc_en:"In-app inbox + system push. New-order pushes the loudest sound; reschedule and ops messages are softer.",
+    desc_ar:"بريد داخل التطبيق + إشعارات نظام. الطلبات الجديدة لها صوت أعلى.",
+    backend:["GET /api/driver/v1/notifications?cursor=","POST /api/driver/v1/notifications/<id>/read"],
+    notes_en:["Push via FCM — server hits the driver's registered device tokens stored in driver.session.","Notification categories: new_order / reschedule / ops_message / settlement / vehicle_doc."],
+    notes_ar:["الإشعارات عبر FCM — السيرفر يستخدم رموز الجهاز المسجلة في driver.session.","التصنيفات: new_order / reschedule / ops_message / settlement / vehicle_doc."]
+  },
+  help: {
+    title_en:"Help / Ops chat", title_ar:"مساعدة / محادثة العمليات",
+    desc_en:"Live chat with the operations team + quick-answer FAQ. Emergency tile opens accident/theft escalation flow.",
+    desc_ar:"محادثة مباشرة مع فريق العمليات + أسئلة شائعة. زر الطوارئ يفتح تدفق التصعيد للحوادث/السرقة.",
+    backend:["GET /api/driver/v1/help/faq","POST /api/driver/v1/help/chat  (forwards to mail.channel)"],
+    notes_en:["Chat is backed by mail.channel — same plumbing as the existing Beena chat, with ops as the recipient.","Emergency tile sends GPS + driver-id to a hard-coded ops number via Twilio SMS."],
+    notes_ar:["المحادثة تستخدم mail.channel — نفس البنية التحتية لـ Beena.","زر الطوارئ يرسل GPS + رقم السائق لرقم العمليات عبر Twilio SMS."]
+  }
+};
+
+// ── Nav + screen swap ─────────────────────
+const screens = document.querySelectorAll('.screen');
+const items = document.querySelectorAll('nav.screens .item');
+const stageTitle = document.getElementById('stage-title');
+const stageDesc = document.getElementById('stage-desc');
+const notesBody = document.getElementById('notes-body');
+const screenCaption = document.getElementById('screen-caption');
+let currentLang = 'en';
+
+function getText(el){
+  const k = currentLang==='ar' ? 'ar' : 'en';
+  return el?.dataset?.[k] ?? el?.textContent ?? '';
+}
+
+function showScreen(name){
+  screens.forEach(s => s.classList.toggle('show', s.dataset.screen===name));
+  items.forEach(i => i.classList.toggle('active', i.dataset.target===name));
+  const m = META[name];
+  if (!m) return;
+  const en = currentLang==='en';
+  stageTitle.textContent = en ? m.title_en : m.title_ar;
+  stageDesc.textContent  = en ? m.desc_en  : m.desc_ar;
+  screenCaption.textContent = en ? m.title_en : m.title_ar;
+  // Notes panel
+  let html = `<p style="font-size:13px; line-height:1.55; margin-bottom:14px">${en?m.desc_en:m.desc_ar}</p>`;
+  html += `<h4>${en?'Backend':'الواجهة الخلفية'}</h4><div>`;
+  (m.backend||[]).forEach(b => html += `<div style="margin-bottom:4px"><code>${b}</code></div>`);
+  html += `</div><h4>${en?'Build notes':'ملاحظات التنفيذ'}</h4><ul>`;
+  (en?m.notes_en:m.notes_ar).forEach(n => html += `<li>${n}</li>`);
+  html += `</ul>`;
+  notesBody.innerHTML = html;
+  // Init maps lazily
+  setTimeout(initMaps, 60);
+}
+
+items.forEach(i => i.addEventListener('click', () => showScreen(i.dataset.target)));
+
+// Inline "go to screen" buttons inside the phone (e.g. Send-payment-link tile
+// inside the order detail). Any element with data-target-screen jumps there.
+document.addEventListener('click', (ev) => {
+  const t = ev.target.closest('[data-target-screen]');
+  if (!t) return;
+  ev.preventDefault();
+  showScreen(t.dataset.targetScreen);
+});
+
+// ── Language toggle ───────────────────────
+const langButtons = document.querySelectorAll('#lang-toggle button');
+langButtons.forEach(b => b.addEventListener('click', () => {
+  currentLang = b.dataset.lang;
+  langButtons.forEach(x => x.classList.toggle('on', x===b));
+  document.body.classList.toggle('ar', currentLang==='ar');
+  // Translate every node carrying data-en/data-ar
+  document.querySelectorAll('[data-en]').forEach(el => {
+    const v = el.dataset[currentLang];
+    if (v) el.textContent = v;
+  });
+  // Re-render the active screen's notes
+  const active = document.querySelector('nav.screens .item.active');
+  if (active) showScreen(active.dataset.target);
+}));
+
+// ── Initial render ────────────────────────
+showScreen('login');
+
+// ── Maps ──────────────────────────────────
+let _maps = {};
+function initMaps(){
+  const detail = document.getElementById('map-detail');
+  if (detail && !_maps.detail){
+    try {
+      const m = L.map(detail, {zoomControl:false, attributionControl:false, dragging:false}).setView([29.3293, 48.0203], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(m);
+      L.marker([29.3293, 48.0203], {icon: L.divIcon({className:'', html:'<div style="background:#412402;color:#FFE066;width:32px;height:32px;border-radius:50%;border:3px solid #F5C320;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 4px 10px rgba(0,0,0,.3)">📦</div>', iconSize:[32,32], iconAnchor:[16,16]})}).addTo(m);
+      _maps.detail = m;
+    } catch(e){}
+  }
+  const trip = document.getElementById('map-trip');
+  if (trip && !_maps.trip){
+    try {
+      const stops = [[29.3293,48.0203],[29.3325,48.0290],[29.3358,48.0421],[29.3110,48.0540],[29.3018,48.0628]];
+      const m = L.map(trip, {zoomControl:false, attributionControl:false}).setView(stops[2], 12);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(m);
+      L.polyline(stops, {color:'#F5C320', weight:5, opacity:.95}).addTo(m);
+      stops.forEach((c,i) => {
+        const done = i<2, now = i===2;
+        const bg = done?'#10B981':(now?'#F5C320':'#fff');
+        const fg = done?'#fff':(now?'#412402':'#412402');
+        const border = done?'#10B981':(now?'#412402':'#412402');
+        L.marker(c, {icon: L.divIcon({className:'', html:`<div style="background:${bg};color:${fg};width:26px;height:26px;border-radius:50%;border:2px solid ${border};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;box-shadow:0 2px 6px rgba(0,0,0,.3)">${done?'✓':(i+1)}</div>`, iconSize:[26,26], iconAnchor:[13,13]})}).addTo(m);
+      });
+      _maps.trip = m;
+    } catch(e){}
+  }
+}
+</script>
+</body>
+</html>

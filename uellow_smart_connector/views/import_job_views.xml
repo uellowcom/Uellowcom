@@ -59,10 +59,10 @@
             <group string="Import Settings">
               <field name="job_type"/>
               <field name="source_url"
-                     invisible="job_type != 'url_import'"
+                     invisible="job_type != 'url'"
                      placeholder="https://..."/>
               <field name="attachment_id"
-                     invisible="job_type != 'file_update'"
+                     invisible="job_type != 'file'"
                      widget="many2one"/>
               <field name="max_products_per_run"/>
               <field name="price_variance_limit" string="Max Price Change (%)"/>
@@ -132,17 +132,17 @@
     <field name="arch" type="xml">
       <search string="Search Import Jobs">
         <field name="name" string="Job Number"/>
-        <filter string="Pending Review" name="review"
+        <filter string="Pending Review — للمراجعة" name="review"
                 domain="[('state','=','review')]"/>
-        <filter string="Done" name="done"
+        <filter string="Done — مكتملة" name="done"
                 domain="[('state','=','done')]"/>
-        <filter string="Error" name="error"
+        <filter string="Error — خطأ" name="error"
                 domain="[('state','=','error')]"/>
         <separator/>
-        <filter string="URL Import" name="url"
-                domain="[('job_type','=','url_import')]"/>
-        <filter string="File Import" name="file"
-                domain="[('job_type','=','file_update')]"/>
+        <filter string="URL Import — رابط" name="url"
+                domain="[('job_type','=','url')]"/>
+        <filter string="File Import — ملف" name="file"
+                domain="[('job_type','=','file')]"/>
         <group expand="0" string="Group By">
           <filter string="State" name="group_state"
                   context="{'group_by': 'state'}"/>

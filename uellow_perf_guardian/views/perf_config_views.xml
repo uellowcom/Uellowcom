@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_perf_config_form" model="ir.ui.view">
+    <field name="name">uellow.perf.config.form</field>
+    <field name="model">uellow.perf.config</field>
+    <field name="arch" type="xml">
+      <form string="Performance Guardian">
+        <sheet>
+          <div class="oe_title"><h1>Performance Guardian</h1></div>
+          <notebook>
+            <page string="Dashboard">
+              <group>
+                <field name="dashboard_auto_refresh_seconds"
+                       help="0 = no auto-refresh"/>
+                <field name="website_filter_ids" widget="many2many_tags"
+                       options="{'no_create': True}"/>
+              </group>
+            </page>
+            <page string="Bot Quota">
+              <group>
+                <field name="bot_quota_enabled"/>
+                <field name="bot_quota_soft"/>
+                <field name="bot_429_retry_after"/>
+                <field name="burst_per_ip_per_min"
+                       help="Sliding-window burst limit per IP within a class"/>
+              </group>
+            </page>
+            <page string="RUM">
+              <group>
+                <field name="rum_enabled"/>
+                <field name="rum_sample_rate"/>
+                <field name="rum_retention_days"/>
+                <field name="rum_beacon_per_ip_per_min"/>
+              </group>
+            </page>
+            <page string="Synthetic + Cache">
+              <group>
+                <field name="synthetic_enabled"/>
+                <field name="synthetic_lcp_warn_ms"/>
+                <field name="synthetic_lcp_crit_ms"/>
+                <field name="cache_health_target_pct"/>
+              </group>
+              <field name="synthetic_urls" widget="text"/>
+            </page>
+            <page string="SSL + Domain">
+              <group>
+                <field name="ssl_monitor_enabled"/>
+                <field name="ssl_monitor_domain"/>
+                <field name="ssl_warn_days"/>
+                <field name="ssl_crit_days"/>
+              </group>
+            </page>
+            <page string="5xx Error Rate">
+              <group>
+                <field name="error_rate_enabled"/>
+                <field name="error_rate_warn_per_min"/>
+                <field name="error_rate_crit_per_min"/>
+              </group>
+            </page>
+            <page string="Anomaly Detection">
+              <group>
+                <field name="anomaly_enabled"/>
+                <field name="anomaly_z_threshold"
+                       help="z-score above which a metric is anomalous (typical: 2-3)"/>
+              </group>
+            </page>
+            <page string="Bundle Monitor">
+              <group>
+                <field name="bundle_monitor_enabled"/>
+              </group>
+              <field name="bundle_urls" widget="text"/>
+            </page>
+            <page string="Slow Queries">
+              <group>
+                <field name="slowq_enabled"/>
+                <field name="slowq_threshold_ms"/>
+              </group>
+            </page>
+            <page string="Image Audit">
+              <group>
+                <field name="image_audit_enabled"/>
+                <field name="image_size_threshold_kb"/>
+              </group>
+            </page>
+            <page string="CDN Purge">
+              <group>
+                <field name="cf_purge_enabled"/>
+                <field name="cf_zone_id"/>
+                <field name="cf_api_token" password="True"/>
+              </group>
+            </page>
+            <page string="Alerts">
+              <group string="Channels">
+                <field name="alert_email"/>
+                <field name="alert_beena"/>
+                <field name="alert_slack_webhook"/>
+                <field name="alert_discord_webhook"/>
+                <field name="alert_telegram_token" password="True"/>
+                <field name="alert_telegram_chat"/>
+                <field name="alert_sentry_dsn" password="True"/>
+              </group>
+            </page>
+            <page string="Integrations">
+              <group string="CrUX (Chrome UX Report)">
+                <field name="crux_enabled"/>
+                <field name="crux_api_key" password="True"/>
+              </group>
+              <group string="ipinfo.io (ASN/WHOIS enrichment)">
+                <field name="ipinfo_token" password="True"
+                       placeholder="Optional, free tier works without"/>
+              </group>
+            </page>
+            <page string="Self-check">
+              <group>
+                <field name="self_check_enabled"
+                       help="Verify the throttle middleware is firing — alerts if not."/>
+              </group>
+            </page>
+            <page string="Metrics Export">
+              <group>
+                <field name="export_token" password="True"/>
+              </group>
+              <p style="font-size:12px;color:#666">
+                Endpoints (auth via <code>X-Perf-Token</code> header):
+                <ul>
+                  <li><code>/perf/metrics</code> — JSON</li>
+                  <li><code>/perf/metrics.prom</code> — Prometheus</li>
+                  <li><code>/perf/health</code> — 200/503 for external monitors (public)</li>
+                </ul>
+              </p>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_perf_config" model="ir.actions.act_window">
+    <field name="name">Settings</field>
+    <field name="res_model">uellow.perf.config</field>
+    <field name="view_mode">form</field>
+    <field name="target">current</field>
+  </record>
+</odoo>

@@ -75,7 +75,11 @@ class UellowBrandsImageProxy(http.Controller):
     بدون الحاجة لتغيير public في ir_attachment
     """
 
-    @http.route('/uellow/brand-image/<int:val_id>', type='http', auth='public', website=True)
+    # website=False so Odoo doesn't create a session cookie on each hit —
+    # without that change Cloudflare refuses to cache (Set-Cookie poisons
+    # cacheability). Saves one origin hit per brand logo per visitor.
+    @http.route('/uellow/brand-image/<int:val_id>', type='http',
+                auth='public', website=False, save_session=False)
     def brand_image(self, val_id, **kwargs):
         cr = request.env.cr
         cr.execute("""
@@ -98,7 +102,7 @@ class UellowBrandsImageProxy(http.Controller):
             attachment.raw,
             content_type=attachment.mimetype or 'image/png',
             headers=[
-                ('Cache-Control', 'public, max-age=604800'),
-                ('Content-Length', len(attachment.raw)),
+                ('Cache-Control', 'public, max-age=2592000, immutable'),
+                ('Content-Length', str(len(attachment.raw))),
             ]
         )

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Singleton config record so get_config() never has to create one
+             at runtime (which would race on first concurrent access). -->
+        <record id="seo_config_singleton" model="uellow.seo.config">
+            <field name="name">SEO Settings</field>
+            <field name="active" eval="True"/>
+            <field name="site_name_en">Uellow</field>
+            <field name="site_name_ar">يلو</field>
+        </record>
+    </data>
+</odoo>

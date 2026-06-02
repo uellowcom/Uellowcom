@@ -4,7 +4,10 @@
     'summary': 'Custom Product Page — WhatsApp, Swatches, Installment, Discount, Related Products, Bilingual Description',
     'category': 'Website/eCommerce',
     'author': 'Custom',
-    'depends': ['website_sale'],
+    'depends': ['website_sale', 'theme_prime'],
+    # NOTE: this depends on theme_prime today and will flip to 'uellow_theme'
+    # as part of the staged migration documented in
+    # /root/uellow_backups/MIGRATION_RUNBOOK.md (step 5).
     'data': [
         'security/ir.model.access.csv',
         'views/product_template_views.xml',

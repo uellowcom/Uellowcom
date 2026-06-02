@@ -78,20 +78,229 @@
     </record>
 
     <record id="action_body_profiles" model="ir.actions.act_window">
-        <field name="name">ملفات المقاسات</field>
+        <field name="name">Body Profiles</field>
         <field name="res_model">customer.body.profile</field>
         <field name="view_mode">list,form</field>
     </record>
 
     <menuitem id="menu_smart_fit_root"
-              name="📏 Smart Fit"
+              name="Smart Fit"
               sequence="92"
               groups="base.group_system"/>
 
     <menuitem id="menu_body_profiles"
-              name="ملفات المقاسات"
+              name="Body Profiles"
               parent="menu_smart_fit_root"
               action="action_body_profiles"
               sequence="10"/>
+
+    <!-- ============================================================ -->
+    <!--  Per-product size chart: tab inside product form              -->
+    <!-- ============================================================ -->
+    <record id="product_template_form_size_chart" model="ir.ui.view">
+        <field name="name">product.template.form.size.chart</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Size Chart" name="size_chart">
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not needs_size_chart">
+                        <strong>⚠ Fashion product without a size chart!</strong>
+                        This product is published for customers but has no detailed measurements —
+                        Beena cannot run a size fit check on it.
+                        Use the button below to generate rows automatically from the product's Size attribute.
+                    </div>
+                    <div class="alert alert-info" role="alert"
+                         invisible="not has_size_chart">
+                        ✓ <field name="size_chart_count" readonly="1" class="oe_inline"/> sizes registered for this product.
+                        Beena uses them to check compatibility with the customer's measurements.
+                    </div>
+                    <field name="is_fashion_item" invisible="1"/>
+                    <field name="needs_size_chart" invisible="1"/>
+                    <field name="has_size_chart" invisible="1"/>
+                    <field name="size_chart_out_of_sync" invisible="1"/>
+                    <field name="size_chart_orphan_count" invisible="1"/>
+                    <field name="size_chart_missing_count" invisible="1"/>
+
+                    <div class="alert alert-danger" role="alert"
+                         invisible="not size_chart_out_of_sync">
+                        <strong>⚠ Chart out of sync with product attributes</strong>
+                        — <field name="size_chart_orphan_count" readonly="1" class="oe_inline"/> orphan row(s),
+                        <field name="size_chart_missing_count" readonly="1" class="oe_inline"/> attribute value(s) not yet in chart.
+                        <button name="action_sync_size_chart" type="object"
+                                class="btn btn-sm btn-warning ms-2"
+                                string="Sync now"/>
+                    </div>
+
+                    <div class="o_button_box my-2">
+                        <button name="action_generate_size_chart" type="object"
+                                class="btn btn-secondary" icon="fa-magic">
+                            Auto-generate rows from Size attribute
+                        </button>
+                    </div>
+
+                    <p class="text-muted">
+                        Enter the actual garment measurements for each size (chest, length, shoulder, ...).
+                        Beena matches them against the customer's body measurements and shows a compatibility percentage.
+                        <br/>
+                        <strong>Tip:</strong> link each row to the actual product attribute value
+                        (Size = S/M/L/...) so Beena can resolve the right variant when adding to cart.
+                    </p>
+                    <field name="size_chart_ids">
+                        <list editable="bottom" decoration-warning="is_orphan == True">
+                            <field name="sequence" widget="handle"/>
+                            <field name="attribute_value_id" string="Attribute value"
+                                   options="{'no_create': True, 'no_open': True}"
+                                   domain="[('attribute_id.product_tmpl_ids', 'in', parent.id)]"/>
+                            <field name="size_label" string="Size"/>
+                            <field name="chest_cm"    string="Chest"/>
+                            <field name="shoulder_cm" string="Shoulder"/>
+                            <field name="sleeve_cm"   string="Sleeve"/>
+                            <field name="length_cm"   string="Length"/>
+                            <field name="waist_cm"    string="Waist"/>
+                            <field name="hip_cm"      string="Hip"/>
+                            <field name="inseam_cm"   string="Inseam"/>
+                            <field name="thigh_cm"    string="Thigh" optional="hide"/>
+                            <field name="foot_length_cm" string="Foot length" optional="hide"/>
+                            <field name="tolerance_cm" string="Tolerance ±" optional="hide"/>
+                            <field name="is_orphan" string="⚠ Orphan" optional="show"
+                                   widget="boolean_toggle"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!--  Standalone admin list for size charts                        -->
+    <!-- ============================================================ -->
+    <record id="view_product_size_chart_list" model="ir.ui.view">
+        <field name="name">product.size.chart.list</field>
+        <field name="model">product.size.chart</field>
+        <field name="arch" type="xml">
+            <list decoration-warning="is_orphan == True">
+                <field name="product_id"/>
+                <field name="size_label"/>
+                <field name="attribute_value_id" optional="show"/>
+                <field name="chest_cm"/>
+                <field name="shoulder_cm"/>
+                <field name="length_cm"/>
+                <field name="waist_cm"/>
+                <field name="hip_cm"/>
+                <field name="inseam_cm"/>
+                <field name="is_orphan" string="⚠ Orphan" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_product_size_chart_search" model="ir.ui.view">
+        <field name="name">product.size.chart.search</field>
+        <field name="model">product.size.chart</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="product_id"/>
+                <field name="size_label"/>
+                <field name="attribute_value_id"/>
+                <filter name="orphan" string="⚠ Orphans (broken link)"
+                        domain="[('is_orphan', '=', True)]"/>
+                <filter name="unlinked" string="No attribute link"
+                        domain="[('attribute_value_id', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_product" string="Product"
+                            context="{'group_by': 'product_id'}"/>
+                    <filter name="group_attr" string="Attribute"
+                            context="{'group_by': 'attribute_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_product_size_charts" model="ir.actions.act_window">
+        <field name="name">Product Size Charts</field>
+        <field name="res_model">product.size.chart</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_size_charts"
+              name="Product Size Charts"
+              parent="menu_smart_fit_root"
+              action="action_product_size_charts"
+              sequence="20"/>
+
+    <!-- ============================================================ -->
+    <!--  Fit history list — to view a customer's past checks          -->
+    <!-- ============================================================ -->
+    <record id="view_customer_fit_history_list" model="ir.ui.view">
+        <field name="name">customer.fit.history.list</field>
+        <field name="model">customer.fit.history</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="create_date" string="Date"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="size_chosen" string="Size"/>
+                <field name="overall_match_pct" widget="progressbar"/>
+                <field name="fit_result"/>
+                <field name="source"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_customer_fit_history" model="ir.actions.act_window">
+        <field name="name">Fit Check History</field>
+        <field name="res_model">customer.fit.history</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_customer_fit_history"
+              name="Fit Check History"
+              parent="menu_smart_fit_root"
+              action="action_customer_fit_history"
+              sequence="30"/>
+
+    <!-- ============================================================ -->
+    <!--  Action: fashion products missing a size chart                -->
+    <!-- ============================================================ -->
+    <record id="action_products_needing_chart" model="ir.actions.act_window">
+        <field name="name">⚠ Products needing a size chart</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('needs_size_chart', '=', True)]</field>
+        <field name="context">{'search_default_needs_chart': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiley_face">
+                ✅ All published fashion products have a size chart.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_products_needing_chart"
+              name="⚠ Products missing chart"
+              parent="menu_smart_fit_root"
+              action="action_products_needing_chart"
+              sequence="40"/>
+
+    <!-- ============================================================ -->
+    <!--  Action: products whose chart is out of sync                  -->
+    <!-- ============================================================ -->
+    <record id="action_products_chart_out_of_sync" model="ir.actions.act_window">
+        <field name="name">⚠ Products with chart out of sync</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('size_chart_out_of_sync', '=', True)]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiley_face">
+                ✅ All size charts are in sync with product attributes.
+            </p>
+        </field>
+    </record>
+
+    <menuitem id="menu_products_chart_out_of_sync"
+              name="⚠ Charts out of sync"
+              parent="menu_smart_fit_root"
+              action="action_products_chart_out_of_sync"
+              sequence="45"/>
 
 </odoo>

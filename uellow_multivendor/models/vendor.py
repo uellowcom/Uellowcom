@@ -44,6 +44,8 @@ class UellowVendor(models.Model):
     store_tagline_ar = fields.Char('Tagline (Arabic)')
 
     # ── Branding ─────────────────────────────────────────
+    logo_image = fields.Binary(string='Store Logo Image')
+    banner_image = fields.Binary(string='Store Banner Image')
     logo_attachment_id = fields.Many2one(
         'ir.attachment', string='Store Logo', ondelete='set null',
     )

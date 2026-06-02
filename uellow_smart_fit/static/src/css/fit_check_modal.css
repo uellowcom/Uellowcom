@@ -1,0 +1,524 @@
+/* ─────────────────────────────────────────────────────────────────────
+   Uellow Smart Fit — Product page button + check-fit modal
+   Prefix:  usf-  (so we don't collide with theme/Beena classes)
+   ───────────────────────────────────────────────────────────────────── */
+
+/* ── Product page button ─────────────────────────────────────────────── */
+.usf-check-fit-wrap {
+    margin-top: 10px;
+    margin-bottom: 6px;
+}
+.usf-check-fit-btn {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    background: linear-gradient(135deg, #FFFDF5, #FFEFA8);
+    border: 2px solid #F5C320;
+    color: #412402;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: filter .15s, transform .05s, box-shadow .15s;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 2px 8px rgba(245, 195, 32, 0.25);
+    font-family: inherit;
+}
+.usf-check-fit-btn:hover {
+    filter: brightness(1.04);
+    box-shadow: 0 4px 14px rgba(245, 195, 32, 0.35);
+    color: #412402;
+    text-decoration: none;
+}
+.usf-check-fit-btn:active { transform: scale(0.99); }
+.usf-check-fit-btn.usf-soft {
+    background: #F8F7F4;
+    border-color: #ECE9E1;
+    color: #5F5E5A;
+    box-shadow: none;
+}
+.usf-cf-icon  { font-size: 22px; margin-bottom: 2px; }
+.usf-cf-label { font-weight: 700; line-height: 1.2; }
+.usf-cf-sub   { font-size: 10px; color: #856C2E; margin-top: 2px; font-weight: 500; }
+
+.usf-floating {
+    position: fixed;
+    right: 20px;
+    bottom: 90px;
+    z-index: 998;
+    max-width: 180px;
+    padding: 9px 13px;
+}
+[dir="rtl"] .usf-floating { right: auto; left: 20px; }
+
+/* ── Inline variant (next to size buttons) ──────────────────────────── */
+/* Wrap is rendered with the SAME tag/class as the sibling size pill so
+   that it inherits whatever inline layout the theme uses (d-inline-block,
+   list-item, flex item, etc.). We only add usf-inline-wrap as a marker. */
+.usf-inline-wrap {
+    margin-inline-start: 8px;
+    vertical-align: middle;
+}
+li.usf-inline-wrap   { display: inline-block; list-style: none; }
+div.usf-inline-wrap  { display: inline-block; }
+span.usf-inline-wrap { display: inline-block; }
+
+.usf-check-fit-btn.usf-inline {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    width: auto;
+    max-width: none;
+    font-size: 12px;
+    line-height: 1.2;
+    border-width: 1.5px;
+    box-shadow: 0 1px 4px rgba(245, 195, 32, 0.18);
+    white-space: nowrap;
+    vertical-align: middle;
+}
+.usf-check-fit-btn.usf-inline .usf-cf-icon  { font-size: 14px; margin: 0; }
+.usf-check-fit-btn.usf-inline .usf-cf-label { white-space: nowrap; }
+.usf-check-fit-btn.usf-inline.usf-soft {
+    background: #F8F7F4;
+    border-color: #ECE9E1;
+    color: #5F5E5A;
+}
+
+/* ── Modal overlay ──────────────────────────────────────────────────── */
+.usf-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(17, 16, 12, 0.65);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    animation: usfFadeIn .15s ease-out;
+}
+@keyframes usfFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.usf-modal {
+    background: #FFFFFF;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 720px;
+    max-height: 92vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    animation: usfSlideUp .22s ease-out;
+}
+@keyframes usfSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Modal header / close ───────────────────────────────────────────── */
+.usf-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #ECE9E1;
+    background: linear-gradient(180deg, #FFFDF5, #FFFFFF);
+}
+.usf-modal-header h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    color: #412402;
+}
+.usf-modal-sub {
+    font-size: 12px;
+    color: #5F5E5A;
+    margin-top: 3px;
+}
+.usf-close {
+    background: none;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #5F5E5A;
+    font-size: 16px;
+    line-height: 1;
+}
+.usf-close:hover { background: #F5F4F2; color: #1A1A1A; }
+
+/* ── Modal body ─────────────────────────────────────────────────────── */
+.usf-modal-body {
+    padding: 18px 20px 22px;
+    overflow-y: auto;
+}
+.usf-empty {
+    text-align: center;
+    padding: 36px 20px;
+}
+.usf-empty-icon {
+    font-size: 42px;
+    margin-bottom: 10px;
+}
+.usf-empty p {
+    color: #5F5E5A;
+    font-size: 13px;
+    margin-bottom: 18px;
+    line-height: 1.5;
+}
+.usf-spinner {
+    width: 38px;
+    height: 38px;
+    margin: 28px auto 14px;
+    border: 3px solid #F1EFE7;
+    border-top-color: #F5C320;
+    border-radius: 50%;
+    animation: usfSpin 0.9s linear infinite;
+}
+@keyframes usfSpin { to { transform: rotate(360deg); } }
+
+/* ── Top row: gauge + silhouette + radar ────────────────────────────── */
+.usf-top {
+    display: grid;
+    grid-template-columns: minmax(140px, 1fr) minmax(110px, 1fr) minmax(180px, 1.5fr);
+    gap: 14px;
+    align-items: center;
+    padding: 12px;
+    background: linear-gradient(135deg, #FFFDF5, #FAFAF7);
+    border-radius: 12px;
+    margin-bottom: 18px;
+}
+.usf-top-gauge {
+    text-align: center;
+}
+.usf-top-label {
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: -8px;
+}
+.usf-top-size-pill {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #412402;
+    background: #FFF;
+    border: 1px solid #F5E5A8;
+    padding: 3px 9px;
+    border-radius: 6px;
+    display: inline-block;
+}
+.usf-gauge-arc {
+    transform-origin: 60px 60px;
+    transition: stroke-dasharray 1s ease-out;
+}
+@keyframes usfGaugeFill {
+    from { stroke-dasharray: 0 600; }
+}
+
+.usf-top-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.usf-body {
+    width: 90px;
+    height: 180px;
+}
+
+.usf-top-radar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.usf-radar-wrap {
+    text-align: center;
+}
+.usf-radar {
+    max-width: 100%;
+    height: auto;
+}
+.usf-radar-legend {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    font-size: 11px;
+    color: #5F5E5A;
+    margin-top: 4px;
+}
+.usf-legend-swatch {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+    vertical-align: -1px;
+    margin-inline-end: 4px;
+}
+.usf-legend-swatch.body { background: rgba(245,195,32,0.55); border: 1px solid #F5C320; }
+.usf-legend-swatch.garm { background: rgba(29,158,117,0.30); border: 1px dashed #1D9E75; }
+
+/* ── Inline size picker (inside modal) ──────────────────────────────── */
+.usf-size-picker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    margin-bottom: 14px;
+    background: #FFF;
+    border: 1px solid #ECE9E1;
+    border-radius: 10px;
+    flex-wrap: wrap;
+}
+.usf-size-picker-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #412402;
+    margin-inline-end: 4px;
+    white-space: nowrap;
+}
+.usf-size-picker-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    flex: 1;
+}
+.usf-size-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #F8F7F4;
+    border: 2px solid #ECE9E1;
+    border-radius: 9px;
+    padding: 6px 11px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1A1A1A;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color .15s, transform .05s, box-shadow .15s;
+    min-width: 64px;
+    justify-content: center;
+}
+.usf-size-chip:hover {
+    border-color: #F5C320;
+}
+.usf-size-chip:active { transform: scale(0.97); }
+.usf-size-chip.active {
+    background: #FFFDF5;
+    border-color: #F5C320;
+    box-shadow: 0 2px 8px rgba(245, 195, 32, 0.3);
+}
+.usf-size-name {
+    font-weight: 700;
+}
+.usf-size-rec {
+    color: #F5C320;
+    margin-inline-start: 2px;
+    font-size: 11px;
+}
+.usf-size-pct {
+    font-size: 10px;
+    font-weight: 700;
+}
+
+/* ── Inline spinner overlay when changing size ──────────────────────── */
+.usf-modal-body.usf-fading {
+    opacity: 0.55;
+    pointer-events: none;
+}
+.usf-inline-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+.usf-modal-body {
+    position: relative;
+    transition: opacity .15s ease;
+}
+.usf-spinner-sm {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #F1EFE7;
+    border-top-color: #F5C320;
+    border-radius: 50%;
+    animation: usfSpin 0.8s linear infinite;
+}
+
+/* ── Sections ───────────────────────────────────────────────────────── */
+.usf-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #412402;
+    margin: 16px 0 10px;
+    border-bottom: 1px dashed #ECE9E1;
+    padding-bottom: 6px;
+}
+
+/* ── Per-area breakdown ─────────────────────────────────────────────── */
+.usf-areas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+}
+.usf-area {
+    background: #FAFAF7;
+    border-radius: 9px;
+    padding: 10px 12px;
+}
+.usf-area-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.usf-area-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1A1A1A;
+    flex: 1;
+}
+.usf-area-verdict {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+.usf-area-verdict.good    { background:#E1F5EE; color:#085041; }
+.usf-area-verdict.tight   { background:#FCEBEB; color:#791F1F; }
+.usf-area-verdict.loose   { background:#FEF3DC; color:#7A4D08; }
+.usf-area-verdict.unknown { background:#F2F1ED; color:#5F5E5A; }
+.usf-area-diff {
+    font-size: 11px;
+    color: #888;
+    font-weight: 600;
+}
+.usf-area-bar {
+    background: #ECE9E1;
+    border-radius: 3px;
+    height: 5px;
+    overflow: hidden;
+}
+.usf-area-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width .7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.usf-area-bar-fill.good    { background: #1D9E75; }
+.usf-area-bar-fill.tight   { background: #E24B4A; }
+.usf-area-bar-fill.loose   { background: #E89B23; }
+.usf-area-bar-fill.unknown { background: #BDB9B0; }
+.usf-area-meas-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 5px;
+    font-size: 11px;
+    color: #5F5E5A;
+}
+
+/* ── Alternate sizes ────────────────────────────────────────────────── */
+.usf-alts {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.usf-alt-chip {
+    background: #FFF;
+    border: 1px solid #ECE9E1;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    color: #1A1A1A;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color .15s, box-shadow .15s;
+}
+.usf-alt-chip:hover {
+    border-color: #F5C320;
+    box-shadow: 0 2px 6px rgba(245, 195, 32, 0.18);
+}
+.usf-alt-size { font-weight: 700; }
+.usf-alt-pct  { font-size: 11px; font-weight: 700; }
+
+/* ── CTAs ───────────────────────────────────────────────────────────── */
+.usf-cta {
+    margin-top: 18px;
+    text-align: center;
+}
+.usf-btn {
+    border: none;
+    border-radius: 9px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: filter .15s, transform .05s;
+}
+.usf-btn-lg     { padding: 12px 22px; font-size: 14px; }
+.usf-btn-primary {
+    background: #F5C320;
+    color: #412402;
+    box-shadow: 0 3px 10px rgba(245, 195, 32, 0.35);
+}
+.usf-btn-primary:hover { filter: brightness(1.05); color: #412402; text-decoration: none; }
+.usf-btn-primary:active { transform: scale(0.98); }
+.usf-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+.usf-btn-secondary {
+    background: #F5F4F2;
+    color: #5F5E5A;
+}
+
+/* ── Footer links ───────────────────────────────────────────────────── */
+.usf-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px dashed #ECE9E1;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.usf-link {
+    background: none;
+    border: none;
+    color: #0C447C;
+    text-decoration: none;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 0;
+}
+.usf-link:hover { color: #084d80; text-decoration: underline; }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+    .usf-modal { border-radius: 14px 14px 0 0; max-height: 96vh; align-self: flex-end; }
+    .usf-modal-overlay { padding: 0; align-items: flex-end; }
+    .usf-top {
+        grid-template-columns: 1fr 1fr;
+    }
+    .usf-top-radar {
+        grid-column: 1 / span 2;
+    }
+    .usf-areas {
+        grid-template-columns: 1fr;
+    }
+    .usf-check-fit-btn { font-size: 12px; padding: 9px 12px; }
+}

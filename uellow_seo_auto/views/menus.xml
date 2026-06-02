@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-  <menuitem id="menu_seo_root" name="SEO" parent="uellow_multivendor.menu_marketplace_main" sequence="56"/>
-  <menuitem id="menu_seo_products" name="Product SEO" parent="menu_seo_root" action="action_seo_products" sequence="1"/>
-  <menuitem id="menu_seo_config" name="SEO Settings" parent="menu_seo_root" action="action_seo_config" sequence="2"/>
+    <menuitem id="menu_seo_root"
+              name="SEO"
+              parent="uellow_multivendor.menu_marketplace_main"
+              sequence="56"
+              groups="uellow_seo_auto.group_seo_manager,base.group_system"/>
+
+    <menuitem id="menu_seo_products"
+              name="Product SEO"
+              parent="menu_seo_root"
+              action="action_seo_products"
+              sequence="1"/>
+
+    <menuitem id="menu_seo_bulk"
+              name="Bulk Generate"
+              parent="menu_seo_root"
+              action="action_seo_generate_wizard"
+              sequence="2"/>
+
+    <menuitem id="menu_seo_redirects"
+              name="Redirects"
+              parent="menu_seo_root"
+              action="action_seo_redirects"
+              sequence="3"/>
+
+    <menuitem id="menu_seo_config"
+              name="SEO Settings"
+              parent="menu_seo_root"
+              action="action_seo_config"
+              sequence="9"/>
 </odoo>

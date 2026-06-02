@@ -6,7 +6,7 @@
         <field name="name">reviewer.profile.list</field>
         <field name="model">reviewer.profile</field>
         <field name="arch" type="xml">
-            <list string="الريفيورز" default_order="rating desc">
+            <list string="Reviewers" default_order="rating desc">
                 <field name="display_name"/>
                 <field name="state" widget="badge"
                        decoration-success="state == 'approved'"
@@ -83,7 +83,7 @@
                         <field name="complaint_count" readonly="1"/>
                     </group>
                     <notebook>
-                        <page string="الطلبات">
+                        <page string="Requests">
                             <field name="request_ids" readonly="1">
                                 <list>
                                     <field name="token"/>
@@ -131,7 +131,7 @@
         <field name="name">reviewer.commission.list</field>
         <field name="model">reviewer.commission</field>
         <field name="arch" type="xml">
-            <list string="العمولات">
+            <list string="Commissions">
                 <field name="reviewer_id"/>
                 <field name="period_start"/>
                 <field name="period_end"/>
@@ -152,21 +152,21 @@
         <field name="name">reviewer.settings.form</field>
         <field name="model">reviewer.settings</field>
         <field name="arch" type="xml">
-            <form string="إعدادات الريفيورز">
+            <form string="Reviewer Settings">
                 <header>
                     <button string="حفظ" type="object" name="execute" class="btn-primary"/>
                     <button string="إلغاء" type="object" name="cancel" class="btn-secondary"/>
                 </header>
                 <sheet>
                     <div class="o_setting_container">
-                        <h2>إعدادات نظام الريفيورز</h2>
+                        <h2>Reviewer System Settings</h2>
 
                         <div class="o_setting_box">
                             <div class="o_setting_left_pane">
                                 <field name="enabled" widget="boolean_toggle"/>
                             </div>
                             <div class="o_setting_right_pane">
-                                <label for="enabled" string="تفعيل نظام الريفيورز"/>
+                                <label for="enabled" string="Enable Reviewer System"/>
                             </div>
                         </div>
 
@@ -195,7 +195,7 @@
                             <field name="chat_duration_minutes"/>
                         </group>
 
-                        <h3 class="mt16">العمولات</h3>
+                        <h3 class="mt16">Commissions</h3>
                         <group>
                             <field name="commission_written"/>
                             <field name="commission_chat"/>
@@ -208,7 +208,7 @@
                         <h3 class="mt16">الحماية والموافقة</h3>
                         <div class="o_setting_box">
                             <div class="o_setting_left_pane"><field name="require_approval" widget="boolean_toggle"/></div>
-                            <div class="o_setting_right_pane"><label for="require_approval" string="موافقة يدوية على الريفيورز الجدد"/></div>
+                            <div class="o_setting_right_pane"><label for="require_approval" string="Manual approval for new reviewers"/></div>
                         </div>
                         <div class="o_setting_box">
                             <div class="o_setting_left_pane"><field name="require_verified_purchase" widget="boolean_toggle"/></div>
@@ -229,7 +229,7 @@
 
     <!-- ── Actions ── -->
     <record id="action_reviewer_profiles" model="ir.actions.act_window">
-        <field name="name">الريفيورز</field>
+        <field name="name">Reviewers</field>
         <field name="res_model">reviewer.profile</field>
         <field name="view_mode">list,form</field>
     </record>
@@ -241,13 +241,13 @@
     </record>
 
     <record id="action_reviewer_commissions" model="ir.actions.act_window">
-        <field name="name">العمولات</field>
+        <field name="name">Commissions</field>
         <field name="res_model">reviewer.commission</field>
         <field name="view_mode">list,form</field>
     </record>
 
     <record id="action_reviewer_settings" model="ir.actions.act_window">
-        <field name="name">الإعدادات</field>
+        <field name="name">Reviewer Settings</field>
         <field name="res_model">reviewer.settings</field>
         <field name="view_mode">form</field>
         <field name="target">inline</field>
@@ -255,30 +255,31 @@
 
     <!-- ── Menu ── -->
     <menuitem id="menu_reviewers_root"
-              name="👥 Reviewers"
-              sequence="91"
+              name="Reviewers"
+              parent="uellow_ai_engine.menu_ai_root"
+              sequence="40"
               groups="base.group_system"/>
 
     <menuitem id="menu_reviewers_list"
-              name="الريفيورز"
+              name="Reviewers"
               parent="menu_reviewers_root"
               action="action_reviewer_profiles"
               sequence="10"/>
 
     <menuitem id="menu_review_requests"
-              name="الطلبات"
+              name="Review Requests"
               parent="menu_reviewers_root"
               action="action_review_requests"
               sequence="20"/>
 
     <menuitem id="menu_reviewer_commissions"
-              name="العمولات"
+              name="Commissions"
               parent="menu_reviewers_root"
               action="action_reviewer_commissions"
               sequence="30"/>
 
     <menuitem id="menu_reviewer_settings"
-              name="الإعدادات"
+              name="Reviewer Settings"
               parent="menu_reviewers_root"
               action="action_reviewer_settings"
               sequence="40"/>

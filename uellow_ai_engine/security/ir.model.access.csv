@@ -4,3 +4,15 @@ access_ai_chat_session_user,ai.chat.session user,model_ai_chat_session,base.grou
 access_ai_message_log_user,ai.message.log user,model_ai_message_log,base.group_user,1,1,1,0
 access_ai_message_log_admin,ai.message.log admin,model_ai_message_log,base.group_system,1,1,1,1
 access_ai_config_settings_admin,ai.config.settings admin,model_ai_config_settings,base.group_system,1,1,1,1
+access_beena_conversation_public,beena.conversation public,model_beena_conversation,,1,1,1,0
+access_beena_conversation_user,beena.conversation user,model_beena_conversation,base.group_user,1,1,1,0
+access_beena_conversation_admin,beena.conversation admin,model_beena_conversation,base.group_system,1,1,1,1
+access_beena_message_public,beena.message public,model_beena_message,,1,1,1,0
+access_beena_message_user,beena.message user,model_beena_message,base.group_user,1,1,1,0
+access_beena_message_admin,beena.message admin,model_beena_message,base.group_system,1,1,1,1
+access_beena_dashboard_admin,beena.dashboard admin,model_beena_dashboard,base.group_system,1,1,1,1
+access_beena_qa_cache_public,beena.qa.cache public,model_beena_qa_cache,base.group_public,1,0,1,0
+access_beena_qa_cache_admin,beena.qa.cache admin,model_beena_qa_cache,base.group_system,1,1,1,1
+access_beena_voice_usage_admin,beena.voice.usage admin,model_beena_voice_usage,base.group_system,1,1,1,1
+access_beena_voice_usage_user,beena.voice.usage user,model_beena_voice_usage,base.group_user,1,1,1,0
+access_beena_voice_usage_public,beena.voice.usage public,model_beena_voice_usage,base.group_public,0,1,1,0

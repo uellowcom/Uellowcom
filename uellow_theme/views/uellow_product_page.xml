@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Uellow Product Page additions
+        ──────────────────────────────────────────────────────────────────
+        Small, targeted XML tweaks that pair with uellow_product_page.scss:
+
+          • Savings badge next to the price (only when there's a discount).
+          • Trust strip below the CTA row (delivery / returns / secure pay).
+          • Optional delivery estimate line driven by company / settings.
+          • Sticky mobile CTA bar handled by the bottom mobnav already, so
+            theme_prime's redundant sticky strip is hidden via SCSS.
+    -->
+
+    <template id="uellow_product_savings_badge"
+              inherit_id="website_sale.product_price"
+              name="Uellow: Savings Badge"
+              priority="20">
+        <!-- Insert the badge AFTER the strike-through "default price" so it
+             reads:  base ̶3̶0̶ KD   24 KD  [-20%] -->
+        <xpath expr="//span[contains(@t-attf-class, 'oe_default_price')]" position="after">
+            <t t-set="_uc_base"   t-value="template_price_vals and template_price_vals.get('base_price', 0) or 0"/>
+            <t t-set="_uc_redu"   t-value="template_price_vals and template_price_vals.get('price_reduce', 0) or 0"/>
+            <t t-set="_uc_has_d"  t-value="_uc_base and _uc_redu and _uc_base &gt; _uc_redu"/>
+            <span t-if="_uc_has_d" class="uc-pp-savings">
+                <i class="fa fa-tag"/>
+                -<t t-out="int(round((_uc_base - _uc_redu) / _uc_base * 100))"/>%
+            </span>
+        </xpath>
+    </template>
+
+    <template id="uellow_product_trust_strip"
+              inherit_id="uellow_theme.product"
+              name="Uellow: Trust Strip"
+              priority="30">
+        <!-- The Uellow theme's product template puts the CTA wrapper inside
+             the right-hand info column. We append the trust strip right
+             after it so it sits below the buttons. -->
+        <xpath expr="//div[@id='o_wsale_cta_wrapper']" position="after">
+            <div class="uc-pp-trust" data-name="Uellow Trust Strip">
+                <div class="uc-pp-trust-item">
+                    <i class="fa fa-truck"/>
+                    <div class="uc-pp-trust-body">
+                        <strong t-out="website._uc_t('Free delivery')"/>
+                        <small t-out="website._uc_t('On qualifying orders')"/>
+                    </div>
+                </div>
+                <div class="uc-pp-trust-item">
+                    <i class="fa fa-undo"/>
+                    <div class="uc-pp-trust-body">
+                        <strong t-out="website._uc_t('Easy returns')"/>
+                        <small t-out="website._uc_t('14-day hassle-free returns')"/>
+                    </div>
+                </div>
+                <div class="uc-pp-trust-item">
+                    <i class="fa fa-shield"/>
+                    <div class="uc-pp-trust-body">
+                        <strong t-out="website._uc_t('Secure payment')"/>
+                        <small t-out="website._uc_t('SSL encrypted checkout')"/>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

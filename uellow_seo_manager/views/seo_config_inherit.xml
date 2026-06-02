@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Extend uellow_seo_auto's config form with the new SEO Manager
+       settings: AI body + blog generator + GSC + auto-on-create. -->
+  <record id="view_seo_config_form_inherit_manager" model="ir.ui.view">
+    <field name="name">uellow.seo.config.form.manager</field>
+    <field name="model">uellow.seo.config</field>
+    <field name="inherit_id" ref="uellow_seo_auto.view_seo_config_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//notebook" position="inside">
+        <!-- ═══ AI generator settings ═══ -->
+        <page string="AI Generator" name="seo_mgr_ai">
+          <group string="Workflow">
+            <field name="ai_auto_on_create"/>
+            <field name="ai_use_vision"/>
+            <field name="ai_write_body"/>
+            <field name="ai_overwrite_existing_body"/>
+            <field name="ai_embed_images"/>
+          </group>
+          <group string="Voice + Market">
+            <field name="ai_country_focus"/>
+            <field name="ai_brand_voice" placeholder="Friendly, helpful, modern…"/>
+          </group>
+          <group string="Cost optimization (turn these ON to save ~70%)">
+            <field name="ai_model"/>
+            <field name="ai_model_blog"/>
+            <field name="ai_use_prompt_cache"/>
+            <field name="ai_skip_vision_in_bulk"/>
+          </group>
+          <group string="Stats" col="4">
+            <field name="ai_call_count" readonly="1"/>
+            <field name="ai_last_call_at" readonly="1"/>
+          </group>
+        </page>
+
+        <!-- ═══ Blog generator settings ═══ -->
+        <page string="Blog Generator" name="seo_mgr_blog">
+          <group string="Defaults">
+            <field name="blog_target_lang"/>
+            <field name="blog_length"/>
+            <field name="blog_recommend_count"/>
+            <field name="blog_topics_per_run"/>
+            <field name="blog_show_related_grid"/>
+          </group>
+          <group string="Publishing">
+            <field name="blog_auto_publish"/>
+            <field name="blog_auto_schedule_enable"/>
+            <field name="blog_auto_schedule_count"
+                   invisible="not blog_auto_schedule_enable"/>
+            <field name="blog_author_name"/>
+          </group>
+        </page>
+
+        <!-- ═══ Google Search Console ═══ -->
+        <page string="Search Console (GSC)" name="seo_mgr_gsc">
+          <group>
+            <field name="gsc_property_url"
+                   placeholder="https://uellow.com/"/>
+            <field name="gsc_service_account_json"
+                   widget="text" password="True"
+                   placeholder="Paste service-account JSON key file here…"/>
+            <field name="gsc_last_sync_at" readonly="1"/>
+            <field name="gsc_last_sync_rows" readonly="1"/>
+          </group>
+          <p style="font-size:12px;color:#666;margin-top:10px">
+            Service-account email must be added as a USER on the GSC property.
+            Daily cron pulls last 7 days into <code>uellow.seo.gsc.row</code>.
+          </p>
+        </page>
+      </xpath>
+    </field>
+  </record>
+</odoo>

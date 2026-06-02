@@ -10,6 +10,14 @@ class VendorSettings(models.Model):
     _description = 'Vendor Settings'
     _rec_name = 'vendor_id'
 
+    # ── Style / Branding colors (empty = fallback to brand_color, then module default) ──
+    flash_bg_color = fields.Char('Flash Sale Background', help='Hex. Empty = brand color')
+    flash_accent_color = fields.Char('Flash Sale Accent', help='Hex for timer/badges. Empty = #ffd60a')
+    section_title_color = fields.Char('Section Titles Color', help='Hex. Empty = brand color')
+    price_color = fields.Char('Price Color', help='Hex. Empty = #1A7A6E')
+    badge_color = fields.Char('Discount Badge Color', help='Hex. Empty = #c0392b')
+    header_text_color = fields.Char('Header Text Color', help='Hex. Empty = white')
+
     vendor_id = fields.Many2one(
         'uellow.vendor', required=True, ondelete='cascade', index=True,
     )
@@ -104,3 +112,16 @@ class VendorSettings(models.Model):
     notify_new_review = fields.Boolean('Notify on New Review', default=True)
     notify_subscription_expiry = fields.Boolean('Notify on Subscription Expiry', default=True)
     notify_dispute = fields.Boolean('Notify on Dispute', default=True)
+
+    def get_style(self):
+        """Resolve final colors: setting -> vendor.brand_color -> module default."""
+        self.ensure_one()
+        brand = self.vendor_id.brand_color or '#c0392b'
+        return {
+            'flash_bg': self.flash_bg_color or brand,
+            'flash_accent': self.flash_accent_color or '#ffd60a',
+            'section_title': self.section_title_color or brand,
+            'price': self.price_color or '#1A7A6E',
+            'badge': self.badge_color or '#c0392b',
+            'header_text': self.header_text_color or '#ffffff',
+        }

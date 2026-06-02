@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+  <!-- Aggressive scrapers / SEO tools — short leash -->
+  <record id="bot_ahrefs" model="uellow.perf.bot.class">
+    <field name="name">AhrefsBot</field>
+    <field name="ua_pattern">AhrefsBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">2000</field>
+    <field name="daily_bytes_budget_mb">200</field>
+  </record>
+  <record id="bot_semrush" model="uellow.perf.bot.class">
+    <field name="name">SemrushBot</field>
+    <field name="ua_pattern">SemrushBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">2000</field>
+    <field name="daily_bytes_budget_mb">200</field>
+  </record>
+  <record id="bot_mj12" model="uellow.perf.bot.class">
+    <field name="name">MJ12bot</field>
+    <field name="ua_pattern">MJ12bot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">1000</field>
+    <field name="daily_bytes_budget_mb">100</field>
+  </record>
+  <record id="bot_petalbot" model="uellow.perf.bot.class">
+    <field name="name">PetalBot</field>
+    <field name="ua_pattern">PetalBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">1000</field>
+    <field name="daily_bytes_budget_mb">100</field>
+  </record>
+  <record id="bot_yandex" model="uellow.perf.bot.class">
+    <field name="name">YandexBot</field>
+    <field name="ua_pattern">YandexBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">3000</field>
+    <field name="daily_bytes_budget_mb">300</field>
+  </record>
+  <record id="bot_dotbot" model="uellow.perf.bot.class">
+    <field name="name">DotBot (Moz)</field>
+    <field name="ua_pattern">DotBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">1000</field>
+    <field name="daily_bytes_budget_mb">100</field>
+  </record>
+  <record id="bot_seekport" model="uellow.perf.bot.class">
+    <field name="name">SeekportBot</field>
+    <field name="ua_pattern">SeekportBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">500</field>
+    <field name="daily_bytes_budget_mb">50</field>
+  </record>
+
+  <!-- AI scrapers — very short leash (you usually don't need them) -->
+  <record id="bot_gpt" model="uellow.perf.bot.class">
+    <field name="name">GPTBot (OpenAI)</field>
+    <field name="ua_pattern">GPTBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">1000</field>
+    <field name="daily_bytes_budget_mb">100</field>
+  </record>
+  <record id="bot_claude" model="uellow.perf.bot.class">
+    <field name="name">ClaudeBot (Anthropic)</field>
+    <field name="ua_pattern">ClaudeBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">1000</field>
+    <field name="daily_bytes_budget_mb">100</field>
+  </record>
+  <record id="bot_ccbot" model="uellow.perf.bot.class">
+    <field name="name">CCBot (Common Crawl)</field>
+    <field name="ua_pattern">CCBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">500</field>
+    <field name="daily_bytes_budget_mb">50</field>
+  </record>
+  <record id="bot_perplexity" model="uellow.perf.bot.class">
+    <field name="name">PerplexityBot</field>
+    <field name="ua_pattern">PerplexityBot</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">500</field>
+    <field name="daily_bytes_budget_mb">50</field>
+  </record>
+  <record id="bot_bytespider" model="uellow.perf.bot.class">
+    <field name="name">Bytespider (ByteDance)</field>
+    <field name="ua_pattern">Bytespider</field>
+    <field name="sequence">10</field>
+    <field name="daily_req_budget">500</field>
+    <field name="daily_bytes_budget_mb">50</field>
+  </record>
+
+  <!-- Major search engines — generous budget, sequence 20 (matched last) -->
+  <record id="bot_google" model="uellow.perf.bot.class">
+    <field name="name">Googlebot</field>
+    <field name="ua_pattern">Googlebot</field>
+    <field name="sequence">20</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">50000</field>
+    <field name="daily_bytes_budget_mb">5000</field>
+  </record>
+  <record id="bot_bing" model="uellow.perf.bot.class">
+    <field name="name">Bingbot</field>
+    <field name="ua_pattern">bingbot</field>
+    <field name="sequence">20</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">20000</field>
+    <field name="daily_bytes_budget_mb">2000</field>
+  </record>
+  <record id="bot_apple" model="uellow.perf.bot.class">
+    <field name="name">Applebot</field>
+    <field name="ua_pattern">Applebot</field>
+    <field name="sequence">20</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">10000</field>
+    <field name="daily_bytes_budget_mb">1000</field>
+  </record>
+  <record id="bot_duck" model="uellow.perf.bot.class">
+    <field name="name">DuckDuckBot</field>
+    <field name="ua_pattern">DuckDuckBot</field>
+    <field name="sequence">20</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">5000</field>
+    <field name="daily_bytes_budget_mb">500</field>
+  </record>
+
+  <!-- Catch-all crawler — anything containing "bot" / "spider" / "crawler"
+       that doesn't match the above. Last in sequence. -->
+  <record id="bot_generic_bot" model="uellow.perf.bot.class">
+    <field name="name">Generic bot</field>
+    <field name="ua_pattern">bot</field>
+    <field name="sequence">90</field>
+    <field name="daily_req_budget">500</field>
+    <field name="daily_bytes_budget_mb">50</field>
+  </record>
+  <record id="bot_generic_spider" model="uellow.perf.bot.class">
+    <field name="name">Generic spider</field>
+    <field name="ua_pattern">spider</field>
+    <field name="sequence">91</field>
+    <field name="daily_req_budget">500</field>
+    <field name="daily_bytes_budget_mb">50</field>
+  </record>
+  <record id="bot_generic_crawler" model="uellow.perf.bot.class">
+    <field name="name">Generic crawler</field>
+    <field name="ua_pattern">crawler</field>
+    <field name="sequence">92</field>
+    <field name="daily_req_budget">500</field>
+    <field name="daily_bytes_budget_mb">50</field>
+  </record>
+</odoo>

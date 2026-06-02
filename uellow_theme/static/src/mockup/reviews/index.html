@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uellow — Reviews Block Mockups</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Tajawal:wght@400;500;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+    *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+        font-family: 'Inter','Tajawal',-apple-system,BlinkMacSystemFont,sans-serif;
+        background: linear-gradient(135deg, #fafafa, #fff5d0 50%, #fef3c7);
+        min-height: 100vh;
+        padding: 40px 20px;
+        color: #1a1208;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1 {
+        font-size: 36px; font-weight: 900;
+        background: linear-gradient(135deg, #412402, #d97706);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+    .subtitle {
+        text-align: center;
+        font-size: 15px; color: #6a5a40;
+        margin-bottom: 40px;
+        max-width: 640px;
+        margin-inline: auto;
+        line-height: 1.5;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 20px;
+    }
+    .card {
+        background: #fff;
+        border-radius: 18px;
+        padding: 24px;
+        border: 1px solid rgba(65,36,2,.10);
+        box-shadow: 0 4px 16px -8px rgba(65,36,2,.18);
+        transition: transform .2s ease, box-shadow .25s ease;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        position: relative;
+        overflow: hidden;
+    }
+    .card::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 6px;
+        background: var(--accent);
+    }
+    .card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 32px -12px rgba(65,36,2,.28);
+        border-color: rgba(245,195,32,.55);
+    }
+    .preview {
+        height: 140px;
+        border-radius: 12px;
+        background: var(--bg);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--preview-fg);
+        font-weight: 900;
+        font-size: 36px;
+        letter-spacing: -1px;
+    }
+    .label {
+        font-size: 10px; font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .8px;
+        color: var(--accent-text);
+        display: inline-block;
+        padding: 3px 8px;
+        background: var(--accent-tint);
+        border-radius: 5px;
+        width: fit-content;
+    }
+    .name { font-size: 18px; font-weight: 800; color: #1a1208; }
+    .desc { font-size: 13px; color: #6a5a40; line-height: 1.5; flex: 1; }
+    .cta {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 10px 16px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #ffd84a, #F5C320);
+        color: #412402;
+        font-weight: 800;
+        font-size: 13px;
+        text-decoration: none;
+        width: fit-content;
+        transition: transform .1s ease;
+    }
+    .cta:hover { transform: translateX(3px); }
+    .v1 { --accent: linear-gradient(90deg, #F5C320, #ef4444); --accent-text: #b91c1c; --accent-tint: rgba(239,68,68,.12); --bg: linear-gradient(135deg, #fef3c7, #fee2e2); --preview-fg: #b91c1c; }
+    .v2 { --accent: linear-gradient(90deg, #F5C320, #412402); --accent-text: #412402; --accent-tint: rgba(245,195,32,.18); --bg: linear-gradient(135deg, #1a1208, #412402); --preview-fg: #ffd84a; }
+    .v3 { --accent: linear-gradient(90deg, #34d399, #047857); --accent-text: #047857; --accent-tint: rgba(16,185,129,.14); --bg: linear-gradient(135deg, #d1fae5, #a7f3d0); --preview-fg: #047857; }
+    .v4 { --accent: linear-gradient(90deg, #c084fc, #f472b6); --accent-text: #9333ea; --accent-tint: rgba(192,132,252,.16); --bg: linear-gradient(135deg, #e9d5ff, #fbcfe8, #fed7aa); --preview-fg: rgba(255,255,255,.95); }
+
+    .compare-note {
+        margin-top: 36px;
+        padding: 18px 24px;
+        background: rgba(255,255,255,.7);
+        border: 1px dashed rgba(65,36,2,.18);
+        border-radius: 14px;
+        font-size: 13.5px;
+        color: #5a4a36;
+        text-align: center;
+        line-height: 1.55;
+    }
+    .compare-note strong { color: #412402; }
+</style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Reviews Block — Mockup Gallery</h1>
+    <p class="subtitle">Four professional design variants. Click any card to open the full interactive mockup in a new tab. Pick the one you like and tell me the number — I will ship it.</p>
+
+    <div class="grid">
+        <a href="variant-1-marketplace.html" class="card v1" target="_blank">
+            <div class="preview">★ 4.7</div>
+            <span class="label">Variant 1</span>
+            <div class="name">Marketplace Vibrant</div>
+            <div class="desc">Multi-color rating bars, colored avatars per star, lots of badges. Energetic e-commerce feel — Banggood / Noon style. Yellow + red + green + blue.</div>
+            <span class="cta">Open mockup →</span>
+        </a>
+
+        <a href="variant-2-premium.html" class="card v2" target="_blank">
+            <div class="preview">★ 4.7</div>
+            <span class="label">Variant 2</span>
+            <div class="name">Premium Black &amp; Gold</div>
+            <div class="desc">Dark luxe theme. Black cards with gold accents. Apple-grade typography. Best for premium positioning. Minimal but rich.</div>
+            <span class="cta">Open mockup →</span>
+        </a>
+
+        <a href="variant-3-trustpilot.html" class="card v3" target="_blank">
+            <div class="preview">★ 4.7</div>
+            <span class="label">Variant 3</span>
+            <div class="name">Trustpilot Green</div>
+            <div class="desc">Trust-first design. Big green score, simple cards, focus on verification and authenticity. Very credible feel.</div>
+            <span class="cta">Open mockup →</span>
+        </a>
+
+        <a href="variant-4-glass.html" class="card v4" target="_blank">
+            <div class="preview">★ 4.7</div>
+            <span class="label">Variant 4</span>
+            <div class="name">Glass &amp; Aurora</div>
+            <div class="desc">Modern glassmorphism. Frosted cards over aurora gradient background. Purple + pink + amber. Trendy SaaS look.</div>
+            <span class="cta">Open mockup →</span>
+        </a>
+    </div>
+
+    <div class="compare-note">
+        Each mockup uses the <strong>same sample data</strong> so you can fairly compare the visual approach.<br>
+        After you pick, I will rebuild the live block in your theme with the chosen design.<br>
+        <em>Tip: open two tabs side-by-side to compare.</em>
+    </div>
+</div>
+</body>
+</html>

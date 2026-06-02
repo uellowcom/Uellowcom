@@ -4,8 +4,10 @@
   <!-- Root menu — standalone application -->
   <menuitem id="menu_sc_root"
             name="Smart Connector"
-            sequence="60"
-            web_icon="uellow_smart_connector,static/description/icon.png"/>
+            sequence="60"/>
+  <!-- web_icon removed — file static/description/icon.png does not exist.
+       Re-add once the icon ships. -->
+
 
   <!-- Dashboard -->
   <menuitem id="menu_sc_dashboard"

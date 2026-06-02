@@ -1,10 +1,46 @@
 from odoo import models, fields, api, _
 
+# Centralised list of (field, ICP key, default, type) tuples — single source
+# of truth so default_get / get_settings / action_save can't drift.
+_PARAMS = [
+    # field name              ICP key                          default                                  type
+    ('anthropic_api_key',     'uellow.sc.anthropic_key',       '',                                       str),
+    ('default_warranty_text', 'uellow.sc.warranty',            'ضمان Uellow سنة كاملة — توصيل خلال 24 ساعة', str),
+    ('default_price_variance','uellow.sc.price_variance',      20.0,                                     float),
+    ('enable_ai_default',     'uellow.sc.enable_ai_default',   True,                                     bool),
+    ('max_products_default',  'uellow.sc.max_products_default',500,                                      int),
+    ('price_check_enabled',   'uellow.sc.price_check',         True,                                     bool),
+    ('price_check_sources',   'uellow.sc.price_sources',       '',                                       str),
+    ('dead_stock_days',       'uellow.sc.dead_stock_days',     30,                                       int),
+    ('dead_stock_alert_email','uellow.sc.dead_stock_email',    True,                                     bool),
+]
+
+
+def _coerce(val, typ, default):
+    """Parse an ICP string into the target python type, falling back to default."""
+    if val in (None, ''):
+        return default
+    try:
+        if typ is bool:
+            return str(val).strip().lower() in ('1', 'true', 'yes', 'on')
+        if typ is int:
+            return int(val)
+        if typ is float:
+            return float(val)
+        return str(val)
+    except (TypeError, ValueError):
+        return default
+
 
 class ConnectorSettings(models.TransientModel):
     """
     Global Smart Connector settings stored via ir.config_parameter.
-    Accessed via res.config.settings extension.
+
+    Bugfix history:
+      - A11: `default_get` ignored 4 fields and `action_save` ignored the
+        same 4; they're now driven from `_PARAMS` so adding a setting needs
+        one line, not three.
+      - D11: form wouldn't close after save; we now return an action_close.
     """
     _name = 'uellow.connector.settings'
     _description = 'إعدادات Smart Connector'
@@ -33,39 +69,38 @@ class ConnectorSettings(models.TransientModel):
         """Pre-fill form with current saved values."""
         res = super().default_get(fields_list)
         ICPSudo = self.env['ir.config_parameter'].sudo()
-        res['anthropic_api_key'] = ICPSudo.get_param('uellow.sc.anthropic_key', '')
-        res['default_warranty_text'] = ICPSudo.get_param(
-            'uellow.sc.warranty',
-            'ضمان Uellow سنة كاملة — توصيل خلال 24 ساعة')
-        res['default_price_variance'] = float(
-            ICPSudo.get_param('uellow.sc.price_variance', '20'))
-        res['price_check_enabled'] = (
-            ICPSudo.get_param('uellow.sc.price_check', 'True') == 'True')
-        res['dead_stock_days'] = int(
-            ICPSudo.get_param('uellow.sc.dead_stock_days', '30'))
+        for field_name, key, default, typ in _PARAMS:
+            res[field_name] = _coerce(ICPSudo.get_param(key), typ, default)
         return res
 
     @api.model
     def get_settings(self):
-        """Return settings dict from ir.config_parameter."""
+        """Return current settings as a plain dict (used by other models)."""
         ICPSudo = self.env['ir.config_parameter'].sudo()
         return {
-            'anthropic_api_key': ICPSudo.get_param('uellow.sc.anthropic_key', ''),
-            'default_warranty': ICPSudo.get_param(
-                'uellow.sc.warranty',
-                'ضمان Uellow سنة كاملة — توصيل خلال 24 ساعة',
-            ),
-            'price_variance': float(ICPSudo.get_param('uellow.sc.price_variance', '20')),
-            'price_check_enabled': ICPSudo.get_param('uellow.sc.price_check', 'True') == 'True',
-            'dead_stock_days': int(ICPSudo.get_param('uellow.sc.dead_stock_days', '30')),
+            field_name: _coerce(ICPSudo.get_param(key), typ, default)
+            for field_name, key, default, typ in _PARAMS
         }
 
     def action_save(self):
+        """Persist every setting to ir_config_parameter and close the dialog."""
         ICPSudo = self.env['ir.config_parameter'].sudo()
-        ICPSudo.set_param('uellow.sc.anthropic_key', self.anthropic_api_key or '')
-        ICPSudo.set_param('uellow.sc.warranty', self.default_warranty_text or '')
-        ICPSudo.set_param('uellow.sc.price_variance', str(self.default_price_variance))
-        ICPSudo.set_param('uellow.sc.price_check', str(self.price_check_enabled))
-        ICPSudo.set_param('uellow.sc.dead_stock_days', str(self.dead_stock_days))
-        return {'type': 'ir.actions.client', 'tag': 'display_notification',
-                'params': {'message': _('تم الحفظ'), 'type': 'success'}}
+        for field_name, key, _default, typ in _PARAMS:
+            val = getattr(self, field_name, None)
+            if typ is bool:
+                ICPSudo.set_param(key, '1' if val else '0')
+            elif val is False or val is None:
+                ICPSudo.set_param(key, '')
+            else:
+                ICPSudo.set_param(key, str(val))
+        # Notify + close — D11 fix.
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('تم الحفظ'),
+                'message': _('تم حفظ إعدادات Smart Connector.'),
+                'type': 'success',
+                'next': {'type': 'ir.actions.act_window_close'},
+            },
+        }

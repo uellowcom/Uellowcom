@@ -1,0 +1,579 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================== -->
+    <!--  Shared polished icon-card used across all Uellow portal entries.  -->
+    <!--  Inputs: icon (fa class), color_fg, color_bg, title, text, url,     -->
+    <!--          badge_text (optional).                                     -->
+    <!-- ================================================================== -->
+    <template id="uellow_portal_icon_card" name="Uellow Portal Icon Card">
+        <div class="col-md-6 col-lg-4 mb-3">
+            <a t-att-href="url" class="uellow-portal-card">
+                <div class="uellow-portal-card-icon" t-attf-style="background:#{color_bg};color:#{color_fg}">
+                    <i t-attf-class="fa fa-#{icon}"/>
+                </div>
+                <div class="uellow-portal-card-body">
+                    <div class="uellow-portal-card-title">
+                        <span t-out="title"/>
+                        <span t-if="badge_text" class="uellow-portal-card-badge"
+                              t-attf-style="background:#{color_bg};color:#{color_fg}"
+                              t-out="badge_text"/>
+                    </div>
+                    <div class="uellow-portal-card-text" t-out="text"/>
+                </div>
+                <div class="uellow-portal-card-arrow">
+                    <i class="fa fa-angle-left"/>
+                </div>
+            </a>
+        </div>
+    </template>
+
+    <!-- ================================================================== -->
+    <!--  Extend the standard portal home with new Uellow cards.             -->
+    <!-- ================================================================== -->
+    <template id="portal_my_home_uellow"
+              name="Portal — Uellow cards"
+              inherit_id="portal.portal_my_home"
+              priority="35">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <div class="o_portal_category row g-2 mt-3" id="portal_uellow_category">
+                <div class="col-12">
+                    <h4 class="uellow-portal-section-title">
+                        <i class="fa fa-magic"/> Smart Services
+                    </h4>
+                </div>
+
+                <t t-call="uellow_smart_fit.uellow_portal_icon_card">
+                    <t t-set="icon"     t-value="'comments'"/>
+                    <t t-set="color_fg" t-value="'#0C447C'"/>
+                    <t t-set="color_bg" t-value="'#E6F1FB'"/>
+                    <t t-set="title"    t-value="'Chat History'"/>
+                    <t t-set="text"     t-value="'Your previous conversations with Beena'"/>
+                    <t t-set="url"      t-value="'/my/chat-history'"/>
+                </t>
+
+                <t t-call="uellow_smart_fit.uellow_portal_icon_card">
+                    <t t-set="icon"     t-value="'arrows-v'"/>
+                    <t t-set="color_fg" t-value="'#27500A'"/>
+                    <t t-set="color_bg" t-value="'#EAF3DE'"/>
+                    <t t-set="title"    t-value="'My Measurements'"/>
+                    <t t-set="text"     t-value="'Height, weight, and body measurements for the best size recommendations'"/>
+                    <t t-set="url"      t-value="'/my/measurements'"/>
+                </t>
+
+                <t t-call="uellow_smart_fit.uellow_portal_icon_card">
+                    <t t-set="icon"     t-value="'camera'"/>
+                    <t t-set="color_fg" t-value="'#854F0B'"/>
+                    <t t-set="color_bg" t-value="'#FEFDF0'"/>
+                    <t t-set="title"    t-value="'My Photo'"/>
+                    <t t-set="text"     t-value="'The photo used for virtual try-ons'"/>
+                    <t t-set="url"      t-value="'/my/photos'"/>
+                </t>
+
+                <t t-call="uellow_smart_fit.uellow_portal_icon_card">
+                    <t t-set="icon"     t-value="'magic'"/>
+                    <t t-set="color_fg" t-value="'#A1226E'"/>
+                    <t t-set="color_bg" t-value="'#F8DDEC'"/>
+                    <t t-set="title"    t-value="'My Virtual Try-Ons'"/>
+                    <t t-set="text"     t-value="'Clothes you have tried on virtually'"/>
+                    <t t-set="url"      t-value="'/my/tryon-history'"/>
+                </t>
+
+                <t t-call="uellow_smart_fit.uellow_portal_icon_card">
+                    <t t-set="icon"     t-value="'check-circle'"/>
+                    <t t-set="color_fg" t-value="'#085041'"/>
+                    <t t-set="color_bg" t-value="'#E1F5EE'"/>
+                    <t t-set="title"    t-value="'Fit Check History'"/>
+                    <t t-set="text"     t-value="'Past size compatibility check results'"/>
+                    <t t-set="url"      t-value="'/my/fit-history'"/>
+                </t>
+
+                <t t-call="uellow_smart_fit.uellow_portal_icon_card">
+                    <t t-set="icon"     t-value="'users'"/>
+                    <t t-set="color_fg" t-value="'#3C3489'"/>
+                    <t t-set="color_bg" t-value="'#EEEDFE'"/>
+                    <t t-set="title"    t-value="'Reviewers'"/>
+                    <t t-set="text"     t-value="'Connect with real experts to review products'"/>
+                    <t t-set="url"      t-value="'/reviewer/dashboard'"/>
+                </t>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- ================================================================== -->
+    <!--  /my/measurements                                                  -->
+    <!-- ================================================================== -->
+    <template id="portal_my_measurements" name="My Measurements">
+        <t t-call="portal.portal_layout">
+            <div class="container my-4 uellow-portal-page">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my">My Account</a></li>
+                    <li class="breadcrumb-item active">My Measurements</li>
+                </ol>
+
+                <div class="uellow-portal-hero" style="background:linear-gradient(135deg,#EAF3DE,#FFFFFF)">
+                    <div class="uellow-portal-hero-icon" style="background:#27500A;color:#FFF">
+                        <i class="fa fa-arrows-v"/>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">My Measurements</h3>
+                        <p class="mb-0 text-muted">Save your measurements once and Beena will recommend the best size for every product.</p>
+                    </div>
+                    <div class="ms-auto text-end">
+                        <div class="uellow-portal-progress">
+                            <span class="uellow-portal-progress-num">
+                                <t t-out="profile.completion_pct or 0"/>%</span>
+                            <span class="uellow-portal-progress-label">Profile completion</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div t-if="request.params.get('saved')" class="alert alert-success mt-3">
+                    ✓ Measurements saved successfully
+                </div>
+                <div t-if="request.params.get('error')" class="alert alert-warning mt-3">
+                    ⚠️ Something went wrong while saving. Please check the values and try again.
+                </div>
+
+                <form action="/my/measurements/save" method="POST" class="uellow-portal-form mt-3">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                    <h5 class="uellow-portal-form-section">Basic Information</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Height (cm)</label>
+                            <input type="number" step="0.1" name="height" class="form-control"
+                                   t-att-value="profile.height or ''" placeholder="170"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Weight (kg)</label>
+                            <input type="number" step="0.1" name="weight" class="form-control"
+                                   t-att-value="profile.weight or ''" placeholder="70"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Gender</label>
+                            <select name="gender" class="form-select">
+                                <option value="">—</option>
+                                <option value="male"   t-att-selected="profile.gender == 'male' or None">Male</option>
+                                <option value="female" t-att-selected="profile.gender == 'female' or None">Female</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Age range</label>
+                            <select name="age_range" class="form-select">
+                                <option value="">—</option>
+                                <option value="teen"   t-att-selected="profile.age_range == 'teen' or None">13 – 17</option>
+                                <option value="young"  t-att-selected="profile.age_range == 'young' or None">18 – 30</option>
+                                <option value="adult"  t-att-selected="profile.age_range == 'adult' or None">31 – 50</option>
+                                <option value="senior" t-att-selected="profile.age_range == 'senior' or None">+50</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Body type</label>
+                            <select name="body_type" class="form-select">
+                                <option value="">—</option>
+                                <option value="slim"     t-att-selected="profile.body_type == 'slim' or None">Slim</option>
+                                <option value="regular"  t-att-selected="profile.body_type == 'regular' or None">Regular</option>
+                                <option value="athletic" t-att-selected="profile.body_type == 'athletic' or None">Athletic</option>
+                                <option value="plus"     t-att-selected="profile.body_type == 'plus' or None">Plus size</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Preferred fit</label>
+                            <select name="preferred_fit" class="form-select">
+                                <option value="">—</option>
+                                <option value="slim"    t-att-selected="profile.preferred_fit == 'slim' or None">Slim</option>
+                                <option value="regular" t-att-selected="profile.preferred_fit == 'regular' or None">Regular</option>
+                                <option value="loose"   t-att-selected="profile.preferred_fit == 'loose' or None">Loose</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Display unit</label>
+                            <select name="preferred_unit" class="form-select">
+                                <option value="cm"   t-att-selected="profile.preferred_unit == 'cm' or None">Centimeters (cm)</option>
+                                <option value="inch" t-att-selected="profile.preferred_unit == 'inch' or None">Inches (in)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <h5 class="uellow-portal-form-section mt-4">Upper Body</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Shoulder (cm)</label>
+                            <input type="number" step="0.1" name="shoulder" class="form-control" t-att-value="profile.shoulder or ''"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Chest (cm)</label>
+                            <input type="number" step="0.1" name="chest" class="form-control" t-att-value="profile.chest or ''"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Waist (cm)</label>
+                            <input type="number" step="0.1" name="waist" class="form-control" t-att-value="profile.waist or ''"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Hip (cm)</label>
+                            <input type="number" step="0.1" name="hip" class="form-control" t-att-value="profile.hip or ''"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Arm length (cm)</label>
+                            <input type="number" step="0.1" name="arm_length" class="form-control" t-att-value="profile.arm_length or ''"/>
+                        </div>
+                    </div>
+
+                    <h5 class="uellow-portal-form-section mt-4">Lower Body</h5>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Inseam (cm)</label>
+                            <input type="number" step="0.1" name="inseam" class="form-control" t-att-value="profile.inseam or ''"/>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Thigh (cm)</label>
+                            <input type="number" step="0.1" name="thigh" class="form-control" t-att-value="profile.thigh or ''"/>
+                        </div>
+                    </div>
+
+                    <h5 class="uellow-portal-form-section mt-4">Shoe Size</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">EU</label>
+                            <input type="number" step="0.5" name="shoe_size_eu" class="form-control" t-att-value="profile.shoe_size_eu or ''"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">US</label>
+                            <input type="number" step="0.5" name="shoe_size_us" class="form-control" t-att-value="profile.shoe_size_us or ''"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Foot length (cm)</label>
+                            <input type="number" step="0.1" name="foot_length_cm" class="form-control" t-att-value="profile.foot_length_cm or ''" placeholder="26.5"/>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Foot width</label>
+                            <select name="shoe_width" class="form-select">
+                                <option value="">—</option>
+                                <option value="narrow" t-att-selected="profile.shoe_width == 'narrow' or None">Narrow</option>
+                                <option value="normal" t-att-selected="profile.shoe_width == 'normal' or None">Normal</option>
+                                <option value="wide"   t-att-selected="profile.shoe_width == 'wide' or None">Wide</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn uellow-btn-primary">
+                            <i class="fa fa-save"/> Save measurements
+                        </button>
+                        <a href="/my" class="btn btn-link">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </t>
+    </template>
+
+    <!-- ================================================================== -->
+    <!--  /my/photos                                                        -->
+    <!-- ================================================================== -->
+    <template id="portal_my_photos" name="My Photos">
+        <t t-call="portal.portal_layout">
+            <div class="container my-4 uellow-portal-page">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my">My Account</a></li>
+                    <li class="breadcrumb-item active">My Photo</li>
+                </ol>
+
+                <div class="uellow-portal-hero" style="background:linear-gradient(135deg,#FEFDF0,#FFFFFF)">
+                    <div class="uellow-portal-hero-icon" style="background:#854F0B;color:#FFF">
+                        <i class="fa fa-camera"/>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">My Photo</h3>
+                        <p class="mb-0 text-muted">The photo used for virtual try-ons (Beena uses it inside the chat).</p>
+                    </div>
+                </div>
+
+                <div t-if="request.params.get('saved')" class="alert alert-success mt-3">✓ Photo uploaded successfully</div>
+                <div t-if="request.params.get('deleted')" class="alert alert-warning mt-3">Photo deleted</div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-md-5">
+                        <div class="uellow-portal-photo-box">
+                            <t t-if="photo_url">
+                                <img t-att-src="photo_url" alt="My photo" class="uellow-portal-photo"/>
+                                <div class="uellow-portal-photo-meta">
+                                    <div t-if="profile.tryon_photo_filename" class="small text-muted">
+                                        <i class="fa fa-file-image-o"/>
+                                        <span t-out="profile.tryon_photo_filename"/>
+                                    </div>
+                                    <div t-if="profile.tryon_photo_uploaded" class="small text-muted">
+                                        <i class="fa fa-clock-o"/>
+                                        <span t-out="profile.tryon_photo_uploaded"/>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="uellow-portal-photo-empty">
+                                    <i class="fa fa-camera fa-3x mb-2"/>
+                                    <div>No photo uploaded yet</div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="uellow-portal-form">
+                            <h5 class="uellow-portal-form-section">Upload a new photo</h5>
+                            <form action="/my/photos/upload" method="POST" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <div class="mb-3">
+                                    <input type="file" name="photo" accept="image/*" required="required" class="form-control"/>
+                                    <div class="form-text">JPG / PNG / WEBP — full standing pose with good lighting recommended.</div>
+                                </div>
+                                <button type="submit" class="btn uellow-btn-primary">
+                                    <i class="fa fa-upload"/> Upload
+                                </button>
+                            </form>
+
+                            <hr/>
+                            <form t-if="photo_url" action="/my/photos/delete" method="POST" onsubmit="return confirm('Delete the saved photo?');">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="fa fa-trash"/> Delete photo
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ================================================================== -->
+    <!--  /my/tryon-history                                                 -->
+    <!-- ================================================================== -->
+    <template id="portal_my_tryon_history" name="My Try-On History">
+        <t t-call="portal.portal_layout">
+            <div class="container my-4 uellow-portal-page">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my">My Account</a></li>
+                    <li class="breadcrumb-item active">My Virtual Try-Ons</li>
+                </ol>
+
+                <div class="uellow-portal-hero" style="background:linear-gradient(135deg,#F8DDEC,#FFFFFF)">
+                    <div class="uellow-portal-hero-icon" style="background:#A1226E;color:#FFF">
+                        <i class="fa fa-magic"/>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">My Virtual Try-Ons</h3>
+                        <p class="mb-0 text-muted">All the products you have tried on virtually, with the generated images.</p>
+                    </div>
+                </div>
+
+                <div t-if="not sessions" class="text-center py-5 text-muted">
+                    <i class="fa fa-magic fa-3x mb-3 d-block"/>
+                    <p>No try-ons yet. Open any product and tell Beena "try it on me".</p>
+                </div>
+
+                <div t-else="" class="row g-3 mt-2">
+                    <div t-foreach="sessions" t-as="s" class="col-md-6 col-lg-4">
+                        <div class="uellow-tryon-session-card">
+                            <div class="uellow-tryon-session-head">
+                                <img t-att-src="'/web/image/product.template/%d/image_256' % s.product_id.id"
+                                     class="uellow-tryon-session-product"
+                                     onerror="this.style.display='none'"/>
+                                <div>
+                                    <div class="uellow-tryon-session-name" t-out="s.product_id.name"/>
+                                    <div class="uellow-tryon-session-date">
+                                        <i class="fa fa-clock-o"/>
+                                        <span t-out="s.create_date"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="uellow-tryon-session-images">
+                                <t t-foreach="s.image_ids[:3]" t-as="im">
+                                    <div class="uellow-tryon-session-image">
+                                        <t t-if="im.status == 'done' and im.image">
+                                            <img t-att-src="'/web/image/customer.tryon.image/%d/image' % im.id"
+                                                 onclick="window._uellowLightbox &amp;&amp; window._uellowLightbox(this.src)"/>
+                                        </t>
+                                        <t t-elif="im.status == 'processing'">
+                                            <div class="uellow-tryon-status processing">
+                                                <i class="fa fa-spinner fa-spin"/> Generating
+                                            </div>
+                                        </t>
+                                        <t t-elif="im.status == 'failed'">
+                                            <div class="uellow-tryon-status failed">
+                                                <i class="fa fa-exclamation-triangle"/> Failed
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                            <div class="uellow-tryon-session-foot">
+                                <a t-att-href="'/shop/product/%d' % s.product_id.id" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fa fa-external-link"/> Product page
+                                </a>
+                                <span class="uellow-tryon-session-count">
+                                    <i class="fa fa-image"/>
+                                    <span t-out="s.image_count or 0"/> images
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ================================================================== -->
+    <!--  /my/fit-history (list)                                            -->
+    <!-- ================================================================== -->
+    <template id="portal_my_fit_history" name="My Fit History">
+        <t t-call="portal.portal_layout">
+            <div class="container my-4 uellow-portal-page">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my">My Account</a></li>
+                    <li class="breadcrumb-item active">Fit Check History</li>
+                </ol>
+
+                <div class="uellow-portal-hero" style="background:linear-gradient(135deg,#E1F5EE,#FFFFFF)">
+                    <div class="uellow-portal-hero-icon" style="background:#085041;color:#FFF">
+                        <i class="fa fa-check-circle"/>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">Fit Check History</h3>
+                        <p class="mb-0 text-muted">All the size compatibility checks you've run with Beena — newest first.</p>
+                    </div>
+                </div>
+
+                <div t-if="not history" class="text-center py-5 text-muted">
+                    <i class="fa fa-check-circle fa-3x mb-3 d-block"/>
+                    <p>No checks yet. Open any fashion product and tell Beena "check the size fit".</p>
+                </div>
+
+                <div t-else="" class="uellow-fit-history-list mt-3">
+                    <a t-foreach="history" t-as="h"
+                       t-att-href="'/my/fit-history/%d' % h.id"
+                       class="uellow-fit-history-item">
+                        <img class="uellow-fit-history-product"
+                             t-att-src="h.product_id and ('/web/image/product.template/%d/image_128' % h.product_id.id) or ''"
+                             onerror="this.style.display='none'"/>
+                        <div class="uellow-fit-history-body">
+                            <div class="uellow-fit-history-product-name"
+                                 t-out="(h.product_id and h.product_id.name) or '—'"/>
+                            <div class="uellow-fit-history-meta">
+                                <span class="uellow-fit-history-size">
+                                    <i class="fa fa-tag"/>
+                                    Size <strong t-out="h.size_chosen or '—'"/>
+                                </span>
+                                <span class="uellow-fit-history-date">
+                                    <i class="fa fa-clock-o"/>
+                                    <t t-out="h.create_date"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="uellow-fit-history-pct">
+                            <span t-attf-class="uellow-fit-history-num pct-#{
+                                h.overall_match_pct &gt;= 85 and 'g'
+                                or h.overall_match_pct &gt;= 70 and 'y'
+                                or h.overall_match_pct &gt;= 50 and 'o'
+                                or 'r'}">
+                                <t t-out="h.overall_match_pct or 0"/>%
+                            </span>
+                            <span class="uellow-fit-history-label" t-out="h.fit_result or ''"/>
+                        </div>
+                        <div class="uellow-chat-arrow"><i class="fa fa-angle-left"/></div>
+                    </a>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ================================================================== -->
+    <!--  /my/fit-history/<id> (detail)                                     -->
+    <!-- ================================================================== -->
+    <template id="portal_fit_history_detail" name="Fit History Detail">
+        <t t-call="portal.portal_layout">
+            <div class="container my-4 uellow-portal-page">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my">My Account</a></li>
+                    <li class="breadcrumb-item"><a href="/my/fit-history">Fit Check History</a></li>
+                    <li class="breadcrumb-item active">Check details</li>
+                </ol>
+
+                <div class="uellow-portal-hero" style="background:linear-gradient(135deg,#E1F5EE,#FFFFFF)">
+                    <div class="uellow-portal-hero-icon" style="background:#085041;color:#FFF">
+                        <i class="fa fa-check-circle"/>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1" t-out="(check.product_id and check.product_id.name) or '—'"/>
+                        <div class="text-muted small">
+                            <span><i class="fa fa-tag"/> Size <strong t-out="check.size_chosen or '—'"/></span>
+                            <span class="ms-3"><i class="fa fa-clock-o"/> <t t-out="check.create_date"/></span>
+                            <a t-if="check.product_id" class="ms-3"
+                               t-att-href="'/shop/product/%d' % check.product_id.id">
+                                <i class="fa fa-external-link"/> Product page
+                            </a>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div t-attf-class="uellow-fit-history-num huge pct-#{
+                            check.overall_match_pct &gt;= 85 and 'g'
+                            or check.overall_match_pct &gt;= 70 and 'y'
+                            or check.overall_match_pct &gt;= 50 and 'o'
+                            or 'r'}">
+                            <t t-out="check.overall_match_pct or 0"/>%
+                        </div>
+                        <div class="small text-muted">Compatibility</div>
+                    </div>
+                </div>
+
+                <h5 class="uellow-portal-section-title mt-4">
+                    <i class="fa fa-th-list"/> Per-area breakdown
+                </h5>
+                <div class="uellow-fit-detail-grid">
+                    <t t-set="areas" t-value="(details.get('areas') or []) if details else []"/>
+                    <t t-foreach="areas" t-as="a">
+                        <div class="uellow-fit-detail-card">
+                            <div class="uellow-fit-detail-card-head">
+                                <span class="uellow-fit-detail-label" t-out="a.get('label') or a.get('key') or ''"/>
+                                <t t-set="fit" t-value="a.get('fit') or 'unknown'"/>
+                                <span t-attf-class="uellow-fit-detail-verdict v-#{fit}">
+                                    <t t-if="fit == 'comfortable'">Comfortable ✓</t>
+                                    <t t-elif="fit == 'tight'">Tight</t>
+                                    <t t-elif="fit == 'loose'">Loose</t>
+                                    <t t-else="">Unknown</t>
+                                </span>
+                            </div>
+                            <div class="uellow-fit-detail-card-body">
+                                <div t-if="a.get('body_cm')" class="uellow-fit-detail-row">
+                                    <span class="muted">Your body:</span>
+                                    <strong><t t-out="a.get('body_cm')"/> cm</strong>
+                                </div>
+                                <div t-if="a.get('garment_cm')" class="uellow-fit-detail-row">
+                                    <span class="muted">Garment:</span>
+                                    <strong><t t-out="a.get('garment_cm')"/> cm</strong>
+                                </div>
+                                <div t-if="a.get('diff_cm') is not None" class="uellow-fit-detail-row">
+                                    <span class="muted">Difference:</span>
+                                    <strong>
+                                        <t t-if="(a.get('diff_cm') or 0) &gt; 0">+</t>
+                                        <t t-out="a.get('diff_cm')"/> cm
+                                    </strong>
+                                </div>
+                                <div t-if="a.get('pct') is not None" class="uellow-fit-detail-bar">
+                                    <div t-attf-class="uellow-fit-detail-bar-fill v-#{fit}"
+                                         t-attf-style="width:#{max(5, a.get('pct') or 0)}%"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <div class="mt-4">
+                    <a t-if="check.product_id" t-att-href="'/shop/product/%d' % check.product_id.id"
+                       class="btn uellow-btn-primary">
+                        <i class="fa fa-shopping-cart"/> Back to product
+                    </a>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

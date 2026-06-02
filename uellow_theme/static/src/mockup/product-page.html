@@ -1,0 +1,1151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Uellow Product Page — Design Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+<style>
+:root {
+    --bg-page       : #f6f7f9;
+    --surface       : #ffffff;
+    --surface-soft  : #f8f9fb;
+    --surface-warm  : #fffbf2;
+    --text          : #0d1421;
+    --text-soft     : #4a525e;
+    --muted         : #8a92a0;
+    --line          : #ecedf1;
+    --line-soft     : #f3f4f7;
+    --yellow        : #F5C320;
+    --yellow-deep   : #b58200;
+    --yellow-soft   : rgba(245, 195, 32, .12);
+    --brand-dark    : #412402;
+    --slate         : #131921;
+    --slate-soft    : #1a232e;
+    --green         : #1f9b62;
+    --red           : #d6332c;
+    --radius        : 12px;
+    --radius-lg     : 18px;
+    --shadow-sm     : 0 2px 8px -4px rgba(13, 20, 33, .12);
+    --shadow        : 0 8px 28px -12px rgba(13, 20, 33, .18);
+    --shadow-lg     : 0 24px 56px -24px rgba(13, 20, 33, .4);
+    --font          : "Inter", "Tajawal", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: var(--font);
+    background: var(--bg-page);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+
+/* ───── Compact top bar (mock of header) ───── */
+.mock-header {
+    background: var(--slate);
+    color: #fff;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.mock-header .inner { max-width: 1280px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.mock-header .logo { color: var(--yellow); font-weight: 800; font-size: 18px; letter-spacing: .5px; }
+.mock-header .search { flex: 1; max-width: 600px; background: #fff; border-radius: 8px; padding: 8px 14px; color: var(--muted); font-size: 13px; }
+.mock-header .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #fff; color: var(--slate);
+    padding: 6px 14px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 700;
+}
+
+/* ───── Page shell ───── */
+.shell { max-width: 1280px; margin: 0 auto; padding: 16px 20px 64px; }
+
+/* ───── Breadcrumb ───── */
+.breadcrumb {
+    display: flex; gap: 6px; align-items: center;
+    color: var(--muted); font-size: 12.5px;
+    margin: 8px 0 18px;
+    flex-wrap: wrap;
+}
+.breadcrumb a:hover { color: var(--yellow-deep); }
+.breadcrumb i { font-size: 9px; opacity: .55; }
+.breadcrumb .current { color: var(--text); font-weight: 600; }
+
+/* ───── Main 2-column layout ───── */
+.grid {
+    display: grid;
+    grid-template-columns: 1.18fr 1fr;
+    gap: 32px;
+    align-items: flex-start;
+}
+@media (max-width: 991px) {
+    .grid { grid-template-columns: 1fr; gap: 18px; }
+}
+
+/* ───── Gallery (sticky on desktop) ───── */
+.gallery {
+    position: sticky;
+    top: 16px;
+    align-self: flex-start;
+}
+@media (max-width: 991px) { .gallery { position: static; } }
+
+.gallery-frame {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    padding: 24px;
+    position: relative;
+}
+.gallery-main {
+    aspect-ratio: 1 / 1;
+    background:
+        radial-gradient(circle at 50% 35%, #fffbe9, #fff 70%),
+        var(--surface);
+    border-radius: 14px;
+    display: grid; place-items: center;
+    position: relative;
+    overflow: hidden;
+}
+.gallery-main img {
+    width: 78%; height: 78%; object-fit: contain;
+    filter: drop-shadow(0 16px 28px rgba(0,0,0,.18));
+    transition: transform .3s ease;
+}
+.gallery-main:hover img { transform: scale(1.06); }
+
+.gallery-ribbon {
+    position: absolute;
+    top: 18px; left: 18px;
+    background: var(--red);
+    color: #fff;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 800;
+    letter-spacing: .3px;
+    box-shadow: 0 4px 10px -4px rgba(214,51,44,.55);
+    z-index: 2;
+}
+.gallery-share {
+    position: absolute;
+    top: 18px; right: 18px;
+    display: flex; gap: 8px;
+    z-index: 2;
+}
+.icon-btn {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,.95);
+    border: 1px solid var(--line);
+    color: var(--text-soft);
+    border-radius: 999px;
+    display: grid; place-items: center;
+    cursor: pointer;
+    transition: all .15s ease;
+    box-shadow: var(--shadow-sm);
+}
+.icon-btn:hover {
+    background: var(--yellow);
+    color: var(--brand-dark);
+    border-color: var(--yellow);
+    transform: translateY(-2px);
+}
+
+.gallery-arrow {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 44px; height: 44px;
+    background: #fff;
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 999px;
+    display: grid; place-items: center;
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: var(--shadow);
+    transition: all .15s ease;
+}
+.gallery-arrow.prev { left: 18px; }
+.gallery-arrow.next { right: 18px; }
+.gallery-arrow:hover { border-color: var(--yellow); color: var(--yellow-deep); transform: translateY(-50%) scale(1.06); }
+
+.thumbs {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-top: 14px;
+}
+.thumb {
+    aspect-ratio: 1 / 1;
+    background: var(--surface);
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all .15s ease;
+    padding: 4px;
+    display: grid; place-items: center;
+}
+.thumb img { width: 100%; height: 100%; object-fit: contain; }
+.thumb:hover { border-color: rgba(245,195,32,.55); transform: translateY(-2px); }
+.thumb.active {
+    border-color: var(--yellow);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px -6px rgba(245,195,32,.55);
+}
+.thumb.video::after {
+    content: "\f04b";
+    font-family: "Font Awesome 6 Free"; font-weight: 900;
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.4);
+    color: #fff;
+    display: grid; place-items: center;
+    font-size: 14px;
+    border-radius: 8px;
+}
+
+.gallery-meta {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.gallery-meta .left { display: flex; gap: 14px; }
+.gallery-meta .left span i { color: var(--yellow-deep); margin-right: 4px; }
+
+/* ───── Info column ───── */
+.info { display: flex; flex-direction: column; gap: 16px; }
+
+.brand-row { display: flex; gap: 8px; align-items: center; }
+.chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--yellow-soft);
+    color: var(--brand-dark);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+}
+.chip.verified { background: rgba(31,155,98,.12); color: var(--green); }
+.chip i { font-size: 11px; }
+
+h1.title {
+    color: var(--text);
+    font-size: 26px;
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -.3px;
+    margin: 0;
+}
+@media (max-width: 991px) { h1.title { font-size: 20px; } }
+
+.meta-row {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    color: var(--text-soft); font-size: 12.5px;
+}
+.rating { display: inline-flex; align-items: center; gap: 6px; }
+.stars i { color: var(--yellow); font-size: 13px; }
+.rating .reviews { color: var(--yellow-deep); font-weight: 700; }
+.meta-row .dot { width: 4px; height: 4px; background: var(--muted); border-radius: 999px; opacity: .5; }
+.meta-row .sku { color: var(--muted); font-weight: 500; }
+.stock { display: inline-flex; align-items: center; gap: 6px; color: var(--green); font-weight: 700; }
+.stock::before {
+    content: ""; width: 8px; height: 8px; background: var(--green); border-radius: 999px;
+    animation: pulse 1.8s ease-in-out infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+
+/* ───── Price card ───── */
+.price-card {
+    background: var(--surface-warm);
+    border: 1px solid rgba(245, 195, 32, .28);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 6px;
+    box-shadow: var(--shadow-sm), inset 0 1px 0 #fff;
+}
+.price-row { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.price-now { font-size: 30px; font-weight: 800; color: var(--text); letter-spacing: -.4px; line-height: 1; }
+.price-now small { font-size: 14px; font-weight: 700; color: var(--text-soft); margin-left: 4px; }
+.price-was { color: var(--muted); text-decoration: line-through; font-size: 14px; font-weight: 500; }
+.savings {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: var(--red); color: #fff;
+    font-size: 11.5px; font-weight: 800;
+    padding: 3px 10px; border-radius: 999px;
+    box-shadow: 0 4px 10px -4px rgba(214,51,44,.45);
+}
+.price-card .tax { color: var(--muted); font-size: 11.5px; }
+.price-card .countdown {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 4px;
+    font-size: 12px; color: var(--text-soft);
+}
+.countdown b { color: var(--red); }
+.cd-box {
+    background: var(--text); color: #fff;
+    padding: 2px 6px; border-radius: 4px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px; font-weight: 800; min-width: 24px; text-align: center;
+}
+
+/* ───── Variants ───── */
+.variant {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 10px;
+    box-shadow: var(--shadow-sm);
+}
+.variant-label {
+    color: var(--muted);
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .9px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.variant-label .selected { color: var(--text); text-transform: none; letter-spacing: 0; font-size: 12.5px; font-weight: 700; }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.swatch {
+    min-width: 52px;
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 700; font-size: 12.5px;
+    cursor: pointer;
+    transition: all .15s ease;
+    text-align: center;
+    position: relative;
+}
+.swatch:hover { border-color: var(--yellow); transform: translateY(-1px); box-shadow: 0 4px 10px -6px rgba(245,195,32,.6); }
+.swatch.active {
+    background: rgba(245,195,32,.16);
+    border-color: var(--yellow);
+    color: var(--brand-dark);
+    box-shadow: 0 4px 10px -4px rgba(245,195,32,.4);
+}
+.swatch.unavailable {
+    opacity: .35;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+.swatch.color {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    padding: 0;
+    border-width: 3px;
+}
+.swatch.color.active::after {
+    content: "\f00c";
+    font-family: "Font Awesome 6 Free"; font-weight: 900;
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    color: #fff;
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+
+/* ───── Quantity + CTA ───── */
+.qty-cta-row { display: grid; grid-template-columns: auto 1fr 1fr auto auto; gap: 10px; align-items: stretch; }
+@media (max-width: 575px) {
+    .qty-cta-row { grid-template-columns: auto 1fr; }
+    .qty-cta-row .btn-fast { grid-column: 1 / -1; }
+    .qty-cta-row .icon-action { grid-column: span 1; }
+}
+
+.qty {
+    display: inline-flex;
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    height: 48px;
+    box-shadow: var(--shadow-sm);
+}
+.qty button {
+    width: 44px; border: 0;
+    background: transparent; cursor: pointer;
+    font-size: 16px; font-weight: 800;
+    color: var(--text);
+    transition: all .12s ease;
+}
+.qty button:hover { background: rgba(245,195,32,.18); color: var(--yellow-deep); }
+.qty input {
+    width: 50px; border: 0; outline: 0;
+    text-align: center; font-weight: 800; font-size: 15px;
+    background: transparent;
+}
+
+.btn {
+    height: 48px; border: 0; border-radius: 10px;
+    font-weight: 800; font-size: 14.5px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px;
+    letter-spacing: .25px;
+    transition: all .15s ease;
+}
+.btn-cart {
+    background: var(--yellow); color: var(--brand-dark);
+    box-shadow: 0 6px 16px -4px rgba(245,195,32,.55), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.btn-cart:hover { transform: translateY(-2px); filter: brightness(.96); }
+
+.btn-fast {
+    background: linear-gradient(135deg, #ff5e5e 0%, #c81212 100%);
+    color: #fff;
+    box-shadow: 0 6px 16px -4px rgba(214,51,44,.5), inset 0 1px 0 rgba(255,255,255,.25);
+    position: relative; overflow: hidden;
+}
+.btn-fast::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.25) 50%, transparent 70%);
+    transform: translateX(-100%);
+    animation: shine 5s ease-in-out infinite;
+}
+@keyframes shine { 0%, 30% { transform: translateX(-100%); } 65%, 100% { transform: translateX(100%); } }
+.btn-fast:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.btn-fast .badge-5sec {
+    position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: var(--yellow);
+    font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 999px;
+    letter-spacing: .3px;
+}
+
+.icon-action {
+    width: 48px; height: 48px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1.5px solid var(--line);
+    color: var(--text-soft);
+    cursor: pointer;
+    display: grid; place-items: center;
+    transition: all .15s ease;
+}
+.icon-action:hover {
+    border-color: var(--yellow);
+    color: var(--yellow-deep);
+    background: var(--yellow-soft);
+    transform: translateY(-2px);
+}
+.icon-action.wishlist.active { color: var(--red); border-color: var(--red); }
+
+/* ───── Trust strip ───── */
+.trust {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+}
+@media (max-width: 575px) { .trust { grid-template-columns: 1fr; } }
+
+.trust-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: all .15s ease;
+}
+.trust-item:hover { background: var(--surface-warm); border-color: rgba(245,195,32,.45); }
+.trust-icon {
+    width: 32px; height: 32px;
+    border-radius: 999px;
+    background: var(--yellow-soft);
+    color: var(--yellow-deep);
+    display: grid; place-items: center;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.trust-body strong { display: block; font-size: 12px; color: var(--text); font-weight: 700; }
+.trust-body small { display: block; font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+
+/* ───── Delivery card ───── */
+.deliver-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex; flex-direction: column; gap: 10px;
+}
+.deliver-card .head {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12.5px;
+    color: var(--text-soft);
+}
+.deliver-card .head strong { color: var(--text); font-weight: 700; }
+.deliver-card .head a { color: var(--yellow-deep); font-weight: 700; font-size: 12px; }
+.deliver-rows { display: flex; flex-direction: column; gap: 8px; }
+.deliver-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 0;
+    border-top: 1px dashed var(--line);
+}
+.deliver-row:first-child { border-top: 0; padding-top: 0; }
+.deliver-row i { color: var(--yellow-deep); font-size: 16px; width: 22px; }
+.deliver-row .body { flex: 1; font-size: 12.5px; color: var(--text-soft); }
+.deliver-row .body strong { color: var(--text); display: block; font-size: 13px; font-weight: 700; }
+
+/* ───── Bullets ───── */
+.bullets {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    list-style: none;
+    margin: 0;
+}
+.bullets li {
+    position: relative;
+    padding-left: 24px;
+    color: var(--text-soft);
+    font-size: 13px;
+    margin-bottom: 6px;
+    line-height: 1.5;
+}
+.bullets li::before {
+    content: "\f00c";
+    font-family: "Font Awesome 6 Free"; font-weight: 900;
+    position: absolute; left: 0; top: 2px;
+    color: var(--yellow-deep);
+    font-size: 11px;
+}
+.bullets li:last-child { margin-bottom: 0; }
+
+/* ───── Tabs section ───── */
+.tabs-wrap {
+    background: var(--surface);
+    margin-top: 28px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+.tabs {
+    background: var(--surface-soft);
+    display: flex;
+    padding: 0 12px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+}
+.tab {
+    padding: 16px 20px;
+    color: var(--text-soft);
+    font-weight: 700; font-size: 13.5px;
+    cursor: pointer;
+    position: relative;
+    display: inline-flex; align-items: center; gap: 6px;
+    white-space: nowrap;
+    transition: color .12s ease;
+}
+.tab i { color: var(--muted); }
+.tab.active { color: var(--text); }
+.tab.active i { color: var(--yellow-deep); }
+.tab.active::after {
+    content: "";
+    position: absolute;
+    left: 20px; right: 20px; bottom: 0;
+    height: 3px; background: var(--yellow); border-radius: 2px 2px 0 0;
+}
+.tab-body { padding: 28px 32px; color: var(--text-soft); font-size: 14px; line-height: 1.75; }
+@media (max-width: 575px) { .tab-body { padding: 18px; } }
+.tab-body h3 { font-size: 16px; color: var(--text); margin: 18px 0 8px; font-weight: 800; }
+.tab-body h3:first-child { margin-top: 0; }
+.tab-body p { margin: 0 0 10px; }
+.spec-table {
+    width: 100%;
+    border-collapse: separate; border-spacing: 0;
+    margin: 16px 0;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.spec-table th, .spec-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    text-align: start; font-size: 13px;
+}
+.spec-table th { background: var(--surface-soft); font-weight: 700; color: var(--text); width: 30%; }
+.spec-table tr:last-child th, .spec-table tr:last-child td { border-bottom: 0; }
+
+/* ───── Reviews section ───── */
+.reviews-summary {
+    display: grid; grid-template-columns: 220px 1fr; gap: 24px;
+    padding: 24px 32px;
+    border-bottom: 1px solid var(--line);
+}
+@media (max-width: 767px) { .reviews-summary { grid-template-columns: 1fr; padding: 20px; } }
+.rs-score {
+    background: var(--surface-warm);
+    border: 1px solid rgba(245,195,32,.28);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+}
+.rs-score .num { font-size: 42px; font-weight: 900; color: var(--text); line-height: 1; }
+.rs-score .out { color: var(--muted); font-size: 12px; }
+.rs-score .stars { margin-top: 8px; }
+.rs-score .stars i { color: var(--yellow); font-size: 14px; }
+.rs-score .count { color: var(--muted); font-size: 12px; margin-top: 4px; }
+.rs-bars { display: flex; flex-direction: column; gap: 8px; }
+.rs-bar { display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--text-soft); }
+.rs-bar .label { width: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 2px; }
+.rs-bar .label i { color: var(--yellow); font-size: 10px; }
+.rs-bar .track { flex: 1; background: var(--line-soft); height: 8px; border-radius: 999px; overflow: hidden; }
+.rs-bar .fill { height: 100%; background: var(--yellow); border-radius: 999px; }
+.rs-bar .pct { width: 38px; text-align: right; font-weight: 600; color: var(--text-soft); }
+
+.review-item {
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--line);
+}
+.review-item:last-child { border-bottom: 0; }
+@media (max-width: 575px) { .review-item { padding: 16px 18px; } }
+.review-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 8px; }
+.avatar {
+    width: 38px; height: 38px; border-radius: 999px;
+    background: linear-gradient(135deg, var(--yellow), #d6a800);
+    color: var(--brand-dark);
+    display: grid; place-items: center;
+    font-weight: 800; font-size: 14px;
+    flex-shrink: 0;
+}
+.review-name { font-weight: 700; color: var(--text); font-size: 13.5px; }
+.review-meta { color: var(--muted); font-size: 11.5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.review-meta i { color: var(--yellow); font-size: 10px; }
+.review-meta .verified { display: inline-flex; align-items: center; gap: 4px; color: var(--green); font-weight: 700; }
+.review-body { color: var(--text-soft); font-size: 13.5px; line-height: 1.7; }
+.review-body p { margin: 0 0 8px; }
+.review-photos { display: flex; gap: 6px; margin-top: 8px; }
+.review-photos img {
+    width: 64px; height: 64px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    object-fit: cover;
+}
+.review-actions {
+    display: flex; gap: 14px; margin-top: 8px;
+    color: var(--muted); font-size: 12px;
+}
+.review-actions a:hover { color: var(--yellow-deep); }
+
+/* ───── Related products ───── */
+.related-wrap {
+    background: var(--surface);
+    margin-top: 28px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--line);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    padding: 24px 28px;
+}
+.section-title {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 0 0 20px;
+}
+.section-title h2 {
+    margin: 0; font-size: 18px; font-weight: 800; color: var(--text);
+    position: relative;
+    padding-bottom: 10px;
+}
+.section-title h2::after {
+    content: "";
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 40px; height: 3px;
+    background: var(--yellow); border-radius: 2px;
+}
+.section-title a {
+    color: var(--yellow-deep);
+    font-size: 12.5px; font-weight: 700;
+}
+.related-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+@media (max-width: 991px) { .related-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.product-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all .15s ease;
+    display: flex; flex-direction: column;
+    position: relative;
+}
+.product-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(245,195,32,.45);
+    box-shadow: var(--shadow);
+}
+.product-card .img {
+    aspect-ratio: 1 / 1;
+    background: var(--surface-soft);
+    display: grid; place-items: center;
+    padding: 14px;
+    position: relative;
+}
+.product-card .img img { width: 80%; height: 80%; object-fit: contain; }
+.product-card .ribbon-mini {
+    position: absolute; top: 8px; left: 8px;
+    background: var(--red); color: #fff;
+    font-size: 10px; font-weight: 800;
+    padding: 2px 8px; border-radius: 999px;
+}
+.product-card .wishlist-mini {
+    position: absolute; top: 8px; right: 8px;
+    width: 28px; height: 28px;
+    background: #fff; border: 1px solid var(--line);
+    border-radius: 999px;
+    display: grid; place-items: center;
+    color: var(--text-soft);
+    cursor: pointer;
+    font-size: 11px;
+}
+.product-card .wishlist-mini:hover { color: var(--red); border-color: var(--red); }
+.product-card .body { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.product-card .brand-mini { font-size: 10px; color: var(--yellow-deep); font-weight: 800; text-transform: uppercase; letter-spacing: .5px; }
+.product-card .name {
+    font-size: 13px; color: var(--text);
+    font-weight: 600; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.product-card .rating-mini { color: var(--yellow); font-size: 11px; display: flex; gap: 2px; align-items: center; }
+.product-card .rating-mini span { color: var(--muted); margin-left: 4px; }
+.product-card .price-mini { display: flex; gap: 6px; align-items: baseline; margin-top: 4px; }
+.product-card .price-mini .now { color: var(--text); font-weight: 800; font-size: 14px; }
+.product-card .price-mini .was { color: var(--muted); text-decoration: line-through; font-size: 11.5px; }
+.product-card .quick-cart {
+    margin: 0 14px 14px;
+    height: 36px;
+    background: var(--surface-warm);
+    border: 1px solid rgba(245,195,32,.35);
+    color: var(--brand-dark);
+    border-radius: 8px;
+    font-weight: 700; font-size: 12.5px;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+.product-card:hover .quick-cart { background: var(--yellow); border-color: var(--yellow); }
+
+/* ───── Footer mock ───── */
+.mock-foot {
+    text-align: center; padding: 32px 16px;
+    color: var(--muted); font-size: 12px;
+    margin-top: 28px;
+}
+</style>
+</head>
+<body>
+
+<!-- Mock compact header (so the page has visual context) -->
+<header class="mock-header">
+    <div class="inner">
+        <div class="logo">Uellow ✦ Design Preview</div>
+        <div class="search d-none d-md-block">🔍 Search for smart watches, brands, deals…</div>
+        <div class="pill"><i class="fa-solid fa-globe"></i> 🇰🇼 Kuwait</div>
+    </div>
+</header>
+
+<div class="shell">
+
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="breadcrumb">
+        <a href="#">Home</a>
+        <i class="fa-solid fa-chevron-right"></i>
+        <a href="#">Electronics</a>
+        <i class="fa-solid fa-chevron-right"></i>
+        <a href="#">Smart Watches</a>
+        <i class="fa-solid fa-chevron-right"></i>
+        <span class="current">HainoTeko RW-81</span>
+    </nav>
+
+    <div class="grid">
+
+        <!-- ─── LEFT: sticky gallery ─── -->
+        <div class="gallery">
+            <div class="gallery-frame">
+                <span class="gallery-ribbon"><i class="fa-solid fa-fire"></i> Hot Deal</span>
+                <div class="gallery-share">
+                    <button class="icon-btn" title="Share"><i class="fa-solid fa-share-nodes"></i></button>
+                    <button class="icon-btn" title="Magnify"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <button class="gallery-arrow prev"><i class="fa-solid fa-chevron-left"></i></button>
+                <button class="gallery-arrow next"><i class="fa-solid fa-chevron-right"></i></button>
+                <div class="gallery-main">
+                    <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=720&auto=format&fit=crop&q=80" alt="Smart Watch">
+                </div>
+
+                <div class="thumbs">
+                    <div class="thumb active"><img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=240&auto=format&fit=crop&q=80" alt=""></div>
+                    <div class="thumb"><img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=240&auto=format&fit=crop&q=80" alt=""></div>
+                    <div class="thumb"><img src="https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=240&auto=format&fit=crop&q=80" alt=""></div>
+                    <div class="thumb"><img src="https://images.unsplash.com/photo-1579586337278-3f436f25d4d6?w=240&auto=format&fit=crop&q=80" alt=""></div>
+                    <div class="thumb video" style="position:relative"><img src="https://images.unsplash.com/photo-1434056886845-dac89ffe9b56?w=240&auto=format&fit=crop&q=80" alt=""></div>
+                    <div class="thumb"><img src="https://images.unsplash.com/photo-1542435503-956c469947f6?w=240&auto=format&fit=crop&q=80" alt=""></div>
+                </div>
+
+                <div class="gallery-meta">
+                    <div class="left">
+                        <span><i class="fa-solid fa-eye"></i> 2.4k viewing</span>
+                        <span><i class="fa-solid fa-cart-shopping"></i> 1.2k sold</span>
+                    </div>
+                    <div><i class="fa-solid fa-rotate"></i> 360° View</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── RIGHT: info column ─── -->
+        <div class="info">
+
+            <div class="brand-row">
+                <a class="chip" href="#"><i class="fa-solid fa-bookmark"></i> HainoTeko</a>
+                <span class="chip verified"><i class="fa-solid fa-circle-check"></i> Verified Seller</span>
+            </div>
+
+            <h1 class="title">HainoTeko RW-81 Smart Watch — Waterproof, Wireless Charging, Heart Rate Monitor</h1>
+
+            <div class="meta-row">
+                <span class="rating">
+                    <span class="stars">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                    </span>
+                    <strong>4.7</strong>
+                    <a class="reviews" href="#">(128 reviews)</a>
+                </span>
+                <span class="dot"></span>
+                <span class="sku">SKU: HT-RW81-BLK</span>
+                <span class="dot"></span>
+                <span class="stock">In stock — ready to ship</span>
+            </div>
+
+            <div class="price-card">
+                <div class="price-row">
+                    <div class="price-now">24.500<small>KWD</small></div>
+                    <div class="price-was">30.000 KWD</div>
+                    <span class="savings"><i class="fa-solid fa-tag"></i> Save 18%</span>
+                </div>
+                <div class="tax">Inclusive of VAT • Free delivery on orders above 15 KWD</div>
+                <div class="countdown">
+                    <b>Deal ends in:</b>
+                    <span class="cd-box">07</span>:
+                    <span class="cd-box">42</span>:
+                    <span class="cd-box">18</span>
+                </div>
+            </div>
+
+            <div class="variant">
+                <div class="variant-label">Color · <span class="selected">Midnight Black</span></div>
+                <div class="swatches">
+                    <span class="swatch color active" style="background:#1a232e" title="Midnight Black"></span>
+                    <span class="swatch color" style="background:#d6d4cf" title="Pearl Silver"></span>
+                    <span class="swatch color" style="background:#c98c4c" title="Rose Gold"></span>
+                    <span class="swatch color unavailable" style="background:#1f9b62" title="Forest Green"></span>
+                </div>
+            </div>
+
+            <div class="variant">
+                <div class="variant-label">Size · <span class="selected">46 mm</span></div>
+                <div class="swatches">
+                    <span class="swatch">42 mm</span>
+                    <span class="swatch active">46 mm</span>
+                    <span class="swatch unavailable">49 mm</span>
+                </div>
+            </div>
+
+            <div class="variant">
+                <div class="variant-label">Strap · <span class="selected">Silicone Sport</span></div>
+                <div class="swatches">
+                    <span class="swatch active">Silicone Sport</span>
+                    <span class="swatch">Milanese Loop</span>
+                    <span class="swatch">Leather</span>
+                    <span class="swatch">Nylon</span>
+                </div>
+            </div>
+
+            <div class="qty-cta-row">
+                <div class="qty">
+                    <button>−</button>
+                    <input type="text" value="1"/>
+                    <button>+</button>
+                </div>
+                <button class="btn btn-cart"><i class="fa-solid fa-cart-shopping"></i> Add to Cart</button>
+                <button class="btn btn-fast">
+                    <span class="badge-5sec">5 SEC</span>
+                    <i class="fa-solid fa-bolt"></i> Fast Buy
+                </button>
+                <button class="icon-action wishlist active" title="Wishlist"><i class="fa-solid fa-heart"></i></button>
+                <button class="icon-action" title="Compare"><i class="fa-solid fa-arrows-left-right"></i></button>
+            </div>
+
+            <div class="trust">
+                <div class="trust-item">
+                    <div class="trust-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                    <div class="trust-body">
+                        <strong>Free delivery</strong>
+                        <small>On qualifying orders</small>
+                    </div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon"><i class="fa-solid fa-rotate-left"></i></div>
+                    <div class="trust-body">
+                        <strong>14-day returns</strong>
+                        <small>Hassle-free</small>
+                    </div>
+                </div>
+                <div class="trust-item">
+                    <div class="trust-icon"><i class="fa-solid fa-shield"></i></div>
+                    <div class="trust-body">
+                        <strong>Secure payment</strong>
+                        <small>SSL encrypted</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="deliver-card">
+                <div class="head">
+                    <div><strong>Deliver to 🇰🇼 Kuwait City, Salmiya</strong></div>
+                    <a href="#">Change</a>
+                </div>
+                <div class="deliver-rows">
+                    <div class="deliver-row">
+                        <i class="fa-solid fa-bolt"></i>
+                        <div class="body">
+                            <strong>Express delivery — Tomorrow</strong>
+                            Order within 4h 12m for next-day delivery (1.500 KWD)
+                        </div>
+                    </div>
+                    <div class="deliver-row">
+                        <i class="fa-solid fa-truck"></i>
+                        <div class="body">
+                            <strong>Standard — Wed, 4 Jun</strong>
+                            Free delivery on orders above 15 KWD
+                        </div>
+                    </div>
+                    <div class="deliver-row">
+                        <i class="fa-solid fa-store"></i>
+                        <div class="body">
+                            <strong>Pick up from store — Today</strong>
+                            Salmiya Mall · 8 stores nearby
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="bullets">
+                <li>1.85" AMOLED Always-On display with 60Hz refresh rate</li>
+                <li>IP68 waterproof, swim-ready certified for 50m depth</li>
+                <li>Wireless charging — 0 to 100% in 90 minutes</li>
+                <li>Heart-rate, SpO2, sleep & menstrual cycle tracking</li>
+                <li>Compatible with iOS 13+ and Android 8.0+</li>
+            </ul>
+
+        </div>
+    </div>
+
+    <!-- ─── Tabs ─── -->
+    <div class="tabs-wrap">
+        <div class="tabs">
+            <div class="tab active"><i class="fa-solid fa-align-left"></i> Description</div>
+            <div class="tab"><i class="fa-solid fa-table-list"></i> Specifications</div>
+            <div class="tab"><i class="fa-solid fa-star"></i> Reviews (128)</div>
+            <div class="tab"><i class="fa-solid fa-comments"></i> Q&amp;A (24)</div>
+            <div class="tab"><i class="fa-solid fa-truck"></i> Shipping &amp; Returns</div>
+        </div>
+        <div class="tab-body">
+            <h3>Designed for the everyday athlete</h3>
+            <p>The HainoTeko RW-81 brings flagship features to a budget-conscious price. With its premium aluminium chassis, sapphire-coated AMOLED display, and a refined silicone sport strap, it looks and feels every bit the part — without the eye-watering price tag.</p>
+            <p>Track 120+ sport modes, monitor your heart rate and blood oxygen 24/7, and get sleep insights that actually help. A wireless charge tops the watch up from 0 to 100% in just 90 minutes, and a single charge typically lasts 8-10 days of normal use.</p>
+
+            <h3>What's in the box</h3>
+            <ul>
+                <li>HainoTeko RW-81 Smart Watch (your selected colour)</li>
+                <li>Silicone Sport strap (your selected size)</li>
+                <li>Wireless magnetic charging cable</li>
+                <li>Quick-start guide (EN / AR)</li>
+                <li>1-year manufacturer warranty card</li>
+            </ul>
+
+            <h3>Key specifications</h3>
+            <table class="spec-table">
+                <tr><th>Display</th><td>1.85" AMOLED, 60Hz, 1000 nits brightness</td></tr>
+                <tr><th>Battery</th><td>410 mAh — up to 10 days normal use</td></tr>
+                <tr><th>Connectivity</th><td>Bluetooth 5.2, NFC, Wi-Fi b/g/n</td></tr>
+                <tr><th>Sensors</th><td>Heart-rate, SpO2, Accelerometer, Gyroscope, Compass, Barometer</td></tr>
+                <tr><th>Water resistance</th><td>IP68 / 5 ATM</td></tr>
+                <tr><th>Compatibility</th><td>iOS 13+ &amp; Android 8.0+</td></tr>
+                <tr><th>Box weight</th><td>320 g</td></tr>
+                <tr><th>Warranty</th><td>12 months (Uellow Care extended warranty available)</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- ─── Reviews section ─── -->
+    <div class="tabs-wrap">
+        <div class="reviews-summary">
+            <div class="rs-score">
+                <div class="num">4.7</div>
+                <div class="out">out of 5</div>
+                <div class="stars">
+                    <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                </div>
+                <div class="count">Based on 128 verified reviews</div>
+            </div>
+            <div class="rs-bars">
+                <div class="rs-bar"><span class="label">5<i class="fa-solid fa-star"></i></span><div class="track"><div class="fill" style="width:78%"></div></div><span class="pct">78%</span></div>
+                <div class="rs-bar"><span class="label">4<i class="fa-solid fa-star"></i></span><div class="track"><div class="fill" style="width:14%"></div></div><span class="pct">14%</span></div>
+                <div class="rs-bar"><span class="label">3<i class="fa-solid fa-star"></i></span><div class="track"><div class="fill" style="width:5%"></div></div><span class="pct">5%</span></div>
+                <div class="rs-bar"><span class="label">2<i class="fa-solid fa-star"></i></span><div class="track"><div class="fill" style="width:2%"></div></div><span class="pct">2%</span></div>
+                <div class="rs-bar"><span class="label">1<i class="fa-solid fa-star"></i></span><div class="track"><div class="fill" style="width:1%"></div></div><span class="pct">1%</span></div>
+            </div>
+        </div>
+
+        <div class="review-item">
+            <div class="review-head">
+                <div class="avatar">AS</div>
+                <div>
+                    <div class="review-name">Ahmed S.</div>
+                    <div class="review-meta">
+                        <span class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></span>
+                        <span>3 days ago</span>
+                        <span class="verified"><i class="fa-solid fa-circle-check"></i> Verified purchase</span>
+                    </div>
+                </div>
+            </div>
+            <div class="review-body">
+                <p>Battery life is genuinely impressive. I've been using it for 9 days off a single charge with notifications, GPS workouts twice a week, and always-on display turned on. The AMOLED is crisp even outdoors.</p>
+                <div class="review-photos">
+                    <img src="https://images.unsplash.com/photo-1542435503-956c469947f6?w=160&auto=format&fit=crop&q=80" alt="">
+                    <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=160&auto=format&fit=crop&q=80" alt="">
+                </div>
+                <div class="review-actions">
+                    <a href="#"><i class="fa-regular fa-thumbs-up"></i> Helpful (24)</a>
+                    <a href="#"><i class="fa-regular fa-comment"></i> Reply</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="review-item">
+            <div class="review-head">
+                <div class="avatar">FM</div>
+                <div>
+                    <div class="review-name">Fatima M.</div>
+                    <div class="review-meta">
+                        <span class="stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i></span>
+                        <span>1 week ago</span>
+                        <span class="verified"><i class="fa-solid fa-circle-check"></i> Verified purchase</span>
+                    </div>
+                </div>
+            </div>
+            <div class="review-body">
+                <p>Great watch for the price. The heart-rate sensor is accurate compared to my chest strap. Wish the strap clasp was a bit more refined — feels a touch plasticky — but at this price I'm not complaining.</p>
+                <div class="review-actions">
+                    <a href="#"><i class="fa-regular fa-thumbs-up"></i> Helpful (11)</a>
+                    <a href="#"><i class="fa-regular fa-comment"></i> Reply</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Related products ─── -->
+    <div class="related-wrap">
+        <div class="section-title">
+            <h2>Customers also bought</h2>
+            <a href="#">See all <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="related-grid">
+            <div class="product-card">
+                <div class="img">
+                    <span class="ribbon-mini">-25%</span>
+                    <button class="wishlist-mini"><i class="fa-regular fa-heart"></i></button>
+                    <img src="https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=400&auto=format&fit=crop&q=80" alt="">
+                </div>
+                <div class="body">
+                    <div class="brand-mini">HainoTeko</div>
+                    <div class="name">HainoTeko T-45 Pro Smart Watch with GPS Tracker</div>
+                    <div class="rating-mini">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                        <span>(64)</span>
+                    </div>
+                    <div class="price-mini"><span class="now">18.750 KWD</span><span class="was">25.000</span></div>
+                </div>
+                <button class="quick-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+            </div>
+
+            <div class="product-card">
+                <div class="img">
+                    <button class="wishlist-mini"><i class="fa-regular fa-heart"></i></button>
+                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&auto=format&fit=crop&q=80" alt="">
+                </div>
+                <div class="body">
+                    <div class="brand-mini">SoundCore</div>
+                    <div class="name">SoundCore Liberty 4 Pro — Active Noise Cancellation</div>
+                    <div class="rating-mini">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                        <span>(212)</span>
+                    </div>
+                    <div class="price-mini"><span class="now">32.500 KWD</span></div>
+                </div>
+                <button class="quick-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+            </div>
+
+            <div class="product-card">
+                <div class="img">
+                    <span class="ribbon-mini">NEW</span>
+                    <button class="wishlist-mini"><i class="fa-regular fa-heart"></i></button>
+                    <img src="https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=400&auto=format&fit=crop&q=80" alt="">
+                </div>
+                <div class="body">
+                    <div class="brand-mini">Carekiso</div>
+                    <div class="name">Carekiso CK-9 Bluetooth Fitness Tracker Ring</div>
+                    <div class="rating-mini">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i>
+                        <span>(41)</span>
+                    </div>
+                    <div class="price-mini"><span class="now">14.900 KWD</span></div>
+                </div>
+                <button class="quick-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+            </div>
+
+            <div class="product-card">
+                <div class="img">
+                    <button class="wishlist-mini"><i class="fa-regular fa-heart"></i></button>
+                    <img src="https://images.unsplash.com/photo-1606220588913-b3aacb4d2f37?w=400&auto=format&fit=crop&q=80" alt="">
+                </div>
+                <div class="body">
+                    <div class="brand-mini">Mikenoon</div>
+                    <div class="name">Mikenoon Premium Magnetic Wireless Charger Pad</div>
+                    <div class="rating-mini">
+                        <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                        <span>(89)</span>
+                    </div>
+                    <div class="price-mini"><span class="now">8.500 KWD</span><span class="was">12.000</span></div>
+                </div>
+                <button class="quick-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="mock-foot">Uellow Product Page — Design Preview v1 · Static mockup, no live cart actions</div>
+
+</body>
+</html>

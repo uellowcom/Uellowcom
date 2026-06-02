@@ -38,6 +38,7 @@
                 return '<div class="uellow-card">' +
                     '<a href="' + b.shop_url + '">' +
                     '<img src="' + b.image_url + '" alt="' + b.name + '"' +
+                    ' width="120" height="80" loading="lazy" decoding="async"' +
                     ' onerror="this.closest(\'.uellow-card\').style.display=\'none\'">' +
                     '</a></div>';
             }).join('');

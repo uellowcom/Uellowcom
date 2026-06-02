@@ -1,0 +1,53 @@
+# -*- coding: utf-8 -*-
+"""Add a mobile-cart token to sale.order for guest carts coming from
+the Flutter app. The token lets a guest user keep their cart across
+app restarts without needing an account; once they log in we transfer
+the cart to their partner_id."""
+from odoo import api, fields, models
+
+
+class SaleOrder(models.Model):
+    _inherit = 'sale.order'
+
+    mobile_cart_token = fields.Char(
+        string='Mobile Cart Token', index=True, copy=False,
+        help='Identifies a guest cart from the Flutter app. Set on first '
+             'add-to-cart; cleared on order confirmation or once a real '
+             'partner is attached at login.',
+    )
+    is_mobile_app_order = fields.Boolean(
+        string='Created via Mobile App', default=False, copy=False,
+    )
+    mobile_session_id = fields.Many2one(
+        'mobile.session', string='Mobile Session', index=True, copy=False,
+    )
+
+    @api.model
+    def merge_mobile_cart_into_partner(self, partner_id, cart_token):
+        """At login time, if a guest cart token was active, move its
+        lines into the freshly-authenticated partner's draft cart."""
+        if not cart_token or not partner_id:
+            return False
+        guest = self.sudo().search([
+            ('mobile_cart_token', '=', cart_token),
+            ('state', '=', 'draft'),
+        ], limit=1)
+        if not guest or not guest.order_line:
+            return False
+        existing = self.sudo().search([
+            ('partner_id', '=', partner_id),
+            ('state', '=', 'draft'),
+        ], limit=1, order='id desc')
+        if not existing:
+            guest.write({'partner_id': partner_id, 'mobile_cart_token': False})
+            return guest.id
+        # Move lines and drop the guest cart
+        for line in guest.order_line:
+            same = existing.order_line.filtered(
+                lambda l: l.product_id == line.product_id and not l.is_reward_line)
+            if same:
+                same[0].product_uom_qty += line.product_uom_qty
+            else:
+                line.order_id = existing.id
+        guest.unlink()
+        return existing.id

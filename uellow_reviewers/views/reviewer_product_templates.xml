@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Mount point used by static/src/js/reviewer_product.js to render the
+        reviewer-summary card directly below the Add-to-Cart area. Restored
+        per ali@uellow.com (2026-05-28) — the standalone "اطلب رأي متخصص"
+        block above "You May Also Like" (rendered by reviewers.js) was the
+        one being retired instead.
+    -->
+    <template id="reviewer_product_card_inject"
+              inherit_id="website_sale.product"
+              name="Uellow Reviewer Card on Product Page">
+        <xpath expr="//div[contains(@class,'js_main_product')]" position="after">
+            <div id="uellow-reviewer-card"
+                 class="uellow-rv-card-mount"
+                 t-att-data-product-id="product.id"
+                 t-att-data-lang="request.env.context.get('lang', 'ar_001')"
+                 style="margin-top:6px"/>
+        </xpath>
+    </template>
+
+</odoo>

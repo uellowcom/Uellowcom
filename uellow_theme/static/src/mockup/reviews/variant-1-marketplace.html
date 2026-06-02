@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V1 — Marketplace Vibrant — Uellow Reviews</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+    --y:#F5C320; --yl:#ffd84a; --yd:#c69b00;
+    --dk:#412402; --dk2:#5a3506;
+    --grn:#10b981; --grn-l:#34d399; --grn-d:#047857;
+    --blu:#3b82f6; --blu-l:#60a5fa; --blu-d:#1d4ed8;
+    --red:#ef4444; --red-l:#f87171; --red-d:#b91c1c;
+    --ora:#fb923c; --ora-d:#ea580c;
+    --txt:#1a1208; --txt2:#6a5a40;
+    --bd:rgba(65,36,2,.10);
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:linear-gradient(180deg,#fafafa,#fff5d0 80%);min-height:100vh;padding:32px 16px;color:var(--txt);line-height:1.45}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--txt2);text-decoration:none;font-size:13px;font-weight:600;margin-bottom:20px}
+.back:hover{color:var(--dk)}
+.container{max-width:1100px;margin:0 auto}
+.title-bar{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.title-bar-pill{padding:4px 12px;border-radius:999px;background:linear-gradient(135deg,#fef3c7,#fee2e2);border:1px solid rgba(239,68,68,.30);color:var(--red-d);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+.title-bar h2{font-size:24px;font-weight:900;color:var(--dk)}
+
+/* HERO */
+.hero{position:relative;border-radius:20px;background:linear-gradient(135deg,#fff 0%,#fffaec 50%,#fef3c7 100%);border:1px solid var(--bd);box-shadow:0 8px 28px -14px rgba(65,36,2,.22);overflow:hidden;margin-bottom:18px}
+.hero::before{content:"";position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--y) 0%,var(--grn) 25%,var(--blu) 50%,var(--red) 75%,var(--ora) 100%)}
+.hero-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(420px 200px at 100% 0%,rgba(239,68,68,.10),transparent 70%),radial-gradient(380px 180px at 0% 100%,rgba(16,185,129,.10),transparent 70%)}
+.hero-grid{position:relative;display:grid;grid-template-columns:1.05fr 1.6fr 1.3fr;gap:24px;padding:24px}
+.h-lbl{font-size:11px;font-weight:800;color:var(--txt2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:inline-block;padding:3px 9px;background:linear-gradient(90deg,rgba(245,195,32,.22),rgba(245,195,32,0));border-radius:5px}
+.hero-score{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.score-big{display:flex;align-items:baseline;gap:5px;margin-top:4px}
+.score-num{font-size:56px;font-weight:900;color:var(--dk);letter-spacing:-2px;line-height:1;background:linear-gradient(135deg,var(--dk),var(--yd));-webkit-background-clip:text;background-clip:text;color:transparent}
+.score-out{font-size:15px;font-weight:700;color:var(--txt2)}
+.score-stars{display:inline-flex;gap:3px;font-size:22px;color:var(--y)}
+.score-stars .e{color:rgba(65,36,2,.16)}
+.score-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid rgba(245,195,32,.40);color:var(--dk);font-size:12px;font-weight:700;margin-top:4px}
+.score-pill strong{font-weight:900;font-size:13.5px}
+.score-cta{margin-top:10px;display:inline-flex;align-items:center;gap:7px;padding:11px 18px;border-radius:11px;background:linear-gradient(135deg,var(--yl),var(--y) 60%,var(--yd));color:var(--dk);font-weight:900;font-size:13.5px;border:1px solid rgba(65,36,2,.20);cursor:pointer;box-shadow:0 4px 12px -5px var(--y);text-decoration:none}
+.score-cta:hover{transform:translateY(-1px);box-shadow:0 8px 16px -6px var(--y)}
+
+/* Distribution bars — coloured per rating */
+.hero-dist{display:flex;flex-direction:column;gap:6px}
+.bars{display:flex;flex-direction:column;gap:6px}
+.brow{display:grid;grid-template-columns:32px 1fr 30px 38px;align-items:center;gap:9px}
+.bstars{font-size:11.5px;font-weight:800;color:var(--dk);display:inline-flex;align-items:center;gap:2px}
+.bstars i{color:var(--y)}
+.btrack{position:relative;height:8px;background:rgba(65,36,2,.07);border-radius:999px;overflow:hidden}
+.bfill{height:100%;border-radius:999px;transition:width .4s ease}
+.r5 .bfill{background:linear-gradient(90deg,var(--grn-l),var(--grn-d))}
+.r4 .bfill{background:linear-gradient(90deg,#a3e635,#65a30d)}
+.r3 .bfill{background:linear-gradient(90deg,#fbbf24,#d97706)}
+.r2 .bfill{background:linear-gradient(90deg,var(--ora),var(--ora-d))}
+.r1 .bfill{background:linear-gradient(90deg,var(--red-l),var(--red-d))}
+.bcnt{font-size:11.5px;font-weight:800;color:var(--dk);text-align:right}
+.bpct{font-size:11px;font-weight:600;color:var(--txt2);text-align:right;background:rgba(65,36,2,.05);padding:1px 5px;border-radius:4px}
+
+/* Stats — colorful! */
+.hero-stats{display:flex;flex-direction:column;gap:6px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.stat{position:relative;padding:11px 12px;border-radius:11px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.stat::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--c)}
+.stat-i{position:absolute;top:7px;right:8px;opacity:.18;color:var(--cd);font-size:24px}
+.stat-n{font-size:22px;font-weight:900;color:var(--cd);line-height:1;margin-top:3px;letter-spacing:-.5px}
+.stat-l{font-size:11px;font-weight:700;color:var(--txt2);line-height:1.2;margin-top:2px}
+.s1{--c:var(--y);--cd:#6a4d05;background:linear-gradient(135deg,#fef9c3,#fde68a);border:1px solid rgba(245,195,32,.30)}
+.s2{--c:var(--grn);--cd:var(--grn-d);background:linear-gradient(135deg,#d1fae5,#a7f3d0);border:1px solid rgba(16,185,129,.30)}
+.s3{--c:var(--blu);--cd:var(--blu-d);background:linear-gradient(135deg,#dbeafe,#bfdbfe);border:1px solid rgba(59,130,246,.30)}
+.s4{--c:var(--red);--cd:var(--red-d);background:linear-gradient(135deg,#fee2e2,#fecaca);border:1px solid rgba(239,68,68,.30)}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#fff;border:1px solid var(--bd);border-radius:12px;margin-bottom:14px;flex-wrap:wrap}
+.chips{display:inline-flex;gap:7px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;background:rgba(65,36,2,.06);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;border:1px solid transparent}
+.chip:hover{background:rgba(245,195,32,.20)}
+.chip.on{background:linear-gradient(135deg,var(--yl),var(--y));color:var(--dk);border-color:var(--y);box-shadow:0 2px 6px -3px var(--y)}
+.chip.on-grn{background:linear-gradient(135deg,var(--grn-l),var(--grn));color:#fff;border-color:var(--grn)}
+.chip.on-blu{background:linear-gradient(135deg,var(--blu-l),var(--blu));color:#fff;border-color:var(--blu)}
+.chip.on-red{background:linear-gradient(135deg,var(--red-l),var(--red));color:#fff;border-color:var(--red)}
+.chip-c{font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.55);color:var(--dk)}
+.chip.on .chip-c,.chip.on-grn .chip-c,.chip.on-blu .chip-c,.chip.on-red .chip-c{background:rgba(0,0,0,.18);color:#fff}
+.chip.on .chip-c{color:var(--dk)}
+.sort{display:inline-flex;align-items:center;gap:6px}
+.sort-lbl{font-size:12px;font-weight:600;color:var(--txt2)}
+.sort-sel{padding:6px 10px;border-radius:8px;background:#fff;border:1px solid var(--bd);font-size:12px;font-weight:700;color:var(--dk);cursor:pointer}
+
+/* REVIEW CARDS */
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:12px}
+.card-rv{position:relative;background:#fff;border:1px solid var(--bd);border-radius:14px;box-shadow:0 3px 8px -5px rgba(65,36,2,.18);overflow:hidden;transition:all .15s ease}
+.card-rv:hover{transform:translateY(-2px);box-shadow:0 8px 20px -8px rgba(65,36,2,.25)}
+.acc{position:absolute;top:0;bottom:0;left:0;width:4px}
+.card-rv[data-r="5"] .acc{background:linear-gradient(180deg,var(--grn-l),var(--grn-d))}
+.card-rv[data-r="4"] .acc{background:linear-gradient(180deg,#a3e635,#65a30d)}
+.card-rv[data-r="3"] .acc{background:linear-gradient(180deg,#fbbf24,#d97706)}
+.card-rv[data-r="2"] .acc{background:linear-gradient(180deg,var(--ora),var(--ora-d))}
+.card-rv[data-r="1"] .acc{background:linear-gradient(180deg,var(--red-l),var(--red-d))}
+.inner{padding:14px 16px 14px 18px;display:flex;flex-direction:column;gap:10px}
+.head{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center}
+.av{width:42px;height:42px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;border:2px solid #fff;box-shadow:0 2px 8px -3px rgba(0,0,0,.20)}
+.av5{background:linear-gradient(135deg,var(--grn-l),var(--grn-d))}
+.av4{background:linear-gradient(135deg,#a3e635,#65a30d)}
+.av3{background:linear-gradient(135deg,#fbbf24,#d97706)}
+.av2{background:linear-gradient(135deg,var(--ora),var(--ora-d))}
+.av1{background:linear-gradient(135deg,var(--red-l),var(--red-d))}
+.info{min-width:0}
+.nm{font-size:13.5px;font-weight:800;color:var(--dk);display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.v{display:inline-flex;align-items:center;gap:3px;color:var(--grn-d);font-size:10.5px;font-weight:700;background:rgba(16,185,129,.13);padding:2px 7px;border-radius:999px}
+.mtopcrit{background:rgba(239,68,68,.13);color:var(--red-d)}
+.mtopcrit i{color:var(--red)}
+.meta{margin-top:3px;font-size:11.5px;color:var(--txt2);display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
+.flag{width:15px;height:11px;border-radius:2px;display:inline-block}
+.sep{opacity:.5}
+.stars{display:inline-flex;gap:1px;font-size:14px;color:var(--y)}
+.stars .e{color:rgba(65,36,2,.18)}
+.tt{font-size:14px;font-weight:800;color:var(--txt);line-height:1.3}
+.txt{font-size:12.5px;color:var(--txt2);line-height:1.55;margin:0}
+.imgs{display:flex;flex-wrap:wrap;gap:6px}
+.imgs img{width:58px;height:58px;border-radius:8px;border:1px solid var(--bd);object-fit:cover;transition:transform .12s}
+.imgs img:hover{transform:scale(1.08);border-color:var(--y)}
+.foot{display:inline-flex;align-items:center;gap:7px;padding-top:9px;border-top:1px dashed rgba(65,36,2,.12)}
+.helpful{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:999px;background:rgba(65,36,2,.06);color:var(--dk);font-size:12px;font-weight:700;border:none;cursor:pointer}
+.helpful:hover{background:linear-gradient(135deg,var(--yl),var(--y))}
+.helpful-c{color:var(--txt2);font-weight:800}
+.tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:800;line-height:1}
+.tag-st{background:rgba(65,36,2,.06);color:var(--dk)}
+.tag-st i{color:var(--yd)}
+.tag-ph{background:rgba(59,130,246,.13);color:var(--blu-d)}
+.tag-ph i{color:var(--blu)}
+
+/* VIEW ALL CTA */
+.viewall{display:flex;justify-content:center;margin:18px 0 8px}
+.viewall a{display:inline-flex;align-items:center;gap:12px;padding:14px 22px;border-radius:14px;background:linear-gradient(135deg,#2b1a06,var(--dk) 50%,var(--dk2));color:var(--yl);text-decoration:none;border:1px solid var(--dk);box-shadow:0 6px 18px -10px rgba(65,36,2,.30);transition:all .15s ease;min-width:280px}
+.viewall a:hover{transform:translateY(-2px);box-shadow:0 10px 24px -10px rgba(65,36,2,.40)}
+.va-ico{width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,var(--yl),var(--y));color:var(--dk);display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.va-lbl{display:flex;flex-direction:column;gap:1px;flex:1}
+.va-m{font-size:13.5px;font-weight:900;color:var(--yl);line-height:1.2}
+.va-s{font-size:11px;font-weight:600;color:rgba(245,195,32,.7);line-height:1.2}
+.va-s strong{color:var(--yl);font-weight:900;margin-right:3px}
+.va-ar{color:var(--y);transition:transform .15s}
+.viewall a:hover .va-ar{transform:translateX(4px)}
+
+@media (max-width:992px){.hero-grid{grid-template-columns:1fr 1fr}.hero-stats{grid-column:1/-1}.sgrid{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:575.98px){.hero-grid{grid-template-columns:1fr;padding:18px}.sgrid{grid-template-columns:1fr 1fr}.score-num{font-size:44px}.list{grid-template-columns:1fr}.viewall a{min-width:0;width:100%;padding:12px 16px}}
+</style>
+</head>
+<body>
+<div class="container">
+    <a href="index.html" class="back"><i class="bi bi-arrow-left"></i> Back to gallery</a>
+
+    <div class="title-bar">
+        <span class="title-bar-pill">Variant 1</span>
+        <h2>Marketplace Vibrant — multi-color rating system</h2>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-glow"></div>
+        <div class="hero-grid">
+            <div class="hero-score">
+                <span class="h-lbl">Customer Reviews</span>
+                <div class="score-big"><span class="score-num">4.7</span><span class="score-out">/ 5</span></div>
+                <div class="score-stars">★★★★<span style="background:linear-gradient(90deg,var(--y) 70%,rgba(65,36,2,.16) 70%);-webkit-background-clip:text;background-clip:text;color:transparent">★</span></div>
+                <span class="score-pill"><i class="bi bi-patch-check-fill" style="color:var(--grn-d)"></i><strong>127</strong> verified reviews</span>
+                <a class="score-cta"><i class="bi bi-pencil-square"></i> Write a Review</a>
+            </div>
+
+            <div class="hero-dist">
+                <span class="h-lbl">Star breakdown</span>
+                <div class="bars">
+                    <div class="brow r5"><span class="bstars">5 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:75%"></div></div><span class="bcnt">95</span><span class="bpct">75%</span></div>
+                    <div class="brow r4"><span class="bstars">4 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:17%"></div></div><span class="bcnt">22</span><span class="bpct">17%</span></div>
+                    <div class="brow r3"><span class="bstars">3 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:5%"></div></div><span class="bcnt">6</span><span class="bpct">5%</span></div>
+                    <div class="brow r2"><span class="bstars">2 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:2%"></div></div><span class="bcnt">3</span><span class="bpct">2%</span></div>
+                    <div class="brow r1"><span class="bstars">1 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:1%"></div></div><span class="bcnt">1</span><span class="bpct">1%</span></div>
+                </div>
+            </div>
+
+            <div class="hero-stats">
+                <span class="h-lbl">At a glance</span>
+                <div class="sgrid">
+                    <div class="stat s1"><i class="bi bi-emoji-smile stat-i"></i><span class="stat-n">89%</span><span class="stat-l">Would recommend</span></div>
+                    <div class="stat s2"><i class="bi bi-patch-check-fill stat-i"></i><span class="stat-n">102</span><span class="stat-l">Verified buys</span></div>
+                    <div class="stat s3"><i class="bi bi-images stat-i"></i><span class="stat-n">47</span><span class="stat-l">With photos</span></div>
+                    <div class="stat s4"><i class="bi bi-fire stat-i"></i><span class="stat-n">75%</span><span class="stat-l">5-star ratings</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="chips">
+            <button class="chip on">All <span class="chip-c">127</span></button>
+            <button class="chip on-grn">5 <i class="bi bi-star-fill"></i> <span class="chip-c">95</span></button>
+            <button class="chip">4 <i class="bi bi-star-fill"></i> <span class="chip-c">22</span></button>
+            <button class="chip on-red">Critical <span class="chip-c">10</span></button>
+            <button class="chip on-blu"><i class="bi bi-images"></i> Photos <span class="chip-c">47</span></button>
+            <button class="chip"><i class="bi bi-patch-check-fill"></i> Verified <span class="chip-c">102</span></button>
+        </div>
+        <div class="sort">
+            <label class="sort-lbl">Sort by</label>
+            <select class="sort-sel"><option>Most helpful</option><option>Most recent</option><option>Highest rated</option><option>Lowest rated</option></select>
+        </div>
+    </div>
+
+    <!-- REVIEW CARDS -->
+    <div class="list">
+        <div class="card-rv" data-r="5">
+            <span class="acc"></span>
+            <div class="inner">
+                <div class="head">
+                    <div class="av av5">S</div>
+                    <div class="info">
+                        <div class="nm">Sarah M. <span class="v"><i class="bi bi-shield-check"></i> Verified buyer</span></div>
+                        <div class="meta"><span class="flag" style="background:linear-gradient(180deg,#dc2626 33%,#fff 33% 66%,#dc2626 66%)"></span> United States <span class="sep">·</span> 3 days ago</div>
+                    </div>
+                    <div class="stars">★★★★★</div>
+                </div>
+                <div class="tt">Absolutely love it — exceeds expectations!</div>
+                <p class="txt">Bought this for my morning runs and it's been a game changer. Battery lasts a full week with everyday use, heart rate sensor is surprisingly accurate, and the build quality feels much more premium than the price suggests. The strap is comfortable even after 12-hour wear.</p>
+                <div class="imgs">
+                    <img src="https://picsum.photos/seed/r1a/120" alt="">
+                    <img src="https://picsum.photos/seed/r1b/120" alt="">
+                    <img src="https://picsum.photos/seed/r1c/120" alt="">
+                </div>
+                <div class="foot">
+                    <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(42)</span></button>
+                    <span class="tag tag-st">5<i class="bi bi-star-fill"></i></span>
+                    <span class="tag tag-ph"><i class="bi bi-images"></i> 3</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-rv" data-r="5">
+            <span class="acc"></span>
+            <div class="inner">
+                <div class="head">
+                    <div class="av av5">A</div>
+                    <div class="info">
+                        <div class="nm">Ahmed K. <span class="v"><i class="bi bi-shield-check"></i> Verified buyer</span></div>
+                        <div class="meta"><span class="flag" style="background:linear-gradient(180deg,#007a3d 33%,#fff 33% 66%,#000 66%)"></span> Kuwait <span class="sep">·</span> 1 week ago</div>
+                    </div>
+                    <div class="stars">★★★★★</div>
+                </div>
+                <div class="tt">ممتاز جداً — جودة عالية مقابل السعر</div>
+                <p class="txt">السماعة وصلت بسرعة وكانت مغلفة بشكل ممتاز. جودة الصوت رائعة وعزل الضوضاء أفضل من المتوقع لهذه الفئة. البطارية تدوم 7+ ساعات بسهولة. أنصح بها بقوة لمن يبحث عن قيمة حقيقية مقابل السعر.</p>
+                <div class="imgs">
+                    <img src="https://picsum.photos/seed/r2a/120" alt="">
+                    <img src="https://picsum.photos/seed/r2b/120" alt="">
+                </div>
+                <div class="foot">
+                    <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(28)</span></button>
+                    <span class="tag tag-st">5<i class="bi bi-star-fill"></i></span>
+                    <span class="tag tag-ph"><i class="bi bi-images"></i> 2</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-rv" data-r="4">
+            <span class="acc"></span>
+            <div class="inner">
+                <div class="head">
+                    <div class="av av4">M</div>
+                    <div class="info">
+                        <div class="nm">Maria L.</div>
+                        <div class="meta"><span class="flag" style="background:linear-gradient(180deg,#aa151b 33%,#f1bf00 33% 66%,#aa151b 66%)"></span> Spain <span class="sep">·</span> 2 weeks ago</div>
+                    </div>
+                    <div class="stars">★★★★<span class="e">★</span></div>
+                </div>
+                <div class="tt">Good value for the price</div>
+                <p class="txt">Solid product overall. Setup was easy and the app is intuitive. Only minor complaint is that the screen could be brighter outdoors, but otherwise very happy with the purchase. Shipping was fast too.</p>
+                <div class="foot">
+                    <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(15)</span></button>
+                    <span class="tag tag-st">4<i class="bi bi-star-fill"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-rv" data-r="3">
+            <span class="acc"></span>
+            <div class="inner">
+                <div class="head">
+                    <div class="av av3">J</div>
+                    <div class="info">
+                        <div class="nm">John D.</div>
+                        <div class="meta"><span class="flag" style="background:linear-gradient(45deg,#012169 30%,#fff 30% 35%,#c8102e 35% 45%,#fff 45% 55%,#c8102e 55% 65%,#fff 65% 70%,#012169 70%)"></span> United Kingdom <span class="sep">·</span> 1 month ago</div>
+                    </div>
+                    <div class="stars">★★★<span class="e">★</span><span class="e">★</span></div>
+                </div>
+                <div class="tt">Decent but not amazing</div>
+                <p class="txt">Works as advertised but nothing special. Connection drops occasionally and the included cable is too short. Returns process was smooth though, which is a plus. Would consider re-buying if there's a sale.</p>
+                <div class="foot">
+                    <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(8)</span></button>
+                    <span class="tag tag-st">3<i class="bi bi-star-fill"></i></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW ALL CTA -->
+    <div class="viewall">
+        <a href="#"><span class="va-ico"><i class="bi bi-eye-fill"></i></span><span class="va-lbl"><span class="va-m">See all previous reviews</span><span class="va-s"><strong>127</strong>reviews · archive</span></span><i class="bi bi-chevron-right va-ar"></i></a>
+    </div>
+</div>
+</body>
+</html>

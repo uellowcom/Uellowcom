@@ -1,19 +1,26 @@
 {
     'name': 'Uellow Smart Fit Engine',
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.2.0',
     'category': 'Website',
     'summary': 'AI-powered size recommendation and body profile for Uellow',
     'author': 'Uellow',
-    'depends': ['website', 'website_sale', 'uellow_ai_engine'],
+    'depends': ['website', 'website_sale', 'portal', 'uellow_ai_engine'],
     'data': [
         'security/ir.model.access.csv',
         'data/config_data.xml',
         'views/fit_views.xml',
+        'views/size_chart_template_views.xml',
+        'views/size_chart_import_wizard.xml',
+        'views/portal_templates.xml',
     ],
     'assets': {
         'web.assets_frontend': [
             'uellow_smart_fit/static/src/css/smart_fit.css',
+            'uellow_smart_fit/static/src/css/portal.css',
+            'uellow_smart_fit/static/src/css/fit_check_modal.css',
             'uellow_smart_fit/static/src/js/smart_fit.js',
+            'uellow_smart_fit/static/src/js/portal.js',
+            'uellow_smart_fit/static/src/js/fit_check_modal.js',
         ],
     },
     'installable': True,

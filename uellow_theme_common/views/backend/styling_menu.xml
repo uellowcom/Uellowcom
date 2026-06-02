@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        ════════════════════════════════════════════════════════════════════
+        🎨  STYLING — Uellow theme control center
+        ────────────────────────────────────────────────────────────────────
+        Top-level backend app gathering all look-and-feel controls in one
+        place. Sub-menus reuse the existing actions, so all permission +
+        view bindings stay unchanged — this file is purely organisational.
+
+          ┌── 🎨 Styling
+          │     ├── 🪄 Live Editor
+          │     ├── ───────────────────────
+          │     ├── Branding
+          │     │     ├── Brands
+          │     │     ├── Categories Labels
+          │     │     ├── Product Labels
+          │     │     └── Menu Labels
+          │     ├── Content
+          │     │     └── Website Content
+          │     ├── Insights
+          │     │     └── Search Report
+          │     └── Advanced
+          │           ├── SEO & Website Settings
+          │           └── Theme Config (raw)
+          └──
+        ════════════════════════════════════════════════════════════════════
+    -->
+
+    <!-- ── Root ────────────────────────────────────────────────────── -->
+    <menuitem id="menu_styling_root"
+              name="Styling"
+              sequence="45"
+              web_icon="uellow_theme_common,static/description/icon.png"
+              groups="base.group_user"/>
+
+    <!-- ── First item: jump straight to the live website editor ────── -->
+    <menuitem id="menu_styling_live_editor"
+              name="Live Editor"
+              parent="menu_styling_root"
+              sequence="10"
+              action="website.website_preview"/>
+
+    <!-- ── Theme Settings — opens the standard Website Settings page,
+            which now embeds the "Uellow Theme" block (logo, colours,
+            preheader, search). All controls are regular Odoo settings. -->
+    <menuitem id="menu_styling_theme_settings"
+              name="Theme Settings"
+              parent="menu_styling_root"
+              sequence="15"
+              action="website.action_website_configuration"/>
+
+    <!-- ── Sub-roots ──────────────────────────────────────────────── -->
+    <menuitem id="menu_styling_branding"
+              name="Branding"
+              parent="menu_styling_root"
+              sequence="20"/>
+
+    <menuitem id="menu_styling_content"
+              name="Content"
+              parent="menu_styling_root"
+              sequence="30"/>
+
+    <menuitem id="menu_styling_insights"
+              name="Insights"
+              parent="menu_styling_root"
+              sequence="40"/>
+
+    <menuitem id="menu_styling_advanced"
+              name="Advanced"
+              parent="menu_styling_root"
+              sequence="90"
+              groups="base.group_system"/>
+
+    <!-- ── Sub-items — reuse existing actions ─────────────────────── -->
+
+    <!-- Branding -->
+    <menuitem id="menu_styling_brands"
+              name="Brands"
+              parent="menu_styling_branding"
+              sequence="10"
+              action="uellow_theme_common.dr_product_brand_values_action"/>
+
+    <menuitem id="menu_styling_cat_labels"
+              name="Category Labels"
+              parent="menu_styling_branding"
+              sequence="20"
+              action="uellow_theme_common.dr_category_label_action"/>
+
+    <menuitem id="menu_styling_prod_labels"
+              name="Product Labels"
+              parent="menu_styling_branding"
+              sequence="30"
+              action="uellow_theme_common.dr_product_label_action"/>
+
+    <menuitem id="menu_styling_menu_labels"
+              name="Menu Labels"
+              parent="menu_styling_branding"
+              sequence="40"
+              action="uellow_theme_common.dr_website_menu_label_action"/>
+
+    <!-- Content -->
+    <menuitem id="menu_styling_website_content"
+              name="Website Content"
+              parent="menu_styling_content"
+              sequence="10"
+              action="uellow_theme_common.dr_website_content_action"/>
+
+    <!-- Insights -->
+    <menuitem id="menu_styling_search_report"
+              name="Search Report"
+              parent="menu_styling_insights"
+              sequence="10"
+              action="uellow_theme_common.dr_search_report_action"/>
+
+    <!-- Advanced -->
+    <menuitem id="menu_styling_seo"
+              name="SEO &amp; Website Settings"
+              parent="menu_styling_advanced"
+              sequence="10"
+              action="website.action_website_configuration"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_styling_raw_config"
+              name="Theme Config (Raw)"
+              parent="menu_styling_advanced"
+              sequence="90"
+              action="uellow_theme_common.dr_theme_config_action"
+              groups="base.group_system"/>
+</odoo>

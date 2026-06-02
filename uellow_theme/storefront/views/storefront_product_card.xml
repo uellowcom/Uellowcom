@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Inherit theme_prime.product_item_price
+        The template has TWO root children: <div t-if="..."> and <div t-else="">
+        We use position="after" on the INNER last child of the main div (t-if branch)
+        to append our extras inside it.
+
+        product_item_price structure:
+        <div class="product_price ..." t-if="request.website._dr_has_b2b_access()">
+            <span>price</span>
+            <del>base_price</del>
+            <span itemprop="price"/>
+            <span itemprop="priceCurrency"/>
+            <small class="tp-discount-percentage">...</small>   ← LAST child
+        </div>
+        <div t-else="">...</div>
+    -->
+    <template id="uellow_price_extras" inherit_id="theme_prime.product_item_price" name="Uellow: Price Extras">
+
+        <!-- Hide TP's own discount % — we show ours styled differently -->
+        <xpath expr="//small[@class='tp-discount-percentage d-none d-md-inline-block ms-1']" position="replace">
+        </xpath>
+
+        <!-- Append our blocks after the priceCurrency span (inside the main div) -->
+        <xpath expr="//span[@itemprop='priceCurrency']" position="after">
+            <t t-set="uc_is_ar" t-value="request.env.lang and request.env.lang.startswith('ar')"/>
+            <t t-set="uc_pb"    t-value="template_price_vals.get('base_price', 0) or 0"/>
+            <t t-set="uc_pr"    t-value="template_price_vals.get('price_reduce', 0) or 0"/>
+            <t t-set="uc_hd"    t-value="'base_price' in template_price_vals and uc_pb and uc_pb > uc_pr and (uc_pr or not website.prevent_zero_price_sale)"/>
+            <t t-set="uc_dp"    t-value="int(round((uc_pb - uc_pr) / uc_pb * 100)) if uc_hd and uc_pb else 0"/>
+            <t t-set="uc_ravg"  t-value="product.rating_avg or 0"/>
+            <t t-set="uc_rcnt"  t-value="product.rating_count or 0"/>
+
+            <!-- Discount % pill -->
+            <span t-if="uc_hd and uc_dp > 0" class="uc-disc-pill">-<t t-esc="uc_dp"/>%</span>
+
+            <!-- Stars + score + count -->
+            <div class="uc-rating-row" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
+                <div class="uc-stars">
+                    <span class="uc-stars-bg">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                    <span class="uc-stars-fg" t-attf-style="width:#{uc_ravg / 5 * 100:.0f}%">&#9733;&#9733;&#9733;&#9733;&#9733;</span>
+                </div>
+                <span class="uc-rating-score"><t t-esc="'%.1f' % uc_ravg"/></span>
+                <span class="uc-rating-count">(<t t-esc="uc_rcnt"/>)</span>
+            </div>
+
+            <!-- Fast delivery -->
+            <div class="uc-delivery" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
+                <svg class="uc-bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14H12L11 22L20 10H12L13 2Z"/></svg>
+                <span t-if="not uc_is_ar">Fast Delivery</span>
+                <span t-if="uc_is_ar">توصيل سريع</span>
+            </div>
+
+            <!-- Badges + availability -->
+            <div class="uc-footer" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
+                <div class="uc-badges">
+                    <span class="uc-badge-exp">EXPRESS</span>
+                    <span class="uc-badge-taly">taly</span>
+                </div>
+                <div class="uc-avail">
+                    <svg class="uc-avail-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                    <t t-if="not uc_is_ar">Available</t>
+                    <t t-if="uc_is_ar">متوفر</t>
+                </div>
+            </div>
+        </xpath>
+
+    </template>
+
+</odoo>

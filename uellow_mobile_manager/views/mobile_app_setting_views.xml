@@ -105,6 +105,102 @@
                         <page string="Countries" name="countries">
                             <field name="country_ids" widget="many2many_tags"/>
                         </page>
+
+                        <!-- TAB 8: Warehouse (sourcing center) -->
+                        <page string="Warehouse / Sourcing Center" name="warehouse">
+                            <group>
+                                <group string="Display Name (Bilingual)">
+                                    <field name="warehouse_name_en" placeholder="Uellow Warehouse"/>
+                                    <field name="warehouse_name_ar" placeholder="مخزن يلو"/>
+                                    <field name="warehouse_address"/>
+                                </group>
+                                <group string="GPS Coordinates">
+                                    <field name="warehouse_lat"/>
+                                    <field name="warehouse_lng"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info mt-2">
+                                <i class="fa fa-map-marker me-1"/>
+                                These coordinates pin the Uellow warehouse on the customer's
+                                live tracking map once an order is confirmed. Use Google Maps
+                                → right-click the location → copy lat,lng.
+                            </div>
+                        </page>
+
+                        <!-- TAB 9: Live tracking + Push tunings -->
+                        <page string="Live Tracking &amp; Push" name="tracking">
+                            <group>
+                                <group string="Proximity">
+                                    <field name="proximity_alert_km"/>
+                                    <field name="driver_heartbeat_seconds"/>
+                                </group>
+                                <group string="Lock Screen / Banners">
+                                    <field name="live_activity_enabled"/>
+                                    <field name="ongoing_notification_enabled"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- TAB 10: Deep links / App identity -->
+                        <page string="Deep Links / App Identity" name="deeplinks">
+                            <group>
+                                <group string="Android">
+                                    <field name="android_package"/>
+                                    <field name="android_fingerprint"
+                                           placeholder="AA:BB:CC:... (SHA-256)"/>
+                                </group>
+                                <group string="iOS">
+                                    <field name="ios_app_id"
+                                           placeholder="TEAMID.com.uellow.app"/>
+                                </group>
+                                <group string="Stores">
+                                    <field name="google_play_url"/>
+                                    <field name="app_store_url"/>
+                                    <field name="appgallery_url"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-warning mt-2">
+                                <i class="fa fa-info-circle me-1"/>
+                                The Android fingerprint is served as
+                                <code>/.well-known/assetlinks.json</code> so the OS
+                                opens uellow.com links in the app. Get it from
+                                <code>keytool -list -v -keystore release.keystore</code>.
+                            </div>
+                        </page>
+
+                        <!-- TAB 11: Checkout policy -->
+                        <page string="Checkout Policy" name="checkout">
+                            <group>
+                                <group string="Address Form">
+                                    <field name="require_phone_on_address"/>
+                                    <field name="require_address_photo"/>
+                                    <field name="enable_smart_address_picker"/>
+                                    <field name="enable_address_photo_upload"/>
+                                </group>
+                                <group string="Pricing">
+                                    <field name="free_shipping_min_kd"/>
+                                    <field name="cash_on_delivery_fee_kd"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- TAB 12: Feature switches -->
+                        <page string="Feature Switches" name="features">
+                            <group>
+                                <group>
+                                    <field name="enable_review_dialog"/>
+                                    <field name="enable_deep_links"/>
+                                </group>
+                                <group>
+                                    <field name="enable_app_banner"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info mt-2">
+                                <i class="fa fa-toggle-on me-1"/>
+                                Toggle individual features on/off without redeploying the app.
+                                The Flutter side reads these via <code>/api/mobile/v2/settings</code>.
+                            </div>
+                        </page>
                     </notebook>
                 </sheet>
             </form>
@@ -126,13 +222,25 @@
         </field>
     </record>
 
-    <record id="action_mobile_app_setting" model="ir.actions.act_window">
+    <!-- Singleton-style action — always lands on the existing settings row
+         (creating it once if missing) so users never hit the
+         `unique(website_id)` constraint by accidentally creating a duplicate
+         empty form when the row was already auto-created by an API call.
+         A separate xmlid is used because the legacy `action_mobile_app_setting`
+         is an `ir.actions.act_window` already stored in DB — Odoo can't
+         upgrade a record across action models. -->
+    <record id="action_mobile_app_setting_open" model="ir.actions.server">
         <field name="name">App Settings</field>
+        <field name="model_id" ref="model_mobile_app_setting"/>
+        <field name="state">code</field>
+        <field name="code">action = env['mobile.app.setting'].action_open_singleton()</field>
+    </record>
+
+    <!-- Kept (but no longer linked from the menu) for multi-website debugging -->
+    <record id="action_mobile_app_setting" model="ir.actions.act_window">
+        <field name="name">App Settings (per-website list)</field>
         <field name="res_model">mobile.app.setting</field>
-        <field name="view_mode">form,list</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Configure your mobile app!</p>
-        </field>
+        <field name="view_mode">list,form</field>
     </record>
 
 </odoo>

@@ -1,4 +1,13 @@
+import base64
+import json
+import logging
+
+import requests
+
 from odoo import models, fields, api, _
+from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class ImportJobLine(models.Model):
@@ -36,6 +45,7 @@ class ImportJobLine(models.Model):
     # Source info
     source_sku = fields.Char('SKU المصدر')
     source_url = fields.Char('رابط المصدر')
+    image_url = fields.Char('رابط الصورة')
 
     # Matching
     product_action = fields.Selection([
@@ -50,7 +60,8 @@ class ImportJobLine(models.Model):
         ondelete='set null',
     )
 
-    # Line status
+    # Line status — `index` accelerates the (job_id, line_state) lookup that
+    # the review wizard and dashboard hit constantly.
     line_state = fields.Selection([
         ('pending',  'بانتظار المراجعة'),
         ('approved', 'معتمد'),
@@ -85,12 +96,28 @@ class ImportJobLine(models.Model):
             else:
                 l.price_diff_pct = 0.0
 
+    @api.constrains('new_price', 'new_qty')
+    def _check_non_negative(self):
+        for l in self:
+            if l.new_price < 0:
+                raise UserError(_('السعر لا يمكن أن يكون سالباً.'))
+            if l.new_qty < 0:
+                raise UserError(_('الكمية لا يمكن أن تكون سالبة.'))
+
     def action_approve(self):
-        self.line_state = 'approved'
-        self.product_action = self.product_action or 'new'
+        # B6: ensure scalar writes on a recordset don't crash with `expected singleton`.
+        for line in self:
+            line.line_state = 'approved'
+            if not line.product_action:
+                line.product_action = 'new'
 
     def action_reject(self):
-        self.line_state = 'rejected'
+        # D5: require a reason — silent rejections lose audit trail.
+        for line in self:
+            if not line.reject_reason:
+                raise UserError(_(
+                    'حدد سبب الرفض قبل رفض السطر "%s".') % (line.name_en or line.id))
+            line.line_state = 'rejected'
 
     def action_apply(self):
         """Apply this single line to product catalog."""
@@ -101,31 +128,107 @@ class ImportJobLine(models.Model):
         self.applied_product_id = product
         self.line_state = 'applied'
 
+    # ──────────────────────────────────────────────────────────────────
+    # Catalog write — also feeds rollback_data so action_rollback can
+    # undo BOTH updates (restore old vals) AND creates (archive).
+    # ──────────────────────────────────────────────────────────────────
     def _apply_to_catalog(self):
         """Create or update product.template from this line's data."""
-        vals = {
+        self.ensure_one()
+        vals = self._product_vals_for_write()
+        job = self.job_id
+
+        if self.product_action == 'update' and self.existing_product_id:
+            ep = self.existing_product_id
+            self._snapshot_for_rollback(job, ep)
+            ep.write(vals)
+            # Optionally adjust stock if qty is positive — left as a TODO
+            # because it needs a stock.change.product.qty wizard call.
+            return ep
+
+        # CREATE path — for rollback we just remember the new product id so
+        # `action_rollback` can archive it (delete is unsafe if movements exist).
+        new_prod = self.env['product.template'].create(vals)
+        self._track_created_for_rollback(job, new_prod)
+        return new_prod
+
+    def _product_vals_for_write(self):
+        """Build the vals dict for product.template.create/write.
+
+        EN and AR descriptions are written to separate fields so neither is
+        silently overwritten by the other.
+        """
+        self.ensure_one()
+        v = {
             'name': self.name_ar or self.name_en,
-            'description_sale': self.description_ar or self.description_en or '',
             'list_price': self.new_price or 0.0,
             'type': 'consu',
         }
-        if self.product_action == 'update' and self.existing_product_id:
-            # Preserve rollback data on job before overwriting
-            job = self.job_id
-            if job.rollback_data:
-                import json
-                rb = json.loads(job.rollback_data)
-            else:
-                import json
-                rb = {}
-            ep = self.existing_product_id
-            rb[str(ep.id)] = {
-                'name': ep.name,
-                'description_sale': ep.description_sale or '',
-                'list_price': ep.list_price,
+        # Descriptions: AR goes to description_sale (customer-facing in AR site),
+        # EN goes to website_description_en if present, else falls back to description_sale.
+        if self.description_ar:
+            v['description_sale'] = self.description_ar
+        elif self.description_en:
+            v['description_sale'] = self.description_en
+        # SKU / barcode — only set if non-empty so we don't blank existing ones
+        if self.source_sku:
+            v['default_code'] = self.source_sku
+        # Image — fetch the URL into image_1920 if accessible
+        img_bin = self._fetch_image_binary()
+        if img_bin:
+            v['image_1920'] = img_bin
+        return v
+
+    def _fetch_image_binary(self):
+        """Return base64-encoded image bytes from `image_url`, or None on error."""
+        self.ensure_one()
+        url = (self.image_url or '').strip()
+        if not (url.startswith('http://') or url.startswith('https://')):
+            return None
+        try:
+            r = requests.get(url, timeout=10, stream=True)
+            r.raise_for_status()
+            # Cap to ~5 MB to avoid huge attachments
+            chunks = []
+            total = 0
+            for chunk in r.iter_content(chunk_size=64 * 1024):
+                chunks.append(chunk)
+                total += len(chunk)
+                if total > 5 * 1024 * 1024:
+                    return None
+            return base64.b64encode(b''.join(chunks))
+        except Exception as e:
+            _logger.info('Smart Connector: image fetch failed for %s: %s', url, e)
+            return None
+
+    @staticmethod
+    def _snapshot_for_rollback(job, product):
+        """Store enough vals to undo a write — keys map to product fields."""
+        rb = json.loads(job.rollback_data) if job.rollback_data else {}
+        if not isinstance(rb, dict) or ('updates' not in rb and 'creates' not in rb):
+            # Migrate the old flat shape {id: vals} → new shape.
+            rb = {'updates': rb if isinstance(rb, dict) else {}, 'creates': []}
+        rb.setdefault('updates', {})
+        rb.setdefault('creates', [])
+        # Don't overwrite an earlier snapshot — first one wins.
+        pid = str(product.id)
+        if pid not in rb['updates']:
+            rb['updates'][pid] = {
+                'name':             product.name,
+                'description_sale': product.description_sale or '',
+                'list_price':       product.list_price,
+                'default_code':     product.default_code or False,
+                'active':           product.active,
             }
-            job.rollback_data = json.dumps(rb)
-            self.existing_product_id.write(vals)
-            return self.existing_product_id
-        else:
-            return self.env['product.template'].create(vals)
+        job.rollback_data = json.dumps(rb)
+
+    @staticmethod
+    def _track_created_for_rollback(job, product):
+        rb = json.loads(job.rollback_data) if job.rollback_data else {}
+        if not isinstance(rb, dict) or ('updates' not in rb and 'creates' not in rb):
+            rb = {'updates': rb if isinstance(rb, dict) else {}, 'creates': []}
+        rb.setdefault('updates', {})
+        rb.setdefault('creates', [])
+        if product.id not in rb['creates']:
+            rb['creates'].append(product.id)
+        job.rollback_data = json.dumps(rb)

@@ -4,12 +4,15 @@
     'category': 'Website',
     'summary': 'AI Sales Assistant powered by Claude API',
     'author': 'Uellow',
-    'depends': ['website', 'website_sale', 'sale_management'],
+    'depends': ['website', 'website_sale', 'sale_management', 'portal'],
     'data': [
         'security/ir.model.access.csv',
         'data/config_data.xml',
         'views/ai_session_views.xml',
         'views/ai_settings_views.xml',
+        'views/beena_archive_views.xml',
+        'views/beena_order_views.xml',
+        'views/portal_templates.xml',
     ],
     'assets': {
         'web.assets_frontend': [

@@ -310,6 +310,14 @@ class UellowCheckout(_WSBase):
         if not order or not order.order_line:
             return {'success': False, 'error': 'empty_cart'}
 
+        # A2 — Idempotency guard. If a tx is already pending for this cart,
+        # short-circuit and return the previously-issued redirect instead of
+        # creating another payment.transaction (which would double-charge).
+        sess_key = 'uc_pending_tx_for_order_%d' % order.id
+        prev = request.session.get(sess_key)
+        if prev and isinstance(prev, dict):
+            return prev
+
         payment_method = (post.get('payment_method') or 'cod').strip()
         is_cod = payment_method.lower() in {'cod', 'cash', 'cash_on_delivery', 'custom'}
 
@@ -432,30 +440,28 @@ class UellowCheckout(_WSBase):
             _save_uc_order(order, payment_method, request.env)
             request.website.sale_reset()
 
-            return {
+            response = {
                 'success':      True,
                 'redirect':     pay_url,
                 'order_id':     order.id,
                 'order_name':   d['name'],
                 'amount_total': '%.3f' % d['total'],
             }
+            # A2 — cache response so duplicate submit returns the same redirect.
+            request.session[sess_key] = response
+            return response
 
         except Exception as e:
             import traceback
             _logger.error('UELLOW UPAYMENTS ERROR: %s\n%s', e, traceback.format_exc())
-            try:
-                order.action_confirm()
-            except Exception:
-                pass
-            d = _raw()
-            _save_uc_order(order, payment_method, request.env)
-            request.website.sale_reset()
+            # A1 — DO NOT auto-confirm on payment-gateway failure. That used
+            # to mark the order paid even when UPayments threw, causing
+            # silent revenue loss. Now we surface the error so the
+            # customer can retry / pick another method.
             return {
-                'success':      True,
-                'order_id':     order.id,
-                'order_name':   d['name'],
-                'amount_total': '%.3f' % d['total'],
-                'redirect':     '/shop/order/success?order_id=%d' % order.id,
+                'success': False,
+                'error':   'Payment gateway error — please retry or pick a different method',
+                'detail':  str(e)[:200],
             }
 
 

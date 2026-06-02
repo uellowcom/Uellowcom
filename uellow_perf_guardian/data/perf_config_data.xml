@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+  <record id="perf_config_singleton" model="uellow.perf.config">
+    <field name="name">Perf Guardian settings</field>
+    <field name="bot_quota_enabled">True</field>
+    <field name="bot_quota_soft">True</field>
+    <field name="rum_enabled">True</field>
+    <field name="rum_sample_rate">0.10</field>
+    <field name="synthetic_enabled">True</field>
+    <field name="slowq_enabled">True</field>
+  </record>
+</odoo>

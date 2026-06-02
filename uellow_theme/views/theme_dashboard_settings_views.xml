@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_uellow_theme_settings_form" model="ir.ui.view">
+        <field name="name">uellow.theme.settings.form</field>
+        <field name="model">uellow.theme.settings</field>
+        <field name="arch" type="xml">
+            <form string="Uellow Theme Settings" class="o_uellow_theme_settings">
+                <header>
+                    <button name="action_save" type="object"
+                            string="Save Settings" class="oe_highlight"/>
+                    <button name="action_reset_assets" type="object"
+                            string="Clear Cached Assets" icon="fa-refresh"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Uellow Theme Settings</h1>
+                        <p class="text-muted">
+                            Single place for every theme-level toggle. Changes save to
+                            <code>ir.config_parameter</code> and apply on next page render.
+                        </p>
+                    </div>
+
+                    <notebook>
+                        <!-- 1. General + Contact -->
+                        <page string="General &amp; Contact" name="general">
+                            <group>
+                                <group string="Contact">
+                                    <field name="whatsapp_number"/>
+                                    <field name="preheader_phone"/>
+                                </group>
+                                <group string="Search Bar">
+                                    <field name="search_placeholder"/>
+                                    <field name="trending_terms" placeholder="iphone, ps5, watch"/>
+                                </group>
+                            </group>
+                            <group string="Promo Banner (above header)">
+                                <field name="preheader_text" placeholder="Free shipping over 15 KWD ✦ Buy 2 get 5% off"/>
+                                <field name="free_shipping_text"/>
+                            </group>
+                        </page>
+
+                        <!-- 2. Mobile App -->
+                        <page string="Mobile App" name="apps">
+                            <group>
+                                <field name="app_ios_url" placeholder="https://apps.apple.com/..."/>
+                                <field name="app_android_url" placeholder="https://play.google.com/..."/>
+                                <field name="app_huawei_url" placeholder="https://appgallery.huawei.com/..."/>
+                            </group>
+                        </page>
+
+                        <!-- 3. Footer -->
+                        <page string="Footer" name="footer">
+                            <group>
+                                <field name="footer_about" widget="text"
+                                       placeholder="Short paragraph about Uellow shown in the footer left column."/>
+                                <field name="footer_newsletter_intro" widget="text"/>
+                                <field name="footer_credit"/>
+                            </group>
+                            <group string="Social Profile URLs (one per line)">
+                                <field name="social_urls" widget="text" nolabel="1"
+                                       placeholder="https://instagram.com/uellow&#10;https://x.com/uellow&#10;https://facebook.com/uellow"/>
+                            </group>
+                        </page>
+
+                        <!-- 4. Storefront -->
+                        <page string="Storefront" name="storefront">
+                            <group>
+                                <field name="delivery_time_text" widget="text"/>
+                                <field name="default_warranty"/>
+                            </group>
+                        </page>
+
+                        <!-- 5. Feature toggles -->
+                        <page string="Feature Toggles" name="features">
+                            <group>
+                                <group string="Chat / AI">
+                                    <field name="enable_beena"/>
+                                </group>
+                                <group string="Buying flow">
+                                    <field name="enable_fast_buy"/>
+                                    <field name="enable_compare"/>
+                                    <field name="enable_wishlist"/>
+                                </group>
+                                <group string="Product page widgets">
+                                    <field name="enable_bulk_pricing"/>
+                                    <field name="enable_view_counter"/>
+                                    <field name="enable_stats_strip"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- 6. Brand -->
+                        <page string="Brand Colours" name="brand">
+                            <group>
+                                <field name="brand_yellow" widget="color"/>
+                                <field name="brand_dark" widget="color"/>
+                            </group>
+                            <div class="alert alert-info">
+                                These values are exposed for future use. Live SCSS variables still come
+                                from <code>primary_variables.scss</code>; deploying a colour swap
+                                requires rebuilding SCSS.
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_uellow_theme_settings" model="ir.actions.act_window">
+        <field name="name">Uellow Theme Settings</field>
+        <field name="res_model">uellow.theme.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+    </record>
+
+    <!-- Top-level menu under the standard Website app -->
+    <menuitem id="menu_uellow_theme_root"
+              name="Uellow Theme"
+              parent="website.menu_website_configuration"
+              sequence="5"/>
+
+    <menuitem id="menu_uellow_theme_settings"
+              name="Settings"
+              parent="menu_uellow_theme_root"
+              action="action_uellow_theme_settings"
+              sequence="1"/>
+</odoo>

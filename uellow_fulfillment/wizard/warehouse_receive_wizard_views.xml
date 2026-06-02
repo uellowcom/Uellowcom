@@ -29,7 +29,7 @@
                 </sheet>
                 <footer>
                     <button name="action_confirm_receipt"
-                            string="Confirm & Update Stock"
+                            string="Confirm &amp; Update Stock"
                             type="object" class="oe_highlight"/>
                     <button string="إلغاء" class="btn-secondary" special="cancel"/>
                 </footer>

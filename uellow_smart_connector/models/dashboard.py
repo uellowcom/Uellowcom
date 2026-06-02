@@ -36,7 +36,9 @@ class SmartConnectorDashboard(models.TransientModel):
         critical_dead = dead_stock.search_count([('suggested_action', '=', 'discount')])
 
         # Recent jobs
-        recent_jobs = jobs.search([], limit=5, order='write_date desc')
+        # B7: order by create_date — write_date reorders silently every time
+        # _compute_stats touches the parent record, surprising the manager.
+        recent_jobs = jobs.search([], limit=5, order='create_date desc')
         recent_jobs_data = []
         for job in recent_jobs:
             recent_jobs_data.append({

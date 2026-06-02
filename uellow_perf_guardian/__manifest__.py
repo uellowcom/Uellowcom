@@ -1,0 +1,38 @@
+{
+    'name': 'Uellow Performance Guardian',
+    'version': '18.0.1.2.0',
+    'category': 'Website/Performance',
+    'summary': 'Production-grade RUM + bots + cache + SSL + 5xx + incidents + webhooks + anomaly',
+    'author': 'Uellow',
+    'website': 'https://uellow.com',
+    'depends': ['web', 'website', 'website_sale', 'website_blog', 'mail'],
+    'data': [
+        'security/ir.model.access.csv',
+        'data/perf_bot_classes.xml',
+        'data/perf_config_data.xml',
+        'data/perf_cron.xml',
+        'views/perf_dashboard.xml',
+        'views/perf_bot_views.xml',
+        'views/perf_metric_views.xml',
+        'views/perf_synthetic_views.xml',
+        'views/perf_slow_query_views.xml',
+        'views/perf_system_metric_views.xml',
+        'views/perf_image_issue_views.xml',
+        'views/perf_incident_views.xml',
+        'views/perf_error_rate_views.xml',
+        'views/perf_ssl_monitor_views.xml',
+        'views/perf_config_views.xml',
+        'views/perf_menus.xml',
+    ],
+    'assets': {
+        'web.assets_frontend': [
+            'uellow_perf_guardian/static/src/js/rum_collector.js',
+        ],
+        'web.assets_backend': [
+            'uellow_perf_guardian/static/src/scss/perf_dashboard.scss',
+        ],
+    },
+    'installable': True,
+    'application': True,
+    'license': 'LGPL-3',
+}

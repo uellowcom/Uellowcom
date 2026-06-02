@@ -4,19 +4,35 @@
    ===================================================== */
 
 :root {
-  --dp-primary:   #2d6be4;
-  --dp-green:     #16a34a;
-  --dp-red:       #dc2626;
-  --dp-yellow:    #d97706;
-  --dp-purple:    #7c3aed;
-  --dp-bg:        #f0f4f8;
-  --dp-white:     #ffffff;
-  --dp-border:    #e2e8f0;
-  --dp-text:      #1e293b;
-  --dp-muted:     #64748b;
-  --dp-sidebar:   #1a1f2e;
-  --dp-radius:    10px;
-  --dp-shadow:    0 2px 12px rgba(0,0,0,0.06);
+  /* Brand-locked palette — Uellow yellow + dark, with semantic colors
+     for status (green ok, red error). Was a mix of teal/orange that
+     fought the rest of the marketplace. */
+  --dp-brand:        #F5C320;
+  --dp-brand-l:      #ffd84a;
+  --dp-brand-d:      #c69b00;
+  --dp-brand-soft:   rgba(245,195,32,.12);
+  --dp-dark:         #412402;
+  --dp-dark-soft:    #5c3508;
+  --dp-primary:      #F5C320;          /* alias for brand */
+  --dp-green:        #10b981;
+  --dp-green-soft:   rgba(16,185,129,.12);
+  --dp-red:          #ef4444;
+  --dp-red-soft:     rgba(239,68,68,.12);
+  --dp-yellow:       #d97706;
+  --dp-blue:         #3b82f6;
+  --dp-blue-soft:    rgba(59,130,246,.12);
+  --dp-purple:       #8b5cf6;
+  --dp-bg:           #fafaf7;
+  --dp-white:        #ffffff;
+  --dp-border:       #e7e2cd;
+  --dp-text:         #1a1208;
+  --dp-muted:        #6a5a40;
+  --dp-sidebar:      #412402;
+  --dp-sidebar-active: #5c3508;
+  --dp-radius:       12px;
+  --dp-radius-sm:    8px;
+  --dp-shadow:       0 4px 14px rgba(65,36,2,.08);
+  --dp-shadow-l:     0 8px 24px rgba(65,36,2,.12);
 }
 
 /* ── Layout ───────────────────────────────────────── */
@@ -757,3 +773,143 @@ body.dp-modal-open { overflow: hidden !important; }
   color: #0F766E;
   font-weight: 700;
 }
+
+/* ════════════════════════════════════════════════════════
+   BRAND POLISH — apply yellow/dark uniformly across the
+   most-visible portal surfaces.
+   ════════════════════════════════════════════════════════ */
+
+/* Sidebar — brand dark with yellow accents */
+.dp-sidebar {
+  background: var(--dp-sidebar) !important;
+  border-right: 1px solid rgba(245,195,32,.15);
+}
+.dp-sidebar a,
+.dp-sidebar .dp-side-item {
+  color: rgba(245,195,32,.85) !important;
+  transition: all .12s ease;
+}
+.dp-sidebar a:hover,
+.dp-sidebar .dp-side-item:hover {
+  background: rgba(245,195,32,.12) !important;
+  color: var(--dp-brand-l) !important;
+}
+.dp-sidebar a.active,
+.dp-sidebar .dp-side-item.active {
+  background: linear-gradient(90deg, var(--dp-brand), var(--dp-brand-d)) !important;
+  color: var(--dp-dark) !important;
+  font-weight: 800;
+  box-shadow: inset 3px 0 0 var(--dp-dark);
+}
+
+/* Primary buttons across the portal */
+.dp-btn,
+.dp-btn-primary,
+button.dp-primary,
+.btn-primary.dp-style {
+  background: linear-gradient(135deg, var(--dp-brand-l), var(--dp-brand) 60%, var(--dp-brand-d)) !important;
+  color: var(--dp-dark) !important;
+  border: 1px solid rgba(65,36,2,.18) !important;
+  font-weight: 800;
+  box-shadow: 0 4px 12px -5px var(--dp-brand);
+  transition: all .12s ease;
+}
+.dp-btn:hover,
+.dp-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -4px var(--dp-brand);
+}
+
+/* Cards / panels */
+.dp-card,
+.dp-panel {
+  background: var(--dp-white);
+  border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius);
+  box-shadow: var(--dp-shadow);
+}
+
+/* KPI cards on the portal home */
+.dp-kpi {
+  background: linear-gradient(135deg, #fff 0%, var(--dp-brand-soft) 100%);
+  border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius);
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.dp-kpi::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--dp-brand-l), var(--dp-brand), var(--dp-brand-d));
+}
+.dp-kpi__num   { font-size: 24px; font-weight: 900; color: var(--dp-dark); }
+.dp-kpi__lbl   { font-size: 11px; font-weight: 700; color: var(--dp-muted); text-transform: uppercase; letter-spacing: .4px; }
+
+/* Status badges */
+.dp-tag-success, .dp-tag-green   { background: var(--dp-green-soft); color: #047857; font-weight: 700; }
+.dp-tag-danger,  .dp-tag-red     { background: var(--dp-red-soft);   color: #b91c1c; font-weight: 700; }
+.dp-tag-info,    .dp-tag-blue    { background: var(--dp-blue-soft);  color: #1d4ed8; font-weight: 700; }
+.dp-tag-warning, .dp-tag-yellow  { background: var(--dp-brand-soft); color: var(--dp-dark); font-weight: 700; }
+
+/* Tables */
+.dp-table th {
+  background: var(--dp-brand-soft);
+  color: var(--dp-dark);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  font-size: 11px;
+  border-bottom: 2px solid var(--dp-brand-d);
+}
+.dp-table td  { border-bottom: 1px solid var(--dp-border); color: var(--dp-text); }
+.dp-table tr:hover { background: var(--dp-brand-soft); }
+
+/* Form inputs */
+.dp-input,
+.dp-select-input {
+  border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius-sm);
+  padding: 8px 12px;
+  font-size: 13px;
+  background: #fff;
+  color: var(--dp-text);
+  transition: all .12s;
+}
+.dp-input:focus,
+.dp-select-input:focus {
+  outline: none;
+  border-color: var(--dp-brand);
+  box-shadow: 0 0 0 3px var(--dp-brand-soft);
+}
+
+/* Loading skeleton */
+.dp-skeleton {
+  background: linear-gradient(90deg, #f5f3eb, #ebe2c8, #f5f3eb);
+  background-size: 200% 100%;
+  animation: dp-shimmer 1.3s linear infinite;
+  border-radius: 6px;
+  min-height: 18px;
+}
+@keyframes dp-shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+/* Mobile-friendly toast */
+.dp-toast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  background: var(--dp-dark);
+  color: var(--dp-brand-l);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 12px 32px -10px rgba(0,0,0,.4);
+  max-width: 90vw;
+}
+.dp-toast.dp-toast-error { background: var(--dp-red); color: #fff; }
+.dp-toast.dp-toast-ok    { background: var(--dp-green); color: #fff; }

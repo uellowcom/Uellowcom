@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- ═══ AUDIT — LIST ═══════════════════════════════════════════ -->
+  <record id="uellow_seo_audit_view_list" model="ir.ui.view">
+    <field name="name">uellow.seo.audit.list</field>
+    <field name="model">uellow.seo.audit</field>
+    <field name="arch" type="xml">
+      <list string="SEO Audits" decoration-success="score >= 80"
+            decoration-warning="score &lt; 80 and score &gt;= 50"
+            decoration-danger="score &lt; 50">
+        <field name="create_date"/>
+        <field name="name"/>
+        <field name="state"/>
+        <field name="score" widget="progressbar"/>
+        <field name="pages_audited"/>
+        <field name="issue_count_critical" string="🔴"/>
+        <field name="issue_count_warning"  string="🟡"/>
+        <field name="issue_count_info"     string="🔵"/>
+        <field name="duration_seconds" optional="hide"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- ═══ AUDIT — FORM ═══════════════════════════════════════════ -->
+  <record id="uellow_seo_audit_view_form" model="ir.ui.view">
+    <field name="name">uellow.seo.audit.form</field>
+    <field name="model">uellow.seo.audit</field>
+    <field name="arch" type="xml">
+      <form string="SEO Audit">
+        <header>
+          <button name="action_view_issues" type="object" string="📋 View issues" class="btn-primary"/>
+          <field name="state" widget="statusbar"/>
+        </header>
+        <sheet>
+          <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+          <group>
+            <group string="Score">
+              <field name="score" widget="progressbar"/>
+              <field name="pages_audited"/>
+              <field name="duration_seconds" widget="float_time" string="Duration"/>
+              <field name="create_date" readonly="1"/>
+            </group>
+            <group string="Issues found">
+              <field name="issue_count_critical" string="🔴 Critical"/>
+              <field name="issue_count_warning"  string="🟡 Warning"/>
+              <field name="issue_count_info"     string="🔵 Info"/>
+              <field name="issue_count_total"    string="Total"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Findings">
+              <field name="issue_ids" readonly="1">
+                <list>
+                  <field name="severity"/>
+                  <field name="code"/>
+                  <field name="message"/>
+                  <field name="record_name"/>
+                  <button name="action_open_record" type="object" icon="fa-external-link" string="Open"/>
+                </list>
+              </field>
+            </page>
+            <page string="Scope">
+              <group>
+                <field name="scope_products"/>
+                <field name="scope_categories"/>
+                <field name="scope_pages"/>
+                <field name="scope_limit"/>
+              </group>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_uellow_seo_audit" model="ir.actions.act_window">
+    <field name="name">SEO Audits</field>
+    <field name="res_model">uellow.seo.audit</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- ═══ ISSUE — LIST ═══════════════════════════════════════════ -->
+  <record id="uellow_seo_audit_issue_view_list" model="ir.ui.view">
+    <field name="name">uellow.seo.audit.issue.list</field>
+    <field name="model">uellow.seo.audit.issue</field>
+    <field name="arch" type="xml">
+      <list string="SEO Issues" decoration-danger="severity == 'critical'"
+            decoration-warning="severity == 'warning'" decoration-info="severity == 'info'">
+        <field name="severity"/>
+        <field name="code"/>
+        <field name="message"/>
+        <field name="record_name"/>
+        <field name="audit_id" optional="hide"/>
+        <button name="action_open_record" type="object" icon="fa-external-link"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_uellow_seo_audit_issue" model="ir.actions.act_window">
+    <field name="name">All SEO Issues</field>
+    <field name="res_model">uellow.seo.audit.issue</field>
+    <field name="view_mode">list</field>
+  </record>
+</odoo>

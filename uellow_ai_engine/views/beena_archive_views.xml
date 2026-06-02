@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============ CONVERSATION LIST ============ -->
+    <record id="view_beena_conversation_list" model="ir.ui.view">
+        <field name="name">beena.conversation.list</field>
+        <field name="model">beena.conversation</field>
+        <field name="arch" type="xml">
+            <list string="Conversations" default_order="create_date desc">
+                <field name="create_date" string="Date"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="is_guest" string="Guest"/>
+                <field name="product_id" string="Product"/>
+                <field name="lang" string="Lang"/>
+                <field name="message_count" string="Messages"/>
+                <field name="claude_calls" string="Claude"/>
+                <field name="cache_hits" string="Cache"/>
+                <field name="total_cost" string="Cost (USD)" sum="Total Cost"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-muted="state == 'archived'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ============ CONVERSATION FORM ============ -->
+    <record id="view_beena_conversation_form" model="ir.ui.view">
+        <field name="name">beena.conversation.form</field>
+        <field name="model">beena.conversation</field>
+        <field name="arch" type="xml">
+            <form string="Conversation">
+                <sheet>
+                    <group>
+                        <group string="Info">
+                            <field name="session_id" readonly="1"/>
+                            <field name="partner_id"/>
+                            <field name="is_guest"/>
+                            <field name="product_id"/>
+                            <field name="lang"/>
+                            <field name="state"/>
+                        </group>
+                        <group string="Usage &amp; Cost">
+                            <field name="message_count"/>
+                            <field name="claude_calls"/>
+                            <field name="cache_hits"/>
+                            <field name="total_input_tokens"/>
+                            <field name="total_output_tokens"/>
+                            <field name="total_cost"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Messages">
+                            <field name="message_ids" readonly="1">
+                                <list default_order="create_date asc">
+                                    <field name="create_date" string="Time"/>
+                                    <field name="role"/>
+                                    <field name="source" widget="badge"/>
+                                    <field name="body"/>
+                                    <field name="input_tokens"/>
+                                    <field name="output_tokens"/>
+                                    <field name="cost"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ============ CONVERSATION SEARCH ============ -->
+    <record id="view_beena_conversation_search" model="ir.ui.view">
+        <field name="name">beena.conversation.search</field>
+        <field name="model">beena.conversation</field>
+        <field name="arch" type="xml">
+            <search string="Search Conversations">
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="session_id"/>
+                <filter name="guests" string="Guests" domain="[('is_guest','=',True)]"/>
+                <filter name="customers" string="Customers" domain="[('is_guest','=',False)]"/>
+                <separator/>
+                <filter name="active" string="Active" domain="[('state','=','active')]"/>
+                <filter name="archived" string="Archived" domain="[('state','=','archived')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_product" string="Product" context="{'group_by':'product_id'}"/>
+                    <filter name="grp_lang" string="Language" context="{'group_by':'lang'}"/>
+                    <filter name="grp_state" string="Status" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============ MESSAGE LIST (cost tracking) ============ -->
+    <record id="view_beena_message_list" model="ir.ui.view">
+        <field name="name">beena.message.list</field>
+        <field name="model">beena.message</field>
+        <field name="arch" type="xml">
+            <list string="Messages" default_order="create_date desc">
+                <field name="create_date" string="Time"/>
+                <field name="conversation_id"/>
+                <field name="role"/>
+                <field name="source" widget="badge"/>
+                <field name="product_id"/>
+                <field name="input_tokens" sum="Input"/>
+                <field name="output_tokens" sum="Output"/>
+                <field name="cost" sum="Total Cost"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_beena_message_search" model="ir.ui.view">
+        <field name="name">beena.message.search</field>
+        <field name="model">beena.message</field>
+        <field name="arch" type="xml">
+            <search string="Search Messages">
+                <field name="conversation_id"/>
+                <field name="product_id"/>
+                <filter name="claude" string="Claude" domain="[('source','=','claude')]"/>
+                <filter name="cache" string="Cache" domain="[('source','=','cache')]"/>
+                <filter name="db" string="DB Routing" domain="[('source','=','db_routing')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_source" string="Source" context="{'group_by':'source'}"/>
+                    <filter name="grp_role" string="Role" context="{'group_by':'role'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ============ MESSAGE GRAPH (cost over time) ============ -->
+    <record id="view_beena_message_graph" model="ir.ui.view">
+        <field name="name">beena.message.graph</field>
+        <field name="model">beena.message</field>
+        <field name="arch" type="xml">
+            <graph string="Cost Analysis" type="line" sample="1">
+                <field name="create_date" interval="day"/>
+                <field name="cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_beena_message_pivot" model="ir.ui.view">
+        <field name="name">beena.message.pivot</field>
+        <field name="model">beena.message</field>
+        <field name="arch" type="xml">
+            <pivot string="Cost Breakdown" sample="1">
+                <field name="source" type="row"/>
+                <field name="create_date" interval="day" type="col"/>
+                <field name="cost" type="measure"/>
+                <field name="input_tokens" type="measure"/>
+                <field name="output_tokens" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- ============ CONVERSATION GRAPH ============ -->
+    <record id="view_beena_conversation_graph" model="ir.ui.view">
+        <field name="name">beena.conversation.graph</field>
+        <field name="model">beena.conversation</field>
+        <field name="arch" type="xml">
+            <graph string="Conversations" type="bar" sample="1">
+                <field name="create_date" interval="day"/>
+                <field name="total_cost" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- ============ ACTIONS ============ -->
+    <record id="action_beena_conversations" model="ir.actions.act_window">
+        <field name="name">Conversations</field>
+        <field name="res_model">beena.conversation</field>
+        <field name="view_mode">list,form,graph</field>
+        <field name="search_view_id" ref="view_beena_conversation_search"/>
+    </record>
+
+    <record id="action_beena_messages" model="ir.actions.act_window">
+        <field name="name">Messages</field>
+        <field name="res_model">beena.message</field>
+        <field name="view_mode">list,graph,pivot</field>
+        <field name="search_view_id" ref="view_beena_message_search"/>
+    </record>
+
+    <!-- ============ MENUS ============ -->
+    <menuitem id="menu_beena_archive"
+              name="Conversation Archive"
+              parent="menu_ai_root"
+              sequence="20"/>
+
+    <menuitem id="menu_beena_conversations"
+              name="Conversations"
+              parent="menu_beena_archive"
+              action="action_beena_conversations"
+              sequence="10"/>
+
+    <menuitem id="menu_beena_messages"
+              name="Messages &amp; Cost"
+              parent="menu_beena_archive"
+              action="action_beena_messages"
+              sequence="20"/>
+
+    <!-- ============ DASHBOARD ============ -->
+    <record id="view_beena_dashboard_form" model="ir.ui.view">
+        <field name="name">beena.dashboard.form</field>
+        <field name="model">beena.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Beena Dashboard" create="false" edit="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Beena AI Dashboard</h1>
+                    </div>
+                    <group string="Cost (USD)">
+                        <group>
+                            <field name="cost_today"/>
+                            <field name="cost_month"/>
+                            <field name="cost_total"/>
+                        </group>
+                        <group>
+                            <field name="conversations_total"/>
+                            <field name="conversations_today"/>
+                            <field name="messages_total"/>
+                        </group>
+                    </group>
+                    <group string="Efficiency">
+                        <group>
+                            <field name="claude_calls"/>
+                            <field name="cache_hits"/>
+                            <field name="cache_hit_rate"/>
+                        </group>
+                        <group>
+                            <field name="tokens_total"/>
+                        </group>
+                    </group>
+                    <group string="Orders via Beena">
+                        <group>
+                            <field name="beena_orders"/>
+                            <field name="beena_orders_value"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Top Products by Conversations">
+                            <field name="top_products" nolabel="1"/>
+                        </group>
+                        <group string="Most Frequent Questions">
+                            <field name="top_questions" nolabel="1"/>
+                        </group>
+                    </group>
+                    <group string="Customer Sentiment">
+                        <field name="sentiment_summary" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_beena_dashboard" model="ir.actions.server">
+        <field name="name">Dashboard</field>
+        <field name="model_id" ref="model_beena_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">action = env['beena.dashboard'].open_dashboard()</field>
+    </record>
+
+    <menuitem id="menu_beena_dashboard"
+              name="Dashboard"
+              parent="uellow_ai_engine.menu_ai_root"
+              action="action_beena_dashboard"
+              sequence="5"/>
+
+    <!-- ============ ANSWER CACHE ============ -->
+    <record id="view_beena_qa_cache_list" model="ir.ui.view">
+        <field name="name">beena.qa.cache.list</field>
+        <field name="model">beena.qa.cache</field>
+        <field name="arch" type="xml">
+            <list string="Answer Cache" default_order="hit_count desc">
+                <field name="question"/>
+                <field name="product_id" string="Product"/>
+                <field name="lang" string="Lang"/>
+                <field name="hit_count" string="Times Used" sum="Total Hits"/>
+                <field name="saved_cost" string="Saved (USD)" sum="Total Saved"/>
+                <field name="approved" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_beena_qa_cache_form" model="ir.ui.view">
+        <field name="name">beena.qa.cache.form</field>
+        <field name="model">beena.qa.cache</field>
+        <field name="arch" type="xml">
+            <form string="Cached Answer">
+                <sheet>
+                    <group>
+                        <group string="Question">
+                            <field name="question"/>
+                            <field name="product_id"/>
+                            <field name="lang"/>
+                            <field name="approved"/>
+                        </group>
+                        <group string="Stats">
+                            <field name="hit_count" readonly="1"/>
+                            <field name="saved_cost" readonly="1"/>
+                            <field name="question_norm" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Answer">
+                        <field name="answer" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_beena_qa_cache_search" model="ir.ui.view">
+        <field name="name">beena.qa.cache.search</field>
+        <field name="model">beena.qa.cache</field>
+        <field name="arch" type="xml">
+            <search string="Search Cache">
+                <field name="question"/>
+                <field name="product_id"/>
+                <filter name="approved" string="Approved" domain="[('approved','=',True)]"/>
+                <filter name="disabled" string="Disabled" domain="[('approved','=',False)]"/>
+                <filter name="used" string="Used" domain="[('hit_count','>',0)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="grp_product" string="Product" context="{'group_by':'product_id'}"/>
+                    <filter name="grp_lang" string="Language" context="{'group_by':'lang'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_beena_qa_cache" model="ir.actions.act_window">
+        <field name="name">Answer Cache</field>
+        <field name="res_model">beena.qa.cache</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_beena_qa_cache_search"/>
+    </record>
+
+    <menuitem id="menu_beena_qa_cache"
+              name="Answer Cache"
+              parent="uellow_ai_engine.menu_ai_root"
+              action="action_beena_qa_cache"
+              sequence="50"/>
+
+</odoo>

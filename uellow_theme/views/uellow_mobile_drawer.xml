@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        ════════════════════════════════════════════════════════════════════
+        Uellow Mobile Drawer — premium hamburger off-canvas
+        ────────────────────────────────────────────────────────────────────
+        Replaces the existing offcanvas body inside `template_header_mobile`
+        with a richer, more professional layout:
+
+           1. Hero — gradient slate with user block (avatar + greeting +
+              loyalty pill OR sign-in CTA)
+           2. Inline search trigger (opens theme_prime's search sidebar)
+           3. Quick actions grid — Orders / Wishlist / Tickets / Loyalty /
+              Addresses / Compare (5-6 tiles)
+           4. Shop by category — 8 category tiles with images + "see all"
+           5. Browse — website menu items as a flat list with icons
+           6. Popular brands — horizontal scrolling strip from
+              website._get_brands(limit=10)
+           7. Customer service links
+           8. Settings — language / currency / storefront switcher
+           9. App download card (App Store + Google Play badges)
+          10. Social row (filtered to populated socials)
+          11. Footer — policies + sign-out (when logged in)
+        ════════════════════════════════════════════════════════════════════
+    -->
+
+    <template id="uellow_mobile_drawer"
+              inherit_id="uellow_theme.template_header_mobile"
+              name="Uellow: Premium Mobile Drawer">
+        <xpath expr="//div[@id='top_menu_collapse_mobile']" position="replace">
+
+            <t t-set="_user"     t-value="user_id"/>
+            <t t-set="_is_guest" t-value="_user._is_public()"/>
+            <t t-set="_partner"  t-value="_user.partner_id if not _is_guest else None"/>
+
+            <t t-set="_cats" t-value="request.env['product.public.category'].sudo().search([
+                ('parent_id', '=', False),
+                ('website_id', 'in', [False, website.id]),
+            ], order='sequence, name', limit=8)"/>
+            <t t-set="_brands"  t-value="website.sudo()._get_brands(limit=10)"/>
+            <t t-set="_socials" t-value="website.sudo()._uc_socials()"/>
+            <t t-set="_addr"    t-value="website.sudo()._uc_current_delivery()"/>
+
+            <t t-nocache="The wishlist + cart counters depend on the user.">
+                <t t-set="_wishcount" t-value="len(request.env['product.wishlist'].current()) if not _is_guest else 0"/>
+            </t>
+
+            <div class="offcanvas offcanvas-start uc-mobdrawer"
+                 id="top_menu_collapse_mobile" tabindex="-1"
+                 aria-labelledby="uc-mobdrawer-title">
+
+                <!-- ─── 1. HERO ─── -->
+                <div class="uc-mobdrawer-hero">
+                    <div class="uc-mobdrawer-hero-bg"/>
+                    <button type="button" class="uc-mobdrawer-close"
+                            data-bs-dismiss="offcanvas" aria-label="Close">
+                        <i class="fa fa-times"/>
+                    </button>
+
+                    <div class="uc-mobdrawer-userblock">
+                        <div class="uc-mobdrawer-avatar">
+                            <t t-if="_is_guest">
+                                <i class="fa fa-user"/>
+                            </t>
+                            <t t-else="">
+                                <img t-attf-src="/web/image/res.users/#{_user.id}/avatar_128"
+                                     t-att-alt="_user.name"
+                                     onerror="this.parentNode.querySelector('i').style.display='grid';this.remove();"/>
+                                <i class="fa fa-user" style="display:none"/>
+                            </t>
+                        </div>
+                        <div class="uc-mobdrawer-user-info">
+                            <small class="uc-mobdrawer-greet">
+                                <t t-if="_is_guest" t-out="website._uc_t('Welcome to Uellow')"/>
+                                <t t-else="" t-out="website._uc_t('Hello,')"/>
+                            </small>
+                            <strong class="uc-mobdrawer-user-name">
+                                <t t-if="_is_guest" t-out="website._uc_t('Sign in to your account')"/>
+                                <t t-else="" t-out="_user.name"/>
+                            </strong>
+                            <div t-if="not _is_guest" class="uc-mobdrawer-user-meta">
+                                <span class="uc-mobdrawer-chip">
+                                    <i class="fa fa-star"/>
+                                    <t t-out="website._uc_t('Loyalty member')"/>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="uc-mobdrawer-cta">
+                        <t t-if="_is_guest">
+                            <a href="/web/login" class="uc-mobdrawer-btn uc-mobdrawer-btn-primary">
+                                <i class="fa fa-sign-in"/>
+                                <t t-out="website._uc_t('Sign in')"/>
+                            </a>
+                            <a href="/web/signup" class="uc-mobdrawer-btn uc-mobdrawer-btn-ghost">
+                                <i class="fa fa-user-plus"/>
+                                <t t-out="website._uc_t('Register')"/>
+                            </a>
+                        </t>
+                        <t t-else="">
+                            <a href="/my/home" class="uc-mobdrawer-btn uc-mobdrawer-btn-primary">
+                                <i class="fa fa-th-large"/>
+                                <t t-out="website._uc_t('Dashboard')"/>
+                            </a>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- ─── 2. SEARCH TRIGGER ─── -->
+                <a href="#" class="uc-mobdrawer-search tp-search-sidebar-action"
+                   t-att-data-search="search"
+                   data-bs-dismiss="offcanvas">
+                    <i class="fa fa-search"/>
+                    <span t-out="website.uc_search_placeholder or website._uc_t('Search for products, brands and more...')"/>
+                </a>
+
+                <!-- ─── BODY (scrollable) ─── -->
+                <div class="offcanvas-body uc-mobdrawer-body p-0">
+
+                    <!-- ── 3. QUICK ACTIONS ── -->
+                    <section class="uc-mobdrawer-section">
+                        <h3 class="uc-mobdrawer-h3"><t t-out="website._uc_t('Quick actions')"/></h3>
+                        <div class="uc-mobdrawer-quick">
+                            <a href="/my/orders" class="uc-mobdrawer-quick-item">
+                                <i class="fa fa-shopping-bag"/>
+                                <span t-out="website._uc_t('Orders')"/>
+                            </a>
+                            <a href="/shop/wishlist" class="uc-mobdrawer-quick-item position-relative">
+                                <i class="fa fa-heart-o"/>
+                                <span t-out="website._uc_t('Wishlist')"/>
+                                <sup t-if="_wishcount" class="uc-mobdrawer-badge" t-out="_wishcount"/>
+                            </a>
+                            <a href="/my/tickets" class="uc-mobdrawer-quick-item">
+                                <i class="fa fa-life-ring"/>
+                                <span t-out="website._uc_t('Tickets')"/>
+                            </a>
+                            <a href="/my/loyalty" class="uc-mobdrawer-quick-item">
+                                <i class="fa fa-star-o"/>
+                                <span t-out="website._uc_t('Loyalty')"/>
+                            </a>
+                            <a href="/my/invoices" class="uc-mobdrawer-quick-item">
+                                <i class="fa fa-file-text-o"/>
+                                <span t-out="website._uc_t('Invoices')"/>
+                            </a>
+                            <a href="/my/account" class="uc-mobdrawer-quick-item">
+                                <i class="fa fa-map-marker"/>
+                                <span t-out="website._uc_t('Addresses')"/>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- ── 4. SHOP BY CATEGORY ── -->
+                    <section class="uc-mobdrawer-section">
+                        <div class="uc-mobdrawer-section-head">
+                            <h3 class="uc-mobdrawer-h3"><t t-out="website._uc_t('Shop by category')"/></h3>
+                            <a href="/shop" class="uc-mobdrawer-see-all">
+                                <t t-out="website._uc_t('See all')"/>
+                                <i class="fa fa-arrow-right"/>
+                            </a>
+                        </div>
+                        <div class="uc-mobdrawer-cats">
+                            <a t-foreach="_cats" t-as="_c"
+                               t-attf-href="/shop/category/#{_c.id}"
+                               class="uc-mobdrawer-cat">
+                                <span class="uc-mobdrawer-cat-img">
+                                    <img t-if="_c.image_128" loading="lazy"
+                                         t-attf-src="/web/image/product.public.category/#{_c.id}/image_128"
+                                         t-att-alt="_c.name"/>
+                                    <i t-else="" class="fa fa-folder-o"/>
+                                </span>
+                                <span class="uc-mobdrawer-cat-name" t-out="_c.name"/>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- ── 5. BROWSE (main menu) ── -->
+                    <!-- Force the current request lang onto the menu lookup so
+                         translations show even when QWeb's outer context was
+                         cached at a different language. -->
+                    <t t-set="_menu_lang" t-value="request.lang.code if request.lang else (request.env.lang or 'en_US')"/>
+                    <t t-set="_menus"     t-value="website.menu_id.child_id.with_context(lang=_menu_lang)"/>
+                    <section class="uc-mobdrawer-section" t-if="_menus">
+                        <h3 class="uc-mobdrawer-h3"><t t-out="website._uc_t('Browse')"/></h3>
+                        <nav class="uc-mobdrawer-nav">
+                            <a t-foreach="_menus" t-as="_m"
+                               t-att-href="_m.url or '#'"
+                               class="uc-mobdrawer-nav-item">
+                                <i class="fa fa-th-list"/>
+                                <span t-out="_m.name"/>
+                                <i class="fa fa-chevron-right uc-mobdrawer-nav-chev"/>
+                            </a>
+                        </nav>
+                    </section>
+
+                    <!-- ── 6. POPULAR BRANDS ── -->
+                    <section class="uc-mobdrawer-section" t-if="_brands">
+                        <div class="uc-mobdrawer-section-head">
+                            <h3 class="uc-mobdrawer-h3"><t t-out="website._uc_t('Popular brands')"/></h3>
+                        </div>
+                        <div class="uc-mobdrawer-brands">
+                            <a t-foreach="_brands" t-as="_b"
+                               t-attf-href="/shop?attribute_value=#{_b.id}"
+                               class="uc-mobdrawer-brand">
+                                <img t-if="_b.image" loading="lazy"
+                                     t-attf-src="/web/image/product.attribute.value/#{_b.id}/image"
+                                     t-att-alt="_b.name"/>
+                                <span t-else="" t-out="_b.name"/>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- ── 7. CUSTOMER SERVICE ── -->
+                    <section class="uc-mobdrawer-section">
+                        <h3 class="uc-mobdrawer-h3"><t t-out="website._uc_t('Customer service')"/></h3>
+                        <ul class="uc-mobdrawer-links">
+                            <li><a href="/contactus"><i class="fa fa-envelope-o"/>
+                                <span t-out="website._uc_t('Contact us')"/></a></li>
+                            <li><a href="/page/faq"><i class="fa fa-question-circle-o"/>
+                                <span t-out="website._uc_t('FAQ')"/></a></li>
+                            <li><a href="/page/track-order"><i class="fa fa-truck"/>
+                                <span t-out="website._uc_t('Track my order')"/></a></li>
+                            <li><a href="/page/returns"><i class="fa fa-undo"/>
+                                <span t-out="website._uc_t('Returns &amp; refunds')"/></a></li>
+                            <li><a href="/page/shipping"><i class="fa fa-truck"/>
+                                <span t-out="website._uc_t('Shipping &amp; delivery')"/></a></li>
+                            <li t-if="website.company_id.phone">
+                                <a t-attf-href="tel:#{website.company_id.phone}">
+                                    <i class="fa fa-phone"/>
+                                    <span><t t-out="website._uc_t('Call us')"/>: <t t-out="website.company_id.phone"/></span>
+                                </a>
+                            </li>
+                        </ul>
+                    </section>
+
+                    <!-- ── 8. SETTINGS — country / language / currency ── -->
+                    <section class="uc-mobdrawer-section">
+                        <h3 class="uc-mobdrawer-h3"><t t-out="website._uc_t('Settings')"/></h3>
+                        <div class="uc-mobdrawer-settings">
+                            <div class="uc-mobdrawer-setting">
+                                <span class="uc-mobdrawer-setting-label">
+                                    <i class="fa fa-globe"/>
+                                    <t t-out="website._uc_t('Storefront')"/>
+                                </span>
+                                <strong t-out="website.name"/>
+                            </div>
+                            <t t-call="uellow_theme.component_language_pricelist_selector">
+                                <t t-set="_dropdown_classes" t-valuef="uc-mobdrawer-lp"/>
+                            </t>
+                            <div t-if="_addr" class="uc-mobdrawer-setting">
+                                <span class="uc-mobdrawer-setting-label">
+                                    <i class="fa fa-map-marker"/>
+                                    <t t-out="website._uc_t('Deliver to')"/>
+                                </span>
+                                <strong>
+                                    <t t-if="_addr.get('flag')" t-out="_addr.get('flag')"/>
+                                    <t t-out="_addr.get('short') or website._uc_t('Select')"/>
+                                </strong>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ── 9. APP CARD ── -->
+                    <section class="uc-mobdrawer-section" t-if="website.uc_app_ios_url or website.uc_app_android_url">
+                        <div class="uc-mobdrawer-app">
+                            <div class="uc-mobdrawer-app-body">
+                                <strong t-out="website._uc_t('Get the Uellow App')"/>
+                                <small t-out="website._uc_t('Faster shopping, better deals')"/>
+                            </div>
+                            <div class="uc-mobdrawer-app-badges">
+                                <a t-if="website.uc_app_ios_url" t-att-href="website.uc_app_ios_url"
+                                   target="_blank" rel="noopener" class="uc-mobdrawer-app-badge">
+                                    <i class="fa fa-apple"/>
+                                    <span>App Store</span>
+                                </a>
+                                <a t-if="website.uc_app_android_url" t-att-href="website.uc_app_android_url"
+                                   target="_blank" rel="noopener" class="uc-mobdrawer-app-badge">
+                                    <i class="fa fa-android"/>
+                                    <span>Google Play</span>
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- ── 10. SOCIALS ── -->
+                    <section class="uc-mobdrawer-section" t-if="_socials">
+                        <h3 class="uc-mobdrawer-h3"><t t-out="website._uc_t('Follow us')"/></h3>
+                        <div class="uc-mobdrawer-socials">
+                            <a t-foreach="_socials" t-as="_s"
+                               t-att-href="_s.get('url')"
+                               t-att-aria-label="_s.get('label')"
+                               t-att-title="_s.get('label')"
+                               target="_blank" rel="noopener"
+                               class="uc-mobdrawer-social">
+                                <i t-attf-class="fa fa-#{_s.get('icon')}"/>
+                            </a>
+                        </div>
+                    </section>
+
+                </div>
+
+                <!-- ─── FOOTER ─── -->
+                <div class="uc-mobdrawer-foot">
+                    <div class="uc-mobdrawer-foot-links">
+                        <a href="/page/privacy" t-out="website._uc_t('Privacy')"/>
+                        <span>·</span>
+                        <a href="/page/terms"   t-out="website._uc_t('Terms')"/>
+                        <span>·</span>
+                        <a href="/page/cookies" t-out="website._uc_t('Cookies')"/>
+                    </div>
+                    <a t-if="not _is_guest" href="/web/session/logout?redirect=/"
+                       class="uc-mobdrawer-logout">
+                        <i class="fa fa-sign-out"/>
+                        <t t-out="website._uc_t('Sign out')"/>
+                    </a>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

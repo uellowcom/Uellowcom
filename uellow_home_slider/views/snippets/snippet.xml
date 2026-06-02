@@ -7,14 +7,14 @@
             <div class="uhs-desktop d-none d-lg-flex" dir="rtl">
                 <div class="uhs-banners-col">
                     <a class="uhs-banner-link" id="uhs_b1_link" href="/shop">
-                        <img id="uhs_b1_img" src="/uellow_home_slider/static/src/img/placeholder.svg" alt="Banner 1" loading="lazy"/>
+                        <img id="uhs_b1_img" src="/uellow_home_slider/static/src/img/placeholder.svg" alt="Banner 1" loading="lazy" width="280" height="180" decoding="async"/>
                     </a>
                     <a class="uhs-banner-link" id="uhs_b2_link" href="/shop">
-                        <img id="uhs_b2_img" src="/uellow_home_slider/static/src/img/placeholder.svg" alt="Banner 2" loading="lazy"/>
+                        <img id="uhs_b2_img" src="/uellow_home_slider/static/src/img/placeholder.svg" alt="Banner 2" loading="lazy" width="280" height="180" decoding="async"/>
                     </a>
                 </div>
                 <div class="uhs-slider-col" id="uhs_desktop_wrap">
-                    <img class="uhs-slide-img" id="uhs_desktop_img" src="/uellow_home_slider/static/src/img/placeholder_wide.svg" alt="slide"/>
+                    <img class="uhs-slide-img" id="uhs_desktop_img" src="/uellow_home_slider/static/src/img/placeholder_wide.svg" alt="slide" loading="eager" fetchpriority="high" decoding="async"/>
                     <button type="button" class="uhs-arrow uhs-right" id="uhs_d_prev">&#8250;</button>
                     <button type="button" class="uhs-arrow uhs-left"  id="uhs_d_next">&#8249;</button>
                     <div class="uhs-dots" id="uhs_d_dots"></div>
@@ -26,7 +26,7 @@
                 </div>
                 <div class="uhs-info-col">
                     <div class="uhs-logo-box">
-                        <img id="uhs_logo" src="/web/image/website/1/logo/Uellow?unique=13b1cfb" alt="Logo" onerror="this.style.display=&apos;none&apos;"/>
+                        <img id="uhs_logo" src="/web/image/website/1/logo/Uellow?unique=13b1cfb" alt="Logo" onerror="this.style.display=&apos;none&apos;" width="180" height="48" decoding="async" loading="eager"/>
                     </div>
                     <p class="uhs-welcome" id="uhs_welcome">&#x645;&#x631;&#x62D;&#x628;&#x627;&#x064B; &#x628;&#x643; &#x641;&#x64A; &#x64A;&#x644;&#x648;! &#x1F49B;</p>
                     <div class="uhs-ticket" id="uhs_ticket_wrap">
@@ -48,7 +48,7 @@
                 </div>
             </div>
             <div class="uhs-mobile d-lg-none" id="uhs_mobile_wrap">
-                <img class="uhs-slide-img" id="uhs_mobile_img" src="/uellow_home_slider/static/src/img/placeholder_wide.svg" alt="slide"/>
+                <img class="uhs-slide-img" id="uhs_mobile_img" src="/uellow_home_slider/static/src/img/placeholder_wide.svg" alt="slide" loading="eager" fetchpriority="high" decoding="async"/>
                 <button type="button" class="uhs-arrow uhs-right" id="uhs_m_prev">&#8250;</button>
                 <button type="button" class="uhs-arrow uhs-left"  id="uhs_m_next">&#8249;</button>
                 <div class="uhs-dots" id="uhs_m_dots"></div>

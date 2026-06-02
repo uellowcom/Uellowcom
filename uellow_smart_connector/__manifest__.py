@@ -13,7 +13,7 @@
         'mail',
     ],
     'external_dependencies': {
-        'python': ['requests', 'openpyxl', 'thefuzz', 'anthropic'],
+        'python': ['requests', 'openpyxl', 'thefuzz', 'anthropic', 'pdfplumber'],
     },
     'data': [
         'security/ir.model.access.csv',
@@ -35,7 +35,6 @@
             'uellow_smart_connector/static/src/js/dashboard.js',
         ],
     },
-    'post_init_hook': 'post_init_hook',
     'installable': True,
     'application': True,
     'license': 'LGPL-3',

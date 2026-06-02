@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Top-level menu placed under the existing Uellow Mobile App app -->
+  <menuitem id="menu_uellow_builder_root"
+            name="App Builder"
+            parent="uellow_mobile_manager.menu_mobile_root"
+            sequence="5"/>
+
+  <menuitem id="menu_uellow_builder_open"
+            name="🎨 Open Visual Builder"
+            parent="menu_uellow_builder_root"
+            action="open_builder"
+            sequence="1"/>
+
+  <menuitem id="menu_uellow_builder_pages"
+            name="Pages"
+            parent="menu_uellow_builder_root"
+            action="action_mobile_page"
+            sequence="10"/>
+
+  <menuitem id="menu_uellow_builder_navbar"
+            name="Nav bars"
+            parent="menu_uellow_builder_root"
+            action="action_mobile_navbar"
+            sequence="20"/>
+
+  <menuitem id="menu_uellow_builder_themes"
+            name="Theme presets"
+            parent="menu_uellow_builder_root"
+            action="action_mobile_theme_preset"
+            sequence="30"/>
+</odoo>

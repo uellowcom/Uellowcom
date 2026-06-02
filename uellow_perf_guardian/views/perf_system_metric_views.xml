@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_perf_system_metric_list" model="ir.ui.view">
+    <field name="name">uellow.perf.system.metric.list</field>
+    <field name="model">uellow.perf.system.metric</field>
+    <field name="arch" type="xml">
+      <list string="System metrics"
+            decoration-danger="load_1m &gt;= (cpu_count * 1.5) or mem_used_pct &gt;= 90"
+            decoration-warning="load_1m &gt;= cpu_count or mem_used_pct &gt;= 80">
+        <field name="create_date"/>
+        <field name="load_1m"/>
+        <field name="load_5m"/>
+        <field name="cpu_count"/>
+        <field name="mem_used_pct" string="Mem %"/>
+        <field name="swap_used_mb" string="Swap MB"/>
+        <field name="disk_used_pct" string="Disk %"/>
+        <field name="pg_connections" string="PG conn"/>
+        <field name="idle_tx_count" string="Idle tx"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_perf_system_metric_graph" model="ir.ui.view">
+    <field name="name">uellow.perf.system.metric.graph</field>
+    <field name="model">uellow.perf.system.metric</field>
+    <field name="arch" type="xml">
+      <graph string="System load over time" type="line">
+        <field name="create_date" interval="hour"/>
+        <field name="load_1m" type="measure"/>
+        <field name="mem_used_pct" type="measure"/>
+      </graph>
+    </field>
+  </record>
+
+  <record id="action_perf_system_metric" model="ir.actions.act_window">
+    <field name="name">System Metrics</field>
+    <field name="res_model">uellow.perf.system.metric</field>
+    <field name="view_mode">list,graph</field>
+  </record>
+
+  <record id="action_perf_system_collect_now" model="ir.actions.server">
+    <field name="name">Collect system metric now</field>
+    <field name="model_id" ref="model_uellow_perf_system_metric"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_collect()
+action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'System','message':'Sample collected','type':'success','sticky':False}}</field>
+  </record>
+</odoo>

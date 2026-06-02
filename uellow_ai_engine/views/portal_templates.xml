@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================== -->
+    <!--  /my/chat-history                                                  -->
+    <!-- ================================================================== -->
+    <template id="portal_my_chat_history" name="My Beena Chat History">
+        <t t-call="portal.portal_layout">
+            <div class="container my-4 uellow-portal-page">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my">My Account</a></li>
+                    <li class="breadcrumb-item active">Chat History</li>
+                </ol>
+
+                <div class="uellow-portal-hero" style="background:linear-gradient(135deg,#E6F1FB,#FFFFFF)">
+                    <div class="uellow-portal-hero-icon" style="background:#0C447C;color:#FFF">
+                        <i class="fa fa-comments"/>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">Beena Chat History</h3>
+                        <p class="mb-0 text-muted">All your past conversations are saved here. Click any one to see its details.</p>
+                    </div>
+                </div>
+
+                <div t-if="not conversations" class="text-center py-5 text-muted">
+                    <i class="fa fa-comments fa-3x mb-3 d-block"/>
+                    <p>No conversations yet. Open Beena from any page and start chatting.</p>
+                </div>
+
+                <div t-else="" class="uellow-chat-list mt-3">
+                    <a t-foreach="conversations" t-as="c"
+                       t-att-href="'/my/chat-history/%d' % c.id"
+                       class="uellow-chat-item">
+                        <div class="uellow-chat-icon">
+                            <i class="fa fa-comment"/>
+                        </div>
+                        <div class="uellow-chat-body">
+                            <div class="uellow-chat-title" t-out="c.display_title or 'Conversation'"/>
+                            <div class="uellow-chat-meta">
+                                <span><i class="fa fa-clock-o"/> <t t-out="c.create_date"/></span>
+                                <span><i class="fa fa-envelope"/> <t t-out="c.message_count or 0"/> messages</span>
+                                <span t-if="c.product_id">
+                                    <i class="fa fa-shopping-bag"/>
+                                    <t t-out="c.product_id.name"/>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="uellow-chat-arrow">
+                            <i class="fa fa-angle-left"/>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ================================================================== -->
+    <!--  /my/chat-history/<id>                                             -->
+    <!-- ================================================================== -->
+    <template id="portal_chat_conversation" name="Beena Conversation Detail">
+        <t t-call="portal.portal_layout">
+            <div class="container my-4 uellow-portal-page">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/my">My Account</a></li>
+                    <li class="breadcrumb-item"><a href="/my/chat-history">Chat History</a></li>
+                    <li class="breadcrumb-item active" t-out="conversation.display_title or 'Conversation'"/>
+                </ol>
+
+                <div class="uellow-portal-hero" style="background:linear-gradient(135deg,#E6F1FB,#FFFFFF)">
+                    <div class="uellow-portal-hero-icon" style="background:#0C447C;color:#FFF">
+                        <i class="fa fa-comments"/>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h3 class="mb-1" t-out="conversation.display_title or 'Conversation'"/>
+                        <div class="text-muted small">
+                            <span><i class="fa fa-clock-o"/> <t t-out="conversation.create_date"/></span>
+                            <span class="ms-3"><i class="fa fa-envelope"/> <t t-out="conversation.message_count or 0"/> messages</span>
+                            <span t-if="conversation.product_id" class="ms-3">
+                                <i class="fa fa-shopping-bag"/>
+                                <a t-att-href="'/shop/product/%d' % conversation.product_id.id"
+                                   t-out="conversation.product_id.name"/>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="uellow-chat-transcript mt-3">
+                    <t t-foreach="messages" t-as="m">
+                        <div t-attf-class="uellow-chat-bubble #{'role-' + (m.role or 'assistant')}">
+                            <div class="uellow-chat-bubble-role">
+                                <t t-if="m.role == 'user'">You</t>
+                                <t t-elif="m.role == 'assistant'">Beena 🐝</t>
+                                <t t-else=""><span t-out="m.role"/></t>
+                                <span class="uellow-chat-bubble-time" t-out="m.create_date"/>
+                            </div>
+                            <div class="uellow-chat-bubble-text" t-out="m.body"/>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

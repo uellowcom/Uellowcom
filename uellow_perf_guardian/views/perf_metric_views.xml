@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_perf_metric_list" model="ir.ui.view">
+    <field name="name">uellow.perf.metric.list</field>
+    <field name="model">uellow.perf.metric</field>
+    <field name="arch" type="xml">
+      <list string="RUM samples"
+            decoration-success="grade == 'good'"
+            decoration-warning="grade == 'ni'"
+            decoration-danger="grade == 'poor'">
+        <field name="create_date"/>
+        <field name="page"/>
+        <field name="device"/>
+        <field name="country"/>
+        <field name="connection"/>
+        <field name="lcp_ms" string="LCP (ms)"/>
+        <field name="cls"/>
+        <field name="inp_ms" string="INP (ms)"/>
+        <field name="ttfb_ms" string="TTFB (ms)"/>
+        <field name="grade"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_perf_metric_graph" model="ir.ui.view">
+    <field name="name">uellow.perf.metric.graph</field>
+    <field name="model">uellow.perf.metric</field>
+    <field name="arch" type="xml">
+      <graph string="LCP over time" type="line">
+        <field name="create_date" interval="hour"/>
+        <field name="lcp_ms" type="measure"/>
+        <field name="ttfb_ms" type="measure"/>
+      </graph>
+    </field>
+  </record>
+
+  <record id="view_perf_metric_pivot" model="ir.ui.view">
+    <field name="name">uellow.perf.metric.pivot</field>
+    <field name="model">uellow.perf.metric</field>
+    <field name="arch" type="xml">
+      <pivot string="Vitals by country / device">
+        <field name="country" type="row"/>
+        <field name="device" type="col"/>
+        <field name="lcp_ms" type="measure"/>
+        <field name="cls" type="measure"/>
+        <field name="ttfb_ms" type="measure"/>
+      </pivot>
+    </field>
+  </record>
+
+  <record id="action_perf_metric" model="ir.actions.act_window">
+    <field name="name">Real-User Vitals</field>
+    <field name="res_model">uellow.perf.metric</field>
+    <field name="view_mode">list,graph,pivot</field>
+  </record>
+</odoo>

@@ -7,3 +7,7 @@ access_restock_line_user,restock.line.user,model_uellow_restock_request_line,bas
 access_restock_line_manager,restock.line.manager,model_uellow_restock_request_line,stock.group_stock_manager,1,1,1,1
 access_receive_wizard,receive.wizard,model_uellow_warehouse_receive_wizard,stock.group_stock_manager,1,1,1,1
 access_receive_wizard_line,receive.wizard.line,model_uellow_warehouse_receive_wizard_line,stock.group_stock_manager,1,1,1,1
+access_withdrawal_user,withdrawal.user,model_uellow_stock_withdrawal,base.group_user,1,1,1,1
+access_withdrawal_portal,withdrawal.portal,model_uellow_stock_withdrawal,base.group_portal,1,1,1,0
+access_withdrawal_line_user,withdrawal.line.user,model_uellow_stock_withdrawal_line,base.group_user,1,1,1,1
+access_withdrawal_line_portal,withdrawal.line.portal,model_uellow_stock_withdrawal_line,base.group_portal,1,1,1,1

@@ -147,22 +147,16 @@
 }
 .uhs-logo-box img {
     max-height: 100%; max-width: 88%; object-fit: contain;
-    animation: uhsFloat 3.2s ease-in-out infinite, uhsGlow 3.2s ease-in-out infinite;
+    /* v2.0.55: GPU-composited (transform only) — removed the filter
+       drop-shadow keyframes that forced a full-page paint each frame.
+       Static glow lives on the parent box now, no per-frame cost. */
+    animation: uhsFloat 3.2s ease-in-out infinite;
+    filter: drop-shadow(0 0 4px rgba(255,209,102,.6))
+            drop-shadow(0 0 8px rgba(245,166,35,.35));
 }
 @keyframes uhsFloat {
     0%, 100% { transform: translateY(0); }
     50%       { transform: translateY(-5px); }
-}
-@keyframes uhsGlow {
-    0%, 100% {
-        filter: drop-shadow(0 0 3px rgba(255,209,102,.5))
-                drop-shadow(0 0 6px rgba(245,166,35,.3));
-    }
-    50% {
-        filter: drop-shadow(0 0 7px rgba(255,209,102,1))
-                drop-shadow(0 0 15px rgba(255,107,0,.7))
-                drop-shadow(0 0 25px rgba(230,57,70,.35));
-    }
 }
 
 /* ترحيب */

@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Uellow Marketplace Header v3
+        - True 100vw bleed (escapes the body's centred container)
+        - Compact heights (preheader 32px, mainbar 56px, catbar 40px)
+        - CSS-hover dropdowns + cascading category mega menu
+        - Address chip (delivery destination, dropdown of saved addresses)
+        - Beena AI quick-button
+        - Storefronts filtered to true shopper destinations
+    -->
+
+    <!-- ===== Tier 1 : utility bar ===== -->
+    <template id="template_preheader_style_7" inherit_id="website.layout"
+              name="Preheader Style - 7 (Uellow Marketplace)" active="False">
+        <xpath expr="//header/*" position="before">
+            <div class="uc-preheader uc-bleed" data-name="Uellow Preheader">
+                <div class="uc-inner">
+                    <div class="uc-pre-row d-flex align-items-center justify-content-between flex-nowrap gap-3">
+
+                        <div class="uc-pre-side d-flex align-items-center gap-3">
+
+                            <div class="uc-hover uc-hover-left">
+                                <a href="#" class="uc-pre-link uc-pre-link-pill d-inline-flex align-items-center gap-2">
+                                    <i class="fa fa-mobile fa-lg"/>
+                                    <span class="d-none d-md-inline" t-out="website._uc_t('Get the App')"/>
+                                    <i class="fa fa-caret-down small"/>
+                                </a>
+                                <div class="uc-hover-menu uc-app-menu">
+                                    <div class="uc-app-grid">
+                                        <div class="uc-app-qr">
+                                            <div class="uc-qr-box">
+                                                <img alt="Uellow App QR"
+                                                     src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&amp;color=131921&amp;bgcolor=ffffff&amp;margin=8&amp;data=https://app.uellow.com"
+                                                     loading="lazy"/>
+                                            </div>
+                                            <small class="uc-app-qr-hint" t-out="website._uc_t('Scan to install')"/>
+                                        </div>
+                                        <div class="uc-app-info">
+                                            <strong class="uc-app-title" t-out="website._uc_t('Uellow App')"/>
+                                            <p class="uc-app-text" t-out="website._uc_t('Shop faster, exclusive deals, order tracking — all in your pocket.')"/>
+                                            <div class="uc-app-badges">
+                                                <a class="uc-app-badge" href="https://apps.apple.com/" target="_blank" rel="noopener">
+                                                    <i class="fa fa-apple"/>
+                                                    <span><small>Download on the</small><b>App Store</b></span>
+                                                </a>
+                                                <a class="uc-app-badge" href="https://play.google.com/" target="_blank" rel="noopener">
+                                                    <i class="fa fa-android"/>
+                                                    <span><small>Get it on</small><b>Google Play</b></span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span class="uc-pre-dot d-none d-lg-inline">•</span>
+                            <span class="uc-pre-promo d-none d-lg-inline-flex align-items-center gap-2"
+                                  t-if="website.uc_preheader_text">
+                                <i class="fa fa-truck"/>
+                                <span t-out="website.uc_preheader_text"/>
+                            </span>
+                            <span class="uc-pre-promo d-none d-xxl-inline-flex align-items-center gap-2"
+                                  t-if="website.uc_preheader_phone">
+                                <i class="fa fa-phone"/>
+                                <span t-out="website.uc_preheader_phone"/>
+                            </span>
+                        </div>
+
+                        <div class="uc-pre-side d-flex align-items-center gap-2">
+
+                            <!-- ─── Address chip (delivery destination) ─── -->
+                            <t t-set="uc_addr" t-value="website._uc_current_delivery()"/>
+                            <t t-set="uc_addr_list" t-value="website._uc_user_addresses()"/>
+                            <div class="uc-hover uc-addr-hover">
+                                <a href="#" class="uc-pre-link uc-pre-link-pill uc-addr-chip d-inline-flex align-items-center gap-2">
+                                    <i class="fa fa-map-marker"/>
+                                    <span class="uc-addr-flag" t-out="uc_addr.get('flag')"/>
+                                    <span class="d-flex flex-column lh-1">
+                                        <small class="uc-addr-small" t-out="website._uc_t('Deliver to')"/>
+                                        <strong class="uc-addr-short" t-out="uc_addr.get('short') or website._uc_t('Sign in')"/>
+                                    </span>
+                                    <i class="fa fa-caret-down small"/>
+                                </a>
+                                <div class="uc-hover-menu uc-addr-menu">
+                                    <div class="uc-addr-head">
+                                        <i class="fa fa-map-marker"/>
+                                        <span t-out="website._uc_t('Delivery destination')"/>
+                                    </div>
+                                    <div class="uc-addr-current">
+                                        <span class="uc-addr-current-flag" t-out="uc_addr.get('flag')"/>
+                                        <div class="uc-addr-current-body">
+                                            <strong t-out="uc_addr.get('short')"/>
+                                            <small t-out="uc_addr.get('full')"/>
+                                        </div>
+                                    </div>
+                                    <t t-if="uc_addr.get('kind') == 'partner' and len(uc_addr_list) > 1">
+                                        <div class="uc-addr-list-head" t-out="website._uc_t('Switch to a saved address')"/>
+                                        <div class="uc-addr-list">
+                                            <a t-foreach="uc_addr_list" t-as="_addr"
+                                               t-if="_addr.id != uc_addr.get('partner_id')"
+                                               t-attf-href="/my/account"
+                                               class="uc-addr-item">
+                                                <span class="uc-addr-item-flag"
+                                                      t-out="website._uc_country_flag(_addr.country_id.code or '')"/>
+                                                <span class="uc-addr-item-body">
+                                                    <strong t-out="_addr.name or _addr.city"/>
+                                                    <small t-out="', '.join(filter(None, [_addr.city, _addr.country_id.name]))"/>
+                                                </span>
+                                            </a>
+                                        </div>
+                                    </t>
+                                    <div class="uc-addr-foot">
+                                        <t t-if="uc_addr.get('kind') == 'partner'">
+                                            <a href="/my/account" class="uc-addr-cta uc-addr-cta-primary">
+                                                <i class="fa fa-pencil"/>
+                                                <t t-out="website._uc_t('Manage addresses')"/>
+                                            </a>
+                                        </t>
+                                        <t t-else="">
+                                            <a href="/web/login" class="uc-addr-cta uc-addr-cta-primary">
+                                                <i class="fa fa-sign-in"/>
+                                                <t t-out="website._uc_t('Sign in to deliver')"/>
+                                            </a>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span class="uc-pre-divider d-none d-md-inline-block"/>
+
+                            <!-- ─── Storefronts switcher ─── -->
+                            <div class="uc-hover">
+                                <a href="#" class="uc-pre-link uc-pre-link-pill d-inline-flex align-items-center gap-2">
+                                    <i class="fa fa-globe"/>
+                                    <span class="d-none d-md-inline">
+                                        <t t-out="website._uc_t('Ship to')"/>:
+                                    </span>
+                                    <strong t-out="website.name"/>
+                                    <i class="fa fa-caret-down small"/>
+                                </a>
+                                <div class="uc-hover-menu uc-sites-menu">
+                                    <div class="uc-sites-head">
+                                        <i class="fa fa-globe"/>
+                                        <span t-out="website._uc_t('Choose your Uellow storefront')"/>
+                                    </div>
+                                    <t t-set="uc_sites" t-value="website._uc_storefronts()"/>
+                                    <div class="uc-sites-grid">
+                                        <a t-foreach="uc_sites" t-as="_site"
+                                           t-att-href="_site.domain or '#'"
+                                           t-attf-class="uc-site-item #{_site.id == website.id and 'is-active' or ''}"
+                                           t-att-title="_site.domain">
+                                            <t t-set="_code" t-value="website._uc_site_code(_site.name)"/>
+                                            <span t-if="_code" class="uc-site-flag-emoji"
+                                                  t-out="website._uc_country_flag(_code)"
+                                                  t-att-aria-label="_site.name"/>
+                                            <span t-else="" class="uc-site-flag-globe">
+                                                <i class="fa fa-globe"/>
+                                            </span>
+                                            <span class="uc-site-name" t-out="_site.name.replace('Uellow','').strip() or 'Global'"/>
+                                            <i t-if="_site.id == website.id" class="fa fa-check uc-site-check"/>
+                                        </a>
+                                    </div>
+                                    <div class="uc-sites-foot">
+                                        <i class="fa fa-info-circle"/>
+                                        <small t-out="website._uc_t('Currency &amp; prices update per storefront.')"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span class="uc-pre-divider d-none d-md-inline-block"/>
+
+                            <t t-call="uellow_theme.component_language_pricelist_selector">
+                                <t t-set="_dropdown_classes" t-valuef="uc-lang-dropdown"/>
+                            </t>
+
+                            <span class="uc-pre-divider d-none d-md-inline-block"/>
+
+                            <a href="/my" class="uc-pre-link d-none d-md-inline-flex align-items-center gap-1">
+                                <i class="fa fa-user-o"/>
+                                <span t-if="user_id._is_public()" t-out="website._uc_t('Sign in')"/>
+                                <span t-else=""><t t-out="user_id.name[:14]"/></span>
+                            </a>
+                            <a href="/contactus" class="uc-pre-link d-none d-lg-inline-flex align-items-center gap-1">
+                                <i class="fa fa-question-circle-o"/>
+                                <span t-out="website._uc_t('Help')"/>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- ===== Tiers 2 + 3 : main bar + categories ===== -->
+    <template id="template_header_style_9" inherit_id="website.layout"
+              name="Header Style - 9 (Uellow Marketplace)" active="False">
+
+        <xpath expr="//header" position="attributes">
+            <attribute name="t-attf-class" add="uc-header" separator=" "/>
+        </xpath>
+
+        <xpath expr="//header//nav" position="replace">
+
+            <t t-call="website.navbar">
+                <t t-set="_navbar_classes" t-valuef="uc-mainbar uc-bleed d-none d-lg-block"/>
+                <!-- Stub .top_menu so Odoo core auto_hide_menu.js
+                     (header.querySelector(".top_menu")) does not crash
+                     with "Cannot read properties of null". Hidden from
+                     users; kept lean. Do not remove. -->
+                <ul class="top_menu d-none" aria-hidden="true" role="presentation"/>
+                <div class="uc-inner">
+                    <div class="uc-mainbar-row d-flex align-items-center gap-3">
+
+                        <a href="/" class="uc-brand-link" t-att-aria-label="website.name">
+                            <img t-att-alt="website.name" class="uc-brand-img"
+                                 t-attf-src="/web/image/website/#{website.id}/logo"/>
+                        </a>
+
+                        <!-- Inline search — the form submits to /shop on enter
+                             AND fires a debounced autocomplete request to
+                             `/uc/search_suggest`. Results (products /
+                             categories / brands) render in the dropdown
+                             below — same data the legacy sidebar shows,
+                             without leaving the page flow. -->
+                        <form class="uc-search flex-grow-1" id="uc-search-form"
+                              action="/shop" method="get" autocomplete="off">
+                            <div class="uc-search-wrap">
+                                <span class="uc-search-icon d-flex"><i class="fa fa-search"/></span>
+                                <input type="search" name="search" class="uc-search-input"
+                                       id="uc-search-input"
+                                       t-att-placeholder="website.uc_search_placeholder or website._uc_t('Search for products, brands and more...')"
+                                       aria-label="Search the store"
+                                       aria-autocomplete="list"
+                                       aria-controls="uc-search-suggest"
+                                       autocomplete="off"/>
+                                <button type="submit" class="uc-search-btn">
+                                    <span class="d-none d-md-inline" t-out="website._uc_t('Search')"/>
+                                    <i class="fa fa-search d-md-none"/>
+                                </button>
+                            </div>
+                            <div class="uc-search-suggest" id="uc-search-suggest"
+                                 aria-live="polite"
+                                 hidden="hidden">
+                                <!-- Populated by uc_header.js -->
+                            </div>
+                            <div class="uc-search-hot d-none d-xxl-flex align-items-center gap-2"
+                                 t-if="website.uc_trending_terms">
+                                <span class="uc-hot-label">
+                                    <i class="fa fa-fire"/>
+                                    <t t-out="website._uc_t('Trending')"/>:
+                                </span>
+                                <t t-foreach="(website.uc_trending_terms or '').split(',')" t-as="_term">
+                                    <t t-set="_q" t-value="_term.strip()"/>
+                                    <a t-if="_q" t-attf-href="/shop?search=#{_q.replace(' ', '+')}" t-out="_q"/>
+                                </t>
+                            </div>
+                        </form>
+
+                        <div class="uc-actions d-flex align-items-center gap-2">
+
+                            <!-- Beena AI quick button -->
+                            <button type="button" class="uc-action uc-action-beena" id="uc-beena-btn"
+                                    aria-label="Ask Beena AI">
+                                <i class="fa fa-magic uc-action-icon"/>
+                                <span class="uc-action-text d-none d-xl-flex">
+                                    <small t-out="website._uc_t('Ask')"/>
+                                    <strong>Beena AI</strong>
+                                </span>
+                            </button>
+
+                            <!-- Account / Sign-in — hover dropdown with inline login + register modal -->
+                            <div class="uc-hover uc-account-wrap">
+                                <a t-att-href="user_id._is_public() and '#' or '/my'"
+                                   class="uc-action uc-action-account">
+                                    <i class="fa fa-user-o uc-action-icon"/>
+                                    <span class="uc-action-text">
+                                        <small>
+                                            <t t-out="website._uc_t('Hello,')"/>
+                                            <t t-if="user_id._is_public()" t-out="website._uc_t('Sign in')"/>
+                                            <t t-else=""><t t-out="user_id.name[:8]"/></t>
+                                        </small>
+                                        <strong t-out="website._uc_t('Account')"/>
+                                    </span>
+                                </a>
+                                <!-- GUEST popover: tabbed Sign in / Register + Google / Apple. -->
+                                <div t-if="user_id._is_public()" class="uc-hover-menu uc-auth-menu">
+                                    <div class="uc-auth-tabs">
+                                        <button type="button" class="uc-auth-tab is-active" data-uc-auth-tab="login">
+                                            <t t-out="website._uc_t('Sign in')"/>
+                                        </button>
+                                        <button type="button" class="uc-auth-tab" data-uc-auth-tab="register">
+                                            <t t-out="website._uc_t('Register')"/>
+                                        </button>
+                                    </div>
+                                    <form class="uc-auth-pane uc-auth-pane-login is-active"
+                                          data-uc-auth-pane="login"
+                                          method="post" action="/web/login">
+                                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                        <input type="hidden" name="redirect" t-att-value="request.httprequest.path"/>
+                                        <label class="uc-auth-field">
+                                            <span t-out="website._uc_t('Email')"/>
+                                            <input type="email" name="login" required="required" autocomplete="email"/>
+                                        </label>
+                                        <label class="uc-auth-field">
+                                            <span t-out="website._uc_t('Password')"/>
+                                            <input type="password" name="password" required="required" autocomplete="current-password"/>
+                                        </label>
+                                        <button type="submit" class="uc-auth-submit">
+                                            <i class="fa fa-sign-in"/>
+                                            <t t-out="website._uc_t('Sign in')"/>
+                                        </button>
+                                        <a href="/web/reset_password" class="uc-auth-link">
+                                            <t t-out="website._uc_t('Forgot password?')"/>
+                                        </a>
+                                        <div class="uc-oauth-sep"><span t-out="website._uc_t('or continue with')"/></div>
+                                        <div class="uc-oauth-row">
+                                            <t t-set="_oauth" t-value="website._uc_oauth_buttons()"/>
+                                            <t t-foreach="_oauth" t-as="_op">
+                                                <a t-att-href="_op.get('url') or '/web/login'"
+                                                   t-attf-class="uc-oauth-btn uc-oauth-#{_op.get('icon')}"
+                                                   t-att-title="_op.get('label')">
+                                                    <i t-attf-class="fa fa-#{_op.get('icon')}"/>
+                                                </a>
+                                            </t>
+                                            <!-- Always-on Apple link (Odoo may not have Apple OAuth wired) -->
+                                            <a t-if="not any(o.get('icon') == 'apple' for o in _oauth)"
+                                               href="/web/login" class="uc-oauth-btn uc-oauth-apple" title="Apple">
+                                                <i class="fa fa-apple"/>
+                                            </a>
+                                        </div>
+                                    </form>
+                                    <div class="uc-auth-pane uc-auth-pane-register"
+                                         data-uc-auth-pane="register">
+                                        <p class="uc-auth-intro" t-out="website._uc_t('Create your free Uellow account to track orders, save favourites and unlock member-only deals.')"/>
+                                        <button type="button" class="uc-auth-submit" data-uc-open="signup">
+                                            <i class="fa fa-user-plus"/>
+                                            <t t-out="website._uc_t('Create account')"/>
+                                        </button>
+                                        <div class="uc-oauth-sep"><span t-out="website._uc_t('or sign up with')"/></div>
+                                        <div class="uc-oauth-row">
+                                            <t t-foreach="website._uc_oauth_buttons()" t-as="_op">
+                                                <a t-att-href="_op.get('url') or '/web/signup'"
+                                                   t-attf-class="uc-oauth-btn uc-oauth-#{_op.get('icon')}"
+                                                   t-att-title="_op.get('label')">
+                                                    <i t-attf-class="fa fa-#{_op.get('icon')}"/>
+                                                </a>
+                                            </t>
+                                            <a href="/web/signup" class="uc-oauth-btn uc-oauth-apple" title="Apple">
+                                                <i class="fa fa-apple"/>
+                                            </a>
+                                        </div>
+                                        <small class="uc-auth-fineprint">
+                                            <t t-out="website._uc_t('Already a member? Switch to the Sign in tab.')"/>
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- LOGGED-IN popover: account links (orders, invoices, etc.) -->
+                                <div t-if="not user_id._is_public()" class="uc-hover-menu uc-acc-menu">
+                                    <div class="uc-acc-head">
+                                        <div class="uc-acc-avatar">
+                                            <img t-attf-src="/web/image/res.users/#{user_id.id}/avatar_128"
+                                                 t-att-alt="user_id.name" onerror="this.style.display='none'"/>
+                                            <i class="fa fa-user"/>
+                                        </div>
+                                        <div class="uc-acc-head-info">
+                                            <strong t-out="user_id.name"/>
+                                            <small t-out="user_id.login"/>
+                                        </div>
+                                    </div>
+                                    <div class="uc-acc-grid">
+                                        <a href="/my/home" class="uc-acc-item">
+                                            <i class="fa fa-th-large"/>
+                                            <span t-out="website._uc_t('Dashboard')"/>
+                                        </a>
+                                        <a href="/my/orders" class="uc-acc-item">
+                                            <i class="fa fa-shopping-bag"/>
+                                            <span t-out="website._uc_t('My orders')"/>
+                                        </a>
+                                        <a href="/my/invoices" class="uc-acc-item">
+                                            <i class="fa fa-file-text-o"/>
+                                            <span t-out="website._uc_t('Invoices')"/>
+                                        </a>
+                                        <a href="/shop/wishlist" class="uc-acc-item">
+                                            <i class="fa fa-heart-o"/>
+                                            <span t-out="website._uc_t('Wishlist')"/>
+                                        </a>
+                                        <a href="/my/tickets" class="uc-acc-item">
+                                            <i class="fa fa-life-ring"/>
+                                            <span t-out="website._uc_t('Support tickets')"/>
+                                        </a>
+                                        <a href="/my/loyalty" class="uc-acc-item">
+                                            <i class="fa fa-star-o"/>
+                                            <span t-out="website._uc_t('Loyalty points')"/>
+                                        </a>
+                                        <a href="/my/account" class="uc-acc-item">
+                                            <i class="fa fa-map-marker"/>
+                                            <span t-out="website._uc_t('Addresses')"/>
+                                        </a>
+                                        <a href="/my/account" class="uc-acc-item">
+                                            <i class="fa fa-cog"/>
+                                            <span t-out="website._uc_t('Settings')"/>
+                                        </a>
+                                    </div>
+                                    <a href="/web/session/logout?redirect=/" class="uc-acc-logout">
+                                        <i class="fa fa-sign-out"/>
+                                        <t t-out="website._uc_t('Sign out')"/>
+                                    </a>
+                                </div>
+                            </div>
+                            <t t-nocache="The wishlist may vary and depends on the user.">
+                                <t t-set="wishcount" t-value="len(request.env['product.wishlist'].current())"/>
+                                <a href="/shop/wishlist" t-if="website.has_ecommerce_access()" class="uc-action position-relative">
+                                    <i class="fa fa-heart-o uc-action-icon"/>
+                                    <span class="uc-action-text">
+                                        <small t-out="website._uc_t('Your')"/>
+                                        <strong t-out="website._uc_t('Wishlist')"/>
+                                    </span>
+                                    <sup class="uc-badge my_wish_quantity" t-out="wishcount"/>
+                                </a>
+                            </t>
+                            <t t-nocache="The cart contents are dynamic, this rendering cannot be cached.">
+                                <t t-set="_uc_order" t-value="website.sale_get_order()"/>
+                                <t t-set="qty" t-value="request.session.get('website_sale_cart_quantity') or (_uc_order and _uc_order.cart_quantity) or 0"/>
+                                <t t-set="_uc_total" t-value="(_uc_order and _uc_order.amount_total) or 0"/>
+                                <!-- Cart pill — premium dark capsule with a
+                                     yellow icon disc, count badge attached
+                                     to the disc, and the total in yellow
+                                     so the price reads at a glance. Opens
+                                     theme_prime's existing sidebar via
+                                     `tp-cart-sidebar-action`. -->
+                                <a href="/shop/cart" t-if="website.has_ecommerce_access()"
+                                   class="uc-action-cart tp-cart-sidebar-action o_wsale_my_cart">
+                                    <span class="uc-cart-disc position-relative">
+                                        <i class="fa fa-shopping-cart"/>
+                                        <sup class="uc-cart-count my_cart_quantity" t-out="qty"
+                                             t-att-data-order-id="request.session.get('sale_order_id', '')"/>
+                                    </span>
+                                    <strong class="uc-cart-total dr-update-cart-total"
+                                            t-out="_uc_total"
+                                            t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+                                </a>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </t>
+
+            <div class="uc-catbar uc-bleed d-none d-lg-block">
+                <div class="uc-inner">
+                    <div class="uc-catbar-row d-flex align-items-stretch gap-3">
+
+                        <div class="uc-catdrop uc-hover">
+                            <button type="button" class="uc-catdrop-btn">
+                                <i class="fa fa-bars"/>
+                                <span t-out="website._uc_t('All Categories')"/>
+                                <i class="fa fa-angle-down ms-1"/>
+                            </button>
+                            <t t-set="uc_parents" t-value="request.env['product.public.category'].sudo().search([('parent_id','=',False),('website_id','in',[False,website.id])], order='sequence, name', limit=12)"/>
+                            <!--
+                                The mega menu is split into TWO SIBLING columns so
+                                neither can clip the other. JS sync (uc_header.js)
+                                tags both the hovered parent and its matching panel
+                                with `.is-active` based on `data-cat`. CSS-only
+                                fallback shows the first panel by default.
+                            -->
+                            <div class="uc-catmega uc-hover-menu">
+                                <ul class="uc-catmega-rail list-unstyled mb-0">
+                                    <li t-foreach="uc_parents" t-as="_cat"
+                                        t-attf-class="uc-catmega-parent #{_cat_index == 0 and 'is-active' or ''}"
+                                        t-att-data-cat="_cat.id">
+                                        <a t-attf-href="/shop/category/#{_cat.id}">
+                                            <img t-if="_cat.image_128" loading="lazy"
+                                                 t-attf-src="/web/image/product.public.category/#{_cat.id}/image_128"
+                                                 t-att-alt="_cat.name" class="uc-catmega-img"/>
+                                            <span t-else="" class="uc-catmega-emoji"><i class="fa fa-folder-o"/></span>
+                                            <span class="uc-catmega-name" t-out="_cat.name"/>
+                                            <i class="fa fa-angle-right uc-catmega-chev"/>
+                                        </a>
+                                    </li>
+                                </ul>
+
+                                <div class="uc-catmega-panels">
+                                    <div t-foreach="uc_parents" t-as="_cat"
+                                         t-attf-class="uc-catmega-panel #{_cat_index == 0 and 'is-active' or ''}"
+                                         t-att-data-cat="_cat.id">
+                                        <!-- Brands and image override are resolved per-category. -->
+                                        <t t-set="_cat_brands"  t-value="website._uc_category_brands(_cat, limit=8)"/>
+                                        <t t-set="_mega_image"  t-value="_cat.uc_mega_image and ('/web/image/product.public.category/%s/uc_mega_image' % _cat.id) or (_cat.image_1024 and ('/web/image/product.public.category/%s/image_1024' % _cat.id))"/>
+                                        <t t-set="_mega_link"   t-value="_cat.uc_mega_link or ('/shop/category/%s' % _cat.id)"/>
+                                        <t t-set="_mega_eyebrow" t-value="_cat.uc_mega_eyebrow or website._uc_t('Featured')"/>
+                                        <t t-set="_mega_tagline" t-value="_cat.uc_mega_tagline"/>
+
+                                        <div class="uc-catmega-body">
+                                            <div class="uc-catmega-section">
+                                                <div class="uc-catmega-section-head">
+                                                    <span class="uc-catmega-section-title">
+                                                        <i class="fa fa-th"/>
+                                                        <t t-out="website._uc_t('Shop')"/>
+                                                        <strong t-out="_cat.name"/>
+                                                    </span>
+                                                    <a t-attf-href="/shop/category/#{_cat.id}" class="uc-catmega-viewall">
+                                                        <t t-out="website._uc_t('View all')"/>
+                                                        <i class="fa fa-arrow-right"/>
+                                                    </a>
+                                                </div>
+                                                <div class="uc-catmega-grid" t-if="_cat.child_id">
+                                                    <a t-foreach="_cat.child_id[:12]" t-as="_sub"
+                                                       t-attf-href="/shop/category/#{_sub.id}"
+                                                       class="uc-catmega-sub"
+                                                       t-attf-style="animation-delay:#{_sub_index * 30}ms">
+                                                        <img t-if="_sub.image_128" loading="lazy"
+                                                             t-attf-src="/web/image/product.public.category/#{_sub.id}/image_128"
+                                                             class="uc-catmega-sub-img"/>
+                                                        <span t-else="" class="uc-catmega-sub-img uc-catmega-sub-img-empty">
+                                                            <i class="fa fa-tag"/>
+                                                        </span>
+                                                        <span class="uc-catmega-sub-name" t-out="_sub.name"/>
+                                                    </a>
+                                                </div>
+                                                <div class="uc-catmega-empty" t-else="">
+                                                    <i class="fa fa-th-large"/>
+                                                    <span t-out="website._uc_t('Browse the full collection')"/>
+                                                </div>
+                                            </div>
+
+                                            <div class="uc-catmega-brands" t-if="_cat_brands">
+                                                <div class="uc-catmega-section-head">
+                                                    <span class="uc-catmega-section-title">
+                                                        <i class="fa fa-bookmark"/>
+                                                        <t t-out="website._uc_t('Top brands')"/>
+                                                    </span>
+                                                </div>
+                                                <div class="uc-catmega-brand-strip">
+                                                    <a t-foreach="_cat_brands" t-as="_brand"
+                                                       t-attf-href="/shop?attribute_value=#{_brand.id}"
+                                                       class="uc-catmega-brand">
+                                                        <img t-if="_brand.image" loading="lazy"
+                                                             t-attf-src="/web/image/product.attribute.value/#{_brand.id}/image"
+                                                             t-att-alt="_brand.name"/>
+                                                        <span t-else="" t-out="_brand.name"/>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <a t-att-href="_mega_link"
+                                           class="uc-catmega-feature"
+                                           t-attf-style="#{_mega_image and 'background-image:linear-gradient(135deg, rgba(19,25,33,.88), rgba(245,195,32,.55)),url(' + _mega_image + ');' or ''}">
+                                            <span class="uc-catmega-feature-eyebrow" t-out="_mega_eyebrow"/>
+                                            <strong class="uc-catmega-feature-title" t-out="_cat.name"/>
+                                            <span class="uc-catmega-feature-text">
+                                                <t t-if="_mega_tagline" t-out="_mega_tagline"/>
+                                                <t t-else="">
+                                                    <t t-out="website._uc_t('Discover handpicked deals on')"/>
+                                                    <t t-out="_cat.name"/>.
+                                                </t>
+                                            </span>
+                                            <span class="uc-catmega-feature-cta">
+                                                <t t-out="website._uc_t('Shop now')"/>
+                                                <i class="fa fa-arrow-right"/>
+                                            </span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inline horizontal menu — every top-level item shows
+                             on the same row as "All Categories". Items wrap to a
+                             second line if the bar runs out of space, instead of
+                             scrolling or being hidden. -->
+                        <ul class="uc-catmenu list-unstyled">
+                            <li t-foreach="website.menu_id.child_id" t-as="_m"
+                                class="uc-catmenu-item">
+                                <a t-att-href="_m.url or '#'" class="uc-catmenu-link"
+                                   t-att-title="_m.name">
+                                    <span t-out="_m.name"/>
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Today's Deals — fixed at the END of the catbar
+                             (margin-inline-start:auto in CSS). Gradient card
+                             with a HH:MM:SS countdown to midnight painted
+                             in three little red boxes above the label. -->
+                        <t t-set="_deals" t-value="website._uc_deals_resolve()"/>
+                        <a t-if="_deals" t-att-href="_deals.get('url')"
+                           class="uc-deals-card" id="uc-deals-card">
+                            <div class="uc-deals-cd" aria-label="Ends in">
+                                <span class="uc-deals-cd-box" data-cd="hours">00</span>
+                                <span class="uc-deals-cd-sep">:</span>
+                                <span class="uc-deals-cd-box" data-cd="minutes">00</span>
+                                <span class="uc-deals-cd-sep">:</span>
+                                <span class="uc-deals-cd-box" data-cd="seconds">00</span>
+                            </div>
+                            <div class="uc-deals-row">
+                                <i t-attf-class="fa #{_deals.get('icon')} uc-deals-icon"/>
+                                <span class="uc-deals-label" t-out="_deals.get('label')"/>
+                                <i class="fa fa-arrow-right uc-deals-chev"/>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <t t-call="uellow_theme.template_header_mobile"/>
+
+            <!-- ════════════════════════════════════════════════════════════
+                 Mobile bottom navigation
+                 ────────────────────────────────────────────────────────────
+                 Fixed-position bar shown ONLY below `lg` (992px). Two
+                 variants render server-side based on the page kind:
+
+                   • product.template pages  → "product nav"
+                       [ Add to cart  ]  [ Fast buy ]  [ Beena ]
+                       Proxies clicks to the real desktop buttons via JS,
+                       so quantity, variant + zorder behaviour are reused.
+
+                   • every other page         → "general nav"
+                       [ Home ] [ Shop ] [ ✨BEENA ] [ Wishlist ] [ Account ]
+                       Centre Beena lives in a raised, glowing yellow disc
+                       with a pulse animation. Replaces the floating chat
+                       button on mobile (the float button is hidden via
+                       CSS — same chat handler, just better real estate).
+            -->
+            <t t-set="_uc_is_product" t-value="main_object and main_object._name == 'product.template'"/>
+
+            <!-- ── Generic nav (non-product pages) ── -->
+            <nav t-if="not _uc_is_product" class="uc-mobnav d-lg-none" aria-label="Bottom navigation">
+                <a href="/" class="uc-mobnav-item">
+                    <i class="fa fa-home"/>
+                    <span t-out="website._uc_t('Home')"/>
+                </a>
+                <a href="/shop" class="uc-mobnav-item">
+                    <i class="fa fa-th-large"/>
+                    <span t-out="website._uc_t('Shop')"/>
+                </a>
+
+                <!-- Centre Beena disc — raised + animated -->
+                <button type="button" class="uc-mobnav-beena" id="uc-mobnav-beena"
+                        t-att-aria-label="website._uc_t('Open Beena AI')">
+                    <span class="uc-mobnav-beena-ring"/>
+                    <span class="uc-mobnav-beena-pulse"/>
+                    <span class="uc-mobnav-beena-core">
+                        <img t-if="website.uc_beena_icon"
+                             t-attf-src="/web/image/website/#{website.id}/uc_beena_icon"
+                             alt="Beena"/>
+                        <i t-else="" class="fa fa-magic"/>
+                    </span>
+                    <small class="uc-mobnav-beena-label" t-out="website._uc_t('Beena')"/>
+                </button>
+
+                <t t-nocache="The wishlist count varies per user.">
+                    <t t-set="_uc_wc" t-value="len(request.env['product.wishlist'].current())"/>
+                    <a href="/shop/wishlist" class="uc-mobnav-item position-relative">
+                        <i class="fa fa-heart-o"/>
+                        <span t-out="website._uc_t('Wishlist')"/>
+                        <sup t-if="_uc_wc" class="uc-mobnav-badge my_wish_quantity" t-out="_uc_wc"/>
+                    </a>
+                </t>
+                <a href="/my" class="uc-mobnav-item">
+                    <i class="fa fa-user-o"/>
+                    <span t-if="user_id._is_public()" t-out="website._uc_t('Sign in')"/>
+                    <span t-else="" t-out="website._uc_t('Account')"/>
+                </a>
+            </nav>
+
+            <!-- ── Product nav (product detail pages) ── -->
+            <nav t-if="_uc_is_product" class="uc-mobnav uc-mobnav-product d-lg-none"
+                 aria-label="Product actions">
+                <button type="button" class="uc-mobnav-prod-btn uc-mobnav-prod-cart"
+                        id="uc-mobnav-add-to-cart"
+                        t-att-aria-label="website._uc_t('Add to cart')">
+                    <i class="fa fa-shopping-cart"/>
+                    <span t-out="website._uc_t('Add to cart')"/>
+                </button>
+                <button type="button" class="uc-mobnav-prod-btn uc-mobnav-prod-fast"
+                        id="uc-mobnav-fast-buy"
+                        t-att-aria-label="website._uc_t('Fast buy')">
+                    <i class="fa fa-bolt"/>
+                    <span t-out="website._uc_t('Fast buy')"/>
+                </button>
+                <button type="button" class="uc-mobnav-prod-beena" id="uc-mobnav-beena"
+                        t-att-aria-label="website._uc_t('Open Beena AI')">
+                    <img t-if="website.uc_beena_icon"
+                         t-attf-src="/web/image/website/#{website.id}/uc_beena_icon"
+                         alt="Beena"/>
+                    <i t-else="" class="fa fa-magic"/>
+                </button>
+            </nav>
+
+            <!-- ─── Signup modal (opens from Register tab in account popover) ─── -->
+            <div t-if="user_id._is_public()" class="modal fade uc-signup-modal"
+                 id="uc-signup-modal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content uc-signup-modal-content">
+                        <div class="modal-header uc-signup-modal-head">
+                            <h5 class="modal-title">
+                                <i class="fa fa-user-plus"/>
+                                <t t-out="website._uc_t('Create your Uellow account')"/>
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white"
+                                    data-bs-dismiss="modal" aria-label="Close"/>
+                        </div>
+                        <div class="modal-body p-0 uc-signup-modal-body">
+                            <iframe id="uc-signup-frame"
+                                    title="Create your Uellow account"
+                                    src="about:blank"
+                                    data-uc-src="/web/signup"
+                                    loading="lazy"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </xpath>
+    </template>
+
+</odoo>

@@ -169,6 +169,21 @@ class VendorPortalController(http.Controller):
             'page_name': 'vendor_stock',
         })
 
+    @http.route('/my/vendor/restock-requests', type='http', auth='user', website=True)
+    def vendor_restock_requests(self, **kw):
+        vendor = self._get_vendor()
+        if not vendor:
+            return request.redirect('/my')
+        vloc = request.env['uellow.vendor.location'].sudo().search(
+            [('partner_id', '=', vendor.partner_id.id)], limit=1)
+        requests = request.env['uellow.restock.request'].sudo().search(
+            [('vendor_location_id', '=', vloc.id)], order='id desc', limit=100) if vloc else request.env['uellow.restock.request']
+        return request.render('uellow_multivendor.portal_vendor_restock_list', {
+            'vendor': vendor,
+            'requests': requests,
+            'page_name': 'vendor_restock_list',
+        })
+
     @http.route('/my/vendor/stock/restock', type='http', auth='user', website=True)
     def vendor_restock(self, product_id=None, **kw):
         vendor = self._get_vendor()
@@ -194,16 +209,24 @@ class VendorPortalController(http.Controller):
             return request.redirect('/my')
         try:
             if product_id and int(qty) > 0:
-                request.env['uellow.restock.request'].sudo().create({
-                    'vendor_id': vendor.id,
-                    'product_id': int(product_id),
-                    'qty': int(qty),
-                    'priority': priority,
+                VL = request.env['uellow.vendor.location'].sudo()
+                vloc = VL.search([('partner_id', '=', vendor.partner_id.id)], limit=1)
+                if not vloc:
+                    vloc = VL.create_for_vendor(vendor.partner_id)
+                from datetime import date, timedelta
+                req = request.env['uellow.restock.request'].sudo().create({
+                    'vendor_location_id': vloc.id,
+                    'expected_date': date.today() + timedelta(days=7),
                     'notes': notes,
+                    'line_ids': [(0, 0, {
+                        'product_id': int(product_id),
+                        'qty_requested': int(qty),
+                    })],
                 })
+                req.action_submit()
         except Exception as e:
             _logger.error('Restock submit error: %s', e)
-        return request.redirect('/my/vendor/stock')
+        return request.redirect('/my/vendor/restock-requests')
 
     # ── Wallet ─────────────────────────────────────────────────────
     @http.route('/my/vendor/wallet', type='http', auth='user', website=True)
@@ -303,6 +326,86 @@ class VendorPortalController(http.Controller):
         return request.redirect('/my/vendor/flash-sale')
 
     # ── Settings ───────────────────────────────────────────────────
+    @http.route('/my/vendor/withdrawals', type='http', auth='user', website=True)
+    def vendor_withdrawals(self, **kw):
+        vendor = self._get_vendor()
+        if not vendor:
+            return request.redirect('/my')
+        vloc = request.env['uellow.vendor.location'].sudo().search(
+            [('partner_id', '=', vendor.partner_id.id)], limit=1)
+        withdrawals = request.env['uellow.stock.withdrawal'].sudo().search(
+            [('vendor_location_id', '=', vloc.id)], order='id desc', limit=100) if vloc else []
+        products = request.env['product.product'].sudo().search(
+            [('vendor_id', '=', vendor.id)], limit=200)
+        return request.render('uellow_multivendor.portal_vendor_withdrawals', {
+            'vendor': vendor,
+            'withdrawals': withdrawals,
+            'products': products,
+            'page_name': 'vendor_withdrawals',
+        })
+
+    @http.route('/my/vendor/withdrawals/submit', type='http', auth='user', website=True, methods=['POST'])
+    def vendor_withdrawals_submit(self, reason='other', reason_note='', destination='vendor', **post):
+        vendor = self._get_vendor()
+        if not vendor:
+            return request.redirect('/my')
+        try:
+            VL = request.env['uellow.vendor.location'].sudo()
+            vloc = VL.search([('partner_id', '=', vendor.partner_id.id)], limit=1)
+            if not vloc:
+                vloc = VL.create_for_vendor(vendor.partner_id)
+            lines = []
+            product_ids = request.httprequest.form.getlist('product_id')
+            qtys = request.httprequest.form.getlist('qty')
+            for pid, q in zip(product_ids, qtys):
+                if pid and int(q or 0) > 0:
+                    lines.append((0, 0, {'product_id': int(pid), 'qty': int(q)}))
+            if lines:
+                wd = request.env['uellow.stock.withdrawal'].sudo().create({
+                    'vendor_location_id': vloc.id,
+                    'initiated_by': 'vendor',
+                    'reason': reason,
+                    'reason_note': reason_note,
+                    'destination': destination,
+                    'line_ids': lines,
+                })
+                wd.action_submit()
+        except Exception as e:
+            _logger.error('Withdrawal submit error: %s', e)
+        return request.redirect('/my/vendor/withdrawals')
+
+    @http.route('/my/vendor/style', type='http', auth='user', website=True)
+    def vendor_style(self, **kw):
+        vendor = self._get_vendor()
+        if not vendor:
+            return request.redirect('/my')
+        settings = vendor.settings_id
+        if not settings:
+            settings = request.env['uellow.vendor.settings'].sudo().create({'vendor_id': vendor.id})
+            vendor.sudo().settings_id = settings.id
+        return request.render('uellow_multivendor.portal_vendor_style', {
+            'vendor': vendor,
+            'settings': settings,
+            'page_name': 'vendor_style',
+        })
+
+    @http.route('/my/vendor/style/save', type='http', auth='user', website=True, methods=['POST'])
+    def vendor_style_save(self, **post):
+        vendor = self._get_vendor()
+        if not vendor:
+            return request.redirect('/my')
+        settings = vendor.settings_id
+        if settings:
+            settings.sudo().write({
+                'flash_bg_color': post.get('flash_bg_color', '').strip(),
+                'flash_accent_color': post.get('flash_accent_color', '').strip(),
+                'section_title_color': post.get('section_title_color', '').strip(),
+                'price_color': post.get('price_color', '').strip(),
+                'badge_color': post.get('badge_color', '').strip(),
+                'header_text_color': post.get('header_text_color', '').strip(),
+            })
+        return request.redirect('/my/vendor/style')
+
     @http.route('/my/vendor/settings', type='http', auth='user', website=True)
     def vendor_settings(self, **kw):
         vendor = self._get_vendor()
@@ -655,24 +758,3 @@ class VendorPortalController(http.Controller):
             'page_name': 'vendor_wallet',
         })
 
-    # ── Public store page ──────────────────────────────────────────
-    @http.route('/store/<string:slug>', type='http', auth='public', website=True)
-    def store_page(self, slug, **kw):
-        vendor = request.env['uellow.vendor'].sudo().search([
-            ('store_slug', '=', slug),
-            ('state', '=', 'active'),
-        ], limit=1)
-        if not vendor:
-            return request.not_found()
-        store_rec = request.env['uellow.vendor.store'].sudo().search([
-            ('vendor_id', '=', vendor.id)], limit=1)
-        if store_rec and hasattr(store_rec, 'store_page_enabled') and not store_rec.store_page_enabled:
-            return request.not_found()
-        products = request.env['product.template'].sudo().search([
-            ('vendor_id', '=', vendor.id),
-            ('website_published', '=', True),
-        ], limit=60)
-        return request.render('uellow_multivendor.store_page', {
-            'vendor': vendor,
-            'products': products,
-        })

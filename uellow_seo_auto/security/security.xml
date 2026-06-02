@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_seo_manager" model="res.groups">
+        <field name="name">Uellow SEO Manager</field>
+        <field name="category_id" ref="base.module_category_website"/>
+        <field name="implied_ids" eval="[(4, ref('website.group_website_designer'))]"/>
+    </record>
+</odoo>

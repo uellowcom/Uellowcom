@@ -1,0 +1,938 @@
+// =============================================================================
+//   Uellow Product Page — premium marketplace layout (v18)
+//   --------------------------------------------------------------------------
+//   Full-page overhaul. Every visible element is restyled — Odoo defaults,
+//   theme_prime decorators, fast_buy, wishlist, compare, share, reviews,
+//   tabs, recently-viewed strips. The layout puts a STICKY gallery on the
+//   left and lets the info column flow naturally on the right (no
+//   nested scrollbar). Unified palette: deep slate + brand yellow +
+//   white surfaces + warm accents.
+// =============================================================================
+
+// ─── Palette ───
+$pp-page         : #ffffff;
+$pp-surface      : #ffffff;
+$pp-surface-soft : #f8f9fb;
+$pp-surface-warm : #fffbf2;
+$pp-text         : #0d1421;
+$pp-text-soft    : #4a525e;
+$pp-muted        : #6c757d;
+$pp-line         : #e9ecef;
+$pp-line-soft    : #f1f3f5;
+$pp-yellow       : #F5C320;
+$pp-yellow-deep  : #b58200;
+$pp-yellow-soft  : rgba(245, 195, 32, .10);
+$pp-brand-dark   : #412402;
+$pp-success      : #1f9b62;
+$pp-danger       : #d6332c;
+$pp-radius       : 12px;
+$pp-radius-lg    : 16px;
+$pp-shadow-sm    : 0 2px 8px -4px rgba(13, 20, 33, .12);
+$pp-shadow       : 0 8px 28px -12px rgba(13, 20, 33, .18);
+$pp-shadow-lg    : 0 18px 44px -20px rgba(13, 20, 33, .35);
+
+// ─── Page shell ─────────────────────────────────────────────────────────────
+body.o_website_sale_product {
+    background: $pp-page;
+}
+section#product_detail {
+    background: $pp-page;
+    padding: 28px 0 64px;
+    color: $pp-text;
+    font-size: 14px;
+    line-height: 1.6;
+
+    @media (max-width: 991.98px) { padding: 12px 0 100px; }
+
+    > .container, > .container-fluid {
+        max-width: 1280px;
+    }
+    > .container > .row {
+        --bs-gutter-x: 40px;
+        align-items: flex-start;
+        @media (max-width: 991.98px) { --bs-gutter-x: 12px; }
+    }
+    // Column widths — sticky gallery 56%, info 44%
+    > .container > .row > .col-lg-6:first-of-type {
+        @media (min-width: 992px) {
+            flex: 0 0 auto;
+            width: 56%;
+            // STICKY gallery — stays in view while info scrolls
+            position: sticky;
+            top: 92px;
+            align-self: flex-start;
+        }
+    }
+    > .container > .row > .col-lg-6:last-of-type,
+    > .container > .row > #product_option_block {
+        @media (min-width: 992px) {
+            flex: 0 0 auto;
+            width: 44%;
+            // NO internal scroll — natural flow
+            position: static !important;
+            max-height: none !important;
+            overflow: visible !important;
+            padding-inline-end: 0 !important;
+        }
+    }
+}
+
+// =============================================================================
+// 1. Image gallery — premium framed card with floating thumbnails
+// =============================================================================
+.tp_product_image_section,
+.o_wsale_product_images,
+#carousel-inner,
+.carousel.product_detail_img,
+.o_wsale_product_page .product_detail_img {
+    background: $pp-surface !important;
+    border-radius: $pp-radius-lg !important;
+    border: 1px solid $pp-line !important;
+    box-shadow: $pp-shadow !important;
+    overflow: hidden !important;
+    padding: 20px !important;
+
+    .carousel-item, .item, img {
+        background: $pp-surface;
+        border-radius: 10px;
+    }
+    img { object-fit: contain; max-height: 560px; width: 100%; }
+
+    @media (max-width: 991.98px) { padding: 10px !important; }
+}
+
+// Carousel arrow controls
+.carousel-control-prev, .carousel-control-next,
+.carousel-control-prev-icon, .carousel-control-next-icon {
+    width: 40px !important;
+    height: 40px !important;
+    background-color: $pp-surface !important;
+    background-image: none !important;
+    color: $pp-text !important;
+    border-radius: 999px !important;
+    border: 1px solid $pp-line !important;
+    box-shadow: $pp-shadow-sm !important;
+    opacity: 1 !important;
+    transition: transform .15s ease, border-color .15s ease;
+    display: grid; place-items: center;
+
+    &::before, &::after { display: none; }
+}
+.carousel-control-prev, .carousel-control-next {
+    top: 50%; transform: translateY(-50%) !important;
+    margin: 0 14px;
+    &::before, &::after {
+        font: 16px/1 FontAwesome; display: block; color: $pp-text;
+    }
+    &:hover { border-color: $pp-yellow !important; }
+}
+.carousel-control-prev::before { content: "\f053"; }
+.carousel-control-next::before { content: "\f054"; }
+
+// Thumbnail strip
+.carousel-indicators,
+.tp_product_thumbnail_carousel,
+.product_detail_img + .carousel-indicators {
+    margin: 14px 0 0 !important;
+    padding: 0 !important;
+    position: static !important;
+    display: flex !important;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-start !important;
+
+    button, [data-bs-target] {
+        width: 70px !important;
+        height: 70px !important;
+        padding: 4px !important;
+        border-radius: 10px !important;
+        background: $pp-surface !important;
+        border: 2px solid $pp-line !important;
+        opacity: 1 !important;
+        margin: 0 !important;
+        transition: border-color .15s ease, transform .15s ease,
+                    box-shadow .15s ease;
+
+        img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
+        &.active, &[aria-current="true"] {
+            border-color: $pp-yellow !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px -6px rgba($pp-yellow, .55);
+        }
+        &:hover { border-color: rgba($pp-yellow, .55) !important; }
+    }
+}
+
+// Product ribbons / labels
+.tp_product_label, .o_ribbon {
+    border-radius: 999px !important;
+    padding: 5px 12px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: .3px !important;
+    box-shadow: $pp-shadow-sm !important;
+}
+
+// Image zoom hint (theme_prime)
+.tp-product-zoom-hint, .product_detail_img + .small {
+    color: $pp-muted !important;
+    font-size: 11.5px !important;
+    margin-top: 6px;
+    text-align: center;
+}
+
+// =============================================================================
+// 2. Right column — info card stack
+// =============================================================================
+#product_option_block {
+    display: flex !important;
+    flex-direction: column;
+    gap: 16px;
+}
+
+// ── Brand chip ──
+.tp-brand, .tp-brand-link, .product_brand_link, .product_brand a {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    background: lighten($pp-yellow, 38%) !important;
+    color: $pp-brand-dark !important;
+    padding: 4px 12px !important;
+    border-radius: 999px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .8px !important;
+    text-decoration: none !important;
+    width: fit-content;
+    transition: filter .12s ease;
+    &:hover { filter: brightness(.96); color: $pp-brand-dark !important; }
+}
+
+// ── Title ──
+h1.product_name,
+h1[t-field="product.name"],
+#product_detail h1,
+.o_wsale_product_page h1 {
+    color: $pp-text !important;
+    font-size: 26px !important;
+    font-weight: 800 !important;
+    line-height: 1.25 !important;
+    letter-spacing: -.3px !important;
+    margin: 0 !important;
+    @media (max-width: 991.98px) { font-size: 20px !important; }
+}
+
+// ── SKU / availability badges row ──
+.tp-product-meta, .o_product_meta {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    color: $pp-muted;
+    font-size: 12px;
+    align-items: center;
+    margin-top: 4px;
+    .badge, .tp-badge {
+        background: $pp-surface-soft !important;
+        border: 1px solid $pp-line !important;
+        color: $pp-text-soft !important;
+        font-weight: 600 !important;
+        padding: 4px 10px !important;
+        border-radius: 999px !important;
+    }
+}
+
+// ── Rating row ──
+.tp-rating, .product_rating, .ratings_summary, .uc-rating,
+.o_website_rating_static {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: $pp-text-soft;
+    margin-top: 4px;
+    .fa-star, .fa-star-o, .fa-star-half-o, .o_wsale_filmstrip_static i {
+        color: $pp-yellow !important; font-size: 14px;
+    }
+    a, .reviews_count {
+        color: $pp-yellow-deep !important;
+        text-decoration: none;
+        font-weight: 600;
+        &:hover { text-decoration: underline; }
+    }
+}
+
+// =============================================================================
+// 3. Price block
+// =============================================================================
+#product_detail .product_price,
+.product_price {
+    background: $pp-surface-warm !important;
+    border: 1px solid rgba($pp-yellow, .28) !important;
+    border-radius: $pp-radius !important;
+    padding: 16px 18px !important;
+    margin: 4px 0 !important;
+    display: flex !important;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), $pp-shadow-sm;
+
+    // Current price
+    h3, h4, .oe_price, .h3, .h4 {
+        color: $pp-text !important;
+        font-size: 30px !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
+        letter-spacing: -.4px !important;
+        line-height: 1.1 !important;
+        @media (max-width: 991.98px) { font-size: 24px !important; }
+    }
+
+    // Strike-through original
+    .oe_default_price, del, s {
+        color: $pp-muted !important;
+        text-decoration: line-through;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        margin-inline-start: 8px !important;
+    }
+
+    // Tax / VAT line
+    .text-muted, small, .o_product_tax {
+        color: $pp-muted !important;
+        font-size: 11.5px !important;
+        margin-top: 2px;
+    }
+
+    // theme_prime "tp-discount-percentage"
+    .tp-discount-percentage {
+        background: $pp-danger !important;
+        color: #fff !important;
+        border-radius: 999px !important;
+        padding: 3px 10px !important;
+        font-size: 11.5px !important;
+        font-weight: 800 !important;
+        letter-spacing: .3px !important;
+        margin-inline-start: 8px;
+        box-shadow: 0 4px 10px -4px rgba($pp-danger, .45);
+    }
+}
+
+// Custom savings badge
+.uc-pp-savings {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: $pp-danger;
+    color: #fff;
+    font-size: 11.5px;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-inline-start: 8px;
+    box-shadow: 0 4px 10px -4px rgba($pp-danger, .45);
+}
+
+// =============================================================================
+// 4. Variants — swatch pills
+// =============================================================================
+.js_attributes {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.variant_attribute {
+    background: $pp-surface !important;
+    border: 1px solid $pp-line !important;
+    border-radius: $pp-radius !important;
+    padding: 12px 14px !important;
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px !important;
+    box-shadow: $pp-shadow-sm;
+}
+.attribute_name, .o_wsale_attribute_name {
+    color: $pp-muted !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .9px !important;
+    margin: 0;
+}
+.css_attribute_value, .o_variant_pills label, .o_variant_pills .form-check {
+    background: $pp-surface !important;
+    border: 1.5px solid $pp-line !important;
+    color: $pp-text !important;
+    padding: 8px 14px !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    font-size: 12.5px !important;
+    transition: border-color .15s ease, transform .12s ease, background .15s ease, box-shadow .15s ease;
+    cursor: pointer;
+    min-width: 48px;
+    text-align: center;
+
+    &:hover {
+        border-color: $pp-yellow !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px -6px rgba($pp-yellow, .55);
+    }
+    &.active, &[data-active="true"], &.selected, &.css_attribute_value_selected {
+        background: lighten($pp-yellow, 36%) !important;
+        border-color: $pp-yellow !important;
+        color: $pp-brand-dark !important;
+        box-shadow: 0 4px 10px -4px rgba($pp-yellow, .4);
+    }
+    &.css_not_available { opacity: .35; cursor: not-allowed; }
+}
+
+// =============================================================================
+// 5. Quantity stepper
+// =============================================================================
+.css_quantity, .o_wsale_quantity {
+    display: inline-flex !important;
+    align-items: stretch;
+    background: $pp-surface !important;
+    border: 1.5px solid $pp-line !important;
+    border-radius: 10px !important;
+    overflow: hidden;
+    height: 48px;
+    width: fit-content;
+    box-shadow: $pp-shadow-sm;
+
+    .float_quantity, input[type="number"], input.quantity {
+        background: transparent !important;
+        border: 0 !important;
+        color: $pp-text !important;
+        font-weight: 800 !important;
+        font-size: 16px !important;
+        text-align: center !important;
+        width: 60px !important;
+        padding: 0 !important;
+        outline: 0;
+        height: 100% !important;
+        -moz-appearance: textfield;
+        &::-webkit-inner-spin-button, &::-webkit-outer-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+    }
+    .js_add_cart_json, button, a.js_add_cart_json {
+        background: transparent !important;
+        border: 0 !important;
+        color: $pp-text !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        width: 48px !important;
+        padding: 0 !important;
+        cursor: pointer;
+        transition: background .12s ease, color .12s ease;
+        height: 100% !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+
+        &:hover {
+            background: lighten($pp-yellow, 36%) !important;
+            color: $pp-yellow-deep !important;
+        }
+        i { font-size: 14px; }
+    }
+}
+
+// Quantity label
+.tp-product-qty-label, label[for="add_to_cart_qty"] {
+    color: $pp-muted !important;
+    font-size: 10.5px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .9px !important;
+    margin-bottom: 6px !important;
+    display: block;
+}
+
+// =============================================================================
+// 6. CTA stack — Add to Cart + Fast Buy + Wishlist + Compare
+// =============================================================================
+#o_wsale_cta_wrapper {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr auto auto;
+    gap: 10px !important;
+    margin: 4px 0 !important;
+    align-items: stretch !important;
+
+    @media (max-width: 575.98px) {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    > * { margin: 0 !important; min-width: 0; }
+}
+
+#add_to_cart, a#add_to_cart, .a-submit#add_to_cart {
+    background: $pp-yellow !important;
+    color: $pp-brand-dark !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    padding: 14px 22px !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    letter-spacing: .25px !important;
+    box-shadow:
+        0 6px 16px -4px rgba($pp-yellow, .55),
+        inset 0 1px 0 rgba(255, 255, 255, .35) !important;
+    transition: transform .15s ease, filter .15s ease;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none !important;
+    min-height: 48px;
+
+    &:hover {
+        filter: brightness(.96);
+        transform: translateY(-2px);
+        color: $pp-brand-dark !important;
+        background: $pp-yellow !important;
+    }
+    &:active { transform: translateY(0); }
+    i { margin-inline-end: 6px; }
+}
+
+// Fast Buy
+.qc-btn-wrap {
+    margin: 0 !important;
+    display: flex !important;
+    > span {
+        // The little "in 5 sec" floating tag from fast_buy
+        top: -8px !important;
+        background: $pp-danger !important;
+        z-index: 1;
+    }
+}
+.qc-open-btn {
+    width: 100% !important;
+    background: linear-gradient(135deg, #ff5e5e 0%, #c81212 100%) !important;
+    color: #fff !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    padding: 14px 22px !important;
+    font-size: 14.5px !important;
+    font-weight: 800 !important;
+    box-shadow:
+        0 6px 16px -4px rgba($pp-danger, .5),
+        inset 0 1px 0 rgba(255, 255, 255, .25) !important;
+    position: relative;
+    overflow: hidden;
+    min-height: 48px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: transform .15s ease, filter .15s ease;
+
+    &::before {
+        content: "";
+        position: absolute; inset: 0;
+        background: linear-gradient(120deg,
+            transparent 30%, rgba(255, 255, 255, .25) 50%, transparent 70%);
+        transform: translateX(-100%);
+        animation: uc-pp-shine 5s ease-in-out infinite;
+        pointer-events: none;
+    }
+    &:hover { transform: translateY(-2px); filter: brightness(1.06); color: #fff !important; }
+    i { margin-inline-end: 6px; }
+}
+@keyframes uc-pp-shine {
+    0%, 30%   { transform: translateX(-100%); }
+    65%, 100% { transform: translateX(100%); }
+}
+
+// Wishlist + compare — icon square buttons
+.product_add_to_wishlist, .js_add_compare, .o_add_compare_dyn,
+button.product_add_to_wishlist {
+    width: 48px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    background: $pp-surface !important;
+    border: 1.5px solid $pp-line !important;
+    color: $pp-text-soft !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: border-color .15s ease, transform .15s ease, color .15s ease,
+                background .15s ease;
+
+    i { font-size: 18px !important; margin: 0 !important; }
+    &:hover {
+        border-color: $pp-yellow !important;
+        color: $pp-yellow-deep !important;
+        background: lighten($pp-yellow, 38%) !important;
+        transform: translateY(-2px);
+    }
+    &.o_wish_with { color: $pp-danger !important; border-color: $pp-danger !important; }
+}
+
+// =============================================================================
+// 7. Trust strip
+// =============================================================================
+.uc-pp-trust {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+.uc-pp-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: $pp-surface !important;
+    border: 1px solid $pp-line !important;
+    border-radius: 10px;
+    transition: border-color .15s ease, background .15s ease;
+
+    i {
+        width: 32px; height: 32px;
+        border-radius: 999px;
+        background: lighten($pp-yellow, 38%);
+        color: $pp-yellow-deep;
+        display: grid; place-items: center;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    .uc-pp-trust-body {
+        display: flex; flex-direction: column;
+        line-height: 1.2;
+        strong { font-size: 12px; color: $pp-text; font-weight: 700; }
+        small  { font-size: 10.5px; color: $pp-muted; }
+    }
+    &:hover { background: $pp-surface-warm !important; border-color: rgba($pp-yellow, .45) !important; }
+}
+
+// =============================================================================
+// 8. theme_prime extras — bullet points, extras, sticky add-to-cart KILL
+// =============================================================================
+.tp-product-bullet-points, .tp-bullet-points {
+    background: $pp-surface !important;
+    border: 1px solid $pp-line !important;
+    border-radius: $pp-radius !important;
+    padding: 14px 16px !important;
+    list-style: none !important;
+    margin: 0 !important;
+
+    li {
+        position: relative;
+        padding-inline-start: 22px;
+        margin-bottom: 6px;
+        color: $pp-text-soft;
+        font-size: 13px;
+        line-height: 1.55;
+        &::before {
+            content: "✓";
+            position: absolute;
+            inset-inline-start: 0;
+            top: 0;
+            color: $pp-yellow-deep;
+            font-weight: 800;
+        }
+        &:last-child { margin-bottom: 0; }
+    }
+}
+.tp-product-extra-fields, .product_extra_fields {
+    background: $pp-surface !important;
+    border: 1px solid $pp-line !important;
+    border-radius: $pp-radius !important;
+    padding: 12px 14px !important;
+    margin: 0 !important;
+    .row { gap: 8px 0; }
+    label, .col-form-label {
+        color: $pp-muted !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: .6px !important;
+    }
+    .form-control, input, select, textarea {
+        background: $pp-surface-soft !important;
+        border: 1px solid $pp-line !important;
+        border-radius: 8px !important;
+        color: $pp-text !important;
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+        &:focus {
+            border-color: $pp-yellow !important;
+            box-shadow: 0 0 0 3px rgba($pp-yellow, .2) !important;
+        }
+    }
+}
+
+// Sticky add-to-cart from theme_prime — superseded by our mobnav
+.tp-sticky-add-to-cart { display: none !important; }
+
+// =============================================================================
+// 9. Share + terms + extras row
+// =============================================================================
+#o_product_terms_and_share, .product_share_buttons, .o_share_btn_wrap {
+    background: $pp-surface !important;
+    border: 1px solid $pp-line !important;
+    border-radius: $pp-radius !important;
+    padding: 14px 16px !important;
+    margin: 0 !important;
+    display: flex !important;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px !important;
+
+    .o_share_btn, a.btn, a.share-link {
+        background: $pp-surface !important;
+        border: 1px solid $pp-line !important;
+        color: $pp-text-soft !important;
+        padding: 6px 12px !important;
+        border-radius: 8px !important;
+        font-size: 12.5px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        i { color: inherit; margin-inline-end: 6px; }
+        &:hover {
+            border-color: $pp-yellow !important;
+            color: $pp-yellow-deep !important;
+            background: $pp-surface-warm !important;
+        }
+    }
+}
+
+// =============================================================================
+// 10. Tabs section — full width below the gallery+info row
+// =============================================================================
+#product_full_description,
+.product_tabs,
+.o_wsale_product_page section ~ section {
+    background: $pp-surface !important;
+    margin-top: 32px !important;
+    padding: 0 !important;
+    border-radius: $pp-radius-lg !important;
+    border: 1px solid $pp-line !important;
+    overflow: hidden !important;
+    box-shadow: $pp-shadow-sm;
+}
+.nav-tabs, .product_tabs .nav {
+    background: $pp-surface-soft !important;
+    border: 0 !important;
+    padding: 0 12px !important;
+    border-bottom: 1px solid $pp-line !important;
+    gap: 4px;
+
+    .nav-item { margin: 0; }
+    .nav-link, .nav-item > a {
+        background: transparent !important;
+        border: 0 !important;
+        color: $pp-text-soft !important;
+        font-weight: 700 !important;
+        font-size: 13.5px !important;
+        padding: 16px 20px !important;
+        position: relative;
+        transition: color .12s ease;
+        i { margin-inline-end: 6px; color: $pp-muted; }
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset-inline: 20px;
+            bottom: 0;
+            height: 3px;
+            background: $pp-yellow;
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform .18s ease;
+            border-radius: 2px 2px 0 0;
+        }
+        &.active {
+            color: $pp-text !important;
+            i { color: $pp-yellow-deep; }
+            &::after { transform: scaleX(1); }
+        }
+        &:hover {
+            color: $pp-text !important;
+            &::after { transform: scaleX(.55); }
+        }
+    }
+}
+.tab-content, .product_tabs .tab-content {
+    padding: 28px 32px !important;
+    color: $pp-text-soft !important;
+    font-size: 14px !important;
+    line-height: 1.75 !important;
+
+    @media (max-width: 991.98px) { padding: 20px !important; }
+
+    h1, h2, h3, h4, h5 {
+        color: $pp-text !important;
+        font-weight: 800 !important;
+        letter-spacing: -.2px;
+    }
+    h2 { font-size: 18px !important; margin: 18px 0 10px; }
+    h3 { font-size: 16px !important; margin: 14px 0 8px; }
+    p  { margin: 0 0 10px; }
+    img { max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; }
+    table {
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0;
+        margin: 12px 0;
+        border: 1px solid $pp-line;
+        border-radius: 10px;
+        overflow: hidden;
+
+        th, td {
+            border: 0 !important;
+            border-bottom: 1px solid $pp-line !important;
+            padding: 10px 14px !important;
+            text-align: start;
+            font-size: 13px;
+        }
+        th { background: $pp-surface-soft !important; font-weight: 700; color: $pp-text; }
+        tr:last-child td { border-bottom: 0 !important; }
+    }
+    ul, ol { padding-inline-start: 20px; }
+}
+
+// =============================================================================
+// 11. Reviews section (website_sale rating)
+// =============================================================================
+.o_website_sale_rating,
+.o_portal_chatter, .o_chatter {
+    background: $pp-surface !important;
+    border: 1px solid $pp-line !important;
+    border-radius: $pp-radius-lg !important;
+    padding: 24px !important;
+    margin-top: 24px !important;
+    box-shadow: $pp-shadow-sm;
+
+    .o_rating_summary, .o_rating_card { padding: 0 !important; background: transparent !important; }
+    .btn-primary {
+        background: $pp-yellow !important;
+        border-color: $pp-yellow !important;
+        color: $pp-brand-dark !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+        &:hover { filter: brightness(.96); }
+    }
+}
+
+// =============================================================================
+// 12. Recently viewed / alternative products strip
+// =============================================================================
+.o_wsale_alternative_products,
+.tp-recently-viewed,
+.tp-related-products,
+.tp-cross-selling {
+    background: $pp-surface !important;
+    border: 1px solid $pp-line !important;
+    border-radius: $pp-radius-lg !important;
+    padding: 24px !important;
+    margin-top: 24px !important;
+    box-shadow: $pp-shadow-sm;
+
+    h2, h3, h4, .section-title {
+        color: $pp-text !important;
+        font-weight: 800 !important;
+        font-size: 18px !important;
+        margin: 0 0 18px !important;
+        position: relative;
+        padding-bottom: 10px;
+        &::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            inset-inline-start: 0;
+            width: 40px; height: 3px;
+            background: $pp-yellow;
+            border-radius: 2px;
+        }
+    }
+    // Soften the product card hover effect inside these strips
+    .oe_product, .product_item, .tp-product-card {
+        border-radius: 10px !important;
+        transition: transform .15s ease, box-shadow .15s ease;
+        &:hover { transform: translateY(-3px); box-shadow: $pp-shadow; }
+    }
+}
+
+// =============================================================================
+// 13. Mobile polish
+// =============================================================================
+@media (max-width: 991.98px) {
+    section#product_detail > .container > .row > .col-lg-6:first-of-type {
+        position: static !important;   // disable sticky on mobile
+    }
+    // CTA stack one column on phones
+    #o_wsale_cta_wrapper {
+        grid-template-columns: 1fr 1fr !important;
+        > #add_to_cart, > .qc-btn-wrap { grid-column: span 2; }
+        > .product_add_to_wishlist, > .js_add_compare, > .o_add_compare_dyn {
+            grid-column: span 1;
+        }
+    }
+    .uc-pp-trust { grid-template-columns: 1fr; }
+    body.o_website_sale_product { padding-bottom: 130px; }
+}
+
+// =============================================================================
+// 14. Soft buttons (theme_prime) — harmonize with our palette
+// =============================================================================
+.btn-primary-soft, .btn-primary-soft:focus,
+.tp-rounded-border.btn-primary-soft {
+    background: lighten($pp-yellow, 38%) !important;
+    color: $pp-yellow-deep !important;
+    border: 1px solid rgba($pp-yellow, .35) !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    &:hover { background: lighten($pp-yellow, 32%) !important; color: $pp-brand-dark !important; }
+}
+
+// Stock indicator
+.o_p_qty_in_stock, .o_p_qty_in_stock_text, .tp-stock {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    color: $pp-success !important;
+    font-size: 12px;
+    font-weight: 700;
+    &::before {
+        content: "";
+        width: 8px; height: 8px;
+        background: $pp-success;
+        border-radius: 999px;
+        animation: uc-pp-pulse 1.8s ease-in-out infinite;
+    }
+}
+@keyframes uc-pp-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .35; }
+}
+
+// Out of stock
+.o_p_qty_out_of_stock {
+    color: $pp-danger !important;
+    background: lighten($pp-danger, 50%);
+    border-radius: 8px;
+    padding: 6px 12px !important;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+// =============================================================================
+// 15. Misc — kill theme_prime bullets that don't fit the new design
+// =============================================================================
+// theme_prime's "image gallery video play overlay" or 360 spin hint — keep
+// but harmonise colours
+.tp-image-360-hint, .tp-video-play-overlay {
+    background: rgba($pp-text, .85) !important;
+    color: $pp-yellow !important;
+    border-radius: 999px !important;
+    padding: 6px 12px !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+}
+
+// Make sure the gallery zoom lens (if any) is on-brand
+.tp-zoom-lens, .image-zoom-lens {
+    background: rgba($pp-yellow, .12) !important;
+    border: 1px solid $pp-yellow !important;
+}

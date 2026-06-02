@@ -205,6 +205,41 @@ class ReviewerController(http.Controller):
 
         return {'success': True, 'request': req.to_dict()}
 
+    # ── Quick verdict (try-on opinion, no chat session) ──────────────────────
+    @http.route('/reviewers/quick_verdict', type='json', auth='user', methods=['POST'], csrf=False)
+    def quick_verdict(self, **kwargs):
+        """Submit a verdict without an active chat session — used for try-on
+        opinion cards in the Requests tab."""
+        try:
+            req_id = int(kwargs.get('request_id') or 0)
+        except Exception:
+            return {'success': False, 'error': 'bad_request_id'}
+        verdict = kwargs.get('verdict')
+        if verdict not in ('recommend', 'not_recommend', 'neutral'):
+            return {'success': False, 'error': 'bad_verdict'}
+        notes = (kwargs.get('notes') or '').strip()
+
+        req = request.env['review.request'].sudo().browse(req_id)
+        if not req.exists():
+            return {'success': False, 'error': 'not_found'}
+
+        # Only the assigned reviewer may submit
+        reviewer_partner = req.reviewer_id.partner_id if req.reviewer_id else False
+        if not reviewer_partner or reviewer_partner.id != request.env.user.partner_id.id:
+            return {'success': False, 'error': 'not_authorized'}
+
+        req.write({
+            'reviewer_verdict': verdict,
+            'reviewer_notes':   notes,
+        })
+        try:
+            req.action_complete(verdict=verdict, notes=notes)
+        except Exception:
+            # Fallback if action_complete requires a chat session
+            req.write({'state': 'completed'})
+        request.env.cr.commit()
+        return {'success': True}
+
     # ── Reviewer: accept/decline request ─────────────────────────────────────
 
     @http.route('/reviewers/accept', type='json', auth='user', methods=['POST'], csrf=False)
@@ -265,6 +300,41 @@ class ReviewerController(http.Controller):
             'active_session': active.to_dict() if active else None,
             'wallet':         reviewer.wallet_balance,
             'total_earned':   reviewer.total_earned,
+        }
+
+    # ── Reviewer: full history of my completed reviews ────────────────────────
+
+    @http.route('/reviewers/history', type='json', auth='user', methods=['POST'], csrf=False)
+    def get_history(self, **kwargs):
+        """Return every completed review/opinion the logged-in reviewer has
+        delivered, newest first. Used by the My-History tab in the portal."""
+        reviewer = request.env['reviewer.profile'].sudo().search(
+            [('partner_id', '=', request.env.user.partner_id.id)], limit=1
+        )
+        if not reviewer:
+            return {'is_reviewer': False, 'requests': []}
+
+        try:
+            limit = max(1, min(200, int(kwargs.get('limit') or 80)))
+        except Exception:
+            limit = 80
+
+        # Completed states cover all "done" buckets we use across versions.
+        done_states = ('completed', 'done', 'rated', 'paid', 'closed')
+        domain = [
+            ('reviewer_id', '=', reviewer.id),
+            '|',
+            ('state', 'in', done_states),
+            ('reviewer_verdict', 'in', ('recommend', 'neutral', 'not_recommend')),
+        ]
+        recs = request.env['review.request'].sudo().search(
+            domain, limit=limit, order='create_date desc'
+        )
+        return {
+            'is_reviewer': True,
+            'reviewer':    reviewer.to_dict(),
+            'requests':    [r.to_dict() for r in recs],
+            'count':       len(recs),
         }
 
     # ── Customer: rate reviewer ───────────────────────────────────────────────

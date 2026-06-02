@@ -29,3 +29,21 @@ access_mobile_app_coupon_mgr,mobile.app.coupon manager,model_mobile_app_coupon,b
 access_mobile_app_coupon_usr,mobile.app.coupon user,model_mobile_app_coupon,base.group_user,1,0,0,0
 access_mobile_dashboard_mgr,mobile.dashboard manager,model_mobile_dashboard,base.group_system,1,1,1,1
 access_mobile_dashboard_usr,mobile.dashboard user,model_mobile_dashboard,base.group_user,1,0,0,0
+access_uc_order_mgr,uc.order manager,model_uc_order,base.group_system,1,1,1,1
+access_uc_order_usr,uc.order user,model_uc_order,base.group_user,1,0,0,0
+access_mobile_country_website_mgr,mobile.country.website manager,model_mobile_country_website,base.group_system,1,1,1,1
+access_mobile_country_website_usr,mobile.country.website user,model_mobile_country_website,base.group_user,1,0,0,0
+access_mobile_flash_sale_mgr,mobile.flash.sale manager,model_mobile_flash_sale,base.group_system,1,1,1,1
+access_mobile_flash_sale_usr,mobile.flash.sale user,model_mobile_flash_sale,base.group_user,1,0,0,0
+access_uellow_delivery_zone_mgr,uellow.delivery.zone manager,model_uellow_delivery_zone,base.group_system,1,1,1,1
+access_uellow_delivery_zone_usr,uellow.delivery.zone user,model_uellow_delivery_zone,base.group_user,1,0,0,0
+access_product_brand_public_read,product.brand public read,dev_facebook_shop_integration.model_product_brand,base.group_public,1,0,0,0
+access_mobile_notification_pref_mgr,mobile.notification.preference manager,model_mobile_notification_preference,base.group_system,1,1,1,1
+access_mobile_notification_pref_user,mobile.notification.preference user,model_mobile_notification_preference,base.group_user,1,1,1,1
+access_mobile_notification_pref_portal,mobile.notification.preference portal,model_mobile_notification_preference,base.group_portal,1,1,1,1
+access_uellow_customer_wallet_tx_mgr,uellow.customer.wallet.tx manager,model_uellow_customer_wallet_tx,base.group_system,1,1,1,1
+access_uellow_customer_wallet_tx_user,uellow.customer.wallet.tx user,model_uellow_customer_wallet_tx,base.group_user,1,1,1,0
+access_uellow_customer_wallet_tx_portal,uellow.customer.wallet.tx portal,model_uellow_customer_wallet_tx,base.group_portal,1,0,0,0
+access_mobile_cart_share_mgr,mobile.cart.share manager,model_mobile_cart_share,base.group_system,1,1,1,1
+access_mobile_cart_share_user,mobile.cart.share user,model_mobile_cart_share,base.group_user,1,1,1,1
+access_mobile_cart_share_portal,mobile.cart.share portal,model_mobile_cart_share,base.group_portal,1,1,1,0

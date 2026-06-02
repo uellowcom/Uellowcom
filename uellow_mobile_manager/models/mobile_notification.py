@@ -12,6 +12,18 @@ class MobileNotification(models.Model):
     body = fields.Text(string='Message Body', required=True)
     image = fields.Binary(string='Notification Image', attachment=True)
 
+    # Category drives delivery filtering — every user has a preference
+    # toggle per category, so a customer who muted "promotions" never
+    # receives a notification with category=promotion (see
+    # mobile.notification.preference).
+    category = fields.Selection([
+        ('promotion',    'Promotion / Marketing'),
+        ('order_update', 'Order Update'),
+        ('general',      'General Info'),
+        ('system',       'System / Critical'),
+    ], string='Category', default='general', required=True,
+        help='System notifications bypass user preferences (account/security only).')
+
     target_audience = fields.Selection([
         ('all', 'All Users'),
         ('specific', 'Specific Users'),

@@ -25,6 +25,15 @@
                             <field name="pending_cash" string="Pending Cash (KD)"/>
                         </group>
                     </group>
+                    <group string="Sorting Center Location (shown on customer live-tracking map)">
+                        <group>
+                            <field name="center_address" placeholder="Street, city"/>
+                        </group>
+                        <group>
+                            <field name="center_lat"/>
+                            <field name="center_lng"/>
+                        </group>
+                    </group>
                     <notebook>
                         <page string="Portal Managers" name="portal_managers">
                             <field name="portal_user_ids" widget="many2many_tags"/>

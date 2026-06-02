@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_uellow_theme_settings_designer,uellow.theme.settings.designer,model_uellow_theme_settings,website.group_website_designer,1,1,1,1
+access_uellow_theme_settings_admin,uellow.theme.settings.admin,model_uellow_theme_settings,base.group_system,1,1,1,1

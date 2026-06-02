@@ -287,11 +287,11 @@ class SmartConnectorDashboard extends Component {
                         <t t-foreach="state.data.price_alerts" t-as="alert" t-key="alert.id">
                             <tr t-on-click="() => this.openPriceRecord(alert.id)">
                                 <td style="font-weight:600" t-out="alert.product"></td>
-                                <td t-out="alert.our_price.toFixed(3) + ' KD'"></td>
-                                <td t-out="alert.competitor_price.toFixed(3) + ' KD'"></td>
+                                <td t-out="(alert.our_price ?? 0).toFixed(3) + ' KD'"></td>
+                                <td t-out="(alert.competitor_price ?? 0).toFixed(3) + ' KD'"></td>
                                 <td>
-                                    <span t-att-class="'sc-badge ' + (alert.diff > 0 ? 'sc-badge-err' : 'sc-badge-ok')"
-                                          t-out="(alert.diff > 0 ? '+' : '') + alert.diff.toFixed(1) + '%'">
+                                    <span t-att-class="'sc-badge ' + ((alert.diff ?? 0) > 0 ? 'sc-badge-err' : 'sc-badge-ok')"
+                                          t-out="((alert.diff ?? 0) > 0 ? '+' : '') + (alert.diff ?? 0).toFixed(1) + '%'">
                                     </span>
                                 </td>
                             </tr>

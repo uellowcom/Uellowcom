@@ -1,0 +1,2405 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1400" />
+<title>Uellow App Builder — Interactive Mockup v2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;900&display=swap" />
+<style>
+  :root{
+    --yellow:#F5C320; --yellow-dk:#E5A900; --yellow-soft:#FFF6D6; --yellow-light:#FFE07A;
+    --dark:#412402; --text:#1F1206; --muted:#7A6850;
+    --bg:#F5F1EA; --bg-2:#FAF7F1; --bg-3:#FFFFFF;
+    --border:#E8E1D2; --border-2:#D8CDB8;
+    --success:#1F8A40; --danger:#C0392B; --info:#1D6FB7; --purple:#6E4AB0;
+    --shadow-sm:0 1px 2px rgba(20,12,2,.06);
+    --shadow:0 6px 18px rgba(20,12,2,.08);
+    --shadow-lg:0 18px 40px rgba(20,12,2,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter','Tajawal',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--bg);color:var(--text);
+    overflow:hidden;font-size:13px;line-height:1.4;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font:inherit;color:inherit}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+  /* === TOP BAR === */
+  .topbar{
+    height:54px;background:var(--dark);color:#fff;
+    display:flex;align-items:center;padding:0 18px;gap:14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);position:relative;z-index:50;
+  }
+  .topbar .logo{display:flex;align-items:center;gap:8px;font-weight:900;letter-spacing:.3px}
+  .topbar .logo .dot{
+    width:28px;height:28px;background:var(--yellow);border-radius:8px;
+    display:grid;place-items:center;color:var(--dark);font-weight:900;
+  }
+  .topbar .crumb{color:rgba(255,255,255,.55);font-size:12px;display:flex;align-items:center;gap:8px;cursor:pointer}
+  .topbar .crumb:hover{color:#fff}
+  .topbar .crumb .sep{margin:0 8px;opacity:.4}
+  .topbar .crumb .pg{color:#fff;font-weight:600;display:flex;align-items:center;gap:4px}
+  .topbar .grow{flex:1}
+  .top-group{display:flex;align-items:center;gap:8px}
+  .seg{
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);
+    border-radius:10px;padding:3px;display:flex;gap:2px;
+  }
+  .seg button{
+    padding:6px 12px;font-size:12px;color:rgba(255,255,255,.75);font-weight:600;
+    border-radius:8px;display:flex;align-items:center;gap:6px;
+  }
+  .seg button.on{background:var(--yellow);color:var(--dark)}
+  .seg button:hover:not(.on){background:rgba(255,255,255,.06);color:#fff}
+  .top-btn{
+    padding:7px 12px;font-size:12px;color:#fff;border-radius:8px;font-weight:600;
+    display:flex;align-items:center;gap:6px;
+  }
+  .top-btn:hover{background:rgba(255,255,255,.08)}
+  .top-btn.primary{background:var(--yellow);color:var(--dark);font-weight:800}
+  .top-btn.primary:hover{background:var(--yellow-dk)}
+  .top-btn.outline{border:1px solid rgba(255,255,255,.20)}
+  .saved-pill{
+    font-size:11px;color:rgba(255,255,255,.65);display:flex;align-items:center;gap:6px;
+    padding:5px 10px;background:rgba(255,255,255,.05);border-radius:20px;
+  }
+  .saved-pill .pulse{width:7px;height:7px;border-radius:50%;background:#4ADE80}
+
+  .scope-pills{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);
+    padding:4px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.08)}
+  .scope-pills .pill{
+    padding:3px 8px;font-size:10.5px;color:rgba(255,255,255,.85);background:rgba(255,255,255,.07);
+    border-radius:6px;display:flex;align-items:center;gap:4px;cursor:pointer;
+  }
+  .scope-pills .pill:hover{background:rgba(245,195,32,.2);color:var(--yellow)}
+  .scope-pills .lbl{font-size:9.5px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+
+  /* === MAIN LAYOUT === */
+  .stage{
+    display:grid;grid-template-columns:54px 320px 1fr 360px;
+    height:calc(100vh - 54px - 32px);
+    transition:grid-template-columns .25s;
+  }
+  .stage.library{grid-template-columns:54px 1fr 0;}
+  .stage.library .left,.stage.library .right{display:none}
+  .stage.navbar-edit{grid-template-columns:54px 380px 1fr 0;}
+  .stage.navbar-edit .right{display:none}
+
+  /* === LEFT RAIL (icon switcher) === */
+  .rail{
+    background:var(--dark);color:rgba(255,255,255,.6);
+    display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;
+    border-right:1px solid rgba(0,0,0,.2);
+  }
+  .rail button{
+    width:42px;height:42px;border-radius:10px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:rgba(255,255,255,.55);font-size:18px;position:relative;
+  }
+  .rail button .l{font-size:8px;font-weight:700;letter-spacing:.3px;margin-top:1px;opacity:.65}
+  .rail button:hover{background:rgba(255,255,255,.08);color:#fff}
+  .rail button.on{background:var(--yellow);color:var(--dark)}
+  .rail button.on .l{opacity:1}
+  .rail .sep{width:24px;height:1px;background:rgba(255,255,255,.1);margin:6px 0}
+
+  /* === LEFT PANEL === */
+  .left{
+    background:var(--bg-3);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .panel-h{
+    padding:14px 16px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--bg-2);
+  }
+  .panel-h h3{font-size:13px;font-weight:800;color:var(--dark);letter-spacing:.3px}
+  .panel-h .sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .left-body{flex:1;overflow:auto}
+
+  /* === BLOCKS LIBRARY === */
+  .blocks-search{padding:10px 12px;border-bottom:1px solid var(--border);}
+  .blocks-search input{
+    width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);
+    background:var(--bg-2);font-size:12px;
+  }
+  .blocks-search input:focus{outline:none;border-color:var(--yellow);background:#fff}
+  .cat{margin-bottom:4px}
+  .cat-h{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 14px;cursor:pointer;user-select:none;
+    font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  }
+  .cat-h:hover{color:var(--dark)}
+  .cat-h .chev{transition:transform .18s;font-size:10px}
+  .cat.collapsed .cat-h .chev{transform:rotate(-90deg)}
+  .cat.collapsed .cat-items{display:none}
+  .cat-items{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 12px 8px}
+  .snip{
+    background:var(--bg-2);border:1px solid var(--border);border-radius:8px;
+    padding:8px 6px;cursor:grab;text-align:center;transition:all .18s;
+    display:flex;flex-direction:column;align-items:center;gap:5px;
+  }
+  .snip:hover{
+    background:#fff;border-color:var(--yellow);transform:translateY(-1px);
+    box-shadow:var(--shadow-sm);
+  }
+  .snip:active{cursor:grabbing}
+  .snip .ic{
+    width:32px;height:32px;border-radius:7px;background:var(--yellow-soft);
+    display:grid;place-items:center;color:var(--dark);font-size:16px;
+    border:1px solid var(--yellow-light);
+  }
+  .snip .lbl{font-size:10.5px;color:var(--text);font-weight:600;line-height:1.2}
+
+  /* === SETTINGS / THEME LEFT PANEL === */
+  .left-body .pad{padding:14px 14px 30px}
+  .left-body .pad .field{margin-bottom:12px}
+  .left-body .pad label{
+    display:block;font-size:10.5px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;
+  }
+  .left-body .pad input,.left-body .pad select,.left-body .pad textarea{
+    width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;
+    background:var(--bg-2);font-size:12px;
+  }
+  .left-body .pad input:focus,.left-body .pad select:focus,.left-body .pad textarea:focus{
+    outline:none;border-color:var(--yellow);background:#fff;
+  }
+  .left-body .pad .sub-h{
+    font-size:10.5px;font-weight:800;color:var(--dark);text-transform:uppercase;
+    letter-spacing:.5px;margin:18px 0 10px;padding-bottom:5px;
+    border-bottom:1px solid var(--border);
+  }
+  .left-body .pad .sub-h:first-child{margin-top:0}
+
+  /* multilingual input — small lang chip row */
+  .ml{display:flex;flex-direction:column;gap:4px}
+  .ml-tabs{display:flex;gap:4px}
+  .ml-tabs button{
+    padding:3px 8px;font-size:10px;border-radius:5px;background:var(--bg-2);
+    border:1px solid var(--border);color:var(--muted);font-weight:700;
+    display:flex;align-items:center;gap:3px;
+  }
+  .ml-tabs button.on{background:var(--yellow);color:var(--dark);border-color:var(--yellow)}
+  .ml-tabs button.warn{color:var(--danger);border-color:#F5B0AA}
+
+  .swatch-row{display:flex;gap:6px;flex-wrap:wrap}
+  .sw{
+    width:28px;height:28px;border-radius:6px;cursor:pointer;
+    border:2px solid #fff;box-shadow:0 0 0 1px var(--border-2);
+  }
+  .sw.on{box-shadow:0 0 0 2px var(--dark)}
+
+  /* preset cards (background patterns) */
+  .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .preset{
+    height:60px;border-radius:7px;border:2px solid transparent;cursor:pointer;
+    position:relative;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700;
+    box-shadow:var(--shadow-sm);
+  }
+  .preset:hover{transform:translateY(-1px)}
+  .preset.on{border-color:var(--dark)}
+
+  /* navbar item card */
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:8px;
+    background:#fff;border:1px solid var(--border);border-radius:10px;cursor:grab;
+    box-shadow:var(--shadow-sm);
+  }
+  .nav-item:active{cursor:grabbing}
+  .nav-item.dragging{opacity:.4}
+  .nav-item .h{
+    width:32px;height:32px;border-radius:8px;background:var(--yellow-soft);
+    display:grid;place-items:center;font-size:16px;color:var(--dark);
+    border:1px solid var(--yellow-light);
+  }
+  .nav-item .info{flex:1;min-width:0}
+  .nav-item .info .nm{font-size:12px;font-weight:800;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .nav-item .info .tg{font-size:10px;color:var(--muted)}
+  .nav-item .grip{color:var(--muted);cursor:grab}
+  .nav-item .x{color:var(--danger);cursor:pointer;padding:4px}
+  .nav-item.add{cursor:pointer;border-style:dashed;background:var(--bg-2);justify-content:center;color:var(--yellow-dk);font-weight:700}
+  .nav-item.add:hover{background:var(--yellow-soft)}
+  .nav-item.selected{border-color:var(--yellow);box-shadow:0 0 0 3px rgba(245,195,32,.18)}
+
+  /* === CENTER PANEL — PREVIEW (editor mode) === */
+  .center{
+    background:
+      radial-gradient(circle at 20% 0%, rgba(245,195,32,.06), transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(65,36,2,.04), transparent 50%),
+      var(--bg);
+    display:flex;flex-direction:column;align-items:center;
+    padding:24px 0 0;overflow:auto;position:relative;
+  }
+  .device-toolbar{
+    display:flex;align-items:center;gap:8px;margin-bottom:18px;
+    background:#fff;padding:6px 10px;border-radius:10px;
+    border:1px solid var(--border);box-shadow:var(--shadow-sm);
+  }
+  .device-toolbar .info{font-size:11px;color:var(--muted)}
+  .device-toolbar .dot{width:6px;height:6px;border-radius:50%;background:var(--success);margin-right:5px}
+
+  .phone{
+    width:340px;background:#111;border-radius:38px;
+    padding:10px;box-shadow:var(--shadow-lg);position:relative;
+    margin-bottom:24px;
+  }
+  .phone-screen{
+    background:#fff;border-radius:30px;overflow:hidden;
+    height:680px;display:flex;flex-direction:column;position:relative;
+  }
+  .phone-notch{
+    position:absolute;top:8px;left:50%;transform:translateX(-50%);
+    width:80px;height:24px;background:#111;border-radius:14px;z-index:5;
+  }
+  .phone-status{
+    height:26px;padding:0 22px 0 22px;display:flex;align-items:center;
+    justify-content:space-between;font-size:11px;font-weight:600;
+    color:#000;flex-shrink:0;
+  }
+  .phone-header{
+    padding:10px 14px 8px;display:flex;align-items:center;gap:8px;flex-shrink:0;
+    border-bottom:1px solid #f3edde;background:#fff;
+  }
+  .phone-header .logo{font-weight:900;color:var(--dark);font-size:14px}
+  .phone-header .logo .y{color:var(--yellow-dk)}
+  .phone-header .search{
+    flex:1;background:#f5f0e2;border-radius:18px;padding:7px 12px;
+    font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;
+  }
+  .phone-header .ic{
+    width:30px;height:30px;border-radius:50%;background:#f5f0e2;
+    display:grid;place-items:center;color:var(--dark);font-size:13px;
+  }
+
+  .canvas{
+    flex:1;overflow:auto;padding:8px 0 70px;
+    background:var(--page-bg, #FAF6EB);
+  }
+  .phone-tabs{
+    position:absolute;bottom:0;left:0;right:0;height:60px;
+    background:#fff;border-top:1px solid #f3edde;
+    display:flex;align-items:center;justify-content:space-around;
+    font-size:9px;color:var(--muted);padding-top:6px;
+  }
+  .phone-tabs .t{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 8px;border-radius:8px}
+  .phone-tabs .t.on{color:var(--dark);font-weight:700}
+  .phone-tabs .t .ic{font-size:16px}
+  .phone-tabs .t.editing{background:var(--yellow-soft);outline:2px dashed var(--yellow)}
+
+  /* === DROPZONE BLOCKS === */
+  .block{
+    position:relative;margin:6px 10px;background:#fff;border-radius:14px;
+    border:2px dashed transparent;transition:all .18s;
+  }
+  .block.selected{
+    border-color:var(--yellow);box-shadow:0 0 0 4px rgba(245,195,32,.18);
+  }
+  .block:hover:not(.selected){border-color:rgba(245,195,32,.4)}
+  .block-toolbar{
+    position:absolute;top:-12px;right:8px;display:none;gap:2px;
+    background:var(--dark);border-radius:8px;padding:3px;
+    box-shadow:0 4px 12px rgba(0,0,0,.25);z-index:10;
+  }
+  .block:hover .block-toolbar,.block.selected .block-toolbar{display:flex}
+  .block-toolbar button{
+    width:24px;height:24px;color:#fff;border-radius:5px;
+    display:grid;place-items:center;font-size:11px;
+  }
+  .block-toolbar button:hover{background:var(--yellow);color:var(--dark)}
+  .block-toolbar button.danger:hover{background:var(--danger);color:#fff}
+  .block-label{
+    position:absolute;top:-12px;left:8px;display:none;
+    background:var(--yellow);color:var(--dark);
+    border-radius:6px;padding:2px 8px;font-size:9.5px;font-weight:800;
+    letter-spacing:.4px;text-transform:uppercase;z-index:9;
+  }
+  .block:hover .block-label,.block.selected .block-label{display:block}
+  .block-cond{
+    position:absolute;top:-10px;left:90px;display:none;align-items:center;gap:3px;
+    background:var(--info);color:#fff;border-radius:6px;padding:2px 7px;
+    font-size:9.5px;font-weight:700;z-index:9;
+  }
+  .block.has-cond:hover .block-cond,.block.has-cond.selected .block-cond{display:flex}
+  .block.hidden-block{opacity:.45}
+  .block.hidden-block::after{
+    content:'HIDDEN';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(0,0,0,.7);color:#fff;padding:3px 10px;border-radius:4px;
+    font-size:10px;font-weight:800;letter-spacing:1px;
+  }
+
+  /* === BLOCK CONTENT — see preview styles below === */
+  .b-hero{
+    height:140px;border-radius:14px;
+    background:var(--hero-bg, linear-gradient(135deg,#412402 0%,#6b3a05 60%,#F5C320 100%));
+    color:#fff;padding:14px 16px;display:flex;flex-direction:column;justify-content:flex-end;
+    position:relative;overflow:hidden;
+  }
+  .b-hero::before{
+    content:'';position:absolute;top:-30%;right:-10%;width:60%;height:160%;
+    background:radial-gradient(circle,rgba(255,255,255,.25),transparent 60%);
+  }
+  .b-hero h4{font-size:13px;font-weight:900;margin-bottom:3px;position:relative}
+  .b-hero p{font-size:10px;opacity:.85;position:relative;margin-bottom:6px}
+  .b-hero .cta{
+    background:var(--yellow);color:var(--dark);padding:5px 12px;border-radius:14px;
+    font-size:10px;font-weight:800;align-self:flex-start;position:relative;
+  }
+  .b-hero .pglink{
+    position:absolute;top:8px;right:8px;background:rgba(0,0,0,.4);color:#fff;
+    padding:2px 7px;border-radius:5px;font-size:8.5px;font-weight:700;
+    display:flex;align-items:center;gap:3px;backdrop-filter:blur(4px);
+  }
+
+  .b-cats{padding:10px 0}
+  .b-cats .row{display:flex;gap:8px;padding:0 12px;overflow-x:auto}
+  .b-cats .item{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .b-cats .ic{
+    width:48px;height:48px;border-radius:50%;background:var(--yellow-soft);
+    display:grid;place-items:center;font-size:20px;border:1px solid var(--yellow-light);
+  }
+  .b-cats .lbl{font-size:9px;color:var(--text);font-weight:600}
+
+  .b-flash{padding:10px 12px}
+  .b-flash .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .b-flash .head .ttl{font-size:12px;font-weight:900;color:var(--dark);display:flex;align-items:center;gap:5px}
+  .b-flash .countdown{
+    background:var(--danger);color:#fff;padding:2px 7px;border-radius:6px;
+    font-size:9px;font-weight:800;font-variant-numeric:tabular-nums;
+  }
+  .b-flash .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .b-flash .card{background:#f9f3e0;border-radius:8px;padding:5px;text-align:center}
+  .b-flash .card .img{
+    background:#fff;height:48px;border-radius:6px;display:grid;place-items:center;
+    font-size:18px;color:var(--muted);margin-bottom:4px;
+  }
+  .b-flash .card .price{font-size:9.5px;font-weight:900;color:var(--danger)}
+  .b-flash .card .old{font-size:8px;color:var(--muted);text-decoration:line-through}
+
+  .b-banner-1{height:90px;border-radius:12px;display:flex;align-items:center;
+    padding:12px 14px;color:#fff;font-weight:800;font-size:12px;position:relative;}
+  .b-banner-1 .pglink{
+    position:absolute;top:6px;right:6px;background:rgba(0,0,0,.35);color:#fff;
+    padding:2px 6px;border-radius:4px;font-size:8.5px;font-weight:700;
+  }
+  .b-banner-1.b1{background:linear-gradient(135deg,#1D6FB7,#5BA7E3)}
+  .b-banner-1.b2{background:linear-gradient(135deg,#1F8A40,#5BC97A)}
+  .b-banner-1.b3{background:linear-gradient(135deg,#C0392B,#F08080)}
+
+  .b-banner-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .b-banner-2>div{
+    height:90px;border-radius:12px;padding:12px;color:#fff;font-weight:800;font-size:11px;
+    display:flex;flex-direction:column;justify-content:flex-end;
+  }
+
+  .b-products{padding:10px 12px}
+  .b-products .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .b-products .head .ttl{font-size:12px;font-weight:900;color:var(--dark)}
+  .b-products .head .more{font-size:10px;color:var(--yellow-dk);font-weight:700}
+  .b-products .row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+  .b-products .card{
+    flex:0 0 110px;background:#fff;border-radius:10px;border:1px solid #f3edde;
+    padding:6px;
+  }
+  .b-products .card .img{
+    height:80px;background:#f5f0e2;border-radius:7px;display:grid;place-items:center;
+    color:var(--muted);font-size:24px;margin-bottom:5px;
+  }
+  .b-products .card .ttl{font-size:9.5px;font-weight:600;color:var(--text);line-height:1.2;
+    overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .b-products .card .price{font-size:10px;font-weight:900;color:var(--dark);margin-top:3px}
+
+  .b-vendors{padding:10px 12px}
+  .b-vendors .row{display:flex;gap:8px;overflow-x:auto}
+  .b-vendors .v{
+    flex:0 0 90px;background:#fff;border:1px solid #f3edde;border-radius:10px;
+    padding:8px;text-align:center;
+  }
+  .b-vendors .v .logo{
+    width:42px;height:42px;border-radius:50%;background:var(--yellow-soft);
+    margin:0 auto 5px;display:grid;place-items:center;font-weight:900;color:var(--dark);
+  }
+  .b-vendors .v .nm{font-size:9.5px;font-weight:700;color:var(--text)}
+  .b-vendors .v .badge{font-size:8.5px;color:var(--yellow-dk);font-weight:700;margin-top:2px}
+
+  .b-loyalty{
+    margin:0 10px;height:80px;border-radius:12px;
+    background:linear-gradient(135deg,#412402,#6b3a05);color:#fff;
+    padding:10px 14px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .b-loyalty .pts{font-size:18px;font-weight:900;color:var(--yellow)}
+  .b-loyalty .lbl{font-size:9px;opacity:.7;text-transform:uppercase;letter-spacing:.5px}
+  .b-loyalty .tier{
+    background:rgba(245,195,32,.2);border:1px solid var(--yellow);
+    color:var(--yellow);padding:3px 10px;border-radius:14px;font-size:9.5px;font-weight:800;
+  }
+
+  .b-newsletter{padding:14px;text-align:center}
+  .b-newsletter .ttl{font-size:12px;font-weight:900;color:var(--dark);margin-bottom:4px}
+  .b-newsletter .sub{font-size:10px;color:var(--muted);margin-bottom:8px}
+  .b-newsletter .form{display:flex;background:#f5f0e2;border-radius:18px;padding:3px}
+  .b-newsletter .form input{flex:1;background:none;border:none;padding:5px 10px;font-size:10px;outline:none}
+  .b-newsletter .form button{background:var(--yellow);color:var(--dark);padding:5px 12px;border-radius:14px;font-size:10px;font-weight:800}
+
+  .b-text{padding:10px 14px;font-size:11px;color:var(--text);line-height:1.5}
+  .b-spacer{height:16px}
+  .b-divider{padding:8px 14px}
+  .b-divider hr{border:none;border-top:1px solid var(--border-2)}
+
+  /* drop indicator */
+  .drop-indicator{
+    margin:0 10px;height:3px;background:var(--yellow);border-radius:2px;
+    box-shadow:0 0 10px rgba(245,195,32,.6);display:none;
+  }
+  .drop-indicator.on{display:block}
+  .add-here{
+    margin:10px;border:2px dashed var(--border-2);border-radius:12px;
+    padding:14px;text-align:center;color:var(--muted);font-size:11px;
+  }
+  .add-here.over{border-color:var(--yellow);background:var(--yellow-soft);color:var(--dark)}
+
+  /* === RIGHT PANEL — PROPERTIES === */
+  .right{
+    background:var(--bg-3);border-left:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .props-empty{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:30px;color:var(--muted);text-align:center;
+  }
+  .props-empty .ic{
+    width:64px;height:64px;border-radius:50%;background:var(--yellow-soft);
+    display:grid;place-items:center;font-size:28px;color:var(--yellow-dk);margin-bottom:12px;
+  }
+  .props-empty h4{font-size:13px;color:var(--dark);font-weight:800;margin-bottom:6px}
+  .props-empty p{font-size:11.5px;line-height:1.5}
+  .props{flex:1;overflow:auto}
+  .props-h{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-2)}
+  .props-h .name{font-size:13px;font-weight:800;color:var(--dark)}
+  .props-h .kind{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .props-tabs{display:flex;border-bottom:1px solid var(--border);background:#fff}
+  .props-tabs button{
+    flex:1;padding:10px 0;font-size:11px;color:var(--muted);
+    font-weight:700;letter-spacing:.3px;border-bottom:2px solid transparent;
+  }
+  .props-tabs button.on{color:var(--dark);border-color:var(--yellow)}
+  .props-body{padding:16px}
+  .field{margin-bottom:14px}
+  .field label{
+    display:block;font-size:10.5px;color:var(--muted);font-weight:700;
+    text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;
+  }
+  .field input,.field select,.field textarea{
+    width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;
+    background:var(--bg-2);font-size:12px;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{
+    outline:none;border-color:var(--yellow);background:#fff;
+  }
+  .field textarea{resize:vertical;min-height:60px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{
+    padding:5px 10px;border:1px solid var(--border);border-radius:14px;
+    font-size:10.5px;font-weight:600;color:var(--text);background:var(--bg-2);
+    display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none;
+  }
+  .chip:hover{border-color:var(--yellow)}
+  .chip.on{background:var(--dark);color:var(--yellow);border-color:var(--dark);font-weight:700}
+  .chip .x{opacity:.6}
+
+  .toggle{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 10px;background:var(--bg-2);border-radius:7px;
+    border:1px solid var(--border);margin-bottom:6px;
+  }
+  .toggle .nm{font-size:11.5px;font-weight:600}
+  .toggle .nm small{display:block;font-size:10px;color:var(--muted);font-weight:400;margin-top:2px}
+  .switch{
+    width:36px;height:20px;background:var(--border-2);border-radius:14px;
+    position:relative;cursor:pointer;flex-shrink:0;transition:background .18s;
+  }
+  .switch::after{
+    content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;
+    border-radius:50%;background:#fff;transition:left .18s;box-shadow:0 1px 3px rgba(0,0,0,.2);
+  }
+  .switch.on{background:var(--success)}
+  .switch.on::after{left:18px}
+
+  .sub-h{
+    font-size:10.5px;font-weight:800;color:var(--dark);text-transform:uppercase;
+    letter-spacing:.5px;margin:18px 0 8px;padding-bottom:5px;
+    border-bottom:1px solid var(--border);
+  }
+  .sub-h:first-child{margin-top:0}
+
+  /* link picker field — looks like an input but is a button */
+  .link-field{
+    width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;
+    background:var(--bg-2);font-size:12px;text-align:left;
+    display:flex;align-items:center;gap:8px;cursor:pointer;
+  }
+  .link-field:hover{border-color:var(--yellow);background:#fff}
+  .link-field .lk-ic{font-size:14px}
+  .link-field .lk-info{flex:1;min-width:0;overflow:hidden}
+  .link-field .lk-info .lk-t{font-weight:700;color:var(--dark);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .link-field .lk-info .lk-s{font-size:10px;color:var(--muted)}
+  .link-field .lk-chev{color:var(--muted);font-size:14px}
+
+  /* === PAGES LIBRARY VIEW === */
+  .lib{
+    flex:1;overflow:auto;padding:30px 40px;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(245,195,32,.04), transparent 50%),
+      var(--bg);
+  }
+  .lib-h{
+    display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;
+    flex-wrap:wrap;gap:14px;
+  }
+  .lib-h .ttl{font-size:22px;font-weight:900;color:var(--dark);display:flex;align-items:center;gap:10px}
+  .lib-h .ttl .ic{
+    width:38px;height:38px;border-radius:10px;background:var(--yellow);color:var(--dark);
+    display:grid;place-items:center;font-size:20px;
+  }
+  .lib-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .lib-filter{
+    padding:8px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;
+    font-size:12px;color:var(--text);display:flex;align-items:center;gap:6px;cursor:pointer;
+  }
+  .lib-filter:hover{border-color:var(--yellow)}
+  .lib-filter .lbl{color:var(--muted);font-size:11px}
+  .lib-filter strong{font-weight:800;color:var(--dark)}
+  .lib-btn{
+    padding:9px 16px;background:var(--dark);color:var(--yellow);border-radius:9px;
+    font-size:12px;font-weight:800;display:flex;align-items:center;gap:6px;
+  }
+  .lib-btn:hover{background:#5a3204}
+
+  .lib-grid{
+    display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:22px;
+  }
+  .lib-card{
+    background:#fff;border-radius:14px;overflow:hidden;
+    box-shadow:var(--shadow-sm);transition:all .2s;cursor:pointer;
+    border:1px solid var(--border);position:relative;
+  }
+  .lib-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);border-color:var(--yellow)}
+  .lib-thumb{
+    height:260px;background:#FAF6EB;
+    padding:12px;display:flex;justify-content:center;align-items:flex-start;
+    position:relative;
+  }
+  .lib-phone{
+    width:130px;background:#111;border-radius:18px;padding:4px;
+    box-shadow:0 6px 18px rgba(0,0,0,.15);
+  }
+  .lib-phone .scr{
+    background:#fff;border-radius:14px;height:230px;overflow:hidden;
+    font-size:6px;color:var(--text);
+  }
+  .lib-phone .scr .pp-hd{
+    height:14px;background:#fff;padding:2px 5px;display:flex;align-items:center;gap:3px;
+    border-bottom:.5px solid #f3edde;
+  }
+  .lib-phone .scr .pp-hd .y{color:var(--yellow-dk);font-weight:900;font-size:6px}
+  .lib-phone .scr .pp-hd .sb{flex:1;height:6px;background:#f5f0e2;border-radius:3px}
+  .lib-phone .scr .pp-tab{
+    position:absolute;bottom:6px;left:8px;right:8px;height:12px;background:#fff;
+    border-radius:6px;border:.5px solid #f3edde;display:flex;justify-content:space-around;align-items:center;
+    padding:2px;
+  }
+  .lib-phone .scr .pp-tab span{font-size:4px;color:var(--muted)}
+  .lib-phone .scr .blks{padding:3px;display:flex;flex-direction:column;gap:2px}
+  .lib-phone .scr .blk{height:14px;background:var(--yellow-soft);border-radius:3px}
+  .lib-phone .scr .blk.hero{height:24px;background:linear-gradient(135deg,#412402,#F5C320)}
+  .lib-phone .scr .blk.grid{height:18px;background:linear-gradient(135deg,#FFE5A0,#FFD966)}
+  .lib-phone .scr .blk.flash{height:22px;background:linear-gradient(135deg,#fff5d6,#FFD966);position:relative}
+  .lib-phone .scr .blk.flash::after{content:'';position:absolute;top:2px;right:2px;width:8px;height:4px;background:var(--danger);border-radius:2px}
+  .lib-phone .scr .blk.banner{height:12px}
+  .lib-phone .scr .blk.products{height:30px;background:#f9f3e0}
+  .lib-phone .scr .blk.dark{background:linear-gradient(135deg,#412402,#6b3a05)}
+
+  .lib-info{padding:14px 16px 16px}
+  .lib-info .nm{
+    font-size:14px;font-weight:800;color:var(--dark);margin-bottom:4px;
+    display:flex;align-items:center;gap:6px;
+  }
+  .lib-info .meta{
+    font-size:11px;color:var(--muted);display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:8px;
+  }
+  .lib-info .meta .dot{width:3px;height:3px;background:var(--muted);border-radius:50%;display:inline-block}
+  .lib-status{
+    position:absolute;top:10px;left:10px;
+    padding:3px 8px;border-radius:14px;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;
+  }
+  .lib-status.published{background:var(--success);color:#fff}
+  .lib-status.draft{background:var(--muted);color:#fff}
+  .lib-status.scheduled{background:var(--info);color:#fff}
+  .lib-pin{
+    position:absolute;top:10px;right:10px;
+    width:24px;height:24px;background:#fff;border-radius:50%;
+    display:grid;place-items:center;box-shadow:var(--shadow-sm);font-size:11px;
+  }
+  .lib-info .badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+  .lib-info .badge{
+    font-size:9.5px;background:var(--bg-2);color:var(--text);padding:2px 7px;border-radius:5px;font-weight:600;
+    border:1px solid var(--border);
+  }
+  .lib-info .badge .f{font-size:11px}
+
+  .lib-card.new-page{
+    border:2px dashed var(--border-2);background:transparent;display:grid;place-items:center;
+    min-height:340px;color:var(--muted);
+  }
+  .lib-card.new-page:hover{border-color:var(--yellow);background:var(--yellow-soft);color:var(--dark)}
+  .lib-card.new-page .nc{
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+  }
+  .lib-card.new-page .ic{
+    width:48px;height:48px;border-radius:50%;background:#fff;
+    display:grid;place-items:center;font-size:24px;color:var(--yellow-dk);
+    box-shadow:var(--shadow-sm);
+  }
+  .lib-card.new-page .lbl{font-size:13px;font-weight:800}
+
+  /* === NAV BAR EDITOR (special center mode) === */
+  .navbar-center{
+    flex:1;background:
+      radial-gradient(circle at 20% 0%, rgba(245,195,32,.06), transparent 50%),
+      var(--bg);
+    display:flex;flex-direction:column;align-items:center;padding:24px 0;overflow:auto;
+  }
+  .navbar-center .focus-tip{
+    background:var(--dark);color:var(--yellow);padding:10px 16px;border-radius:10px;
+    font-size:12px;margin-bottom:18px;display:flex;align-items:center;gap:8px;
+  }
+
+  /* === BOTTOM STATUS BAR === */
+  .statusbar{
+    height:32px;background:var(--dark);color:rgba(255,255,255,.7);
+    display:flex;align-items:center;padding:0 14px;gap:14px;font-size:11px;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+  .statusbar .grow{flex:1}
+  .statusbar .item{display:flex;align-items:center;gap:6px}
+  .statusbar .item strong{color:#fff;font-weight:600}
+
+  /* === TOAST === */
+  .toast{
+    position:fixed;bottom:50px;left:50%;transform:translateX(-50%) translateY(100px);
+    background:var(--dark);color:#fff;padding:10px 18px;border-radius:10px;
+    font-size:12px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3);
+    transition:transform .25s;display:flex;align-items:center;gap:8px;z-index:200;
+  }
+  .toast.on{transform:translateX(-50%) translateY(0)}
+  .toast .ic{color:var(--yellow)}
+
+  /* === MODAL === */
+  .modal-bd{
+    position:fixed;inset:0;background:rgba(20,12,2,.45);z-index:150;
+    display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);
+  }
+  .modal-bd.on{display:flex}
+  .modal{
+    width:560px;max-height:80vh;background:#fff;border-radius:14px;overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;
+  }
+  .modal.lg{width:760px}
+  .modal-h{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .modal-h h3{font-size:14px;font-weight:800;color:var(--dark)}
+  .modal-h .x{font-size:18px;color:var(--muted);cursor:pointer}
+  .modal-b{padding:18px;overflow:auto;flex:1}
+  .modal-f{padding:14px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+  .btn{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
+  .btn-secondary{background:var(--bg-2);color:var(--text);border:1px solid var(--border)}
+  .btn-primary{background:var(--dark);color:var(--yellow)}
+  .btn-primary:hover{background:#5a3204}
+
+  /* link picker tabs */
+  .lp-tabs{display:flex;gap:4px;background:var(--bg-2);padding:4px;border-radius:8px;margin-bottom:14px}
+  .lp-tabs button{flex:1;padding:7px;font-size:11.5px;color:var(--muted);font-weight:700;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:5px}
+  .lp-tabs button.on{background:#fff;color:var(--dark);box-shadow:var(--shadow-sm)}
+  .lp-list{display:flex;flex-direction:column;gap:6px;max-height:340px;overflow:auto}
+  .lp-item{
+    display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);
+    border-radius:8px;cursor:pointer;border:1px solid transparent;
+  }
+  .lp-item:hover{background:#fff;border-color:var(--yellow)}
+  .lp-item.on{background:var(--yellow-soft);border-color:var(--yellow)}
+  .lp-item .ic{width:36px;height:36px;border-radius:8px;background:#fff;display:grid;place-items:center;font-size:18px}
+  .lp-item .info{flex:1;min-width:0}
+  .lp-item .nm{font-size:12px;font-weight:800;color:var(--dark)}
+  .lp-item .sub{font-size:10.5px;color:var(--muted)}
+  .lp-item .pin{font-size:10px;color:var(--success);font-weight:800}
+
+  /* new page modal */
+  .npg{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .tpl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tpl{
+    border:2px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;
+    text-align:center;background:#fff;
+  }
+  .tpl:hover{border-color:var(--yellow);background:var(--yellow-soft)}
+  .tpl.on{border-color:var(--dark);background:var(--yellow-soft)}
+  .tpl .ic{font-size:24px;margin-bottom:4px}
+  .tpl .nm{font-size:11px;font-weight:800;color:var(--dark)}
+  .tpl .desc{font-size:9.5px;color:var(--muted);margin-top:2px;line-height:1.3}
+
+  /* helper card */
+  .helper{
+    position:fixed;top:70px;right:20px;background:rgba(65,36,2,.95);color:#fff;
+    padding:14px 18px;border-radius:12px;max-width:300px;font-size:11.5px;line-height:1.55;
+    box-shadow:0 10px 40px rgba(0,0,0,.4);z-index:80;
+  }
+  .helper h4{color:var(--yellow);font-size:13px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .helper p{margin-bottom:6px}
+  .helper kbd{
+    display:inline-block;padding:1px 5px;background:rgba(255,255,255,.15);
+    border-radius:3px;font-size:10px;font-weight:700;
+  }
+  .helper .x{
+    position:absolute;top:6px;right:8px;cursor:pointer;color:rgba(255,255,255,.5);font-size:14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo"><div class="dot">U</div> Uellow</div>
+  <div class="crumb" id="crumb"><span>Mobile App</span><span class="sep">›</span><span class="pg" id="crumbPage">📄 Pages</span></div>
+  <div class="grow"></div>
+
+  <div class="scope-pills" id="scopePills">
+    <span class="lbl">Scope</span>
+    <div class="pill" id="scopeWebsite">🌐 KW Site</div>
+    <div class="pill" id="scopeCountry">🇰🇼 Kuwait</div>
+    <div class="pill" id="scopeLang">🅰 EN+AR</div>
+  </div>
+
+  <div class="top-group">
+    <span style="font-size:11px;color:rgba(255,255,255,.5)">View as</span>
+    <div class="seg">
+      <button class="on" data-view="guest">👤 Guest</button>
+      <button data-view="customer">🛍 Customer</button>
+      <button data-view="vip">⭐ VIP</button>
+    </div>
+  </div>
+
+  <div class="seg">
+    <button class="on" title="Mobile">📱</button>
+    <button title="Tablet">📱</button>
+  </div>
+
+  <button class="top-btn" title="Undo">⤺</button>
+  <button class="top-btn" title="Redo">⤻</button>
+
+  <div class="saved-pill" id="savedPill"><span class="pulse"></span> Saved 2s ago</div>
+
+  <button class="top-btn outline">👁 Preview</button>
+  <button class="top-btn primary" id="publishBtn">📤 Publish</button>
+</div>
+
+<div class="stage library" id="stage">
+  <!-- LEFT RAIL — view switcher -->
+  <aside class="rail">
+    <button class="on" data-view="library" title="Pages library">📄<span class="l">PAGES</span></button>
+    <button data-view="blocks" title="Blocks library">🧱<span class="l">BLOCKS</span></button>
+    <button data-view="navbar" title="Nav bar editor">🧭<span class="l">NAV</span></button>
+    <button data-view="theme" title="Page theme">🎨<span class="l">THEME</span></button>
+    <button data-view="settings" title="Page settings">⚙<span class="l">SET</span></button>
+    <div class="sep"></div>
+    <button title="Translations">🌍<span class="l">i18n</span></button>
+    <button title="Analytics">📊<span class="l">STATS</span></button>
+  </aside>
+
+  <!-- LEFT PANEL — content changes by view -->
+  <aside class="left" id="left">
+    <!-- populated by JS -->
+  </aside>
+
+  <!-- CENTER — pages library OR editor preview -->
+  <main class="center" id="center">
+    <!-- populated by JS -->
+  </main>
+
+  <!-- RIGHT — properties (only shown in editor) -->
+  <aside class="right" id="right">
+    <div id="propsHost" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="props-empty">
+        <div class="ic">⚙</div>
+        <h4>No block selected</h4>
+        <p>Click a block in the preview to edit its content, style, and visibility conditions.</p>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="item">📍 <strong id="sbScope">Library view</strong></div>
+  <div class="item">📊 <strong id="sbPages">6</strong> pages · <strong id="sbPublished">4</strong> published</div>
+  <div class="grow"></div>
+  <div class="item">📈 Last 7 days: <strong style="color:#4ADE80">12,840 visits</strong> · <strong style="color:#4ADE80">+18.4%</strong> conversion</div>
+  <div class="item">⏱ Last save: <strong>just now</strong></div>
+</div>
+
+<div class="helper" id="helper">
+  <span class="x" onclick="this.parentElement.style.display='none'">✕</span>
+  <h4>💡 What you're looking at</h4>
+  <p><b>Pages</b> · all designed pages — Home, Eid Sale, Black Friday, brand pages, anything.</p>
+  <p><b>Blocks</b> · drag building blocks into the open page.</p>
+  <p><b>Nav Bar</b> · edit bottom tabs — add a tab that opens any designed page.</p>
+  <p><b>Theme</b> · per-page colors / background / fonts → makes the Eid page actually <i>feel</i> like Eid.</p>
+  <p><b>Settings</b> · which website / country / languages this page targets.</p>
+  <p style="margin-top:8px;color:var(--yellow)">Try: open the Eid Sale page → check its custom green/gold theme → see the link from the "Eid" banner on Home points to it.</p>
+</div>
+
+<div class="toast" id="toast"><span class="ic">✓</span><span id="toastMsg">Saved</span></div>
+
+<!-- MODAL: link picker -->
+<div class="modal-bd" id="linkPickerBd">
+  <div class="modal">
+    <div class="modal-h">
+      <h3>🔗 Where should this link go?</h3>
+      <span class="x" onclick="closeModal('linkPickerBd')">✕</span>
+    </div>
+    <div class="modal-b" id="linkPickerBody"></div>
+    <div class="modal-f">
+      <button class="btn btn-secondary" onclick="closeModal('linkPickerBd')">Cancel</button>
+      <button class="btn btn-primary" onclick="applyLinkPick()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: new page -->
+<div class="modal-bd" id="newPageBd">
+  <div class="modal lg">
+    <div class="modal-h"><h3>➕ Create a new page</h3><span class="x" onclick="closeModal('newPageBd')">✕</span></div>
+    <div class="modal-b">
+      <div class="npg">
+        <div>
+          <div class="field"><label>Page name</label><input id="npName" placeholder="e.g. Mother's Day 2026" /></div>
+          <div class="field"><label>URL slug</label><input id="npSlug" placeholder="mothers-day-2026" /></div>
+          <div class="field"><label>Page kind</label>
+            <select id="npKind">
+              <option value="campaign">🎁 Campaign / promo landing</option>
+              <option value="brand">🏪 Brand showcase</option>
+              <option value="collection">📦 Curated collection</option>
+              <option value="info">ℹ Info / policy page</option>
+              <option value="custom">🧩 Custom</option>
+            </select>
+          </div>
+          <div class="sub-h">Scope</div>
+          <div class="field"><label>Website</label>
+            <select id="npWebsite">
+              <option>🌐 Kuwait Site</option>
+              <option>🌐 Saudi Site</option>
+              <option>🌐 UAE Site</option>
+              <option>🌐 Qatar Site</option>
+              <option>🌐 Egypt Site</option>
+              <option>🌐 Oman Site</option>
+              <option>🌐 All websites</option>
+            </select>
+          </div>
+          <div class="field"><label>Languages enabled</label>
+            <div class="chips" id="npLangs">
+              <div class="chip on">🇺🇸 EN</div>
+              <div class="chip on">🇰🇼 AR</div>
+              <div class="chip">🇫🇷 FR</div>
+              <div class="chip">🇮🇳 HI</div>
+              <div class="chip">🇵🇭 TL</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="sub-h">Start from template</div>
+          <div class="tpl-grid">
+            <div class="tpl on"><div class="ic">📭</div><div class="nm">Blank</div><div class="desc">Empty canvas</div></div>
+            <div class="tpl"><div class="ic">🎁</div><div class="nm">Promo Sale</div><div class="desc">Hero · countdown · flash deals · CTA</div></div>
+            <div class="tpl"><div class="ic">🏪</div><div class="nm">Brand</div><div class="desc">Vendor hero · about · product grid</div></div>
+            <div class="tpl"><div class="ic">📦</div><div class="nm">Collection</div><div class="desc">Cover · filters · products</div></div>
+            <div class="tpl"><div class="ic">✨</div><div class="nm">Editorial</div><div class="desc">Hero · text · gallery · CTA</div></div>
+            <div class="tpl"><div class="ic">📜</div><div class="nm">Info</div><div class="desc">Header · sections · FAQ</div></div>
+          </div>
+          <div class="sub-h">Theme override</div>
+          <div class="preset-grid">
+            <div class="preset on" style="background:linear-gradient(135deg,#412402,#F5C320)">Uellow</div>
+            <div class="preset" style="background:linear-gradient(135deg,#0E5E2E,#FFD700)">🌙 Eid</div>
+            <div class="preset" style="background:linear-gradient(135deg,#7E2D1E,#FFB347)">🎃 Halloween</div>
+            <div class="preset" style="background:linear-gradient(135deg,#003049,#D62828)">⚫ Black Friday</div>
+            <div class="preset" style="background:linear-gradient(135deg,#C0392B,#F08080)">❤ Valentine</div>
+            <div class="preset" style="background:linear-gradient(135deg,#1F8A40,#F5C320)">🇰🇼 National Day</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-f">
+      <button class="btn btn-secondary" onclick="closeModal('newPageBd')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmNewPage()">Create + open</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: publish -->
+<div class="modal-bd" id="publishBd">
+  <div class="modal">
+    <div class="modal-h"><h3>📤 Publish page</h3><span class="x" onclick="closeModal('publishBd')">✕</span></div>
+    <div class="modal-b" id="publishBody"></div>
+    <div class="modal-f">
+      <button class="btn btn-secondary" onclick="closeModal('publishBd')">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal('publishBd');toast('🚀 Published — going live now')">Publish</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA — pages, blocks, snippets, navbar
+   ============================================================ */
+
+const LANGS = [
+  { code:'en', flag:'🇺🇸', name:'English' },
+  { code:'ar', flag:'🇰🇼', name:'العربية' },
+  { code:'fr', flag:'🇫🇷', name:'Français' },
+  { code:'hi', flag:'🇮🇳', name:'हिन्दी' },
+  { code:'tl', flag:'🇵🇭', name:'Tagalog' },
+];
+
+const WEBSITES = [
+  { id:1, name:'Kuwait Site',       country:'KW', flag:'🇰🇼' },
+  { id:2, name:'Saudi Site',        country:'SA', flag:'🇸🇦' },
+  { id:3, name:'UAE Site',          country:'AE', flag:'🇦🇪' },
+  { id:4, name:'Qatar Site',        country:'QA', flag:'🇶🇦' },
+  { id:5, name:'Egypt Site',        country:'EG', flag:'🇪🇬' },
+  { id:6, name:'Oman Site',         country:'OM', flag:'🇴🇲' },
+];
+
+const SNIPPETS = [
+  { cat:'Headers',     items:[
+    { kind:'hero',        icon:'🌅', label:'Hero Banner' },
+    { kind:'carousel',    icon:'🎠', label:'Carousel' },
+    { kind:'searchbar',   icon:'🔍', label:'Search Bar' },
+    { kind:'countdown',   icon:'⏰', label:'Countdown' },
+  ]},
+  { cat:'Categories',  items:[
+    { kind:'cats-grid',   icon:'▦', label:'Categories Grid' },
+    { kind:'cats-strip',  icon:'▭', label:'Categories Strip' },
+  ]},
+  { cat:'Products',    items:[
+    { kind:'products',    icon:'🛍', label:'Product Carousel' },
+    { kind:'flash',       icon:'⚡', label:'Flash Deals' },
+    { kind:'grid',        icon:'⊞', label:'Product Grid' },
+    { kind:'recent',      icon:'⏱', label:'Recently Viewed' },
+    { kind:'rec-ai',      icon:'✨', label:'AI Recommended' },
+    { kind:'bestsellers', icon:'🏆', label:'Bestsellers' },
+  ]},
+  { cat:'Banners',     items:[
+    { kind:'banner-1',    icon:'▬', label:'Single Banner' },
+    { kind:'banner-2',    icon:'▰▰', label:'Two-Up Banner' },
+    { kind:'banner-3',    icon:'▰▰▰', label:'Three-Up' },
+  ]},
+  { cat:'Vendors',     items:[
+    { kind:'vendors',     icon:'🏪', label:'Vendor Strip' },
+    { kind:'vendor-feat', icon:'⭐', label:'Featured Vendor' },
+  ]},
+  { cat:'Loyalty',     items:[
+    { kind:'loyalty',     icon:'💎', label:'Loyalty Banner' },
+    { kind:'wallet',      icon:'💰', label:'Wallet Banner' },
+    { kind:'coupons',     icon:'🎟', label:'My Coupons' },
+  ]},
+  { cat:'Engagement',  items:[
+    { kind:'newsletter',  icon:'📧', label:'Newsletter' },
+    { kind:'app-promo',   icon:'📱', label:'App Promo' },
+    { kind:'reviews',     icon:'⭐', label:'Testimonials' },
+    { kind:'beena',       icon:'💬', label:'Ask Beena AI' },
+  ]},
+  { cat:'Content',     items:[
+    { kind:'text',        icon:'📝', label:'Text Block' },
+    { kind:'video',       icon:'▶', label:'Video Block' },
+    { kind:'html',        icon:'⌨', label:'HTML Snippet' },
+  ]},
+  { cat:'Layout',      items:[
+    { kind:'tabs',        icon:'⎘', label:'Tabs Layout' },
+    { kind:'spacer',      icon:'↕', label:'Spacer' },
+    { kind:'divider',     icon:'━', label:'Divider' },
+  ]},
+];
+
+const THEME_PRESETS = [
+  { id:'uellow', name:'Uellow',       gradient:'linear-gradient(135deg,#412402,#F5C320)',
+    primary:'#F5C320', dark:'#412402', pageBg:'#FAF6EB', heroBg:'linear-gradient(135deg,#412402 0%,#6b3a05 60%,#F5C320 100%)' },
+  { id:'eid',    name:'🌙 Eid',       gradient:'linear-gradient(135deg,#0E5E2E,#FFD700)',
+    primary:'#FFD700', dark:'#0E5E2E', pageBg:'#E9F4ED', heroBg:'linear-gradient(135deg,#0E5E2E 0%,#1B7A3F 50%,#FFD700 100%)' },
+  { id:'ramadan',name:'🕌 Ramadan',   gradient:'linear-gradient(135deg,#1B2D5C,#D4AF37)',
+    primary:'#D4AF37', dark:'#1B2D5C', pageBg:'#EDEEF5', heroBg:'linear-gradient(135deg,#1B2D5C 0%,#3A5BA0 50%,#D4AF37 100%)' },
+  { id:'bf',     name:'⚫ Black Friday', gradient:'linear-gradient(135deg,#000,#FF4500)',
+    primary:'#FF4500', dark:'#000', pageBg:'#1A1A1A', heroBg:'linear-gradient(135deg,#000,#FF4500)' },
+  { id:'valentine', name:'❤ Valentine', gradient:'linear-gradient(135deg,#C0392B,#F08080)',
+    primary:'#C0392B', dark:'#5A0A0A', pageBg:'#FFF0F0', heroBg:'linear-gradient(135deg,#5A0A0A,#C0392B 60%,#F08080)' },
+  { id:'national', name:'🇰🇼 National Day', gradient:'linear-gradient(135deg,#1F8A40,#F5C320)',
+    primary:'#F5C320', dark:'#1F8A40', pageBg:'#F0F7F2', heroBg:'linear-gradient(135deg,#1F8A40 0%,#34A853 50%,#F5C320 100%)' },
+  { id:'mom',    name:'🌸 Mother\'s Day', gradient:'linear-gradient(135deg,#A0276B,#FFC0CB)',
+    primary:'#A0276B', dark:'#5C0F3D', pageBg:'#FFF5F8', heroBg:'linear-gradient(135deg,#5C0F3D,#A0276B 50%,#FFC0CB)' },
+];
+
+const PAGE_KINDS = {
+  home:     { icon:'🏠', label:'Home' },
+  campaign: { icon:'🎁', label:'Campaign' },
+  brand:    { icon:'🏪', label:'Brand' },
+  collection:{icon:'📦', label:'Collection' },
+  info:     { icon:'ℹ',  label:'Info' },
+  custom:   { icon:'🧩', label:'Custom' },
+};
+
+/* Seed pages — represents what's been designed so far */
+let pageSeq = 1;
+const pid = () => 'pg' + (pageSeq++);
+
+let pages = [
+  {
+    id: pid(), kind:'home', name:{en:'Home', ar:'الرئيسية'}, slug:'home',
+    websiteIds:[1,2,3,4,5,6], countries:['KW','SA','AE','QA','EG','OM'],
+    langs:['en','ar'], theme:'uellow',
+    status:'published', updatedAt:'2 min ago', views7d:'24,180',
+    pinned:true,
+    blocks: defaultHomeBlocks(),
+  },
+  {
+    id: pid(), kind:'campaign', name:{en:'Eid Mega Sale', ar:'تخفيضات العيد الكبرى'}, slug:'eid-sale-2026',
+    websiteIds:[1,2,3,4,5,6], countries:['KW','SA','AE','QA','EG','OM'],
+    langs:['en','ar'], theme:'eid',
+    status:'published', updatedAt:'1h ago', views7d:'8,940',
+    blocks: eidSaleBlocks(),
+  },
+  {
+    id: pid(), kind:'campaign', name:{en:'Ramadan Nights', ar:'ليالي رمضان'}, slug:'ramadan-2026',
+    websiteIds:[1,2,3,4,5,6], countries:['KW','SA','AE','QA','EG','OM'],
+    langs:['en','ar'], theme:'ramadan',
+    status:'scheduled', updatedAt:'yesterday', views7d:'0', scheduledFor:'2026-03-10',
+    blocks: ramadanBlocks(),
+  },
+  {
+    id: pid(), kind:'campaign', name:{en:'Black Friday', ar:'الجمعة السوداء'}, slug:'black-friday',
+    websiteIds:[1,2,3], countries:['KW','SA','AE'],
+    langs:['en','ar'], theme:'bf',
+    status:'draft', updatedAt:'5 days ago', views7d:'0',
+    blocks: bfBlocks(),
+  },
+  {
+    id: pid(), kind:'brand', name:{en:'Apple at Uellow', ar:'آبل في يلو'}, slug:'brand/apple',
+    websiteIds:[1,2,3], countries:['KW','SA','AE'],
+    langs:['en','ar'], theme:'uellow',
+    status:'published', updatedAt:'3 days ago', views7d:'1,420',
+    blocks: brandBlocks(),
+  },
+  {
+    id: pid(), kind:'info', name:{en:'Shipping & Returns', ar:'الشحن والإرجاع'}, slug:'info/shipping',
+    websiteIds:[1,2,3,4,5,6], countries:['KW','SA','AE','QA','EG','OM'],
+    langs:['en','ar'], theme:'uellow',
+    status:'published', updatedAt:'last month', views7d:'380',
+    blocks: infoBlocks(),
+  },
+];
+
+/* Nav bar items — bottom tabs */
+let navbarItems = [
+  { id:'n1', icon:'🏠', label:{en:'Home',ar:'الرئيسية'},      target:{type:'page', value:pages[0].id}, badge:null },
+  { id:'n2', icon:'🛍', label:{en:'Shop',ar:'تسوق'},          target:{type:'screen', value:'shop'},   badge:null },
+  { id:'n3', icon:'❤', label:{en:'Wishlist',ar:'المفضّلة'},   target:{type:'screen', value:'wishlist'}, badge:null },
+  { id:'n4', icon:'🛒', label:{en:'Cart',ar:'السلة'},         target:{type:'screen', value:'cart'},   badge:'cart_count' },
+  { id:'n5', icon:'👤', label:{en:'Me',ar:'حسابي'},           target:{type:'screen', value:'account'}, badge:null },
+];
+
+function defaultHomeBlocks(){
+  return [
+    block('hero', {
+      titleEn:'Ramadan Mega Sale', titleAr:'تخفيضات رمضان الكبرى',
+      subEn:'Up to 60% off selected items', subAr:'خصم حتى ٦٠٪',
+      ctaEn:'Shop now', ctaAr:'تسوّق الآن',
+      link:{type:'page', value:'eid-sale-2026', label:'Eid Mega Sale'},
+    }),
+    block('cats-grid', { titleEn:'Shop by category' }),
+    block('banner-1', {
+      titleEn:'🌙 Eid offers — open the special page',
+      color:'#0E5E2E',
+      link:{type:'page', value:'eid-sale-2026', label:'Eid Mega Sale'},
+    }, { countries:['KW','SA'] }),
+    block('flash', { titleEn:'⚡ Flash Deals' }),
+    block('banner-1', { titleEn:'Tabby — split in 4 · 0% interest', color:'#1F8A40' }),
+    block('products', { titleEn:'Bestsellers this week' }),
+    block('vendors', { titleEn:'Top sellers' }),
+    block('loyalty', {}),
+    block('newsletter', { titleEn:'Stay in the loop', subEn:'New arrivals + private deals' }),
+  ];
+}
+function eidSaleBlocks(){
+  return [
+    block('hero', {
+      titleEn:'🌙 Eid Mubarak', titleAr:'عيد مبارك',
+      subEn:'Celebrate with up to 70% off',
+      ctaEn:'Shop the sale', ctaAr:'تسوّق التخفيضات',
+    }),
+    block('countdown', {}),
+    block('cats-grid', { titleEn:'Eid essentials' }),
+    block('flash', { titleEn:'⚡ Eid Flash — 24h only' }),
+    block('products', { titleEn:'Eid gift ideas' }),
+    block('banner-2', {}),
+    block('vendors', { titleEn:'Featured for Eid' }),
+  ];
+}
+function ramadanBlocks(){ return [
+  block('hero', { titleEn:'🕌 Ramadan Kareem', ctaEn:'Suhoor & Iftar essentials' }),
+  block('cats-grid', { titleEn:'Ramadan shop' }),
+  block('flash', { titleEn:'⚡ Late-night deals' }),
+  block('products', { titleEn:'Iftar tableware' }),
+];}
+function bfBlocks(){ return [
+  block('hero', { titleEn:'⚫ BLACK FRIDAY', subEn:'24-hour mega sale', ctaEn:'Shop now' }),
+  block('countdown', {}),
+  block('flash', { titleEn:'⚡ Doorbusters' }),
+  block('products', { titleEn:'Top deals' }),
+  block('grid', { titleEn:'Under 5 KD' }),
+];}
+function brandBlocks(){ return [
+  block('hero', { titleEn:'Apple', subEn:'Innovate. Experience. Own.', ctaEn:'Explore' }),
+  block('products', { titleEn:'iPhone 16 Series' }),
+  block('products', { titleEn:'Mac & iPad' }),
+  block('reviews', {}),
+];}
+function infoBlocks(){ return [
+  block('text', { titleEn:'Shipping & Returns', textEn:'We deliver across Kuwait within 24 hours and across the GCC within 3 working days. Returns accepted within 14 days of delivery.' }),
+  block('divider', {}),
+  block('text', { textEn:'For more details, contact our support team via Beena AI or open a ticket.' }),
+];}
+
+function block(kind, props, cond){
+  return {
+    id:'b'+Math.random().toString(36).slice(2,9),
+    kind, props:props||{},
+    cond:Object.assign({countries:[],languages:[],segments:[],schedule:{start:'',end:''},abVariant:'all'}, cond||{}),
+    hidden:false,
+  };
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let view = 'library';     // 'library' | 'blocks' | 'navbar' | 'theme' | 'settings'
+let openPageId = null;    // id of page being edited
+let selectedBlockId = null;
+let propsTab = 'content';
+let navbarSelected = null;
+let linkPicker = { onApply:null, current:null, mode:'page' };
+
+const cur = () => pages.find(p => p.id === openPageId);
+const theme = (id) => THEME_PRESETS.find(t => t.id === id) || THEME_PRESETS[0];
+
+/* ============================================================
+   ROUTING — view switching
+   ============================================================ */
+function go(v){
+  view = v;
+  if (v === 'library') {
+    openPageId = null; selectedBlockId = null;
+  } else if (!openPageId) {
+    openPageId = pages[0].id;
+  }
+  render();
+}
+function openPage(id, defaultLeftView){
+  openPageId = id;
+  view = defaultLeftView || 'blocks';
+  selectedBlockId = null;
+  render();
+}
+
+/* ============================================================
+   TOP-LEVEL RENDER
+   ============================================================ */
+function render(){
+  const stage = document.getElementById('stage');
+  stage.className = 'stage';
+  if (view === 'library') stage.classList.add('library');
+  if (view === 'navbar')  stage.classList.add('navbar-edit');
+
+  applyThemeToCenter();
+  renderRail();
+  renderCrumb();
+  renderScopePills();
+  renderLeft();
+  renderCenter();
+  renderRight();
+  renderStatus();
+}
+
+function applyThemeToCenter(){
+  const c = document.getElementById('center');
+  const t = openPageId ? theme(cur().theme) : theme('uellow');
+  c.style.setProperty('--page-bg', t.pageBg);
+  c.style.setProperty('--hero-bg', t.heroBg);
+}
+
+function renderRail(){
+  document.querySelectorAll('.rail button[data-view]').forEach(b => {
+    b.classList.toggle('on', b.dataset.view === view);
+  });
+}
+
+function renderCrumb(){
+  const span = document.getElementById('crumbPage');
+  if (view === 'library') {
+    span.innerHTML = '📄 Pages';
+  } else {
+    const p = cur();
+    const k = PAGE_KINDS[p.kind] || {icon:'📄', label:'Page'};
+    span.innerHTML = `${k.icon} ${p.name.en}`;
+    if (view === 'navbar') span.innerHTML += ' <span style="opacity:.5">›</span> 🧭 Nav Bar';
+    if (view === 'theme') span.innerHTML += ' <span style="opacity:.5">›</span> 🎨 Theme';
+    if (view === 'settings') span.innerHTML += ' <span style="opacity:.5">›</span> ⚙ Settings';
+  }
+}
+
+function renderScopePills(){
+  const p = view === 'library' ? null : cur();
+  document.getElementById('scopeWebsite').textContent =
+    p ? `🌐 ${p.websiteIds.length} site${p.websiteIds.length>1?'s':''}` : '🌐 All sites';
+  document.getElementById('scopeCountry').textContent =
+    p ? `${flagOf(p.countries[0])} ${p.countries.length} country` + (p.countries.length>1?'s':'') : '🌍 All countries';
+  document.getElementById('scopeLang').textContent =
+    p ? `🅰 ${p.langs.map(l => LANGS.find(x=>x.code===l)?.flag||l).join(' ')}` : '🅰 All langs';
+}
+
+function flagOf(code){
+  return {KW:'🇰🇼',SA:'🇸🇦',AE:'🇦🇪',QA:'🇶🇦',EG:'🇪🇬',OM:'🇴🇲'}[code] || '🌐';
+}
+
+function renderStatus(){
+  const sb = document.getElementById('sbScope');
+  if (view === 'library') sb.textContent = 'Pages library';
+  else sb.textContent = (PAGE_KINDS[cur().kind]?.label || 'Page') + ' · ' + cur().name.en;
+  document.getElementById('sbPages').textContent = pages.length;
+  document.getElementById('sbPublished').textContent = pages.filter(p => p.status==='published').length;
+}
+
+/* ============================================================
+   LEFT PANEL — content varies by view
+   ============================================================ */
+function renderLeft(){
+  const host = document.getElementById('left');
+  if (view === 'library') { host.innerHTML = ''; return; }
+  if (view === 'blocks')   return renderLeftBlocks(host);
+  if (view === 'navbar')   return renderLeftNavbar(host);
+  if (view === 'theme')    return renderLeftTheme(host);
+  if (view === 'settings') return renderLeftSettings(host);
+}
+
+function renderLeftBlocks(host){
+  host.innerHTML = `
+    <div class="panel-h">
+      <div>
+        <h3>Building Blocks</h3>
+        <div class="sub">Drag onto the canvas</div>
+      </div>
+      <button class="top-btn" style="color:var(--dark)" title="Custom snippet">＋</button>
+    </div>
+    <div class="blocks-search"><input placeholder="🔍 Search blocks…" /></div>
+    <div class="left-body" id="snippets">${
+      SNIPPETS.map(c => `
+        <div class="cat">
+          <div class="cat-h">${c.cat} <span class="chev">▾</span></div>
+          <div class="cat-items">
+            ${c.items.map(s => `
+              <div class="snip" draggable="true" data-kind="${s.kind}">
+                <div class="ic">${s.icon}</div>
+                <div class="lbl">${s.label}</div>
+              </div>`).join('')}
+          </div>
+        </div>`).join('')
+    }</div>
+  `;
+  host.querySelectorAll('.cat-h').forEach(h => {
+    h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed'));
+  });
+  host.querySelectorAll('.snip').forEach(s => {
+    s.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('snip-kind', s.dataset.kind);
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+  });
+}
+
+function renderLeftNavbar(host){
+  host.innerHTML = `
+    <div class="panel-h">
+      <div><h3>Nav Bar Editor</h3><div class="sub">Bottom tabs — drag to reorder</div></div>
+      <button class="top-btn" style="color:var(--dark)" onclick="addNavbarItem()">＋</button>
+    </div>
+    <div class="left-body pad" id="navbarItems">
+      ${navbarItems.map((it,i) => `
+        <div class="nav-item ${navbarSelected===it.id?'selected':''}" data-id="${it.id}" draggable="true">
+          <span class="grip">⠿</span>
+          <div class="h">${it.icon}</div>
+          <div class="info">
+            <div class="nm">${it.label.en}</div>
+            <div class="tg">${describeTarget(it.target)}</div>
+          </div>
+          <span class="x" onclick="event.stopPropagation();removeNavbarItem('${it.id}')" title="Remove">✕</span>
+        </div>`).join('')}
+      <div class="nav-item add" onclick="addNavbarItem()">＋ Add a tab</div>
+
+      <div class="sub-h" style="margin-top:18px">Style</div>
+      <div class="field"><label>Bar height</label><input type="number" value="60" /></div>
+      <div class="field"><label>Active color</label>
+        <div class="swatch-row">
+          <div class="sw on" style="background:#412402"></div>
+          <div class="sw" style="background:#F5C320"></div>
+          <div class="sw" style="background:#1D6FB7"></div>
+          <div class="sw" style="background:#1F8A40"></div>
+          <div class="sw" style="background:#C0392B"></div>
+        </div>
+      </div>
+      <div class="toggle"><div class="nm">Floating action button (FAB)<small>e.g. Beena AI in the middle</small></div><div class="switch"></div></div>
+      <div class="toggle"><div class="nm">Show labels</div><div class="switch on"></div></div>
+      <div class="toggle"><div class="nm">Haptic feedback on tap</div><div class="switch on"></div></div>
+    </div>
+  `;
+  host.querySelectorAll('.nav-item[data-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      navbarSelected = el.dataset.id;
+      renderLeft(); renderRight();
+    });
+    el.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('move-nav', el.dataset.id);
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    el.addEventListener('dragover', e => e.preventDefault());
+    el.addEventListener('drop', e => {
+      const fromId = e.dataTransfer.getData('move-nav');
+      if (!fromId) return;
+      const fromI = navbarItems.findIndex(x => x.id === fromId);
+      const toI = navbarItems.findIndex(x => x.id === el.dataset.id);
+      const [m] = navbarItems.splice(fromI, 1);
+      navbarItems.splice(toI, 0, m);
+      render();
+    });
+  });
+}
+
+function describeTarget(t){
+  if (!t) return '—';
+  if (t.type === 'page') {
+    const p = pages.find(x => x.id === t.value || x.slug === t.value);
+    return p ? `📄 ${p.name.en}` : '📄 ' + t.value;
+  }
+  if (t.type === 'screen') return '📱 Built-in: ' + t.value;
+  if (t.type === 'url')    return '🔗 ' + t.value;
+  if (t.type === 'product')return '🛍 Product';
+  if (t.type === 'category')return '📁 Category';
+  return '—';
+}
+
+function renderLeftTheme(host){
+  const p = cur();
+  const cur_t = theme(p.theme);
+  host.innerHTML = `
+    <div class="panel-h">
+      <div><h3>Theme</h3><div class="sub">Per-page colors & background</div></div>
+    </div>
+    <div class="left-body pad">
+      <div class="sub-h">Choose a preset</div>
+      <div class="preset-grid">
+        ${THEME_PRESETS.map(t => `
+          <div class="preset ${p.theme===t.id?'on':''}" style="background:${t.gradient}" data-theme="${t.id}">${t.name}</div>
+        `).join('')}
+      </div>
+      <div class="sub-h">Or customize</div>
+      <div class="field"><label>Primary color</label>
+        <div class="swatch-row">
+          ${['#F5C320','#FFD700','#D4AF37','#FF4500','#1F8A40','#C0392B','#1D6FB7','#6E4AB0'].map(c=>`
+            <div class="sw" style="background:${c}" data-color="${c}"></div>`).join('')}
+        </div>
+      </div>
+      <div class="field"><label>Background</label>
+        <select>
+          <option>Cream (default)</option>
+          <option>Pure white</option>
+          <option>Soft gray</option>
+          <option>Pattern: lanterns</option>
+          <option>Pattern: confetti</option>
+          <option>Custom image…</option>
+        </select>
+      </div>
+      <div class="field"><label>Header style</label>
+        <select>
+          <option>Sticky search header</option>
+          <option>Translucent / blur</option>
+          <option>Hidden (full-bleed hero)</option>
+          <option>Custom logo + nav</option>
+        </select>
+      </div>
+      <div class="field"><label>Body font</label>
+        <select>
+          <option>Inter / Tajawal (default)</option>
+          <option>Cairo</option>
+          <option>Tajawal Bold</option>
+          <option>SF Pro / Noto Sans Arabic</option>
+        </select>
+      </div>
+      <div class="sub-h">Animations</div>
+      <div class="toggle"><div class="nm">Confetti on page open<small>Eid · Mother's Day</small></div><div class="switch ${p.theme==='eid'?'on':''}"></div></div>
+      <div class="toggle"><div class="nm">Parallax hero</div><div class="switch on"></div></div>
+      <div class="toggle"><div class="nm">Falling lanterns (background)</div><div class="switch ${p.theme==='ramadan'?'on':''}"></div></div>
+    </div>
+  `;
+  host.querySelectorAll('[data-theme]').forEach(el => {
+    el.addEventListener('click', () => {
+      p.theme = el.dataset.theme;
+      render();
+      toast('Theme applied · ' + theme(el.dataset.theme).name);
+    });
+  });
+}
+
+function renderLeftSettings(host){
+  const p = cur();
+  host.innerHTML = `
+    <div class="panel-h">
+      <div><h3>Page Settings</h3><div class="sub">Where this page lives</div></div>
+    </div>
+    <div class="left-body pad">
+      <div class="sub-h">Identity</div>
+      <div class="field"><label>Page name</label>
+        <div class="ml">
+          <div class="ml-tabs">
+            ${LANGS.map((l,i)=>`<button class="${i===0?'on':''} ${!p.langs.includes(l.code)?'warn':''}">${l.flag} ${l.code.toUpperCase()}</button>`).join('')}
+          </div>
+          <input value="${p.name.en}" />
+        </div>
+      </div>
+      <div class="field"><label>URL slug</label><input value="${p.slug}" /></div>
+      <div class="field"><label>Page kind</label>
+        <select>
+          ${Object.entries(PAGE_KINDS).map(([k,v])=>`<option ${p.kind===k?'selected':''}>${v.icon} ${v.label}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="sub-h">Targeting</div>
+      <div class="field"><label>Websites <small style="text-transform:none;color:var(--muted);font-weight:500"> · which Odoo sites publish this page</small></label>
+        <div class="chips">${WEBSITES.map(w => `
+          <div class="chip ${p.websiteIds.includes(w.id)?'on':''}" data-w="${w.id}">${w.flag} ${w.name}</div>
+        `).join('')}</div>
+      </div>
+      <div class="field"><label>Languages</label>
+        <div class="chips">${LANGS.map(l => `
+          <div class="chip ${p.langs.includes(l.code)?'on':''}" data-lang="${l.code}">${l.flag} ${l.name}</div>
+        `).join('')}</div>
+        <p style="font-size:10.5px;color:var(--muted);margin-top:5px">Each enabled language gets a "translate" tab in every text field across blocks.</p>
+      </div>
+
+      <div class="sub-h">Scheduling</div>
+      <div class="field"><label>Publish date</label><input type="datetime-local" value="2026-06-01T00:00" /></div>
+      <div class="field"><label>Unpublish at</label><input type="datetime-local" /></div>
+
+      <div class="sub-h">SEO / Share</div>
+      <div class="field"><label>Meta title</label><input value="${p.name.en} — Uellow" /></div>
+      <div class="field"><label>Meta description</label><textarea placeholder="Shown in search results and shared links"></textarea></div>
+      <div class="field"><label>Share image</label><input value="og-${p.slug}.jpg" /></div>
+
+      <div class="sub-h">Advanced</div>
+      <div class="toggle"><div class="nm">Show in nav bar by default</div><div class="switch"></div></div>
+      <div class="toggle"><div class="nm">Allow indexing (SEO)</div><div class="switch on"></div></div>
+      <div class="toggle"><div class="nm">Require login to view</div><div class="switch"></div></div>
+      <div class="toggle"><div class="nm">A/B test against current</div><div class="switch"></div></div>
+    </div>
+  `;
+  host.querySelectorAll('[data-w]').forEach(c => {
+    c.addEventListener('click', () => {
+      const id = parseInt(c.dataset.w);
+      const i = p.websiteIds.indexOf(id);
+      if (i>=0) p.websiteIds.splice(i,1); else p.websiteIds.push(id);
+      // mirror to countries
+      p.countries = p.websiteIds.map(id => WEBSITES.find(w => w.id===id)?.country).filter(Boolean);
+      render();
+    });
+  });
+  host.querySelectorAll('[data-lang]').forEach(c => {
+    c.addEventListener('click', () => {
+      const code = c.dataset.lang;
+      const i = p.langs.indexOf(code);
+      if (i>=0) p.langs.splice(i,1); else p.langs.push(code);
+      render();
+    });
+  });
+}
+
+/* ============================================================
+   CENTER — pages library OR phone preview OR navbar
+   ============================================================ */
+function renderCenter(){
+  const host = document.getElementById('center');
+  if (view === 'library') return renderLibrary(host);
+  return renderEditor(host);
+}
+
+function renderLibrary(host){
+  host.innerHTML = `
+    <div class="lib">
+      <div class="lib-h">
+        <div class="ttl"><div class="ic">📄</div> Pages</div>
+        <div class="lib-filters">
+          <div class="lib-filter">
+            <span class="lbl">Website:</span> <strong>All</strong> <span style="color:var(--muted)">▾</span>
+          </div>
+          <div class="lib-filter">
+            <span class="lbl">Status:</span> <strong>All</strong> <span style="color:var(--muted)">▾</span>
+          </div>
+          <div class="lib-filter">
+            <span class="lbl">Language:</span> <strong>Any</strong> <span style="color:var(--muted)">▾</span>
+          </div>
+          <button class="lib-btn" onclick="openNewPage()">＋ New page</button>
+        </div>
+      </div>
+      <div class="lib-grid">
+        ${pages.map(p => libCard(p)).join('')}
+        <div class="lib-card new-page" onclick="openNewPage()">
+          <div class="nc">
+            <div class="ic">＋</div>
+            <div class="lbl">New page</div>
+            <div style="font-size:10.5px;color:var(--muted);text-align:center;max-width:180px;line-height:1.4">Campaign · brand · collection · or anything custom — pick a template or start blank.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  host.querySelectorAll('[data-open]').forEach(el => {
+    el.addEventListener('click', () => openPage(el.dataset.open, 'blocks'));
+  });
+}
+
+function libCard(p){
+  const t = theme(p.theme);
+  const k = PAGE_KINDS[p.kind] || {icon:'📄', label:'Page'};
+  return `
+    <div class="lib-card" data-open="${p.id}">
+      ${p.pinned ? `<div class="lib-pin" title="Pinned (home of the app)">📌</div>` : ''}
+      <div class="lib-status ${p.status}">${p.status}${p.scheduledFor?' · '+p.scheduledFor:''}</div>
+      <div class="lib-thumb" style="background:${tintFromTheme(t)}">
+        <div class="lib-phone"><div class="scr" style="background:${t.pageBg};position:relative">
+          <div class="pp-hd"><span class="y">U</span><span class="sb"></span></div>
+          <div class="blks">${miniBlocks(p, t)}</div>
+          <div class="pp-tab"><span>🏠</span><span>🛍</span><span>❤</span><span>🛒</span><span>👤</span></div>
+        </div></div>
+      </div>
+      <div class="lib-info">
+        <div class="nm">${k.icon} ${p.name.en}</div>
+        <div class="meta">
+          ${p.langs.map(l => LANGS.find(x=>x.code===l)?.flag || '').join('')}
+          <span class="dot"></span>
+          <span>${p.websiteIds.length} site${p.websiteIds.length>1?'s':''}</span>
+          <span class="dot"></span>
+          <span>${p.views7d} visits / 7d</span>
+        </div>
+        <div class="meta" style="margin-bottom:0">
+          <span style="font-size:10px">/ ${p.slug}</span>
+          <span class="dot"></span>
+          <span>${p.updatedAt}</span>
+        </div>
+        <div class="badges">
+          ${p.countries.slice(0,5).map(c=>`<div class="badge"><span class="f">${flagOf(c)}</span></div>`).join('')}
+          ${p.countries.length>5?`<div class="badge">+${p.countries.length-5}</div>`:''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+function tintFromTheme(t){
+  return `linear-gradient(135deg, ${t.pageBg}, ${shade(t.primary, 90)})`;
+}
+function shade(hex, alpha){
+  // very rough — return rgba
+  return hex;
+}
+function miniBlocks(p, t){
+  return p.blocks.slice(0, 6).map(b => {
+    const cls = {
+      hero:'hero', 'cats-grid':'grid', 'cats-strip':'grid',
+      flash:'flash', products:'products', bestsellers:'products',
+      'banner-1':'banner', 'banner-2':'banner', 'banner-3':'banner',
+      loyalty:'dark', wallet:'dark', vendors:'',
+    }[b.kind] || '';
+    const style = b.kind === 'hero' ? `style="background:${t.heroBg}"` : '';
+    return `<div class="blk ${cls}" ${style}></div>`;
+  }).join('');
+}
+
+/* ============================================================
+   CENTER — Editor (phone preview)
+   ============================================================ */
+function renderEditor(host){
+  const p = cur();
+  const t = theme(p.theme);
+  host.innerHTML = `
+    <div class="device-toolbar">
+      <span class="info"><span class="dot"></span> Live preview · 360 × 780 · ${p.name.en} · theme: ${t.name}</span>
+    </div>
+    ${view==='navbar' ? `
+      <div class="focus-tip">🎯 Editing bottom nav bar — drag tabs in the left panel to reorder, click a tab to edit it.</div>
+    ` : ''}
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="phone-status">
+          <span>9:41</span>
+          <span>5G ●●●● 100%</span>
+        </div>
+        <div class="phone-header">
+          <span class="logo"><span class="y">U</span>ellow</span>
+          <div class="search">🔍 Search products…</div>
+          <div class="ic">🔔</div>
+        </div>
+        <div class="canvas" id="canvas"></div>
+        <div class="phone-tabs" id="phoneTabs"></div>
+      </div>
+    </div>
+  `;
+  renderCanvas();
+  renderPhoneTabs();
+}
+
+function renderCanvas(){
+  const p = cur();
+  const c = document.getElementById('canvas');
+  if (!c) return;
+  if (p.blocks.length === 0){
+    c.innerHTML = `<div class="add-here" id="dz-empty">⊕ Drag a block from the left to start</div>`;
+    wireDropzone();
+    return;
+  }
+  c.innerHTML = p.blocks.map((b,i) => renderBlock(b,i)).join('') +
+                `<div class="add-here" id="dz-end" style="margin-top:14px">⊕ Drop another block here</div>`;
+  wireBlocks();
+  wireDropzone();
+}
+
+function renderPhoneTabs(){
+  const host = document.getElementById('phoneTabs');
+  if (!host) return;
+  host.innerHTML = navbarItems.map(it => `
+    <div class="t ${navbarSelected===it.id?'editing':''} ${it.id==='n1'?'on':''}" data-nav="${it.id}">
+      <span class="ic">${it.icon}</span>
+      <span>${it.label.en}</span>
+    </div>
+  `).join('');
+  host.querySelectorAll('[data-nav]').forEach(el => {
+    el.addEventListener('click', () => {
+      navbarSelected = el.dataset.nav;
+      go('navbar');
+    });
+  });
+}
+
+function renderBlock(b, idx){
+  const sel = b.id === selectedBlockId ? ' selected' : '';
+  const hid = b.hidden ? ' hidden-block' : '';
+  const cond = hasCond(b.cond) ? ' has-cond' : '';
+  return `
+    <div class="drop-indicator" data-before="${b.id}"></div>
+    <div class="block${sel}${hid}${cond}" data-id="${b.id}" draggable="true">
+      <div class="block-label">${labelFor(b.kind)}</div>
+      ${hasCond(b.cond) ? `<div class="block-cond">🎯 ${condBadge(b.cond)}</div>` : ''}
+      <div class="block-toolbar">
+        <button title="Move up"   data-act="up">↑</button>
+        <button title="Move down" data-act="dn">↓</button>
+        <button title="Duplicate" data-act="dup">⎘</button>
+        <button title="${b.hidden?'Show':'Hide'}" data-act="hide">${b.hidden?'👁':'⊘'}</button>
+        <button title="Conditions" data-act="cond">🎯</button>
+        <button class="danger" title="Delete" data-act="del">🗑</button>
+      </div>
+      ${renderBlockContent(b)}
+    </div>
+  `;
+}
+
+function hasCond(c){
+  return c && (c.countries.length || c.languages.length || c.segments.length ||
+               c.schedule.start || c.schedule.end || c.abVariant !== 'all');
+}
+function condBadge(c){
+  const parts = [];
+  if (c.countries.length) parts.push(c.countries.join('+'));
+  if (c.segments.length)  parts.push(c.segments[0]);
+  if (c.schedule.start)   parts.push('scheduled');
+  return parts.slice(0,2).join(' · ') || 'rules';
+}
+function labelFor(kind){
+  for (const c of SNIPPETS) { const s = c.items.find(x => x.kind === kind); if (s) return s.label; }
+  return kind;
+}
+function iconFor(kind){
+  for (const c of SNIPPETS) { const s = c.items.find(x => x.kind === kind); if (s) return s.icon; }
+  return '⬚';
+}
+
+function renderBlockContent(b){
+  const p = b.props || {};
+  const linkBadge = p.link && p.link.type === 'page'
+    ? `<div class="pglink">🔗 ${p.link.label}</div>` : '';
+  switch(b.kind){
+    case 'hero': return `
+      <div class="b-hero">
+        ${linkBadge}
+        <h4>${p.titleEn || 'Hero Title'}</h4>
+        <p>${p.subEn || 'Subtitle text'}</p>
+        <span class="cta">${p.ctaEn || 'Shop now'} →</span>
+      </div>`;
+    case 'cats-grid':
+    case 'cats-strip': return `
+      <div class="b-cats">
+        <div class="row">
+          ${['📱','👕','👟','💄','🏠','🎮','⌚','🎁'].map((e,i)=>`
+            <div class="item"><div class="ic">${e}</div><div class="lbl">Cat ${i+1}</div></div>`).join('')}
+        </div>
+      </div>`;
+    case 'flash': return `
+      <div class="b-flash">
+        <div class="head"><div class="ttl">${p.titleEn || '⚡ Flash Deals'}</div><div class="countdown">02:14:09</div></div>
+        <div class="grid">
+          ${[1,2,3].map(i=>`<div class="card"><div class="img">📷</div><div class="price">${(i*4).toFixed(3)} KD</div><div class="old">${(i*8).toFixed(3)} KD</div></div>`).join('')}
+        </div>
+      </div>`;
+    case 'banner-1': return `
+      <div style="padding:10px 12px">
+        <div class="b-banner-1 ${p.color==='#1F8A40'?'b2':p.color==='#C0392B'?'b3':'b1'}" style="${p.color?`background:linear-gradient(135deg,${p.color},${p.color}cc)`:''}">
+          ${linkBadge}
+          ${p.titleEn || 'Promo banner'}
+        </div>
+      </div>`;
+    case 'banner-2': return `
+      <div style="padding:10px 12px"><div class="b-banner-2">
+        <div style="background:linear-gradient(135deg,#1D6FB7,#5BA7E3)">Banner A</div>
+        <div style="background:linear-gradient(135deg,#1F8A40,#5BC97A)">Banner B</div>
+      </div></div>`;
+    case 'banner-3': return `
+      <div style="padding:10px 12px"><div class="b-banner-2" style="grid-template-columns:1fr 1fr 1fr">
+        <div style="background:linear-gradient(135deg,#1D6FB7,#5BA7E3);font-size:9px">Free ship</div>
+        <div style="background:linear-gradient(135deg,#1F8A40,#5BC97A);font-size:9px">Tabby</div>
+        <div style="background:linear-gradient(135deg,#C0392B,#F08080);font-size:9px">COD</div>
+      </div></div>`;
+    case 'products':case 'bestsellers':case 'rec-ai':case 'recent':case 'grid':
+      return `
+        <div class="b-products">
+          <div class="head"><div class="ttl">${p.titleEn || labelFor(b.kind)}</div><div class="more">See all →</div></div>
+          <div class="row">${[1,2,3,4].map(i=>`<div class="card"><div class="img">📷</div><div class="ttl">Product ${i}</div><div class="price">${(i*4.5).toFixed(3)} KD</div></div>`).join('')}</div>
+        </div>`;
+    case 'vendors':case 'vendor-feat': return `
+      <div class="b-vendors">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:900;color:var(--dark)">${p.titleEn || 'Top sellers'}</div>
+          <div style="font-size:10px;color:var(--yellow-dk);font-weight:700">All →</div>
+        </div>
+        <div class="row">${['Eureka','HainoTeko','BelleVie','Cherie','TechZone'].map(n=>`<div class="v"><div class="logo">${n[0]}</div><div class="nm">${n}</div><div class="badge">★ 4.${Math.floor(Math.random()*9)}</div></div>`).join('')}</div>
+      </div>`;
+    case 'loyalty': return `<div style="padding:10px 0"><div class="b-loyalty"><div><div class="lbl">Loyalty points</div><div class="pts">2,840</div></div><div class="tier">🥇 GOLD</div></div></div>`;
+    case 'wallet': return `<div style="padding:10px 0"><div class="b-loyalty" style="background:linear-gradient(135deg,#1F8A40,#5BC97A)"><div><div class="lbl">Wallet</div><div class="pts" style="color:#fff">12.500 KD</div></div><div class="tier" style="background:rgba(255,255,255,.2);border-color:#fff;color:#fff">Top up</div></div></div>`;
+    case 'coupons': return `<div style="padding:10px 12px"><div style="background:#fff5d6;border:1px dashed var(--yellow-dk);border-radius:10px;padding:10px;display:flex;justify-content:space-between"><div><div style="font-size:11.5px;font-weight:800;color:var(--dark)">3 coupons available</div><div style="font-size:9.5px;color:var(--muted)">Tap to apply</div></div><div style="font-size:18px">🎟</div></div></div>`;
+    case 'newsletter': return `<div style="padding:10px 12px"><div style="background:linear-gradient(135deg,#fff,#fff7d6);border-radius:12px;border:1px solid var(--yellow-light)" class="b-newsletter"><div class="ttl">${p.titleEn || 'Stay in the loop'}</div><div class="sub">${p.subEn || 'New arrivals'}</div><div class="form"><input placeholder="you@example.com"/><button>Subscribe</button></div></div></div>`;
+    case 'app-promo': return `<div style="padding:10px 12px"><div style="background:linear-gradient(135deg,#412402,#6b3a05);color:#fff;padding:12px 14px;border-radius:12px;display:flex;align-items:center;gap:10px"><div style="font-size:24px">📱</div><div style="flex:1"><div style="font-size:12px;font-weight:800">Get our app</div><div style="font-size:9.5px;opacity:.7">Faster · Live tracking</div></div><div style="background:var(--yellow);color:var(--dark);padding:5px 10px;border-radius:14px;font-size:10px;font-weight:800">Install</div></div></div>`;
+    case 'reviews': return `<div style="padding:10px 12px"><div style="background:#fff;border:1px solid #f3edde;border-radius:12px;padding:12px"><div style="font-size:18px;margin-bottom:5px">★★★★★</div><div style="font-size:10.5px;font-style:italic">"Fastest delivery — ordered at 2pm, at my door by 5pm." — Ahmed K.</div></div></div>`;
+    case 'beena': return `<div style="padding:10px 12px"><div style="background:linear-gradient(135deg,#412402,#1F1206);color:#fff;border-radius:14px;padding:14px;display:flex;align-items:center;gap:10px"><div style="width:42px;height:42px;border-radius:50%;background:var(--yellow);display:grid;place-items:center;color:var(--dark);font-size:18px;font-weight:900">B</div><div style="flex:1"><div style="font-size:12px;font-weight:800;color:var(--yellow)">Beena AI</div><div style="font-size:9.5px;opacity:.8">Ask anything · Sizes · Try outfits</div></div><div style="font-size:18px;color:var(--yellow)">›</div></div></div>`;
+    case 'searchbar': return `<div style="padding:10px 12px"><div style="background:#f5f0e2;border-radius:18px;padding:8px 14px;font-size:11px;color:var(--muted)">🔍 Search 50,000+ products…</div></div>`;
+    case 'carousel': return `<div style="padding:10px 12px"><div style="height:120px;border-radius:12px;background:linear-gradient(135deg,#412402,#F5C320);color:#fff;padding:14px;font-weight:800;position:relative">Slide 1 of 4<div style="position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:4px"><span style="width:18px;height:4px;background:#fff;border-radius:2px"></span><span style="width:6px;height:4px;background:rgba(255,255,255,.4);border-radius:2px"></span><span style="width:6px;height:4px;background:rgba(255,255,255,.4);border-radius:2px"></span></div></div></div>`;
+    case 'countdown': return `<div style="padding:10px 12px"><div style="background:linear-gradient(135deg,#C0392B,#E74C3C);color:#fff;padding:10px 14px;border-radius:12px;text-align:center"><div style="font-size:11px;font-weight:700;text-transform:uppercase">Ends in</div><div style="font-size:22px;font-weight:900;font-variant-numeric:tabular-nums">14d 02:14:09</div></div></div>`;
+    case 'text': return `<div class="b-text">${p.titleEn?`<div style="font-weight:900;color:var(--dark);margin-bottom:4px">${p.titleEn}</div>`:''}${p.textEn || 'Your text content here.'}</div>`;
+    case 'video': return `<div style="padding:10px 12px"><div style="background:#000;color:#fff;height:160px;border-radius:12px;display:grid;place-items:center;position:relative"><div style="font-size:32px">▶</div><div style="position:absolute;bottom:8px;left:10px;font-size:10px">Brand story · 0:34</div></div></div>`;
+    case 'html': return `<div style="background:#1F1206;color:#9CA3AF;padding:10px;border-radius:8px;font-family:monospace;font-size:10px;margin:10px 12px;border-left:3px solid var(--yellow)">&lt;div&gt;Custom HTML&lt;/div&gt;</div>`;
+    case 'tabs': return `<div style="padding:10px 12px"><div style="display:flex;border-bottom:1px solid #f3edde;margin-bottom:8px"><div style="padding:6px 12px;font-size:11px;font-weight:800;color:var(--dark);border-bottom:2px solid var(--yellow)">For You</div><div style="padding:6px 12px;font-size:11px;color:var(--muted)">New</div><div style="padding:6px 12px;font-size:11px;color:var(--muted)">Sale</div></div><div style="font-size:10.5px;color:var(--muted);text-align:center;padding:20px">Tab content area</div></div>`;
+    case 'spacer': return `<div class="b-spacer"></div>`;
+    case 'divider': return `<div class="b-divider"><hr/></div>`;
+    default: return `<div class="b-text">[${b.kind}]</div>`;
+  }
+}
+
+/* ============================================================
+   Block wiring (drag, click, toolbar)
+   ============================================================ */
+function wireBlocks(){
+  const p = cur();
+  document.querySelectorAll('.block').forEach(el => {
+    const id = el.dataset.id;
+    el.addEventListener('click', e => {
+      if (e.target.closest('.block-toolbar')) return;
+      selectBlock(id);
+    });
+    el.querySelectorAll('.block-toolbar button').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        handleAction(id, btn.dataset.act);
+      });
+    });
+    el.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('move-id', id);
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => el.style.opacity = '.4', 0);
+    });
+    el.addEventListener('dragend', () => { el.style.opacity='1'; clearIndicators(); });
+    el.addEventListener('dragover', e => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height/2;
+      clearIndicators();
+      const ind = document.querySelector(before
+        ? `.drop-indicator[data-before="${id}"]`
+        : `.drop-indicator[data-before="${nextId(id)}"]`);
+      if (ind) ind.classList.add('on');
+    });
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const moveId = e.dataTransfer.getData('move-id');
+      const newKind = e.dataTransfer.getData('snip-kind');
+      const rect = el.getBoundingClientRect();
+      const before = (e.clientY - rect.top) < rect.height/2;
+      const targetIdx = p.blocks.findIndex(b => b.id === id);
+      const insertAt = before ? targetIdx : targetIdx + 1;
+      if (moveId) reorderBlock(moveId, insertAt);
+      else if (newKind) addBlock(newKind, insertAt);
+      clearIndicators();
+    });
+  });
+}
+function nextId(id){
+  const p = cur();
+  const i = p.blocks.findIndex(b => b.id === id);
+  return p.blocks[i+1]?.id || null;
+}
+function clearIndicators(){
+  document.querySelectorAll('.drop-indicator.on').forEach(e => e.classList.remove('on'));
+  document.querySelectorAll('.add-here.over').forEach(e => e.classList.remove('over'));
+}
+function wireDropzone(){
+  ['dz-empty','dz-end'].forEach(zid => {
+    const z = document.getElementById(zid);
+    if (!z) return;
+    z.addEventListener('dragover', e => { e.preventDefault(); z.classList.add('over'); });
+    z.addEventListener('dragleave', () => z.classList.remove('over'));
+    z.addEventListener('drop', e => {
+      e.preventDefault(); z.classList.remove('over');
+      const p = cur();
+      const newKind = e.dataTransfer.getData('snip-kind');
+      const moveId = e.dataTransfer.getData('move-id');
+      if (newKind) addBlock(newKind, p.blocks.length);
+      else if (moveId) reorderBlock(moveId, p.blocks.length);
+    });
+  });
+}
+
+function selectBlock(id){
+  selectedBlockId = id;
+  renderCanvas();
+  renderRight();
+}
+function handleAction(id, act){
+  const p = cur();
+  const i = p.blocks.findIndex(b => b.id === id);
+  if (i < 0) return;
+  const b = p.blocks[i];
+  switch(act){
+    case 'up':  if (i > 0) [p.blocks[i-1],p.blocks[i]]=[p.blocks[i],p.blocks[i-1]]; break;
+    case 'dn':  if (i < p.blocks.length-1) [p.blocks[i],p.blocks[i+1]]=[p.blocks[i+1],p.blocks[i]]; break;
+    case 'dup': p.blocks.splice(i+1, 0, JSON.parse(JSON.stringify(b))); p.blocks[i+1].id='b'+Math.random().toString(36).slice(2,9); toast('Duplicated'); break;
+    case 'hide': b.hidden = !b.hidden; toast(b.hidden?'Hidden':'Visible'); break;
+    case 'cond': selectBlock(id); propsTab = 'conditions'; renderRight(); return;
+    case 'del':  p.blocks.splice(i,1); if (selectedBlockId===id) selectedBlockId=null; toast('Deleted'); break;
+  }
+  renderCanvas(); renderRight();
+}
+function addBlock(kind, at){
+  const p = cur();
+  const b = block(kind, {});
+  p.blocks.splice(at, 0, b);
+  selectBlock(b.id);
+  toast('Added · '+labelFor(kind));
+}
+function reorderBlock(id, at){
+  const p = cur();
+  const i = p.blocks.findIndex(b => b.id === id);
+  if (i < 0) return;
+  const [b] = p.blocks.splice(i,1);
+  const insertAt = at > i ? at-1 : at;
+  p.blocks.splice(insertAt, 0, b);
+  renderCanvas(); renderRight();
+}
+
+/* ============================================================
+   RIGHT PANEL — block properties OR nav-item properties
+   ============================================================ */
+function renderRight(){
+  const host = document.getElementById('propsHost');
+  if (view === 'navbar' && navbarSelected){
+    return renderNavItemProps(host);
+  }
+  if (view === 'library') {
+    host.innerHTML = ''; return;
+  }
+  const p = cur();
+  const b = p.blocks.find(x => x.id === selectedBlockId);
+  if (!b){
+    host.innerHTML = `
+      <div class="props-empty">
+        <div class="ic">⚙</div>
+        <h4>No block selected</h4>
+        <p>Click a block in the preview to edit its content, style, and visibility conditions.</p>
+      </div>`;
+    return;
+  }
+  host.innerHTML = `
+    <div class="props-h">
+      <div class="kind">${iconFor(b.kind)} ${b.kind}</div>
+      <div class="name">${labelFor(b.kind)}</div>
+    </div>
+    <div class="props-tabs">
+      <button class="${propsTab==='content'?'on':''}" data-tab="content">Content</button>
+      <button class="${propsTab==='style'?'on':''}" data-tab="style">Style</button>
+      <button class="${propsTab==='conditions'?'on':''}" data-tab="conditions">Conditions${hasCond(b.cond)?' •':''}</button>
+    </div>
+    <div class="props-body">${renderPropsBody(b)}</div>
+  `;
+  host.querySelectorAll('.props-tabs button').forEach(btn => {
+    btn.addEventListener('click', () => { propsTab = btn.dataset.tab; renderRight(); });
+  });
+  wirePropsBody(b);
+}
+
+function renderPropsBody(b){
+  if (propsTab === 'conditions') return renderConditions(b);
+  if (propsTab === 'style')      return renderStyle(b);
+  return renderContent(b);
+}
+
+function mlField(b, key, label){
+  const p = cur();
+  return `
+    <div class="field">
+      <label>${label}</label>
+      <div class="ml">
+        <div class="ml-tabs">
+          ${p.langs.map((code,i)=>{
+            const l = LANGS.find(x=>x.code===code);
+            return `<button class="${i===0?'on':''}" data-lang="${code}">${l.flag} ${l.name}</button>`;
+          }).join('')}
+        </div>
+        <input data-prop="${key+'En'}" value="${b.props[key+'En']||''}" placeholder="${label}" />
+      </div>
+    </div>
+  `;
+}
+
+function renderContent(b){
+  const p = b.props || {};
+  switch(b.kind){
+    case 'hero':
+      return `
+        ${mlField(b,'title','Title')}
+        ${mlField(b,'sub','Subtitle')}
+        <div class="sub-h">Call to action</div>
+        ${mlField(b,'cta','Button label')}
+        <div class="field"><label>Link target</label>
+          ${linkFieldBtn(p.link)}
+        </div>
+        <div class="sub-h">Media</div>
+        <div class="field"><label>Background image</label><input value="hero.jpg"/></div>
+        <div class="toggle"><div class="nm">Inherit page theme<small>Use this page's theme colors automatically</small></div><div class="switch on"></div></div>`;
+    case 'cats-grid':case 'cats-strip':
+      return `
+        ${mlField(b,'title','Section title')}
+        <div class="field"><label>Source</label>
+          <select><option>All categories (auto)</option><option>Manual selection</option><option>From category tag</option></select>
+        </div>
+        <div class="field"><label>Columns</label>
+          <select><option>3 — large</option><option selected>4 — balanced</option><option>5 — compact</option></select>
+        </div>`;
+    case 'flash':case 'products':case 'bestsellers':case 'rec-ai':case 'recent':case 'grid':
+      return `
+        ${mlField(b,'title','Section title')}
+        <div class="field"><label>Source</label>
+          <select>
+            <option>Active discount &gt; 30%</option>
+            <option>Bestsellers (last 7d)</option>
+            <option>User recently viewed</option>
+            <option>AI recommended (Beena)</option>
+            <option>From product collection…</option>
+            <option>Manual product list</option>
+            <option>Vendor's products</option>
+          </select>
+        </div>
+        <div class="field"><label>Maximum items</label><input type="number" value="10"/></div>`;
+    case 'banner-1':case 'banner-2':case 'banner-3':
+      return `
+        ${mlField(b,'title','Banner text')}
+        <div class="field"><label>Background</label>
+          <div class="swatch-row">
+            ${['#1D6FB7','#1F8A40','#C0392B','#412402','#F5C320','#6E4AB0','#0E5E2E','#FF4500'].map(c=>`<div class="sw" style="background:${c}"></div>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Link target</label>
+          ${linkFieldBtn(p.link)}
+        </div>
+        <div class="field"><label>Icon (optional)</label><input value="🚚"/></div>`;
+    case 'vendors':case 'vendor-feat':
+      return `
+        ${mlField(b,'title','Section title')}
+        <div class="field"><label>Source</label>
+          <select><option>Top rated</option><option>Recently joined</option><option>Manual selection</option></select>
+        </div>`;
+    case 'newsletter':
+      return `${mlField(b,'title','Heading')}${mlField(b,'sub','Subheading')}
+        <div class="field"><label>Reward for subscribing</label>
+          <select><option>None</option><option selected>Welcome coupon 10%</option><option>50 loyalty points</option></select>
+        </div>`;
+    case 'text':
+      return `${mlField(b,'title','Heading')}
+        <div class="field"><label>Body</label><textarea style="min-height:100px" data-prop="textEn">${p.textEn||''}</textarea></div>`;
+    case 'spacer':
+      return `<div class="field"><label>Height (px)</label><input type="number" value="16"/></div>`;
+    case 'divider':
+      return `<div class="field"><label>Style</label><select><option>Solid thin</option><option>Dashed</option><option>Gradient fade</option></select></div>`;
+    default:
+      return `<p style="font-size:12px;color:var(--muted)">No content fields for ${b.kind}.</p>`;
+  }
+}
+
+function linkFieldBtn(link){
+  if (!link) {
+    return `<button class="link-field" onclick="openLinkPicker()"><div class="lk-ic">🔗</div><div class="lk-info"><div class="lk-t">Set link target…</div><div class="lk-s">Page · product · category · external</div></div><div class="lk-chev">›</div></button>`;
+  }
+  const ic = {page:'📄', product:'🛍', category:'📁', url:'🔗', collection:'📦', screen:'📱'}[link.type] || '🔗';
+  return `<button class="link-field" onclick="openLinkPicker()"><div class="lk-ic">${ic}</div><div class="lk-info"><div class="lk-t">${link.label||'—'}</div><div class="lk-s">${link.type}</div></div><div class="lk-chev">✏</div></button>`;
+}
+
+function renderStyle(b){
+  return `
+    <div class="sub-h">Spacing</div>
+    <div class="field"><label>Top padding</label><input type="number" value="12"/></div>
+    <div class="field"><label>Bottom padding</label><input type="number" value="12"/></div>
+    <div class="field"><label>Side margin</label><input type="number" value="12"/></div>
+    <div class="sub-h">Appearance</div>
+    <div class="field"><label>Background</label>
+      <div class="swatch-row">
+        <div class="sw on" style="background:#fff"></div>
+        <div class="sw" style="background:transparent;border:1px solid var(--border-2)"></div>
+        <div class="sw" style="background:#FFF6D6"></div>
+        <div class="sw" style="background:#412402"></div>
+      </div>
+    </div>
+    <div class="field"><label>Corner radius</label><input type="number" value="14"/></div>
+    <div class="toggle"><div class="nm">Drop shadow</div><div class="switch on"></div></div>
+    <div class="toggle"><div class="nm">Border</div><div class="switch"></div></div>
+    <div class="sub-h">Animation</div>
+    <div class="field"><label>On-scroll entry</label>
+      <select><option>None</option><option selected>Fade in</option><option>Slide up</option><option>Zoom</option></select>
+    </div>`;
+}
+
+function renderConditions(b){
+  const c = b.cond;
+  return `
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:14px;line-height:1.5">Only show this block when <strong>all</strong> rules match.</p>
+
+    <div class="sub-h">Country</div>
+    <div class="chips">${['KW','SA','QA','AE','EG','OM'].map(co => `<div class="chip ${c.countries.includes(co)?'on':''}" data-c-country="${co}">${flagOf(co)} ${co}</div>`).join('')}</div>
+
+    <div class="sub-h">Language</div>
+    <div class="chips">${['EN','AR','FR'].map(l => `<div class="chip ${c.languages.includes(l)?'on':''}" data-c-lang="${l}">${l}</div>`).join('')}</div>
+
+    <div class="sub-h">Audience</div>
+    <div class="chips">${['guest','customer','vip','new','abandoned-cart','high-spender'].map(s => `<div class="chip ${c.segments.includes(s)?'on':''}" data-c-seg="${s}">${s}</div>`).join('')}</div>
+
+    <div class="sub-h">Schedule</div>
+    <div class="field"><label>Start</label><input type="datetime-local" value="${c.schedule.start}"/></div>
+    <div class="field"><label>End</label><input type="datetime-local" value="${c.schedule.end}"/></div>
+
+    <div class="sub-h">A/B variant</div>
+    <div class="chips">
+      <div class="chip ${c.abVariant==='all'?'on':''}">All</div>
+      <div class="chip ${c.abVariant==='a'?'on':''}">A 50%</div>
+      <div class="chip ${c.abVariant==='b'?'on':''}">B 50%</div>
+    </div>`;
+}
+
+function wirePropsBody(b){
+  document.querySelectorAll('[data-prop]').forEach(inp => {
+    inp.addEventListener('input', () => { b.props[inp.dataset.prop] = inp.value; renderCanvas(); });
+  });
+  document.querySelectorAll('[data-c-country]').forEach(c => {
+    c.addEventListener('click', () => {
+      const v = c.dataset.cCountry;
+      const i = b.cond.countries.indexOf(v);
+      if (i>=0) b.cond.countries.splice(i,1); else b.cond.countries.push(v);
+      renderRight(); renderCanvas();
+    });
+  });
+  document.querySelectorAll('[data-c-lang]').forEach(c => {
+    c.addEventListener('click', () => {
+      const v = c.dataset.cLang;
+      const i = b.cond.languages.indexOf(v);
+      if (i>=0) b.cond.languages.splice(i,1); else b.cond.languages.push(v);
+      renderRight(); renderCanvas();
+    });
+  });
+  document.querySelectorAll('[data-c-seg]').forEach(c => {
+    c.addEventListener('click', () => {
+      const v = c.dataset.cSeg;
+      const i = b.cond.segments.indexOf(v);
+      if (i>=0) b.cond.segments.splice(i,1); else b.cond.segments.push(v);
+      renderRight(); renderCanvas();
+    });
+  });
+  document.querySelectorAll('.switch').forEach(s => {
+    s.addEventListener('click', () => s.classList.toggle('on'));
+  });
+  // current block for link picker
+  linkPicker.current = b;
+}
+
+/* ============================================================
+   NAV ITEM PROPERTIES (right panel when nav item selected)
+   ============================================================ */
+function renderNavItemProps(host){
+  const it = navbarItems.find(x => x.id === navbarSelected);
+  if (!it){ host.innerHTML = `<div class="props-empty"><div class="ic">🧭</div><h4>Pick a tab</h4><p>Click a tab in the bottom bar or in the left list.</p></div>`; return; }
+  host.innerHTML = `
+    <div class="props-h">
+      <div class="kind">NAV ITEM</div>
+      <div class="name">${it.icon} ${it.label.en}</div>
+    </div>
+    <div class="props-body">
+      <div class="field"><label>Icon</label>
+        <div class="swatch-row" style="gap:8px">
+          ${['🏠','🛍','❤','🛒','👤','🔔','💎','🎟','💰','💬','🏪','🌙','🎁','📦','⚡','📷','📍'].map(e=>`
+            <div class="sw" style="background:#fff;display:grid;place-items:center;font-size:18px;${it.icon===e?'box-shadow:0 0 0 2px var(--dark)':''}" data-icon="${e}">${e}</div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="field"><label>Label</label>
+        <div class="ml">
+          <div class="ml-tabs">
+            ${LANGS.map((l,i)=>`<button class="${i===0?'on':''}">${l.flag} ${l.code.toUpperCase()}</button>`).join('')}
+          </div>
+          <input value="${it.label.en}" data-nav-label />
+        </div>
+      </div>
+      <div class="field"><label>Target</label>
+        ${navTargetField(it.target)}
+      </div>
+      <div class="field"><label>Badge</label>
+        <select>
+          <option ${!it.badge?'selected':''}>None</option>
+          <option ${it.badge==='cart_count'?'selected':''}>Cart line count</option>
+          <option ${it.badge==='wishlist_count'?'selected':''}>Wishlist count</option>
+          <option ${it.badge==='notifications'?'selected':''}>Unread notifications</option>
+          <option ${it.badge==='static'?'selected':''}>Static dot</option>
+        </select>
+      </div>
+      <div class="sub-h">Visibility</div>
+      <div class="toggle"><div class="nm">Visible</div><div class="switch on"></div></div>
+      <div class="toggle"><div class="nm">Only for logged-in users</div><div class="switch"></div></div>
+      <div class="toggle"><div class="nm">Hide on guest mode</div><div class="switch"></div></div>
+      <div class="sub-h">Style</div>
+      <div class="field"><label>Inactive color</label>
+        <div class="swatch-row"><div class="sw on" style="background:#7A6850"></div><div class="sw" style="background:#999"></div><div class="sw" style="background:#412402"></div></div>
+      </div>
+    </div>
+  `;
+  host.querySelectorAll('[data-icon]').forEach(el => {
+    el.addEventListener('click', () => { it.icon = el.dataset.icon; render(); });
+  });
+}
+
+function navTargetField(t){
+  const ic = {page:'📄', screen:'📱', url:'🔗', product:'🛍', category:'📁'}[t?.type] || '🔗';
+  return `<button class="link-field" onclick="openLinkPicker(true)"><div class="lk-ic">${ic}</div><div class="lk-info"><div class="lk-t">${describeTarget(t).replace(/^📄 |^📱 Built-in: |^🔗 /,'')}</div><div class="lk-s">${t?.type||'—'}</div></div><div class="lk-chev">✏</div></button>`;
+}
+
+function addNavbarItem(){
+  navbarItems.push({
+    id:'n'+Math.random().toString(36).slice(2,7),
+    icon:'⭐', label:{en:'New tab', ar:'تاب جديد'},
+    target:{type:'page', value:pages[1].id},
+    badge:null,
+  });
+  toast('Tab added — configure on the right');
+  render();
+}
+function removeNavbarItem(id){
+  const i = navbarItems.findIndex(x => x.id === id);
+  if (i >= 0) navbarItems.splice(i,1);
+  if (navbarSelected === id) navbarSelected = null;
+  render(); toast('Tab removed');
+}
+
+/* ============================================================
+   LINK PICKER
+   ============================================================ */
+let linkPickerForNav = false;
+function openLinkPicker(forNav){
+  linkPickerForNav = !!forNav;
+  linkPicker.mode = 'page';
+  renderLinkPicker();
+  document.getElementById('linkPickerBd').classList.add('on');
+}
+function renderLinkPicker(){
+  const body = document.getElementById('linkPickerBody');
+  body.innerHTML = `
+    <div class="lp-tabs">
+      <button class="${linkPicker.mode==='page'?'on':''}"     data-lp="page">📄 Custom page</button>
+      <button class="${linkPicker.mode==='screen'?'on':''}"   data-lp="screen">📱 Built-in screen</button>
+      <button class="${linkPicker.mode==='product'?'on':''}"  data-lp="product">🛍 Product</button>
+      <button class="${linkPicker.mode==='category'?'on':''}" data-lp="category">📁 Category</button>
+      <button class="${linkPicker.mode==='url'?'on':''}"      data-lp="url">🔗 External URL</button>
+    </div>
+    ${renderLinkPickerMode()}
+  `;
+  body.querySelectorAll('[data-lp]').forEach(b => {
+    b.addEventListener('click', () => { linkPicker.mode = b.dataset.lp; renderLinkPicker(); });
+  });
+  body.querySelectorAll('.lp-item').forEach(el => {
+    el.addEventListener('click', () => {
+      body.querySelectorAll('.lp-item').forEach(x => x.classList.remove('on'));
+      el.classList.add('on');
+      linkPicker.choice = JSON.parse(el.dataset.choice);
+    });
+  });
+}
+function renderLinkPickerMode(){
+  if (linkPicker.mode === 'page'){
+    return `
+      <p style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Pick a designed page. Tapping the block in the app will open this page.</p>
+      <div class="lp-list">${pages.map(p => {
+        const k = PAGE_KINDS[p.kind] || {icon:'📄'};
+        const ch = JSON.stringify({type:'page', value:p.slug, label:p.name.en});
+        return `<div class="lp-item" data-choice='${ch}'>
+          <div class="ic">${k.icon}</div>
+          <div class="info"><div class="nm">${p.name.en}</div><div class="sub">/ ${p.slug} · ${theme(p.theme).name} · ${p.status}</div></div>
+          ${p.status==='published'?'<div class="pin">● live</div>':''}
+        </div>`;
+      }).join('')}</div>
+      <button class="btn btn-secondary" style="margin-top:14px;width:100%" onclick="closeModal('linkPickerBd');openNewPage()">＋ Create a new page instead</button>
+    `;
+  }
+  if (linkPicker.mode === 'screen'){
+    const screens = [
+      ['shop','🛍 Shop'], ['cart','🛒 Cart'], ['wishlist','❤ Wishlist'],
+      ['account','👤 Account'], ['orders','📦 My orders'], ['beena','💬 Beena AI'],
+      ['loyalty','💎 Loyalty'], ['wallet','💰 Wallet'], ['coupons','🎟 Coupons'],
+      ['notifications','🔔 Notifications'], ['search','🔍 Search'], ['tryon','✨ Virtual try-on'],
+    ];
+    return `<p style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Built-in app screens that exist in the Flutter codebase.</p>
+      <div class="lp-list">${screens.map(([v,l])=>{
+        const ch = JSON.stringify({type:'screen', value:v, label:l});
+        return `<div class="lp-item" data-choice='${ch}'><div class="ic">${l.split(' ')[0]}</div><div class="info"><div class="nm">${l}</div><div class="sub">/${v}</div></div></div>`;
+      }).join('')}</div>`;
+  }
+  if (linkPicker.mode === 'product'){
+    return `<div class="field"><label>Search product</label><input placeholder="🔍 Type product name or SKU" /></div>
+      <div class="lp-list">
+        ${['HainoTeko Smart Watch','Apple iPhone 16','Samsung Galaxy S25','Dyson Hairdryer'].map((n,i)=>{
+          const ch = JSON.stringify({type:'product', value:i+1, label:n});
+          return `<div class="lp-item" data-choice='${ch}'><div class="ic">🛍</div><div class="info"><div class="nm">${n}</div><div class="sub">Product #${i+1}</div></div></div>`;
+        }).join('')}
+      </div>`;
+  }
+  if (linkPicker.mode === 'category'){
+    return `<div class="lp-list">
+      ${['Phones','Fashion','Beauty','Home & Living','Toys','Groceries'].map((n,i)=>{
+        const ch = JSON.stringify({type:'category', value:i+1, label:n});
+        return `<div class="lp-item" data-choice='${ch}'><div class="ic">📁</div><div class="info"><div class="nm">${n}</div><div class="sub">Category #${i+1}</div></div></div>`;
+      }).join('')}
+    </div>`;
+  }
+  return `<div class="field"><label>External URL</label><input id="lpUrl" placeholder="https://example.com/landing"/></div>
+    <div class="toggle"><div class="nm">Open in in-app browser<small>Vs. system browser</small></div><div class="switch on"></div></div>`;
+}
+function applyLinkPick(){
+  let choice = linkPicker.choice;
+  if (linkPicker.mode === 'url'){
+    const v = document.getElementById('lpUrl')?.value || '';
+    choice = {type:'url', value:v, label:v};
+  }
+  if (!choice){ toast('Pick a target first'); return; }
+  if (linkPickerForNav){
+    const it = navbarItems.find(x => x.id === navbarSelected);
+    if (it){ it.target = choice; toast('Tab target updated'); }
+  } else {
+    if (linkPicker.current){ linkPicker.current.props.link = choice; toast('Link set'); }
+  }
+  closeModal('linkPickerBd'); render();
+}
+
+/* ============================================================
+   NEW PAGE
+   ============================================================ */
+function openNewPage(){ document.getElementById('newPageBd').classList.add('on'); }
+function confirmNewPage(){
+  const name = document.getElementById('npName').value || 'Untitled page';
+  const slug = document.getElementById('npSlug').value || name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+  const kindLbl = document.getElementById('npKind').value;
+  const kind = (Object.entries(PAGE_KINDS).find(([k,v]) => kindLbl.includes(v.label)) || ['custom'])[0];
+  const websiteLbl = document.getElementById('npWebsite').value;
+  const ws = WEBSITES.find(w => websiteLbl.includes(w.name)) ? [WEBSITES.find(w => websiteLbl.includes(w.name)).id] : WEBSITES.map(w => w.id);
+  const langs = [...document.querySelectorAll('#npLangs .chip.on')].map((c,i) => ['en','ar','fr','hi','tl'][i]);
+  const selectedTheme = document.querySelector('.preset.on')?.textContent || 'Uellow';
+  const themeId = THEME_PRESETS.find(t => selectedTheme.includes(t.name.replace(/[^A-Za-z']/g,'').trim()))?.id || 'uellow';
+  const np = {
+    id: pid(), kind, name:{en:name, ar:name}, slug,
+    websiteIds:ws, countries:ws.map(id => WEBSITES.find(w => w.id===id).country),
+    langs: langs.length?langs:['en','ar'], theme:themeId,
+    status:'draft', updatedAt:'just now', views7d:'0',
+    blocks: [block('hero', {titleEn:name})],
+  };
+  pages.push(np);
+  closeModal('newPageBd');
+  toast('Page created · ' + name);
+  openPage(np.id, 'blocks');
+}
+
+/* ============================================================
+   MISC
+   ============================================================ */
+function toast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('on');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('on'), 2200);
+}
+function closeModal(id){ document.getElementById(id).classList.remove('on'); }
+
+document.querySelector('.rail').addEventListener('click', e => {
+  const b = e.target.closest('button[data-view]');
+  if (b) go(b.dataset.view);
+});
+document.getElementById('crumb').addEventListener('click', () => go('library'));
+document.getElementById('publishBtn').addEventListener('click', () => {
+  const p = cur();
+  if (!p){ toast('Open a page first'); return; }
+  document.getElementById('publishBody').innerHTML = `
+    <p style="font-size:12.5px;line-height:1.6;margin-bottom:14px">You're about to publish <strong>${p.name.en}</strong> to <strong>${p.websiteIds.length} website${p.websiteIds.length>1?'s':''}</strong> (${p.countries.map(flagOf).join(' ')}).</p>
+    <div class="field"><label>Release notes (optional)</label><textarea placeholder="What changed"></textarea></div>
+    <div class="toggle"><div class="nm">A/B test against current<small>50/50 split, runs 7 days</small></div><div class="switch"></div></div>
+    <div class="toggle"><div class="nm">Push notification on publish<small>"New from Uellow — ${p.name.en}"</small></div><div class="switch"></div></div>`;
+  document.getElementById('publishBd').classList.add('on');
+});
+
+/* INIT */
+render();
+</script>
+</body>
+</html>

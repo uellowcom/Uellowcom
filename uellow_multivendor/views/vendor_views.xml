@@ -79,6 +79,7 @@
           </div>
           <group>
             <group string="Identity">
+              <field name="logo_image" widget="image" class="oe_avatar"/>
               <field name="partner_id"/>
               <field name="user_id"/>
               <field name="store_slug"/>

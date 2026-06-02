@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- ═══ GSC Row list ═══════════════════════════════════════════ -->
+  <record id="view_uellow_seo_gsc_row_list" model="ir.ui.view">
+    <field name="name">uellow.seo.gsc.row.list</field>
+    <field name="model">uellow.seo.gsc.row</field>
+    <field name="arch" type="xml">
+      <list string="Search Console queries"
+            decoration-success="position &lt; 5"
+            decoration-warning="position &gt;= 10 and position &lt; 20"
+            decoration-danger="position &gt;= 20">
+        <field name="date"/>
+        <field name="query"/>
+        <field name="page"/>
+        <field name="country"/>
+        <field name="device"/>
+        <field name="clicks" sum="Total"/>
+        <field name="impressions" sum="Total"/>
+        <field name="ctr"/>
+        <field name="position" avg="Avg"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_uellow_seo_gsc_rows" model="ir.actions.act_window">
+    <field name="name">Search Console — queries</field>
+    <field name="res_model">uellow.seo.gsc.row</field>
+    <field name="view_mode">list</field>
+  </record>
+
+  <record id="action_uellow_seo_gsc_sync" model="ir.actions.server">
+    <field name="name">Sync Search Console now</field>
+    <field name="model_id" ref="model_uellow_seo_gsc_row"/>
+    <field name="state">code</field>
+    <field name="code">n = env['uellow.seo.gsc.row'].action_sync_recent(days=7)
+action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'GSC sync','message':'Imported %s rows'%n,'type':'success','sticky':False}}</field>
+  </record>
+
+  <!-- ═══ Link Issues ═══════════════════════════════════════════ -->
+  <record id="view_uellow_seo_link_issue_list" model="ir.ui.view">
+    <field name="name">uellow.seo.link.issue.list</field>
+    <field name="model">uellow.seo.link.issue</field>
+    <field name="arch" type="xml">
+      <list string="Link issues"
+            decoration-danger="severity == 'critical'"
+            decoration-warning="severity == 'warning'">
+        <field name="severity"/>
+        <field name="issue_type"/>
+        <field name="target_url"/>
+        <field name="source_url"/>
+        <field name="note"/>
+        <field name="detected_at"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_uellow_seo_link_issues" model="ir.actions.act_window">
+    <field name="name">Link issues</field>
+    <field name="res_model">uellow.seo.link.issue</field>
+    <field name="view_mode">list</field>
+  </record>
+
+  <record id="action_uellow_seo_link_scan" model="ir.actions.server">
+    <field name="name">Run link scan now</field>
+    <field name="model_id" ref="model_uellow_seo_link_issue"/>
+    <field name="state">code</field>
+    <field name="code">n = env['uellow.seo.link.issue'].action_scan(limit_products=300)
+action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'Link scan','message':'Found %s issues'%n,'type':'success','sticky':False}}</field>
+  </record>
+
+  <!-- ═══ Content suggestions ═══════════════════════════════════ -->
+  <record id="view_uellow_seo_content_sugg_list" model="ir.ui.view">
+    <field name="name">uellow.seo.content.suggestion.list</field>
+    <field name="model">uellow.seo.content.suggestion</field>
+    <field name="arch" type="xml">
+      <list string="Blog topic suggestions"
+            decoration-success="state == 'published'"
+            decoration-info="state == 'drafted'">
+        <field name="priority"/>
+        <field name="title"/>
+        <field name="target_keywords"/>
+        <field name="state"/>
+        <button name="action_generate_draft" type="object" icon="fa-magic" string="Draft"
+                invisible="state != 'todo'"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_uellow_seo_content_sugg_form" model="ir.ui.view">
+    <field name="name">uellow.seo.content.suggestion.form</field>
+    <field name="model">uellow.seo.content.suggestion</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_generate_draft" type="object" string="Draft via AI" class="btn-primary"
+                  invisible="state == 'published'"/>
+          <button name="action_publish" type="object" string="Publish to blog" class="btn-primary"
+                  invisible="state != 'drafted'"/>
+          <button name="action_publish" type="object" string="Update published article" class="btn-secondary"
+                  invisible="state != 'published'"/>
+          <field name="state" widget="statusbar"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="title" placeholder="Blog title…"/></h1>
+            <field name="blog_post_url" widget="url" readonly="1" invisible="not blog_post_url"/>
+          </div>
+          <group>
+            <group string="Topic">
+              <field name="priority"/>
+              <field name="target_keywords"/>
+              <field name="target_category_id"/>
+              <field name="angle" placeholder="Angle / outline…"/>
+            </group>
+            <group string="Stats">
+              <field name="reading_time" widget="integer" string="Reading time (min)"/>
+              <field name="summary_tldr" placeholder="TL;DR (auto)" widget="text"/>
+              <field name="scheduled_publish_at"
+                     placeholder="Pick a date to auto-publish later"
+                     invisible="state == 'published'"/>
+              <field name="tokens_used" readonly="1"/>
+              <field name="estimated_cost_usd" readonly="1" string="Cost (USD)"/>
+            </group>
+          </group>
+          <separator string="Recommended products in this article"/>
+          <field name="recommended_product_ids" widget="many2many_tags" readonly="1"/>
+          <separator string="Generated draft"/>
+          <field name="generated_html" widget="html"/>
+          <separator string="FAQs (JSON-LD, rendered as FAQPage schema on publish)"/>
+          <field name="faq_json" widget="text" readonly="1"/>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_uellow_seo_content_suggestions" model="ir.actions.act_window">
+    <field name="name">Blog topic suggestions</field>
+    <field name="res_model">uellow.seo.content.suggestion</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <record id="action_uellow_seo_suggest_gaps" model="ir.actions.server">
+    <field name="name">AI: suggest blog topics</field>
+    <field name="model_id" ref="model_uellow_seo_content_suggestion"/>
+    <field name="state">code</field>
+    <field name="code">n = env['uellow.seo.content.suggestion'].action_suggest_gaps()
+action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'Content gap','message':'AI suggested %s blog topics'%n,'type':'success','sticky':False}}</field>
+  </record>
+
+  <!-- ═══ AI regenerate server actions ═══════════════════════════ -->
+  <record id="action_uellow_seo_ai_regen_missing" model="ir.actions.server">
+    <field name="name">AI: regenerate meta for products missing description (20 at a time)</field>
+    <field name="model_id" ref="product.model_product_template"/>
+    <field name="state">code</field>
+    <field name="code">n = env['product.template'].action_seo_ai_regenerate_bulk(batch=20, only_missing=True)
+action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'AI SEO','message':'Regenerated %s products'%n,'type':'success','sticky':False}}</field>
+  </record>
+
+  <record id="action_uellow_seo_og_generate" model="ir.actions.server">
+    <field name="name">Generate OG images for next 50 products</field>
+    <field name="model_id" ref="product.model_product_template"/>
+    <field name="state">code</field>
+    <field name="code">n = env['product.template'].action_seo_og_generate_bulk(batch=50)
+action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'OG images','message':'Generated %s images'%n,'type':'success','sticky':False}}</field>
+  </record>
+
+  <!-- One-time fix: move AI-generated content out of the wrong field
+       (description_sale = quotation) into the correct one (website_description). -->
+  <record id="action_uellow_seo_fix_descriptions" model="ir.actions.server">
+    <field name="name">Fix: move AI descriptions from Quotation → Website page</field>
+    <field name="model_id" ref="product.model_product_template"/>
+    <field name="state">code</field>
+    <field name="code">action = env['product.template'].action_seo_fix_misplaced_descriptions()</field>
+  </record>
+
+  <!-- ═══ SERP preview on product form ═══════════════════════════ -->
+  <record id="view_product_template_serp_preview" model="ir.ui.view">
+    <field name="name">product.template.serp.preview</field>
+    <field name="model">product.template</field>
+    <field name="inherit_id" ref="website_sale.product_template_form_view"/>
+    <field name="arch" type="xml">
+      <xpath expr="//page[1]" position="after">
+        <page string="SEO preview" name="uellow_seo_preview">
+          <group>
+            <group string="Google SERP preview (desktop)">
+              <div style="border:1px solid #d4d4d4;padding:14px;border-radius:8px;background:#fff;max-width:560px">
+                <div style="color:#1a0dab;font-size:18px;line-height:1.3;text-decoration:underline">
+                  <field name="seo_serp_title" nolabel="1" readonly="1"/>
+                </div>
+                <div style="color:#006621;font-size:13px;margin-top:2px">
+                  <field name="seo_serp_url" nolabel="1" readonly="1"/>
+                </div>
+                <div style="color:#545454;font-size:13px;margin-top:4px;line-height:1.4">
+                  <field name="seo_serp_desc" nolabel="1" readonly="1"/>
+                </div>
+              </div>
+            </group>
+            <group string="Quality">
+              <field name="seo_serp_title_length" string="Title length"/>
+              <field name="seo_serp_title_quality" string="Title status"/>
+              <field name="seo_serp_desc_length"  string="Description length"/>
+              <field name="seo_serp_desc_quality" string="Description status"/>
+              <field name="seo_og_image_id" string="OG image"/>
+              <button name="action_generate_og_image" type="object"
+                      string="Generate OG image" class="btn-secondary"/>
+              <button name="action_seo_ai_generate_single" type="object"
+                      string="Regenerate meta via AI" class="btn-primary"/>
+            </group>
+          </group>
+        </page>
+      </xpath>
+    </field>
+  </record>
+</odoo>

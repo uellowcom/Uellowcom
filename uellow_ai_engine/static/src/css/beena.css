@@ -118,6 +118,106 @@
     pointer-events: all;
 }
 
+/* Draggable header */
+#beena-header.beena-draggable {
+    cursor: move;
+    user-select: none;
+    touch-action: none;
+}
+#beena-header.beena-draggable button {
+    cursor: pointer;        /* keep buttons interactive */
+    touch-action: auto;
+}
+#beena-chat.beena-dragging {
+    transition: none !important;
+    opacity: 0.92;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.25);
+}
+
+/* Maximized: centered overlay panel */
+#beena-chat.maximized {
+    position: fixed !important;
+    width: 96vw !important;
+    height: 94vh !important;
+    max-width: 1100px;
+    max-height: 900px;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: translate(-50%, -50%) !important;
+    border-radius: 16px;
+    z-index: 9999;
+}
+body[dir="rtl"] #beena-chat.maximized {
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+/* Unread badge on the float button */
+.beena-unread-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 20px;
+    height: 20px;
+    background: #E24B4A;
+    color: #FFFFFF;
+    border: 2px solid #FFFFFF;
+    border-radius: 10px;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(226, 75, 74, 0.5);
+    z-index: 2;
+    pointer-events: none;
+    animation: beenaPulse 1.5s ease-in-out infinite;
+}
+body[dir="rtl"] .beena-unread-badge { right: auto; left: -4px; }
+@keyframes beenaPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+}
+
+/* Header buttons: macOS traffic-light style (close / min / max).
+   ID rules so they win against any stale cached CSS rule that may have
+   set background to transparent or none. */
+#beena-max, #beena-min, #beena-close {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    border: 1px solid rgba(0,0,0,.18);
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(0,0,0,0);   /* glyph hidden until hover */
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    opacity: 1;
+    transition: filter .15s, transform .12s, color .15s;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,.12);
+}
+#beena-max   { background: #28C840 !important; }
+#beena-min   { background: #FEBC2E !important; }
+#beena-close { background: #FF5F57 !important; }
+#beena-max:hover, #beena-min:hover, #beena-close:hover {
+    color: rgba(0,0,0,.55);
+    transform: scale(1.08);
+    filter: brightness(1.05);
+}
+#beena-max > span, #beena-min > span, #beena-close > span {
+    pointer-events: none;
+    display: block;
+    transform: translateY(-1px);
+}
+
 /* RTL layout for Arabic */
 body[dir="rtl"] #beena-float,
 body[dir="rtl"] #beena-chat {
@@ -175,18 +275,8 @@ body[dir="rtl"] #beena-chat {
     flex-shrink: 0;
 }
 
-#beena-close {
-    background: none;
-    border: none;
-    font-size: 20px;
-    color: #854F0B;
-    cursor: pointer;
-    line-height: 1;
-    padding: 0;
-    opacity: .7;
-    transition: opacity .2s;
-}
-#beena-close:hover { opacity: 1; }
+/* (Old transparent #beena-close styling removed — colored traffic-light
+   rules earlier in this file own the close button now.) */
 
 /* ── Product Context Bar ──────────────────────── */
 #beena-context {
@@ -275,6 +365,1429 @@ body[dir="rtl"] .beena-msg-user {
     align-self: flex-start;
 }
 
+/* ── Rich text inside AI messages ────────────────── */
+.beena-msg-ai .beena-rich-link {
+    color: #0F6FB4;
+    text-decoration: none;
+    border-bottom: 1px dotted #0F6FB4;
+    word-break: break-word;
+}
+.beena-msg-ai .beena-rich-link:hover {
+    color: #084d80;
+    border-bottom-style: solid;
+}
+.beena-msg-ai .beena-rich-img {
+    display: block;
+    max-width: 100%;
+    max-height: 240px;
+    border-radius: 8px;
+    margin: 6px 0;
+    cursor: zoom-in;
+    object-fit: cover;
+}
+.beena-msg-ai .beena-rich-code {
+    background: #F1F0EC;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 92%;
+    color: #412402;
+}
+.beena-msg-ai .beena-rich-ul {
+    padding-inline-start: 18px;
+    margin: 4px 0;
+}
+.beena-msg-ai .beena-rich-ul li {
+    margin: 2px 0;
+    line-height: 1.45;
+}
+
+/* ── Virtual Try-On Card ───────────────────────── */
+.beena-tryon-card {
+    background: #FFFDF5 !important;
+    border: 1px solid #F5C320 !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    max-width: 92% !important;
+}
+.beena-tryon-head {
+    display: flex; align-items: center; gap: 9px;
+    padding-bottom: 9px; border-bottom: 1px dashed #F0D480;
+    margin-bottom: 9px;
+}
+.beena-tryon-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: #F5C320; color: #412402;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+}
+.beena-tryon-titles { flex: 1; min-width: 0; }
+.beena-tryon-title {
+    font-size: 13px; font-weight: 700; color: #412402;
+    line-height: 1.2;
+}
+.beena-tryon-sub {
+    font-size: 10px; color: #856C2E; line-height: 1.3;
+}
+.beena-tryon-product {
+    display: flex; gap: 9px; align-items: center;
+    background: #FFF; border: 1px solid #F1E3B7; border-radius: 8px;
+    padding: 7px; margin-bottom: 9px;
+}
+.beena-tryon-product-img {
+    width: 52px; height: 52px; border-radius: 7px;
+    object-fit: cover; flex-shrink: 0;
+    background: #FAF8F2;
+}
+.beena-tryon-product-info { flex: 1; min-width: 0; }
+.beena-tryon-product-name {
+    font-size: 12px; font-weight: 600; color: #1A1A1A;
+    line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.beena-tryon-price {
+    font-size: 11px; color: #854F0B; font-weight: 700; margin-top: 2px;
+}
+.beena-tryon-photo-row {
+    display: flex; gap: 9px; align-items: center;
+    background: #FFF; border: 1px solid #E1F0DC; border-radius: 8px;
+    padding: 7px; margin-bottom: 9px;
+}
+.beena-tryon-photo-thumb {
+    width: 44px; height: 44px; border-radius: 50%;
+    object-fit: cover; flex-shrink: 0;
+    border: 2px solid #1D9E75;
+}
+.beena-tryon-photo-meta { flex: 1; min-width: 0; }
+.beena-tryon-photo-label {
+    font-size: 11px; color: #085041; font-weight: 600;
+}
+.beena-tryon-change-photo {
+    background: none; border: none; color: #0F6FB4;
+    font-size: 10px; cursor: pointer; padding: 0; margin-top: 2px;
+    text-decoration: underline;
+}
+.beena-tryon-change-photo:hover { color: #084d80; }
+.beena-tryon-msg {
+    font-size: 12px; color: #1A1A1A;
+    margin-bottom: 9px; line-height: 1.45;
+}
+.beena-tryon-btn {
+    border: none; border-radius: 7px;
+    padding: 9px 14px; font-weight: 700; font-size: 12px;
+    cursor: pointer; font-family: inherit;
+    transition: filter .15s, transform .05s;
+}
+.beena-tryon-btn:hover { filter: brightness(1.05); }
+.beena-tryon-btn:active { transform: scale(0.98); }
+.beena-tryon-btn:disabled { opacity: .7; cursor: wait; }
+.beena-tryon-btn-primary {
+    background: #F5C320; color: #412402;
+    box-shadow: 0 2px 6px rgba(245, 195, 32, 0.35);
+}
+.beena-tryon-hint {
+    font-size: 10px; color: #888; margin-top: 5px; line-height: 1.3;
+}
+.beena-tryon-result { margin-top: 10px; }
+.beena-tryon-result-wrap {
+    background: #FFF; border: 1px solid #E5E5E5; border-radius: 9px;
+    padding: 5px; overflow: hidden;
+}
+.beena-tryon-result-img {
+    width: 100%; max-height: 380px; object-fit: contain;
+    border-radius: 6px; cursor: zoom-in; display: block;
+    background: #FAFAFA;
+}
+.beena-tryon-result-caption {
+    font-size: 10px; color: #666;
+    text-align: center; padding: 5px 0 3px;
+}
+
+/* ── Reviewer Cards ────────────────────────────── */
+.beena-rev-wrap { padding: 10px 12px !important; max-width: 92% !important; }
+.beena-rev-header {
+    margin-bottom: 9px; padding-bottom: 7px;
+    border-bottom: 1px dashed #E5E1D2;
+}
+.beena-rev-header-title {
+    font-size: 13px; font-weight: 700; color: #412402;
+}
+.beena-rev-header-sub {
+    font-size: 11px; color: #5F5E5A; margin-top: 2px;
+    display: flex; align-items: center; gap: 5px;
+}
+.beena-rev-dot-on, .beena-rev-dot-off {
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+}
+.beena-rev-dot-on  { background: #1D9E75; box-shadow: 0 0 0 3px rgba(29,158,117,.15); }
+.beena-rev-dot-off { background: #aaa; }
+.beena-rev-card {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #FFF; border: 1px solid #ECE9E1; border-radius: 9px;
+    padding: 10px; margin-bottom: 7px;
+    transition: border-color .15s, box-shadow .15s;
+}
+.beena-rev-card:hover {
+    border-color: #F5C320;
+    box-shadow: 0 2px 8px rgba(245,195,32,.18);
+}
+.beena-rev-avatar-wrap {
+    position: relative; flex-shrink: 0; width: 44px; height: 44px;
+}
+.beena-rev-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    object-fit: cover; background: #F5F4F2;
+    border: 2px solid #FFF;
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+    display: block;
+}
+.beena-rev-avatar-fallback {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: #F5C320; color: #412402;
+    align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+    position: absolute; inset: 0; display: none;
+}
+.beena-rev-status {
+    position: absolute; bottom: 0; right: 0;
+    width: 11px; height: 11px; border-radius: 50%;
+    border: 2px solid #FFF;
+}
+.beena-rev-status.on  { background: #1D9E75; }
+.beena-rev-status.off { background: #ccc; }
+.beena-rev-info { flex: 1; min-width: 0; }
+.beena-rev-name-row {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.beena-rev-name {
+    font-size: 13px; font-weight: 700; color: #1A1A1A;
+}
+.beena-rev-badge {
+    font-size: 9px; padding: 2px 6px; border-radius: 4px;
+    font-weight: 600;
+}
+.beena-rev-rating {
+    margin-top: 2px;
+    font-size: 11px; display: flex; align-items: center; gap: 5px;
+}
+.beena-rev-stars   { color: #F5C320; letter-spacing: 1px; }
+.beena-rev-num     { color: #1A1A1A; font-weight: 600; }
+.beena-rev-reviews { color: #888; font-size: 10px; }
+.beena-rev-specialty {
+    font-size: 10px; color: #5F5E5A; margin-top: 3px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.beena-rev-actions {
+    display: flex; gap: 5px; align-items: center;
+    margin-top: 6px; flex-wrap: wrap;
+}
+.beena-rev-btn {
+    border: 1px solid transparent; border-radius: 6px;
+    padding: 4px 9px; font-size: 11px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+    transition: filter .12s;
+}
+.beena-rev-btn:hover { filter: brightness(.96); }
+.beena-rev-btn-chat    { background: #E1F5EE; color: #085041; border-color:#C8EBDD; }
+.beena-rev-btn-written { background: #FEFDF0; color: #854F0B; border-color:#F5E5A8; }
+.beena-rev-free {
+    font-size: 10px; color: #854F0B; font-weight: 600;
+    background: #FEFDF0; padding: 2px 6px; border-radius: 4px;
+}
+
+/* ── Location Card ─────────────────────────────── */
+.beena-loc-card {
+    padding: 10px !important;
+    max-width: 92% !important;
+    background: #FFF !important;
+    border: 1px solid #ECE9E1 !important;
+    border-radius: 11px !important;
+}
+.beena-loc-head {
+    display: flex; gap: 9px; align-items: flex-start;
+    padding-bottom: 9px; border-bottom: 1px dashed #ECE9E1;
+    margin-bottom: 9px;
+}
+.beena-loc-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: #FCEBEB; color: #BB342F;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+}
+.beena-loc-titles { flex: 1; min-width: 0; }
+.beena-loc-name {
+    font-size: 13px; font-weight: 700; color: #1A1A1A;
+    line-height: 1.25;
+}
+.beena-loc-address {
+    font-size: 11px; color: #5F5E5A; margin-top: 2px;
+    line-height: 1.4;
+}
+.beena-loc-map {
+    border-radius: 9px; overflow: hidden;
+    border: 1px solid #ECE9E1;
+    background: #F8F7F4;
+}
+.beena-loc-map iframe {
+    width: 100%; height: 180px;
+    border: 0; display: block;
+}
+.beena-loc-meta {
+    display: flex; flex-wrap: wrap; gap: 9px;
+    margin-top: 9px; font-size: 11px;
+}
+.beena-loc-meta-item {
+    color: #5F5E5A; text-decoration: none;
+    padding: 3px 7px; border-radius: 5px;
+    background: #F5F4F2;
+}
+a.beena-loc-meta-item:hover { background: #ECE9E1; color: #1A1A1A; }
+.beena-loc-actions { margin-top: 10px; }
+.beena-loc-btn {
+    display: inline-block; text-decoration: none;
+    border-radius: 7px; padding: 9px 14px;
+    font-size: 12px; font-weight: 700;
+    transition: filter .15s, transform .05s;
+}
+.beena-loc-btn:hover  { filter: brightness(1.05); }
+.beena-loc-btn:active { transform: scale(0.98); }
+.beena-loc-btn-primary {
+    background: #F5C320; color: #412402 !important;
+    box-shadow: 0 2px 6px rgba(245,195,32,.35);
+}
+
+/* ── Fit Check Card ────────────────────────────── */
+.beena-fit-card {
+    padding: 12px !important;
+    max-width: 92% !important;
+    background: #FFF !important;
+    border: 1px solid #ECE9E1 !important;
+    border-radius: 12px !important;
+}
+.beena-fit-head {
+    display: flex; gap: 9px; align-items: center;
+    padding-bottom: 9px; border-bottom: 1px dashed #ECE9E1;
+    margin-bottom: 10px;
+}
+.beena-fit-icon {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: #EAF3DE; color: #27500A;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+}
+.beena-fit-titles { flex: 1; min-width: 0; }
+.beena-fit-title {
+    font-size: 13px; font-weight: 700; color: #412402;
+}
+.beena-fit-sub {
+    font-size: 10px; color: #856C2E; margin-top: 1px;
+}
+.beena-fit-msg {
+    font-size: 11px; color: #5F5E5A;
+    margin-bottom: 9px; line-height: 1.4;
+}
+.beena-fit-product {
+    display: flex; gap: 9px; align-items: center;
+    background: #FAFAF7; border: 1px solid #ECE9E1; border-radius: 9px;
+    padding: 9px; margin-bottom: 11px;
+}
+.beena-fit-product-img {
+    width: 52px; height: 52px; border-radius: 7px;
+    object-fit: cover; background: #F5F4F2; flex-shrink: 0;
+}
+.beena-fit-product-info { flex: 1; min-width: 0; }
+.beena-fit-product-name {
+    font-size: 12px; font-weight: 700; color: #1A1A1A;
+    line-height: 1.25;
+    overflow: hidden; text-overflow: ellipsis;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.beena-fit-size-pill {
+    display: inline-block; margin-top: 3px;
+    font-size: 11px; color: #412402;
+    background: #FEFDF0; border: 1px solid #F5E5A8;
+    padding: 2px 8px; border-radius: 5px;
+}
+.beena-fit-price {
+    font-size: 11px; color: #854F0B; font-weight: 700; margin-top: 3px;
+}
+.beena-fit-gauge {
+    text-align: center; flex-shrink: 0;
+}
+.beena-fit-gauge-label {
+    font-size: 11px; font-weight: 700; margin-top: -2px;
+}
+.beena-fit-areas {
+    display: flex; flex-direction: column; gap: 7px;
+    margin-bottom: 11px;
+}
+.beena-fit-area {
+    background: #FAFAF7; border-radius: 8px;
+    padding: 8px 10px;
+}
+.beena-fit-area-row {
+    display: flex; align-items: center; gap: 7px;
+    margin-bottom: 4px;
+}
+.beena-fit-area-label {
+    font-size: 12px; font-weight: 600; color: #1A1A1A;
+    flex: 1;
+}
+.beena-fit-area-verdict {
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px;
+}
+.beena-fit-area-verdict.good    { background:#E1F5EE; color:#085041; }
+.beena-fit-area-verdict.tight   { background:#FCEBEB; color:#791F1F; }
+.beena-fit-area-verdict.loose   { background:#FEF3DC; color:#7A4D08; }
+.beena-fit-area-verdict.unknown { background:#F2F1ED; color:#5F5E5A; }
+.beena-fit-area-diff {
+    font-size: 10px; color: #888;
+}
+.beena-fit-area-bar {
+    background: #ECE9E1; height: 4px; border-radius: 3px; overflow: hidden;
+}
+.beena-fit-area-bar-fill { height: 100%; border-radius: 3px; }
+.beena-fit-area-bar-fill.good    { background: #1D9E75; }
+.beena-fit-area-bar-fill.tight   { background: #E24B4A; }
+.beena-fit-area-bar-fill.loose   { background: #E89B23; }
+.beena-fit-area-bar-fill.unknown { background: #BDB9B0; }
+.beena-fit-alts {
+    background: #FAFAF7; border-radius: 8px; padding: 8px 10px;
+    margin-bottom: 11px;
+}
+.beena-fit-alts-title {
+    font-size: 11px; color: #5F5E5A; font-weight: 600; margin-bottom: 5px;
+}
+.beena-fit-alts-chips {
+    display: flex; gap: 5px; flex-wrap: wrap;
+}
+.beena-fit-alt-chip {
+    background: #FFF; border: 1px solid #ECE9E1; border-radius: 7px;
+    padding: 4px 9px; font-size: 12px; font-weight: 600; cursor: pointer;
+    font-family: inherit; display: inline-flex; align-items: center; gap: 5px;
+    transition: border-color .12s;
+}
+.beena-fit-alt-chip:hover { border-color: #F5C320; }
+.beena-fit-alt-pct {
+    font-size: 10px; font-weight: 700;
+}
+.beena-fit-cta { display: flex; gap: 7px; }
+.beena-fit-btn {
+    border: none; border-radius: 7px;
+    padding: 9px 14px; font-weight: 700; font-size: 12px;
+    cursor: pointer; font-family: inherit;
+    flex: 1; text-align: center;
+    transition: filter .12s, transform .05s;
+}
+.beena-fit-btn:hover  { filter: brightness(1.05); }
+.beena-fit-btn:active { transform: scale(.98); }
+.beena-fit-btn:disabled { opacity: .55; cursor: not-allowed; }
+.beena-fit-btn-primary {
+    background: #F5C320; color: #412402;
+    box-shadow: 0 2px 6px rgba(245,195,32,.35);
+}
+.beena-fit-btn-secondary {
+    background: #F5F4F2; color: #5F5E5A;
+}
+
+/* ── Fit Replay Banner (compact, dismissible) ──── */
+.beena-replay-card {
+    padding: 10px 11px !important;
+    max-width: 92% !important;
+    background: linear-gradient(135deg,#FFFDF5,#FFF) !important;
+    border: 1px solid #F5E5A8 !important;
+    border-radius: 11px !important;
+}
+.beena-replay-head { display: flex; gap: 9px; align-items: center; }
+.beena-replay-icon {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: #FEFDF0; color: #854F0B;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+}
+.beena-replay-body { flex: 1; min-width: 0; }
+.beena-replay-title {
+    font-size: 12px; font-weight: 600; color: #1A1A1A; line-height: 1.3;
+}
+.beena-replay-meta {
+    margin-top: 2px; display: flex; gap: 10px; align-items: center;
+}
+.beena-replay-pct {
+    font-size: 12px; font-weight: 700;
+}
+.beena-replay-date {
+    font-size: 10px; color: #856C2E;
+}
+.beena-replay-dismiss {
+    background: none; border: none; color: #BDB9B0;
+    font-size: 15px; cursor: pointer; padding: 0 5px;
+    line-height: 1;
+}
+.beena-replay-dismiss:hover { color: #5F5E5A; }
+.beena-replay-actions {
+    display: flex; gap: 5px; margin-top: 9px;
+}
+.beena-replay-btn {
+    border: none; border-radius: 6px;
+    padding: 6px 11px; font-size: 11px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 3px;
+}
+.beena-replay-btn-primary {
+    background: #F5C320; color: #412402;
+}
+.beena-replay-btn-secondary {
+    background: #FFF; color: #5F5E5A; border: 1px solid #ECE9E1;
+}
+
+/* ── Try-On feature buttons row (under result image) ── */
+.beena-tryon-features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+.beena-tryon-feat-btn {
+    background: #FFF;
+    border: 1px solid #ECE9E1;
+    border-radius: 7px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    color: #412402;
+    transition: border-color .12s, box-shadow .12s, transform .05s;
+}
+.beena-tryon-feat-btn:hover {
+    border-color: #F5C320;
+    box-shadow: 0 2px 6px rgba(245,195,32,.2);
+}
+.beena-tryon-feat-btn:active { transform: scale(.97); }
+.beena-tryon-feat-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ── Inline pickers (color / background) ─────────── */
+.beena-tryon-picker {
+    padding: 10px !important;
+    max-width: 92% !important;
+    background: #FFFDF5 !important;
+    border: 1px solid #F5E5A8 !important;
+    border-radius: 10px !important;
+}
+.beena-tryon-picker-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #412402;
+    margin-bottom: 7px;
+}
+.beena-tryon-picker-chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.beena-tryon-picker-chip {
+    background: #FFF;
+    border: 1px solid #ECE9E1;
+    border-radius: 7px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    color: #1A1A1A;
+    transition: border-color .12s;
+}
+.beena-tryon-picker-chip:hover { border-color: #F5C320; }
+.beena-tryon-picker-chip.active {
+    background: #F5C320;
+    color: #412402;
+    border-color: #F5C320;
+}
+
+/* ── Reviewer picker (multi-select) ───────────── */
+.beena-rev-picker {
+    padding: 12px !important;
+    max-width: 92% !important;
+}
+.beena-rev-picker-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #412402;
+    margin-bottom: 9px;
+}
+.beena-rev-picker-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-bottom: 9px;
+}
+@media (min-width: 480px) {
+    .beena-rev-picker-cards { grid-template-columns: 1fr 1fr; }
+}
+.beena-rev-pcard {
+    display: block;
+    cursor: pointer;
+    position: relative;
+}
+.beena-rev-pcheck {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 16px;
+    height: 16px;
+    accent-color: #F5C320;
+    z-index: 2;
+    cursor: pointer;
+}
+body[dir="rtl"] .beena-rev-pcheck { right: auto; left: 6px; }
+.beena-rev-pcard-inner {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: #FFFFFF;
+    border: 2px solid #ECE9E1;
+    border-radius: 9px;
+    padding: 8px 9px;
+    transition: border-color .12s, box-shadow .12s;
+}
+.beena-rev-pcheck:checked + .beena-rev-pcard-inner {
+    border-color: #F5C320;
+    box-shadow: 0 2px 8px rgba(245, 195, 32, 0.25);
+    background: #FFFDF5;
+}
+.beena-rev-pcard-avatar {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+.beena-rev-pcard-avatar img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.beena-rev-pcard-init {
+    position: absolute;
+    inset: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #F5C320;
+    color: #412402;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+}
+.beena-rev-pcard-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #FFFFFF;
+}
+.beena-rev-pcard-dot.on  { background: #1D9E75; }
+.beena-rev-pcard-dot.off { background: #BDB9B0; }
+.beena-rev-pcard-info { flex: 1; min-width: 0; }
+.beena-rev-pcard-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1A1A1A;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.beena-rev-pcard-meta {
+    font-size: 10px;
+    color: #888;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    margin-top: 1px;
+}
+.beena-rev-pcard-stars { color: #F5C320; letter-spacing: 1px; }
+.beena-rev-pcard-num   { color: #1A1A1A; font-weight: 600; }
+.beena-rev-pcard-level { font-size: 10px; color: #5F5E5A; }
+.beena-rev-picker-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 1px dashed #ECE9E1;
+}
+.beena-rev-picker-hint {
+    flex: 1;
+    font-size: 11px;
+    color: #5F5E5A;
+}
+.beena-rev-picker-hint b { color: #412402; }
+.beena-rev-picker-cancel, .beena-rev-picker-go {
+    border: 0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+}
+.beena-rev-picker-cancel { background: #F5F4F2; color: #5F5E5A; }
+.beena-rev-picker-go     { background: #F5C320; color: #412402; }
+.beena-rev-picker-go:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Reviewer votes results ───────────────────── */
+.beena-rev-votes {
+    padding: 10px 12px !important;
+    max-width: 92% !important;
+}
+.beena-rev-votes-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 9px;
+    padding-bottom: 7px;
+    border-bottom: 1px dashed #ECE9E1;
+    gap: 9px;
+}
+.beena-rev-votes-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #412402;
+}
+.beena-rev-votes-totals {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.beena-rev-votes-totals .t-good     { color: #1D9E75; }
+.beena-rev-votes-totals .t-bad      { color: #E24B4A; }
+.beena-rev-votes-totals .t-pending  { color: #856C2E; }
+.beena-rev-votes-totals .t-total    { color: #888; font-weight: 600; }
+.beena-rev-votes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.beena-rev-vote {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    background: #FAFAF7;
+    border-radius: 8px;
+    padding: 7px 9px;
+}
+.beena-rev-vote-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.beena-rev-vote-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1A1A1A;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.beena-rev-vote-verdict {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+}
+.beena-rev-vote-verdict.good    { background: #E1F5EE; color: #085041; }
+.beena-rev-vote-verdict.bad     { background: #FCEBEB; color: #791F1F; }
+.beena-rev-vote-verdict.pending { background: #FEF3DC; color: #856C2E; }
+.beena-rev-vote-note {
+    grid-column: 2 / 4;
+    font-size: 11px;
+    color: #5F5E5A;
+    background: #FFFFFF;
+    border-radius: 5px;
+    padding: 5px 8px;
+    margin-top: 3px;
+}
+
+/* ── Cart / Checkout / Quote cards ───────────────── */
+.beena-cart-added, .beena-cart-view, .beena-checkout-card, .beena-quote-card {
+    padding: 12px !important;
+    max-width: 92% !important;
+}
+
+.beena-cart-added {
+    background: #E1F5EE !important;
+    border: 1px solid #1D9E75 !important;
+    border-radius: 11px !important;
+}
+.beena-cart-added-head {
+    font-size: 13px; font-weight: 700; color: #085041;
+    margin-bottom: 5px;
+}
+.beena-cart-added-name {
+    font-size: 12px; color: #1A1A1A; margin-bottom: 5px;
+}
+.beena-cart-added-total {
+    font-size: 11px; color: #085041; margin-bottom: 9px;
+}
+.beena-cart-added-count { color: #5F5E5A; }
+.beena-cart-added-actions, .beena-cart-actions {
+    display: flex; gap: 7px; flex-wrap: wrap;
+}
+
+.beena-cart-btn {
+    border: 0; border-radius: 7px;
+    padding: 7px 13px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: inherit; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 4px;
+    transition: filter .12s, transform .05s;
+}
+.beena-cart-btn:hover  { filter: brightness(1.05); text-decoration: none; }
+.beena-cart-btn:active { transform: scale(.98); }
+.beena-cart-btn-primary {
+    background: #F5C320; color: #412402;
+    box-shadow: 0 2px 6px rgba(245,195,32,.35);
+}
+.beena-cart-btn-primary:hover { color: #412402; }
+.beena-cart-btn-link {
+    background: #FFFFFF; color: #1A1A1A;
+    border: 1px solid #ECE9E1;
+}
+
+.beena-cart-view {
+    background: #FFFFFF !important;
+    border: 1px solid #ECE9E1 !important;
+    border-radius: 11px !important;
+}
+.beena-cart-empty {
+    font-size: 13px; color: #5F5E5A;
+    padding: 14px; text-align: center;
+}
+.beena-cart-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: 8px; border-bottom: 1px dashed #ECE9E1;
+    margin-bottom: 9px;
+}
+.beena-cart-head-title {
+    font-size: 13px; font-weight: 700; color: #412402;
+}
+.beena-cart-head-count {
+    font-size: 11px; color: #856C2E;
+    background: #FEFDF0; padding: 2px 8px; border-radius: 5px;
+}
+.beena-cart-lines {
+    display: flex; flex-direction: column; gap: 7px;
+    margin-bottom: 10px;
+}
+.beena-cart-line {
+    display: flex; gap: 9px; align-items: center;
+    background: #FAFAF7; border-radius: 8px; padding: 7px;
+}
+.beena-cart-line-img {
+    width: 42px; height: 42px; border-radius: 7px;
+    object-fit: cover; background: #FFF; flex-shrink: 0;
+}
+.beena-cart-line-info { flex: 1; min-width: 0; }
+.beena-cart-line-name {
+    font-size: 12px; font-weight: 600; color: #1A1A1A;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.beena-cart-line-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 11px; color: #5F5E5A; margin-top: 2px;
+}
+.beena-cart-line-meta strong { color: #412402; }
+.beena-cart-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 9px; border-top: 1px dashed #ECE9E1;
+    font-size: 13px; color: #1A1A1A; margin-bottom: 10px;
+}
+.beena-cart-total strong {
+    color: #412402; font-size: 14px;
+}
+
+.beena-checkout-card {
+    background: #FFFFFF !important;
+    border: 1.5px solid #F5C320 !important;
+}
+.beena-checkout-msg {
+    font-size: 13px; color: #1A1A1A; margin-bottom: 10px;
+}
+.beena-checkout-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 9px; padding-bottom: 8px; border-bottom: 1px dashed #ECE9E1;
+}
+.beena-checkout-title {
+    font-size: 13px; font-weight: 700; color: #412402;
+}
+.beena-checkout-total {
+    font-size: 14px; font-weight: 700; color: #854F0B;
+    background: #FEFDF0; padding: 3px 10px; border-radius: 6px;
+}
+.beena-checkout-form {
+    display: flex; flex-direction: column; gap: 7px;
+    margin-bottom: 4px;
+}
+.beena-co-row {
+    display: flex; flex-direction: column; gap: 3px;
+}
+.beena-co-label {
+    font-size: 11px; font-weight: 600; color: #412402;
+}
+.beena-co-input {
+    border: 1px solid #ECE9E1;
+    border-radius: 7px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #FFF;
+    color: #1A1A1A;
+    outline: none;
+    transition: border-color .12s, box-shadow .12s;
+}
+.beena-co-input:focus {
+    border-color: #F5C320;
+    box-shadow: 0 0 0 3px rgba(245,195,32,.2);
+}
+.beena-co-geo {
+    background: #FEFDF0;
+    color: #854F0B;
+    border: 1px dashed #F5C320;
+    border-radius: 7px;
+    padding: 8px 11px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    margin-top: 4px;
+    transition: background .12s;
+}
+.beena-co-geo:hover    { background: #FFF7C2; }
+.beena-co-geo:disabled { opacity: 0.6; cursor: wait; }
+
+.beena-co-status {
+    font-size: 11px;
+    color: #5F5E5A;
+    min-height: 16px;
+    padding: 3px 0;
+}
+.beena-co-status.ok   { color: #085041; }
+.beena-co-status.err  { color: #791F1F; }
+.beena-co-status.info { color: #0C447C; }
+
+.beena-co-submit {
+    margin-top: 5px;
+    padding: 11px 14px !important;
+    font-size: 13px !important;
+}
+
+.beena-co-fields {
+    display: flex; flex-direction: column; gap: 5px;
+    margin-bottom: 10px;
+}
+.beena-co-field {
+    display: grid; grid-template-columns: 22px 1fr auto;
+    gap: 8px; align-items: center;
+    padding: 6px 9px; border-radius: 7px;
+    background: #FAFAF7;
+    font-size: 12px;
+}
+.beena-co-field.filled  { background: #E1F5EE; }
+.beena-co-field.missing { background: #FCEBEB; }
+.beena-co-icon  { font-size: 13px; }
+.beena-co-label { color: #5F5E5A; }
+.beena-co-value {
+    color: #1A1A1A; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    max-width: 180px;
+}
+.beena-co-field.missing .beena-co-value { color: #791F1F; }
+.beena-checkout-progress {
+    font-size: 12px; color: #5F5E5A;
+    padding: 8px 9px; border-radius: 7px;
+    background: #FEFDF0; margin-bottom: 9px;
+}
+.beena-checkout-progress.done {
+    background: #E1F5EE; color: #085041;
+}
+
+.beena-quote-card {
+    background: linear-gradient(135deg,#FFFDF5,#FFF) !important;
+    border: 2px solid #F5C320 !important;
+    box-shadow: 0 3px 12px rgba(245,195,32,.2);
+}
+.beena-quote-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+}
+.beena-quote-tag {
+    font-size: 11px; font-weight: 700;
+    background: #F5C320; color: #412402;
+    padding: 4px 9px; border-radius: 5px;
+}
+.beena-quote-name {
+    font-size: 13px; font-weight: 700; color: #412402;
+}
+.beena-quote-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 11px; background: #FFF;
+    border: 1px solid #F1E3B7; border-radius: 8px;
+    font-size: 13px; color: #1A1A1A; margin-bottom: 9px;
+}
+.beena-quote-total strong { color: #854F0B; font-size: 15px; }
+.beena-quote-meta {
+    display: flex; flex-direction: column; gap: 4px;
+    font-size: 11px; color: #5F5E5A;
+    margin-bottom: 10px;
+}
+
+/* ── Mic button states (WhatsApp-style hold-to-record) ── */
+#beena-voice-btn {
+    transition: background .15s, transform .08s, color .15s;
+    color: #5F5E5A;
+}
+#beena-voice-btn svg { display: block; }
+#beena-voice-btn:hover {
+    background: rgba(245, 195, 32, 0.18);
+    color: #412402;
+}
+#beena-voice-btn.beena-mic-recording {
+    background: #E24B4A;
+    color: #FFFFFF;
+    transform: scale(1.12);
+    box-shadow: 0 0 0 0 rgba(226, 75, 74, 0.6);
+    animation: beenaMicPulse 1.2s ease-out infinite;
+}
+#beena-voice-btn.beena-mic-cancel {
+    background: #5F5E5A !important;
+    color: #FFFFFF;
+    animation: none;
+}
+@keyframes beenaMicPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(226, 75, 74, 0.65); }
+    70%  { box-shadow: 0 0 0 14px rgba(226, 75, 74, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(226, 75, 74, 0); }
+}
+
+/* Recording duration bubble above input */
+.beena-rec-bubble {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 14px;
+    background: linear-gradient(135deg, #FCEBEB, #FFFFFF);
+    border-top: 1px solid #E24B4A33;
+    font-size: 12px;
+    color: #791F1F;
+    font-weight: 600;
+}
+.beena-rec-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #E24B4A;
+    animation: beenaRecDot 0.9s ease-in-out infinite;
+}
+@keyframes beenaRecDot {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.35; }
+}
+.beena-rec-time {
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    font-weight: 700;
+}
+.beena-rec-hint {
+    margin-inline-start: auto;
+    font-size: 10px;
+    color: #888;
+    font-weight: 500;
+}
+
+/* TTS play/pause toggle is styled later in this file (search:
+   "Play / Pause toggle (TTS)") with the proper pill layout that
+   accommodates both the SVG icon and the label.
+   Kept here: the inline-text rule used by AI message bubbles. */
+.beena-msg-ai .beena-msg-text {
+    display: inline;
+}
+.beena-msg-ai .beena-tts-btn {
+    vertical-align: middle;
+    margin-inline-start: 6px;
+    margin-top: 0;
+}
+.beena-tts-btn svg { flex-shrink: 0; }
+
+/* ── Payment status card ─────────────────────────── */
+.beena-pay-status {
+    padding: 10px 12px !important;
+    background: #FFFDF5 !important;
+    border: 1px solid #F5E5A8 !important;
+    border-radius: 10px !important;
+    max-width: 92% !important;
+}
+.beena-pay-status-row {
+    display: flex; align-items: center; gap: 9px;
+    font-size: 13px; color: #412402;
+}
+.beena-pay-spinner {
+    width: 16px; height: 16px;
+    border: 2px solid #F1EFE7;
+    border-top-color: #F5C320;
+    border-radius: 50%;
+    animation: beenaSpin 0.8s linear infinite;
+}
+.beena-pay-status-hint {
+    font-size: 11px; color: #5F5E5A; margin-top: 5px;
+}
+.beena-pay-success {
+    display: flex; align-items: center; gap: 12px;
+    background: #E1F5EE; color: #085041;
+    padding: 8px 12px; border-radius: 8px;
+}
+.beena-pay-success-icon {
+    width: 30px; height: 30px;
+    background: #1D9E75; color: #FFFFFF;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+    animation: beenaPayPop 0.4s ease-out;
+}
+@keyframes beenaPayPop {
+    0%   { transform: scale(0); }
+    70%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+.beena-pay-failed {
+    background: #FCEBEB; color: #791F1F;
+    padding: 8px 12px; border-radius: 8px;
+    font-size: 13px;
+}
+.beena-pay-pending {
+    background: #FFFDF5; color: #854F0B;
+    padding: 8px 12px; border-radius: 8px;
+    font-size: 12px;
+}
+@keyframes beenaSpin { to { transform: rotate(360deg); } }
+
+/* ── Generic Dialog (in-chat modal) ─────────────── */
+.beena-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 1000000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    animation: beenaDialogFade .15s ease-out;
+}
+@keyframes beenaDialogFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+.beena-dialog {
+    background: #FFFFFF;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 920px;
+    max-height: 92vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 18px 56px rgba(0,0,0,0.4);
+    animation: beenaDialogSlide .2s ease-out;
+}
+@keyframes beenaDialogSlide {
+    from { transform: translateY(16px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+}
+.beena-dialog-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid #ECE9E1;
+    background: linear-gradient(180deg, #FFFDF5, #FFFFFF);
+}
+.beena-dialog-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #412402;
+}
+.beena-dialog-close {
+    background: transparent;
+    border: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #5F5E5A;
+    font-size: 18px;
+    line-height: 1;
+}
+.beena-dialog-close:hover { background: #F5F4F2; color: #1A1A1A; }
+.beena-dialog-body {
+    flex: 1;
+    overflow: hidden;
+    background: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+}
+.beena-dialog-iframe {
+    flex: 1;
+    width: 100%;
+    min-height: 60vh;
+    border: 0;
+}
+
+/* ── Cart line qty / delete controls ───────────── */
+.beena-cart-qty {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #FFFFFF;
+    border: 1px solid #ECE9E1;
+    border-radius: 6px;
+    padding: 1px;
+}
+.beena-qty-btn {
+    background: transparent;
+    border: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #412402;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .12s;
+}
+.beena-qty-btn:hover { background: #FEFDF0; }
+.beena-qty-val {
+    min-width: 22px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #1A1A1A;
+}
+.beena-qty-del {
+    background: transparent;
+    border: 0;
+    color: #791F1F;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 5px;
+    margin-inline-start: 6px;
+    transition: background .12s, transform .08s;
+}
+.beena-qty-del:hover { background: #FCEBEB; transform: scale(1.1); }
+
+/* ── Order tracking timeline ─────────────────────── */
+.beena-order-track {
+    padding: 12px !important;
+    max-width: 92% !important;
+    background: #FFFFFF !important;
+    border: 1px solid #ECE9E1 !important;
+    border-radius: 11px !important;
+}
+.beena-track-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 9px;
+    margin-bottom: 11px;
+    padding-bottom: 9px;
+    border-bottom: 1px dashed #ECE9E1;
+}
+.beena-track-name {
+    font-size: 13px; font-weight: 700; color: #412402;
+}
+.beena-track-meta {
+    font-size: 11px; color: #5F5E5A;
+    margin-top: 3px;
+    display: flex; gap: 12px; align-items: center;
+}
+.beena-track-amount { color: #854F0B; font-weight: 700; }
+.beena-track-state {
+    font-size: 11px; font-weight: 700;
+    padding: 3px 9px; border-radius: 5px;
+    white-space: nowrap;
+}
+.beena-track-state.active { background: #E6F1FB; color: #0C447C; }
+.beena-track-state.done   { background: #E1F5EE; color: #085041; }
+.beena-track-state.failed { background: #FCEBEB; color: #791F1F; }
+.beena-track-timeline {
+    display: grid;
+    grid-template-columns: repeat(9, auto);
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    padding: 4px 0 8px;
+}
+.beena-track-step {
+    text-align: center;
+    flex-shrink: 0;
+    min-width: 60px;
+}
+.beena-track-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #F5F4F2;
+    border: 2px solid #ECE9E1;
+    color: #BDB9B0;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto;
+    font-size: 14px;
+    transition: all .25s;
+}
+.beena-track-step.done    .beena-track-dot { background: #1D9E75; border-color: #1D9E75; color: #FFF; }
+.beena-track-step.current .beena-track-dot {
+    background: #F5C320; border-color: #F5C320; color: #412402;
+    animation: beenaTrackPulse 1.4s ease-in-out infinite;
+    transform: scale(1.08);
+}
+.beena-track-step.failed  .beena-track-dot { background: #E24B4A; border-color: #E24B4A; color: #FFF; }
+@keyframes beenaTrackPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 195, 32, 0.6); }
+    50%      { box-shadow: 0 0 0 8px rgba(245, 195, 32, 0); }
+}
+.beena-track-label {
+    font-size: 9px; color: #5F5E5A;
+    margin-top: 4px;
+    max-width: 64px;
+    line-height: 1.2;
+}
+.beena-track-step.done    .beena-track-label,
+.beena-track-step.current .beena-track-label { color: #412402; font-weight: 600; }
+.beena-track-bar {
+    height: 2px;
+    width: 100%;
+    min-width: 14px;
+    background: #ECE9E1;
+    align-self: center;
+    margin-top: -14px;
+}
+.beena-track-bar.done { background: #1D9E75; }
+.beena-track-driver {
+    background: #FEFDF0;
+    border-radius: 7px;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: #412402;
+    margin-top: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 7px;
+}
+.beena-track-call {
+    color: #1D9E75 !important;
+    text-decoration: none;
+    font-weight: 600;
+}
+.beena-track-tracking {
+    font-size: 11px; color: #5F5E5A; margin-top: 5px;
+    font-family: ui-monospace, monospace;
+}
+.beena-track-eta {
+    font-size: 11px; color: #854F0B; margin-top: 5px; font-weight: 600;
+}
+
+/* ── Company location card ───────────────────────── */
+.beena-cloc-card {
+    padding: 10px !important;
+    max-width: 92% !important;
+    background: #FFFFFF !important;
+    border: 1px solid #ECE9E1 !important;
+    border-radius: 11px !important;
+}
+.beena-cloc-head {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    padding-bottom: 9px;
+    border-bottom: 1px dashed #ECE9E1;
+    margin-bottom: 9px;
+}
+.beena-cloc-icon {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: #FFFDF5; color: #854F0B;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+    border: 1.5px solid #F5C320;
+}
+.beena-cloc-titles { flex: 1; min-width: 0; }
+.beena-cloc-name {
+    font-size: 14px; font-weight: 700; color: #412402;
+}
+.beena-cloc-addr {
+    font-size: 12px; color: #5F5E5A; margin-top: 3px; line-height: 1.4;
+}
+.beena-cloc-map {
+    border-radius: 9px;
+    overflow: hidden;
+    border: 1px solid #ECE9E1;
+    margin-bottom: 9px;
+}
+.beena-cloc-map iframe {
+    width: 100%;
+    height: 200px;
+    border: 0;
+    display: block;
+}
+.beena-cloc-photos {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    margin-bottom: 9px;
+    padding-bottom: 4px;
+}
+.beena-cloc-photo {
+    width: 110px; height: 80px;
+    object-fit: cover;
+    border-radius: 7px;
+    flex-shrink: 0;
+    cursor: zoom-in;
+    transition: transform .15s;
+}
+.beena-cloc-photo:hover { transform: scale(1.04); }
+.beena-cloc-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 9px;
+}
+.beena-cloc-meta-item {
+    background: #FAFAF7;
+    color: #412402 !important;
+    text-decoration: none !important;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.beena-cloc-meta-item:hover { background: #F5F4F2; color: #412402 !important; }
+.beena-cloc-actions {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
 /* ── Typing Indicator ─────────────────────────── */
 .beena-typing {
     display: flex;
@@ -328,13 +1841,52 @@ body[dir="rtl"] .beena-msg-user {
 /* ── Product Cards in Chat ────────────────────── */
 .beena-product-card {
     display: flex;
-    gap: 8px;
-    align-items: center;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
     background: #F9F8F5;
     border-radius: 8px;
     padding: 8px;
     margin-top: 5px;
 }
+
+/* ── Compact variant summary (list view) ─────────────────────────────
+   Replaces the per-card color/size chip rows. Three small swatch dots
+   + an "X colors" label keep multi-product lists clean. */
+.beena-variant-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+    padding: 4px 2px 0 2px;
+    border-top: 1px dashed #EFE7C8;
+    font-size: 11px;
+    color: #6B5C2A;
+}
+.beena-variant-grp {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.beena-color-mini {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 0 0 1px #fff inset;
+    flex-shrink: 0;
+}
+.beena-color-mini + .beena-color-mini {
+    margin-left: -4px;
+}
+.beena-variant-more {
+    font-size: 10px;
+    color: #8A7A2A;
+    margin-left: 2px;
+}
+.beena-variant-icon { font-size: 12px; line-height: 1; }
+.beena-variant-lbl  { font-size: 11px; }
+[dir="rtl"] .beena-color-mini + .beena-color-mini { margin-left: 0; margin-right: -4px; }
 
 .beena-product-card img {
     width: 40px;
@@ -665,4 +2217,456 @@ body[dir="rtl"] .beena-msg-user {
         outline: none;
         border-color: #F5C320;
     }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PHASE 10 — Professional widgets, RTL, traffic lights, nudge anim,
+              full-width cards, color/size chips, sign-in dialog,
+              tryon options replay, Play/Pause TTS
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── Traffic-light header buttons (macOS style) ─────────────────── */
+#beena-traffic-lights {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+body[dir="rtl"] #beena-traffic-lights {
+    margin-left: 0;
+    margin-right: 8px;
+}
+.beena-tl {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,.22);
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(0,0,0,.72);   /* glyph visible by default — affordance > minimalism */
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+    transition: filter .15s, transform .12s, color .15s, box-shadow .15s;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,.12);
+}
+.beena-tl > span {
+    pointer-events: none;
+    display: block;
+    transform: translateY(-1px);
+    text-shadow: 0 1px 0 rgba(255,255,255,.35);
+}
+.beena-tl-close { background: #FF5F57; }
+.beena-tl-min   { background: #FEBC2E; }
+.beena-tl-max   { background: #28C840; }
+.beena-tl:hover { color: rgba(0,0,0,.92); transform: scale(1.08); }
+.beena-tl:active { transform: scale(0.95); }
+.beena-tl:focus-visible {
+    outline: 2px solid rgba(0,0,0,.55);
+    outline-offset: 2px;
+}
+/* Override any older #id base styles so the colour + glyph from the
+   .beena-tl rules above win even with higher ID specificity. */
+#beena-traffic-lights #beena-max,
+#beena-traffic-lights #beena-min,
+#beena-traffic-lights #beena-close {
+    width: 18px;
+    height: 18px;
+    background-color: inherit;
+    color: rgba(0,0,0,.72);
+    opacity: 1;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 900;
+}
+#beena-traffic-lights #beena-max:hover,
+#beena-traffic-lights #beena-min:hover,
+#beena-traffic-lights #beena-close:hover {
+    color: rgba(0,0,0,.92);
+}
+
+/* ── Float-button nudge animations (config-driven) ──────────────── */
+@keyframes beenaBounce {
+    0%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-6px); }
+    50% { transform: translateY(0); }
+    75% { transform: translateY(-3px); }
+}
+@keyframes beenaShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-3px); }
+    40%, 80% { transform: translateX(3px); }
+}
+@keyframes beenaGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 195, 32, 0); }
+    50%      { box-shadow: 0 0 0 12px rgba(245, 195, 32, .35); }
+}
+#beena-float.beena-anim-bounce { animation: beenaBounce 1.5s ease-in-out infinite; }
+#beena-float.beena-anim-shake  { animation: beenaShake  1.0s ease-in-out infinite; }
+#beena-float.beena-anim-glow   { animation: beenaGlow   1.6s ease-in-out infinite; }
+/* "pulse" already exists as beenaPulse */
+#beena-float.beena-anim-pulse #beena-float-btn { animation: beenaPulse 1.6s ease-in-out infinite; }
+
+/* ── Full-width widget cards inside chat ───────────────────────── */
+.beena-msg-wide {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    border-radius: 14px !important;
+}
+.beena-tryon-card,
+.beena-fit-card,
+.beena-rev-wrap,
+.beena-checkout-card,
+.beena-cart-card,
+.beena-quote-card,
+.beena-payment-card,
+.beena-location-card,
+.beena-color-chip-row,
+.beena-size-chip-row,
+.beena-signin-card,
+.beena-meta-card,
+.beena-tryon-options {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box;
+}
+
+/* ── RTL bubble support (per-message direction) ─────────────────── */
+.beena-msg[dir="rtl"],
+.beena-msg.beena-rtl {
+    direction: rtl;
+    text-align: right;
+}
+.beena-msg[dir="ltr"],
+.beena-msg.beena-ltr {
+    direction: ltr;
+    text-align: left;
+}
+#beena-chat.beena-input-rtl #beena-input {
+    direction: rtl;
+    text-align: right;
+}
+
+/* ── Color chips row (when Beena mentions colors) ──────────────── */
+.beena-color-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 4px;
+    padding: 10px 12px;
+    background: #FFFDF7;
+    border: 1px solid #F0E7C8;
+    border-radius: 12px;
+}
+.beena-color-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px 6px 6px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #ECE3C2;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform .12s, box-shadow .12s, border-color .12s;
+}
+.beena-color-chip:hover {
+    transform: translateY(-1px);
+    border-color: #F5C320;
+    box-shadow: 0 4px 10px rgba(245, 195, 32, .22);
+}
+.beena-color-chip.beena-out {
+    opacity: .55;
+    text-decoration: line-through;
+}
+.beena-color-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,.12);
+    background-image: linear-gradient(135deg, var(--c1, #ddd) 50%, var(--c2, #ddd) 50%);
+    flex-shrink: 0;
+}
+
+/* ── Size chips row ────────────────────────────────────────────── */
+.beena-size-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0 4px;
+    padding: 10px 12px;
+    background: #FCFAF2;
+    border: 1px solid #ECE3C2;
+    border-radius: 12px;
+}
+.beena-size-chip {
+    min-width: 38px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1.5px solid #ECE3C2;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--beena-dark, #412402);
+    text-align: center;
+    cursor: pointer;
+    transition: transform .12s, border-color .12s, background .12s;
+}
+.beena-size-chip:hover {
+    transform: translateY(-1px);
+    border-color: #F5C320;
+    background: #FFF8DD;
+}
+.beena-size-chip.beena-out {
+    opacity: .45;
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+.beena-size-chip.beena-recommended {
+    border-color: #1D9E75;
+    background: #E1F5EE;
+    color: #085041;
+    box-shadow: 0 2px 6px rgba(29, 158, 117, .25);
+}
+
+/* ── Availability badge ────────────────────────────────────────── */
+.beena-stock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+.beena-stock-badge.in    { background: #E1F5EE; color: #085041; }
+.beena-stock-badge.low   { background: #FEF3DC; color: #7A4D08; }
+.beena-stock-badge.cs    { background: #E6F1FB; color: #084D80; }
+.beena-stock-badge.out   { background: #FCEBEB; color: #791F1F; }
+
+/* ── Address-mode picker (manual vs geo-IP) ────────────────────── */
+.beena-mode-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 10px 0;
+}
+.beena-mode-btn {
+    border: 1.5px solid #ECE3C2;
+    background: #fff;
+    border-radius: 12px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform .12s, border-color .12s, box-shadow .12s;
+    font-family: inherit;
+}
+.beena-mode-btn:hover {
+    transform: translateY(-2px);
+    border-color: #F5C320;
+    box-shadow: 0 6px 14px rgba(245, 195, 32, .22);
+}
+.beena-mode-btn .beena-mode-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+.beena-mode-btn .beena-mode-title { font-size: 13px; font-weight: 700; color: #412402; }
+.beena-mode-btn .beena-mode-sub   { font-size: 11px; color: #777; margin-top: 2px; }
+@media (max-width: 380px) {
+    .beena-mode-picker { grid-template-columns: 1fr; }
+}
+
+/* ── Sign-in dialog card ───────────────────────────────────────── */
+.beena-signin-card {
+    background: linear-gradient(135deg, #FFF9E5 0%, #FFFDF7 100%);
+    border: 1px solid #F0E7C8;
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+}
+.beena-signin-icon { font-size: 30px; }
+.beena-signin-title { font-weight: 800; color: #412402; margin: 6px 0 4px; }
+.beena-signin-sub   { font-size: 12px; color: #777; margin-bottom: 10px; }
+.beena-signin-btns  { display:flex; gap:8px; justify-content:center; flex-wrap: wrap; }
+.beena-signin-btn   {
+    background: #412402;
+    color: #fff;
+    border: 0;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: filter .12s;
+}
+.beena-signin-btn:hover { filter: brightness(1.15); }
+.beena-signin-btn.beena-signin-secondary { background: #F5C320; color: #412402; }
+.beena-signin-status {
+    font-size: 12px;
+    color: #1D9E75;
+    margin-top: 8px;
+    min-height: 16px;
+}
+
+/* ── Play / Pause toggle (TTS) ─────────────────────────────────── */
+.beena-tts-btn {
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid rgba(0,0,0,.12);
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: #412402;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    transition: background .12s, border-color .12s;
+}
+.beena-tts-btn:hover { background: rgba(245,195,32,.15); border-color: #F5C320; }
+.beena-tts-btn.beena-tts-playing {
+    background: #FFF5C7;
+    border-color: #F5C320;
+    animation: beenaPulse 1.2s ease-in-out infinite;
+}
+
+/* ── Tryon options replay row ──────────────────────────────────── */
+.beena-tryon-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(0,0,0,.08);
+}
+
+/* ── Dialog reachability tweaks ────────────────────────────────── */
+#beena-dialog .beena-dialog-iframe {
+    width: 100%;
+    min-height: 70vh;
+    border: 0;
+}
+
+/* ── Maximized mode keeps widgets full-width ───────────────────── */
+#beena-chat.maximized .beena-msg-wide,
+#beena-chat.maximized .beena-checkout-card,
+#beena-chat.maximized .beena-cart-card,
+#beena-chat.maximized .beena-tryon-card,
+#beena-chat.maximized .beena-fit-card {
+    max-width: 100% !important;
+}
+
+/* ── Buy-with-AI button polish ─────────────────────────────────── */
+.beena-buy-ai-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    background: linear-gradient(135deg, #F5C320 0%, #E4A800 100%);
+    color: #412402 !important;
+    font-weight: 800;
+    border: 0;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 4px 10px rgba(245, 195, 32, .25);
+    transition: transform .12s, box-shadow .15s;
+    font-family: inherit;
+}
+.beena-buy-ai-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(245, 195, 32, .35);
+}
+.beena-buy-ai-btn:active { transform: translateY(0); }
+
+/* ════════════════════════════════════════════════════════════════
+   PHASE 11 — Voice Call (Phase B) UI + voice transcribing bubble
+   ════════════════════════════════════════════════════════════════ */
+
+/* 📞 button in the header */
+.beena-voice-call-btn {
+    background: rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.18);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 16px;
+    line-height: 1;
+    color: #412402;
+    cursor: pointer;
+    margin-inline-end: 8px;
+    transition: background .15s, transform .12s;
+}
+.beena-voice-call-btn:hover {
+    background: rgba(245,195,32,.35);
+    transform: scale(1.05);
+}
+body[dir="rtl"] .beena-voice-call-btn { margin-inline-end: 0; margin-inline-start: 8px; }
+
+/* Live call dialog body */
+.beena-vc-wrap {
+    padding: 28px 18px 22px;
+    text-align: center;
+    color: #412402;
+}
+.beena-vc-ring {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #FFF8DD 0%, #F5C320 100%);
+    margin: 0 auto 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px;
+    box-shadow: 0 6px 18px rgba(245,195,32,.45);
+}
+.beena-vc-pulse {
+    position: absolute; inset: -8px;
+    border-radius: 50%;
+    border: 2px solid #F5C320;
+    opacity: 0;
+    animation: beenaVcPulse 1.6s ease-out infinite;
+}
+@keyframes beenaVcPulse {
+    0%   { transform: scale(0.85); opacity: 0.9; }
+    100% { transform: scale(1.35); opacity: 0; }
+}
+.beena-vc-status {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+.beena-vc-timer {
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: #777;
+    margin-bottom: 18px;
+}
+.beena-vc-end {
+    background: #E24B4A;
+    color: #fff;
+    border: 0;
+    padding: 10px 22px;
+    border-radius: 999px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    transition: filter .15s;
+}
+.beena-vc-end:hover { filter: brightness(1.1); }
+
+/* "Transcribing…" placeholder bubble */
+.beena-voice-transcribing {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    font-style: italic;
+    opacity: .85;
 }

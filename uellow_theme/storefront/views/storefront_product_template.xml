@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_view_inherit_ppc_desc" model="ir.ui.view">
+        <field name="name">product.template.form.inherit.ppc.desc</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="وصف الصفحة" name="ppc_desc_tab">
+                    <group string="الوصف بالعربية">
+                        <field name="website_description_ar"
+                               widget="html"
+                               nolabel="1"
+                               colspan="2"/>
+                    </group>
+                    <group string="English Description">
+                        <field name="website_description_en"
+                               widget="html"
+                               nolabel="1"
+                               colspan="2"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

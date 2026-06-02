@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V4 — Glass &amp; Aurora — Uellow Reviews</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+    --pur:#c084fc; --pur-d:#9333ea;
+    --pin:#f472b6; --pin-d:#db2777;
+    --amb:#fbbf24; --amb-d:#d97706;
+    --tea:#5eead4; --tea-d:#0d9488;
+    --glass-bg:rgba(255,255,255,.55);
+    --glass-bd:rgba(255,255,255,.40);
+    --glass-shadow:rgba(147,51,234,.18);
+    --txt:#1e1b4b; --txt2:#5b21b6; --txt3:#7c3aed;
+}
+body{
+    font-family:'Inter',-apple-system,sans-serif;
+    background:
+        radial-gradient(800px 600px at 0% 0%,rgba(192,132,252,.45),transparent 50%),
+        radial-gradient(700px 500px at 100% 30%,rgba(244,114,182,.40),transparent 50%),
+        radial-gradient(900px 600px at 50% 100%,rgba(251,191,36,.35),transparent 60%),
+        linear-gradient(135deg,#fdf4ff,#fce7f3,#fef3c7);
+    min-height:100vh;
+    padding:32px 16px;
+    color:var(--txt);
+    line-height:1.5;
+}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--txt2);text-decoration:none;font-size:13px;font-weight:600;margin-bottom:20px}
+.back:hover{color:var(--pur-d)}
+.container{max-width:1100px;margin:0 auto}
+.title-bar{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.title-bar-pill{padding:5px 14px;border-radius:999px;background:rgba(255,255,255,.55);backdrop-filter:blur(12px);border:1px solid var(--glass-bd);color:var(--pur-d);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px}
+.title-bar h2{font-size:26px;font-weight:900;background:linear-gradient(135deg,var(--pur-d),var(--pin-d));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* Glass utility */
+.glass{background:var(--glass-bg);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--glass-bd);box-shadow:0 8px 32px -8px var(--glass-shadow)}
+
+/* HERO */
+.hero{border-radius:24px;overflow:hidden;margin-bottom:18px}
+.hero-grid{display:grid;grid-template-columns:1fr 1.5fr 1.3fr;gap:20px;padding:24px}
+.h-lbl{font-size:10.5px;font-weight:800;color:var(--pur-d);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;display:inline-block;padding:4px 10px;background:rgba(255,255,255,.55);border-radius:999px;border:1px solid var(--glass-bd)}
+.hero-score{display:flex;flex-direction:column;gap:8px}
+.score-big{display:flex;align-items:baseline;gap:5px;margin-top:6px}
+.score-num{font-size:62px;font-weight:900;letter-spacing:-2.5px;line-height:.95;background:linear-gradient(135deg,var(--pur-d) 0%,var(--pin-d) 50%,var(--amb-d) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.score-out{font-size:16px;font-weight:700;color:var(--txt2)}
+.score-stars{display:inline-flex;gap:3px;font-size:22px;color:var(--amb);text-shadow:0 0 12px rgba(251,191,36,.50)}
+.score-stars .e{color:rgba(94,21,168,.20)}
+.score-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;background:rgba(255,255,255,.65);backdrop-filter:blur(8px);border:1px solid var(--glass-bd);color:var(--pur-d);font-size:12.5px;font-weight:700;margin-top:4px}
+.score-pill strong{font-weight:900}
+.score-cta{margin-top:12px;display:inline-flex;align-items:center;gap:7px;padding:12px 20px;border-radius:14px;background:linear-gradient(135deg,var(--pur),var(--pin) 50%,var(--amb));color:#fff;font-weight:800;font-size:13.5px;border:none;cursor:pointer;text-decoration:none;box-shadow:0 8px 24px -8px var(--pur-d);transition:all .2s}
+.score-cta:hover{transform:translateY(-2px);box-shadow:0 12px 32px -10px var(--pin-d)}
+
+/* Bars */
+.bars{display:flex;flex-direction:column;gap:7px}
+.brow{display:grid;grid-template-columns:32px 1fr 32px 36px;align-items:center;gap:10px}
+.bstars{font-size:12px;font-weight:800;color:var(--txt);display:inline-flex;align-items:center;gap:2px}
+.bstars i{color:var(--amb)}
+.btrack{position:relative;height:8px;background:rgba(255,255,255,.45);border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.50)}
+.bfill{height:100%;border-radius:999px;transition:width .5s ease}
+.r5 .bfill{background:linear-gradient(90deg,var(--tea),var(--tea-d));box-shadow:0 0 10px var(--tea)}
+.r4 .bfill{background:linear-gradient(90deg,#a3e635,#65a30d);box-shadow:0 0 10px #a3e635}
+.r3 .bfill{background:linear-gradient(90deg,var(--amb),var(--amb-d));box-shadow:0 0 10px var(--amb)}
+.r2 .bfill{background:linear-gradient(90deg,#fb923c,#ea580c);box-shadow:0 0 10px #fb923c}
+.r1 .bfill{background:linear-gradient(90deg,#f87171,#dc2626);box-shadow:0 0 10px #f87171}
+.bcnt{font-size:12px;font-weight:800;color:var(--txt);text-align:right;font-variant-numeric:tabular-nums}
+.bpct{font-size:10.5px;font-weight:700;color:var(--pur-d);text-align:right;padding:2px 6px;background:rgba(255,255,255,.45);border-radius:5px;border:1px solid var(--glass-bd)}
+
+/* Stats */
+.hero-stats{display:flex;flex-direction:column;gap:8px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{padding:13px;border-radius:14px;background:rgba(255,255,255,.55);backdrop-filter:blur(12px);border:1px solid var(--glass-bd);display:flex;flex-direction:column;gap:3px;transition:all .15s;position:relative;overflow:hidden}
+.stat:hover{transform:translateY(-2px);box-shadow:0 8px 20px -10px var(--glass-shadow)}
+.stat::before{content:"";position:absolute;top:-20%;right:-20%;width:80px;height:80px;border-radius:999px;background:var(--accent);filter:blur(40px);opacity:.45}
+.stat-i{color:var(--accent-fg);font-size:14px;position:relative;z-index:1}
+.stat-n{font-size:22px;font-weight:900;color:var(--accent-fg);line-height:1;letter-spacing:-.5px;position:relative;z-index:1}
+.stat-l{font-size:11px;font-weight:600;color:var(--txt2);line-height:1.2;position:relative;z-index:1}
+.s1{--accent:var(--amb);--accent-fg:var(--amb-d)}
+.s2{--accent:var(--tea);--accent-fg:var(--tea-d)}
+.s3{--accent:var(--pin);--accent-fg:var(--pin-d)}
+.s4{--accent:var(--pur);--accent-fg:var(--pur-d)}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:16px;margin-bottom:16px;flex-wrap:wrap}
+.chips{display:inline-flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.50);backdrop-filter:blur(8px);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--glass-bd);transition:all .12s}
+.chip:hover{background:rgba(255,255,255,.80);color:var(--pur-d)}
+.chip.on{background:linear-gradient(135deg,var(--pur),var(--pin));color:#fff;border-color:transparent;box-shadow:0 4px 12px -4px var(--pur-d)}
+.chip-c{font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:999px;background:rgba(255,255,255,.55);color:var(--pur-d)}
+.chip.on .chip-c{background:rgba(255,255,255,.30);color:#fff}
+.sort{display:inline-flex;align-items:center;gap:8px}
+.sort-lbl{font-size:12px;font-weight:600;color:var(--txt2)}
+.sort-sel{padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.55);backdrop-filter:blur(8px);border:1px solid var(--glass-bd);font-size:12px;font-weight:700;color:var(--pur-d);cursor:pointer}
+
+/* REVIEW CARDS */
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}
+.card-rv{position:relative;border-radius:18px;padding:20px;background:rgba(255,255,255,.55);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--glass-bd);box-shadow:0 4px 20px -8px var(--glass-shadow);transition:all .2s;overflow:hidden}
+.card-rv::before{content:"";position:absolute;top:-30%;right:-15%;width:160px;height:160px;border-radius:999px;background:var(--accent);filter:blur(60px);opacity:.40;z-index:0}
+.card-rv > *{position:relative;z-index:1}
+.card-rv[data-r="5"]{--accent:var(--tea)}
+.card-rv[data-r="4"]{--accent:#a3e635}
+.card-rv[data-r="3"]{--accent:var(--amb)}
+.card-rv[data-r="2"]{--accent:#fb923c}
+.card-rv[data-r="1"]{--accent:#f87171}
+.card-rv:hover{transform:translateY(-3px);box-shadow:0 12px 32px -10px var(--glass-shadow)}
+.head{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;margin-bottom:12px}
+.av{width:44px;height:44px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:#fff;border:2px solid rgba(255,255,255,.60);box-shadow:0 4px 12px -4px var(--glass-shadow)}
+.av-5{background:linear-gradient(135deg,var(--tea),var(--tea-d))}
+.av-4{background:linear-gradient(135deg,#a3e635,#65a30d)}
+.av-3{background:linear-gradient(135deg,var(--amb),var(--amb-d))}
+.av-2{background:linear-gradient(135deg,#fb923c,#ea580c)}
+.av-1{background:linear-gradient(135deg,#f87171,#dc2626)}
+.info{min-width:0}
+.nm{font-size:14px;font-weight:800;color:var(--txt);display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.v{display:inline-flex;align-items:center;gap:3px;color:var(--tea-d);font-size:10.5px;font-weight:700;background:rgba(94,234,212,.30);padding:2px 8px;border-radius:999px;backdrop-filter:blur(6px)}
+.meta{margin-top:3px;font-size:11.5px;color:var(--txt2);display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
+.flag{width:14px;height:10px;border-radius:2px;display:inline-block}
+.sep{opacity:.5}
+.stars{display:inline-flex;gap:1px;font-size:14px;color:var(--amb)}
+.stars .e{color:rgba(94,21,168,.20)}
+.tt{font-size:14.5px;font-weight:800;color:var(--txt);line-height:1.3;margin-bottom:8px;background:linear-gradient(135deg,var(--txt),var(--pur-d));-webkit-background-clip:text;background-clip:text;color:transparent}
+.txt{font-size:12.5px;color:var(--txt2);line-height:1.6;margin-bottom:12px}
+.imgs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.imgs img{width:62px;height:62px;border-radius:12px;border:2px solid rgba(255,255,255,.60);object-fit:cover;transition:all .15s;box-shadow:0 2px 8px -3px var(--glass-shadow)}
+.imgs img:hover{transform:scale(1.08) rotate(2deg)}
+.foot{display:inline-flex;align-items:center;gap:7px;padding-top:10px;border-top:1px solid rgba(255,255,255,.40);flex-wrap:wrap}
+.helpful{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.50);backdrop-filter:blur(8px);color:var(--txt);font-size:11.5px;font-weight:700;border:1px solid var(--glass-bd);cursor:pointer}
+.helpful:hover{background:linear-gradient(135deg,var(--pur),var(--pin));color:#fff;border-color:transparent}
+.helpful-c{color:var(--pur-d);font-weight:800}
+.helpful:hover .helpful-c{color:#fff}
+.tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;font-size:10.5px;font-weight:800;line-height:1;background:rgba(255,255,255,.45);backdrop-filter:blur(6px);color:var(--pur-d);border:1px solid var(--glass-bd)}
+.tag i{color:var(--amb-d)}
+.tag-ph{color:var(--pin-d)}
+.tag-ph i{color:var(--pin)}
+
+/* VIEW ALL CTA */
+.viewall{display:flex;justify-content:center;margin:22px 0 8px}
+.viewall a{display:inline-flex;align-items:center;gap:14px;padding:16px 28px;border-radius:18px;background:linear-gradient(135deg,var(--pur),var(--pin) 50%,var(--amb));color:#fff;text-decoration:none;border:none;box-shadow:0 12px 36px -12px var(--pur-d);transition:all .2s;min-width:300px;position:relative;overflow:hidden}
+.viewall a::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,var(--pin),var(--amb),var(--pur));opacity:0;transition:opacity .3s}
+.viewall a:hover::before{opacity:1}
+.viewall a > *{position:relative;z-index:1}
+.viewall a:hover{transform:translateY(-2px);box-shadow:0 16px 40px -12px var(--pin-d)}
+.va-ico{width:38px;height:38px;border-radius:999px;background:rgba(255,255,255,.30);backdrop-filter:blur(8px);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;border:1px solid rgba(255,255,255,.40)}
+.va-lbl{display:flex;flex-direction:column;gap:2px;flex:1}
+.va-m{font-size:14px;font-weight:900;color:#fff;line-height:1.2}
+.va-s{font-size:11px;font-weight:600;color:rgba(255,255,255,.85);line-height:1.2}
+.va-s strong{color:#fff;font-weight:900;margin-right:3px}
+.va-ar{color:#fff;font-size:18px;transition:transform .2s}
+.viewall a:hover .va-ar{transform:translateX(5px)}
+
+@media (max-width:992px){.hero-grid{grid-template-columns:1fr 1fr}.hero-stats{grid-column:1/-1}.sgrid{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:575.98px){.hero-grid{grid-template-columns:1fr;padding:18px}.sgrid{grid-template-columns:1fr 1fr}.score-num{font-size:50px}.list{grid-template-columns:1fr}.viewall a{min-width:0;width:100%}}
+</style>
+</head>
+<body>
+<div class="container">
+    <a href="index.html" class="back"><i class="bi bi-arrow-left"></i> Back to gallery</a>
+
+    <div class="title-bar">
+        <span class="title-bar-pill">Variant 4</span>
+        <h2>Glass &amp; Aurora — modern glassmorphism</h2>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero glass">
+        <div class="hero-grid">
+            <div class="hero-score">
+                <span class="h-lbl">Customer Reviews</span>
+                <div class="score-big"><span class="score-num">4.7</span><span class="score-out">/5</span></div>
+                <div class="score-stars">★★★★<span style="background:linear-gradient(90deg,var(--amb) 70%,rgba(94,21,168,.20) 70%);-webkit-background-clip:text;background-clip:text;color:transparent">★</span></div>
+                <span class="score-pill"><i class="bi bi-patch-check-fill" style="color:var(--tea-d)"></i><strong>127</strong> verified reviews</span>
+                <a class="score-cta"><i class="bi bi-pencil-square"></i> Write a Review</a>
+            </div>
+
+            <div>
+                <span class="h-lbl">Star breakdown</span>
+                <div class="bars">
+                    <div class="brow r5"><span class="bstars">5 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:75%"></div></div><span class="bcnt">95</span><span class="bpct">75%</span></div>
+                    <div class="brow r4"><span class="bstars">4 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:17%"></div></div><span class="bcnt">22</span><span class="bpct">17%</span></div>
+                    <div class="brow r3"><span class="bstars">3 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:5%"></div></div><span class="bcnt">6</span><span class="bpct">5%</span></div>
+                    <div class="brow r2"><span class="bstars">2 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:2%"></div></div><span class="bcnt">3</span><span class="bpct">2%</span></div>
+                    <div class="brow r1"><span class="bstars">1 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:1%"></div></div><span class="bcnt">1</span><span class="bpct">1%</span></div>
+                </div>
+            </div>
+
+            <div class="hero-stats">
+                <span class="h-lbl">At a glance</span>
+                <div class="sgrid">
+                    <div class="stat s1"><i class="bi bi-heart-fill stat-i"></i><div class="stat-n">89%</div><div class="stat-l">Recommend</div></div>
+                    <div class="stat s2"><i class="bi bi-patch-check-fill stat-i"></i><div class="stat-n">102</div><div class="stat-l">Verified buys</div></div>
+                    <div class="stat s3"><i class="bi bi-images stat-i"></i><div class="stat-n">47</div><div class="stat-l">With photos</div></div>
+                    <div class="stat s4"><i class="bi bi-fire stat-i"></i><div class="stat-n">75%</div><div class="stat-l">5-star</div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar glass">
+        <div class="chips">
+            <button class="chip on">All<span class="chip-c">127</span></button>
+            <button class="chip">5 ★<span class="chip-c">95</span></button>
+            <button class="chip">4 ★<span class="chip-c">22</span></button>
+            <button class="chip">Critical<span class="chip-c">10</span></button>
+            <button class="chip"><i class="bi bi-images"></i> Photos<span class="chip-c">47</span></button>
+            <button class="chip"><i class="bi bi-patch-check"></i> Verified<span class="chip-c">102</span></button>
+        </div>
+        <div class="sort">
+            <label class="sort-lbl">Sort by</label>
+            <select class="sort-sel"><option>Most helpful</option><option>Most recent</option><option>Highest rated</option><option>Lowest rated</option></select>
+        </div>
+    </div>
+
+    <!-- REVIEW CARDS -->
+    <div class="list">
+        <div class="card-rv" data-r="5">
+            <div class="head">
+                <div class="av av-5">S</div>
+                <div class="info">
+                    <div class="nm">Sarah M. <span class="v"><i class="bi bi-shield-check"></i> Verified</span></div>
+                    <div class="meta"><span class="flag" style="background:linear-gradient(180deg,#dc2626 33%,#fff 33% 66%,#dc2626 66%)"></span> United States <span class="sep">·</span> 3 days ago</div>
+                </div>
+                <div class="stars">★★★★★</div>
+            </div>
+            <div class="tt">Absolutely love it — exceeds expectations!</div>
+            <p class="txt">Bought this for my morning runs and it's been a game changer. Battery lasts a full week with everyday use, heart rate sensor is surprisingly accurate, and the build quality feels much more premium than the price suggests.</p>
+            <div class="imgs">
+                <img src="https://picsum.photos/seed/r1a/120" alt="">
+                <img src="https://picsum.photos/seed/r1b/120" alt="">
+                <img src="https://picsum.photos/seed/r1c/120" alt="">
+            </div>
+            <div class="foot">
+                <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(42)</span></button>
+                <span class="tag">5 <i class="bi bi-star-fill"></i></span>
+                <span class="tag tag-ph"><i class="bi bi-images"></i> 3</span>
+            </div>
+        </div>
+
+        <div class="card-rv" data-r="5">
+            <div class="head">
+                <div class="av av-5">A</div>
+                <div class="info">
+                    <div class="nm">Ahmed K. <span class="v"><i class="bi bi-shield-check"></i> Verified</span></div>
+                    <div class="meta"><span class="flag" style="background:linear-gradient(180deg,#007a3d 33%,#fff 33% 66%,#000 66%)"></span> Kuwait <span class="sep">·</span> 1 week ago</div>
+                </div>
+                <div class="stars">★★★★★</div>
+            </div>
+            <div class="tt">Excellent quality for the price point</div>
+            <p class="txt">The product arrived quickly and beautifully packaged. Sound quality is outstanding and noise isolation exceeded my expectations for this price range. Battery comfortably lasts 7+ hours.</p>
+            <div class="imgs">
+                <img src="https://picsum.photos/seed/r2a/120" alt="">
+                <img src="https://picsum.photos/seed/r2b/120" alt="">
+            </div>
+            <div class="foot">
+                <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(28)</span></button>
+                <span class="tag">5 <i class="bi bi-star-fill"></i></span>
+                <span class="tag tag-ph"><i class="bi bi-images"></i> 2</span>
+            </div>
+        </div>
+
+        <div class="card-rv" data-r="4">
+            <div class="head">
+                <div class="av av-4">M</div>
+                <div class="info">
+                    <div class="nm">Maria L.</div>
+                    <div class="meta"><span class="flag" style="background:linear-gradient(180deg,#aa151b 33%,#f1bf00 33% 66%,#aa151b 66%)"></span> Spain <span class="sep">·</span> 2 weeks ago</div>
+                </div>
+                <div class="stars">★★★★<span class="e">★</span></div>
+            </div>
+            <div class="tt">Good value for the price</div>
+            <p class="txt">Solid product overall. Setup was easy and the app is intuitive. Only minor complaint is that the screen could be brighter outdoors, but otherwise very happy.</p>
+            <div class="foot">
+                <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(15)</span></button>
+                <span class="tag">4 <i class="bi bi-star-fill"></i></span>
+            </div>
+        </div>
+
+        <div class="card-rv" data-r="3">
+            <div class="head">
+                <div class="av av-3">J</div>
+                <div class="info">
+                    <div class="nm">John D.</div>
+                    <div class="meta"><span class="flag" style="background:#012169"></span> United Kingdom <span class="sep">·</span> 1 month ago</div>
+                </div>
+                <div class="stars">★★★<span class="e">★</span><span class="e">★</span></div>
+            </div>
+            <div class="tt">Decent but not amazing</div>
+            <p class="txt">Works as advertised but nothing special. Connection drops occasionally and the included cable is too short. Returns process was smooth though.</p>
+            <div class="foot">
+                <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(8)</span></button>
+                <span class="tag">3 <i class="bi bi-star-fill"></i></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW ALL -->
+    <div class="viewall">
+        <a href="#"><span class="va-ico"><i class="bi bi-eye-fill"></i></span><span class="va-lbl"><span class="va-m">See all previous reviews</span><span class="va-s"><strong>127</strong>reviews · archive</span></span><i class="bi bi-arrow-right va-ar"></i></a>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mobile_page_mgr,mobile.page mgr,model_mobile_page,base.group_system,1,1,1,1
+access_mobile_page_usr,mobile.page user,model_mobile_page,base.group_user,1,1,1,0
+access_mobile_page_pub,mobile.page public,model_mobile_page,base.group_portal,1,0,0,0
+access_mobile_page_version_mgr,mobile.page.version mgr,model_mobile_page_version,base.group_system,1,1,1,1
+access_mobile_page_version_usr,mobile.page.version user,model_mobile_page_version,base.group_user,1,0,0,0
+access_mobile_navbar_mgr,mobile.navbar mgr,model_mobile_navbar,base.group_system,1,1,1,1
+access_mobile_navbar_usr,mobile.navbar user,model_mobile_navbar,base.group_user,1,1,1,0
+access_mobile_theme_preset_mgr,mobile.theme.preset mgr,model_mobile_theme_preset,base.group_system,1,1,1,1
+access_mobile_theme_preset_usr,mobile.theme.preset user,model_mobile_theme_preset,base.group_user,1,1,1,0
+access_mobile_theme_preset_pub,mobile.theme.preset public,model_mobile_theme_preset,base.group_portal,1,0,0,0

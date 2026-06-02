@@ -3,16 +3,13 @@
     "name": "Uellow Mobile API",
     "version": "18.0.1.0.0",
     "category": "API/Mobile",
-    "summary": "Mobile API endpoints and models for Uellow e-commerce platform",
+    "summary": "[DEPRECATED — use uellow_mobile_manager v2] Mobile API for Uellow",
     "description": """
-        Uellow Mobile API Module
-        ========================
-        Provides REST API endpoints and data models for the Uellow Flutter mobile app:
-        - Authentication (JWT, Firebase, Social Login)
-        - Device Registration & Push Notifications
-        - Wallet System
-        - Wishlist Management
-        - Product View History
+        DEPRECATED 2026-05-30
+        =====================
+        Superseded by /api/mobile/v2/* in `uellow_mobile_manager`.
+        See DEPRECATED.md for the migration plan + endpoint map.
+        Sunset target: 2026-10-01.
     """,
     "author": "Uellow",
     "website": "https://uellow.com",

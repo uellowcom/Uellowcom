@@ -1,0 +1,1981 @@
+// =============================================================================
+//   Uellow Marketplace Header v5
+//   --------------------------------------------------------------------------
+//   What changed in this revision:
+//     • Killed the 100vw bleed trick that caused a phantom horizontal
+//       scrollbar — the <header> is already full-width as a child of <body>,
+//       so each tier just uses width:100% and inherits the slab background.
+//     • Unified the catbar colour with the rest of the header so no seam
+//       can read between the main bar and the category bar.
+//     • Mega menu split into TWO sibling columns (rail + panels). The
+//       panels live in their own column and can grow as tall as the rail
+//       without being clipped by overflow:auto.
+//     • Full RTL support via logical properties (inset-inline-start,
+//       border-inline-start, margin-inline-start) — works for Arabic and
+//       any future RTL locale Odoo adds.
+//     • Real flag PNGs from flagcdn.com — no more dependence on system
+//       emoji fonts.
+//     • Defensive `overflow-x: clip` on <html> so absolute / fixed children
+//       can never inflate the document width.
+// =============================================================================
+
+$uc-bg          : #131921;
+$uc-bg-soft     : #131921;        // unified — kills the seam
+$uc-bg-hover    : #232f3e;
+$uc-yellow      : #F5C320;
+$uc-yellow-soft : rgba(245, 195, 32, .15);
+$uc-brand-dark  : #412402;
+$uc-text        : #ffffff;
+$uc-muted       : rgba(255, 255, 255, .78);
+$uc-line-soft   : rgba(255, 255, 255, .06);
+$uc-radius      : 6px;
+$uc-shadow      : 0 24px 48px -14px rgba(0, 0, 0, .55);
+
+:root {
+    --uc-bg: #{$uc-bg};
+    --uc-yellow: #{$uc-yellow};
+    --uc-logo-h: 38px;
+}
+
+// =============================================================================
+//   Document-level guard — `clip` prevents 100vw children from creating a
+//   horizontal scrollbar but still lets them paint edge-to-edge.
+//   --------------------------------------------------------------------------
+//   `#wrapwrap` is theme_prime's main page wrapper. It commonly carries
+//   `overflow: hidden` to corral floats, which would clip our header's
+//   100vw bleed inside the parent's narrower box. We force it back to
+//   `visible` on the X axis; <html>'s `overflow-x: clip` still suppresses
+//   the body-level scrollbar.
+// =============================================================================
+html { overflow-x: clip; }
+body { overflow-x: clip; }
+#wrapwrap {
+    overflow-x: visible !important;
+    overflow-y: visible !important;
+    overflow: visible !important;
+    max-width: none !important;
+}
+
+// =============================================================================
+//   <header> shell — the SOLE source of dark slab
+//   --------------------------------------------------------------------------
+//   The previous revision relied on per-tier `width: 100vw` bleed bands to
+//   paint the slab, then nuked the navbar background to let it show
+//   through. That collided with theme_prime's `.o_cc` colour-combination
+//   classes on individual tiers — the catbar ended up with no painted
+//   background.
+//
+//   This revision flips the strategy:
+//     • <header> itself is the dark slab — it's a direct child of <body>
+//       so it's already viewport-wide.
+//     • Every child tier (preheader, mainbar, catbar) is transparent so
+//       the slab shows through unbroken — no chance of one tier being
+//       lighter than its neighbours.
+//     • The site's `.container` is 1320px wide at xxl; `.uc-inner`
+//       matches that so the header content lines up perfectly with the
+//       rest of the page.
+// =============================================================================
+header.uc-header {
+    background: #131921 !important;
+    background-color: #131921 !important;
+    color: $uc-text;
+    border: 0 !important;
+    box-shadow: none !important;
+    position: relative;
+    z-index: 1040;
+    overflow: visible !important;
+    padding: 0 !important;
+
+    // CRITICAL — theme_prime's "boxed" layout caps `#wrapwrap > *` at
+    // 600/780/1200px depending on breakpoint. That cap was throttling
+    // our header to that same narrow width. Force a full-viewport
+    // bleed regardless: max-width none + 100vw + symmetric negative
+    // margins. `html { overflow-x: clip }` keeps it scrollbar-free.
+    max-width: none !important;
+    min-width: 100vw !important;
+    width: 100vw !important;
+    margin-inline-start: calc(50% - 50vw) !important;
+    margin-inline-end: calc(50% - 50vw) !important;
+
+    > .container, > .container-fluid {
+        max-width: none !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+    a { text-decoration: none; }
+
+    // EVERY direct tier is transparent → slab paints through. The
+    // selectors below cover theme_prime's `.o_cc`, `.o_colored_level`,
+    // Bootstrap's `.navbar-light` and our own classes so no inherited
+    // rule can repaint a tier white or grey.
+    > div, > nav,
+    > div.o_cc, > nav.o_cc,
+    > div.o_colored_level, > nav.o_colored_level,
+    nav.navbar, nav.navbar-light, nav.navbar-expand-lg,
+    .uc-preheader, .uc-mainbar, .uc-catbar {
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        box-shadow: none !important;
+        border: 0 !important;
+    }
+}
+
+// `.uc-bleed` is now a no-op — kept as a class hook for theme dev mode
+// inspection. The slab background lives on <header> itself.
+.uc-bleed { width: 100%; }
+
+// Match Bootstrap `.container` at xxl (1320px) so the header content
+// lines up perfectly with the rest of the site.
+.uc-inner {
+    width: 100%;
+    max-width: 1320px;
+    margin-inline: auto;
+    padding-inline: 12px;     // matches Bootstrap container side gutter
+}
+
+// =============================================================================
+//   Hover dropdowns (bidirectional)
+// =============================================================================
+.uc-hover {
+    position: relative;
+
+    > .uc-hover-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        inset-inline-end: 0;           // default: opens toward start
+        min-width: 320px;
+        background: #fff;
+        color: #212529;
+        border-radius: 12px;
+        box-shadow: $uc-shadow;
+        padding: 16px;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-6px) scale(.98);
+        transform-origin: top right;
+        transition: opacity .18s ease, transform .18s ease,
+                    visibility 0s linear .18s;
+        z-index: 1080;
+    }
+    &:hover > .uc-hover-menu,
+    &:focus-within > .uc-hover-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0) scale(1);
+        transition-delay: 0s;
+    }
+    &::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        inset-inline: 0;
+        height: 8px;
+    }
+}
+[dir="rtl"] .uc-hover > .uc-hover-menu { transform-origin: top left; }
+
+// Left-anchored variant — menu opens toward end (right in LTR / left in RTL)
+.uc-hover-left > .uc-hover-menu {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+    transform-origin: top left;
+}
+[dir="rtl"] .uc-hover-left > .uc-hover-menu { transform-origin: top right; }
+
+// =============================================================================
+//   Tier 1 — Preheader
+// =============================================================================
+.uc-preheader {
+    background: var(--uc-bg, $uc-bg) !important;
+    color: $uc-text;
+    font-size: 12.5px;
+    border: 0 !important;
+    box-shadow: none !important;
+
+    .uc-pre-row { min-height: 26px; }
+
+    .uc-pre-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: $uc-muted;
+        padding: 4px 8px;
+        border-radius: 4px;
+        line-height: 1.1;
+        transition: background .12s ease, color .12s ease;
+
+        &:hover, &:focus { color: $uc-yellow; background: rgba(255, 255, 255, .05); }
+        strong { color: $uc-text; font-weight: 600; }
+    }
+    .uc-pre-link-pill {
+        border: 1px solid rgba(255, 255, 255, .10);
+        padding: 4px 10px;
+    }
+    .uc-pre-promo { color: $uc-muted; }
+    .uc-pre-dot   { color: rgba(255, 255, 255, .25); }
+    .uc-pre-divider {
+        width: 1px;
+        height: 16px;
+        background: rgba(255, 255, 255, .08);
+        align-self: center;
+    }
+    .uc-lang-dropdown .btn,
+    .uc-lang-dropdown button {
+        background: transparent !important;
+        border: 1px solid rgba(255, 255, 255, .10) !important;
+        color: $uc-text !important;
+        border-radius: 4px;
+        padding: 3px 10px !important;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+}
+
+// ----- Address chip -----
+.uc-addr-chip {
+    .uc-addr-flag {
+        font-size: 18px;
+        min-width: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .uc-addr-small { font-size: 10px; opacity: .7; letter-spacing: .3px; text-transform: uppercase; }
+    .uc-addr-short { font-size: 13px; font-weight: 700; color: $uc-text; }
+}
+.uc-addr-menu {
+    width: 360px;
+    padding: 14px;
+
+    .uc-addr-head {
+        display: flex; align-items: center; gap: 8px;
+        font-weight: 600; font-size: 13px; color: $uc-bg;
+        padding-bottom: 10px; margin-bottom: 10px;
+        border-bottom: 1px solid #eef0f3;
+        i { color: $uc-yellow; }
+    }
+    .uc-addr-current {
+        display: flex; align-items: flex-start; gap: 12px;
+        background: lighten($uc-yellow, 38%);
+        border: 1px solid rgba($uc-yellow, .4);
+        border-radius: 8px;
+        padding: 12px;
+        .uc-addr-current-flag { font-size: 28px; min-width: 32px; line-height: 1; }
+        .uc-addr-current-body {
+            display: flex; flex-direction: column; gap: 4px;
+            strong { font-size: 14px; color: $uc-bg; }
+            small  { font-size: 12px; color: #495057; line-height: 1.4; }
+        }
+    }
+    .uc-addr-list-head {
+        font-size: 11px; text-transform: uppercase; color: #6c757d;
+        letter-spacing: .5px; margin: 14px 0 6px;
+    }
+    .uc-addr-list { display: flex; flex-direction: column; gap: 4px; }
+    .uc-addr-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 8px 10px; border-radius: 6px;
+        color: #212529;
+        transition: background .12s ease;
+        &:hover { background: #f8f9fa; color: $uc-bg; }
+        .uc-addr-item-flag { font-size: 20px; min-width: 24px; line-height: 1; }
+        .uc-addr-item-body { display: flex; flex-direction: column; line-height: 1.25; }
+        strong { font-size: 13px; }
+        small  { font-size: 11px; color: #6c757d; }
+    }
+    .uc-addr-foot {
+        margin-top: 12px; padding-top: 10px;
+        border-top: 1px solid #eef0f3;
+        display: flex; justify-content: flex-end;
+    }
+    .uc-addr-cta {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 14px; border-radius: 6px;
+        font-size: 13px; font-weight: 600;
+        transition: background .12s ease, transform .12s ease;
+    }
+    .uc-addr-cta-primary {
+        background: $uc-bg; color: #fff;
+        &:hover { background: $uc-bg-hover; color: $uc-yellow; transform: translateY(-1px); }
+    }
+}
+
+// ----- App popover -----
+.uc-app-menu { width: 420px; padding: 18px; }
+.uc-app-grid {
+    display: grid; grid-template-columns: 160px 1fr; gap: 16px; align-items: start;
+}
+.uc-app-qr {
+    text-align: center;
+    .uc-qr-box {
+        width: 160px; height: 160px;
+        background: #fff;
+        border: 1px solid #e9ecef; border-radius: 8px;
+        display: grid; place-items: center; overflow: hidden;
+    }
+    .uc-qr-box img { width: 100%; height: 100%; object-fit: contain; }
+    .uc-app-qr-hint { display: block; margin-top: 6px; color: #6c757d; font-size: 11px; }
+}
+.uc-app-info {
+    .uc-app-title { display: block; color: $uc-bg; font-size: 16px; margin-bottom: 4px; }
+    .uc-app-text  { color: #495057; font-size: 12px; line-height: 1.5; margin: 0 0 12px; }
+}
+.uc-app-badges {
+    display: flex; flex-direction: column; gap: 8px;
+    .uc-app-badge {
+        display: inline-flex; align-items: center; gap: 10px;
+        padding: 6px 12px;
+        background: $uc-bg; color: #fff;
+        border-radius: 6px;
+        transition: filter .12s ease, transform .12s ease;
+        &:hover { filter: brightness(1.3); color: #fff; transform: translateY(-1px); }
+        i { font-size: 22px; line-height: 1; }
+        span { display: flex; flex-direction: column; line-height: 1.15; }
+        small { font-size: 9px; opacity: .8; text-transform: uppercase; letter-spacing: .5px; }
+        b { font-size: 13px; }
+    }
+}
+
+// ----- Websites switcher -----
+.uc-sites-menu { width: 460px; padding: 16px; }
+.uc-sites-head {
+    display: flex; align-items: center; gap: 8px;
+    color: $uc-bg; font-weight: 600; font-size: 13px;
+    padding-bottom: 10px; border-bottom: 1px solid #eef0f3; margin-bottom: 10px;
+    i { color: $uc-yellow; }
+}
+.uc-sites-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.uc-site-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px;
+    border-radius: 6px;
+    color: #212529;
+    border: 1px solid transparent;
+    font-size: 13px; line-height: 1.2;
+    transition: background .12s ease, border-color .12s ease, transform .12s ease;
+
+    &:hover {
+        background: lighten($uc-yellow, 38%);
+        border-color: rgba($uc-yellow, .35);
+        color: $uc-bg;
+        transform: translateY(-1px);
+    }
+    &.is-active {
+        background: rgba($uc-yellow, .18);
+        border-color: rgba($uc-yellow, .55);
+        font-weight: 600;
+    }
+    .uc-site-flag-img {
+        width: 24px; height: 18px;
+        object-fit: cover; border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, .12);
+        flex-shrink: 0;
+    }
+    .uc-site-flag-emoji {
+        // Native OS emoji renders crisp + zero HTTP requests (vs flagcdn.com)
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 24px; height: 18px; line-height: 1;
+        font-size: 18px; flex-shrink: 0;
+        font-family: "Apple Color Emoji", "Segoe UI Emoji",
+                     "Noto Color Emoji", "Twemoji Mozilla", sans-serif;
+    }
+    .uc-site-flag-globe {
+        width: 24px; height: 18px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: $uc-yellow;
+        background: lighten($uc-yellow, 36%);
+        border-radius: 2px;
+        flex-shrink: 0;
+        font-size: 12px;
+    }
+    .uc-site-name { flex: 1; }
+    .uc-site-check { color: $uc-yellow; }
+}
+.uc-sites-foot {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid #eef0f3;
+    color: #6c757d;
+    display: flex; align-items: center; gap: 6px; font-size: 11px;
+    i { color: $uc-yellow; }
+}
+
+// =============================================================================
+//   Tier 2 — Main bar
+// =============================================================================
+.uc-mainbar {
+    background: var(--uc-bg, $uc-bg) !important;
+    color: $uc-text;
+    padding: 0;
+    border: 0 !important;
+    box-shadow: none !important;
+
+    .uc-mainbar-row { min-height: 46px; padding: 4px 0; }
+}
+
+.uc-brand-link  { display: inline-flex; align-items: center; flex-shrink: 0; }
+.uc-brand-img   {
+    height: var(--uc-logo-h, 34px);
+    width: auto; max-height: 44px; object-fit: contain;
+}
+
+.uc-search {
+    max-width: 720px;
+
+    .uc-search-wrap {
+        display: flex; align-items: stretch;
+        background: #fff; border-radius: $uc-radius; overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+        cursor: pointer;
+        text-decoration: none;
+        transition: box-shadow .15s ease;
+
+        &:hover {
+            box-shadow: 0 0 0 3px rgba($uc-yellow, .35), 0 6px 18px rgba(0, 0, 0, .25);
+        }
+    }
+    .uc-search-icon { background: #fff; color: #6c757d; align-items: center; padding: 0 12px; font-size: 14px; }
+    .uc-search-input-faux {
+        flex: 1;
+        background: #fff;
+        color: #6c757d;
+        padding: 0 12px;
+        font-size: 13px;
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .uc-search-btn {
+        flex: 0 0 auto;
+        background: var(--uc-yellow, $uc-yellow); color: $uc-brand-dark;
+        font-weight: 700; padding: 0 24px;
+        font-size: 13.5px; letter-spacing: .25px;
+        display: inline-flex; align-items: center; justify-content: center;
+        // Round the OUTER right edge so the button echoes the wrap's
+        // rounded corner; left side stays square so it butts cleanly
+        // against the input.
+        border-radius: 0 #{$uc-radius} #{$uc-radius} 0;
+        border: 0;
+        transition: filter .12s ease;
+        &:hover { filter: brightness(.94); }
+    }
+    .uc-search-hot {
+        margin-top: 4px; color: $uc-muted; font-size: 11.5px;
+        flex-wrap: wrap;
+        .uc-hot-label { color: rgba(255, 255, 255, .55); }
+        .uc-hot-label i { color: $uc-yellow; }
+        a {
+            color: $uc-muted; border-bottom: 1px dashed transparent; padding: 0 2px;
+            &:hover { color: $uc-yellow; border-bottom-color: $uc-yellow; }
+        }
+    }
+}
+
+.uc-actions {
+    flex-shrink: 0;
+
+    .uc-action {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: transparent; border: 1px solid transparent;
+        color: $uc-text;
+        padding: 6px 10px;
+        border-radius: $uc-radius;
+        line-height: 1.1;
+        cursor: pointer;
+        transition: background .15s ease, border-color .15s ease,
+                    color .15s ease, transform .15s ease;
+
+        &:hover {
+            background: rgba(255, 255, 255, .06);
+            border-color: rgba($uc-yellow, .55);
+            color: $uc-yellow;
+            transform: translateY(-1px);
+        }
+    }
+    .uc-action-icon { font-size: 20px; }
+    .uc-action-text {
+        display: flex; flex-direction: column; text-align: start;
+        small  { font-size: 10.5px; opacity: .8; line-height: 1.1; }
+        strong { font-size: 13px; font-weight: 700; line-height: 1.1; }
+    }
+
+    // ----- Cart — compact white pill (v15) ------------------------------
+    // Clean white pill that pops against the dark header. Just the
+    // essentials: gold icon disc, red count badge, dark bold total.
+    // 36px tall so it fits inside the mainbar without crowding it.
+    .uc-action-cart {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        height: 36px;
+        padding: 3px 14px 3px 3px;
+        border-radius: 999px;
+        background: #ffffff !important;
+        border: 1px solid rgba(0, 0, 0, .06);
+        box-shadow:
+            0 2px 6px -2px rgba(0, 0, 0, .35),
+            inset 0 1px 0 rgba(255, 255, 255, .9);
+        color: #1a232e !important;
+        text-decoration: none !important;
+        line-height: 1;
+        transition: transform .15s ease, box-shadow .15s ease,
+                    border-color .15s ease, background .15s ease;
+
+        .uc-cart-disc {
+            width: 30px; height: 30px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ffe45e 0%, $uc-yellow 60%, #c69b00 100%);
+            color: $uc-brand-dark;
+            display: grid; place-items: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, .55),
+                inset 0 -2px 0 rgba(170, 100, 0, .25);
+        }
+        .uc-cart-count {
+            position: absolute;
+            top: -3px;
+            inset-inline-end: -4px;
+            min-width: 17px; height: 17px;
+            padding: 0 4px;
+            background: #c81212;
+            color: #fff;
+            border-radius: 999px;
+            font-size: 9.5px;
+            font-weight: 800;
+            line-height: 13px;
+            text-align: center;
+            border: 2px solid #fff;
+        }
+        .uc-cart-total {
+            color: #1a232e !important;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: .2px;
+            white-space: nowrap;
+        }
+        &:hover {
+            background: #fffaee !important;
+            border-color: rgba($uc-yellow, .65);
+            transform: translateY(-1px);
+            box-shadow:
+                0 6px 14px -4px rgba(0, 0, 0, .35),
+                0 0 0 3px rgba($uc-yellow, .15);
+            color: $uc-brand-dark !important;
+            .uc-cart-total { color: $uc-brand-dark !important; }
+        }
+        &:active { transform: translateY(0); }
+    }
+
+    .uc-action-beena {
+        background: linear-gradient(135deg, #2a3447 0%, #1a232e 100%);
+        border-color: rgba($uc-yellow, .35);
+        position: relative;
+        overflow: hidden;
+
+        .uc-action-icon { color: $uc-yellow; }
+        .uc-action-text strong { color: $uc-yellow; }
+        .uc-action-text small  { color: rgba(255, 255, 255, .75); }
+
+        &::before {
+            content: "";
+            position: absolute; inset: 0;
+            background: linear-gradient(120deg,
+                transparent 30%,
+                rgba($uc-yellow, .25) 50%,
+                transparent 70%);
+            transform: translateX(-100%);
+            animation: uc-shimmer 4.5s ease-in-out infinite;
+            pointer-events: none;
+        }
+        &:hover {
+            background: linear-gradient(135deg, #3a4659 0%, #232f3e 100%);
+            border-color: $uc-yellow;
+            color: $uc-yellow;
+            transform: translateY(-1px);
+            .uc-action-icon { animation: uc-spin-once .6s ease; }
+        }
+    }
+    @keyframes uc-shimmer {
+        0%   { transform: translateX(-100%); }
+        50%  { transform: translateX(100%); }
+        100% { transform: translateX(100%); }
+    }
+    @keyframes uc-spin-once {
+        from { transform: rotate(0); } to { transform: rotate(360deg); }
+    }
+
+    .uc-badge {
+        position: absolute;
+        top: -4px;
+        inset-inline-end: -4px;
+        background: #e53935; color: #fff;
+        border-radius: 999px;
+        padding: 0 6px;
+        font-size: 10.5px; font-weight: 700; line-height: 18px;
+        min-width: 18px; text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, .25);
+        animation: uc-badge-pulse 2.4s ease-in-out infinite;
+    }
+    .uc-action-cart .uc-badge {
+        background: $uc-brand-dark;
+        color: $uc-yellow;
+    }
+    @keyframes uc-badge-pulse {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.08); }
+    }
+}
+
+// =============================================================================
+//   Tier 3 — Category bar (unified colour = no seam)
+// =============================================================================
+.uc-catbar {
+    background: var(--uc-bg, $uc-bg) !important;
+    color: $uc-text;
+    padding: 0;
+    border: 0 !important;
+    box-shadow: none !important;
+
+    .uc-catbar-row { min-height: 34px; flex-wrap: wrap; }
+}
+
+.uc-catdrop {
+    .uc-catdrop-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: var(--uc-yellow, $uc-yellow);
+        color: $uc-brand-dark;
+        border: 0;
+        font-weight: 700; font-size: 13.5px;
+        padding: 9px 18px;
+        cursor: pointer;
+        transition: filter .12s ease;
+        &:hover { filter: brightness(.94); }
+    }
+    > .uc-hover-menu {
+        top: 100%;
+        inset-inline-start: 0;
+        inset-inline-end: auto;
+        width: 1080px;
+        max-width: calc(100vw - 32px);   // never overflow viewport
+        padding: 0;
+        border-radius: 0 0 14px 14px;
+        overflow: hidden;
+        transform-origin: top left;
+    }
+}
+[dir="rtl"] .uc-catdrop > .uc-hover-menu { transform-origin: top right; }
+
+// =============================================================================
+//   Mega menu — sibling columns (rail | panels)
+// =============================================================================
+.uc-catmega {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 500px;
+    background: #fff;
+}
+
+.uc-catmega-rail {
+    background: #fafbfc;
+    padding: 10px 0;
+    max-height: 540px;
+    overflow-y: auto;
+    border-inline-end: 1px solid #eef0f3;
+    list-style: none;
+    margin: 0;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba($uc-yellow, .55) transparent;
+    &::-webkit-scrollbar { width: 6px; }
+    &::-webkit-scrollbar-thumb { background: rgba($uc-yellow, .55); border-radius: 4px; }
+}
+
+.uc-catmega-parent {
+    position: relative;
+    list-style: none;
+
+    > a {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 14px;
+        color: #212529;
+        font-size: 13px; line-height: 1.2;
+        border-inline-start: 3px solid transparent;
+        transition: background .12s ease, border-color .12s ease, color .12s ease;
+        cursor: pointer;
+    }
+    .uc-catmega-img {
+        width: 28px; height: 28px;
+        object-fit: contain; border-radius: 4px;
+        background: #fff;
+    }
+    .uc-catmega-emoji {
+        width: 28px; height: 28px;
+        display: grid; place-items: center;
+        color: $uc-bg; background: lighten($uc-yellow, 35%); border-radius: 4px;
+    }
+    .uc-catmega-name { flex: 1; }
+    .uc-catmega-chev {
+        color: #adb5bd; font-size: 12px;
+        transition: transform .15s ease, color .15s ease;
+    }
+    [dir="rtl"] & .uc-catmega-chev { transform: scaleX(-1); }
+
+    // Active state — set by JS on mouseenter, also default on first
+    &.is-active > a,
+    &:hover > a {
+        background: #fff;
+        border-inline-start-color: var(--uc-yellow, $uc-yellow);
+        color: $uc-bg;
+        .uc-catmega-chev {
+            transform: translateX(3px);
+            color: $uc-yellow;
+        }
+    }
+    [dir="rtl"] &.is-active > a .uc-catmega-chev,
+    [dir="rtl"] &:hover    > a .uc-catmega-chev {
+        transform: scaleX(-1) translateX(3px);
+    }
+}
+
+// ----- Panels column -----
+.uc-catmega-panels {
+    position: relative;
+    background: #fff;
+    overflow: hidden;
+}
+.uc-catmega-panel {
+    display: none;
+    grid-template-columns: 1fr 280px;
+    min-height: 500px;
+
+    &.is-active { display: grid; }
+}
+
+.uc-catmega-body {
+    padding: 20px 22px;
+    display: flex; flex-direction: column; gap: 18px;
+    overflow: hidden;
+}
+
+.uc-catmega-section { display: flex; flex-direction: column; gap: 10px; }
+.uc-catmega-section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #eef0f3;
+}
+.uc-catmega-section-title {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: $uc-bg;
+    font-size: 13px; font-weight: 700; letter-spacing: .2px;
+    i { color: $uc-yellow; }
+    strong { color: $uc-bg; }
+}
+.uc-catmega-viewall {
+    display: inline-flex; align-items: center; gap: 4px;
+    color: $uc-bg; font-size: 12px; font-weight: 600;
+    padding: 4px 10px; border-radius: 999px;
+    background: $uc-yellow-soft;
+    transition: background .12s ease;
+    &:hover { background: rgba($uc-yellow, .3); color: $uc-bg; }
+    .fa-arrow-right { transition: transform .15s ease; }
+    &:hover .fa-arrow-right { transform: translateX(2px); }
+}
+[dir="rtl"] .uc-catmega-viewall .fa-arrow-right { transform: scaleX(-1); }
+[dir="rtl"] .uc-catmega-viewall:hover .fa-arrow-right { transform: scaleX(-1) translateX(2px); }
+
+.uc-catmega-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+.uc-catmega-sub {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    color: #495057;
+    font-size: 12.5px; line-height: 1.3;
+    border: 1px solid transparent;
+    background: #fff;
+    opacity: 0;
+    transform: translateY(4px);
+    animation: uc-fade-up .35s ease forwards;
+    transition: background .12s ease, border-color .12s ease,
+                color .12s ease, transform .12s ease;
+
+    &:hover {
+        background: lighten($uc-yellow, 38%);
+        border-color: rgba($uc-yellow, .45);
+        color: $uc-bg;
+        transform: translateY(-1px) !important;
+    }
+}
+@keyframes uc-fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.uc-catmega-sub-img {
+    width: 34px; height: 34px;
+    object-fit: contain; border-radius: 6px;
+    background: #f8f9fa; flex-shrink: 0;
+}
+.uc-catmega-sub-img-empty {
+    display: grid; place-items: center;
+    color: $uc-yellow;
+    background: lighten($uc-yellow, 36%);
+}
+.uc-catmega-sub-name { flex: 1; }
+
+.uc-catmega-empty {
+    display: flex; align-items: center; gap: 10px;
+    padding: 18px; border-radius: 10px;
+    background: lighten($uc-yellow, 36%);
+    color: $uc-bg;
+    font-size: 13px;
+    i { color: $uc-yellow; font-size: 20px; }
+}
+
+// ----- Brand strip -----
+.uc-catmega-brands { display: flex; flex-direction: column; gap: 10px; }
+.uc-catmega-brand-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+.uc-catmega-brand {
+    display: grid; place-items: center;
+    padding: 10px;
+    border: 1px solid #eef0f3;
+    border-radius: 8px;
+    background: #fff;
+    transition: border-color .12s ease, transform .12s ease, background .12s ease;
+    min-height: 52px;
+
+    img { max-width: 100%; max-height: 32px; object-fit: contain; filter: grayscale(.2); }
+    span {
+        color: #495057;
+        font-size: 12px; font-weight: 600;
+        text-align: center;
+    }
+
+    &:hover {
+        border-color: rgba($uc-yellow, .55);
+        background: lighten($uc-yellow, 39%);
+        transform: translateY(-2px);
+        img { filter: grayscale(0); }
+        span { color: $uc-bg; }
+    }
+}
+
+// ----- Featured promo card -----
+.uc-catmega-feature {
+    position: relative;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 22px;
+    color: $uc-text;
+    background:
+        linear-gradient(135deg, rgba($uc-bg, .92), rgba($uc-yellow, .55)),
+        linear-gradient(135deg, $uc-bg, $uc-bg-hover);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+    border-inline-start: 1px solid #eef0f3;
+    text-decoration: none !important;
+    isolation: isolate;
+
+    &::after {
+        content: "";
+        position: absolute; inset: -25%;
+        background: radial-gradient(circle at 20% 20%, rgba($uc-yellow, .25), transparent 50%);
+        opacity: .9; pointer-events: none;
+        transition: transform .6s ease;
+    }
+    &:hover::after { transform: scale(1.05) translate(4%, 4%); }
+
+    .uc-catmega-feature-eyebrow {
+        display: inline-block;
+        background: rgba($uc-yellow, .9);
+        color: $uc-brand-dark;
+        font-size: 10.5px; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 1px;
+        padding: 3px 10px; border-radius: 999px;
+        align-self: flex-start;
+        margin-bottom: 12px;
+    }
+    .uc-catmega-feature-title {
+        display: block;
+        color: $uc-text;
+        font-size: 22px; font-weight: 800; line-height: 1.1;
+        margin-bottom: 8px;
+    }
+    .uc-catmega-feature-text {
+        display: block;
+        color: rgba(255, 255, 255, .82);
+        font-size: 12px; line-height: 1.4;
+        margin-bottom: 14px;
+    }
+    .uc-catmega-feature-cta {
+        align-self: flex-start;
+        display: inline-flex; align-items: center; gap: 6px;
+        background: var(--uc-yellow, $uc-yellow); color: $uc-brand-dark;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-weight: 700; font-size: 13px;
+        transition: transform .15s ease, filter .15s ease;
+    }
+    &:hover .uc-catmega-feature-cta {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+    [dir="rtl"] & .fa-arrow-right { transform: scaleX(-1); }
+}
+
+// =============================================================================
+//   Horizontal top menu
+// =============================================================================
+.uc-catmenu-wrap {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
+}
+.uc-catmenu {
+    display: flex; align-items: stretch;
+    margin: 0; padding: 0;
+    list-style: none; gap: 0;
+    flex-wrap: wrap;          // every menu item stays visible; never clipped
+
+    > .uc-catmenu-item { list-style: none; flex-shrink: 0; }
+
+    .uc-catmenu-link {
+        display: inline-flex; align-items: center;
+        color: $uc-muted !important;
+        font-size: 13px; font-weight: 500;
+        padding: 11px 12px !important;
+        line-height: 1;
+        position: relative;
+        white-space: nowrap;
+        transition: color .12s ease;
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset-inline: 12px;
+            bottom: 6px;
+            height: 2px;
+            background: var(--uc-yellow, $uc-yellow);
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform .18s ease;
+        }
+        &:hover, &:focus {
+            color: $uc-yellow !important;
+            background: transparent !important;
+            &::after { transform: scaleX(1); }
+        }
+        &.active {
+            color: $uc-yellow !important;
+            &::after { transform: scaleX(1); }
+        }
+    }
+}
+
+.uc-catbar-promo {
+    align-self: center;
+    color: $uc-yellow !important;
+    background: $uc-yellow-soft;
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 12.5px;
+    transition: background .12s ease;
+    &:hover { background: rgba($uc-yellow, .25); }
+}
+
+// ─── Today's Deals card with countdown ─────────────────────────────
+.uc-deals-card {
+    // Pin to the END of the catbar regardless of how many menu items
+    // wrap above. Auto-margin in the flex row pushes us to the edge.
+    margin-inline-start: auto !important;
+    align-self: center;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 3px 10px 4px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #c81212 0%, #ff4d4d 100%);
+    color: #fff !important;
+    text-decoration: none !important;
+    box-shadow: 0 4px 12px -3px rgba(200, 18, 18, .45),
+                inset 0 1px 0 rgba(255, 255, 255, .12);
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    position: relative;
+    overflow: hidden;
+
+    // Subtle moving shine to draw the eye
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg,
+            transparent 30%,
+            rgba(255, 255, 255, .18) 50%,
+            transparent 70%);
+        transform: translateX(-100%);
+        animation: uc-deals-shine 5s ease-in-out infinite;
+        pointer-events: none;
+    }
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px -6px rgba(200, 18, 18, .55),
+                    inset 0 1px 0 rgba(255, 255, 255, .18);
+        filter: brightness(1.04);
+        color: #fff !important;
+    }
+}
+@keyframes uc-deals-shine {
+    0%   { transform: translateX(-100%); }
+    60%  { transform: translateX(100%); }
+    100% { transform: translateX(100%); }
+}
+
+.uc-deals-cd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    line-height: 1;
+}
+.uc-deals-cd-box {
+    background: rgba(0, 0, 0, .35);
+    color: #fff;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10.5px;
+    font-weight: 800;
+    min-width: 22px;
+    text-align: center;
+    letter-spacing: .3px;
+    border: 1px solid rgba(255, 255, 255, .12);
+}
+.uc-deals-cd-sep {
+    color: rgba(255, 255, 255, .8);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.uc-deals-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1;
+}
+.uc-deals-icon {
+    color: #ffe45e;
+    font-size: 13px;
+}
+.uc-deals-label {
+    color: #fff;
+    font-weight: 800;
+    font-size: 12.5px;
+    letter-spacing: .25px;
+    white-space: nowrap;
+}
+.uc-deals-chev {
+    color: rgba(255, 255, 255, .85);
+    font-size: 11px;
+    transition: transform .15s ease;
+}
+.uc-deals-card:hover .uc-deals-chev { transform: translateX(3px); }
+[dir="rtl"] .uc-deals-chev { transform: scaleX(-1); }
+[dir="rtl"] .uc-deals-card:hover .uc-deals-chev { transform: scaleX(-1) translateX(3px); }
+
+// ─── Search autocomplete dropdown ──────────────────────────────────
+.uc-search { position: relative; }   // anchor for the suggest box
+
+.uc-search-input {
+    flex: 1; border: 0; outline: 0;
+    background: #fff; color: #212529;
+    padding: 0 12px;
+    font-size: 13px;
+    min-height: 36px;
+    width: 100%;
+}
+
+.uc-search-suggest {
+    position: absolute;
+    top: calc(100% + 6px);
+    inset-inline: 0;
+    background: #fff;
+    color: #212529;
+    border-radius: 10px;
+    box-shadow: 0 24px 48px -14px rgba(0, 0, 0, .35);
+    overflow: hidden;
+    max-height: 480px;
+    overflow-y: auto;
+    z-index: 1070;
+
+    &[hidden] { display: none; }
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba($uc-yellow, .55) transparent;
+    &::-webkit-scrollbar { width: 6px; }
+    &::-webkit-scrollbar-thumb { background: rgba($uc-yellow, .55); border-radius: 4px; }
+}
+.uc-sg-section { padding: 6px 0; border-bottom: 1px solid #f1f3f5; }
+.uc-sg-section:last-child { border-bottom: 0; }
+.uc-sg-head {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    color: #6c757d;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    i { color: $uc-yellow; }
+}
+.uc-sg-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 14px;
+    color: #212529;
+    text-decoration: none;
+    transition: background .12s ease;
+
+    &:hover { background: lighten($uc-yellow, 38%); }
+}
+.uc-sg-img {
+    width: 32px; height: 32px;
+    object-fit: contain;
+    border-radius: 5px;
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+.uc-sg-img-fa {
+    display: grid; place-items: center;
+    color: $uc-yellow;
+    background: lighten($uc-yellow, 36%);
+}
+.uc-sg-name { flex: 1; font-size: 13px; line-height: 1.3; }
+.uc-sg-prod { display: flex; flex-direction: column; flex: 1; }
+.uc-sg-empty {
+    display: flex; align-items: center; gap: 8px;
+    padding: 14px;
+    color: #6c757d;
+    font-size: 12.5px;
+    i { color: $uc-yellow; }
+}
+.uc-sg-all {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: $uc-bg;
+    color: #fff !important;
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .12s ease, color .12s ease;
+    i { color: $uc-yellow; }
+    &:hover { background: $uc-bg-hover; color: $uc-yellow !important; }
+}
+[dir="rtl"] .uc-sg-all .fa-arrow-right { transform: scaleX(-1); }
+
+// =============================================================================
+//   Mobile bottom navigation
+//   --------------------------------------------------------------------------
+//   A single fixed bar living above iOS safe-area, with two server-side
+//   variants. Heavy use of `position: relative` + absolute children so the
+//   Beena disc can float above the bar while staying inside the nav grid
+//   for sane keyboard order. Every animation is GPU-friendly (transform +
+//   opacity only) so phones don't drop frames.
+// =============================================================================
+$umn-bg          : #ffffff;
+$umn-bg-soft     : #fafbfc;
+$umn-yellow      : #F5C320;
+$umn-yellow-deep : #b58200;
+$umn-brand-dark  : #412402;
+$umn-text        : #1d2530;
+$umn-muted       : #6c757d;
+$umn-line        : #eef0f3;
+$umn-height      : 64px;
+
+@media (max-width: 991.98px) {
+    body { padding-bottom: calc(#{$umn-height} + env(safe-area-inset-bottom, 0px) + 6px); }
+    // Tame theme_prime's old bottom strip so it doesn't double-stack
+    .tp-bottombar-component, #tp-bottombar { display: none !important; }
+    // Beena lives in the centre disc on mobile. Park its launcher
+    // OFFSCREEN (not display:none) so programmatic clicks from the
+    // bottom-nav trigger continue to fire its event listeners.
+    #beena-float-btn, .beena-float-btn {
+        position: fixed !important;
+        inset: auto auto -200px auto !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transform: scale(0) !important;
+    }
+}
+
+// =============================================================================
+//   Universal loading state — spinner overlay used by mobnav buttons
+// =============================================================================
+.uc-is-loading {
+    position: relative;
+    pointer-events: none;
+    cursor: progress;
+
+    > *:not(.uc-mobnav-beena-ring):not(.uc-mobnav-beena-pulse) {
+        opacity: 0 !important;
+        transition: opacity .12s ease;
+    }
+    &::after {
+        content: "";
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 22px; height: 22px;
+        margin: -11px;
+        border-radius: 50%;
+        border: 2.5px solid currentColor;
+        border-top-color: transparent;
+        animation: uc-spin .65s linear infinite;
+        z-index: 5;
+    }
+}
+// Tune the spinner on the Beena centre disc — show the spinner INSIDE
+// the disc rather than overlaying the whole button column
+.uc-mobnav-beena.uc-is-loading {
+    &::after { display: none; }
+    .uc-mobnav-beena-core {
+        opacity: 1 !important;
+        background: linear-gradient(135deg, #ffe45e, $umn-yellow 60%, #d6a800) !important;
+        > i, > img { opacity: 0; }
+        &::after {
+            content: "";
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 24px; height: 24px;
+            margin: -12px;
+            border-radius: 50%;
+            border: 2.5px solid $umn-brand-dark;
+            border-top-color: transparent;
+            animation: uc-spin .65s linear infinite;
+        }
+    }
+    .uc-mobnav-beena-label {
+        opacity: 0 !important;
+    }
+}
+.uc-mobnav-prod-beena.uc-is-loading {
+    > i, > img { opacity: 0; }
+    &::after { color: $umn-brand-dark; }
+}
+@keyframes uc-spin {
+    to { transform: rotate(360deg); }
+}
+
+.uc-mobnav {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 1050;
+    height: $umn-height;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: rgba(255, 255, 255, .97);
+    backdrop-filter: saturate(160%) blur(8px);
+    -webkit-backdrop-filter: saturate(160%) blur(8px);
+    color: $umn-text;
+    border-top: 1px solid $umn-line;
+    box-shadow: 0 -8px 24px -10px rgba(0, 0, 0, .12),
+                inset 0 1px 0 rgba(255, 255, 255, .9);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr 1fr 1fr;
+    align-items: end;
+    padding-inline: 2px;
+    overflow: visible;
+
+    @media (min-width: 992px) { display: none !important; }
+
+    // Suppress any stray badges/sups that other modules might attach to
+    // mobnav items. Only badges we explicitly add (with class
+    // `uc-mobnav-badge`) are allowed.
+    > a > sup:not(.uc-mobnav-badge),
+    > button > sup:not(.uc-mobnav-badge),
+    > a > .badge:not(.uc-mobnav-badge),
+    > button > .badge:not(.uc-mobnav-badge) {
+        display: none !important;
+    }
+}
+
+// ──────────────── Generic item ────────────────
+.uc-mobnav-item {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px;
+    height: $umn-height;
+    color: $umn-muted;
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none !important;
+    position: relative;
+    transition: color .15s ease, transform .15s ease;
+    -webkit-tap-highlight-color: transparent;
+
+    i { font-size: 20px; color: inherit; transition: transform .2s ease; }
+    span {
+        font-size: 10.5px;
+        white-space: nowrap;
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: inherit;
+    }
+
+    &:hover, &:focus, &:active {
+        color: $umn-yellow-deep;
+        i { transform: translateY(-2px); }
+    }
+    &.is-active {
+        color: $umn-yellow-deep;
+        font-weight: 700;
+        &::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 28px; height: 3px;
+            border-radius: 0 0 4px 4px;
+            background: $umn-yellow;
+        }
+    }
+}
+
+.uc-mobnav-badge {
+    position: absolute;
+    top: 4px;
+    inset-inline-end: calc(50% - 24px);
+    min-width: 18px; height: 18px;
+    padding: 0 5px;
+    background: #e53935;
+    color: #fff;
+    font-size: 10px; font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+    border-radius: 999px;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .25);
+    animation: uc-mn-badge-pulse 2.4s ease-in-out infinite;
+}
+@keyframes uc-mn-badge-pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+}
+
+// ──────────────── Centre Beena disc ────────────────
+.uc-mobnav-beena {
+    appearance: none;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 0;
+    position: relative;
+    height: $umn-height;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end;
+    gap: 0;
+    color: $umn-yellow;
+    -webkit-tap-highlight-color: transparent;
+    transform-style: preserve-3d;
+
+    .uc-mobnav-beena-core {
+        position: absolute;
+        top: -24px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 58px; height: 58px;
+        border-radius: 999px;
+        background:
+            radial-gradient(circle at 30% 25%, #ffe45e 0%, $umn-yellow 50%, #d6a800 100%);
+        color: $umn-brand-dark;
+        display: grid; place-items: center;
+        font-size: 24px;
+        box-shadow:
+            0 12px 22px -8px rgba($umn-yellow, .75),
+            0 4px 10px -2px rgba(0, 0, 0, .25),
+            inset 0 1px 0 rgba(255, 255, 255, .6),
+            inset 0 -6px 12px rgba(170, 100, 0, .4);
+        transition: transform .2s ease, box-shadow .2s ease;
+        z-index: 2;
+        overflow: hidden;
+
+        i  { line-height: 1; animation: uc-mn-magic 4s ease-in-out infinite; }
+        img {
+            width: 34px; height: 34px;
+            object-fit: contain;
+            animation: uc-mn-magic 4s ease-in-out infinite;
+        }
+    }
+
+    // Outer glow ring — pulses outwards
+    .uc-mobnav-beena-ring {
+        position: absolute;
+        top: -24px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 58px; height: 58px;
+        border-radius: 999px;
+        background: rgba($umn-yellow, .35);
+        animation: uc-mn-ring 2.4s ease-out infinite;
+        pointer-events: none;
+        z-index: 1;
+    }
+    // Soft second pulse, offset for richer effect
+    .uc-mobnav-beena-pulse {
+        position: absolute;
+        top: -24px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 58px; height: 58px;
+        border-radius: 999px;
+        background: rgba($umn-yellow, .22);
+        animation: uc-mn-ring 2.4s ease-out 1.2s infinite;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    .uc-mobnav-beena-label {
+        position: relative;
+        z-index: 3;
+        margin-top: 38px;
+        font-size: 10.5px;
+        font-weight: 800;
+        color: $umn-yellow-deep;
+        line-height: 1;
+    }
+
+    &:hover, &:focus, &:active {
+        .uc-mobnav-beena-core {
+            transform: translateX(-50%) translateY(-2px) scale(1.05);
+            box-shadow:
+                0 18px 30px -10px rgba($umn-yellow, .85),
+                0 6px 14px -2px rgba(0, 0, 0, .45),
+                inset 0 1px 0 rgba(255, 255, 255, .7);
+        }
+    }
+}
+
+@keyframes uc-mn-ring {
+    0%   { transform: translateX(-50%) scale(.6);  opacity: .9; }
+    70%  { transform: translateX(-50%) scale(1.7); opacity: 0;  }
+    100% { transform: translateX(-50%) scale(1.7); opacity: 0;  }
+}
+@keyframes uc-mn-magic {
+    0%, 100% { transform: rotate(-8deg); }
+    50%      { transform: rotate(8deg) scale(1.08); }
+}
+
+// ──────────────── Product variant ────────────────
+.uc-mobnav-product {
+    grid-template-columns: 1.6fr 1.6fr 0.7fr;
+    gap: 8px;
+    padding: 10px 12px env(safe-area-inset-bottom, 0px);
+    align-items: center;
+    height: $umn-height;
+}
+.uc-mobnav-prod-btn {
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    min-width: 0;                  // allow shrinking inside grid
+    padding: 0 6px;                // small inner safety so text never kisses the edge
+    height: 44px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 13.5px;
+    letter-spacing: .25px;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px;
+    transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+    overflow: hidden;
+
+    i { font-size: 15px; flex-shrink: 0; }
+    span {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    &:active { transform: scale(.97); }
+}
+
+// Arabic word for "Add to cart" / "Fast buy" is wider than English —
+// scale down a hair and tighten the icon so the full word fits without
+// being clipped on narrow phones.
+[lang^="ar"], [dir="rtl"] {
+    .uc-mobnav-prod-btn {
+        font-size: 12px;
+        gap: 4px;
+        letter-spacing: 0;
+        padding: 0 4px;
+        i { font-size: 13px; }
+    }
+}
+@media (max-width: 360px) {
+    [lang^="ar"], [dir="rtl"] {
+        .uc-mobnav-prod-btn {
+            font-size: 11px;
+            i { font-size: 12px; }
+        }
+    }
+}
+.uc-mobnav-prod-cart {
+    background: $umn-yellow;
+    color: $umn-brand-dark;
+    box-shadow: 0 6px 14px -4px rgba($umn-yellow, .55),
+                inset 0 1px 0 rgba(255, 255, 255, .35);
+    &:hover { filter: brightness(.96); transform: translateY(-1px); }
+}
+.uc-mobnav-prod-fast {
+    background: linear-gradient(135deg, #ff4d4d 0%, #c81212 100%);
+    color: #fff;
+    box-shadow: 0 6px 14px -4px rgba(200, 18, 18, .5),
+                inset 0 1px 0 rgba(255, 255, 255, .25);
+    position: relative;
+    overflow: hidden;
+
+    // Same micro-shine the catbar deals card has — keeps brand language consistent
+    &::before {
+        content: "";
+        position: absolute; inset: 0;
+        background: linear-gradient(120deg,
+            transparent 30%,
+            rgba(255, 255, 255, .25) 50%,
+            transparent 70%);
+        transform: translateX(-100%);
+        animation: uc-deals-shine 5s ease-in-out infinite;
+        pointer-events: none;
+    }
+    &:hover { transform: translateY(-1px); filter: brightness(1.04); }
+}
+.uc-mobnav-prod-beena {
+    appearance: none; cursor: pointer;
+    width: 44px; height: 44px;
+    border-radius: 999px;
+    background:
+        radial-gradient(circle at 30% 25%, #ffe45e 0%, $umn-yellow 50%, #d6a800 100%);
+    color: $umn-brand-dark;
+    border: 0;
+    display: grid; place-items: center;
+    font-size: 18px;
+    box-shadow: 0 6px 14px -4px rgba($umn-yellow, .55),
+                inset 0 1px 0 rgba(255, 255, 255, .55);
+    transition: transform .15s ease, filter .15s ease;
+    position: relative;
+    overflow: hidden;
+
+    img {
+        width: 26px; height: 26px;
+        object-fit: contain;
+    }
+
+    // Same orbital ring as the centre disc to tie them together
+    &::before {
+        content: "";
+        position: absolute; inset: -4px;
+        border-radius: 999px;
+        background: rgba($umn-yellow, .3);
+        animation: uc-mn-ring 2.4s ease-out infinite;
+        z-index: -1;
+    }
+    &:hover { transform: translateY(-1px) scale(1.05); }
+    &:active { transform: scale(.96); }
+}
+
+// =============================================================================
+//   Mobile header — marketplace skin (white icons, yellow brand)
+// =============================================================================
+@media (max-width: 991.98px) {
+    .uc-preheader, .uc-mainbar, .uc-catbar { display: none !important; }
+
+    .o_header_mobile,
+    header.uc-header .o_header_mobile,
+    header.uc-header > nav.o_header_mobile {
+        background: var(--uc-bg, $uc-bg) !important;
+        color: $uc-text !important;
+        border: 0 !important;
+        box-shadow: none !important;
+
+        .logo, img.logo { background: transparent; }
+
+        .tp-menu-sidebar-action,
+        .btn.btn-link,
+        .btn-link.shadow-none {
+            color: $uc-text !important;
+            background: transparent !important;
+            border: 0 !important;
+            &:hover, &:focus, &:active, &.active { color: $uc-yellow !important; }
+            svg, i { color: inherit !important; fill: currentColor !important; }
+        }
+
+        i, .dri, .fa, svg { color: $uc-text; }
+
+        .tp-account-info a,
+        .tp-cart-sidebar-action a,
+        .o_wsale_my_cart a,
+        .o_wsale_my_wish a {
+            color: $uc-text !important;
+            &:hover { color: $uc-yellow !important; }
+        }
+
+        .navbar-brand, .navbar-brand b,
+        .tp-mobile-label, .o_mobile_label {
+            color: $uc-yellow !important;
+            font-weight: 700;
+        }
+
+        .my_cart_quantity,
+        .my_wish_quantity,
+        .text-bg-primary {
+            background: $uc-yellow !important;
+            color: $uc-brand-dark !important;
+        }
+    }
+}
+
+// =============================================================================
+//   Auth popover — login form + register tab
+// =============================================================================
+.uc-account-wrap {
+    // Bigger hover bridge so the popover is forgiving — the dropdown is
+    // wider than the trigger button and people drift downward.
+    &::after { height: 14px !important; }
+}
+.uc-auth-menu {
+    width: 320px;
+    padding: 0;
+    overflow: hidden;
+    color: #212529;
+}
+.uc-auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #fafbfc;
+    border-bottom: 1px solid #eef0f3;
+}
+.uc-auth-tab {
+    background: transparent;
+    border: 0;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #6c757d;
+    cursor: pointer;
+    position: relative;
+    transition: color .12s ease, background .12s ease;
+
+    &:hover { color: $uc-bg; background: rgba(0, 0, 0, .03); }
+    &.is-active { color: $uc-bg; background: #fff; }
+    &.is-active::after {
+        content: "";
+        position: absolute;
+        inset-inline: 12px;
+        bottom: -1px;
+        height: 2px;
+        background: var(--uc-yellow, $uc-yellow);
+    }
+}
+.uc-auth-pane {
+    display: none;
+    padding: 12px;
+    background: #fff;
+
+    &.is-active { display: flex; flex-direction: column; gap: 8px; }
+}
+.uc-auth-field {
+    display: flex; flex-direction: column; gap: 3px;
+
+    > span {
+        font-size: 10px; font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+    > input {
+        background: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 5px;
+        padding: 7px 10px;
+        font-size: 12.5px;
+        color: #212529;
+        outline: 0;
+        transition: border-color .12s ease, box-shadow .12s ease;
+
+        &:focus {
+            border-color: var(--uc-yellow, $uc-yellow);
+            box-shadow: 0 0 0 3px rgba($uc-yellow, .25);
+        }
+    }
+}
+.uc-auth-submit {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px;
+    background: var(--uc-yellow, $uc-yellow);
+    color: $uc-brand-dark;
+    border: 0;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 12.5px; font-weight: 700;
+    cursor: pointer;
+    transition: filter .12s ease, transform .12s ease;
+
+    &:hover { filter: brightness(.95); transform: translateY(-1px); }
+}
+.uc-auth-link {
+    align-self: center;
+    color: $uc-bg;
+    font-size: 11px;
+    text-decoration: none;
+    border-bottom: 1px dashed transparent;
+    &:hover { color: $uc-bg; border-bottom-color: $uc-bg; }
+}
+.uc-auth-intro {
+    margin: 0;
+    color: #495057;
+    font-size: 12px;
+    line-height: 1.5;
+}
+.uc-auth-fineprint {
+    color: #6c757d;
+    font-size: 10px;
+    text-align: center;
+    margin-top: 2px;
+}
+
+// ----- OAuth row (Google / Apple / Facebook) -----
+.uc-oauth-sep {
+    display: flex; align-items: center; gap: 8px;
+    margin: 4px 0 2px;
+    color: #adb5bd;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+
+    &::before, &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: #eef0f3;
+    }
+}
+.uc-oauth-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+.uc-oauth-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px;
+    border-radius: 999px;
+    border: 1px solid #dee2e6;
+    background: #fff;
+    color: #495057;
+    font-size: 16px;
+    transition: background .12s ease, border-color .12s ease,
+                color .12s ease, transform .12s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        border-color: rgba($uc-yellow, .55);
+    }
+}
+.uc-oauth-google {
+    &:hover { background: #fff5f5; color: #ea4335; border-color: #ea4335; }
+}
+.uc-oauth-apple {
+    background: #000; color: #fff; border-color: #000;
+    &:hover { background: #1c1c1e; color: #fff; }
+}
+.uc-oauth-facebook {
+    &:hover { background: #eef3fb; color: #1877f2; border-color: #1877f2; }
+}
+.uc-oauth-windows {
+    &:hover { background: #eaf3fc; color: #0078d4; border-color: #0078d4; }
+}
+
+// =============================================================================
+//   Account dropdown — when user is logged in
+// =============================================================================
+.uc-acc-menu {
+    width: 320px;
+    padding: 0;
+    overflow: hidden;
+    color: #212529;
+}
+.uc-acc-head {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px;
+    background: $uc-bg;
+    color: $uc-text;
+
+    .uc-acc-avatar {
+        width: 42px; height: 42px;
+        border-radius: 999px;
+        background: rgba($uc-yellow, .2);
+        color: $uc-yellow;
+        display: grid; place-items: center;
+        font-size: 18px;
+        overflow: hidden;
+        position: relative;
+
+        img {
+            position: absolute; inset: 0;
+            width: 100%; height: 100%; object-fit: cover;
+        }
+    }
+    .uc-acc-head-info {
+        display: flex; flex-direction: column;
+        min-width: 0;
+        strong { font-size: 13px; color: $uc-text; line-height: 1.2;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        small  { font-size: 11px; color: rgba(255, 255, 255, .7); line-height: 1.2;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    }
+}
+.uc-acc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    padding: 8px;
+    gap: 2px;
+    background: #fff;
+}
+.uc-acc-item {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: #495057;
+    font-size: 12px;
+    line-height: 1.2;
+    text-decoration: none;
+    transition: background .12s ease, color .12s ease;
+
+    i { color: $uc-yellow; width: 16px; text-align: center; }
+    &:hover { background: lighten($uc-yellow, 38%); color: $uc-bg; }
+}
+.uc-acc-logout {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px;
+    padding: 11px 12px;
+    background: #fafbfc;
+    border-top: 1px solid #eef0f3;
+    color: #dc3545;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .12s ease, color .12s ease;
+
+    &:hover { background: #fff5f5; color: #b02a37; }
+    i { font-size: 13px; }
+}
+
+// =============================================================================
+//   Browse Menu dropdown (single trigger, vertical list)
+// =============================================================================
+.uc-menudrop {
+    .uc-menudrop-btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: transparent;
+        color: $uc-text;
+        border: 1px solid rgba(255, 255, 255, .14);
+        font-weight: 600; font-size: 13px;
+        padding: 6px 14px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background .12s ease, border-color .12s ease, color .12s ease;
+
+        &:hover {
+            background: rgba(255, 255, 255, .06);
+            border-color: rgba($uc-yellow, .55);
+            color: $uc-yellow;
+        }
+        i { font-size: 13px; }
+    }
+}
+.uc-menudrop-menu {
+    width: 240px;
+    padding: 6px;
+}
+.uc-menudrop-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: #212529;
+    font-size: 13px;
+    text-decoration: none;
+    transition: background .12s ease, color .12s ease;
+
+    .uc-menudrop-name { flex: 1; }
+    i { color: #adb5bd; }
+    &:hover {
+        background: lighten($uc-yellow, 38%);
+        color: $uc-bg;
+        i { color: $uc-yellow; }
+    }
+}
+
+// =============================================================================
+//   Signup modal — iframe-based dialog
+// =============================================================================
+.uc-signup-modal {
+    .modal-dialog { max-width: 580px; }
+    .uc-signup-modal-content {
+        border: 0;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+    .uc-signup-modal-head {
+        background: $uc-bg;
+        color: $uc-text;
+        border-bottom: 0;
+        padding: 14px 18px;
+
+        .modal-title {
+            display: inline-flex; align-items: center; gap: 10px;
+            color: $uc-yellow;
+            font-size: 16px; font-weight: 700;
+            i { color: $uc-yellow; }
+        }
+    }
+    .uc-signup-modal-body {
+        background: #fff;
+        min-height: 560px;
+        display: flex;
+
+        #uc-signup-frame {
+            flex: 1;
+            width: 100%;
+            min-height: 560px;
+            border: 0;
+            background: #fff;
+        }
+    }
+}
+
+// Cart now opens theme_prime's built-in sidebar via `tp-cart-sidebar-action`
+// (no custom drawer needed).
+
+// =============================================================================
+//   RTL polish
+// =============================================================================
+[dir="rtl"] {
+    .uc-search .uc-search-input { text-align: right; }
+    .uc-actions .uc-action-text { text-align: end; }
+    .uc-auth-tab.is-active::after { left: 12px; right: 12px; }
+    .fa-angle-right { transform: scaleX(-1); }
+}

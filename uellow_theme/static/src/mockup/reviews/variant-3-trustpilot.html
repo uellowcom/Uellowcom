@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V3 — Trustpilot Green — Uellow Reviews</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+    --grn:#00b67a; --grn-l:#33d39c; --grn-d:#008c5e; --grn-dk:#005e3f;
+    --grn-tint:#e8f9f1;
+    --y:#ffd84a; --y-d:#c69b00;
+    --red:#ef4444;
+    --txt:#0a1a14; --txt2:#5a6b65; --txt3:#8a9a94;
+    --bd:#e6ecea;
+    --bg:#fff;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:linear-gradient(180deg,#f3faf7,#fff);min-height:100vh;padding:32px 16px;color:var(--txt);line-height:1.5}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--txt2);text-decoration:none;font-size:13px;font-weight:600;margin-bottom:20px}
+.back:hover{color:var(--grn-d)}
+.container{max-width:1100px;margin:0 auto}
+.title-bar{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+.title-bar-pill{padding:5px 12px;border-radius:999px;background:var(--grn-tint);border:1px solid rgba(0,182,122,.30);color:var(--grn-d);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+.title-bar h2{font-size:25px;font-weight:900;color:var(--txt)}
+
+/* TRUST BAR */
+.trust-bar{background:linear-gradient(90deg,var(--grn) 0%,var(--grn-d) 100%);border-radius:14px;padding:18px 22px;color:#fff;display:flex;align-items:center;gap:18px;margin-bottom:14px;flex-wrap:wrap;box-shadow:0 6px 18px -8px rgba(0,182,122,.35)}
+.trust-shield{width:48px;height:48px;border-radius:999px;background:rgba(255,255,255,.20);display:inline-flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:2px solid rgba(255,255,255,.30)}
+.trust-text{flex:1;min-width:200px}
+.trust-text h3{font-size:17px;font-weight:900;margin-bottom:2px}
+.trust-text p{font-size:13px;opacity:.95}
+.trust-stars{display:inline-flex;gap:2px;font-size:18px;color:#fff;background:rgba(255,255,255,.18);padding:6px 12px;border-radius:8px;align-items:center;font-weight:800}
+.trust-stars i{font-size:14px}
+
+/* HERO */
+.hero{background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden;margin-bottom:16px;box-shadow:0 2px 10px -5px rgba(0,182,122,.15)}
+.hero-grid{display:grid;grid-template-columns:300px 1fr;gap:0}
+.hero-score{background:linear-gradient(180deg,var(--grn-tint),#fff);padding:28px;border-right:1px solid var(--bd);text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px}
+.score-circle{width:140px;height:140px;border-radius:999px;background:linear-gradient(135deg,var(--grn),var(--grn-d));color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 8px 24px -8px var(--grn-d);margin-bottom:8px}
+.score-num{font-size:46px;font-weight:900;line-height:1;letter-spacing:-1px}
+.score-out{font-size:12px;font-weight:600;opacity:.85;margin-top:-3px}
+.score-label{font-size:14px;font-weight:800;color:var(--grn-d);text-transform:uppercase;letter-spacing:1px}
+.score-stars{display:inline-flex;gap:2px;font-size:18px;color:var(--grn);margin:4px 0}
+.score-stars .e{color:#cfd8d4}
+.score-sub{font-size:12.5px;color:var(--txt2)}
+.score-sub strong{color:var(--grn-d);font-weight:800}
+.score-cta{margin-top:14px;display:inline-flex;align-items:center;gap:7px;padding:11px 22px;border-radius:8px;background:var(--grn);color:#fff;font-weight:800;font-size:13px;border:none;cursor:pointer;text-decoration:none;box-shadow:0 3px 10px -3px var(--grn)}
+.score-cta:hover{background:var(--grn-d)}
+
+.hero-right{padding:24px 28px;display:flex;flex-direction:column;gap:20px}
+.h-lbl{font-size:11px;font-weight:800;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.bars{display:flex;flex-direction:column;gap:7px}
+.brow{display:grid;grid-template-columns:55px 1fr 50px 38px;align-items:center;gap:10px}
+.bstars{font-size:12.5px;font-weight:700;color:var(--txt);display:inline-flex;align-items:center;gap:3px}
+.bstars i{color:var(--grn);font-size:12px}
+.btrack{position:relative;height:10px;background:#eef3f1;border-radius:3px;overflow:hidden}
+.bfill{height:100%;border-radius:3px;background:var(--grn);transition:width .4s ease}
+.r5 .bfill{background:linear-gradient(90deg,var(--grn),var(--grn-d))}
+.r4 .bfill{background:linear-gradient(90deg,#84cc16,#65a30d)}
+.r3 .bfill{background:linear-gradient(90deg,#facc15,#eab308)}
+.r2 .bfill{background:linear-gradient(90deg,#fb923c,#ea580c)}
+.r1 .bfill{background:linear-gradient(90deg,#f87171,#dc2626)}
+.bcnt{font-size:12px;font-weight:700;color:var(--txt);text-align:right;font-variant-numeric:tabular-nums}
+.bpct{font-size:11px;font-weight:600;color:var(--txt2);text-align:right;padding:1px 6px;background:#eef3f1;border-radius:4px}
+
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:12px;text-align:center;transition:all .15s}
+.stat:hover{border-color:var(--grn);box-shadow:0 4px 12px -6px rgba(0,182,122,.25)}
+.stat-i{color:var(--grn);font-size:18px;margin-bottom:4px}
+.stat-n{font-size:18px;font-weight:900;color:var(--txt);line-height:1}
+.stat-l{font-size:10.5px;color:var(--txt2);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;background:#fff;border:1px solid var(--bd);border-radius:12px;margin-bottom:14px;flex-wrap:wrap}
+.chips{display:inline-flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;background:#fff;color:var(--txt);font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--bd);transition:all .12s}
+.chip:hover{border-color:var(--grn);color:var(--grn-d);background:var(--grn-tint)}
+.chip.on{background:var(--grn);color:#fff;border-color:var(--grn);box-shadow:0 2px 6px -2px var(--grn)}
+.chip-c{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(0,0,0,.06);color:var(--txt2);margin-left:2px}
+.chip.on .chip-c{background:rgba(255,255,255,.20);color:#fff}
+.sort{display:inline-flex;align-items:center;gap:8px}
+.sort-lbl{font-size:12px;font-weight:600;color:var(--txt2)}
+.sort-sel{padding:7px 12px;border-radius:8px;background:#fff;border:1px solid var(--bd);font-size:12px;font-weight:600;color:var(--txt);cursor:pointer}
+
+/* REVIEW CARDS */
+.list{display:flex;flex-direction:column;gap:12px}
+.card-rv{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:20px;display:flex;gap:16px;transition:all .15s;position:relative}
+.card-rv:hover{border-color:var(--grn);box-shadow:0 6px 18px -8px rgba(0,182,122,.20)}
+.card-rv::before{content:"";position:absolute;top:0;left:0;width:3px;bottom:0;background:var(--grn);border-radius:3px 0 0 3px}
+.card-rv[data-r="4"]::before{background:#65a30d}
+.card-rv[data-r="3"]::before{background:#eab308}
+.card-rv[data-r="2"]::before{background:#ea580c}
+.card-rv[data-r="1"]::before{background:#dc2626}
+.av-col{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;width:80px;text-align:center;padding-right:14px;border-right:1px solid var(--bd)}
+.av{width:54px;height:54px;border-radius:999px;background:linear-gradient(135deg,var(--grn-l),var(--grn-d));color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;border:2px solid #fff;box-shadow:0 2px 8px -3px var(--grn)}
+.av-nm{font-size:11.5px;font-weight:800;color:var(--txt);line-height:1.2}
+.av-loc{font-size:10.5px;color:var(--txt2);display:inline-flex;align-items:center;gap:3px}
+.av-loc .flag{width:13px;height:9px;border-radius:1px}
+.v-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;background:var(--grn-tint);color:var(--grn-d);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.body-col{flex:1;min-width:0}
+.body-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;flex-wrap:wrap}
+.body-stars{display:inline-flex;gap:1px;font-size:16px;color:var(--grn)}
+.body-stars .e{color:#cfd8d4}
+.card-rv[data-r="4"] .body-stars{color:#65a30d}
+.card-rv[data-r="3"] .body-stars{color:#eab308}
+.card-rv[data-r="2"] .body-stars{color:#ea580c}
+.card-rv[data-r="1"] .body-stars{color:#dc2626}
+.body-date{font-size:11.5px;color:var(--txt3);font-weight:600}
+.tt{font-size:14.5px;font-weight:800;color:var(--txt);margin-bottom:6px;line-height:1.3}
+.txt{font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:12px}
+.imgs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.imgs img{width:60px;height:60px;border-radius:6px;border:1px solid var(--bd);object-fit:cover;transition:all .12s}
+.imgs img:hover{transform:scale(1.06);border-color:var(--grn)}
+.foot{display:inline-flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid var(--bd)}
+.helpful{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:6px;background:transparent;color:var(--txt2);font-size:12px;font-weight:700;border:1px solid var(--bd);cursor:pointer;transition:all .12s}
+.helpful:hover{border-color:var(--grn);color:var(--grn-d);background:var(--grn-tint)}
+.helpful-c{color:var(--txt3);font-weight:700}
+.tag{font-size:11px;color:var(--txt2);display:inline-flex;align-items:center;gap:4px}
+.tag i{color:var(--grn)}
+
+/* VIEW ALL */
+.viewall{display:flex;justify-content:center;margin:20px 0 8px}
+.viewall a{display:inline-flex;align-items:center;gap:12px;padding:14px 24px;border-radius:10px;background:#fff;color:var(--grn-d);text-decoration:none;border:2px solid var(--grn);transition:all .15s;min-width:300px;font-weight:800}
+.viewall a:hover{background:var(--grn);color:#fff;transform:translateY(-2px);box-shadow:0 8px 20px -8px var(--grn)}
+.va-ico{width:36px;height:36px;border-radius:999px;background:var(--grn-tint);color:var(--grn-d);display:inline-flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;transition:all .15s}
+.viewall a:hover .va-ico{background:rgba(255,255,255,.20);color:#fff}
+.va-lbl{display:flex;flex-direction:column;gap:1px;flex:1}
+.va-m{font-size:14px;font-weight:900}
+.va-s{font-size:11px;font-weight:600;opacity:.85}
+.va-ar{transition:transform .15s}
+.viewall a:hover .va-ar{transform:translateX(4px)}
+
+@media (max-width:992px){.hero-grid{grid-template-columns:1fr}.hero-score{border-right:none;border-bottom:1px solid var(--bd)}.stat-row{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:575.98px){.card-rv{flex-direction:column;gap:14px}.av-col{flex-direction:row;width:auto;text-align:left;border-right:none;border-bottom:1px solid var(--bd);padding-right:0;padding-bottom:14px}.viewall a{min-width:0;width:100%}}
+</style>
+</head>
+<body>
+<div class="container">
+    <a href="index.html" class="back"><i class="bi bi-arrow-left"></i> Back to gallery</a>
+
+    <div class="title-bar">
+        <span class="title-bar-pill">Variant 3</span>
+        <h2>Trustpilot Green — trust-first credibility</h2>
+    </div>
+
+    <!-- TRUST BAR -->
+    <div class="trust-bar">
+        <div class="trust-shield"><i class="bi bi-patch-check-fill"></i></div>
+        <div class="trust-text">
+            <h3>Verified by Uellow</h3>
+            <p>Every review comes from a confirmed purchase. No paid placements.</p>
+        </div>
+        <div class="trust-stars">★★★★★ <span style="font-size:14px">4.7/5</span></div>
+    </div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <div class="hero-grid">
+            <div class="hero-score">
+                <div class="score-circle">
+                    <div class="score-num">4.7</div>
+                    <div class="score-out">out of 5</div>
+                </div>
+                <div class="score-label">Excellent</div>
+                <div class="score-stars">★★★★<span style="background:linear-gradient(90deg,var(--grn) 70%,#cfd8d4 70%);-webkit-background-clip:text;background-clip:text;color:transparent">★</span></div>
+                <div class="score-sub">Based on <strong>127 reviews</strong></div>
+                <a class="score-cta"><i class="bi bi-pencil-square"></i> Write a Review</a>
+            </div>
+
+            <div class="hero-right">
+                <div>
+                    <div class="h-lbl">Rating breakdown</div>
+                    <div class="bars">
+                        <div class="brow r5"><span class="bstars">5 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:75%"></div></div><span class="bcnt">95</span><span class="bpct">75%</span></div>
+                        <div class="brow r4"><span class="bstars">4 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:17%"></div></div><span class="bcnt">22</span><span class="bpct">17%</span></div>
+                        <div class="brow r3"><span class="bstars">3 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:5%"></div></div><span class="bcnt">6</span><span class="bpct">5%</span></div>
+                        <div class="brow r2"><span class="bstars">2 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:2%"></div></div><span class="bcnt">3</span><span class="bpct">2%</span></div>
+                        <div class="brow r1"><span class="bstars">1 <i class="bi bi-star-fill"></i></span><div class="btrack"><div class="bfill" style="width:1%"></div></div><span class="bcnt">1</span><span class="bpct">1%</span></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="h-lbl">At a glance</div>
+                    <div class="stat-row">
+                        <div class="stat"><i class="bi bi-emoji-smile stat-i"></i><div class="stat-n">89%</div><div class="stat-l">Recommend</div></div>
+                        <div class="stat"><i class="bi bi-patch-check-fill stat-i"></i><div class="stat-n">102</div><div class="stat-l">Verified</div></div>
+                        <div class="stat"><i class="bi bi-images stat-i"></i><div class="stat-n">47</div><div class="stat-l">Photos</div></div>
+                        <div class="stat"><i class="bi bi-fire stat-i"></i><div class="stat-n">75%</div><div class="stat-l">5-star</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+        <div class="chips">
+            <button class="chip on">All<span class="chip-c">127</span></button>
+            <button class="chip">5 ★<span class="chip-c">95</span></button>
+            <button class="chip">4 ★<span class="chip-c">22</span></button>
+            <button class="chip">Critical<span class="chip-c">10</span></button>
+            <button class="chip"><i class="bi bi-images"></i> Photos<span class="chip-c">47</span></button>
+            <button class="chip"><i class="bi bi-patch-check"></i> Verified<span class="chip-c">102</span></button>
+        </div>
+        <div class="sort">
+            <label class="sort-lbl">Sort by</label>
+            <select class="sort-sel"><option>Most helpful</option><option>Most recent</option><option>Highest rated</option><option>Lowest rated</option></select>
+        </div>
+    </div>
+
+    <!-- REVIEW CARDS — single column with avatar sidebar -->
+    <div class="list">
+        <div class="card-rv" data-r="5">
+            <div class="av-col">
+                <div class="av">S</div>
+                <div class="av-nm">Sarah M.</div>
+                <div class="av-loc"><span class="flag" style="background:linear-gradient(180deg,#dc2626 33%,#fff 33% 66%,#dc2626 66%)"></span>US</div>
+                <span class="v-pill"><i class="bi bi-patch-check-fill"></i> Verified</span>
+            </div>
+            <div class="body-col">
+                <div class="body-top">
+                    <div class="body-stars">★★★★★</div>
+                    <div class="body-date">3 days ago</div>
+                </div>
+                <div class="tt">Absolutely love it — exceeds expectations!</div>
+                <p class="txt">Bought this for my morning runs and it's been a game changer. Battery lasts a full week with everyday use, heart rate sensor is surprisingly accurate, and the build quality feels much more premium than the price suggests.</p>
+                <div class="imgs">
+                    <img src="https://picsum.photos/seed/r1a/120" alt="">
+                    <img src="https://picsum.photos/seed/r1b/120" alt="">
+                    <img src="https://picsum.photos/seed/r1c/120" alt="">
+                </div>
+                <div class="foot">
+                    <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(42)</span></button>
+                    <span class="tag"><i class="bi bi-images"></i> 3 photos attached</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-rv" data-r="5">
+            <div class="av-col">
+                <div class="av">A</div>
+                <div class="av-nm">Ahmed K.</div>
+                <div class="av-loc"><span class="flag" style="background:linear-gradient(180deg,#007a3d 33%,#fff 33% 66%,#000 66%)"></span>KW</div>
+                <span class="v-pill"><i class="bi bi-patch-check-fill"></i> Verified</span>
+            </div>
+            <div class="body-col">
+                <div class="body-top">
+                    <div class="body-stars">★★★★★</div>
+                    <div class="body-date">1 week ago</div>
+                </div>
+                <div class="tt">Excellent quality for the price point</div>
+                <p class="txt">The product arrived quickly and beautifully packaged. Sound quality is outstanding and noise isolation exceeded my expectations for this price range. Battery comfortably lasts 7+ hours of continuous use. Strongly recommend.</p>
+                <div class="imgs">
+                    <img src="https://picsum.photos/seed/r2a/120" alt="">
+                    <img src="https://picsum.photos/seed/r2b/120" alt="">
+                </div>
+                <div class="foot">
+                    <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(28)</span></button>
+                    <span class="tag"><i class="bi bi-images"></i> 2 photos attached</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-rv" data-r="4">
+            <div class="av-col">
+                <div class="av" style="background:linear-gradient(135deg,#a3e635,#65a30d)">M</div>
+                <div class="av-nm">Maria L.</div>
+                <div class="av-loc"><span class="flag" style="background:linear-gradient(180deg,#aa151b 33%,#f1bf00 33% 66%,#aa151b 66%)"></span>ES</div>
+            </div>
+            <div class="body-col">
+                <div class="body-top">
+                    <div class="body-stars">★★★★<span class="e">★</span></div>
+                    <div class="body-date">2 weeks ago</div>
+                </div>
+                <div class="tt">Good value for the price</div>
+                <p class="txt">Solid product overall. Setup was easy and the app is intuitive. Only minor complaint is that the screen could be brighter outdoors, but otherwise very happy with the purchase. Shipping was fast too.</p>
+                <div class="foot">
+                    <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(15)</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-rv" data-r="3">
+            <div class="av-col">
+                <div class="av" style="background:linear-gradient(135deg,#facc15,#eab308)">J</div>
+                <div class="av-nm">John D.</div>
+                <div class="av-loc"><span class="flag" style="background:#012169"></span>UK</div>
+            </div>
+            <div class="body-col">
+                <div class="body-top">
+                    <div class="body-stars">★★★<span class="e">★</span><span class="e">★</span></div>
+                    <div class="body-date">1 month ago</div>
+                </div>
+                <div class="tt">Decent but not amazing</div>
+                <p class="txt">Works as advertised but nothing special. Connection drops occasionally and the included cable is too short. Returns process was smooth though, which is a plus.</p>
+                <div class="foot">
+                    <button class="helpful"><i class="bi bi-hand-thumbs-up"></i> Helpful <span class="helpful-c">(8)</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- VIEW ALL -->
+    <div class="viewall">
+        <a href="#"><span class="va-ico"><i class="bi bi-eye-fill"></i></span><span class="va-lbl"><span class="va-m">See all previous reviews</span><span class="va-s">127 reviews · full archive</span></span><i class="bi bi-arrow-right va-ar"></i></a>
+    </div>
+</div>
+</body>
+</html>

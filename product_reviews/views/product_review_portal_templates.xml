@@ -1,198 +1,442 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ╔════════════════════════════════════════════════════════════════
+         REVIEWS WIDGET — premium hero + stats + filter bar + top reviews.
+         A "View all" CTA opens the archive page (uellow.reviews_archive).
+         ════════════════════════════════════════════════════════════════ -->
     <template id="reviews_widget" name="Customer Reviews Widget">
         <t t-set="sp" t-value="product.sudo()"/>
-        <t t-set="reviews_all" t-value="sp.rating_ids.filtered(lambda r: r.consumed and r.rating > 0).sorted(key=lambda r: r.write_date, reverse=True)"/>
-        <t t-set="is_logged" t-value="not request.env.user._is_public()"/>
-        <t t-set="photo_count" t-value="len(reviews_all.filtered(lambda r: r.review_image_ids))"/>
+        <t t-set="reviews_all"   t-value="sp.rating_ids.filtered(lambda r: r.consumed and r.rating > 0).sorted(key=lambda r: r.write_date, reverse=True)"/>
+        <t t-set="is_logged"     t-value="not request.env.user._is_public()"/>
+        <t t-set="photo_count"   t-value="len(reviews_all.filtered(lambda r: r.review_image_ids))"/>
         <t t-set="verified_count" t-value="len(reviews_all.filtered(lambda r: r.is_verified_purchase))"/>
+        <t t-set="recommend_count" t-value="len(reviews_all.filtered(lambda r: r.rating &gt;= 4))"/>
+        <t t-set="recommend_pct"  t-value="int((recommend_count * 100) / max(sp.pr_total, 1))"/>
+        <t t-set="positive_pct"   t-value="int((sp.pr_star_5 * 100) / max(sp.pr_total, 1))"/>
+        <!-- Top 4 reviews to preview on the product page -->
+        <t t-set="reviews_top" t-value="reviews_all.sorted(key=lambda r: (r.helpful_count or 0, r.write_date), reverse=True)[:4]"/>
 
         <div class="prw" t-att-data-product-id="sp.id"
              t-att-data-logged="'1' if is_logged else '0'"
              t-att-data-login-url="'/web/login?redirect=' + request.httprequest.path">
 
-            <!-- HEADER: split panel -->
-            <div class="prw-header">
-                <div class="prw-header-left">
-                    <div class="prw-big-score"><t t-esc="str(sp.pr_avg)"/></div>
-                    <div class="prw-big-stars">
-                        <t t-set="ai" t-value="int(sp.pr_avg)"/>
-                        <t t-foreach="[1,2,3,4,5]" t-as="s">
-                            <span t-att-class="'prw-s on' if s &lt;= ai else 'prw-s'">&#9733;</span>
-                        </t>
+            <!-- ─── HERO (V1 Marketplace Vibrant — compact) ───────── -->
+            <div class="prw-hero">
+                <div class="prw-hero-grid">
+                    <!-- Score -->
+                    <div class="prw-hero-score">
+                        <div class="prw-h-lbl">Customer Reviews</div>
+                        <div class="prw-score-big">
+                            <span class="prw-score-num"><t t-esc="('%.1f' % sp.pr_avg) if sp.pr_total else '—'"/></span>
+                            <span class="prw-score-out">/ 5</span>
+                        </div>
+                        <div class="prw-score-stars">
+                            <t t-set="ai" t-value="sp.pr_avg"/>
+                            <t t-foreach="[1,2,3,4,5]" t-as="s">
+                                <span t-attf-class="prw-bigstar #{'full' if s &lt;= int(ai) else ('half' if (ai &gt; s-1 and ai &lt; s) else 'empty')}">&#9733;</span>
+                            </t>
+                        </div>
+                        <span class="prw-score-pill">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:#047857"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4zm-1.5 14L7 11.5l1.4-1.4 2.1 2.1L15.6 7l1.4 1.4L10.5 15z"/></svg>
+                            <strong t-esc="sp.pr_total"/> <span>verified reviews</span>
+                        </span>
+                        <button class="prw-score-cta" id="prwWriteBtn" type="button">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+                            <span>Write a Review</span>
+                        </button>
                     </div>
-                    <div class="prw-big-lbl"><t t-esc="sp.pr_total"/> reviews</div>
-                    <div class="prw-stats-row">
-                        <div class="prw-stat">
-                            <div class="prw-stat-num"><t t-esc="photo_count"/></div>
-                            <div class="prw-stat-lbl">Photos</div>
-                        </div>
-                        <div class="prw-stat">
-                            <div class="prw-stat-num"><t t-esc="verified_count"/></div>
-                            <div class="prw-stat-lbl">Verified</div>
-                        </div>
-                        <div class="prw-stat">
-                            <t t-set="pos_pct" t-value="str(int(sp.pr_star_5 * 100 // (sp.pr_total or 1)))"/>
-                            <div class="prw-stat-num"><t t-esc="pos_pct"/>%</div>
-                            <div class="prw-stat-lbl">Positive</div>
+
+                    <!-- Distribution bars -->
+                    <div class="prw-hero-dist">
+                        <div class="prw-h-lbl">Star breakdown</div>
+                        <div class="prw-bars">
+                            <t t-set="tot" t-value="sp.pr_total or 1"/>
+                            <t t-foreach="[(5,sp.pr_star_5),(4,sp.pr_star_4),(3,sp.pr_star_3),(2,sp.pr_star_2),(1,sp.pr_star_1)]" t-as="row">
+                                <t t-set="pct" t-value="int(row[1]*100//tot)"/>
+                                <div t-attf-class="prw-bar-row prw-bar-r#{row[0]}">
+                                    <span class="prw-bar-stars">
+                                        <span t-esc="row[0]"/>
+                                        <span class="prw-bar-staricon">&#9733;</span>
+                                    </span>
+                                    <div class="prw-bar-track">
+                                        <div class="prw-bar-fill" t-att-style="'width:' + str(pct) + '%'"/>
+                                    </div>
+                                    <span class="prw-bar-count"><span t-esc="row[1]"/></span>
+                                    <span class="prw-bar-pct"><span t-esc="pct"/>%</span>
+                                </div>
+                            </t>
                         </div>
                     </div>
-                    <button class="prw-btn-write" id="prwWriteBtn">&#9998; Write a Review</button>
-                </div>
-                <div class="prw-header-right">
-                    <div class="prw-bars">
-                        <t t-set="tot" t-value="sp.pr_total or 1"/>
-                        <t t-foreach="[(5,sp.pr_star_5,'prw-bar-5',True),(4,sp.pr_star_4,'prw-bar-4',False),(3,sp.pr_star_3,'prw-bar-3',False),(2,sp.pr_star_2,'prw-bar-2',False),(1,sp.pr_star_1,'prw-bar-1',False)]" t-as="row">
-                            <t t-set="pct" t-value="int(row[1]*100//tot)"/>
-                            <div class="prw-bar-row">
-                                <span class="prw-bar-l"><t t-esc="row[0]"/> &#9733;</span>
-                                <div class="prw-bar-t"><div t-att-class="'prw-bar-f '+row[2]" t-att-style="'width:'+str(pct)+'%'"/></div>
-                                <span t-att-class="'prw-bar-c ' + ('hi' if row[3] else 'lo')"><t t-esc="row[1]"/></span>
+
+                    <!-- Stats -->
+                    <div class="prw-hero-stats">
+                        <div class="prw-h-lbl">At a glance</div>
+                        <div class="prw-stats-grid">
+                            <div class="prw-stat prw-stat-c1">
+                                <span class="prw-stat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span>
+                                <span class="prw-stat-num"><t t-esc="recommend_pct"/>%</span>
+                                <span class="prw-stat-lbl">Recommend</span>
                             </div>
-                        </t>
-                    </div>
-                    <div class="prw-chips">
-                        <button class="prw-chip prw-chip-all" data-filter="all">All (<t t-esc="sp.pr_total"/>)</button>
-                        <button class="prw-chip prw-chip-5star" data-filter="5star">5&#9733; (<t t-esc="sp.pr_star_5"/>)</button>
-                        <t t-if="photo_count > 0">
-                            <button class="prw-chip prw-chip-photo" data-filter="photo">&#128247; Photos (<t t-esc="photo_count"/>)</button>
-                        </t>
-                        <t t-if="verified_count > 0">
-                            <button class="prw-chip prw-chip-ver" data-filter="verified">&#10003; Verified (<t t-esc="verified_count"/>)</button>
-                        </t>
+                            <div class="prw-stat prw-stat-c2">
+                                <span class="prw-stat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4zm-1.5 14L7 11.5l1.4-1.4 2.1 2.1L15.6 7l1.4 1.4L10.5 15z"/></svg></span>
+                                <span class="prw-stat-num"><t t-esc="verified_count"/></span>
+                                <span class="prw-stat-lbl">Verified</span>
+                            </div>
+                            <div class="prw-stat prw-stat-c3">
+                                <span class="prw-stat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></span>
+                                <span class="prw-stat-num"><t t-esc="photo_count"/></span>
+                                <span class="prw-stat-lbl">Photos</span>
+                            </div>
+                            <div class="prw-stat prw-stat-c4">
+                                <span class="prw-stat-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg></span>
+                                <span class="prw-stat-num"><t t-esc="positive_pct"/>%</span>
+                                <span class="prw-stat-lbl">5-star</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- REVIEWS -->
+            <!-- ─── FILTER + SORT bar ─────────────────────────────── -->
+            <div class="prw-toolbar">
+                <div class="prw-filter-chips" role="tablist" aria-label="Filter reviews">
+                    <button class="prw-chip prw-chip-active" data-filter="all">
+                        <span>All</span>
+                        <span class="prw-chip-c"><t t-esc="sp.pr_total"/></span>
+                    </button>
+                    <button class="prw-chip" data-filter="5">
+                        <span>5</span>
+                        <span class="prw-chip-star">&#9733;</span>
+                        <span class="prw-chip-c"><t t-esc="sp.pr_star_5"/></span>
+                    </button>
+                    <button class="prw-chip" data-filter="4">
+                        <span>4</span>
+                        <span class="prw-chip-star">&#9733;</span>
+                        <span class="prw-chip-c"><t t-esc="sp.pr_star_4"/></span>
+                    </button>
+                    <button class="prw-chip" data-filter="critical">
+                        <span>Critical</span>
+                        <span class="prw-chip-c"><t t-esc="sp.pr_star_1 + sp.pr_star_2 + sp.pr_star_3"/></span>
+                    </button>
+                    <t t-if="photo_count &gt; 0">
+                        <button class="prw-chip prw-chip-photo" data-filter="photo">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span>Photos</span>
+                            <span class="prw-chip-c"><t t-esc="photo_count"/></span>
+                        </button>
+                    </t>
+                    <t t-if="verified_count &gt; 0">
+                        <button class="prw-chip prw-chip-ver" data-filter="verified">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4zm-1.5 14L7 11.5l1.4-1.4 2.1 2.1L15.6 7l1.4 1.4L10.5 15z"/></svg>
+                            <span>Verified</span>
+                            <span class="prw-chip-c"><t t-esc="verified_count"/></span>
+                        </button>
+                    </t>
+                </div>
+                <div class="prw-sort">
+                    <label for="prwSort" class="prw-sort-lbl">Sort by</label>
+                    <select id="prwSort" class="prw-sort-sel">
+                        <option value="helpful">Most helpful</option>
+                        <option value="recent">Most recent</option>
+                        <option value="high">Highest rated</option>
+                        <option value="low">Lowest rated</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ─── REVIEWS GRID (top 4 preview) ──────────────────── -->
             <div class="prw-list-wrap">
                 <div class="prw-list" id="prwList">
-                    <t t-if="reviews_all">
-                        <t t-foreach="reviews_all" t-as="rv">
-                            <div class="prw-card"
-                                 t-att-data-img="'1' if rv.review_image_ids else '0'"
-                                 t-att-data-rating="str(int(rv.rating or 0))"
-                                 t-att-data-verified="'1' if rv.is_verified_purchase else '0'">
-                                <div class="prw-accent-bar"></div>
-                                <div class="prw-card-inner">
-                                    <div class="prw-card-head">
-                                        <div class="prw-avatar">
-                                            <t t-set="rn" t-value="rv.partner_id.name or 'A'"/>
-                                            <span><t t-esc="rn[0].upper()"/></span>
-                                        </div>
-                                        <div class="prw-card-info">
-                                            <div class="prw-card-name">
-                                                <t t-esc="rv.partner_id.name or 'Anonymous'"/>
-                                                <t t-if="rv.is_verified_purchase"><span class="prw-v">&#10003; Verified</span></t>
-                                            </div>
-                                            <t t-if="rv.partner_id.country_id">
-                                                <div class="prw-country">
-                                                    <img t-attf-src="/web/image/res.country/#{rv.partner_id.country_id.id}/image_32" class="prw-flag" loading="lazy"/>
-                                                    <t t-esc="rv.partner_id.country_id.name"/>
-                                                </div>
-                                            </t>
-                                        </div>
-                                        <div class="prw-card-right">
-                                            <div class="prw-card-stars">
-                                                <t t-set="ri" t-value="int(rv.rating or 0)"/>
-                                                <t t-foreach="[1,2,3,4,5]" t-as="s">
-                                                    <span t-att-class="'prw-s on' if s &lt;= ri else 'prw-s'">&#9733;</span>
-                                                </t>
-                                            </div>
-                                            <div class="prw-card-date"><t t-esc="rv.write_date" t-options='{"widget":"date"}'/></div>
-                                        </div>
-                                    </div>
-                                    <t t-if="rv.review_title"><div class="prw-card-title"><t t-esc="rv.review_title"/></div></t>
-                                    <div class="prw-card-body">
-                                        <p class="prw-card-text"><t t-esc="rv.feedback or ''"/></p>
-                                        <t t-if="rv.review_image_ids">
-                                            <div class="prw-card-imgs">
-                                                <t t-foreach="rv.review_image_ids" t-as="img">
-                                                    <a class="prw-thumb" href="#" t-attf-data-src="/web/image/rating.review.image/#{img.id}/image">
-                                                        <img t-attf-src="/web/image/rating.review.image/#{img.id}/image" loading="lazy"/>
-                                                    </a>
-                                                </t>
-                                            </div>
-                                        </t>
-                                    </div>
-                                    <div class="prw-card-foot">
-                                        <button class="prw-helpful" t-att-data-id="rv.id">&#128077; Helpful (<t t-esc="rv.helpful_count"/>)</button>
-                                        <span class="prw-tag prw-tag-stars"><t t-esc="str(int(rv.rating or 0))"/>&#9733;</span>
-                                        <t t-if="rv.review_image_ids"><span class="prw-tag prw-tag-photo">&#128247;</span></t>
-                                    </div>
-                                </div>
-                            </div>
+                    <t t-if="reviews_top">
+                        <t t-foreach="reviews_top" t-as="rv">
+                            <t t-call="product_reviews.review_card">
+                                <t t-set="rv" t-value="rv"/>
+                            </t>
                         </t>
                     </t>
-                    <t t-else=""><div class="prw-empty">No reviews yet.</div></t>
-                </div>
-                <!-- Show More overlay -->
-                <div class="prw-showmore-overlay" id="prwShowMoreOverlay">
-                    <button class="prw-showmore-btn" id="prwShowMoreBtn">See More Reviews</button>
-                </div>
-            </div>
-
-            <!-- Pagination -->
-            <div class="prw-pager" id="prwPager" style="display:none">
-                <button class="prw-pg-btn" id="prwPrev">&#8592; Prev</button>
-                <span class="prw-pg-info" id="prwPgInfo"></span>
-                <button class="prw-pg-btn" id="prwNext">Next &#8594;</button>
-            </div>
-        </div>
-
-        <!-- DIALOG -->
-        <div class="prw-overlay" id="prwOverlay" style="display:none">
-            <div class="prw-dialog">
-                <button class="prw-dlg-close" id="prwDlgClose">&#10005;</button>
-                <div id="prwDlgContent">
-                    <div class="prw-dlg-title">Write a Review</div>
-                    <div class="prw-dlg-sub">for <strong><t t-esc="sp.name"/></strong></div>
-                    <form id="prwForm">
-                        <div class="prw-fld">
-                            <label>Rating *</label>
-                            <div class="prw-star-pick" id="prwStarPick">
-                                <span data-v="1">&#9733;</span><span data-v="2">&#9733;</span>
-                                <span data-v="3">&#9733;</span><span data-v="4">&#9733;</span>
-                                <span data-v="5">&#9733;</span>
+                    <t t-else="">
+                        <div class="prw-empty">
+                            <div class="prw-empty-ico" aria-hidden="true">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                             </div>
-                            <input type="hidden" id="prwRating" name="rating"/>
+                            <div class="prw-empty-title">No reviews yet</div>
+                            <div class="prw-empty-sub">Be the first to share your experience with this product.</div>
+                            <button class="prw-empty-cta" id="prwEmptyWrite">Write the first review</button>
                         </div>
-                        <div class="prw-fld">
-                            <label>Review Title</label>
-                            <input type="text" name="review_title" class="prw-inp" placeholder="Summarize your experience"/>
-                        </div>
-                        <div class="prw-fld">
-                            <label>Your Review *</label>
-                            <textarea name="feedback" class="prw-txt" rows="4" required="required" placeholder="Share your experience..."/>
-                        </div>
-                        <div class="prw-fld">
-                            <label>Photos (optional)</label>
-                            <div class="prw-drop" id="prwDrop">
-                                <span>&#128247; Click or drag photos here</span>
-                                <input type="file" name="images" multiple="multiple" accept="image/*" id="prwFiles"/>
-                            </div>
-                            <div class="prw-prevs" id="prwPrevs"/>
-                        </div>
-                        <button type="submit" class="prw-dlg-submit">Submit Review</button>
-                    </form>
-                </div>
-                <div class="prw-success" id="prwSuccessMsg" style="display:none">
-                    <div class="prw-success-icon">&#10003;</div>
-                    <h4>Thank you!</h4>
-                    <p>Your review is pending approval.</p>
-                    <button class="prw-dlg-submit" id="prwSuccessClose">Close</button>
+                    </t>
                 </div>
             </div>
-        </div>
 
-        <!-- LIGHTBOX -->
-        <div class="prw-lb" id="prwLb" style="display:none">
-            <button class="prw-lb-close">&#10005;</button>
-            <img id="prwLbImg" src=""/>
+            <!-- ─── VIEW ALL REVIEWS CTA (opens archive page) ────── -->
+            <t t-if="sp.pr_total &gt; len(reviews_top)">
+                <div class="prw-viewall-wrap">
+                    <a t-attf-href="/shop/#{slug(sp)}/reviews" class="prw-viewall-btn">
+                        <span class="prw-viewall-icon" aria-hidden="true">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </span>
+                        <span class="prw-viewall-lbl">
+                            <span class="prw-viewall-main">See all previous reviews</span>
+                            <span class="prw-viewall-sub">
+                                <strong t-esc="sp.pr_total"/>
+                                <span>reviews · archive</span>
+                            </span>
+                        </span>
+                        <svg class="prw-viewall-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </a>
+                </div>
+            </t>
+
+            <!-- ─── WRITE-REVIEW DIALOG ──────────────────────────── -->
+            <div class="prw-overlay" id="prwOverlay" style="display:none">
+                <div class="prw-dialog">
+                    <button class="prw-dlg-close" id="prwDlgClose" aria-label="Close">&#10005;</button>
+                    <div id="prwDlgContent">
+                        <div class="prw-dlg-title">Write a Review</div>
+                        <div class="prw-dlg-sub">for <strong><t t-esc="sp.name"/></strong></div>
+                        <form id="prwForm">
+                            <div class="prw-fld">
+                                <label>Rating *</label>
+                                <div class="prw-star-pick" id="prwStarPick">
+                                    <span data-v="1">&#9733;</span><span data-v="2">&#9733;</span>
+                                    <span data-v="3">&#9733;</span><span data-v="4">&#9733;</span>
+                                    <span data-v="5">&#9733;</span>
+                                </div>
+                                <input type="hidden" id="prwRating" name="rating"/>
+                            </div>
+                            <div class="prw-fld">
+                                <label>Review Title</label>
+                                <input type="text" name="review_title" class="prw-inp" placeholder="Summarize your experience"/>
+                            </div>
+                            <div class="prw-fld">
+                                <label>Your Review *</label>
+                                <textarea name="feedback" class="prw-txt" rows="4" required="required" placeholder="Share your experience..."/>
+                            </div>
+                            <div class="prw-fld">
+                                <label>Photos (optional)</label>
+                                <div class="prw-drop" id="prwDrop">
+                                    <span>&#128247; Click or drag photos here</span>
+                                    <input type="file" name="images" multiple="multiple" accept="image/*" id="prwFiles"/>
+                                </div>
+                                <div class="prw-prevs" id="prwPrevs"/>
+                            </div>
+                            <button type="submit" class="prw-dlg-submit">Submit Review</button>
+                        </form>
+                    </div>
+                    <div class="prw-success" id="prwSuccessMsg" style="display:none">
+                        <div class="prw-success-icon">&#10003;</div>
+                        <h4>Thank you!</h4>
+                        <p>Your review is pending approval.</p>
+                        <button class="prw-dlg-submit" id="prwSuccessClose">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ─── LIGHTBOX ─────────────────────────────────────── -->
+            <div class="prw-lb" id="prwLb" style="display:none">
+                <button class="prw-lb-close" aria-label="Close">&#10005;</button>
+                <img id="prwLbImg" src=""/>
+            </div>
         </div>
     </template>
 
+    <!-- ╔════════════════════════════════════════════════════════════════
+         REVIEW CARD — V3 layout: avatar sidebar (left) + body (right).
+         Avatar color follows the rating tone (yellow 5★, lime 4★, etc.)
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="review_card" name="Review Card">
+        <t t-set="rn"   t-value="rv.partner_id.name or 'Anonymous'"/>
+        <t t-set="ri"   t-value="int(rv.rating or 0)"/>
+        <t t-set="rinit" t-value="rn[0].upper() if rn else 'A'"/>
+        <t t-set="excerpt_threshold" t-value="280"/>
+        <t t-set="fb" t-value="rv.feedback or ''"/>
+        <t t-set="is_long" t-value="len(fb) &gt; excerpt_threshold"/>
+        <div class="prw-card"
+             t-att-data-img="'1' if rv.review_image_ids else '0'"
+             t-att-data-rating="str(ri)"
+             t-att-data-verified="'1' if rv.is_verified_purchase else '0'">
+            <span class="prw-card-accent" aria-hidden="true"/>
+            <div class="prw-card-inner">
+                <div class="prw-card-head">
+                    <div class="prw-avatar" t-attf-data-c="#{ri}">
+                        <span t-esc="rinit"/>
+                    </div>
+                    <div class="prw-card-info">
+                        <div class="prw-card-name">
+                            <span t-esc="rn"/>
+                            <t t-if="rv.is_verified_purchase">
+                                <span class="prw-v" title="Verified purchase">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4zm-1.5 14L7 11.5l1.4-1.4 2.1 2.1L15.6 7l1.4 1.4L10.5 15z"/></svg>
+                                    <span>Verified buyer</span>
+                                </span>
+                            </t>
+                        </div>
+                        <div class="prw-card-meta">
+                            <t t-if="rv.partner_id.country_id">
+                                <span class="prw-country">
+                                    <img t-attf-src="/web/image/res.country/#{rv.partner_id.country_id.id}/image_32" class="prw-flag" loading="lazy" alt=""/>
+                                    <span t-esc="rv.partner_id.country_id.name"/>
+                                </span>
+                                <span class="prw-meta-sep">·</span>
+                            </t>
+                            <span class="prw-card-date">
+                                <t t-esc="rv.write_date" t-options='{"widget":"date"}'/>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="prw-card-stars">
+                        <t t-foreach="[1,2,3,4,5]" t-as="s">
+                            <span t-att-class="'prw-s on' if s &lt;= ri else 'prw-s'">&#9733;</span>
+                        </t>
+                    </div>
+                </div>
+                <t t-if="rv.review_title">
+                    <div class="prw-card-title" t-esc="rv.review_title"/>
+                </t>
+                <p t-attf-class="prw-card-text #{'prw-truncate' if is_long else ''}">
+                    <span class="prw-text-short" t-esc="fb[:excerpt_threshold] + ('…' if is_long else '')"/>
+                    <t t-if="is_long">
+                        <span class="prw-text-full" hidden="hidden" t-esc="fb"/>
+                        <button type="button" class="prw-readmore">Read more</button>
+                    </t>
+                </p>
+                <t t-if="rv.review_image_ids">
+                    <div class="prw-card-imgs">
+                        <t t-foreach="rv.review_image_ids" t-as="img">
+                            <a class="prw-thumb" href="#" t-attf-data-src="/web/image/rating.review.image/#{img.id}/image">
+                                <img t-attf-src="/web/image/rating.review.image/#{img.id}/image" loading="lazy" alt=""/>
+                            </a>
+                        </t>
+                    </div>
+                </t>
+                <div class="prw-card-foot">
+                    <button class="prw-helpful" t-att-data-id="rv.id" type="button" aria-label="Mark helpful">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+                        <span>Helpful</span>
+                        <span class="prw-helpful-c">(<span class="prw-helpful-n" t-esc="rv.helpful_count"/>)</span>
+                    </button>
+                    <span class="prw-tag prw-tag-stars"><span t-esc="ri"/><span class="prw-tag-star">&#9733;</span></span>
+                    <t t-if="rv.review_image_ids">
+                        <span class="prw-tag prw-tag-photo">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                            <span t-esc="len(rv.review_image_ids)"/>
+                        </span>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- ╔════════════════════════════════════════════════════════════════
+         REVIEWS ARCHIVE PAGE — full list of every review of a product
+         with pagination + filter UI. Rendered by ProductReviewController
+         at /shop/{slug}/reviews.
+         ════════════════════════════════════════════════════════════════ -->
+    <template id="reviews_archive_page" name="Reviews Archive Page">
+        <t t-call="website.layout">
+            <t t-set="additional_title" t-value="'Reviews of ' + product.name"/>
+            <div class="prw-archive container py-4">
+                <nav class="prw-arch-bcrumb" aria-label="Breadcrumb">
+                    <a t-attf-href="/shop/#{slug(product)}">&#8592;
+                        <span>Back to product</span>
+                    </a>
+                </nav>
+                <h1 class="prw-arch-title">
+                    <span>Reviews of</span>
+                    <span class="prw-arch-prod" t-esc="product.name"/>
+                </h1>
+
+                <!-- Re-use the widget for the hero + filter + cards;
+                     pass an extra flag so it can render every review. -->
+                <t t-set="archive_mode" t-value="True"/>
+
+                <t t-set="sp" t-value="product.sudo()"/>
+                <t t-set="reviews_all"   t-value="reviews_page"/>
+                <t t-set="is_logged"     t-value="not request.env.user._is_public()"/>
+                <t t-set="photo_count"   t-value="len(sp.rating_ids.filtered(lambda r: r.consumed and r.review_image_ids))"/>
+                <t t-set="verified_count" t-value="len(sp.rating_ids.filtered(lambda r: r.consumed and r.is_verified_purchase))"/>
+                <t t-set="recommend_pct"  t-value="int((len(sp.rating_ids.filtered(lambda r: r.consumed and r.rating &gt;= 4)) * 100) / max(sp.pr_total, 1))"/>
+                <t t-set="positive_pct"   t-value="int((sp.pr_star_5 * 100) / max(sp.pr_total, 1))"/>
+
+                <div class="prw" t-att-data-product-id="sp.id"
+                     t-att-data-logged="'1' if is_logged else '0'"
+                     t-att-data-login-url="'/web/login?redirect=' + request.httprequest.path">
+                    <!-- Hero (V1 Marketplace Vibrant) -->
+                    <div class="prw-hero">
+                        <div class="prw-hero-grid">
+                            <div class="prw-hero-score">
+                                <div class="prw-h-lbl">Customer Reviews</div>
+                                <div class="prw-score-big">
+                                    <span class="prw-score-num"><t t-esc="('%.1f' % sp.pr_avg) if sp.pr_total else '—'"/></span>
+                                    <span class="prw-score-out">/ 5</span>
+                                </div>
+                                <div class="prw-score-stars">
+                                    <t t-foreach="[1,2,3,4,5]" t-as="s">
+                                        <span t-attf-class="prw-bigstar #{'full' if s &lt;= int(sp.pr_avg) else ('half' if (sp.pr_avg &gt; s-1 and sp.pr_avg &lt; s) else 'empty')}">&#9733;</span>
+                                    </t>
+                                </div>
+                                <span class="prw-score-pill">
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" style="color:#047857"><path d="M12 1 3 5v6c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V5l-9-4zm-1.5 14L7 11.5l1.4-1.4 2.1 2.1L15.6 7l1.4 1.4L10.5 15z"/></svg>
+                                    <strong t-esc="sp.pr_total"/> <span>verified reviews</span>
+                                </span>
+                            </div>
+                            <div class="prw-hero-dist">
+                                <div class="prw-h-lbl">Star breakdown</div>
+                                <div class="prw-bars">
+                                    <t t-set="tot" t-value="sp.pr_total or 1"/>
+                                    <t t-foreach="[(5,sp.pr_star_5),(4,sp.pr_star_4),(3,sp.pr_star_3),(2,sp.pr_star_2),(1,sp.pr_star_1)]" t-as="row">
+                                        <t t-set="pct" t-value="int(row[1]*100//tot)"/>
+                                        <div t-attf-class="prw-bar-row prw-bar-r#{row[0]}">
+                                            <span class="prw-bar-stars"><span t-esc="row[0]"/><span class="prw-bar-staricon">&#9733;</span></span>
+                                            <div class="prw-bar-track"><div class="prw-bar-fill" t-att-style="'width:' + str(pct) + '%'"/></div>
+                                            <span class="prw-bar-count"><span t-esc="row[1]"/></span>
+                                            <span class="prw-bar-pct"><span t-esc="pct"/>%</span>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="prw-hero-stats">
+                                <div class="prw-h-lbl">At a glance</div>
+                                <div class="prw-stats-grid">
+                                    <div class="prw-stat prw-stat-c1"><span class="prw-stat-num"><t t-esc="recommend_pct"/>%</span><span class="prw-stat-lbl">Recommend</span></div>
+                                    <div class="prw-stat prw-stat-c2"><span class="prw-stat-num"><t t-esc="verified_count"/></span><span class="prw-stat-lbl">Verified</span></div>
+                                    <div class="prw-stat prw-stat-c3"><span class="prw-stat-num"><t t-esc="photo_count"/></span><span class="prw-stat-lbl">Photos</span></div>
+                                    <div class="prw-stat prw-stat-c4"><span class="prw-stat-num"><t t-esc="positive_pct"/>%</span><span class="prw-stat-lbl">5-star</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ALL reviews list -->
+                    <div class="prw-list prw-archive-list">
+                        <t t-foreach="reviews_page" t-as="rv">
+                            <t t-call="product_reviews.review_card">
+                                <t t-set="rv" t-value="rv"/>
+                            </t>
+                        </t>
+                    </div>
+
+                    <!-- Pagination -->
+                    <t t-if="pager.get('total_pages', 1) &gt; 1">
+                        <nav class="prw-arch-pager" aria-label="Pagination">
+                            <t t-foreach="range(1, pager['total_pages'] + 1)" t-as="p">
+                                <t t-if="p == pager['page']">
+                                    <span class="prw-pg-item prw-pg-active" t-esc="p"/>
+                                </t>
+                                <t t-else="">
+                                    <a t-attf-href="/shop/#{slug(product)}/reviews?page=#{p}" class="prw-pg-item" t-esc="p"/>
+                                </t>
+                            </t>
+                        </nav>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Hook our widget into Odoo's reviews tab on the product page -->
     <template id="product_comment_override" name="Discussion and Rating"
               inherit_id="website_sale.product_comment" priority="20">
         <xpath expr="//t[@t-call='portal.message_thread']" position="replace" optional="True">

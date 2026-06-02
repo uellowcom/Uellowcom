@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_seo_page_mgr,seo.page.mgr,model_uellow_seo_page,uellow_seo_auto.group_seo_manager,1,1,1,1
 access_seo_page_admin,seo.page.admin,model_uellow_seo_page,base.group_system,1,1,1,1
-access_seo_page_user,seo.page.user,model_uellow_seo_page,base.group_user,1,0,0,0
+access_seo_page_faq_mgr,seo.page.faq.mgr,model_uellow_seo_page_faq,uellow_seo_auto.group_seo_manager,1,1,1,1
+access_seo_page_faq_admin,seo.page.faq.admin,model_uellow_seo_page_faq,base.group_system,1,1,1,1

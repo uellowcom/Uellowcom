@@ -1,4 +1,9 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_seo_config,seo.config,model_uellow_seo_config,base.group_system,1,1,1,1
-access_seo_product_user,seo.product.user,model_uellow_seo_product,base.group_user,1,0,0,0
+access_seo_config_mgr,seo.config.mgr,model_uellow_seo_config,uellow_seo_auto.group_seo_manager,1,1,1,0
+access_seo_config_admin,seo.config.admin,model_uellow_seo_config,base.group_system,1,1,1,1
+access_seo_product_mgr,seo.product.mgr,model_uellow_seo_product,uellow_seo_auto.group_seo_manager,1,1,1,1
 access_seo_product_admin,seo.product.admin,model_uellow_seo_product,base.group_system,1,1,1,1
+access_seo_redirect_mgr,seo.redirect.mgr,model_uellow_seo_redirect,uellow_seo_auto.group_seo_manager,1,1,1,1
+access_seo_redirect_admin,seo.redirect.admin,model_uellow_seo_redirect,base.group_system,1,1,1,1
+access_seo_wizard_mgr,seo.wizard.mgr,model_uellow_seo_generate_wizard,uellow_seo_auto.group_seo_manager,1,1,1,1
+access_seo_wizard_admin,seo.wizard.admin,model_uellow_seo_generate_wizard,base.group_system,1,1,1,1

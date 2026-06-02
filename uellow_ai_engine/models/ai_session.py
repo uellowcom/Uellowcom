@@ -33,11 +33,27 @@ class AiChatSession(models.Model):
             })
         return session
 
-    def get_messages(self):
+    def get_messages(self, limit=None):
         try:
-            return json.loads(self.messages_json or '[]')
+            msgs = json.loads(self.messages_json or '[]')
         except Exception:
             return []
+        # Trim to last N messages to save tokens (configurable; 0/None = all)
+        if limit is None:
+            raw = self.env['ir.config_parameter'].sudo().get_param(
+                'uellow_ai.history_limit', '8'
+            )
+            try:
+                limit = int(raw)
+            except Exception:
+                limit = 8
+        if limit and limit > 0 and len(msgs) > limit:
+            msgs = msgs[-limit:]
+            # Ensure the window starts on a 'user' message so the
+            # conversation reads cleanly for Claude.
+            while msgs and msgs[0].get('role') != 'user':
+                msgs = msgs[1:]
+        return msgs
 
     def add_message(self, role, content):
         msgs = self.get_messages()

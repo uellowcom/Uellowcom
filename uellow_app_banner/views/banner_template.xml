@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="uellow_app_banner" name="Uellow App Smart Banner"
+              inherit_id="website.layout" priority="99">
+        <xpath expr="//header" position="before">
+            <div id="uellow-app-banner" style="display:none">
+                <div class="uab-inner">
+                    <div class="uab-logo">
+                        <img src="/web/image/website/1/favicon" alt="Uellow"/>
+                    </div>
+                    <div class="uab-text">
+                        <strong class="uab-title">
+                            <span class="en">Uellow App</span>
+                            <span class="ar">تطبيق يلو</span>
+                        </strong>
+                        <span class="uab-sub">
+                            <span class="en">Shop faster · Track orders live · Earn points</span>
+                            <span class="ar">تسوق أسرع · تتبع طلباتك مباشرة · اكسب نقاط</span>
+                        </span>
+                    </div>
+                    <a id="uab-cta" class="uab-cta" href="#">
+                        <span class="en">Open</span>
+                        <span class="ar">فتح</span>
+                    </a>
+                    <button id="uab-close" class="uab-close" aria-label="Close">×</button>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

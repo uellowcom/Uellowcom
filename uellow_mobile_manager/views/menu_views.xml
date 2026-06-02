@@ -20,5 +20,5 @@
     <menuitem id="menu_mobile_search_analytic" name="Search Analytics" parent="menu_mobile_analytics" action="action_mobile_search_analytic" sequence="20"/>
     <menuitem id="menu_mobile_settings" name="Settings" parent="menu_mobile_root" sequence="99"/>
     <menuitem id="menu_mobile_feature_flag" name="Feature Flags" parent="menu_mobile_settings" action="action_mobile_feature_flag" sequence="10"/>
-    <menuitem id="menu_mobile_app_setting" name="App Settings" parent="menu_mobile_settings" action="action_mobile_app_setting" sequence="20"/>
+    <menuitem id="menu_mobile_app_setting" name="App Settings" parent="menu_mobile_settings" action="action_mobile_app_setting_open" sequence="20"/>
 </odoo>

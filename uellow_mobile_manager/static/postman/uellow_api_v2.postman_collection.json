@@ -1,0 +1,287 @@
+{
+  "info": {
+    "name": "Uellow Mobile API v2",
+    "_postman_id": "a4f7e2c1-9b3a-4d5e-8c7f-1234567890ab",
+    "description": "Full coverage of /api/mobile/v2/* — auth, products, cart, orders, profile, loyalty, wallet, Beena, notifications.\n\n**Setup:**\n1. Import this collection + the environment file.\n2. Set `base_url` to your Odoo host (default: https://www.uellow.com).\n3. Run 'Auth > Login' once — the test script auto-saves the token into the `token` env var.\n4. All subsequent requests pick up the token from `{{token}}` automatically.\n\nGuest endpoints (home/products/categories/search/settings) work without a token.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+  },
+  "variable": [
+    {"key": "base_url", "value": "https://www.uellow.com"},
+    {"key": "token",     "value": ""},
+    {"key": "cart_token","value": ""}
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-add X-Cart-Token if we have one stored",
+          "const ct = pm.environment.get('cart_token') || pm.collectionVariables.get('cart_token');",
+          "if (ct) pm.request.headers.add({key:'X-Cart-Token', value: ct});",
+          "// Default language header",
+          "if (!pm.request.headers.has('X-Lang')) pm.request.headers.add({key:'X-Lang', value:'en'});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (email+password)",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/login", "host": ["{{base_url}}"], "path": ["api","mobile","v2","auth","login"]},
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"email\": \"ali@uellow.com\",\n  \"password\": \"YOUR_PASSWORD\",\n  \"device_id\": \"postman-dev\",\n  \"device_name\": \"Postman\",\n  \"app_version\": \"4.1.11\"\n}"}
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.success && json.data && json.data.token) {",
+                  "  pm.collectionVariables.set('token', json.data.token);",
+                  "  pm.environment.set('token', json.data.token);",
+                  "  console.log('Token saved:', json.data.token.slice(0, 16) + '...');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/register"},
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "body": {"mode":"raw","raw":"{\n  \"name\": \"Test User\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"changeme123\",\n  \"phone\": \"+96599000000\"\n}"}
+          }
+        },
+        {
+          "name": "OTP Request",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/otp/request"},
+            "body": {"mode":"raw","raw":"{\"phone\": \"+96599000000\"}"}
+          }
+        },
+        {
+          "name": "OTP Verify",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/otp/verify"},
+            "body": {"mode":"raw","raw":"{\"phone\":\"+96599000000\",\"firebase_uid\":\"FIREBASE_UID_HERE\",\"name\":\"Phone User\"}"}
+          }
+        },
+        {
+          "name": "Social — Google",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/social/google"},
+            "body": {"mode":"raw","raw":"{\"email\":\"google@example.com\",\"provider_user_id\":\"GOOGLE_UID\",\"name\":\"Google User\"}"}
+          }
+        },
+        {
+          "name": "Social — Apple",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/social/apple"},
+            "body": {"mode":"raw","raw":"{\"email\":\"apple@privaterelay.appleid.com\",\"provider_user_id\":\"APPLE_UID\",\"name\":\"Apple User\"}"}
+          }
+        },
+        {
+          "name": "Social — Facebook",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/social/facebook"},
+            "body": {"mode":"raw","raw":"{\"email\":\"fb@example.com\",\"provider_user_id\":\"FB_UID\",\"name\":\"Facebook User\"}"}
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/forgot"},
+            "body": {"mode":"raw","raw":"{\"email\":\"ali@uellow.com\"}"}
+          }
+        },
+        {
+          "name": "Me (current user)",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/me"}
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": {"raw": "{{base_url}}/api/mobile/v2/auth/logout"}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {"name":"Update","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/profile/update","body":{"mode":"raw","raw":"{\"name\":\"New Name\",\"phone\":\"+96599111111\"}"}}},
+        {"name":"Change Password","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/profile/change-password","body":{"mode":"raw","raw":"{\"old_password\":\"old\",\"new_password\":\"newpass123\"}"}}},
+        {"name":"Delete Account","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/profile/delete"}}
+      ]
+    },
+    {
+      "name": "Home",
+      "item": [
+        {"name":"Home (sliders + sections + popups)","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/home"}}
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {"name":"List","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products?page=1&per_page=20&sort=newest"}},
+        {"name":"List by category","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products?category_id=1&sort=price_asc"}},
+        {"name":"List on sale","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products?on_sale=1&per_page=10"}},
+        {"name":"Search","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products?search=watch"}},
+        {"name":"Detail","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products/1786"}},
+        {"name":"Variants","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products/1786/variants"}},
+        {"name":"Reviews","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products/1786/reviews"}},
+        {"name":"Related","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products/1786/related"}},
+        {"name":"Top selling","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products/top-selling"}},
+        {"name":"Recommended (auth-aware)","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products/recommended"}},
+        {"name":"Recently viewed (auth)","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products/recently-viewed"}},
+        {"name":"Products by section","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/products/section/1"}},
+        {"name":"Ask a question","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/products/1786/ask","body":{"mode":"raw","raw":"{\"question\":\"Is this waterproof?\",\"email\":\"guest@example.com\"}"}}}
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {"name":"List roots","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/categories"}},
+        {"name":"List with children","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/categories?with_children=true"}},
+        {"name":"Full tree","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/categories/tree"}},
+        {"name":"Detail","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/categories/1"}},
+        {"name":"Products in category","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/categories/1/products?sort=newest"}}
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get cart",
+          "request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/cart"},
+          "event":[{
+            "listen":"test","script":{"type":"text/javascript","exec":[
+              "const j=pm.response.json();",
+              "if(j.success && j.data && j.data.cart && j.data.cart.cart_token){",
+              "  pm.collectionVariables.set('cart_token', j.data.cart.cart_token);",
+              "}"
+            ]}
+          }]
+        },
+        {
+          "name": "Add to cart",
+          "request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/cart/add","body":{"mode":"raw","raw":"{\"product_id\":1786,\"qty\":1}"}},
+          "event":[{
+            "listen":"test","script":{"type":"text/javascript","exec":[
+              "const j=pm.response.json();",
+              "if(j.success && j.data && j.data.cart && j.data.cart.cart_token){",
+              "  pm.collectionVariables.set('cart_token', j.data.cart.cart_token);",
+              "}"
+            ]}
+          }]
+        },
+        {"name":"Update line","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/cart/update","body":{"mode":"raw","raw":"{\"line_id\":123,\"qty\":3}"}}},
+        {"name":"Remove line","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/cart/remove","body":{"mode":"raw","raw":"{\"line_id\":123}"}}},
+        {"name":"Clear cart","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/cart/clear"}},
+        {"name":"Apply coupon","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/cart/apply-coupon","body":{"mode":"raw","raw":"{\"code\":\"SAVE10\"}"}}},
+        {"name":"Remove coupon","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/cart/remove-coupon"}}
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {"name":"List orders","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/orders?page=1"}},
+        {"name":"Order detail","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/orders/12345"}},
+        {"name":"Shipping methods","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/orders/shipping-methods"}},
+        {"name":"Payment methods","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/orders/payment-methods"}},
+        {"name":"Checkout summary","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/orders/checkout/summary"}},
+        {"name":"Checkout confirm (COD)","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/orders/checkout/confirm","body":{"mode":"raw","raw":"{\"delivery_address_id\":42,\"carrier_id\":1,\"payment_method\":\"cod\"}"}}},
+        {"name":"Checkout confirm (online)","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/orders/checkout/confirm","body":{"mode":"raw","raw":"{\"delivery_address_id\":42,\"carrier_id\":1,\"payment_method\":\"card\"}"}}}
+      ]
+    },
+    {
+      "name": "Addresses",
+      "item": [
+        {"name":"List","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/addresses"}},
+        {"name":"Create","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/addresses/create","body":{"mode":"raw","raw":"{\"name\":\"Home\",\"phone\":\"+96599000000\",\"street\":\"Block 5, Street 12\",\"city\":\"Hawalli\",\"country_id\":119,\"zip\":\"30000\",\"type\":\"delivery\"}"}}},
+        {"name":"Update","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/addresses/42/update","body":{"mode":"raw","raw":"{\"phone\":\"+96599111222\"}"}}},
+        {"name":"Delete","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/addresses/42/delete"}}
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "item": [
+        {"name":"List","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/wishlist"}},
+        {"name":"Add","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/wishlist/add","body":{"mode":"raw","raw":"{\"product_id\":1786}"}}},
+        {"name":"Remove","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/wishlist/remove","body":{"mode":"raw","raw":"{\"product_id\":1786}"}}}
+      ]
+    },
+    {
+      "name": "Search",
+      "item": [
+        {"name":"Search","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/search?q=watch"}},
+        {"name":"Popular queries","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/search/popular"}}
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {"name":"Create review","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/reviews/create","body":{"mode":"raw","raw":"{\"product_id\":1786,\"rating\":5,\"title\":\"Great\",\"body\":\"Loved it.\"}"}}},
+        {"name":"My reviews","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/reviews/mine"}}
+      ]
+    },
+    {
+      "name": "Loyalty + Wallet",
+      "item": [
+        {"name":"Loyalty overview","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/loyalty"}},
+        {"name":"Wallet balance","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/wallet/balance"}},
+        {"name":"Wallet transactions","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/wallet/transactions"}}
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {"name":"List","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/notifications"}},
+        {"name":"Mark as read","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/notifications/12/read"}},
+        {"name":"Register device","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/notifications/register-device","body":{"mode":"raw","raw":"{\"device_id\":\"postman-dev\",\"push_token\":\"FCM_TOKEN\",\"platform\":\"android\",\"device_name\":\"Pixel 7\",\"os_version\":\"14\",\"app_version\":\"4.1.11\"}"}}}
+      ]
+    },
+    {
+      "name": "Beena AI",
+      "item": [
+        {"name":"Config","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/beena/config"}},
+        {"name":"Chat","request":{"method":"POST","url":"{{base_url}}/api/mobile/v2/beena/chat","body":{"mode":"raw","raw":"{\"message\":\"What's the price of the HainoTeko watch?\"}"}}}
+      ]
+    },
+    {
+      "name": "App settings",
+      "item": [
+        {"name":"Settings","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/app/settings?platform=android"}},
+        {"name":"Languages","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/app/languages"}},
+        {"name":"Countries","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/app/countries"}},
+        {"name":"States (Kuwait)","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/app/states?country_id=119"}},
+        {"name":"Version check","request":{"method":"GET","url":"{{base_url}}/api/mobile/v2/app/version-check?version=4.1.11&platform=android"}}
+      ]
+    }
+  ]
+}

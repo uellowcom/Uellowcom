@@ -4,4 +4,4 @@ from . import import_job
 from . import import_job_line
 from . import price_intelligence
 from . import dead_stock
-from . import product_mapping
+# product_mapping removed — model had no view/menu/callsite (E1 from audit)

@@ -65,6 +65,19 @@ class ReviewRequest(models.Model):
     tryon_image     = fields.Binary(string='صورة Try-On')
     tryon_shared    = fields.Boolean(default=False)
 
+    # Group voting: multiple review.request records sharing the same
+    # batch_token form one vote pool over the same try-on image.
+    batch_token     = fields.Char(string='Group vote token', index=True,
+        help='Identifies a multi-reviewer vote on a single try-on image.')
+    tryon_image_id  = fields.Many2one('customer.tryon.image', string='Try-On image record',
+        index=True, ondelete='set null',
+        help='Link to the try-on image record (lets the reviewer dashboard '
+             'show the same generated photo without re-uploading).')
+    kind            = fields.Selection([
+        ('product_review', 'Product review'),
+        ('tryon_opinion',  'Try-on opinion'),
+    ], default='product_review', string='Kind')
+
     def get_messages(self):
         import json
         try:
@@ -127,16 +140,40 @@ class ReviewRequest(models.Model):
 
     def to_dict(self):
         import json
+        tryon_url = ''
+        # Preferred: binary image attached to the customer.tryon.image record.
+        if self.tryon_image_id and self.tryon_image_id.image:
+            tryon_url = '/web/image/customer.tryon.image/%d/image' % self.tryon_image_id.id
+        # Fallback: provider URL (Replicate / FASHN CDN) — used when we only
+        # have the remote URL, not a stored binary.
+        elif self.tryon_image_id and getattr(self.tryon_image_id, 'image_url', ''):
+            tryon_url = self.tryon_image_id.image_url
+        elif self.tryon_image:
+            # Legacy binary on the request itself
+            tryon_url = '/web/image/review.request/%d/tryon_image' % self.id
+        # Final fallback: ir.attachment we created when posting the request
+        if not tryon_url:
+            att = self.env['ir.attachment'].sudo().search([
+                ('res_model', '=', 'review.request'),
+                ('res_id',    '=', self.id),
+                ('mimetype', 'like', 'image/%'),
+            ], limit=1, order='id desc')
+            if att:
+                tryon_url = '/web/image/ir.attachment/%d/datas' % att.id
         return {
             'id':           self.id,
             'token':        self.token,
             'session_type': self.session_type,
+            'kind':         getattr(self, 'kind', '') or 'product_review',
+            'batch_token':  self.batch_token or '',
             'state':        self.state,
             'reviewer':     self.reviewer_id.to_dict() if self.reviewer_id else {},
             'product':      {
-                'id':   self.product_id.id,
-                'name': self.product_id.name,
+                'id':        self.product_id.id,
+                'name':      self.product_id.name,
+                'image_url': '/web/image/product.template/%d/image_256' % self.product_id.id,
             } if self.product_id else {},
+            'tryon_image_url': tryon_url,
             'messages':     self.get_messages(),
             'verdict':      self.reviewer_verdict,
             'notes':        self.reviewer_notes or '',
@@ -146,4 +183,5 @@ class ReviewRequest(models.Model):
                 'comfort':  self.comfort_rating,
             },
             'expires_at':   self.expires_at.isoformat() if self.expires_at else '',
+            'create_date':  self.create_date.isoformat() if self.create_date else '',
         }

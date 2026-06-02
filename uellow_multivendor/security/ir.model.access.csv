@@ -27,3 +27,6 @@ access_payout_wizard,payout.wizard,model_uellow_payout_wizard,base.group_system,
 access_product_reject_wizard,access.product.reject.wizard,model_uellow_product_reject_wizard,base.group_user,1,1,1,1
 access_marketplace_dashboard,access.marketplace.dashboard,model_uellow_marketplace_dashboard,base.group_user,1,1,1,1
 access_marketplace_dashboard,access.marketplace.dashboard,model_uellow_marketplace_dashboard,base.group_user,1,1,1,1
+access_vendor_restock_user,vend.restock.user,model_uellow_vendor_restock,base.group_user,1,0,0,0
+access_vendor_restock_admin,vend.restock.admin,model_uellow_vendor_restock,base.group_system,1,1,1,1
+access_vendor_restock_portal,vend.restock.portal,model_uellow_vendor_restock,base.group_portal,1,1,1,0

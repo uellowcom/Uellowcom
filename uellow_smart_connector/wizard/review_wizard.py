@@ -38,39 +38,79 @@ class ImportReviewWizard(models.TransientModel):
             w.update_count = len(lines.filtered(lambda l: l.product_action == 'update'))
 
     def action_apply_review(self):
-        """Apply review decisions and push approved lines to catalog."""
+        """Apply review decisions and push approved lines to catalog.
+
+        Bugfixes vs. prior version:
+          - D2: `filter_type` is now honoured — was defined but ignored.
+          - A8: per-line apply errors are collected and surfaced via chatter
+            instead of silently swallowed with `try/except: pass`. The job
+            stays in `review` (not flipped to `done`) if any apply failed,
+            so the manager can retry.
+        """
         self.ensure_one()
         job = self.job_id
-        lines = job.line_ids.filtered(lambda l: l.line_state == 'pending')
+        pending = job.line_ids.filtered(lambda l: l.line_state == 'pending')
+
+        # D2: scope by filter_type
+        if self.filter_type == 'warnings':
+            scope = pending.filtered('has_warning')
+        elif self.filter_type == 'new':
+            scope = pending.filtered(lambda l: l.product_action == 'new')
+        elif self.filter_type == 'updates':
+            scope = pending.filtered(lambda l: l.product_action == 'update')
+        else:
+            scope = pending
 
         if self.reject_warnings:
-            lines.filtered('has_warning').write({'line_state': 'rejected'})
-            lines = lines.filtered(lambda l: l.line_state == 'pending')
+            scope.filtered('has_warning').write({'line_state': 'rejected'})
+            scope = scope.filtered(lambda l: l.line_state == 'pending')
 
         if self.approve_all:
-            lines.write({'line_state': 'approved'})
+            scope.write({'line_state': 'approved'})
 
-        # Apply all approved lines
+        # Apply all approved lines — but collect failures.
         approved = job.line_ids.filtered(lambda l: l.line_state == 'approved')
         applied = 0
+        failures = []
         for line in approved:
             try:
                 line.action_apply()
                 applied += 1
-            except Exception:
-                pass
+            except Exception as e:
+                failures.append((line.name_en or str(line.id), str(e)[:160]))
 
-        job.state = 'done'
         job.imported_product_ids = [(6, 0, [
             l.applied_product_id.id
             for l in job.line_ids
             if l.applied_product_id
         ])]
+
+        rejected_count = len(job.line_ids.filtered(lambda l: l.line_state == 'rejected'))
+        if failures:
+            failure_lines = '\n'.join(
+                '• %s — %s' % (name, err) for name, err in failures[:20]
+            )
+            job.message_post(body=_(
+                'تم التطبيق: %d منتج · مرفوض: %d · فشل: %d.\n%s'
+            ) % (applied, rejected_count, len(failures), failure_lines))
+            # Keep job in review so the user can retry the failed lines.
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('تمت المعالجة مع وجود أخطاء'),
+                    'message': _('تم تطبيق %d منتج، وفشل %d. راجع المحادثة للتفاصيل.')
+                               % (applied, len(failures)),
+                    'type': 'warning',
+                    'sticky': True,
+                    'next': {'type': 'ir.actions.act_window_close'},
+                },
+            }
+
+        # All clean → mark done
+        job.state = 'done'
         job.message_post(body=_(
-            'تم التطبيق: %d منتج · مرفوض: %d سطر.') % (
-            applied,
-            len(job.line_ids.filtered(lambda l: l.line_state == 'rejected')),
-        ))
+            'تم التطبيق: %d منتج · مرفوض: %d سطر.') % (applied, rejected_count))
         return {'type': 'ir.actions.act_window_close'}
 
     def action_open_lines(self):

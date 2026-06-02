@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!--
+        Uellow Marketplace Footer — light, data-driven, desktop only.
+
+        Every piece of copy and every URL comes from Odoo:
+          • Logo / name           → website
+          • Brand description     → website.uc_footer_about
+          • Social row            → website.social_facebook / instagram /
+                                    twitter / youtube / tiktok / linkedin /
+                                    github (only the ones actually filled
+                                    in are rendered)
+          • App store badges      → website.uc_app_ios_url /
+                                    uc_app_android_url / uc_app_huawei_url
+          • Newsletter pitch      → website.uc_footer_newsletter_intro
+          • Phone / email / addr  → website.company_id
+          • Credit line           → website.uc_footer_credit
+    -->
+
+    <template id="template_footer_style_9" inherit_id="website.layout"
+              name="Footer Style - 9 (Uellow Marketplace)" active="False">
+        <xpath expr="//div[@id='footer']" position="replace">
+            <div id="footer" class="uc-footer-shell" t-if="not no_footer" t-ignore="true">
+
+                <!-- Pre-compute reusable values once. `sudo()` so the public
+                     visitor can read the company contact address — these
+                     are PUBLIC details we WANT shown in the footer; without
+                     sudo Odoo raises AccessError on `_co.partner_id.contact_address`. -->
+                <t t-set="_co"       t-value="website.company_id.sudo()"/>
+                <t t-set="_socials"  t-value="website._uc_socials()"/>
+                <t t-set="_ios"      t-value="website.uc_app_ios_url"/>
+                <t t-set="_android"  t-value="website.uc_app_android_url"/>
+                <t t-set="_huawei"   t-value="website.uc_app_huawei_url"/>
+
+                <!-- ─── 1. Trust strip ─── -->
+                <div class="uc-foot-trust uc-foot-bleed">
+                    <div class="uc-foot-inner">
+                        <div class="uc-foot-trust-row">
+                            <div class="uc-foot-trust-card">
+                                <span class="uc-foot-trust-icon"><i class="fa fa-lock"/></span>
+                                <div class="uc-foot-trust-body">
+                                    <strong t-out="website._uc_t('Secure payment')"/>
+                                    <small t-out="website._uc_t('SSL encrypted checkout')"/>
+                                </div>
+                            </div>
+                            <div class="uc-foot-trust-card">
+                                <span class="uc-foot-trust-icon"><i class="fa fa-truck"/></span>
+                                <div class="uc-foot-trust-body">
+                                    <strong t-out="website._uc_t('Free delivery')"/>
+                                    <small t-out="website._uc_t('On qualifying orders')"/>
+                                </div>
+                            </div>
+                            <div class="uc-foot-trust-card">
+                                <span class="uc-foot-trust-icon"><i class="fa fa-undo"/></span>
+                                <div class="uc-foot-trust-body">
+                                    <strong t-out="website._uc_t('Easy returns')"/>
+                                    <small t-out="website._uc_t('14-day hassle-free returns')"/>
+                                </div>
+                            </div>
+                            <div class="uc-foot-trust-card">
+                                <span class="uc-foot-trust-icon"><i class="fa fa-headphones"/></span>
+                                <div class="uc-foot-trust-body">
+                                    <strong t-out="website._uc_t('24/7 support')"/>
+                                    <small t-if="_co.phone" t-out="_co.phone"/>
+                                    <small t-else="" t-out="website._uc_t('Real humans, always on')"/>
+                                </div>
+                            </div>
+                            <div class="uc-foot-trust-card">
+                                <span class="uc-foot-trust-icon"><i class="fa fa-mobile"/></span>
+                                <div class="uc-foot-trust-body">
+                                    <strong t-out="website._uc_t('Uellow App')"/>
+                                    <small t-out="website._uc_t('Faster shopping, better deals')"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── 2. Main grid ─── -->
+                <div class="uc-foot-main uc-foot-bleed">
+                    <div class="uc-foot-inner">
+                        <div class="uc-foot-grid">
+
+                            <!-- Brand column -->
+                            <div class="uc-foot-col uc-foot-brand">
+                                <a href="/" class="uc-foot-logo">
+                                    <img t-attf-src="/web/image/website/#{website.id}/logo"
+                                         t-att-alt="website.name"/>
+                                </a>
+                                <p class="uc-foot-tagline" t-if="website.uc_footer_about"
+                                   t-out="website.uc_footer_about"/>
+
+                                <!-- Contact lines from the company record -->
+                                <ul class="uc-foot-contact" t-if="_co.phone or _co.email or _co.partner_id.contact_address">
+                                    <li t-if="_co.phone">
+                                        <i class="fa fa-phone"/>
+                                        <a t-attf-href="tel:#{_co.phone}" t-out="_co.phone"/>
+                                    </li>
+                                    <li t-if="_co.email">
+                                        <i class="fa fa-envelope"/>
+                                        <a t-attf-href="mailto:#{_co.email}" t-out="_co.email"/>
+                                    </li>
+                                    <li t-if="_co.partner_id.contact_address">
+                                        <i class="fa fa-map-marker"/>
+                                        <span t-out="_co.partner_id.contact_address.strip().replace('\n', ', ')"/>
+                                    </li>
+                                </ul>
+
+                                <!-- Social row — only socials actually configured -->
+                                <div class="uc-foot-social" t-if="_socials">
+                                    <a t-foreach="_socials" t-as="_s"
+                                       t-att-href="_s.get('url')"
+                                       t-att-aria-label="_s.get('label')"
+                                       t-att-title="_s.get('label')"
+                                       target="_blank" rel="noopener">
+                                        <i t-attf-class="fa fa-#{_s.get('icon')}"/>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Account column -->
+                            <div class="uc-foot-col">
+                                <h6 class="uc-foot-head" t-out="website._uc_t('My account')"/>
+                                <ul class="uc-foot-links">
+                                    <li><a href="/my/home"     t-out="website._uc_t('Dashboard')"/></li>
+                                    <li><a href="/my/orders"   t-out="website._uc_t('My orders')"/></li>
+                                    <li><a href="/my/invoices" t-out="website._uc_t('Invoices')"/></li>
+                                    <li><a href="/my/loyalty"  t-out="website._uc_t('Loyalty points')"/></li>
+                                    <li><a href="/shop/wishlist" t-out="website._uc_t('Wishlist')"/></li>
+                                    <li><a href="/my/account"  t-out="website._uc_t('Addresses')"/></li>
+                                </ul>
+                            </div>
+
+                            <!-- Help column -->
+                            <div class="uc-foot-col">
+                                <h6 class="uc-foot-head" t-out="website._uc_t('Customer service')"/>
+                                <ul class="uc-foot-links">
+                                    <li><a href="/contactus"      t-out="website._uc_t('Contact us')"/></li>
+                                    <li><a href="/page/faq"       t-out="website._uc_t('FAQ')"/></li>
+                                    <li><a href="/page/shipping"  t-out="website._uc_t('Shipping &amp; delivery')"/></li>
+                                    <li><a href="/page/returns"   t-out="website._uc_t('Returns &amp; refunds')"/></li>
+                                    <li><a href="/my/tickets"     t-out="website._uc_t('Support tickets')"/></li>
+                                    <li><a href="/page/track-order" t-out="website._uc_t('Track my order')"/></li>
+                                </ul>
+                            </div>
+
+                            <!-- Discover column -->
+                            <div class="uc-foot-col">
+                                <h6 class="uc-foot-head" t-out="website._uc_t('Discover')"/>
+                                <ul class="uc-foot-links">
+                                    <li><a href="/shop"          t-out="website._uc_t('All categories')"/></li>
+                                    <li t-set="_d" t-value="website._uc_deals_resolve()"/>
+                                    <li t-if="_d"><a t-att-href="_d.get('url')" t-out="_d.get('label')"/></li>
+                                    <li><a href="/shop?search=new" t-out="website._uc_t('New arrivals')"/></li>
+                                    <li><a href="/blog"            t-out="website._uc_t('Blog')"/></li>
+                                    <li><a href="/page/about-us"   t-out="website._uc_t('About Uellow')"/></li>
+                                    <li><a href="/page/careers"    t-out="website._uc_t('Careers')"/></li>
+                                </ul>
+                            </div>
+
+                            <!-- App + Newsletter column -->
+                            <div class="uc-foot-col uc-foot-cta">
+                                <h6 class="uc-foot-head" t-out="website._uc_t('Get the App')"/>
+                                <p class="uc-foot-mini" t-if="website.uc_footer_newsletter_intro"
+                                   t-out="website.uc_footer_newsletter_intro"/>
+                                <div class="uc-foot-app-row" t-if="_ios or _android or _huawei">
+                                    <a t-if="_ios" class="uc-foot-app-badge" t-att-href="_ios"
+                                       target="_blank" rel="noopener">
+                                        <i class="fa fa-apple"/>
+                                        <span>
+                                            <small t-out="website._uc_t('Download on the')"/>
+                                            <b t-out="website._uc_t('App Store')"/>
+                                        </span>
+                                    </a>
+                                    <a t-if="_android" class="uc-foot-app-badge" t-att-href="_android"
+                                       target="_blank" rel="noopener">
+                                        <i class="fa fa-android"/>
+                                        <span>
+                                            <small t-out="website._uc_t('Get it on')"/>
+                                            <b t-out="website._uc_t('Google Play')"/>
+                                        </span>
+                                    </a>
+                                    <a t-if="_huawei" class="uc-foot-app-badge" t-att-href="_huawei"
+                                       target="_blank" rel="noopener">
+                                        <i class="fa fa-globe"/>
+                                        <span>
+                                            <small>Explore it on</small>
+                                            <b>AppGallery</b>
+                                        </span>
+                                    </a>
+                                </div>
+                                <h6 class="uc-foot-head mt-3" t-out="website._uc_t('Newsletter')"/>
+                                <form class="uc-foot-news" action="/website_mail/follow" method="post">
+                                    <input type="email" name="email" required="required"
+                                           t-att-placeholder="website._uc_t('Email address')"/>
+                                    <button type="submit" t-out="website._uc_t('Subscribe')"/>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── 3. Payments + storefront ─── -->
+                <div class="uc-foot-pay uc-foot-bleed">
+                    <div class="uc-foot-inner">
+                        <div class="uc-foot-pay-row">
+                            <div class="uc-foot-pay-left">
+                                <span class="uc-foot-pay-label" t-out="website._uc_t('We accept')"/>
+                                <div class="uc-foot-pay-icons">
+                                    <span class="uc-foot-pay-chip"><i class="fa fa-cc-visa"/></span>
+                                    <span class="uc-foot-pay-chip"><i class="fa fa-cc-mastercard"/></span>
+                                    <span class="uc-foot-pay-chip"><i class="fa fa-cc-amex"/></span>
+                                    <span class="uc-foot-pay-chip"><i class="fa fa-cc-paypal"/></span>
+                                    <span class="uc-foot-pay-chip"><i class="fa fa-cc-stripe"/></span>
+                                    <span class="uc-foot-pay-chip uc-foot-pay-chip-text">KNET</span>
+                                    <span class="uc-foot-pay-chip uc-foot-pay-chip-text">mada</span>
+                                    <span class="uc-foot-pay-chip"><i class="fa fa-money"/></span>
+                                </div>
+                            </div>
+                            <div class="uc-foot-pay-right">
+                                <a href="#" class="uc-foot-storefront">
+                                    <i class="fa fa-globe"/>
+                                    <span t-out="website._uc_t('Ship to')"/>: <strong t-out="website.name"/>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── 4. Copyright bar ─── -->
+                <div class="uc-foot-bottom uc-foot-bleed">
+                    <div class="uc-foot-inner">
+                        <div class="uc-foot-bottom-row">
+                            <div class="uc-foot-copy">
+                                <span>©</span>
+                                <strong t-out="website.name"/>
+                                <span t-out="website._uc_t('All rights reserved.')"/>
+                            </div>
+                            <div class="uc-foot-policies">
+                                <a href="/page/privacy"      t-out="website._uc_t('Privacy')"/>
+                                <a href="/page/terms"        t-out="website._uc_t('Terms')"/>
+                                <a href="/page/cookies"      t-out="website._uc_t('Cookies')"/>
+                                <a href="/page/accessibility" t-out="website._uc_t('Accessibility')"/>
+                            </div>
+                            <div class="uc-foot-credit" t-if="website.uc_footer_credit">
+                                <span t-out="website.uc_footer_credit"/>
+                                <i class="fa fa-heart"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </xpath>
+    </template>
+
+</odoo>

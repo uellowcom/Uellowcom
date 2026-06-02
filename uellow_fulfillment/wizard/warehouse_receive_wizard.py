@@ -94,11 +94,14 @@ class WarehouseReceiveWizard(models.TransientModel):
             accepted = max(0, wline.qty_received - wline.qty_damaged)
             if accepted <= 0:
                 continue
+            prod = wline.product_id or wline.restock_line_id.product_id
+            if not prod:
+                continue
             moves.append((0, 0, {
-                'name': wline.product_id.display_name,
-                'product_id': wline.product_id.id,
+                'name': prod.display_name,
+                'product_id': prod.id,
                 'product_uom_qty': accepted,
-                'product_uom': wline.product_id.uom_id.id,
+                'product_uom': prod.uom_id.id,
                 'location_id': supplier_loc.id,
                 'location_dest_id': loc_dest.id,
             }))
@@ -145,8 +148,8 @@ class WarehouseReceiveWizardLine(models.TransientModel):
     _description = 'سطر استلام Wizard'
 
     wizard_id = fields.Many2one('uellow.warehouse.receive.wizard', ondelete='cascade')
-    restock_line_id = fields.Many2one('uellow.restock.request.line', readonly=True)
-    product_id = fields.Many2one('product.product', string='المنتج (Variant)', readonly=True)
+    restock_line_id = fields.Many2one('uellow.restock.request.line')
+    product_id = fields.Many2one('product.product', string='المنتج (Variant)')
     variant_description = fields.Char('اللون/الحجم', readonly=True)
     qty_requested = fields.Integer('مطلوب', readonly=True)
     qty_received = fields.Integer('وصل فعلاً', required=True)

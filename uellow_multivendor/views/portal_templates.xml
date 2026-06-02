@@ -13,6 +13,19 @@
         .o_main_navbar { display: none !important; }
         body.o_portal { background: #f4f6f8; }
 
+        /* ── Hide website (Theme Prime) header and footer in vendor portal ── */
+        #wrapwrap &gt; header,
+        #wrapwrap &gt; footer,
+        header#top,
+        .o_header_standard,
+        #o_main_nav,
+        .tp_header_wrapper,
+        .o_footer,
+        footer,
+        .o_footer_copyright,
+        #footer { display: none !important; }
+        #wrapwrap &gt; main { padding-top: 0 !important; margin-top: 0 !important; }
+
         /* ── Topbar ── */
         .vp-topbar {
           position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
@@ -75,6 +88,23 @@
           display: none;
         }
         .vp-notif-panel.open { display: block; animation: vp-slide-down .2s ease; }
+
+        /* ── Profile dropdown ── */
+        .vp-profile-panel {
+          position: absolute; top: 40px; right: 0;
+          width: 190px; background: #fff;
+          border: 0.5px solid #e8e8e8; border-radius: 12px;
+          z-index: 2000; box-shadow: 0 8px 24px rgba(0,0,0,.08);
+          display: none; overflow: hidden;
+        }
+        .vp-profile-panel.open { display: block; animation: vp-slide-down .2s ease; }
+        .vp-profile-item {
+          display: flex; align-items: center; gap: 9px;
+          padding: 10px 14px; font-size: 13px; color: #444;
+          text-decoration: none; transition: background .1s;
+        }
+        .vp-profile-item:hover { background: #fafafa; text-decoration: none; }
+        .vp-profile-item i { font-size: 14px; width: 16px; text-align: center; }
         @keyframes vp-slide-down {
           from { opacity: 0; transform: translateY(-6px); }
           to { opacity: 1; transform: translateY(0); }
@@ -435,8 +465,20 @@
       </div>
 
       <t t-if="vendor">
-        <div class="vp-avatar" title="Your store">
-          <t t-esc="(vendor.store_name_en or 'V')[:2].upper()"/>
+        <t t-set="is_ar" t-value="(request.env.lang or 'en_US').startswith('ar')"/>
+        <div style="position:relative">
+          <div class="vp-avatar" title="Your store" onclick="vpToggleProfile()">
+            <t t-esc="(vendor.store_name_en or 'V')[:2].upper()"/>
+          </div>
+          <div class="vp-profile-panel" id="vp-profile-panel">
+            <div style="padding:12px 14px;border-bottom:0.5px solid #f0f0f0">
+              <div style="font-size:13px;font-weight:600;color:#333"><t t-esc="vendor.store_name_en or 'Store'"/></div>
+              <div style="font-size:11px;color:#888"><t t-esc="vendor.tier or ''"/></div>
+            </div>
+            <a t-attf-href="/store/#{vendor.store_slug}" class="vp-profile-item"><i class="fa fa-external-link"></i> <t t-esc="'عرض المتجر' if is_ar else 'View store'"/></a>
+            <a href="/my/vendor/settings" class="vp-profile-item"><i class="fa fa-cog"></i> <t t-esc="'الإعدادات' if is_ar else 'Settings'"/></a>
+            <a href="/web/session/logout?redirect=/" class="vp-profile-item" style="color:#e24b4a"><i class="fa fa-sign-out"></i> <t t-esc="'تسجيل الخروج' if is_ar else 'Sign out'"/></a>
+          </div>
         </div>
       </t>
     </div>
@@ -459,15 +501,23 @@
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_products' and 'active' or ''}"
              href="/my/vendor/products">
-            <i class="fa fa-box"></i> Products
+            <i class="fa fa-cube"></i> Products
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_stock' and 'active' or ''}"
              href="/my/vendor/stock">
-            <i class="fa fa-warehouse"></i> Stock / FBU
+            <i class="fa fa-cubes"></i> Stock / FBU
+          </a>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_restock_list' and 'active' or ''}"
+             href="/my/vendor/restock-requests">
+            <i class="fa fa-refresh"></i> Restock Requests
+          </a>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_withdrawals' and 'active' or ''}"
+             href="/my/vendor/withdrawals">
+            <i class="fa fa-sign-out"></i> <t t-esc="'طلبات السحب' if (request.env.lang or '').startswith('ar') else 'Stock Withdrawals'"/>
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_wallet' and 'active' or ''}"
              href="/my/vendor/wallet">
-            <i class="fa fa-wallet"></i> Wallet
+            <i class="fa fa-credit-card"></i> Wallet
           </a>
 
           <div class="vp-sidebar-label" style="margin-top:6px">Marketing</div>
@@ -481,6 +531,10 @@
           </a>
 
           <div class="vp-sidebar-label" style="margin-top:6px">Store</div>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_style' and 'active' or ''}"
+             href="/my/vendor/style">
+            <i class="fa fa-paint-brush"></i> Style
+          </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_settings' and 'active' or ''}"
              href="/my/vendor/settings">
             <i class="fa fa-cog"></i> Settings
@@ -506,7 +560,7 @@
     </div>
 
     <!-- Auto-refresh + notification polling script -->
-    <script>
+    <script><![CDATA[
     (function(){
       var sidebarOpen = window.innerWidth &gt; 768;
       var notifOpen = false;
@@ -541,6 +595,18 @@
         notifOpen = !notifOpen;
         var panel = document.getElementById('vp-notif-panel');
         if(panel) panel.classList.toggle('open', notifOpen);
+        var pp = document.getElementById('vp-profile-panel');
+        if(pp) pp.classList.remove('open');
+      };
+
+      var profileOpen = false;
+      window.vpToggleProfile = function(){
+        profileOpen = !profileOpen;
+        var pp = document.getElementById('vp-profile-panel');
+        if(pp) pp.classList.toggle('open', profileOpen);
+        var np = document.getElementById('vp-notif-panel');
+        if(np) np.classList.remove('open');
+        notifOpen = false;
       };
 
       window.vpClearNotif = function(){
@@ -556,6 +622,11 @@
           notifOpen = false;
           var panel = document.getElementById('vp-notif-panel');
           if(panel) panel.classList.remove('open');
+        }
+        if(profileOpen &amp;&amp; !e.target.closest('#vp-profile-panel') &amp;&amp; !e.target.closest('.vp-avatar')){
+          profileOpen = false;
+          var pp = document.getElementById('vp-profile-panel');
+          if(pp) pp.classList.remove('open');
         }
       });
 
@@ -605,7 +676,7 @@
       // Initial poll after 3s
       setTimeout(window.vpCheckNotifications, 3000);
     })();
-    </script>
+    ]]></script>
   </t>
 </template>
 
@@ -1041,10 +1112,10 @@
             <tr>
               <td style="font-weight:600"><t t-esc="product.display_name"/></td>
               <td>
-                <div style="font-weight:600"><t t-esc="int(product.fbu_qty or 0)"/> units</div>
+                <div style="font-weight:600"><t t-esc="int(product.vendor_qty or 0)"/> units</div>
                 <div class="vp-stock-bar">
                   <div class="vp-stock-fill"
-                    t-attf-style="width:#{min((product.fbu_qty or 0)/20*100,100)}%;background:#{(product.fbu_qty or 0) > 5 and '#1A7A6E' or (product.fbu_qty or 0) > 0 and '#f59e0b' or '#e24b4a'}">
+                    t-attf-style="width:#{min((product.vendor_qty or 0)/20*100,100)}%;background:#{(product.vendor_qty or 0) > 5 and '#1A7A6E' or (product.vendor_qty or 0) > 0 and '#f59e0b' or '#e24b4a'}">
                   </div>
                 </div>
               </td>
@@ -1314,8 +1385,8 @@
             <tr>
               <td style="font-weight:600"><t t-esc="sale.name"/></td>
               <td style="color:#e24b4a;font-weight:600"><t t-esc="int(sale.discount_pct or 0)"/>% OFF</td>
-              <td style="font-size:11px;color:#888"><t t-esc="sale.start_date"/></td>
-              <td style="font-size:11px;color:#888"><t t-esc="sale.end_date"/></td>
+              <td style="font-size:11px;color:#888"><t t-esc="sale.start_datetime"/></td>
+              <td style="font-size:11px;color:#888"><t t-esc="sale.end_datetime"/></td>
               <td>
                 <span t-attf-class="vp-badge #{sale.state == 'active' and 'vp-b-ok' or sale.state == 'upcoming' and 'vp-b-info' or 'vp-b-gray'}">
                   <t t-esc="sale.state.title() if sale.state else ''"/>
@@ -1513,333 +1584,523 @@
 <!-- ══ STORE PUBLIC PAGE ════════════════════════════════════════════ -->
 <template id="store_page" name="Vendor Store">
   <t t-call="website.layout">
-    <t t-set="no_header" t-value="False"/>
-
+    <t t-set="bc" t-value="vendor.brand_color or '#1A7A6E'"/>
+    <div class="container py-4" style="direction:ltr">
     <style>
-      .vs-hero{background:#1A7A6E;padding:18px 16px;position:relative;overflow:hidden}
-      .vs-hero-pattern{position:absolute;inset:0;pointer-events:none}
-      .vs-hero-content{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
-      .vs-avatar{width:54px;height:54px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#1A7A6E;flex-shrink:0;overflow:hidden}
-      .vs-name{font-size:20px;font-weight:700;color:#fff}
-      .vs-sub{font-size:12px;color:#9FE1CB;margin-top:2px}
-      .vs-meta{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
-      .vs-meta span{font-size:11px;color:#9FE1CB}
-      .vs-live{background:rgba(255,255,255,0.2);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;display:inline-flex;align-items:center;gap:3px;margin-left:6px}
-      .vs-tier{background:rgba(255,255,255,0.2);color:#fff;font-size:9px;padding:2px 7px;border-radius:20px;margin-left:4px}
-      .vs-follow-btn{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.4);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer}
-
-      .vs-nav{background:#fff;border-bottom:1px solid #eee;display:flex;align-items:center;overflow:visible;position:sticky;top:0;z-index:50}
-      .vs-nav-item{padding:11px 13px;font-size:12px;color:#555;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;text-decoration:none;display:flex;align-items:center;gap:3px}
-      .vs-nav-item:hover{color:#1A7A6E;text-decoration:none}
-      .vs-nav-item.active{color:#1A7A6E;border-bottom-color:#1A7A6E;font-weight:500}
-      .vs-nav-badge{font-size:9px;padding:1px 4px;border-radius:20px;background:#FCEBEB;color:#791F1F;font-weight:700}
-      .vs-nav-badge.orange{background:#FAEEDA;color:#633806}
-      .vs-cat-dropdown{position:relative}
-      .vs-cat-menu{display:none;position:absolute;top:100%;left:0;background:#fff;border:0.5px solid #eee;border-radius:8px;min-width:180px;z-index:100;box-shadow:0 4px 12px rgba(0,0,0,.08)}
-      .vs-cat-menu a{padding:9px 14px;font-size:12px;color:#555;cursor:pointer;display:flex;align-items:center;gap:6px;text-decoration:none}
-      .vs-cat-menu a:hover{background:#E1F5EE;color:#085041}
-      .vs-cat-dropdown:hover .vs-cat-menu{display:block}
-      .vs-search-wrap{margin-left:auto;padding:6px 12px;display:flex;align-items:center}
-      .vs-search-box{display:flex;align-items:center;border:0.5px solid #e0e0e0;border-radius:20px;padding:4px 10px;gap:6px;background:#f9f9f9}
-      .vs-search-box input{border:none;background:transparent;font-size:12px;color:#333;outline:none;width:130px}
-
-      .vs-section{padding:14px 16px}
-      .vs-section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-      .vs-section-title{font-size:14px;font-weight:700;color:#1a1a1a}
-      .vs-see-more{font-size:11px;color:#1A7A6E;cursor:pointer;text-decoration:none}
-
-      .vs-flash{background:#1a1a1a;border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-
-      .vs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-      .vs-card{background:#fff;border-radius:10px;overflow:hidden;border:0.5px solid #eee;text-decoration:none;display:block}
-      .vs-card:hover{border-color:#9FE1CB;text-decoration:none}
-      .vs-card-img{position:relative;aspect-ratio:1;background:#f9f9f9;display:flex;align-items:center;justify-content:center;overflow:hidden}
-      .vs-card-img img{width:100%;height:100%;object-fit:cover}
-      .vs-card-img .no-img{font-size:32px;color:#ddd}
-      .vs-badge{position:absolute;top:6px;left:6px;font-size:9px;padding:2px 5px;border-radius:20px;font-weight:700}
-      .vs-badge-disc{background:#E24B4A;color:#fff}
-      .vs-badge-new{background:#1A7A6E;color:#fff}
-      .vs-badge-flash{background:#1a1a1a;color:#fff}
-      .vs-fbu{position:absolute;bottom:6px;left:6px;background:rgba(26,122,110,0.88);color:#fff;font-size:9px;padding:2px 5px;border-radius:20px}
-      .vs-sold{position:absolute;bottom:6px;left:6px;background:rgba(100,56,6,0.85);color:#fff;font-size:9px;padding:2px 5px;border-radius:20px}
-      .vs-card-body{padding:8px}
-      .vs-vendor-row{display:flex;align-items:center;gap:4px;margin-bottom:3px}
-      .vs-vendor-av{width:14px;height:14px;border-radius:3px;background:#E1F5EE;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#085041;flex-shrink:0}
-      .vs-sold-by{font-size:9px;color:#888}
-      .vs-sold-by.fbu strong{color:#085041}
-      .vs-sold-by.vendor strong{color:#854F0B}
-      .vs-sold-by.default strong{color:#0C447C}
-      .vs-pname{font-size:11px;font-weight:600;color:#1a1a1a;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .vs-rating{display:flex;align-items:center;gap:2px;margin-bottom:4px;font-size:10px;color:#f59e0b}
-      .vs-rating span{font-size:9px;color:#888}
-      .vs-price{display:flex;align-items:baseline;gap:4px}
-      .vs-price-main{font-size:13px;font-weight:700;color:#1A7A6E}
-      .vs-price-old{font-size:10px;color:#aaa;text-decoration:line-through}
-      .vs-btn{width:100%;background:#1A7A6E;color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;cursor:pointer;margin-top:6px;display:block;text-align:center;text-decoration:none}
-      .vs-btn:hover{background:#085041;color:#fff;text-decoration:none}
-      .vs-empty{grid-column:1/-1;text-align:center;padding:48px;color:#aaa}
+      .vs-pcard:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,.12); }
+      #vs_follow_btn { transition:transform .15s, box-shadow .15s, background .15s; }
+      #vs_follow_btn:hover { transform:scale(1.06); box-shadow:0 6px 18px rgba(0,0,0,.18); background:#fff !important; }
+      .vs-cat-link:hover { background:#f5f5f5; }
     </style>
 
-    <!-- Hero -->
-    <div class="vs-hero">
-      <svg class="vs-hero-pattern" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="vsd" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="#9FE1CB" opacity="0.3"/></pattern>
-          <pattern id="vsl" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M0 40 L40 0" stroke="#9FE1CB" stroke-width="0.6" opacity="0.2"/></pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#vsl)"/>
-        <rect width="100%" height="100%" fill="url(#vsd)"/>
-        <circle cx="90%" cy="-10" r="90" fill="#9FE1CB" opacity="0.1"/>
-      </svg>
-      <div class="vs-hero-content">
-        <div style="display:flex;gap:12px;align-items:flex-start">
-          <div class="vs-avatar">
-            <t t-if="vendor.logo_attachment_id">
-              <img t-attf-src="/web/content/#{vendor.logo_attachment_id.id}/datas" style="width:100%;height:100%;object-fit:cover"/>
-            </t>
-            <t t-else="">
-              <t t-esc="(vendor.store_name_en or 'U')[:1].upper()"/>
-            </t>
-          </div>
-          <div>
-            <div style="display:flex;align-items:center;flex-wrap:wrap">
-              <span class="vs-name"><t t-esc="vendor.store_name_en or vendor.partner_id.name"/></span>
-              <t t-if="vendor.tier"><span class="vs-tier" style="text-transform:capitalize"><t t-esc="vendor.tier"/></span></t>
-              <span class="vs-live"><span style="width:5px;height:5px;border-radius:50%;background:#4ade80;display:inline-block"></span>Live</span>
+      <div t-attf-style="background:#{bc};border-radius:16px;padding:28px 24px;margin-bottom:18px;position:relative;overflow:hidden">
+        <svg style="position:absolute;inset:0;width:100%;height:100%;opacity:.18;pointer-events:none" xmlns="http://www.w3.org/2000/svg">
+          <defs><pattern id="vsdots" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(15)"><circle cx="4" cy="4" r="2" fill="#ffffff"/></pattern></defs>
+          <rect width="100%" height="100%" fill="url(#vsdots)"/>
+        </svg>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;position:relative;z-index:1">
+          <div style="display:flex;gap:16px;align-items:center">
+            <div style="width:72px;height:72px;border-radius:14px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">
+              <t t-if="vendor.logo_image"><img t-attf-src="/web/image/uellow.vendor/#{vendor.id}/logo_image" style="width:100%;height:100%;object-fit:cover"/></t>
+              <t t-elif="website.logo"><img t-attf-src="#{website.logo}" style="width:100%;height:100%;object-fit:contain;padding:8px;background:#fff"/></t>
+              <t t-else=""><span style="color:#fff;font-size:30px;font-weight:800"><t t-esc="(vendor.store_name_en or 'U')[0].upper()"/></span></t>
             </div>
-            <t t-if="vendor.store_name_ar"><div class="vs-sub"><t t-esc="vendor.store_name_ar"/></div></t>
-            <t t-if="vendor.store_tagline_en"><div class="vs-sub" style="font-style:italic"><t t-esc="vendor.store_tagline_en"/></div></t>
-            <div class="vs-meta">
-              <span><i class="fa fa-star" style="color:#fbbf24"></i> <t t-esc="'%.1f' % (vendor.avg_rating or 0)"/></span>
-              <span><i class="fa fa-users"></i> <t t-esc="vendor.follower_count or 0"/> followers</span>
-              <span><i class="fa fa-box"></i> <t t-esc="len(all_products)"/> products</span>
+            <div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <h1 t-attf-style="color:#{style['header_text']};font-size:24px;font-weight:800;margin:0"><t t-esc="vendor.store_name_en or vendor.partner_id.name"/></h1>
+                <t t-if="vendor.tier"><span style="background:rgba(255,255,255,.92);color:#333;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:capitalize"><t t-esc="vendor.tier"/></span></t>
+                <t t-if="vendor.state == 'active'"><span style="background:rgba(52,211,153,.25);color:#d1fae5;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px"><i class="fa fa-circle" style="font-size:7px;vertical-align:middle"></i> Live</span></t>
+              </div>
+              <t t-if="vendor.store_name_ar"><div t-attf-style="color:#{style['header_text']};opacity:.85;font-size:14px;margin-top:3px;direction:rtl"><t t-esc="vendor.store_name_ar"/></div></t>
+              <t t-if="vendor.store_tagline_en"><div t-attf-style="color:#{style['header_text']};opacity:.7;font-size:12px;font-style:italic;margin-top:2px"><t t-esc="vendor.store_tagline_en"/></div></t>
+              <div t-attf-style="display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;color:#{style['header_text']};opacity:.9">
+                <span style="font-size:12px"><i class="fa fa-star" style="color:#fbbf24"></i> <t t-esc="'%.1f' % (vendor.avg_rating or 0)"/> rating</span>
+                <span style="font-size:12px"><i class="fa fa-users"></i> <t t-esc="vendor.follower_count or 0"/> followers</span>
+                <span style="font-size:12px"><i class="fa fa-box"></i> <t t-esc="len(all_products) if all_products else 0"/> products</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div style="text-align:right">
-          <button class="vs-follow-btn" id="vs-follow-btn"
-                  t-att-data-slug="vendor.store_slug"
-                  t-att-data-following="'1' if is_following else '0'">
-            <i t-att-class="'fa fa-heart' if is_following else 'fa fa-heart-o'"></i>
-            <t t-if="is_following">Following</t>
-            <t t-else="">Follow</t>
+          <button type="button" id="vs_follow_btn" t-att-data-slug="vendor.store_slug" t-att-data-following="'1' if is_following else '0'" t-att-data-login="'0' if (request.env.user and request.env.user.id != request.website.user_id.id) else '1'" style="background:rgba(255,255,255,.95);color:#333;border:none;font-weight:700;font-size:13px;padding:8px 18px;border-radius:24px;cursor:pointer">
+            <i class="fa" t-attf-class="fa #{'fa-check' if is_following else 'fa-heart'}"></i>
+            <span id="vs_follow_label"><t t-esc="'Following' if is_following else 'Follow'"/></span>
           </button>
         </div>
       </div>
-    </div>
-
-    <!-- Nav -->
-    <div class="vs-nav">
-      <a t-attf-href="/store/#{vendor.store_slug}?tab=new_in"
-         t-attf-class="vs-nav-item #{'active' if tab == 'new_in' else ''}">New in</a>
-      <a t-attf-href="/store/#{vendor.store_slug}?tab=best_selling"
-         t-attf-class="vs-nav-item #{'active' if tab == 'best_selling' else ''}">Best selling</a>
-
-      <!-- Categories dropdown -->
-      <div class="vs-nav-item vs-cat-dropdown">
-        Categories <i class="fa fa-caret-down" style="font-size:10px"></i>
-        <div class="vs-cat-menu">
-          <t t-foreach="categories" t-as="cat">
-            <a t-attf-href="/store/#{vendor.store_slug}?tab=cat_#{cat.id}">
-              <i class="fa fa-tag" style="color:#1A7A6E"></i>
-              <t t-esc="cat.name"/>
-            </a>
+      <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <t t-set="tabs" t-value="[('home','Home'),('new_in','New in'),('best_selling','Best selling'),('reviews','Reviews'),('coupons','Coupons')]"/>
+          <t t-foreach="tabs" t-as="tb">
+            <a t-attf-href="/store/#{vendor.store_slug}?tab=#{tb[0]}" t-attf-style="padding:10px 14px;font-size:13px;font-weight:600;text-decoration:none;border-bottom:2px solid #{bc if tab == tb[0] else 'transparent'};color:#{bc if tab == tb[0] else '#666'}"><t t-esc="tb[1]"/></a>
           </t>
-          <t t-if="not categories">
-            <a href="#"><i class="fa fa-inbox" style="color:#ccc"></i> No categories</a>
-          </t>
+          <div id="vs_cat_dd" style="display:inline-block;position:relative">
+            <a href="#" id="vs_cat_toggle" t-attf-style="padding:10px 14px;font-size:13px;font-weight:600;text-decoration:none;border-bottom:2px solid #{bc if tab == 'categories' else 'transparent'};color:#{bc if tab == 'categories' else '#666'}">Categories <i class="fa fa-caret-down"></i></a>
+            <div id="vs_cat_menu" style="display:none;position:absolute;top:100%;left:0;background:#fff;border:1px solid #eee;border-radius:8px;box-shadow:0 6px 24px rgba(0,0,0,.12);min-width:200px;max-height:320px;overflow:auto;z-index:50;padding:6px 0">
+              <t t-if="category_sections"><t t-foreach="category_sections" t-as="sec"><a class="vs-cat-link" t-attf-href="#vs-cat-#{sec['category'].id}" style="display:block;padding:8px 16px;font-size:13px;color:#333;text-decoration:none"><t t-esc="sec['category'].name"/></a></t></t>
+              <t t-else=""><span style="display:block;padding:8px 16px;font-size:13px;color:#aaa">No categories</span></t>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <t t-if="flash_products">
-        <a t-attf-href="/store/#{vendor.store_slug}?tab=flash"
-           t-attf-class="vs-nav-item #{'active' if tab == 'flash' else ''}">
-          Flash sales
-          <span class="vs-nav-badge"><t t-esc="len(flash_products)"/></span>
-        </a>
-      </t>
-
-      <a t-attf-href="/store/#{vendor.store_slug}?tab=reviews"
-         t-attf-class="vs-nav-item #{'active' if tab == 'reviews' else ''}">Reviews</a>
-
-      <a t-attf-href="/store/#{vendor.store_slug}?tab=coupons"
-         t-attf-class="vs-nav-item #{'active' if tab == 'coupons' else ''}">Coupons</a>
-
-      <!-- Search -->
-      <div class="vs-search-wrap">
         <form t-attf-action="/store/#{vendor.store_slug}" method="get" style="margin:0">
-          <div class="vs-search-box">
-            <i class="fa fa-search" style="color:#888;font-size:12px"></i>
-            <input type="text" name="search" t-att-value="search" placeholder="Search in store..."/>
+          <div style="display:flex;border:1px solid #e0e0e0;border-radius:20px;overflow:hidden;max-width:260px">
+            <input type="text" name="search" t-att-value="search" placeholder="Search in store..." style="flex:1;border:none;padding:7px 14px;font-size:13px;outline:none"/>
+            <button type="submit" t-attf-style="background:#{bc};color:#fff;border:none;padding:7px 14px;cursor:pointer"><i class="fa fa-search"></i></button>
           </div>
         </form>
       </div>
-    </div>
 
-    <!-- Flash Sales Section -->
-    <t t-if="flash_products">
-      <div class="vs-section" style="padding-bottom:4px">
-        <div class="vs-flash">
-          <div style="display:flex;align-items:center;gap:8px">
-            <i class="fa fa-bolt" style="color:#f59e0b;font-size:16px"></i>
-            <span style="font-size:14px;font-weight:700;color:#fff">Flash Sales</span>
-            <div style="display:flex;gap:3px;align-items:center;margin-left:10px" id="vs-timer">
-              <div style="background:#E24B4A;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:5px" id="vs-h">00</div>
-              <span style="color:#fff;font-weight:700">:</span>
-              <div style="background:#E24B4A;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:5px" id="vs-m">00</div>
-              <span style="color:#fff;font-weight:700">:</span>
-              <div style="background:#E24B4A;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:5px" id="vs-s">00</div>
+      <t t-if="search">
+        <h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Results for "<t t-esc="search"/>"</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px">
+          <t t-foreach="all_products" t-as="product"><t t-call="uellow_multivendor.vs_card_inline"/></t>
+          <t t-if="not all_products"><div style="grid-column:1/-1;text-align:center;padding:48px;color:#aaa">No products match.</div></t>
+        </div>
+      </t>
+      <t t-else="">
+        <t t-if="tab == 'new_in'">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px">
+            <t t-foreach="new_products" t-as="product"><t t-call="uellow_multivendor.vs_card_inline"/></t>
+            <t t-if="not new_products"><div style="grid-column:1/-1;text-align:center;padding:40px;color:#aaa">No products yet.</div></t>
+          </div>
+        </t>
+        <t t-elif="tab == 'best_selling'">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px">
+            <t t-foreach="best_selling" t-as="product"><t t-call="uellow_multivendor.vs_card_inline"/></t>
+            <t t-if="not best_selling"><div style="grid-column:1/-1;text-align:center;padding:40px;color:#aaa">No products yet.</div></t>
+          </div>
+        </t>
+        <t t-elif="tab == 'categories'">
+          <t t-foreach="category_sections" t-as="sec">
+            <div t-attf-id="vs-cat-#{sec['category'].id}" style="margin-bottom:28px;scroll-margin-top:90px">
+              <h3 style="font-size:17px;font-weight:700;margin:0 0 14px"><t t-esc="sec['category'].name"/></h3>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px"><t t-foreach="sec['products']" t-as="product"><t t-call="uellow_multivendor.vs_card_inline"/></t></div>
             </div>
-          </div>
-          <a t-attf-href="/store/#{vendor.store_slug}?tab=flash" style="color:#aaa;font-size:11px;text-decoration:none">See all →</a>
-        </div>
-        <div class="vs-grid">
-          <t t-foreach="flash_products[:4]" t-as="product">
-            <t t-call="uellow_multivendor.vs_product_card">
-              <t t-set="badge_type" t-value="'flash'"/>
-            </t>
           </t>
-        </div>
-      </div>
-    </t>
+          <t t-if="not category_sections"><div style="text-align:center;padding:40px;color:#aaa">No categories.</div></t>
+        </t>
+        <t t-elif="tab == 'reviews'">
+          <div style="text-align:center;padding:40px;color:#aaa">Reviews coming soon.</div>
+        </t>
+        <t t-elif="tab == 'coupons'">
+          <div style="text-align:center;padding:40px;color:#aaa">No active coupons.</div>
+        </t>
+        <t t-else="">
+          <!-- ===== Flash Sale (Bold Red, vendor colors) ===== -->
+          <t t-if="flash_products">
+            <div style="border-radius:14px;overflow:hidden;margin-bottom:24px" t-attf-style="background:#{style['flash_bg']};border-radius:14px;overflow:hidden;margin-bottom:24px">
+              <div style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <i class="fa fa-bolt" t-attf-style="color:#{style['flash_accent']};font-size:22px"></i>
+                  <div style="color:#fff;font-weight:800;font-size:18px;letter-spacing:.5px">FLASH SALE</div>
+                </div>
+                <div id="vs_flash_timer" t-att-data-seconds="flash_seconds" style="display:flex;align-items:center;gap:4px">
+                  <div style="text-align:center">
+                    <div id="vs_fd" style="background:#1a1423;color:#fff;font-weight:700;font-size:13px;min-width:30px;padding:5px 0;border-radius:6px;font-variant-numeric:tabular-nums">--</div>
+                    <div style="color:rgba(255,255,255,.8);font-size:8px;margin-top:2px">يوم</div>
+                  </div>
+                  <span t-attf-style="color:#{style['flash_accent']};font-weight:700;align-self:flex-start;margin-top:4px">:</span>
+                  <div style="text-align:center">
+                    <div id="vs_fh" style="background:#1a1423;color:#fff;font-weight:700;font-size:13px;min-width:30px;padding:5px 0;border-radius:6px;font-variant-numeric:tabular-nums">--</div>
+                    <div style="color:rgba(255,255,255,.8);font-size:8px;margin-top:2px">ساعة</div>
+                  </div>
+                  <span t-attf-style="color:#{style['flash_accent']};font-weight:700;align-self:flex-start;margin-top:4px">:</span>
+                  <div style="text-align:center">
+                    <div id="vs_fm" style="background:#1a1423;color:#fff;font-weight:700;font-size:13px;min-width:30px;padding:5px 0;border-radius:6px;font-variant-numeric:tabular-nums">--</div>
+                    <div style="color:rgba(255,255,255,.8);font-size:8px;margin-top:2px">دقيقة</div>
+                  </div>
+                  <span t-attf-style="color:#{style['flash_accent']};font-weight:700;align-self:flex-start;margin-top:4px">:</span>
+                  <div style="text-align:center">
+                    <div id="vs_fs" t-attf-style="background:#{style['flash_accent']};color:#1a1423;font-weight:700;font-size:13px;min-width:30px;padding:5px 0;border-radius:6px;font-variant-numeric:tabular-nums">--</div>
+                    <div style="color:rgba(255,255,255,.8);font-size:8px;margin-top:2px">ثانية</div>
+                  </div>
+                </div>
+              </div>
+              <div style="background:#fafafa;margin:0 8px 8px;border-radius:10px;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+                <t t-foreach="flash_products" t-as="product">
+                  <a t-att-href="product.website_url" class="vs-pcard" style="text-decoration:none;display:block;background:#fff;border:0.5px solid #eee;border-radius:10px;overflow:hidden;position:relative;transition:transform .18s,box-shadow .18s">
+                    <t t-set="fcmp" t-value="product.compare_list_price or product.list_price"/>
+                    <t t-set="fdisc" t-value="int(round((fcmp - product.flash_sale_price) / fcmp * 100)) if fcmp and product.flash_sale_price and fcmp &gt; product.flash_sale_price else 0"/>
+                    <t t-if="fdisc &gt; 0"><span t-attf-style="position:absolute;top:6px;left:6px;background:#{style['badge']};color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;z-index:2">-<t t-esc="fdisc"/>%</span></t>
+                    <div style="aspect-ratio:1;background:#f7f7f7;display:flex;align-items:center;justify-content:center">
+                      <t t-if="product.image_128"><img t-attf-src="/web/image/product.template/#{product.id}/image_256" style="width:100%;height:100%;object-fit:cover"/></t>
+                      <t t-else=""><i class="fa fa-box" style="font-size:28px;color:#ddd"></i></t>
+                    </div>
+                    <div style="padding:8px 9px">
+                      <div style="font-size:11px;color:#1a1a1a;line-height:1.3;height:28px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical"><t t-esc="product.name"/></div>
+                      <div style="display:flex;align-items:baseline;gap:5px;margin-top:5px">
+                        <span t-attf-style="color:#{style['badge']};font-weight:800;font-size:13px"><t t-esc="'%.3f' % (product.flash_sale_price or product.list_price)"/></span>
+                        <t t-if="fdisc &gt; 0"><span style="color:#aaa;font-size:10px;text-decoration:line-through"><t t-esc="'%.3f' % fcmp"/></span></t>
+                      </div>
+                    </div>
+                  </a>
+                </t>
+              </div>
+            </div>
+          </t>
 
-    <!-- New In Section -->
-    <div class="vs-section">
-      <div class="vs-section-hd">
-        <div class="vs-section-title">&#128381; New in</div>
-        <a t-attf-href="/store/#{vendor.store_slug}?tab=new_in" class="vs-see-more">See more →</a>
-      </div>
-      <div class="vs-grid">
-        <t t-foreach="new_products[:4]" t-as="product">
-          <t t-call="uellow_multivendor.vs_product_card">
-            <t t-set="badge_type" t-value="'new'"/>
-          </t>
-        </t>
-        <t t-if="not new_products">
-          <t t-foreach="all_products[:4]" t-as="product">
-            <t t-call="uellow_multivendor.vs_product_card">
-              <t t-set="badge_type" t-value="''"/>
-            </t>
-          </t>
-        </t>
-        <t t-if="not all_products">
-          <div class="vs-empty">
-            <i class="fa fa-box fa-2x" style="display:block;margin-bottom:8px;opacity:.2"></i>
-            No products yet.
+          <!-- ===== New in ===== -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <h3 t-attf-style="font-size:17px;font-weight:700;margin:0;color:#{style['section_title']}">&#10024; New in</h3>
+            <a t-attf-href="/store/#{vendor.store_slug}?tab=new_in" t-attf-style="font-size:13px;color:#{bc};text-decoration:none;font-weight:600">See more &#8594;</a>
           </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:28px">
+            <t t-foreach="new_products" t-as="product"><t t-call="uellow_multivendor.vs_card_inline"/></t>
+            <t t-if="not new_products"><div style="grid-column:1/-1;text-align:center;padding:30px;color:#aaa">No products yet.</div></t>
+          </div>
+
+          <!-- ===== Best selling ===== -->
+          <t t-if="best_selling">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <h3 t-attf-style="font-size:17px;font-weight:700;margin:0;color:#{style['section_title']}"><i class="fa fa-fire" style="color:#e24b4a"></i> Best selling</h3>
+              <a t-attf-href="/store/#{vendor.store_slug}?tab=best_selling" t-attf-style="font-size:13px;color:#{bc};text-decoration:none;font-weight:600">See more &#8594;</a>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:28px">
+              <t t-foreach="best_selling" t-as="product"><t t-call="uellow_multivendor.vs_card_inline"/></t>
+            </div>
+          </t>
+
+          <!-- ===== Per-category sections ===== -->
+          <t t-foreach="category_sections" t-as="sec">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+              <h3 t-attf-style="font-size:17px;font-weight:700;margin:0;color:#{style['section_title']}"><t t-esc="sec['category'].name"/></h3>
+              <a t-attf-href="/shop?category=#{sec['category'].id}" t-attf-style="font-size:13px;color:#{bc};text-decoration:none;font-weight:600">See more &#8594;</a>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;margin-bottom:28px">
+              <t t-foreach="sec['products']" t-as="product"><t t-call="uellow_multivendor.vs_card_inline"/></t>
+            </div>
+          </t>
         </t>
-      </div>
+      </t>
     </div>
-
-    <!-- Category Sections -->
-    <t t-foreach="category_sections" t-as="section">
-      <div class="vs-section" style="padding-top:0">
-        <div class="vs-section-hd">
-          <div class="vs-section-title">
-            <i class="fa fa-tag" style="color:#1A7A6E;font-size:13px"></i>
-            <t t-esc="section['category'].name"/>
-          </div>
-          <a t-attf-href="/store/#{vendor.store_slug}?tab=cat_#{section['category'].id}" class="vs-see-more">See more →</a>
-        </div>
-        <div class="vs-grid">
-          <t t-foreach="section['products']" t-as="product">
-            <t t-call="uellow_multivendor.vs_product_card">
-              <t t-set="badge_type" t-value="''"/>
-            </t>
-          </t>
-        </div>
-      </div>
-    </t>
-
-    <script>
-    (function(){
-      // Flash sale timer (2hr countdown demo)
-      var end = new Date().getTime() + 2*3600*1000;
-      function tick(){
-        var now = new Date().getTime();
-        var diff = Math.max(0, end - now);
-        var h = Math.floor(diff/3600000);
-        var m = Math.floor((diff%3600000)/60000);
-        var s = Math.floor((diff%60000)/1000);
-        var pad = function(n){ return n < 10 ? '0'+n : n; };
-        var hEl = document.getElementById('vs-h');
-        var mEl = document.getElementById('vs-m');
-        var sEl = document.getElementById('vs-s');
-        if(hEl) hEl.textContent = pad(h);
-        if(mEl) mEl.textContent = pad(m);
-        if(sEl) sEl.textContent = pad(s);
-      }
-      tick();
-      setInterval(tick, 1000);
-
-      // Follow button
-      var btn = document.getElementById('vs-follow-btn');
-      if(btn){
-        btn.addEventListener('click', function(){
-          var slug = btn.dataset.slug;
-          fetch('/store/'+slug+'/follow', {
-            method:'POST',
-            headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
-            body: JSON.stringify({jsonrpc:'2.0',method:'call',params:{}})
-          }).then(function(r){ return r.json(); }).then(function(data){
-            if(data.result){
-              var f = data.result.following;
-              btn.dataset.following = f ? '1' : '0';
-              btn.innerHTML = f
-                ? '<i class="fa fa-heart"></i> Following'
-                : '<i class="fa fa-heart-o"></i> Follow';
-            }
+    <script type="text/javascript">
+//<![CDATA[
+      document.addEventListener('DOMContentLoaded', function () {
+        var btn = document.getElementById('vs_follow_btn');
+        if (btn) {
+          btn.addEventListener('click', function () {
+            if (btn.getAttribute('data-login') === '1') { window.location.href = '/web/login?redirect=' + encodeURIComponent(window.location.pathname); return; }
+            var slug = btn.getAttribute('data-slug');
+            fetch('/store/' + slug + '/follow', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({jsonrpc:'2.0', method:'call', params:{}})})
+              .then(function(r){return r.json();}).then(function(res){ var d = res.result || res; var lbl = document.getElementById('vs_follow_label'); if (d && typeof d.following !== 'undefined') { lbl.textContent = d.following ? 'Following' : 'Follow'; } else { location.reload(); } }).catch(function(){ location.reload(); });
           });
-        });
-      }
-    })();
+        }
+        var ft = document.getElementById('vs_flash_timer');
+        if (ft) {
+          var secs = parseInt(ft.getAttribute('data-seconds') || '0', 10);
+          var ed = document.getElementById('vs_fd'), eh = document.getElementById('vs_fh'), em = document.getElementById('vs_fm'), es = document.getElementById('vs_fs');
+          var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+          var tick = function () {
+            if (secs < 0) secs = 0;
+            var d = Math.floor(secs / 86400), h = Math.floor((secs % 86400) / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
+            if (ed) ed.textContent = pad(d);
+            if (eh) eh.textContent = pad(h);
+            if (em) em.textContent = pad(m);
+            if (es) es.textContent = pad(s);
+            if (secs > 0) secs--;
+          };
+          tick(); setInterval(tick, 1000);
+        }
+        var ddT = document.getElementById('vs_cat_toggle'), ddM = document.getElementById('vs_cat_menu');
+        if (ddT && ddM) {
+          ddT.addEventListener('click', function(e){ e.preventDefault(); ddM.style.display = (ddM.style.display==='none'?'block':'none'); });
+          document.addEventListener('click', function(e){ if(!document.getElementById('vs_cat_dd').contains(e.target)){ ddM.style.display='none'; } });
+          ddM.querySelectorAll('.vs-cat-link').forEach(function(l){ l.addEventListener('click', function(e){ var el=document.querySelector(l.getAttribute('href')); if(el){ e.preventDefault(); ddM.style.display='none'; el.scrollIntoView({behavior:'smooth'}); } }); });
+        }
+      });
+//]]>
     </script>
-
   </t>
 </template>
 
 <!-- Product Card Sub-template -->
 <template id="vs_product_card" name="VS Product Card">
-  <a t-att-href="product.website_url" class="vs-card">
+  <a t-attf-href="/shop/#{product.id}" class="vs-card">
     <div class="vs-card-img">
       <t t-if="product.image_128">
         <img t-attf-src="/web/image/product.template/#{product.id}/image_256"
              style="width:100%;height:100%;object-fit:cover" t-att-alt="product.name"/>
       </t>
       <t t-else="">
-        <i class="fa fa-box vs-no-img" style="font-size:32px;color:#ddd"></i>
+        <i class="fa fa-box" style="font-size:32px;color:#ddd"></i>
       </t>
-      <t t-if="badge_type == 'flash'"><span class="vs-badge vs-badge-flash"><i class="fa fa-bolt"></i> FLASH</span></t>
-      <t t-elif="badge_type == 'new'"><span class="vs-badge vs-badge-new">NEW</span></t>
-      <t t-if="product.list_price and product.compare_list_price and product.compare_list_price > product.list_price">
-        <t t-set="disc_pct" t-value="int((1 - product.list_price / product.compare_list_price) * 100)"/>
-        <t t-if="disc_pct > 0 and badge_type != 'flash'">
-          <span class="vs-badge vs-badge-disc">-<t t-esc="disc_pct"/>%</span>
-        </t>
+      <t t-if="badge_type == 'flash'">
+        <span class="vs-badge vs-badge-flash"><i class="fa fa-bolt"></i> FLASH</span>
       </t>
-      <t t-if="product.vendor_id and product.vendor_id.settings_id and product.vendor_id.settings_id.fbu_enabled">
-        <span class="vs-fbu">&#11044; FBU</span>
+      <t t-elif="badge_type == 'new'">
+        <span class="vs-badge vs-badge-new">NEW</span>
       </t>
-      <t t-elif="product.vendor_id">
-        <span class="vs-sold">&#128722; Sold by <t t-esc="product.vendor_id.store_name_en or ''"/></span>
-      </t>
-      <t t-else="">
-        <span class="vs-fbu" style="background:rgba(12,68,124,0.85)">&#11044; By Uellow</span>
+      <t t-if="product.vendor_id">
+        <span class="vs-sold">&#128722; <t t-esc="product.vendor_id.store_name_en or 'Vendor'"/></span>
       </t>
     </div>
     <div class="vs-card-body">
       <div class="vs-pname"><t t-esc="product.name"/></div>
       <div class="vs-price">
         <span class="vs-price-main"><t t-esc="'%.3f' % product.list_price"/> KD</span>
-        <t t-if="product.compare_list_price and product.compare_list_price > product.list_price">
-          <span class="vs-price-old"><t t-esc="'%.3f' % product.compare_list_price"/> KD</span>
-        </t>
       </div>
-      <a t-att-href="product.website_url" class="vs-btn" onclick="event.preventDefault();event.stopPropagation()">+ Add to cart</a>
+      <span class="vs-btn">+ Add to cart</span>
     </div>
   </a>
 </template>
 
 
+
+
+<template id="vs_card_inline" name="VS Card Inline">
+  <t t-set="cmp" t-value="product.compare_list_price or 0"/>
+  <t t-set="disc" t-value="int(round((cmp - product.list_price) / cmp * 100)) if cmp and cmp &gt; product.list_price else 0"/>
+  <t t-set="avail" t-value="product.qty_available or 0"/>
+  <a t-att-href="product.website_url" class="vs-pcard" style="text-decoration:none;display:block;background:#fff;border-radius:14px;border:1px solid #eee;overflow:hidden;transition:transform .18s,box-shadow .18s">
+    <div style="aspect-ratio:1;background:#f7f7f7;display:flex;align-items:center;justify-content:center;position:relative">
+      <t t-if="disc &gt; 0">
+        <span style="position:absolute;top:10px;left:10px;background:#e11d48;color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;z-index:2">-<t t-esc="disc"/>%</span>
+      </t>
+      <span t-attf-style="position:absolute;top:10px;right:10px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;z-index:2;#{'background:#dcfce7;color:#16a34a' if avail &gt; 0 else 'background:#fee2e2;color:#dc2626'}">
+        <t t-esc="'In stock' if avail &gt; 0 else 'Out of stock'"/>
+      </span>
+      <t t-if="product.image_128"><img t-attf-src="/web/image/product.template/#{product.id}/image_256" style="width:100%;height:100%;object-fit:cover" t-att-alt="product.name"/></t>
+      <t t-else=""><i class="fa fa-box" style="font-size:32px;color:#ddd"></i></t>
+    </div>
+    <div style="padding:12px 13px">
+      <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px;line-height:18px"><t t-esc="product.name"/></div>
+      <div style="display:flex;align-items:center;gap:3px;margin-bottom:7px">
+        <t t-set="rv" t-value="product.rating_last_value or 0"/>
+        <t t-foreach="[1,2,3,4,5]" t-as="s">
+          <i class="fa fa-star" t-attf-style="font-size:11px;color:#{'#fbbf24' if s &lt;= rv else '#e0e0e0'}"></i>
+        </t>
+        <span style="font-size:11px;color:#999;margin-left:3px"><t t-esc="'%.1f' % rv"/></span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:7px;flex-wrap:wrap">
+        <span style="font-size:16px;font-weight:800;color:#1A7A6E"><t t-esc="'%.3f' % product.list_price"/> KD</span>
+        <t t-if="disc &gt; 0">
+          <span style="font-size:12px;color:#aaa;text-decoration:line-through"><t t-esc="'%.3f' % cmp"/> KD</span>
+        </t>
+      </div>
+    </div>
+  </a>
+</template>
+
+
+<template id="portal_vendor_style" name="Vendor Style">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_style'"/>
+    <div style="max-width:760px">
+      <h2 style="font-size:20px;font-weight:700;margin:0 0 4px">Store Style</h2>
+      <p style="color:#888;font-size:13px;margin:0 0 20px">خصّص ألوان متجرك. اتركه فارغاً ليستخدم لون البراند تلقائياً.</p>
+      <form action="/my/vendor/style/save" method="post">
+        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;background:#fff;border:0.5px solid #eee;border-radius:12px;padding:20px">
+
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">خلفية الفلاش سيل</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="color" name="flash_bg_color" t-att-value="settings.flash_bg_color or (vendor.brand_color or '#c0392b')" style="width:46px;height:38px;border:1px solid #ddd;border-radius:8px;padding:2px;cursor:pointer"/>
+              <input type="text" name="flash_bg_color_txt" t-att-value="settings.flash_bg_color or ''" placeholder="auto (brand)" style="flex:1;border:1px solid #ddd;border-radius:8px;padding:8px;font-size:12px" readonly="readonly"/>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">لون التوهّج (العدّاد/الشارات)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="color" name="flash_accent_color" t-att-value="settings.flash_accent_color or '#ffd60a'" style="width:46px;height:38px;border:1px solid #ddd;border-radius:8px;padding:2px;cursor:pointer"/>
+              <span style="flex:1;font-size:11px;color:#aaa">افتراضي ذهبي</span>
+            </div>
+          </div>
+
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">لون عناوين الأقسام</label>
+            <input type="color" name="section_title_color" t-att-value="settings.section_title_color or (vendor.brand_color or '#1A7A6E')" style="width:46px;height:38px;border:1px solid #ddd;border-radius:8px;padding:2px;cursor:pointer"/>
+          </div>
+
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">لون السعر</label>
+            <input type="color" name="price_color" t-att-value="settings.price_color or '#1A7A6E'" style="width:46px;height:38px;border:1px solid #ddd;border-radius:8px;padding:2px;cursor:pointer"/>
+          </div>
+
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">لون شارة الخصم</label>
+            <input type="color" name="badge_color" t-att-value="settings.badge_color or '#c0392b'" style="width:46px;height:38px;border:1px solid #ddd;border-radius:8px;padding:2px;cursor:pointer"/>
+          </div>
+
+          <div>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">لون خط الهيدر</label>
+            <input type="color" name="header_text_color" t-att-value="settings.header_text_color or '#ffffff'" style="width:46px;height:38px;border:1px solid #ddd;border-radius:8px;padding:2px;cursor:pointer"/>
+          </div>
+
+        </div>
+        <button type="submit" style="margin-top:18px;background:#1A7A6E;color:#fff;border:none;font-weight:600;font-size:14px;padding:11px 28px;border-radius:10px;cursor:pointer">حفظ التغييرات</button>
+        <a href="/store/" t-attf-href="/store/#{vendor.store_slug}" target="_blank" style="margin-right:12px;font-size:13px;color:#1A7A6E;text-decoration:none">معاينة المتجر ←</a>
+      </form>
+    </div>
+  </t>
+</template>
+
+
+<template id="portal_vendor_restock_list" name="Vendor Restock Requests">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_restock_list'"/>
+    <t t-set="is_ar" t-value="(request.env.context.get('lang') or request.env.lang or 'en_US').startswith('ar')"/>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div>
+        <h2 style="font-size:20px;font-weight:700;margin:0 0 4px"><t t-esc="u'طلبات إعادة التخزين' if is_ar else 'Restock Requests'"/></h2>
+        <p style="color:#888;font-size:13px;margin:0"><t t-esc="u'تابع حالة طلباتك' if is_ar else 'Track your restock requests'"/></p>
+      </div>
+      <a href="/my/vendor/stock/restock" style="background:#1A7A6E;color:#fff;font-weight:600;font-size:13px;padding:9px 18px;border-radius:10px;text-decoration:none"><i class="fa fa-plus"></i> <t t-esc="u'طلب جديد' if is_ar else 'New request'"/></a>
+    </div>
+
+    <t t-if="requests">
+      <div style="background:#fff;border:0.5px solid #eee;border-radius:12px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:#fafafa;text-align:right">
+              <th style="padding:12px 14px;font-weight:600;color:#666;border-bottom:0.5px solid #eee">رقم الطلب</th>
+              <th style="padding:12px 14px;font-weight:600;color:#666;border-bottom:0.5px solid #eee">المنتجات</th>
+              <th style="padding:12px 14px;font-weight:600;color:#666;border-bottom:0.5px solid #eee">إجمالي الوحدات</th>
+              <th style="padding:12px 14px;font-weight:600;color:#666;border-bottom:0.5px solid #eee">التاريخ المتوقع</th>
+              <th style="padding:12px 14px;font-weight:600;color:#666;border-bottom:0.5px solid #eee">الحالة</th>
+            </tr>
+          </thead>
+          <tbody>
+            <t t-foreach="requests" t-as="req">
+              <tr style="border-bottom:0.5px solid #f3f3f3">
+                <td style="padding:12px 14px;font-weight:600"><t t-esc="req.name"/></td>
+                <td style="padding:12px 14px;font-size:12px;color:#555">
+                  <t t-foreach="req.line_ids" t-as="ln"><div><t t-esc="ln.product_id.display_name"/> &#215; <t t-esc="int(ln.qty_requested or 0)"/></div></t>
+                </td>
+                <td style="padding:12px 14px"><t t-esc="int(req.total_units or 0)"/> وحدة</td>
+                <td style="padding:12px 14px;color:#888;font-size:11px"><t t-esc="req.expected_date.strftime('%Y-%m-%d') if req.expected_date else ''"/></td>
+                <td style="padding:12px 14px">
+                  <t t-set="sc" t-value="{'draft':('#f3f4f6','#666'),'submitted':('#fef3c7','#854f0b'),'approved':('#dbeafe','#1e40af'),'received':('#dcfce7','#16a34a'),'cancelled':('#fee2e2','#dc2626')}.get(req.state,('#eee','#666'))"/>
+                  <span t-attf-style="background:#{sc[0]};color:#{sc[1]};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px"><t t-esc="dict(req._fields['state'].selection).get(req.state, req.state)"/></span>
+                </td>
+              </tr>
+            </t>
+          </tbody>
+        </table>
+      </div>
+    </t>
+    <t t-else="">
+      <div style="text-align:center;padding:50px;color:#aaa;background:#fff;border:0.5px solid #eee;border-radius:12px">
+        <i class="fa fa-inbox" style="font-size:32px;color:#ddd"></i>
+        <p style="margin:12px 0 0">لا توجد طلبات إعادة تخزين بعد</p>
+      </div>
+    </t>
+  </t>
+</template>
+
+
+<template id="portal_vendor_withdrawals" name="Vendor Stock Withdrawals">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_withdrawals'"/>
+    <t t-set="is_ar" t-value="(request.env.lang or 'en_US').startswith('ar')"/>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div>
+        <h2 style="font-size:20px;font-weight:700;margin:0 0 4px"><t t-esc="'طلبات سحب المخزون' if is_ar else 'Stock Withdrawals'"/></h2>
+        <p style="color:#888;font-size:13px;margin:0"><t t-esc="'اسحب منتجاتك من مخزن يلو' if is_ar else 'Withdraw your products from Uellow warehouse'"/></p>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:0.5px solid #eee;border-radius:12px;padding:18px;margin-bottom:24px">
+      <h3 style="font-size:15px;font-weight:700;margin:0 0 14px"><t t-esc="'طلب سحب جديد' if is_ar else 'New withdrawal request'"/></h3>
+      <form action="/my/vendor/withdrawals/submit" method="post">
+        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+          <div>
+            <label style="display:block;font-size:13px;color:#666;margin-bottom:5px"><t t-esc="'السبب' if is_ar else 'Reason'"/></label>
+            <select name="reason" style="width:100%;border:0.5px solid #ddd;border-radius:8px;padding:9px;font-size:13px">
+              <option value="slow_moving"><t t-esc="'بضاعة راكدة' if is_ar else 'Slow-moving stock'"/></option>
+              <option value="sell_elsewhere"><t t-esc="'البيع في مكان آخر' if is_ar else 'Sell elsewhere'"/></option>
+              <option value="quality"><t t-esc="'مشكلة جودة' if is_ar else 'Quality issue'"/></option>
+              <option value="expired"><t t-esc="'منتهي / قريب الانتهاء' if is_ar else 'Expired / near expiry'"/></option>
+              <option value="other"><t t-esc="'أخرى' if is_ar else 'Other'"/></option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:13px;color:#666;margin-bottom:5px"><t t-esc="'الوجهة' if is_ar else 'Destination'"/></label>
+            <select name="destination" style="width:100%;border:0.5px solid #ddd;border-radius:8px;padding:9px;font-size:13px">
+              <option value="vendor"><t t-esc="'إرجاع للتاجر' if is_ar else 'Return to me'"/></option>
+              <option value="scrap"><t t-esc="'إتلاف' if is_ar else 'Scrap / discard'"/></option>
+            </select>
+          </div>
+        </div>
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:5px"><t t-esc="'المنتجات والكميات' if is_ar else 'Products and quantities'"/></label>
+        <div id="wd_lines">
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <select name="product_id" style="flex:1;border:0.5px solid #ddd;border-radius:8px;padding:9px;font-size:13px">
+              <option value=""><t t-esc="'اختر منتج' if is_ar else 'Select product'"/></option>
+              <t t-foreach="products" t-as="p">
+                <option t-att-value="p.id"><t t-esc="p.display_name"/></option>
+              </t>
+            </select>
+            <input type="number" name="qty" min="1" value="1" style="width:90px;border:0.5px solid #ddd;border-radius:8px;padding:9px;font-size:13px"/>
+          </div>
+        </div>
+        <a href="#" id="wd_add_line" style="font-size:12px;color:#1A7A6E;text-decoration:none"><i class="fa fa-plus"></i> <t t-esc="'إضافة منتج' if is_ar else 'Add product'"/></a>
+        <div style="margin-top:16px">
+          <button type="submit" style="background:#1A7A6E;color:#fff;border:none;font-weight:600;font-size:14px;padding:10px 26px;border-radius:10px;cursor:pointer"><t t-esc="'إرسال الطلب' if is_ar else 'Submit request'"/></button>
+        </div>
+      </form>
+    </div>
+
+    <t t-if="withdrawals">
+      <div style="background:#fff;border:0.5px solid #eee;border-radius:12px;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="background:#fafafa">
+              <th style="padding:11px 14px;font-weight:600;color:#666;text-align:start"><t t-esc="'رقم' if is_ar else 'Ref'"/></th>
+              <th style="padding:11px 14px;font-weight:600;color:#666;text-align:start"><t t-esc="'المنتجات' if is_ar else 'Products'"/></th>
+              <th style="padding:11px 14px;font-weight:600;color:#666;text-align:start"><t t-esc="'الوحدات' if is_ar else 'Units'"/></th>
+              <th style="padding:11px 14px;font-weight:600;color:#666;text-align:start"><t t-esc="'المُنشئ' if is_ar else 'By'"/></th>
+              <th style="padding:11px 14px;font-weight:600;color:#666;text-align:start"><t t-esc="'الحالة' if is_ar else 'Status'"/></th>
+            </tr>
+          </thead>
+          <tbody>
+            <t t-foreach="withdrawals" t-as="wd">
+              <tr style="border-top:0.5px solid #f3f3f3">
+                <td style="padding:11px 14px;font-weight:600"><t t-esc="wd.name"/></td>
+                <td style="padding:11px 14px;font-size:12px;color:#555">
+                  <t t-foreach="wd.line_ids" t-as="ln"><div><t t-esc="ln.product_id.display_name"/> &#215; <t t-esc="int(ln.qty or 0)"/></div></t>
+                </td>
+                <td style="padding:11px 14px"><t t-esc="int(wd.total_units or 0)"/></td>
+                <td style="padding:11px 14px;font-size:12px">
+                  <t t-esc="(('التاجر' if is_ar else 'Vendor') if wd.initiated_by == 'vendor' else ('يلو' if is_ar else 'Uellow'))"/>
+                </td>
+                <td style="padding:11px 14px">
+                  <t t-set="sc" t-value="{'draft':('#f3f4f6','#666'),'submitted':('#fef3c7','#854f0b'),'approved':('#dbeafe','#1e40af'),'done':('#dcfce7','#16a34a'),'rejected':('#fee2e2','#dc2626')}.get(wd.state,('#eee','#666'))"/>
+                  <t t-set="slabel" t-value="{'draft':('مسوّد','Draft'),'submitted':('بانتظار الموافقة','Pending'),'approved':('موافق','Approved'),'done':('تم السحب','Withdrawn'),'rejected':('مرفوض','Rejected')}.get(wd.state,('',''))"/>
+                  <span t-attf-style="background:#{sc[0]};color:#{sc[1]};font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px"><t t-esc="slabel[0] if is_ar else slabel[1]"/></span>
+                </td>
+              </tr>
+            </t>
+          </tbody>
+        </table>
+      </div>
+    </t>
+    <t t-else="">
+      <div style="text-align:center;padding:50px;color:#aaa;background:#fff;border:0.5px solid #eee;border-radius:12px">
+        <i class="fa fa-inbox" style="font-size:32px;color:#ddd"></i>
+        <p style="margin:12px 0 0"><t t-esc="'لا توجد طلبات سحب بعد' if is_ar else 'No withdrawal requests yet'"/></p>
+      </div>
+    </t>
+
+    <script type="text/javascript">
+//<![CDATA[
+      document.addEventListener('DOMContentLoaded', function () {
+        var add = document.getElementById('wd_add_line');
+        if (add) {
+          add.addEventListener('click', function (e) {
+            e.preventDefault();
+            var box = document.getElementById('wd_lines');
+            var first = box.querySelector('div');
+            var clone = first.cloneNode(true);
+            clone.querySelector('input[name=qty]').value = 1;
+            clone.querySelector('select[name=product_id]').value = '';
+            box.appendChild(clone);
+          });
+        }
+      });
+//]]>
+    </script>
+  </t>
+</template>
 
 </odoo>

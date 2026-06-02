@@ -1,0 +1,559 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="ppc_head" inherit_id="website.layout" name="PPC - Head">
+        <xpath expr="//head" position="inside">
+            <script type="text/javascript">
+                window.ppcWa   = "<t t-esc="request.env['ir.config_parameter'].sudo().get_param('uellow_theme.whatsapp_number', '+96597170933')"/>";
+                window.ppcLang = "<t t-esc="(request.env.lang or 'en_US')[:2]"/>";
+                window.ppcCur  = "<t t-esc="request.env.company.currency_id.symbol or 'KD'"/>";
+            </script>
+        </xpath>
+    </template>
+
+    <template id="ppc_product_page" inherit_id="website_sale.product" name="PPC - Product Page">
+
+        <!-- JS vars -->
+        <xpath expr="//h1" position="before">
+            <t t-set="ppc_sudo" t-value="product.sudo()"/>
+            <t t-set="ppc_view_count" t-value="ppc_sudo._get_product_view_safe()"/>
+            <script type="text/javascript">
+                window.ppcPrice = <t t-esc="ppc_sudo.list_price"/>;
+                window.ppcOrig  = <t t-esc="ppc_sudo.compare_list_price or 0"/>;
+                window.ppcCatg  = <t t-esc="ppc_sudo.categ_id.id if ppc_sudo.categ_id else 0"/>;
+                window.ppcProd  = <t t-esc="ppc_sudo.id"/>;
+                window.ppcViews = <t t-esc="int(ppc_view_count or 0)"/>;
+            </script>
+        </xpath>
+
+        <!-- ════════════════════════════════════════════════════════════
+             BREADCRUMB on top of the gallery column.
+             Shows: Shop &gt; Category &gt; Subcategory &gt; Product name.
+             Walks `public_categ_ids[0].parents_and_self` so every level
+             of the public category tree is rendered. Category and
+             product names come from translated jsonb fields, so the
+             breadcrumb matches the current website language for ALL
+             site languages — no per-lang t-if needed for the names.
+             "Shop" + the aria label are wrapped so Odoo's QWeb
+             translation extractor lifts them into ir.ui.view.arch_db,
+             which lets website translators add any missing locale
+             through the standard Translate tool.
+             ════════════════════════════════════════════════════════════ -->
+        <xpath expr="//t[@t-call='website_sale.shop_product_images']" position="before">
+            <t t-set="ppc_sudo_bc"   t-value="product.sudo()"/>
+            <t t-set="ppc_pub_cats"  t-value="ppc_sudo_bc.public_categ_ids[:1]"/>
+            <t t-set="ppc_cat_chain" t-value="ppc_pub_cats and ppc_pub_cats[0].parents_and_self or []"/>
+            <nav class="ppc-bcrumb" aria-label="Breadcrumb" id="ppcBcrumbTop">
+                <ol class="ppc-bcrumb-list">
+                    <li class="ppc-bcrumb-item ppc-bcrumb-home">
+                        <a href="/shop">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                <polyline points="9 22 9 12 15 12 15 22"/>
+                            </svg>
+                            <span class="ppc-bcrumb-label">
+                                <t t-if="(request.env.lang or 'en_US').startswith('ar')">المتجر</t>
+                                <t t-else="">Shop</t>
+                            </span>
+                        </a>
+                    </li>
+                    <t t-foreach="ppc_cat_chain" t-as="ppc_c">
+                        <li class="ppc-bcrumb-sep" aria-hidden="true">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </li>
+                        <li class="ppc-bcrumb-item">
+                            <a t-attf-href="/shop/category/#{ppc_c.id}">
+                                <span class="ppc-bcrumb-label" t-esc="ppc_c.name"/>
+                            </a>
+                        </li>
+                    </t>
+                    <li class="ppc-bcrumb-sep" aria-hidden="true">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </li>
+                    <li class="ppc-bcrumb-item ppc-bcrumb-current" aria-current="page">
+                        <span class="ppc-bcrumb-label" t-esc="product.name"/>
+                    </li>
+                </ol>
+            </nav>
+        </xpath>
+
+        <!-- ════════════════════════════════════════════════════════════
+             INSTALLMENTS card — server-rendered (translatable via
+             ir.ui.view.arch_db JSONB → all site languages).
+             Replaces the old JS-generated #ppcBanner (kept hidden via
+             CSS to avoid duplicates if the JS still fires for any
+             reason). The strip shows 4 steps; price split is computed
+             from list_price ÷ 4 here in the template so the figure is
+             SEO-indexable and survives JS-disabled clients.
+             ════════════════════════════════════════════════════════════ -->
+        <xpath expr="//h1" position="after">
+            <t t-set="ppc_sudo_in" t-value="product.sudo()"/>
+            <t t-set="ppc_is_ar2"  t-value="(request.env.lang or 'en_US').startswith('ar')"/>
+            <t t-set="ppc_cur2"    t-value="request.env.company.currency_id.symbol or 'KD'"/>
+            <t t-set="ppc_price2"  t-value="ppc_sudo_in.list_price or 0"/>
+            <t t-set="ppc_part"    t-value="round(ppc_price2 / 4.0, 3) if ppc_price2 else 0"/>
+            <t t-if="ppc_price2">
+                <section class="ppc-inst" id="ppcInstall" t-att-dir="'rtl' if ppc_is_ar2 else 'ltr'" role="region" aria-label="Installments">
+                    <div class="ppc-inst-head">
+                        <div class="ppc-inst-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                <line x1="2" y1="10" x2="22" y2="10"/>
+                                <line x1="6" y1="15" x2="10" y2="15"/>
+                            </svg>
+                        </div>
+                        <div class="ppc-inst-textwrap">
+                            <div class="ppc-inst-title">
+                                <t t-if="ppc_is_ar2">قسّم فاتورتك على 4 دفعات بدون فوائد</t>
+                                <t t-else="">Split into 4 interest-free payments</t>
+                            </div>
+                            <div class="ppc-inst-sub">
+                                <t t-if="ppc_is_ar2">خصم تلقائي · موافقة فورية · بدون رسوم</t>
+                                <t t-else="">Auto-debited · Instant approval · No fees</t>
+                            </div>
+                        </div>
+                        <div class="ppc-inst-badges">
+                            <span class="ppc-inst-badge ppc-inst-apr">
+                                <t t-if="ppc_is_ar2">0% فائدة</t>
+                                <t t-else="">0% APR</t>
+                            </span>
+                            <span class="ppc-inst-badge ppc-inst-sec">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/>
+                                    <polyline points="9 12 11 14 15 10"/>
+                                </svg>
+                                <t t-if="ppc_is_ar2">آمن</t>
+                                <t t-else="">Secure</t>
+                            </span>
+                        </div>
+                    </div>
+
+                    <ol class="ppc-inst-strip" role="list">
+                        <li class="ppc-inst-step ppc-inst-step-active">
+                            <span class="ppc-inst-step-n" aria-hidden="true">1</span>
+                            <span class="ppc-inst-step-when">
+                                <t t-if="ppc_is_ar2">الآن</t>
+                                <t t-else="">Today</t>
+                            </span>
+                            <span class="ppc-inst-step-amt"><t t-esc="'%.3f' % ppc_part"/> <small t-esc="ppc_cur2"/></span>
+                        </li>
+                        <li class="ppc-inst-step">
+                            <span class="ppc-inst-step-n" aria-hidden="true">2</span>
+                            <span class="ppc-inst-step-when">
+                                <t t-if="ppc_is_ar2">بعد شهر</t>
+                                <t t-else="">In 1 month</t>
+                            </span>
+                            <span class="ppc-inst-step-amt"><t t-esc="'%.3f' % ppc_part"/> <small t-esc="ppc_cur2"/></span>
+                        </li>
+                        <li class="ppc-inst-step">
+                            <span class="ppc-inst-step-n" aria-hidden="true">3</span>
+                            <span class="ppc-inst-step-when">
+                                <t t-if="ppc_is_ar2">بعد شهرين</t>
+                                <t t-else="">In 2 months</t>
+                            </span>
+                            <span class="ppc-inst-step-amt"><t t-esc="'%.3f' % ppc_part"/> <small t-esc="ppc_cur2"/></span>
+                        </li>
+                        <li class="ppc-inst-step">
+                            <span class="ppc-inst-step-n" aria-hidden="true">4</span>
+                            <span class="ppc-inst-step-when">
+                                <t t-if="ppc_is_ar2">بعد 3 شهور</t>
+                                <t t-else="">In 3 months</t>
+                            </span>
+                            <span class="ppc-inst-step-amt"><t t-esc="'%.3f' % ppc_part"/> <small t-esc="ppc_cur2"/></span>
+                        </li>
+                    </ol>
+
+                    <div class="ppc-inst-foot">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8"  x2="12.01" y2="8"/>
+                        </svg>
+                        <span>
+                            <t t-if="ppc_is_ar2">يخضع للموافقة. الشروط والأحكام تطبَّق.</t>
+                            <t t-else="">Subject to approval. Terms &amp; conditions apply.</t>
+                        </span>
+                    </div>
+                </section>
+            </t>
+        </xpath>
+
+        <!-- Stock/Ship/Express row — ABOVE qty+buttons -->
+        <xpath expr="//div[@id='o_wsale_cta_wrapper']" position="before">
+            <t t-set="ppc_qty"  t-value="ppc_sudo.virtual_available"/>
+            <t t-set="ppc_cont" t-value="ppc_sudo.product_variant_ids and ppc_sudo.product_variant_ids[0].allow_out_of_stock_order"/>
+            <div class="ppc-stock-express-row" id="ppcStockInline">
+                <t t-if="ppc_qty > 0">
+                    <span class="ppc-stk ppc-in-stock">
+                        <t t-if="(request.env.lang or 'en_US').startswith('ar')">✓ متوفر — <t t-esc="int(ppc_qty)"/> وحدة</t>
+                        <t t-else="">✓ In stock — <t t-esc="int(ppc_qty)"/> left</t>
+                    </span>
+                </t>
+                <t t-elif="ppc_cont">
+                    <span class="ppc-stk ppc-in-stock">
+                        <t t-if="(request.env.lang or 'en_US').startswith('ar')">✓ متوفر</t>
+                        <t t-else="">✓ In stock</t>
+                    </span>
+                </t>
+                <t t-else="">
+                    <span class="ppc-stk ppc-out-stock">
+                        <t t-if="(request.env.lang or 'en_US').startswith('ar')">✗ غير متوفر</t>
+                        <t t-else="">✗ Out of stock</t>
+                    </span>
+                </t>
+                <span class="ppc-ship" id="ppcShipBadge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                    <t t-if="(request.env.lang or 'en_US').startswith('ar')">اطلب الآن واستلم طلبك خلال 24 ساعة</t>
+                    <t t-else="">Order Now &amp; receive by tomorrow</t>
+                </span>
+                <span class="ppc-express" id="ppcExpressBadge">
+                    <span class="ppc-express-hours">
+                        <t t-if="(request.env.lang or 'en_US').startswith('ar')">٣ ساعات</t>
+                        <t t-else="">3 Hours</t>
+                    </span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="#7a4800" style="flex-shrink:0"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    <span class="ppc-express-label">Express</span>
+                </span>
+            </div>
+        </xpath>
+
+        <!-- WA button after add_to_cart — same size as Buy Now -->
+        <xpath expr="//a[@id='add_to_cart']" position="after">
+            <t t-set="ppc_num" t-value="request.env['ir.config_parameter'].sudo().get_param('uellow_theme.whatsapp_number', '+96597170933').replace('+','').replace(' ','').replace('-','')"/>
+            <a t-attf-href="https://wa.me/#{ppc_num}"
+               id="ppcWaBtn" class="ppc-wa-btn ppc-cta-btn ppc-cta-wa btn"
+               target="_blank" rel="noopener noreferrer"
+               onclick="event.stopPropagation();">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style="flex-shrink:0">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.422 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                <span class="ppc-cta-label">
+                    <t t-if="(request.env.lang or 'en_US').startswith('ar')">واتساب</t>
+                    <t t-else="">WhatsApp</t>
+                </span>
+            </a>
+        </xpath>
+
+        <!-- ════════════════════════════════════════════════════════════
+             Premium Product Description block (replaces ppcDescBlock).
+             - Header with icon + title + AR/EN switch (when both exist)
+             - Reading-friendly typography, smooth expand/collapse
+             - Hidden by default; product_page.js toggles visibility per lang
+             ════════════════════════════════════════════════════════════ -->
+        <xpath expr="//a[@id='add_to_cart']" position="after">
+            <t t-set="ppc_has_ar" t-value="product.website_description_ar and product.website_description_ar.strip() != ''"/>
+            <t t-set="ppc_has_en" t-value="product.website_description_en and product.website_description_en.strip() != ''"/>
+            <t t-set="ppc_is_ar"  t-value="(request.env.lang or 'en_US').startswith('ar')"/>
+            <t t-if="ppc_has_ar or ppc_has_en">
+                <div id="ppcDescBlock" class="ppc-desc-card" style="display:none">
+                    <div class="ppc-desc-head">
+                        <div class="ppc-desc-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="#fff" stroke-width="1.6" fill="none"/>
+                            </svg>
+                        </div>
+                        <div class="ppc-desc-titlewrap">
+                            <div class="ppc-desc-title">
+                                <t t-if="ppc_is_ar">وصف المنتج</t>
+                                <t t-else="">Product Description</t>
+                            </div>
+                            <div class="ppc-desc-sub">
+                                <t t-if="ppc_is_ar">كل ما تحتاج معرفته قبل الشراء</t>
+                                <t t-else="">Everything you need to know before buying</t>
+                            </div>
+                        </div>
+                        <t t-if="ppc_has_ar and ppc_has_en">
+                            <div class="ppc-desc-langswitch" role="tablist" aria-label="Language">
+                                <button type="button" class="ppc-desc-langpill" data-lb="en"
+                                        t-att-aria-pressed="'false' if ppc_is_ar else 'true'">EN</button>
+                                <button type="button" class="ppc-desc-langpill" data-lb="ar"
+                                        t-att-aria-pressed="'true' if ppc_is_ar else 'false'">AR</button>
+                            </div>
+                        </t>
+                    </div>
+
+                    <div class="ppc-desc-body">
+                        <t t-if="ppc_has_ar">
+                            <div t-attf-class="ppc-desc-block ppc-ar-block#{' ppc-hidden' if not ppc_is_ar else ''}"
+                                 data-lb="ar" dir="rtl">
+                                <div class="ppc-desc-inner" t-field="product.website_description_ar"/>
+                                <div class="ppc-fade-more">
+                                    <button type="button" class="ppc-see-more">عرض المزيد ▼</button>
+                                </div>
+                                <button type="button" class="ppc-see-less" style="display:none">▲ عرض أقل</button>
+                            </div>
+                        </t>
+                        <t t-if="ppc_has_en">
+                            <div t-attf-class="ppc-desc-block ppc-en-block#{' ppc-hidden' if ppc_is_ar else ''}"
+                                 data-lb="en" dir="ltr">
+                                <div class="ppc-desc-inner" t-field="product.website_description_en"/>
+                                <div class="ppc-fade-more">
+                                    <button type="button" class="ppc-see-more">See more ▼</button>
+                                </div>
+                                <button type="button" class="ppc-see-less" style="display:none">▲ See less</button>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+
+        <!-- Bottom sections -->
+        <xpath expr="//div[hasclass('o_wsale_product_page')]" position="after">
+            <t t-if="ppc_sudo.categ_id">
+
+                <!-- You May Also Like slider -->
+                <div class="ppc-related-section" id="ppcRelatedSection"
+                     t-att-data-prod="ppc_sudo.id"
+                     t-att-data-cur="request.env.company.currency_id.symbol or 'KD'"
+                     style="display:none">
+                    <div class="container">
+                        <div class="ppc-related-header">
+                            <div class="ppc-related-bar"></div>
+                            <h2 class="ppc-related-title">
+                                <t t-if="(request.env.lang or 'en_US').startswith('ar')">منتجات مشابهة</t>
+                                <t t-else="">You May Also Like</t>
+                            </h2>
+                        </div>
+                        <div class="ppc-slider-wrap">
+                            <button type="button" class="ppc-sl-prev" onclick="ppcSlide(-1)">&#8249;</button>
+                            <div class="ppc-slider-viewport">
+                                <div class="ppc-slider" id="ppcSlider"></div>
+                            </div>
+                            <button type="button" class="ppc-sl-next" onclick="ppcSlide(1)">&#8250;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs + Top Selling sidebar -->
+                <div class="ppc-bottom-layout">
+                    <div class="ppc-tabs-col" id="ppcTabsCol"></div>
+                    <div class="ppc-ts-col">
+                        <div class="ppc-ts-header">
+                            <span class="ppc-ts-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="#f5a623"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 15h-2v-2h2zm0-4h-2V7h2z"/></svg>
+                            </span>
+                            <t t-if="(request.env.lang or 'en_US').startswith('ar')">وصل حديثاً ✨</t>
+                            <t t-else="">New In ✨</t>
+                        </div>
+                        <div class="ppc-ts-list" id="ppcTopSellingList"></div>
+                    </div>
+                </div>
+
+                <!-- Explore More grid -->
+                <div class="ppc-grid-section" id="ppcGridSection" style="display:none;">
+                    <div class="ppc-grid-card">
+                        <div class="ppc-grid-header">
+                            <div class="ppc-related-bar"></div>
+                            <h2 class="ppc-related-title">
+                                <t t-if="(request.env.lang or 'en_US').startswith('ar')">استكشف المزيد</t>
+                                <t t-else="">Explore More</t>
+                            </h2>
+                        </div>
+                        <div class="ppc-related-grid" id="ppcRelGrid"
+                             t-att-data-prod="ppc_sudo.id"
+                             t-att-data-categ="ppc_sudo.categ_id.id if ppc_sudo.categ_id else 0"
+                             t-att-data-cur="request.env.company.currency_id.symbol or 'KD'">
+                        </div>
+                        <div class="ppc-load-more-wrap ppc-hidden" id="ppcLoadMoreWrap">
+                            <button type="button" class="ppc-load-more-btn" id="ppcLoadMore" onclick="ppcLoadMore(this)">
+                                <t t-if="(request.env.lang or 'en_US').startswith('ar')">عرض المزيد</t>
+                                <t t-else="">Load More</t>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </t>
+        </xpath>
+
+    </template>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         PROFESSIONAL PRODUCT TABS
+
+         Implementation note: theme_prime.product_tabs is a `theme.ir.ui.view`
+         (not a plain `ir.ui.view`), so inheriting it by xmlid breaks at
+         module load. Instead we:
+           1. Define our tabs as a STANDALONE template (ppc_product_tabs).
+           2. Override the parent theme_prime.product template to swap the
+              <t t-call="theme_prime.product_tabs"/> with our template.
+         ════════════════════════════════════════════════════════════════ -->
+
+    <!-- Inject our tabs after the product detail section (works with or
+         without theme_prime). The theme's tabs are hidden via CSS — see
+         the .tp-hook-product-tabs {display:none} rule in product_page.css. -->
+    <template id="ppc_product_tabs_inject" inherit_id="website_sale.product"
+              priority="20" name="PPC - Inject Premium Product Tabs">
+        <xpath expr="//section[@id='product_detail']" position="after">
+            <div class="container-fluid px-0 my-4 ppc-tabs-host">
+                <div class="row g-0">
+                    <div class="col-12">
+                        <t t-call="uellow_theme.ppc_product_tabs"/>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Our standalone tabs template — full markup -->
+    <template id="ppc_product_tabs" name="PPC - Premium Product Tabs">
+            <t t-set="ppc_is_ar" t-value="(request.env.lang or 'en_US').startswith('ar')"/>
+            <t t-set="ppc_desc_html" t-value="product.get_description_html(lang='ar' if ppc_is_ar else 'en')"/>
+            <t t-set="ppc_specs"     t-value="product.get_specifications()"/>
+            <t t-set="ppc_docs"      t-value="product.sudo().product_document_ids.filtered(lambda d: d.shown_on_product_page)"/>
+            <t t-set="ppc_delivery"  t-value="request.env['ir.config_parameter'].sudo().get_param('uellow_ai.delivery_time_text', '')"/>
+
+            <div class="ppc-tabs-card">
+                <ul class="ppc-tabs-nav nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab"
+                           href="#ppc-tab-description" role="tab" aria-selected="true">
+                            <span class="ppc-tab-icon">📋</span>
+                            <span class="ppc-tab-label">
+                                <t t-if="ppc_is_ar">الوصف</t><t t-else="">Description</t>
+                            </span>
+                        </a>
+                    </li>
+                    <li class="nav-item" t-if="ppc_specs">
+                        <a class="nav-link" data-bs-toggle="tab"
+                           href="#ppc-tab-specs" role="tab" aria-selected="false">
+                            <span class="ppc-tab-icon">📊</span>
+                            <span class="ppc-tab-label">
+                                <t t-if="ppc_is_ar">المواصفات</t><t t-else="">Specifications</t>
+                            </span>
+                            <span class="ppc-tab-count" t-esc="len(ppc_specs)"/>
+                        </a>
+                    </li>
+                    <li class="nav-item" t-if="ppc_docs">
+                        <a class="nav-link" data-bs-toggle="tab"
+                           href="#ppc-tab-documents" role="tab" aria-selected="false">
+                            <span class="ppc-tab-icon">📄</span>
+                            <span class="ppc-tab-label">
+                                <t t-if="ppc_is_ar">المستندات</t><t t-else="">Documents</t>
+                            </span>
+                            <span class="ppc-tab-count" t-esc="len(ppc_docs)"/>
+                        </a>
+                    </li>
+                    <li class="nav-item" t-if="is_view_active('website_sale.product_comment')">
+                        <a class="nav-link" data-bs-toggle="tab"
+                           href="#ppc-tab-reviews" role="tab" aria-selected="false">
+                            <span class="ppc-tab-icon">⭐</span>
+                            <span class="ppc-tab-label">
+                                <t t-if="ppc_is_ar">التقييمات</t><t t-else="">Reviews</t>
+                            </span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab"
+                           href="#ppc-tab-shipping" role="tab" aria-selected="false">
+                            <span class="ppc-tab-icon">🚚</span>
+                            <span class="ppc-tab-label">
+                                <t t-if="ppc_is_ar">الشحن والإرجاع</t><t t-else="">Shipping &amp; Returns</t>
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="tab-content ppc-tabs-content">
+
+                    <!-- ───────── Description ───────── -->
+                    <div class="tab-pane fade show active" id="ppc-tab-description" role="tabpanel">
+                        <div class="ppc-tab-body" itemprop="description"
+                             t-out="ppc_desc_html or '&lt;p class=&quot;ppc-tab-empty&quot;&gt;%s&lt;/p&gt;' % (('لم يُضَف وصف بعد لهذا المنتج.' if ppc_is_ar else 'No description has been added for this product yet.'))"/>
+                    </div>
+
+                    <!-- ───────── Specifications ───────── -->
+                    <div class="tab-pane fade" id="ppc-tab-specs" role="tabpanel" t-if="ppc_specs">
+                        <div class="ppc-tab-body">
+                            <div class="ppc-spec-grid">
+                                <t t-foreach="ppc_specs" t-as="spec">
+                                    <div class="ppc-spec-row" t-att-data-group="spec['group']">
+                                        <div class="ppc-spec-ico" t-esc="spec['icon']"/>
+                                        <div class="ppc-spec-label" t-esc="spec['label']"/>
+                                        <div class="ppc-spec-value" t-esc="spec['value']"/>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ───────── Documents (PDF brochures, manuals) ───────── -->
+                    <div class="tab-pane fade" id="ppc-tab-documents" role="tabpanel" t-if="ppc_docs">
+                        <div class="ppc-tab-body">
+                            <div class="ppc-docs-list">
+                                <t t-foreach="ppc_docs" t-as="doc">
+                                    <a t-attf-href="/web/content/product.document/#{doc.id}/datas?download=true"
+                                       class="ppc-doc-item" target="_blank" rel="noopener">
+                                        <span class="ppc-doc-icon">📄</span>
+                                        <span class="ppc-doc-name" t-esc="doc.name or doc.ir_attachment_id.name"/>
+                                        <span class="ppc-doc-dl">⤓</span>
+                                    </a>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ───────── Reviews — render the .prw widget directly here.
+                         Previously this used a lazy JS hand-off from an Odoo
+                         container elsewhere on the page; that broke because
+                         the new reviews_widget renders into a different host.
+                         Calling the widget template directly is safe: it
+                         doesn't re-inherit website_sale.product so there's no
+                         recursion. ──────────────────────────────────── -->
+                    <div class="tab-pane fade" id="ppc-tab-reviews" role="tabpanel">
+                        <div class="ppc-tab-body" id="o_product_page_reviews_tab">
+                            <t t-call="product_reviews.reviews_widget">
+                                <t t-set="product" t-value="product"/>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- ───────── Shipping &amp; Returns ───────── -->
+                    <div class="tab-pane fade" id="ppc-tab-shipping" role="tabpanel">
+                        <div class="ppc-tab-body">
+                            <div class="ppc-ship-grid">
+                                <div class="ppc-ship-card">
+                                    <div class="ppc-ship-icon">🚚</div>
+                                    <div class="ppc-ship-title">
+                                        <t t-if="ppc_is_ar">سياسة الشحن</t>
+                                        <t t-else="">Shipping policy</t>
+                                    </div>
+                                    <div class="ppc-ship-body" t-esc="ppc_delivery or ('Same-day in Kuwait City before 2pm. 24–48h elsewhere. 5–7 business days international.')"/>
+                                </div>
+                                <div class="ppc-ship-card">
+                                    <div class="ppc-ship-icon">↩</div>
+                                    <div class="ppc-ship-title">
+                                        <t t-if="ppc_is_ar">سياسة الإرجاع</t>
+                                        <t t-else="">Return policy</t>
+                                    </div>
+                                    <div class="ppc-ship-body">
+                                        <t t-if="ppc_is_ar">إرجاع مجاني خلال 14 يوماً من الاستلام. المنتج بحالته الأصلية مع الفاتورة.</t>
+                                        <t t-else="">Free returns within 14 days of delivery. Item must be in original condition with the invoice.</t>
+                                    </div>
+                                </div>
+                                <div class="ppc-ship-card">
+                                    <div class="ppc-ship-icon">🛡</div>
+                                    <div class="ppc-ship-title">
+                                        <t t-if="ppc_is_ar">الضمان</t>
+                                        <t t-else="">Warranty</t>
+                                    </div>
+                                    <div class="ppc-ship-body">
+                                        <t t-if="ppc_is_ar">ضمان المنتج مغطى وفق سياسة الشركة المصنّعة.</t>
+                                        <t t-else="">Manufacturer warranty applies per the brand's policy.</t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+    </template>
+
+</odoo>

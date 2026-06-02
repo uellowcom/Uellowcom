@@ -34,58 +34,55 @@
   }
 
   /* Render payment methods */
-  function renderPayMethods(methods, listEls, payBtns) {
-    var html = '';
-    methods.forEach(function (m) {
-      html += '<div class="uc-pay-opt"'
-        + ' data-id="'      + m.id   + '"'
-        + ' data-code="'    + (m.code || '')  + '"'
-        + ' data-is-cod="'  + (m.is_cod  ? '1' : '0') + '"'
-        + ' data-is-upay="' + (m.is_upay ? '1' : '0') + '"'
-        + ' style="display:flex;align-items:center;gap:12px;padding:14px 16px;'
-        + 'border-radius:12px;border:2px solid #eee;cursor:pointer;'
-        + 'margin-bottom:8px;transition:border-color .2s,background .2s">'
-        + '<div style="width:40px;height:40px;border-radius:8px;background:#f5f5f5;'
-        + 'overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center">'
-        + '<img src="/web/image/payment.method/' + m.id + '/image"'
-        + ' style="width:100%;height:100%;object-fit:contain" alt="' + (m.name || '') + '">'
-        + '</div>'
-        + '<span style="font-size:14px;font-weight:600;color:#222">' + (m.name || '') + '</span>'
-        + '</div>';
-    });
+  /* Build an .uc-pay-opt node WITHOUT inline styles — CSS class controls
+     look. User-controlled fields (name) inserted via textContent to prevent
+     XSS. CSS class .uc-pay-opt + .sel state drives the entire visual. */
+  function _buildPayOpt(m) {
+    var opt = document.createElement('div');
+    opt.className = 'uc-pay-opt';
+    opt.dataset.id     = m.id;
+    opt.dataset.code   = m.code || '';
+    opt.dataset.isCod  = m.is_cod  ? '1' : '0';
+    opt.dataset.isUpay = m.is_upay ? '1' : '0';
 
+    var icon = document.createElement('div');
+    icon.className = 'uc-pay-icon';
+    var img = document.createElement('img');
+    img.src = '/web/image/payment.method/' + m.id + '/image';
+    img.alt = ''; // safe — decorative
+    icon.appendChild(img);
+
+    var name = document.createElement('span');
+    name.className = 'uc-pay-name';
+    name.textContent = m.name || ''; // safe — no HTML injection
+
+    var check = document.createElement('span');
+    check.className = 'uc-pay-check';
+    check.textContent = '✓';
+
+    opt.appendChild(icon);
+    opt.appendChild(name);
+    opt.appendChild(check);
+    return opt;
+  }
+
+  function renderPayMethods(methods, listEls, payBtns) {
     listEls.forEach(function (el) {
       if (!el) return;
-      /* Hide spinner */
       var spin = el.querySelector('.uc-pay-loading');
       if (spin) spin.style.display = 'none';
-      /* Write options */
       var body = el.querySelector('.uc-pay-body') || el;
-      body.innerHTML = html;
-      /* Click handlers */
+      body.innerHTML = '';
+      methods.forEach(function (m) { body.appendChild(_buildPayOpt(m)); });
+
       body.querySelectorAll('.uc-pay-opt').forEach(function (opt) {
         opt.addEventListener('click', function () {
-          /* Deselect all in both lists */
+          // Toggle .sel class on every mirrored list
           listEls.forEach(function (sib) {
             if (!sib) return;
             var sb = sib.querySelector('.uc-pay-body') || sib;
             sb.querySelectorAll('.uc-pay-opt').forEach(function (o) {
-              o.style.borderColor = '#eee';
-              o.style.background  = '';
-            });
-          });
-          /* Select clicked */
-          opt.style.borderColor = '#43A047';
-          opt.style.background  = '#f1f8e9';
-          /* Mirror to other list */
-          listEls.forEach(function (sib) {
-            if (!sib || sib === el) return;
-            var sb = sib.querySelector('.uc-pay-body') || sib;
-            sb.querySelectorAll('.uc-pay-opt').forEach(function (o) {
-              if (o.dataset.id === opt.dataset.id) {
-                o.style.borderColor = '#43A047';
-                o.style.background  = '#f1f8e9';
-              }
+              o.classList.toggle('sel', o.dataset.id === opt.dataset.id);
             });
           });
           selPayId   = parseInt(opt.dataset.id || '0', 10);
@@ -124,28 +121,85 @@
       });
   }
 
-  /* Submit order */
+  // Lazy-build the spinner overlay (CSS in checkout.css)
+  function _ensureOverlay() {
+    var o = d.getElementById('uc-submit-overlay');
+    if (o) return o;
+    o = d.createElement('div');
+    o.id = 'uc-submit-overlay';
+    o.className = 'uc-submit-overlay';
+    o.innerHTML =
+      '<div class="uc-submit-overlay__box">' +
+        '<div class="uc-submit-overlay__spinner"></div>' +
+        '<div class="uc-submit-overlay__msg"></div>' +
+      '</div>';
+    d.body.appendChild(o);
+    return o;
+  }
+  function _showOverlay(msg) {
+    var o = _ensureOverlay();
+    o.querySelector('.uc-submit-overlay__msg').textContent = msg || '';
+    o.classList.add('on');
+  }
+  function _hideOverlay() {
+    var o = d.getElementById('uc-submit-overlay');
+    if (o) o.classList.remove('on');
+  }
+  // Bilingual toast — non-blocking, replaces alert()
+  function _toast(en, ar, type) {
+    var div = d.createElement('div');
+    div.style.cssText =
+      'position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:99998;' +
+      'background:' + (type === 'error' ? '#ef4444' : '#412402') + ';color:#fff;' +
+      'padding:11px 18px;border-radius:10px;font-size:13px;font-weight:700;' +
+      'box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:90vw;text-align:center;line-height:1.4;' +
+      'animation:uc-toast-in .2s ease;';
+    div.textContent = en + (ar ? ' · ' + ar : '');
+    d.body.appendChild(div);
+    setTimeout(function () { div.style.opacity = '0'; div.style.transition = 'opacity .3s'; }, 3500);
+    setTimeout(function () { try { d.body.removeChild(div); } catch (e) {} }, 4000);
+  }
+
+  /* Submit order — debounced + idempotent (no double-charge on rapid taps) */
+  var _submitInflight = false;
   function doPayment() {
+    if (_submitInflight) return;
     if (!selPayId) {
-      alert(isAr ? 'الرجاء اختيار وسيلة الدفع' : 'Please select a payment method');
+      _toast('Please select a payment method', 'الرجاء اختيار وسيلة الدفع', 'error');
       return;
     }
-    var overlay = d.getElementById('uc-submit-overlay');
-    if (overlay) overlay.style.display = 'flex';
+    _submitInflight = true;
+    // Disable every CTA on the page so duplicate clicks can't fire.
+    d.querySelectorAll('.uc-confirm-btn, .uc-btn, .uc-desk-btn').forEach(function (b) {
+      b.disabled = true;
+    });
+    _showOverlay(isAr ? 'جارٍ تأمين الدفعة…' : 'Securing your payment…');
 
     rpc('/uellow/checkout/submit', {
       payment_method:    selPayCode,
       payment_method_id: selPayId,
     }).then(function (res) {
-      if (overlay) overlay.style.display = 'none';
       if (res && res.success && res.redirect) {
-        w.location.href = res.redirect;
-      } else {
-        alert(isAr ? 'حدث خطا، حاول مجددا' : 'An error occurred, please try again.');
+        w.location.href = res.redirect; // keep overlay visible during nav
+        return;
       }
+      _hideOverlay();
+      _submitInflight = false;
+      d.querySelectorAll('.uc-confirm-btn, .uc-btn, .uc-desk-btn').forEach(function (b) {
+        b.disabled = false;
+      });
+      _toast(
+        (res && res.error) || 'Payment failed, please try again',
+        'فشلت عملية الدفع، حاول مجدداً',
+        'error'
+      );
     }).catch(function () {
-      if (overlay) overlay.style.display = 'none';
-      alert(isAr ? 'حدث خطا في الاتصال' : 'Connection error. Please try again.');
+      _hideOverlay();
+      _submitInflight = false;
+      d.querySelectorAll('.uc-confirm-btn, .uc-btn, .uc-desk-btn').forEach(function (b) {
+        b.disabled = false;
+      });
+      _toast('Connection error', 'خطأ في الاتصال', 'error');
     });
   }
 

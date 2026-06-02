@@ -111,4 +111,11 @@
             parent="menu_marketplace_products_root"
             action="uellow_multivendor.action_vendor_product_approval"
             sequence="20"/>
+
+  <!-- Move Fulfillment menu under Multivendor -->
+  <menuitem id="uellow_fulfillment.menu_fbu_root"
+            name="Fulfillment"
+            parent="menu_marketplace_main"
+            sequence="35"/>
+
 </odoo>

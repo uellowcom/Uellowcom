@@ -45,6 +45,8 @@ class CustomerBodyProfile(models.Model):
     # ── Shoe ─────────────────────────────────────────────────────────────────
     shoe_size_eu = fields.Float(string='مقاس الحذاء EU')
     shoe_size_us = fields.Float(string='مقاس الحذاء US')
+    foot_length_cm = fields.Float(string='طول القدم (cm)',
+        help='أدق من EU/US — يقاس من نهاية الكعب لرأس الإصبع الأطول.')
     shoe_width   = fields.Selection([
         ('narrow', 'ضيق'),
         ('normal', 'عادي'),
@@ -57,6 +59,18 @@ class CustomerBodyProfile(models.Model):
         ('regular', 'Regular Fit'),
         ('loose',   'Loose Fit'),
     ], string='تفضيل القصة', default='regular')
+
+    preferred_unit = fields.Selection([
+        ('cm',   'Centimeters (cm)'),
+        ('inch', 'Inches (in)'),
+    ], string='Preferred unit', default='cm',
+       help='How measurements are displayed to you. '
+            'Storage stays in cm regardless.')
+
+    # ── Virtual Try-On source photo ──────────────────────────────────────────
+    tryon_photo          = fields.Binary(string='صورة Try-On', attachment=True)
+    tryon_photo_filename = fields.Char(string='اسم ملف الصورة')
+    tryon_photo_uploaded = fields.Datetime(string='تاريخ رفع الصورة')
 
     # ── Learning from history ─────────────────────────────────────────────────
     fit_history_ids = fields.One2many(
@@ -97,6 +111,7 @@ class CustomerBodyProfile(models.Model):
             'preferred_fit': self.preferred_fit,
             'complete':      self.profile_complete,
             'completion':    self.completion_pct,
+            'has_tryon_photo': bool(self.tryon_photo),
         }
 
 
@@ -106,8 +121,11 @@ class CustomerFitHistory(models.Model):
     _order       = 'create_date desc'
 
     profile_id  = fields.Many2one('customer.body.profile', ondelete='cascade')
-    product_id  = fields.Many2one('product.template', string='المنتج')
+    partner_id  = fields.Many2one('res.partner', related='profile_id.partner_id',
+                                  store=True, index=True)
+    product_id  = fields.Many2one('product.template', string='المنتج', index=True)
     size_chosen = fields.Char(string='المقاس المختار')
+
     fit_result  = fields.Selection([
         ('perfect',   'مناسب تماماً'),
         ('too_small', 'ضيق'),
@@ -115,5 +133,42 @@ class CustomerFitHistory(models.Model):
         ('too_long',  'طويل'),
         ('too_short', 'قصير'),
     ], string='نتيجة القصة')
+
+    # ── Per-area verdict (computed snapshot at the time of the check) ────
+    AREA_VALUES = [
+        ('tight',       'ضيق'),
+        ('comfortable', 'مريح'),
+        ('loose',       'واسع'),
+        ('unknown',     'غير معروف'),
+    ]
+    chest_fit    = fields.Selection(AREA_VALUES, string='الصدر')
+    waist_fit    = fields.Selection(AREA_VALUES, string='الوسط')
+    hip_fit      = fields.Selection(AREA_VALUES, string='الورك')
+    shoulder_fit = fields.Selection(AREA_VALUES, string='الكتف')
+    length_fit   = fields.Selection(AREA_VALUES, string='الطول')
+    sleeve_fit   = fields.Selection(AREA_VALUES, string='الكم')
+    inseam_fit   = fields.Selection(AREA_VALUES, string='الساق')
+
+    chest_diff_cm    = fields.Float(string='فرق الصدر (cm)')
+    waist_diff_cm    = fields.Float(string='فرق الوسط (cm)')
+    hip_diff_cm      = fields.Float(string='فرق الورك (cm)')
+    shoulder_diff_cm = fields.Float(string='فرق الكتف (cm)')
+    length_diff_cm   = fields.Float(string='فرق الطول (cm)')
+    sleeve_diff_cm   = fields.Float(string='فرق الكم (cm)')
+    inseam_diff_cm   = fields.Float(string='فرق الساق (cm)')
+
+    overall_match_pct = fields.Integer(string='نسبة التوافق %')
+
+    # ── Source/category metadata ─────────────────────────────────────────
+    category    = fields.Char(string='فئة المنتج')
+    source      = fields.Selection([
+        ('beena_check', 'فحص بينا'),
+        ('purchase',    'بعد الشراء'),
+        ('manual',      'يدوي'),
+    ], default='beena_check')
+
+    details_json = fields.Text(string='تفاصيل (JSON)',
+                               help='Per-area diffs + raw analyzer output snapshot.')
+
     notes       = fields.Text(string='ملاحظات')
     order_id    = fields.Many2one('sale.order', string='الطلب')

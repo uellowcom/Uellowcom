@@ -1,0 +1,100 @@
+/* ============================================================
+   PPC - Bilingual Description Tab (Backend)
+   ============================================================ */
+
+.ppc-backend-desc-wrap { padding: 16px 0 8px; }
+
+/* Language toggle buttons */
+.ppc-be-lang-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e8e8e8;
+}
+
+.ppc-be-lang-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: 8px;
+    border: 1.5px solid #d0d0d0;
+    background: #f5f5f5;
+    color: #555;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    line-height: 1.4;
+}
+
+.ppc-be-lang-btn:hover {
+    border-color: #875a7b;
+    color: #875a7b;
+    background: #f9f0fb;
+}
+
+.ppc-be-lang-btn.active {
+    background: #875a7b;
+    border-color: #875a7b;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(135,90,123,0.3);
+}
+
+/* Field label row */
+.ppc-be-field-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #333;
+}
+
+.ppc-be-flag { font-size: 20px; }
+
+.ppc-be-badge {
+    padding: 2px 9px;
+    border-radius: 5px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+}
+
+.ppc-be-badge-ar {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffe0b2;
+}
+
+.ppc-be-badge-en {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: 1px solid #bbdefb;
+}
+
+/* RTL editor for Arabic */
+#ppc-be-ar .odoo-editor-editable,
+#ppc-be-ar .note-editable {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Cairo', 'Tajawal', sans-serif !important;
+}
+
+/* Hint bar */
+.ppc-be-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 18px;
+    padding: 11px 16px;
+    background: #f0f7ff;
+    border: 1px solid #cce0ff;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #444;
+    line-height: 1.65;
+    direction: rtl;
+    text-align: right;
+}

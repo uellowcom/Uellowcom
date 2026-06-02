@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_perf_incident_list" model="ir.ui.view">
+    <field name="name">uellow.perf.incident.list</field>
+    <field name="model">uellow.perf.incident</field>
+    <field name="arch" type="xml">
+      <list string="Incidents"
+            decoration-danger="status == 'open'"
+            decoration-muted="status == 'closed'">
+        <field name="opened_at"/>
+        <field name="closed_at"/>
+        <field name="category"/>
+        <field name="name"/>
+        <field name="mttr_minutes" string="Duration (min)"/>
+        <field name="status"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_perf_incident_form" model="ir.ui.view">
+    <field name="name">uellow.perf.incident.form</field>
+    <field name="model">uellow.perf.incident</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name"/></h1>
+          </div>
+          <group>
+            <group>
+              <field name="category"/>
+              <field name="status"/>
+              <field name="opened_at"/>
+              <field name="closed_at"/>
+              <field name="mttr_minutes"/>
+            </group>
+            <group>
+              <field name="sample_alert_id" readonly="1"/>
+            </group>
+          </group>
+          <field name="note" placeholder="Post-mortem notes…"/>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_perf_incident" model="ir.actions.act_window">
+    <field name="name">Incidents (MTTR)</field>
+    <field name="res_model">uellow.perf.incident</field>
+    <field name="view_mode">list,form</field>
+  </record>
+</odoo>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_uellow_delivery_zone_tree" model="ir.ui.view">
+    <field name="name">uellow.delivery.zone.list</field>
+    <field name="model">uellow.delivery.zone</field>
+    <field name="arch" type="xml">
+      <list editable="bottom">
+        <field name="sequence" widget="handle"/>
+        <field name="carrier_id"/>
+        <field name="name"/>
+        <field name="cities"/>
+        <field name="price"/>
+        <field name="cutoff_time"/>
+        <field name="weekday_mask"/>
+        <field name="active"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_uellow_delivery_zone" model="ir.actions.act_window">
+    <field name="name">Delivery Zones (Uellow)</field>
+    <field name="res_model">uellow.delivery.zone</field>
+    <field name="view_mode">list</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">Define delivery zones</p>
+      <p>For each delivery carrier, list which cities cost what.
+         Use <code>*</code> as a wildcard for the default rate, and put
+         remote-city overrides on separate rows above it.</p>
+      <p>Example for Kuwait next-day:</p>
+      <ul>
+        <li>Row 1 — cities: <code>abdali, sabah al ahmad</code> · price <code>2.500</code></li>
+        <li>Row 2 — cities: <code>*</code> · price <code>1.250</code></li>
+      </ul>
+    </field>
+  </record>
+
+  <menuitem id="menu_uellow_delivery_zone"
+            name="Delivery Zones"
+            parent="uellow_mobile_manager.menu_mobile_root"
+            action="action_uellow_delivery_zone" sequence="60"/>
+
+  <!-- Add the zone tab on delivery.carrier so an admin can also manage
+       zones directly from the carrier form. -->
+  <record id="view_delivery_carrier_form_uellow_zones" model="ir.ui.view">
+    <field name="name">delivery.carrier.form.uellow.zones</field>
+    <field name="model">delivery.carrier</field>
+    <field name="inherit_id" ref="delivery.view_delivery_carrier_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//notebook" position="inside">
+        <page string="Uellow Zones" name="uellow_zones">
+          <field name="uellow_zone_ids">
+            <list editable="bottom">
+              <field name="sequence" widget="handle"/>
+              <field name="name"/>
+              <field name="cities"/>
+              <field name="price"/>
+              <field name="cutoff_time"/>
+              <field name="weekday_mask"/>
+              <field name="active"/>
+            </list>
+          </field>
+        </page>
+      </xpath>
+    </field>
+  </record>
+</odoo>

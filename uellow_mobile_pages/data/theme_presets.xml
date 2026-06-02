@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+  <record id="theme_uellow" model="mobile.theme.preset">
+    <field name="code">uellow</field>
+    <field name="name">Uellow</field>
+    <field name="sequence">10</field>
+    <field name="primary">#F5C320</field>
+    <field name="dark">#412402</field>
+    <field name="page_bg">#FAF6EB</field>
+    <field name="hero_bg">linear-gradient(135deg,#412402 0%,#6b3a05 60%,#F5C320 100%)</field>
+  </record>
+  <record id="theme_eid" model="mobile.theme.preset">
+    <field name="code">eid</field>
+    <field name="name">Eid</field>
+    <field name="icon">🌙</field>
+    <field name="sequence">20</field>
+    <field name="primary">#FFD700</field>
+    <field name="dark">#0E5E2E</field>
+    <field name="page_bg">#E9F4ED</field>
+    <field name="hero_bg">linear-gradient(135deg,#0E5E2E 0%,#1B7A3F 50%,#FFD700 100%)</field>
+    <field name="extras_json">{"lanterns":true,"confetti":true}</field>
+  </record>
+  <record id="theme_ramadan" model="mobile.theme.preset">
+    <field name="code">ramadan</field>
+    <field name="name">Ramadan</field>
+    <field name="icon">🕌</field>
+    <field name="sequence">30</field>
+    <field name="primary">#D4AF37</field>
+    <field name="dark">#1B2D5C</field>
+    <field name="page_bg">#EDEEF5</field>
+    <field name="hero_bg">linear-gradient(135deg,#1B2D5C 0%,#3A5BA0 50%,#D4AF37 100%)</field>
+    <field name="extras_json">{"lanterns":true}</field>
+  </record>
+  <record id="theme_bf" model="mobile.theme.preset">
+    <field name="code">bf</field>
+    <field name="name">Black Friday</field>
+    <field name="icon">⚫</field>
+    <field name="sequence">40</field>
+    <field name="primary">#FF4500</field>
+    <field name="dark">#000000</field>
+    <field name="page_bg">#1A1A1A</field>
+    <field name="hero_bg">linear-gradient(135deg,#000000,#FF4500)</field>
+  </record>
+  <record id="theme_valentine" model="mobile.theme.preset">
+    <field name="code">valentine</field>
+    <field name="name">Valentine</field>
+    <field name="icon">❤</field>
+    <field name="sequence">50</field>
+    <field name="primary">#C0392B</field>
+    <field name="dark">#5A0A0A</field>
+    <field name="page_bg">#FFF0F0</field>
+    <field name="hero_bg">linear-gradient(135deg,#5A0A0A,#C0392B 60%,#F08080)</field>
+  </record>
+  <record id="theme_national" model="mobile.theme.preset">
+    <field name="code">national</field>
+    <field name="name">National Day</field>
+    <field name="icon">🇰🇼</field>
+    <field name="sequence">60</field>
+    <field name="primary">#F5C320</field>
+    <field name="dark">#1F8A40</field>
+    <field name="page_bg">#F0F7F2</field>
+    <field name="hero_bg">linear-gradient(135deg,#1F8A40 0%,#34A853 50%,#F5C320 100%)</field>
+  </record>
+  <record id="theme_mom" model="mobile.theme.preset">
+    <field name="code">mom</field>
+    <field name="name">Mother's Day</field>
+    <field name="icon">🌸</field>
+    <field name="sequence">70</field>
+    <field name="primary">#A0276B</field>
+    <field name="dark">#5C0F3D</field>
+    <field name="page_bg">#FFF5F8</field>
+    <field name="hero_bg">linear-gradient(135deg,#5C0F3D,#A0276B 50%,#FFC0CB)</field>
+  </record>
+</odoo>

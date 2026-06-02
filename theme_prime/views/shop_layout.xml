@@ -468,7 +468,7 @@
             <div class="tp-product-wrapper">
                 <div class="tp-product-top position-relative overflow-hidden">
                     <a t-att-href="product_href" class="tp-product-image-container d-block h-100" itemprop="url">
-                        <img t-attf-src="/web/image/product.template/#{product.id}/#{product_image_size}" itemprop="image" loading="lazy" class="h-100 w-100 tp-product-image"/>
+                        <img t-attf-src="/web/image/product.template/#{product.id}/#{product_image_size}" itemprop="image" loading="lazy" class="h-100 w-100 tp-product-image" width="512" height="512" decoding="async"/>
                     </a>
                     <t t-call="theme_prime.product_label">
                         <t t-set="label" t-value="product.dr_label_id"/>
@@ -521,7 +521,7 @@
             <div class="tp-product-wrapper h-100 border">
                 <div class="tp-product-top position-relative overflow-hidden">
                     <a t-att-href="product_href" class="tp-product-image-container d-block h-100" itemprop="url">
-                        <img t-attf-src="/web/image/product.template/#{product.id}/#{product_image_size}" itemprop="image" loading="lazy" class="img-fluid h-100 w-100 tp-product-image"/>
+                        <img t-attf-src="/web/image/product.template/#{product.id}/#{product_image_size}" itemprop="image" loading="lazy" class="img-fluid h-100 w-100 tp-product-image" width="512" height="512" decoding="async"/>
                     </a>
                     <t t-call="theme_prime.product_label">
                         <t t-set="label" t-value="product.dr_label_id"/>
@@ -589,7 +589,7 @@
             <div class="tp-product-wrapper border overflow-hidden tp-rounded-border-radius h-100">
                 <div class="tp-product-top position-relative overflow-hidden">
                     <a t-att-href="product_href" class="tp-product-image-container d-block" itemprop="url">
-                        <img t-attf-src="/web/image/product.template/#{product.id}/#{product_image_size}" itemprop="image" loading="lazy" class="img-fluid h-100 w-100 tp-product-image"/>
+                        <img t-attf-src="/web/image/product.template/#{product.id}/#{product_image_size}" itemprop="image" loading="lazy" class="img-fluid h-100 w-100 tp-product-image" width="512" height="512" decoding="async"/>
                     </a>
                     <t t-call="theme_prime.product_label">
                         <t t-set="label" t-value="product.dr_label_id"/>

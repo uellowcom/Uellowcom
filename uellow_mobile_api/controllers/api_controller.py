@@ -9,11 +9,22 @@ _logger = logging.getLogger(__name__)
 
 
 def _json(data, status=200):
+    # DEPRECATION: every v1 response carries a deprecation hint so
+    # clients see it in dev tools / Sentry / their networking logs.
+    # See DEPRECATED.md for the migration map and sunset plan.
+    if isinstance(data, dict):
+        data.setdefault('deprecated', True)
+        data.setdefault('migrate_to', '/api/mobile/v2/...')
     return Response(
         json.dumps(data, ensure_ascii=False, default=str),
         status=status,
         mimetype='application/json',
-        headers={'Access-Control-Allow-Origin': '*'},
+        headers={
+            'Access-Control-Allow-Origin': '*',
+            'Deprecation': 'true',
+            'Sunset': 'Wed, 01 Oct 2026 00:00:00 GMT',
+            'Link': '</api/mobile/v2/>; rel="successor-version"',
+        },
     )
 
 

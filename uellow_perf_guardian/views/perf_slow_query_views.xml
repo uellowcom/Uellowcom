@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_perf_slow_query_list" model="ir.ui.view">
+    <field name="name">uellow.perf.slow.query.list</field>
+    <field name="model">uellow.perf.slow.query</field>
+    <field name="arch" type="xml">
+      <list string="Slow queries"
+            decoration-danger="mean_ms &gt;= 1000"
+            decoration-warning="mean_ms &gt;= 500 and mean_ms &lt; 1000">
+        <field name="digest"/>
+        <field name="calls"/>
+        <field name="mean_ms" string="Mean (ms)"/>
+        <field name="max_ms" string="Max (ms)"/>
+        <field name="total_ms" string="Total (ms)"/>
+        <field name="rows"/>
+        <field name="last_seen"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_perf_slow_query" model="ir.actions.act_window">
+    <field name="name">Slow Queries</field>
+    <field name="res_model">uellow.perf.slow.query</field>
+    <field name="view_mode">list</field>
+  </record>
+
+  <record id="action_perf_slow_query_collect_now" model="ir.actions.server">
+    <field name="name">Collect slow queries now</field>
+    <field name="model_id" ref="model_uellow_perf_slow_query"/>
+    <field name="state">code</field>
+    <field name="code">n = model.cron_collect()
+action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'Slow queries','message':'Collected %s digests'%n,'type':'success','sticky':False}}</field>
+  </record>
+
+  <record id="view_perf_alert_list" model="ir.ui.view">
+    <field name="name">uellow.perf.alert.list</field>
+    <field name="model">uellow.perf.alert</field>
+    <field name="arch" type="xml">
+      <list string="Alerts"
+            decoration-danger="severity == 'critical'"
+            decoration-warning="severity == 'warning'"
+            decoration-muted="resolved">
+        <field name="create_date"/>
+        <field name="category"/>
+        <field name="severity"/>
+        <field name="name"/>
+        <field name="resolved"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_perf_alert" model="ir.actions.act_window">
+    <field name="name">Alerts</field>
+    <field name="res_model">uellow.perf.alert</field>
+    <field name="view_mode">list</field>
+  </record>
+</odoo>

@@ -1,0 +1,305 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* uellow_smart_fit
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 18.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: ar\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: uellow_smart_fit
+msgid "Smart Services"
+msgstr "الخدمات الذكية"
+
+#. module: uellow_smart_fit
+msgid "Chat History"
+msgstr "سجل المحادثات"
+
+#. module: uellow_smart_fit
+msgid "Your previous conversations with Beena"
+msgstr "محادثاتك السابقة مع بينا"
+
+#. module: uellow_smart_fit
+msgid "My Measurements"
+msgstr "مقاساتي"
+
+#. module: uellow_smart_fit
+msgid "Height, weight, and body measurements for the best size recommendations"
+msgstr "الطول، الوزن، والمقاسات لتوصية المقاس الأنسب"
+
+#. module: uellow_smart_fit
+msgid "My Photo"
+msgstr "صورتي الشخصية"
+
+#. module: uellow_smart_fit
+msgid "The photo used for virtual try-ons"
+msgstr "الصورة المستخدمة في التجربة الافتراضية"
+
+#. module: uellow_smart_fit
+msgid "My Virtual Try-Ons"
+msgstr "تجاربي الافتراضية"
+
+#. module: uellow_smart_fit
+msgid "Clothes you have tried on virtually"
+msgstr "الملابس اللي جرّبتها افتراضياً"
+
+#. module: uellow_smart_fit
+msgid "Fit Check History"
+msgstr "سجل فحوصات المقاسات"
+
+#. module: uellow_smart_fit
+msgid "Past size compatibility check results"
+msgstr "نتائج فحوصاتك السابقة لتوافق المقاسات"
+
+#. module: uellow_smart_fit
+msgid "Reviewers"
+msgstr "الريفيورز"
+
+#. module: uellow_smart_fit
+msgid "Connect with real experts to review products"
+msgstr "تواصل مع خبراء حقيقيين لمراجعة المنتجات"
+
+#. module: uellow_smart_fit
+msgid "My Account"
+msgstr "حسابي"
+
+#. module: uellow_smart_fit
+msgid "Save your measurements once and Beena will recommend the best size for every product."
+msgstr "احفظ مقاساتك مرّة واحدة، وبينا توصّيلك بالمقاس الأنسب لكل منتج."
+
+#. module: uellow_smart_fit
+msgid "Profile completion"
+msgstr "اكتمال البروفايل"
+
+#. module: uellow_smart_fit
+msgid "Measurements saved successfully"
+msgstr "تم حفظ المقاسات بنجاح"
+
+#. module: uellow_smart_fit
+msgid "Something went wrong while saving. Please check the values and try again."
+msgstr "صار خطأ بالحفظ. تأكد من صحة القيم وحاول مرة ثانية."
+
+#. module: uellow_smart_fit
+msgid "Basic Information"
+msgstr "معلومات أساسية"
+
+#. module: uellow_smart_fit
+msgid "Height (cm)"
+msgstr "الطول (سم)"
+
+#. module: uellow_smart_fit
+msgid "Weight (kg)"
+msgstr "الوزن (كجم)"
+
+#. module: uellow_smart_fit
+msgid "Gender"
+msgstr "الجنس"
+
+#. module: uellow_smart_fit
+msgid "Male"
+msgstr "ذكر"
+
+#. module: uellow_smart_fit
+msgid "Female"
+msgstr "أنثى"
+
+#. module: uellow_smart_fit
+msgid "Age range"
+msgstr "الفئة العمرية"
+
+#. module: uellow_smart_fit
+msgid "Body type"
+msgstr "نوع الجسم"
+
+#. module: uellow_smart_fit
+msgid "Slim"
+msgstr "نحيف"
+
+#. module: uellow_smart_fit
+msgid "Athletic"
+msgstr "رياضي"
+
+#. module: uellow_smart_fit
+msgid "Plus size"
+msgstr "بلس سايز"
+
+#. module: uellow_smart_fit
+msgid "Preferred fit"
+msgstr "القصّة المفضّلة"
+
+#. module: uellow_smart_fit
+msgid "Loose"
+msgstr "واسع"
+
+#. module: uellow_smart_fit
+msgid "Upper Body"
+msgstr "مقاسات الجزء العلوي"
+
+#. module: uellow_smart_fit
+msgid "Shoulder (cm)"
+msgstr "الكتف (سم)"
+
+#. module: uellow_smart_fit
+msgid "Chest (cm)"
+msgstr "الصدر (سم)"
+
+#. module: uellow_smart_fit
+msgid "Waist (cm)"
+msgstr "الوسط (سم)"
+
+#. module: uellow_smart_fit
+msgid "Hip (cm)"
+msgstr "الورك (سم)"
+
+#. module: uellow_smart_fit
+msgid "Arm length (cm)"
+msgstr "طول الذراع (سم)"
+
+#. module: uellow_smart_fit
+msgid "Lower Body"
+msgstr "مقاسات الجزء السفلي"
+
+#. module: uellow_smart_fit
+msgid "Inseam (cm)"
+msgstr "طول الساق (سم)"
+
+#. module: uellow_smart_fit
+msgid "Thigh (cm)"
+msgstr "الفخذ (سم)"
+
+#. module: uellow_smart_fit
+msgid "Shoe Size"
+msgstr "مقاس الحذاء"
+
+#. module: uellow_smart_fit
+msgid "Foot length (cm)"
+msgstr "طول القدم (سم)"
+
+#. module: uellow_smart_fit
+msgid "Foot width"
+msgstr "عرض القدم"
+
+#. module: uellow_smart_fit
+msgid "Narrow"
+msgstr "ضيّق"
+
+#. module: uellow_smart_fit
+msgid "Wide"
+msgstr "واسع"
+
+#. module: uellow_smart_fit
+msgid "Save measurements"
+msgstr "حفظ المقاسات"
+
+#. module: uellow_smart_fit
+msgid "Cancel"
+msgstr "إلغاء"
+
+#. module: uellow_smart_fit
+msgid "The photo used for virtual try-ons (Beena uses it inside the chat)."
+msgstr "الصورة المُستخدمة لتجربة المنتجات افتراضياً (بينا تستخدمها داخل المحادثة)."
+
+#. module: uellow_smart_fit
+msgid "Photo uploaded successfully"
+msgstr "تم رفع الصورة بنجاح"
+
+#. module: uellow_smart_fit
+msgid "Photo deleted"
+msgstr "تم حذف الصورة"
+
+#. module: uellow_smart_fit
+msgid "No photo uploaded yet"
+msgstr "ما رفعت صورة بعد"
+
+#. module: uellow_smart_fit
+msgid "Upload a new photo"
+msgstr "رفع صورة جديدة"
+
+#. module: uellow_smart_fit
+msgid "JPG / PNG / WEBP — full standing pose with good lighting recommended."
+msgstr "JPG / PNG / WEBP — يفضّل وقفة كاملة وإضاءة جيدة."
+
+#. module: uellow_smart_fit
+msgid "Upload"
+msgstr "رفع"
+
+#. module: uellow_smart_fit
+msgid "Delete the saved photo?"
+msgstr "حذف الصورة المحفوظة؟"
+
+#. module: uellow_smart_fit
+msgid "Delete photo"
+msgstr "حذف الصورة"
+
+#. module: uellow_smart_fit
+msgid "All the products you have tried on virtually, with the generated images."
+msgstr "كل المنتجات اللي جرّبتها افتراضياً مع الصور المولّدة."
+
+#. module: uellow_smart_fit
+msgid "Generating"
+msgstr "جاري التوليد"
+
+#. module: uellow_smart_fit
+msgid "Failed"
+msgstr "فشل"
+
+#. module: uellow_smart_fit
+msgid "Product page"
+msgstr "صفحة المنتج"
+
+#. module: uellow_smart_fit
+msgid "images"
+msgstr "صور"
+
+#. module: uellow_smart_fit
+msgid "All the size compatibility checks you've run with Beena — newest first."
+msgstr "كل فحوصات التوافق اللي عملتها مع بينا — مرتبة من الأحدث للأقدم."
+
+#. module: uellow_smart_fit
+msgid "Check details"
+msgstr "تفاصيل الفحص"
+
+#. module: uellow_smart_fit
+msgid "Size"
+msgstr "المقاس"
+
+#. module: uellow_smart_fit
+msgid "Compatibility"
+msgstr "نسبة التوافق"
+
+#. module: uellow_smart_fit
+msgid "Per-area breakdown"
+msgstr "تفاصيل لكل منطقة"
+
+#. module: uellow_smart_fit
+msgid "Comfortable ✓"
+msgstr "مريح ✓"
+
+#. module: uellow_smart_fit
+msgid "Tight"
+msgstr "ضيّق"
+
+#. module: uellow_smart_fit
+msgid "Unknown"
+msgstr "غير محدّد"
+
+#. module: uellow_smart_fit
+msgid "Your body:"
+msgstr "جسمك:"
+
+#. module: uellow_smart_fit
+msgid "Garment:"
+msgstr "القطعة:"
+
+#. module: uellow_smart_fit
+msgid "Difference:"
+msgstr "الفرق:"
+
+#. module: uellow_smart_fit
+msgid "Back to product"
+msgstr "ارجع للمنتج"
