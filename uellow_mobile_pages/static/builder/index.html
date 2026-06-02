@@ -3704,9 +3704,22 @@ function renderStyle(b){
       <input type="number" min="12" max="64" value="${p.header_icon_size||22}" data-prop-num="header_icon_size"/></div>
     <div class="field"><label>Display mode</label>
       <select data-prop="header_image_mode">
-        <option value="beside" ${(p.header_image_mode||'beside')==='beside'?'selected':''}>Beside the title (default)</option>
-        <option value="replace" ${p.header_image_mode==='replace'?'selected':''}>Replace title (image only)</option>
+        <option value="beside" ${(p.header_image_mode||'beside')==='beside'?'selected':''}>Beside the title (small icon)</option>
+        <option value="replace" ${p.header_image_mode==='replace'?'selected':''}>Replace title (small image)</option>
+        <option value="banner" ${p.header_image_mode==='banner'?'selected':''}>🖼 Full-width banner (image is the title)</option>
       </select></div>
+    ${p.header_image_mode==='banner' ? `
+    <p class="hint" style="background:#e6f7ef;padding:8px 12px;border-left:3px solid #2cb67d;border-radius:6px;margin:6px 0">Banner mode — the image becomes the section header itself, full width with rounded corners and a soft shadow. Tip: pick a tall thin banner image for best results.</p>
+    <div class="field"><label>Banner height (px)</label>
+      <input type="number" min="40" max="240" value="${p.header_banner_height||84}" data-prop-num="header_banner_height"/></div>
+    <div class="field"><label>Banner corner radius (px)</label>
+      <input type="number" min="0" max="32" value="${p.header_banner_radius!=null?p.header_banner_radius:12}" data-prop-num="header_banner_radius"/></div>
+    <div class="field"><label>Image fit</label>
+      <select data-prop="header_banner_fit">
+        <option value="cover" ${(p.header_banner_fit||'cover')==='cover'?'selected':''}>Cover (fill area — may crop)</option>
+        <option value="contain" ${p.header_banner_fit==='contain'?'selected':''}>Contain (show whole image)</option>
+      </select></div>
+    ` : ''}
 
     <div class="sub-h">Spacing between blocks</div>
     <div class="field"><label>Block vertical padding (px)</label>
