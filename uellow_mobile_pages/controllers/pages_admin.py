@@ -376,6 +376,64 @@ class AdminLookups(http.Controller):
             })
         return _ok({'vendors': out})
 
+    @http.route('/api/admin/v2/lookups/flash-sales', type='http',
+                auth='user', methods=['GET'], csrf=False)
+    def flash_sales(self, **kw):
+        """v2.0.62 — surface vendor flash-sale records to the builder so
+        the Flash Deal block can be linked to one (or many) of them.
+
+        Query params:
+          state=active|upcoming|all — default 'active' + upcoming
+        """
+        guard = _require_internal()
+        if guard:
+            return guard
+        try:
+            Fs = request.env['uellow.flash.sale'].sudo()
+        except KeyError:
+            return _ok({'flash_sales': []})
+        from datetime import datetime
+        now = datetime.utcnow()
+        state = (kw.get('state') or 'active_upcoming').strip()
+        dom = []
+        if state == 'active':
+            dom = [('state', '=', 'active')]
+        elif state == 'all':
+            dom = []
+        else:
+            # active + upcoming = state in (draft, active) AND end_datetime > now
+            dom = ['|', ('state', '=', 'active'),
+                   '&', ('state', '=', 'draft'), ('end_datetime', '>', now)]
+        recs = Fs.search(dom, order='end_datetime asc', limit=200)
+        out = []
+        for s in recs:
+            vendor_name = ''
+            try:
+                vendor_name = s.vendor_id.name if s.vendor_id else ''
+            except Exception:
+                pass
+            remaining = 0
+            if s.end_datetime and s.end_datetime > now:
+                remaining = int((s.end_datetime - now).total_seconds())
+            out.append({
+                'id': s.id,
+                'name': s.name,
+                'name_ar': s.name_ar or '',
+                'vendor_id': s.vendor_id.id if s.vendor_id else 0,
+                'vendor_name': vendor_name,
+                'state': s.state,
+                'discount_pct': s.discount_pct,
+                'start_datetime': s.start_datetime.isoformat()
+                                 if s.start_datetime else '',
+                'end_datetime': s.end_datetime.isoformat()
+                               if s.end_datetime else '',
+                'remaining_seconds': remaining,
+                'units_sold': s.units_sold,
+                'max_quantity': s.max_quantity,
+                'product_count': len(s.product_ids),
+            })
+        return _ok({'flash_sales': out})
+
     @http.route('/api/admin/v2/lookups/sliders', type='http', auth='user',
                 methods=['GET'], csrf=False)
     def sliders(self, **kw):

@@ -3095,6 +3095,9 @@ function renderContent(b){
         ${b.kind==='flash' ? flashVariantPicker(b) : ''}
         <div class="field"><label>Source</label>
           ${sourceSelect(b, 'source', [
+            ...(b.kind==='flash' ? [
+              ['flash_sale','🔥 Linked vendor flash sale (auto-timer)'],
+            ] : []),
             ['discounted','⚡ Active discount'],
             ['bestsellers','🏆 Bestsellers'],
             ['newest','✨ Newest'],
@@ -3108,8 +3111,10 @@ function renderContent(b){
         ${(p.source==='manual') ? productsPickerBtn(b) : ''}
         ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
         ${(p.source==='vendor') ? vendorPickerBtn(b) : ''}
+        ${(b.kind==='flash' && p.source==='flash_sale') ? flashSalePickerBtn(b) : ''}
         <div class="field"><label>Maximum items</label><input type="number" data-prop="limit" value="${p.limit||12}"/></div>
-        ${b.kind==='flash' ? `<div class="field"><label>Countdown ends at</label><input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/></div>` : ''}`;
+        ${(b.kind==='flash' && p.source!=='flash_sale') ? `<div class="field"><label>Countdown ends at</label><input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/></div>` : ''}
+        ${(b.kind==='flash' && p.source==='flash_sale') ? `<p class="hint" style="background:#e6f7ef;padding:8px 12px;border-left:3px solid #2cb67d;border-radius:6px;margin-top:6px">⏰ Timer + products come automatically from the selected flash sale(s). The earliest end_datetime is used as the countdown.</p>` : ''}`;
     case 'banner-1':case 'banner-2':case 'banner-3':
       return `
         ${mlField(b,'title','Banner text')}
@@ -3237,6 +3242,83 @@ function vendorPickerBtn(b){
       <div class="lk-info"><div class="lk-t">${label || 'Click to pick'}</div><div class="lk-s">${id?('id #'+id):'single'}</div></div>
       <div class="lk-chev">✏</div>
     </button></div>`;
+}
+
+/* ─── v2.0.62: Flash-sale picker — pulls live records from
+   uellow.flash.sale and lets the admin pick one or many. The block's
+   countdown timer then comes from the earliest end_datetime. */
+function flashSalePickerBtn(b){
+  const ids = b.props.flash_sale_ids || [];
+  const labels = b.props.flash_sale_labels || [];
+  return `<div class="field"><label>Linked flash sales (${ids.length} selected)</label>
+    <button class="link-field" onclick="openFlashSalesPicker()">
+      <div class="lk-ic">🔥</div>
+      <div class="lk-info">
+        <div class="lk-t">${labels.length ? labels.slice(0,2).join(' · ') + (labels.length>2?' …':''): 'Click to pick — shows vendor flash sales'}</div>
+        <div class="lk-s">${ids.length ? ids.length+' linked' : 'none — block stays empty'}</div>
+      </div>
+      <div class="lk-chev">✏</div>
+    </button></div>`;
+}
+async function openFlashSalesPicker(){
+  try {
+    const r = await api('GET', '/api/admin/v2/lookups/flash-sales?state=active_upcoming');
+    const sales = r.flash_sales || [];
+    const p = cur();
+    const block = p && selectedBlockId
+        ? p.blocks.find(x => x.id === selectedBlockId) : null;
+    const curIds = (block && block.props.flash_sale_ids) || [];
+    const sel = new Set(curIds);
+    const fmt = (s) => {
+      const d = new Date(s.end_datetime || 0);
+      const rem = s.remaining_seconds || 0;
+      const days = Math.floor(rem / 86400);
+      const hours = Math.floor((rem % 86400) / 3600);
+      const remStr = rem ? (days ? days+'d ' : '') + hours + 'h' : 'expired';
+      return `<label style="display:flex;gap:8px;padding:8px;border:1px solid #eee;border-radius:8px;cursor:pointer;background:${sel.has(s.id)?'#fff8d6':'#fff'}">
+        <input type="checkbox" data-fs-id="${s.id}" ${sel.has(s.id)?'checked':''}/>
+        <div style="flex:1">
+          <div style="font-weight:800;color:#412402">${s.name||'(no name)'} · <span style="color:#C0392B">${s.discount_pct}% off</span></div>
+          <div style="font-size:11px;color:#666">🏪 ${s.vendor_name||'(no vendor)'} · ${s.product_count} products · ⏰ ${remStr} remaining</div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:${s.state==='active'?'#2cb67d':'#888'};text-transform:uppercase">${s.state}</div>
+      </label>`;
+    };
+    const html = `
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center" id="fsPickerModal">
+        <div style="background:#fff;border-radius:12px;padding:20px;width:560px;max-height:80vh;overflow:auto">
+          <h3 style="margin:0 0 12px">🔥 Pick flash sales to link</h3>
+          <p style="color:#666;font-size:12px;margin:0 0 14px">Active + upcoming vendor flash sales. The block will show all their products and use the earliest end-time as the countdown.</p>
+          <div style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto" id="fsList">
+            ${sales.length ? sales.map(fmt).join('') : '<p style="color:#999">No active or upcoming flash sales. Vendors create them in their dashboard.</p>'}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="document.getElementById('fsPickerModal').remove()">Cancel</button>
+            <button class="btn btn-primary" id="fsPickApply">Apply</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('fsPickApply').addEventListener('click', () => {
+      const checked = Array.from(document.querySelectorAll('#fsList input[type=checkbox]:checked'));
+      const ids = checked.map(c => parseInt(c.dataset.fsId));
+      const labels = checked.map(c => {
+        const s = sales.find(x => x.id === parseInt(c.dataset.fsId));
+        return s ? s.name : '';
+      });
+      const p = cur();
+      const block = p && selectedBlockId
+        ? p.blocks.find(x => x.id === selectedBlockId) : null;
+      if (block) {
+        block.props.flash_sale_ids = ids;
+        block.props.flash_sale_labels = labels;
+        renderRight(); renderCanvas(); scheduleSave();
+      }
+      document.getElementById('fsPickerModal').remove();
+    });
+  } catch(e){
+    toast('Failed to load flash sales — ' + (e.message||e));
+  }
 }
 /* ─── Variant picker — visual thumbnails for design variants ──── */
 function flashVariantPicker(b){

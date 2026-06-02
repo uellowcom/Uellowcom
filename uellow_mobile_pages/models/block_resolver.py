@@ -136,6 +136,60 @@ def resolve_products(env, props, lang, block=None):
             # Fallback: any recent published product
             recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
 
+    elif source == 'flash_sale':
+        # v2.0.62 — link the block to live uellow.flash.sale records.
+        # Returns the union of products across the picked sales plus
+        # metadata (timer end + max_quantity + vendor) so the Flutter
+        # widget can show progress + vendor name + urgency.
+        FlashSale = env.get('uellow.flash.sale')
+        if not FlashSale:
+            return {'items': []}
+        Fs = FlashSale.sudo()
+        dom_fs = [('state', '=', 'active')]
+        if props.get('flash_sale_ids'):
+            try:
+                ids = [int(x) for x in props['flash_sale_ids']]
+                dom_fs = [('id', 'in', ids)]
+            except Exception:
+                pass
+        sales = Fs.search(dom_fs, order='end_datetime asc')
+        prod_ids = []
+        meta_by_prod = {}
+        earliest_end = None
+        flash_label_en = ''
+        flash_label_ar = ''
+        for s in sales:
+            if not earliest_end or (s.end_datetime and s.end_datetime < earliest_end):
+                earliest_end = s.end_datetime
+                flash_label_en = s.name or ''
+                flash_label_ar = s.name_ar or s.name or ''
+            for p in s.product_ids:
+                if p.id not in meta_by_prod:
+                    prod_ids.append(p.id)
+                    meta_by_prod[p.id] = {
+                        'flash_sale_id': s.id,
+                        'flash_sale_name': s.name,
+                        'flash_discount_pct': s.discount_pct,
+                        'flash_units_sold': s.units_sold,
+                        'flash_max_quantity': s.max_quantity,
+                        'flash_end_datetime':
+                            s.end_datetime.isoformat() if s.end_datetime else '',
+                        'vendor_name': (s.vendor_id.name
+                                        if s.vendor_id else ''),
+                    }
+        recs = Tmpl.browse(prod_ids[:limit]).exists()
+        # Stash meta + earliest end so resolver below uses it
+        env.context.get('_flash_meta_stash', {}).update(meta_by_prod)
+        return {
+            'items': [dict(_product_brief(env, p, lang),
+                           **meta_by_prod.get(p.id, {}))
+                      for p in recs],
+            'flash_end_datetime':
+                earliest_end.isoformat() if earliest_end else '',
+            'flash_label': {'en': flash_label_en, 'ar': flash_label_ar},
+            'flash_count': len(sales),
+        }
+
     elif source == 'bestsellers':
         # Approximation — products with most sales lines. For perf we just
         # fall back to recently-updated published products if the join is
