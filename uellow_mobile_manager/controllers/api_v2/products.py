@@ -435,6 +435,15 @@ class MobileProductsAPI(http.Controller):
         if p.get('on_sale') in ('1', 'true', True):
             domain.append(('compare_list_price', '>', 0))
 
+        # v2.0.80 — minimum rating filter (4 = "4★ & up"). Only applied
+        # when the product.template has a `rating_avg` aggregate.
+        try:
+            mr = float(p.get('min_rating') or 0)
+            if mr > 0 and 'rating_avg' in request.env['product.template']._fields:
+                domain.append(('rating_avg', '>=', mr))
+        except Exception:
+            pass
+
         # Sort
         sort_map = {
             'newest':       'create_date desc',
