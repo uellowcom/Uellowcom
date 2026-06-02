@@ -2581,19 +2581,103 @@ function renderContent(b){
         ${addItemBtn('items', 'Add pill')}`;
     }
     case 'promo-pills': {
+      // v2.0.63 — Pro Promo Pills with 8 layouts, 7 styles, stat counters,
+      // and one-click templates (trust badges / stats / services).
       const pills = p.pills || [];
       return `${mlField(b,'title','Heading (optional)')}
-        <p class="hint">Compact promo strips — e.g. free shipping, flash sale. 1–3 pills.</p>
+        <p class="hint">Trust badges, stats, service guarantees. Pick a layout + style + optional animation. Use a quick template to get a polished set in one click.</p>
+
+        <div class="sub-h">Quick templates · one-click pre-fill</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button class="btn-secondary" style="padding:8px;font-size:11px;text-align:left;cursor:pointer;border:1px solid #ddd;border-radius:8px;background:#fff" data-promo-template="trust">🛡 Trust badges
+            <small style="display:block;color:#888;font-weight:500">Worry-free + Worldwide + 24/7 + Secure</small></button>
+          <button class="btn-secondary" style="padding:8px;font-size:11px;text-align:left;cursor:pointer;border:1px solid #ddd;border-radius:8px;background:#fff" data-promo-template="stats">📊 Stats &amp; achievements
+            <small style="display:block;color:#888;font-weight:500">12K customers + 500 products + 4.9★ + 30-day returns</small></button>
+          <button class="btn-secondary" style="padding:8px;font-size:11px;text-align:left;cursor:pointer;border:1px solid #ddd;border-radius:8px;background:#fff" data-promo-template="service">🎁 Service guarantees
+            <small style="display:block;color:#888;font-weight:500">Free ship + Returns + Warranty + COD</small></button>
+          <button class="btn-secondary" style="padding:8px;font-size:11px;text-align:left;cursor:pointer;border:1px solid #ddd;border-radius:8px;background:#fff" data-promo-template="offers">⚡ Limited offers
+            <small style="display:block;color:#888;font-weight:500">Flash + Coupons + Free shipping</small></button>
+        </div>
+
+        <div class="sub-h">Layout</div>
+        <div class="field"><label>Layout style</label>
+          ${sourceSelect(b, 'layout', [
+            ['row',          '◀▶ Single row (default)'],
+            ['grid_2x2',     '▦ Grid 2×2'],
+            ['grid_2x3',     '▦ Grid 2×3'],
+            ['grid_3x2',     '▦ Grid 3×2'],
+            ['vertical',     '▤ Vertical stack'],
+            ['ticker',       '🎞 Ticker (auto-scroll)'],
+            ['compact_row',  '— Compact one-liner'],
+            ['featured',     '★ Featured (1 big + grid)'],
+            ['iconic_row',   '⬣ Iconic row (icons only)'],
+          ], 'row')}
+        </div>
+        <div class="field"><label>Card style</label>
+          ${sourceSelect(b, 'style', [
+            ['filled',       '🟦 Filled (color background)'],
+            ['outlined',     '◌ Outlined (transparent + border)'],
+            ['gradient',     '🌈 Gradient (2 stops)'],
+            ['glass',        '◐ Glass (frosted blur)'],
+            ['minimal',      '· Minimal (text only)'],
+            ['iconic',       '⬤ Iconic (big icon, small text)'],
+            ['neumorphic',   '◉ Neumorphic (soft shadow)'],
+          ], 'filled')}
+        </div>
+        <div class="field"><label>Icon position</label>
+          ${sourceSelect(b, 'icon_position', [
+            ['left','◀ Left of text'],
+            ['top','▲ Above text'],
+            ['right','▶ Right of text'],
+          ], 'left')}
+        </div>
+        <div class="field"><label>Icon size</label>
+          ${sourceSelect(b, 'icon_size', [
+            ['sm','Small (14px)'],['md','Medium (18px)'],
+            ['lg','Large (24px)'],['xl','Extra large (32px)']
+          ], 'md')}
+        </div>
+        <div class="field"><label>Gap (px)</label>
+          <input type="number" min="2" max="20" data-prop-num="gap" value="${p.gap??8}"/></div>
+
+        <div class="sub-h">Animation</div>
+        <div class="field"><label>Entry animation</label>
+          ${sourceSelect(b, 'animation', [
+            ['none','None'],
+            ['fade_in','✨ Fade in (stagger)'],
+            ['slide_up','⬆ Slide up (stagger)'],
+            ['pulse_icon','◉ Pulse icon'],
+          ], 'fade_in')}
+        </div>
+        <div class="toggle"><div class="nm">🔢 Animate number counters (count up from 0)</div>
+          <div class="switch ${(p.count_up!==false)?'on':''}" data-toggle-prop="count_up"></div></div>
+
+        <div class="sub-h">Pills (${pills.length})</div>
         ${pills.map((it,i)=>`
           <div class="item-card">
-            ${itemHeader('Promo', 'pills', i, pills.length)}
+            ${itemHeader('Pill', 'pills', i, pills.length)}
+            <div class="field"><label>Type</label>
+              <select data-i-prop="pills|${i}|kind">
+                <option value="pill"      ${(!it.kind||it.kind==='pill')?'selected':''}>🎁 Standard pill (icon + title + sub)</option>
+                <option value="stat"      ${it.kind==='stat'?'selected':''}>📊 Stat (animated number)</option>
+                <option value="icon_only" ${it.kind==='icon_only'?'selected':''}>⬣ Icon-only (tooltip on tap)</option>
+                <option value="badge"     ${it.kind==='badge'?'selected':''}>🏷 Just a badge</option>
+              </select></div>
             ${itemIcon('pills', i, 'icon', it)}
             ${itemMl('pills', i, 'titleEn', 'titleAr', 'Title', it)}
             ${itemMl('pills', i, 'subtitleEn', 'subtitleAr', 'Subtitle', it)}
-            ${itemColor('pills', i, 'color', it)}
+            ${it.kind==='stat' ? `
+              <div class="field"><label>Stat value (number, e.g. 12000)</label>
+                <input type="number" data-i-prop="pills|${i}|value" value="${it.value||0}"/></div>
+              <div class="field"><label>Suffix (e.g. + or % or K)</label>
+                <input data-i-prop="pills|${i}|value_suffix" value="${it.value_suffix||''}"/></div>` : ''}
+            ${itemColor('pills', i, 'color', it, ['#FFF6E0','#FFE5E5','#FFD9E8','#E5F0FF','#E0F2EA','#F5E7FF','#F7F7F7','#412402','#1F8A40','#C0392B'])}
+            ${itemColor('pills', i, 'icon_color', it, ['#F5C320','#412402','#FF4500','#1F8A40','#C0392B','#1D6FB7','#6E4AB0','#000','#fff'])}
+            ${itemColor('pills', i, 'text_color', it, ['#412402','#000','#fff','#F5C320','#C0392B','#1F8A40'])}
             ${itemLink('pills', i, 'link', it)}
+            ${itemText('pills', i, 'badge_text', 'Corner badge text (NEW, HOT, etc.) — optional', it)}
           </div>`).join('')}
-        ${addItemBtn('pills', 'Add promo')}`;
+        ${addItemBtn('pills', 'Add pill')}`;
     }
     case 'pill-filter': {
       const pills = p.pills || [];
@@ -3546,6 +3630,48 @@ function wirePropsBody(b){
   });
   // Array-item button SETTERS — for buttons that set a specific value on click.
   // Pattern: data-i-set="arrayKey|idx|key|value"
+  // v2.0.63 — Promo-pill template quick-fill buttons
+  document.querySelectorAll('[data-promo-template]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const templates = {
+        trust: [
+          {kind:'pill', icon:'🛡', titleEn:'Worry-Free Shopping', titleAr:'تسوّق آمن', subtitleEn:'30-day return policy', subtitleAr:'إرجاع خلال 30 يوم', color:'#E0F2EA', icon_color:'#1F8A40'},
+          {kind:'pill', icon:'🌍', titleEn:'Worldwide Delivery', titleAr:'توصيل عالمي', subtitleEn:'Ship to GCC + EG', subtitleAr:'لكل دول الخليج ومصر', color:'#E5F0FF', icon_color:'#1D6FB7'},
+          {kind:'pill', icon:'🕐', titleEn:'24/7 Customer Service', titleAr:'دعم ٢٤/٧', subtitleEn:'We are always here', subtitleAr:'دائماً معك', color:'#FFF6E0', icon_color:'#F5C320'},
+          {kind:'pill', icon:'🔒', titleEn:'Secure Payment', titleAr:'دفع آمن', subtitleEn:'KNET · Visa · Apple Pay', subtitleAr:'KNET · فيزا · Apple Pay', color:'#F5E7FF', icon_color:'#6E4AB0'},
+        ],
+        stats: [
+          {kind:'stat', icon:'😊', titleEn:'Happy Customers', titleAr:'عميل سعيد', value:12000, value_suffix:'+', color:'#FFF6E0', icon_color:'#F5C320'},
+          {kind:'stat', icon:'📦', titleEn:'Products', titleAr:'منتج', value:500, value_suffix:'+', color:'#E5F0FF', icon_color:'#1D6FB7'},
+          {kind:'stat', icon:'⭐', titleEn:'Average Rating', titleAr:'متوسط التقييم', value:4.9, value_suffix:'/5', color:'#E0F2EA', icon_color:'#1F8A40'},
+          {kind:'stat', icon:'🔄', titleEn:'Return Policy', titleAr:'سياسة الإرجاع', value:30, value_suffix:' days', color:'#FFE5E5', icon_color:'#C0392B'},
+        ],
+        service: [
+          {kind:'pill', icon:'🚚', titleEn:'Free Shipping', titleAr:'شحن مجاني', subtitleEn:'On orders over 10 KWD', subtitleAr:'لطلبات فوق ١٠ د.ك', color:'#FFF6E0', icon_color:'#F5C320'},
+          {kind:'pill', icon:'↩', titleEn:'Easy Returns', titleAr:'إرجاع سهل', subtitleEn:'30-day window', subtitleAr:'خلال ٣٠ يوم', color:'#E0F2EA', icon_color:'#1F8A40'},
+          {kind:'pill', icon:'🛡', titleEn:'Warranty', titleAr:'ضمان', subtitleEn:'12 months on electronics', subtitleAr:'١٢ شهر على الإلكترونيات', color:'#E5F0FF', icon_color:'#1D6FB7'},
+          {kind:'pill', icon:'💵', titleEn:'Cash on Delivery', titleAr:'الدفع عند الاستلام', subtitleEn:'Available in Kuwait', subtitleAr:'متوفر بالكويت', color:'#F5E7FF', icon_color:'#6E4AB0'},
+        ],
+        offers: [
+          {kind:'pill', icon:'⚡', titleEn:'Flash Sale', titleAr:'تخفيضات', subtitleEn:'Up to 70% off', subtitleAr:'حتى ٧٠٪ خصم', color:'#FFE5E5', icon_color:'#C0392B'},
+          {kind:'pill', icon:'🎟', titleEn:'Coupons', titleAr:'كوبونات', subtitleEn:'Stack with sales', subtitleAr:'يتجمع مع الخصومات', color:'#FFF6E0', icon_color:'#F5C320'},
+          {kind:'pill', icon:'🚚', titleEn:'Free Shipping', titleAr:'شحن مجاني', subtitleEn:'On orders 10 KWD+', subtitleAr:'لـ١٠ د.ك+', color:'#E0F2EA', icon_color:'#1F8A40'},
+        ],
+      };
+      const which = btn.dataset.promoTemplate;
+      const set = templates[which];
+      if (!set) return;
+      const p = cur();
+      const block = p && selectedBlockId
+          ? p.blocks.find(x => x.id === selectedBlockId) : null;
+      if (!block) return;
+      if (!confirm('Replace current pills with the "' + which + '" template?\n(Existing pills will be lost.)')) return;
+      block.props.pills = JSON.parse(JSON.stringify(set));
+      renderRight(); renderCanvas(); scheduleSave();
+      toast('🎁 ' + which + ' template applied');
+    });
+  });
+
   document.querySelectorAll('[data-i-set]').forEach(btn => {
     btn.addEventListener('click', () => {
       const [arr, idxS, key, val] = btn.dataset.iSet.split('|');
