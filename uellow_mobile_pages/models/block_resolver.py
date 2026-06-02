@@ -630,6 +630,7 @@ RESOLVERS = {
     'story-bubbles':   resolve_passthrough,
     'lookbook':        resolve_passthrough,
     'sticky-cta':      resolve_passthrough,
+    'image-banner':    resolve_passthrough,
 }
 
 

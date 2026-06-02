@@ -1176,6 +1176,10 @@ const SNIPPETS = [
     { kind:'lookbook',        icon:'🖼', label:'Lookbook collage' },
     { kind:'sticky-cta',      icon:'📌', label:'Sticky CTA bar' },
   ]},
+  // v2.0.74: image-only banner grid (1 / 2 / 3 columns) with per-language image
+  { cat:'🖼 v2.0.74 Image blocks', items:[
+    { kind:'image-banner',    icon:'🖼', label:'Image Banner (full / 2-col / 3-col)' },
+  ]},
   // v2.0.34: new pro variants matching reference designs
   { cat:'✨ Pro Designs', items:[
     { kind:'quick-pills',    icon:'⭕', label:'Quick Pills Row' },
@@ -1375,6 +1379,22 @@ const KIND_DEFAULTS = {
     cta_link:{type:'screen',value:'shop'},
     show_close:true,
     sticky_position:'top',     // top | bottom | inline
+  }),
+  // v2.0.74 — Image Banner block
+  // Each item supports an EN image and an optional AR image (renderer
+  // picks the AR one only when the app is in Arabic mode + it's set,
+  // otherwise falls back to the EN image so admins don't have to upload
+  // twice if the artwork has no localized variant).
+  'image-banner': () => ({
+    show_title:false, title_gap:0, pad_y:6,
+    variant:'full',                  // full | cols_2 | cols_3
+    aspect:'16_9',                   // 16_9 | 3_1 | 4_3 | 1_1 | 3_4
+    radius:12,
+    gap:8,
+    banners:[
+      {image_url:'', image_url_ar:'', altEn:'Banner', altAr:'بانر',
+       link:{type:'screen',value:'shop'}},
+    ],
   }),
   'explore-more': () => ({
     titleEn:'Explore More',   titleAr:'استكشف المزيد',
@@ -2314,6 +2334,25 @@ function renderBlockContent(b){
         </div>
         ${p.sticky_position!=='inline'?`<div style="text-align:center;font-size:9px;color:var(--muted);margin-top:2px">📌 sticks to ${p.sticky_position} of screen</div>`:''}
       </div>`;
+    case 'image-banner': {
+      // v2.0.74 — canvas mock for the image-only banner block
+      const v = p.variant || 'full';
+      const radius = p.radius!=null ? p.radius : 12;
+      const banners = (p.banners||[]).length ? p.banners : [{}, {}, {}];
+      const aspect = {16_9:0.5625, 3_1:0.333, 4_3:0.75, 1_1:1, 3_4:1.333}[(p.aspect||'16_9').replace('_','_')] || 0.5625;
+      const tile = (b, h) => `<div style="height:${h}px;border-radius:${radius}px;overflow:hidden;background:${b.image_url?'#fff':'linear-gradient(135deg,#f5e8dd,#e6dec8)'};${b.image_url?`background-image:url('${b.image_url}');background-size:cover;background-position:center`:''}"></div>`;
+      if (v === 'cols_2') {
+        const h = Math.round(160 * aspect);
+        return `<div style="padding:6px 10px;display:flex;gap:${p.gap||8}px">${banners.slice(0,2).map(b=>`<div style="flex:1">${tile(b, h)}</div>`).join('')}</div>`;
+      }
+      if (v === 'cols_3') {
+        const h = Math.round(100 * aspect);
+        return `<div style="padding:6px 10px;display:flex;gap:${p.gap||8}px">${banners.slice(0,3).map(b=>`<div style="flex:1">${tile(b, h)}</div>`).join('')}</div>`;
+      }
+      // full
+      const h = Math.round(320 * aspect);
+      return `<div style="padding:6px 10px">${tile(banners[0]||{}, h)}</div>`;
+    }
     case 'explore-more': {
       const cols = parseInt(p.columns || '2');
       const items = Math.min(parseInt(p.per_page || '12'), 8);
@@ -3136,6 +3175,59 @@ function renderContent(b){
           </div></div>
         <div class="toggle"><div class="nm">✕ Show close button</div>
           <div class="switch ${(p.show_close!==false)?'on':''}" data-toggle-prop="show_close"></div></div>`;
+    case 'image-banner': {
+      // v2.0.74 — image-only banner block; each item has an EN image and
+      // an optional AR override so admins can ship localized artwork.
+      const banners = p.banners || [];
+      const VARIANTS = [
+        ['full',   '▭',  'Full width',  '1 image, full bleed'],
+        ['cols_2', '◫',  '2 columns',   '2 images side by side'],
+        ['cols_3', '⊞',  '3 columns',   '3 equal-width images'],
+      ];
+      const ASPECTS = [
+        ['16_9','16:9 (wide)'],
+        ['3_1', '3:1 (panoramic)'],
+        ['4_3', '4:3'],
+        ['1_1', '1:1 (square)'],
+        ['3_4', '3:4 (portrait)'],
+      ];
+      const curV = p.variant || 'full';
+      return `<p class="hint">Pure-image block — pick the layout (full / 2-col / 3-col), upload an image per language if you want, and link each tile to anywhere in the app.</p>
+
+        <div class="sub-h">Layout</div>
+        <div class="field"><label>Variant</label>
+          <div class="variant-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px">
+            ${VARIANTS.map(([v,ic,lbl,sub])=>`
+              <div class="variant-card ${curV===v?'on':''}" data-prop="variant" data-prop-val="${v}"
+                   style="cursor:pointer;padding:8px 6px;border:1px solid ${curV===v?'var(--brand)':'#e6dec8'};border-radius:8px;background:${curV===v?'#FFF6E0':'#fff'};text-align:center">
+                <div style="font-size:18px;line-height:1">${ic}</div>
+                <div style="font-size:10.5px;font-weight:900;color:var(--dark);margin-top:3px">${lbl}</div>
+                <div style="font-size:9px;opacity:.6;margin-top:1px">${sub}</div>
+              </div>`).join('')}
+          </div></div>
+        <div class="field"><label>Aspect ratio</label>
+          <select data-prop="aspect">
+            ${ASPECTS.map(([v,l])=>`<option value="${v}" ${(p.aspect||'16_9')===v?'selected':''}>${l}</option>`).join('')}
+          </select></div>
+        <div class="field"><label>Corner radius (px)</label>
+          <input type="number" data-prop-num="radius" min="0" max="32" value="${p.radius!=null?p.radius:12}"/></div>
+        ${curV!=='full' ? `<div class="field"><label>Gap between tiles (px)</label>
+          <input type="number" data-prop-num="gap" min="0" max="32" value="${p.gap!=null?p.gap:8}"/></div>` : ''}
+
+        <div class="sub-h">Images (${banners.length})</div>
+        ${banners.map((it,i)=>`
+          <div class="item-card">
+            ${itemHeader('Banner', 'banners', i, banners.length)}
+            <div class="field"><label>🇬🇧 Image (English / default)</label>
+              ${itemImage('banners', i, 'image_url', it)}</div>
+            <div class="field"><label>🇰🇼 Image (Arabic — optional override)</label>
+              ${itemImage('banners', i, 'image_url_ar', it)}
+              <div class="hint">Leave empty to reuse the English image when the app is in Arabic mode.</div></div>
+            ${itemMl('banners', i, 'altEn', 'altAr', 'Alt text (accessibility)', it)}
+            ${itemLink('banners', i, 'link', it)}
+          </div>`).join('')}
+        ${addItemBtn('banners', 'Add banner')}`;
+    }
     case 'explore-more':
       return `${mlField(b,'title','Section title')}
         ${mlField(b,'sub','Subtitle (small label)')}
