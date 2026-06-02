@@ -6,129 +6,266 @@
     <field name="arch" type="xml">
       <form string="Performance Guardian">
         <sheet>
-          <div class="oe_title"><h1>Performance Guardian</h1></div>
+          <div class="oe_title">
+            <h1>Performance Guardian — settings</h1>
+            <p style="color:#666;margin:6px 0 0">
+              Each tab below controls one monitoring or protection feature.
+              Hover any field name for the short tooltip; the boxes below
+              explain the bigger picture.
+            </p>
+          </div>
           <notebook>
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="Dashboard">
+              <div style="background:#fff4cc;border-left:4px solid #F5C320;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>الداشبورد</b> — صفحة Perf Guardian → Dashboard تعرض حالة الموقع لحظياً.
+                <br/><b>Dashboard auto-refresh</b>: عدد الثوان بين كل تحديث تلقائي (0 = بدون).
+                <br/><b>Websites to include</b>: لو فعّلت Multi-website، حدد المواقع التي يجب أن تظهر بياناتها في الداشبورد.
+              </div>
               <group>
                 <field name="dashboard_auto_refresh_seconds"
-                       help="0 = no auto-refresh"/>
+                       help="Auto-refresh interval. 30 is a sane default. 0 = no auto-refresh (manual reload only)."/>
                 <field name="website_filter_ids" widget="many2many_tags"
-                       options="{'no_create': True}"/>
+                       options="{'no_create': True}"
+                       help="Optional. If set, only these websites' data shows in the dashboard."/>
               </group>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="Bot Quota">
+              <div style="background:#fde2e4;border-left:4px solid #c92a2a;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>كوتا البوتات</b> — كل طلب يصل Odoo يُصنّف حسب User-Agent. البوتات (Googlebot/Ahrefs/إلخ) لها سقف يومي محدد لكل صنف. لو تجاوز السقف يحصل على 429.
+                <br/><b>Enforce bot quotas</b>: ON = الحجب الفعلي. OFF = لا يحجب أحد.
+                <br/><b>Soft mode</b>: يسجّل من سيُحجب لكن لا يحجبه فعلاً. مفيد أول 24 ساعة لمعرفة الأثر.
+                <br/><b>429 Retry-After</b>: عدد الثوان التي نخبر البوت ينتظرها قبل المحاولة مرة أخرى.
+                <br/><b>Per-IP burst limit</b>: لو IP واحد طلب أكثر من X طلب/دقيقة (مثلاً 120) يحصل على 429 فوراً — يحمي من بوتات موزّعة سريعة.
+              </div>
               <group>
-                <field name="bot_quota_enabled"/>
-                <field name="bot_quota_soft"/>
-                <field name="bot_429_retry_after"/>
+                <field name="bot_quota_enabled"
+                       help="Master switch. OFF = no bot is throttled."/>
+                <field name="bot_quota_soft"
+                       help="Dry-run: log over-quota hits but still serve them. Use for first 24h after install."/>
+                <field name="bot_429_retry_after"
+                       help="Seconds we tell the bot to wait in the Retry-After header (default: 86400 = 24h)."/>
                 <field name="burst_per_ip_per_min"
-                       help="Sliding-window burst limit per IP within a class"/>
+                       help="Sliding window in seconds. 120/min ~ 2/sec — kicks distributed scrapers."/>
               </group>
             </page>
-            <page string="RUM">
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <page string="Real-User Vitals">
+              <div style="background:#e6f7ef;border-left:4px solid #2cb67d;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>Real-User Monitoring (RUM)</b> — جافاسكربت صغير في الموقع يقيس سرعة فعلية من متصفح كل زائر (LCP, CLS, INP, FCP, TTFB) ويبعث النتيجة للسيرفر.
+                <br/><b>Collect Real-User Vitals</b>: المفتاح الرئيسي.
+                <br/><b>RUM sample rate</b>: نسبة الزوار التي ترسل beacon. 0.10 = 10% (موصى). 1.0 = كل زائر — مكلف.
+                <br/><b>Keep RUM samples for N days</b>: مدة الاحتفاظ بالعينات في DB. 30 يوم كافي.
+                <br/><b>RUM beacon rate-limit</b>: حماية من spam: حد أقصى للـbeacons من IP واحد في الدقيقة.
+              </div>
               <group>
                 <field name="rum_enabled"/>
-                <field name="rum_sample_rate"/>
+                <field name="rum_sample_rate"
+                       help="0.0 to 1.0. 0.10 = 10% sampling, plenty for trends."/>
                 <field name="rum_retention_days"/>
-                <field name="rum_beacon_per_ip_per_min"/>
+                <field name="rum_beacon_per_ip_per_min"
+                       help="Protects /perf/rum from abusive clients sending fake metrics."/>
               </group>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="Synthetic + Cache">
+              <div style="background:#fff4cc;border-left:4px solid #b8860b;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>Synthetic Probes</b> — كل 5 دقائق المديول يطلب الـURLs أدناه ويقيس زمن الاستجابة + إذا Cloudflare HIT/MISS. لو URL تأخر &gt; warn ms → تنبيه أصفر. &gt; crit ms → تنبيه أحمر.
+                <br/><b>Cache HIT target %</b>: نسبة HIT المتوقعة من Cloudflare. لو نزلت تحتها → تنبيه (يدل أن cache rule كسرت).
+              </div>
               <group>
                 <field name="synthetic_enabled"/>
-                <field name="synthetic_lcp_warn_ms"/>
-                <field name="synthetic_lcp_crit_ms"/>
-                <field name="cache_health_target_pct"/>
+                <field name="synthetic_lcp_warn_ms"
+                       string="Warning threshold (ms)"
+                       help="If a probe exceeds this, raise a warning alert."/>
+                <field name="synthetic_lcp_crit_ms"
+                       string="Critical threshold (ms)"
+                       help="If a probe exceeds this, raise a critical alert + open an incident."/>
+                <field name="cache_health_target_pct"
+                       string="Target Cloudflare HIT %"
+                       help="If HIT ratio drops below half this, raise a critical alert."/>
               </group>
-              <field name="synthetic_urls" widget="text"/>
+              <field name="synthetic_urls" widget="text"
+                     placeholder="One URL per line. Use https://www.uellow.com/... for production checks (will reflect real Cloudflare cache)."/>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="SSL + Domain">
+              <div style="background:#fde2e4;border-left:4px solid #c92a2a;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>مراقبة شهادة SSL + الدومين</b> — يومياً يفحص شهادة HTTPS + تاريخ انتهاء الدومين. شهادة منتهية = موقع معطّل.
+                <br/><b>Warn days</b>: ينبّه أصفر قبل الانتهاء بهذه الأيام (30 يوم افتراضي).
+                <br/><b>Critical days</b>: ينبّه أحمر + يفتح incident (7 يوم افتراضي).
+              </div>
               <group>
                 <field name="ssl_monitor_enabled"/>
-                <field name="ssl_monitor_domain"/>
+                <field name="ssl_monitor_domain"
+                       help="Domain to check. Usually www.uellow.com."/>
                 <field name="ssl_warn_days"/>
                 <field name="ssl_crit_days"/>
               </group>
             </page>
-            <page string="5xx Error Rate">
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <page string="5xx Errors">
+              <div style="background:#fde2e4;border-left:4px solid #c92a2a;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>مراقبة معدل الأخطاء 5xx</b> — كل رد HTTP بـ status &gt;= 500 (server crash) يُحسب. الكرون يفحص كل دقيقة:
+                <br/>• أكثر من <b>warn</b> أخطاء/دقيقة → تنبيه أصفر.
+                <br/>• أكثر من <b>crit</b> → تنبيه أحمر + يفتح incident.
+              </div>
               <group>
                 <field name="error_rate_enabled"/>
                 <field name="error_rate_warn_per_min"/>
                 <field name="error_rate_crit_per_min"/>
               </group>
             </page>
-            <page string="Anomaly Detection">
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <page string="Anomaly">
+              <div style="background:#fff4cc;border-left:4px solid #b8860b;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>كشف الشذوذ</b> — كل 15 دقيقة يقارن المقاييس الحالية (load avg, LCP) بمتوسط الأسبوع. لو z-score &gt; threshold = شذوذ.
+                <br/><b>مثال</b>: لو LCP المعتاد 800ms والآن صار 2000ms = شذوذ (حتى لو لا يزال أقل من حد الأزمة 2500).
+                <br/><b>z-score</b>: عدد الانحرافات المعيارية. 2.0 = حساس، 3.0 = صارم. 2.5 توازن جيد.
+              </div>
               <group>
                 <field name="anomaly_enabled"/>
                 <field name="anomaly_z_threshold"
-                       help="z-score above which a metric is anomalous (typical: 2-3)"/>
+                       help="Standard deviations above baseline. 2.0 = sensitive. 3.0 = strict."/>
               </group>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="Bundle Monitor">
+              <div style="background:#e6f7ef;border-left:4px solid #2cb67d;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>مراقبة حجم الـbundles</b> — يومياً يفحص حجم ملفات JS/CSS الكبيرة. لو نمت فجأة (مثلاً مديول جديد أضاف 500KB) ستظهر في الرسم البياني.
+              </div>
               <group>
                 <field name="bundle_monitor_enabled"/>
               </group>
-              <field name="bundle_urls" widget="text"/>
+              <field name="bundle_urls" widget="text"
+                     placeholder="One bundle URL per line."/>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="Slow Queries">
+              <div style="background:#fff4cc;border-left:4px solid #b8860b;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>الاستعلامات البطيئة</b> — كل 30 دقيقة يقرأ من <code>pg_stat_statements</code> أبطأ الاستعلامات ويعرضها في القائمة. مفيد لاكتشاف فهارس مفقودة.
+                <br/><b>Threshold (ms)</b>: استعلامات أبطأ من هذا فقط تُسجّل. 500ms حد جيد للبداية.
+                <br/><i>متطلب: pg_stat_statements في shared_preload_libraries (مفعّل عندك ✓).</i>
+              </div>
               <group>
                 <field name="slowq_enabled"/>
                 <field name="slowq_threshold_ms"/>
               </group>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="Image Audit">
+              <div style="background:#e6f7ef;border-left:4px solid #2cb67d;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>تدقيق الصور</b> — يومياً يفحص كل صور النظام (logos + product images). الصور أكبر من <b>threshold KB</b> تُسجّل في "Image Audit" مع زر "Optimize" يضغطها (downscale + JPEG q85).
+                <br/><b>500 KB</b> حد افتراضي جيد — أي صورة أكبر تستحق ضغط.
+              </div>
               <group>
                 <field name="image_audit_enabled"/>
                 <field name="image_size_threshold_kb"/>
               </group>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="CDN Purge">
+              <div style="background:#fff4cc;border-left:4px solid #b8860b;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>تفريغ Cache Cloudflare التلقائي</b> — لما تعدّل منتج أو مقال، المديول يستدعي API Cloudflare ويفرغ الـURL من الـedge cache فوراً. بدونه: تعديلاتك لا تظهر للزوار حتى ينتهي TTL.
+                <br/><b>Zone ID</b>: من Cloudflare → Overview (يمين الصفحة، 32 حرف).
+                <br/><b>API Token</b>: Profile → API Tokens → Create Token → "Zone Cache Purge" template.
+              </div>
               <group>
                 <field name="cf_purge_enabled"/>
-                <field name="cf_zone_id"/>
-                <field name="cf_api_token" password="True"/>
+                <field name="cf_zone_id" placeholder="32-character hex Zone ID from Cloudflare"/>
+                <field name="cf_api_token" password="True"
+                       placeholder="Token with Zone.Cache Purge scope"/>
               </group>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="Alerts">
+              <div style="background:#fde2e4;border-left:4px solid #c92a2a;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>قنوات التنبيهات</b> — حدد أين تصل الإنذارات. يمكن تفعيل أكثر من قناة.
+                <br/>• <b>Email</b>: بسيط، قد يتأخر.
+                <br/>• <b>Beena chat</b>: داخل بيئة Odoo.
+                <br/>• <b>Slack/Discord</b>: webhook URL من إعدادات الـworkspace.
+                <br/>• <b>Telegram</b>: Bot token (من @BotFather) + chat_id.
+                <br/>• <b>Sentry</b>: DSN — للأخطاء الحرجة فقط.
+              </div>
               <group string="Channels">
                 <field name="alert_email"/>
                 <field name="alert_beena"/>
-                <field name="alert_slack_webhook"/>
-                <field name="alert_discord_webhook"/>
-                <field name="alert_telegram_token" password="True"/>
-                <field name="alert_telegram_chat"/>
-                <field name="alert_sentry_dsn" password="True"/>
+                <field name="alert_slack_webhook"
+                       placeholder="https://hooks.slack.com/services/T.../B.../..."/>
+                <field name="alert_discord_webhook"
+                       placeholder="https://discord.com/api/webhooks/..."/>
+                <field name="alert_telegram_token" password="True"
+                       placeholder="Get from @BotFather"/>
+                <field name="alert_telegram_chat"
+                       placeholder="Your chat or channel ID"/>
+                <field name="alert_sentry_dsn" password="True"
+                       placeholder="https://...@sentry.io/..."/>
               </group>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
             <page string="Integrations">
-              <group string="CrUX (Chrome UX Report)">
+              <div style="background:#e6f7ef;border-left:4px solid #2cb67d;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>تكاملات اختيارية</b> — كلها تعمل بدون مفتاح، لكن المفتاح يفتح ميزات أكثر.
+              </div>
+              <group string="CrUX (Chrome UX Report) — Field Data من Google">
                 <field name="crux_enabled"/>
-                <field name="crux_api_key" password="True"/>
+                <field name="crux_api_key" password="True"
+                       placeholder="Free key from Google Cloud Console"/>
               </group>
-              <group string="ipinfo.io (ASN/WHOIS enrichment)">
+              <p style="font-size:12px;color:#666;margin:0 0 16px">
+                CrUX يعطيك بيانات Core Web Vitals الحقيقية من زوار Chrome فعلياً (لا تحتاج JS بداخل موقعك). يفيدك لمقارنة موقعك بـ Google Search Console.
+              </p>
+              <group string="ipinfo.io — معلومات IP/ASN/WHOIS">
                 <field name="ipinfo_token" password="True"
-                       placeholder="Optional, free tier works without"/>
+                       placeholder="Optional — free tier (50k/month) works without token"/>
               </group>
-            </page>
-            <page string="Self-check">
-              <group>
-                <field name="self_check_enabled"
-                       help="Verify the throttle middleware is firing — alerts if not."/>
-              </group>
-            </page>
-            <page string="Metrics Export">
-              <group>
-                <field name="export_token" password="True"/>
-              </group>
-              <p style="font-size:12px;color:#666">
-                Endpoints (auth via <code>X-Perf-Token</code> header):
-                <ul>
-                  <li><code>/perf/metrics</code> — JSON</li>
-                  <li><code>/perf/metrics.prom</code> — Prometheus</li>
-                  <li><code>/perf/health</code> — 200/503 for external monitors (public)</li>
-                </ul>
+              <p style="font-size:12px;color:#666;margin:0">
+                لو فعّلته، صفحة Bot IPs ستعرض ASN كل IP (هل هو AWS؟ Cloudflare؟ سكني؟) لتتمكن من تشخيص هجمات.
               </p>
             </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <page string="Self-check">
+              <div style="background:#fff4cc;border-left:4px solid #b8860b;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>الفحص الذاتي</b> — كل 30 دقيقة Perf Guardian يجرّب طلب وهمي بـUser-Agent بوت ويتأكد أن middleware الكوتا اشتغل. لو فشل ← تنبيه حرج (يعني الحماية معطلة!).
+                <br/>اتركها ON دائماً.
+              </div>
+              <group>
+                <field name="self_check_enabled"/>
+              </group>
+            </page>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <page string="Metrics Export">
+              <div style="background:#e6f7ef;border-left:4px solid #2cb67d;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>تصدير المقاييس لأدوات خارجية</b> — لو تريد ربط Grafana/Datadog/Prometheus.
+                <br/><b>Export auth token</b>: ضع نصاً عشوائياً طويلاً (32+ حرف). بدونه: لا أحد يستطيع قراءة الـendpoints.
+              </div>
+              <group>
+                <field name="export_token" password="True"
+                       placeholder="Generate a long random secret"/>
+              </group>
+              <p style="font-size:13px;color:#666;line-height:1.6">
+                <b>Endpoints المتاحة (auth via <code>X-Perf-Token</code> header أو <code>?token=</code>):</b>
+                <br/>📊 <code>https://www.uellow.com/perf/metrics</code> → JSON كامل لكل المقاييس
+                <br/>📈 <code>https://www.uellow.com/perf/metrics.prom</code> → Prometheus text format (Grafana/VictoriaMetrics)
+                <br/>❤️ <code>https://www.uellow.com/perf/health</code> → 200/503 (للـUptimeRobot/Better Uptime) — <b>public, no auth</b>
+              </p>
+            </page>
+
           </notebook>
         </sheet>
       </form>
