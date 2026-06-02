@@ -27,7 +27,16 @@
                 <field name="max_tiers_shown"
                        help="How many tiers to display. Recommended 4."/>
                 <field name="show_to_guest"/>
+                <field name="default_max_qty"
+                       string="Default max quantity per order"
+                       help="Upper bound for the +/- quantity selector. Categories and individual products can override. Default 10."/>
               </group>
+              <p style="background:#fff4cc;border-left:4px solid #F5C320;padding:10px 14px;border-radius:6px;margin-top:8px;font-size:12px">
+                <b>كيف يطبَّق max_qty:</b><br/>
+                ١) لو المنتج له <code>bulk_max_qty</code> &gt; 0 → يستخدمه.<br/>
+                ٢) وإلا، أول قسم في قائمة الـpublic categories بـ override &gt; 0 → يستخدمه.<br/>
+                ٣) وإلا، الافتراضي العام أعلاه.
+              </p>
             </page>
 
             <!-- ════════════════ 2. Cost-floor (الميزة الأهم) ══════════ -->

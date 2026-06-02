@@ -268,6 +268,11 @@ def serialize_product_full(product, lang='en_US'):
         'view_count': view_count,
         'brand': brand,
         'bulk_pricing': bulk_tiers,
+        # v2.0.58: effective max purchasable quantity for this product
+        # (resolution order: product override → category → global default).
+        # Mobile uses this to cap the +/- quantity selector.
+        'max_qty_buyable': request.env['uellow.bulk.pricing.config']
+                              .sudo().max_qty_for(product),
         'allow_out_of_stock_order': allow_oos,
         # Only return warranty when the product actually has the field set;
         # otherwise None so the UI hides the row instead of showing a fake 12.

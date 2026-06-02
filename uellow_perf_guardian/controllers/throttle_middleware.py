@@ -142,16 +142,25 @@ class IrHttpInherit(models.AbstractModel):
         burst_limit = cfg.burst_per_ip_per_min or 0
         over_burst = _check_burst(bot.id, ip, burst_limit)
 
-        env.cr.execute("""
-            UPDATE uellow_perf_bot_class
-               SET req_today = req_today + 1,
-                   last_seen = NOW() AT TIME ZONE 'UTC'
-             WHERE id = %s
-        """, [bot.id])
+        # Wrap the counter UPDATE in a savepoint so a concurrent-update
+        # serialization conflict (common when many bots hit at once)
+        # doesn't abort the whole HTTP transaction — losing a few
+        # increments is fine; killing the page request is not.
+        try:
+            with env.cr.savepoint():
+                env.cr.execute("""
+                    UPDATE uellow_perf_bot_class
+                       SET req_today = req_today + 1,
+                           last_seen = NOW() AT TIME ZONE 'UTC'
+                     WHERE id = %s
+                """, [bot.id])
+        except Exception:
+            pass
 
         try:
-            env['uellow.perf.bot.hit'].sudo().record(
-                bot, 0, over_class or over_ip or over_burst, path)
+            with env.cr.savepoint():
+                env['uellow.perf.bot.hit'].sudo().record(
+                    bot, 0, over_class or over_ip or over_burst, path)
         except Exception:
             pass
 
@@ -200,14 +209,20 @@ class IrHttpInherit(models.AbstractModel):
             return
         env = request.env
         mb = size / (1024 * 1024)
-        env.cr.execute("""
-            UPDATE uellow_perf_bot_class
-               SET bytes_today_mb = bytes_today_mb + %s
-             WHERE id = %s
-        """, [mb, bot.id])
+        # Same savepoint protection as the request counter.
         try:
-            env['uellow.perf.bot.hit'].sudo().record(bot, size, False,
-                                                    request.httprequest.path)
+            with env.cr.savepoint():
+                env.cr.execute("""
+                    UPDATE uellow_perf_bot_class
+                       SET bytes_today_mb = bytes_today_mb + %s
+                     WHERE id = %s
+                """, [mb, bot.id])
+        except Exception:
+            pass
+        try:
+            with env.cr.savepoint():
+                env['uellow.perf.bot.hit'].sudo().record(
+                    bot, size, False, request.httprequest.path)
         except Exception:
             pass
 

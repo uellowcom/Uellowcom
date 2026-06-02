@@ -93,6 +93,15 @@ class BulkPricingConfig(models.Model):
         help='Mobile app shows a small banner under the tier ladder: '
              '"Add 2 more for 20% off!" — drives upsell.')
 
+    # ─── Quantity selector — global max ────────────────────────
+    default_max_qty = fields.Integer(
+        string='Default max quantity per order',
+        default=10,
+        help='Default upper bound for the quantity selector on the product '
+             'page. Categories and products can override. The selector '
+             'always starts at 1 (original price) and lets the customer '
+             'increment up to this number.')
+
     @api.model
     def get_config(self):
         rec = self.search([], limit=1)
@@ -131,6 +140,30 @@ class BulkPricingConfig(models.Model):
             except Exception:
                 pass
         return False
+
+    @api.model
+    def max_qty_for(self, product):
+        """Resolve the effective max quantity for a product.
+        Priority: product override → first matching category override → global.
+        0 anywhere means 'use parent'.
+        """
+        cfg = self.get_config()
+        # Per-product
+        try:
+            v = int(getattr(product, 'bulk_max_qty', 0) or 0)
+            if v > 0:
+                return v
+        except Exception:
+            pass
+        # First category with an override
+        try:
+            for cat in (product.public_categ_ids or []):
+                v = int(getattr(cat, 'bulk_max_qty', 0) or 0)
+                if v > 0:
+                    return v
+        except Exception:
+            pass
+        return max(1, int(cfg.default_max_qty or 10))
 
     @api.model
     def safety_floor_for(self, product):

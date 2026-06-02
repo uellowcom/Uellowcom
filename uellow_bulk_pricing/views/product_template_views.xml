@@ -15,6 +15,9 @@
           <group>
             <group>
               <field name="bulk_pricing_excluded"/>
+              <field name="bulk_max_qty"
+                     string="Max qty per order"
+                     help="0 = use category default, then global. Higher numbers allow customers to buy more in a single order."/>
             </group>
             <group>
               <field name="bulk_safety_margin_override"
@@ -25,6 +28,23 @@
             </group>
           </group>
         </page>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- Add max-qty to public category form -->
+  <record id="product_public_category_form_bulk_max_qty"
+          model="ir.ui.view">
+    <field name="name">product.public.category.form.bulk.max.qty</field>
+    <field name="model">product.public.category</field>
+    <field name="inherit_id" ref="website_sale.product_public_category_form_view"/>
+    <field name="arch" type="xml">
+      <xpath expr="//sheet" position="inside">
+        <group string="Bulk Pricing — quantity limits">
+          <field name="bulk_max_qty"
+                 string="Max qty per order"
+                 help="Overrides the global default. 0 = use global setting."/>
+        </group>
       </xpath>
     </field>
   </record>

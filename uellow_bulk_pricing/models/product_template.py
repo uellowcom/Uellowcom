@@ -2,8 +2,25 @@
 from odoo import api, fields, models
 
 
+class PublicCategoryBulkMaxQty(models.Model):
+    _inherit = 'product.public.category'
+
+    bulk_max_qty = fields.Integer(
+        string='Max quantity per order',
+        default=0,
+        help='Maximum quantity a customer can buy in a single order from '
+             'products in this category. 0 = use the global default.')
+
+
 class ProductTemplateBulkPricing(models.Model):
     _inherit = 'product.template'
+
+    bulk_max_qty = fields.Integer(
+        string='Max quantity per order',
+        default=0,
+        help='Maximum quantity a customer can buy in a single order. '
+             '0 = use category or global default. Overrides any category '
+             'or global setting if non-zero.')
 
     bulk_pricing_excluded = fields.Boolean(
         string='Exclude from bulk pricing',
