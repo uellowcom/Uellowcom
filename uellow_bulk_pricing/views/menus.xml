@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_bulk_pricing_root"
+            name="Bulk Pricing"
+            parent="sale.sale_menu_root"
+            sequence="50"/>
+  <menuitem id="menu_bulk_pricing_settings"
+            name="Settings"
+            parent="menu_bulk_pricing_root"
+            action="action_bulk_pricing_config"
+            sequence="1"/>
+  <menuitem id="menu_bulk_pricing_loss_risk"
+            name="Loss-risk products"
+            parent="menu_bulk_pricing_root"
+            action="action_bulk_loss_risk"
+            sequence="10"/>
+</odoo>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Add per-product bulk-pricing fields to the product form. -->
+  <record id="product_template_form_bulk_pricing" model="ir.ui.view">
+    <field name="name">product.template.form.bulk.pricing</field>
+    <field name="model">product.template</field>
+    <field name="inherit_id" ref="product.product_template_form_view"/>
+    <field name="arch" type="xml">
+      <xpath expr="//page[1]" position="after">
+        <page string="Bulk Pricing" name="bulk_pricing_uellow">
+          <div style="background:#fff4cc;border-left:4px solid #F5C320;padding:10px 14px;border-radius:6px;margin:8px 0">
+            <b>إعدادات أسعار الجملة لهذا المنتج</b>
+            <br/>الافتراضات تأتي من <i>Sales → Bulk Pricing → Settings</i>. هنا فقط لو تريد تخصيص شيء لهذا المنتج تحديداً.
+          </div>
+          <group>
+            <group>
+              <field name="bulk_pricing_excluded"/>
+            </group>
+            <group>
+              <field name="bulk_safety_margin_override"
+                     string="Safety margin override (%)"
+                     help="0 = use global setting. Set higher for premium products you want to protect more, lower for clearance items."/>
+              <field name="bulk_pricing_loss_risk" readonly="1"
+                     string="At loss-risk?"/>
+            </group>
+          </group>
+        </page>
+      </xpath>
+    </field>
+  </record>
+</odoo>

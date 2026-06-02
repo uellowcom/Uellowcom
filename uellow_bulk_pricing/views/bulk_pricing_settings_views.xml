@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_bulk_pricing_config_form" model="ir.ui.view">
+    <field name="name">uellow.bulk.pricing.config.form</field>
+    <field name="model">uellow.bulk.pricing.config</field>
+    <field name="arch" type="xml">
+      <form string="Bulk Pricing Settings">
+        <sheet>
+          <div class="oe_title">
+            <h1>Bulk Pricing — Settings</h1>
+            <p style="color:#666;margin:6px 0 0">
+              يتحكم في كيفية ظهور وتطبيق أسعار الجملة في الموقع والتطبيق.
+              كل قسم له شرح بالعربي والإنجليزي.
+            </p>
+          </div>
+
+          <notebook>
+            <!-- ════════════════ 1. Master switch ═══════════════ -->
+            <page string="General">
+              <div style="background:#fff4cc;border-left:4px solid #F5C320;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>التحكم العام</b> — لو أوقفت "Bulk pricing enabled" فلن تظهر أي شريحة على أي منتج في الموقع/التطبيق.
+                <br/><b>Tiers shown per product</b>: عدد الشرائح التي تظهر على صفحة المنتج (1-5). الافتراضي 4.
+                <br/><b>Show to guest visitors</b>: لو OFF، فقط المسجلين دخول يرون الشرائح.
+              </div>
+              <group>
+                <field name="enabled"/>
+                <field name="max_tiers_shown"
+                       help="How many tiers to display. Recommended 4."/>
+                <field name="show_to_guest"/>
+              </group>
+            </page>
+
+            <!-- ════════════════ 2. Cost-floor (الميزة الأهم) ══════════ -->
+            <page string="Cost-Floor Protection">
+              <div style="background:#fde2e4;border-left:4px solid #c92a2a;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>حماية ضد الخسارة (الميزة الأهم)</b>
+                <br/>تخيل: تكلفة المنتج 8 KD، السعر 8.80 KD (هامش 10%). pricelist يقول "خصم 20% عند شراء 50 قطعة" → السعر يصير 7.04 KD = خسارة 0.96 KD لكل قطعة!
+                <br/><br/>هذا القسم يمنع الكارثة. السعر لا ينزل تحت <b>cost + safety margin</b> أبداً.
+                <br/><br/><b>Cap</b>: الشريحة تظهر لكن بخصم أقل (مثلاً 9.5% بدل 20%).
+                <br/><b>Hide</b>: الشريحة تختفي كلياً من صفحة المنتج.
+              </div>
+              <group>
+                <field name="cost_floor_enabled"/>
+                <field name="safety_margin_pct"
+                       string="Safety margin above cost (%)"
+                       help="Cost + this% = minimum price. Default 2%."/>
+                <field name="cost_floor_behavior"/>
+              </group>
+              <p style="color:#888;font-size:12px;margin-top:8px">
+                مثال: cost=10، safety=2% → floor=10.20. أي شريحة سعرها &lt; 10.20 تُعالج حسب الـbehavior أعلاه.
+              </p>
+            </page>
+
+            <!-- ════════════════ 3. Exclusions ══════════════════ -->
+            <page string="Exclusions">
+              <div style="background:#fff4cc;border-left:4px solid #b8860b;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>الاستثناءات</b> — منتجات/أقسام/براندات لا تطبّق عليها أسعار الجملة.
+                <br/>يمكنك الجمع بين أكثر من نوع استثناء — أي منتج يطابق <i>أي</i> منهم يُستثنى.
+                <br/><b>للاستثناء الفردي:</b> اذهب لصفحة المنتج → بطاقة Sales → ضع علامة على "Exclude from bulk pricing".
+              </div>
+              <group string="By category">
+                <field name="excluded_category_ids" widget="many2many_tags"
+                       options="{'no_create': True}"
+                       nolabel="1"/>
+              </group>
+              <group string="By specific products">
+                <field name="excluded_product_ids" widget="many2many_tags"
+                       options="{'no_create': True}"
+                       nolabel="1"/>
+              </group>
+              <group string="By brand">
+                <field name="excluded_brand_value_ids" widget="many2many_tags"
+                       options="{'no_create': True}"
+                       nolabel="1"/>
+              </group>
+            </page>
+
+            <!-- ════════════════ 4. Auto-generation ════════════ -->
+            <page string="Auto-Generated Tiers">
+              <div style="background:#e6f7ef;border-left:4px solid #2cb67d;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>توليد الشرائح تلقائياً</b> — لو منتج ليس له شرائح في pricelist، يولّد المديول 4 شرائح من القالب أدناه.
+                <br/>القالب: كل سطر = <code>min_qty,save_pct</code>. مثلاً <code>10,15</code> = 15% خصم عند شراء 10 قطع.
+                <br/>الـcost-floor يطبّق على هذه الشرائح أيضاً، فلا خوف من خسارة.
+              </div>
+              <group>
+                <field name="auto_generate_when_missing"/>
+              </group>
+              <field name="default_tier_template" widget="text"
+                     placeholder="5,5&#10;10,10&#10;25,15&#10;50,20"/>
+            </page>
+
+            <!-- ════════════════ 5. UX hints ═══════════════════ -->
+            <page string="Display Hints">
+              <div style="background:#e6f7ef;border-left:4px solid #2cb67d;padding:12px 16px;border-radius:6px;margin:8px 0 16px">
+                <b>رسائل التحفيز</b> — تعرض على المستخدم رسائل ذكية لزيادة المبيعات.
+              </div>
+              <group>
+                <field name="show_next_tier_hint"/>
+              </group>
+              <p style="color:#666;font-size:12px;margin-top:6px">
+                مثال: لو المستخدم اختار 3 قطع وأقرب شريحة عند 5 قطع تعطي خصم 10%، تظهر له رسالة:
+                <br/><b>"أضف قطعتين فقط لتوفّر 10%!"</b>
+              </p>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_bulk_pricing_config" model="ir.actions.act_window">
+    <field name="name">Bulk Pricing Settings</field>
+    <field name="res_model">uellow.bulk.pricing.config</field>
+    <field name="view_mode">form</field>
+    <field name="target">current</field>
+  </record>
+
+  <!-- Loss-risk list: products at risk of negative margin -->
+  <record id="view_bulk_loss_risk_list" model="ir.ui.view">
+    <field name="name">product.template.bulk.loss.risk.list</field>
+    <field name="model">product.template</field>
+    <field name="arch" type="xml">
+      <list string="At-risk products">
+        <field name="name"/>
+        <field name="list_price"/>
+        <field name="bulk_safety_margin_override" string="Override %"/>
+        <field name="bulk_pricing_excluded"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_bulk_loss_risk" model="ir.actions.act_window">
+    <field name="name">Loss-risk products</field>
+    <field name="res_model">product.template</field>
+    <field name="view_mode">list</field>
+    <field name="domain">[('bulk_pricing_loss_risk', '=', True)]</field>
+    <field name="view_id" ref="view_bulk_loss_risk_list"/>
+  </record>
+</odoo>

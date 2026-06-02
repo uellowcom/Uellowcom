@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+  <record id="bulk_pricing_config_singleton" model="uellow.bulk.pricing.config">
+    <field name="name">Bulk Pricing settings</field>
+    <field name="enabled">True</field>
+    <field name="max_tiers_shown">4</field>
+    <field name="show_to_guest">True</field>
+    <field name="cost_floor_enabled">True</field>
+    <field name="safety_margin_pct">2.0</field>
+    <field name="cost_floor_behavior">cap</field>
+    <field name="auto_generate_when_missing">False</field>
+    <field name="default_tier_template">5,5
+10,10
+25,15
+50,20</field>
+    <field name="show_next_tier_hint">True</field>
+  </record>
+</odoo>

@@ -927,15 +927,32 @@ def _bulk_pricing_tiers(product):
     except Exception:
         pass
 
-    # If still nothing AND the product is genuinely flat-priced, hide the
-    # whole block (return empty). Don't fabricate fake tiers.
+    # ── v2.0.57: route through uellow.bulk.pricing.config for exclusions,
+    # cost-floor protection, max-tier cap, and auto-generated tiers when
+    # the pricelist is empty.
+    try:
+        Cfg = request.env['uellow.bulk.pricing.config'].sudo()
+        cfg = Cfg.get_config()
+        # Guest-visibility gate
+        if not cfg.show_to_guest and request.env.user._is_public():
+            return []
+        # Pass the raw pricelist tiers through the rules engine
+        raw_items = [{'min_quantity': t['min_qty'], 'price': t['price']}
+                     for t in tiers]
+        tiers = Cfg.build_tiers(product, pricelist_items=raw_items,
+                                list_price=list_p, currency_sym=sym)
+    except Exception:
+        # Fail-safe: if the engine errors, fall back to the basic list above
+        # capped at 4 and with no floor enforcement.
+        tiers = tiers[:4]
+
     if not tiers:
         return []
     # Always prepend the "1+ pcs" base tier so the UI shows the
     # comparison strip cleanly.
-    if tiers and tiers[0]['min_qty'] > 1:
+    if tiers and tiers[0].get('min_qty', 0) > 1:
         tiers.insert(0, {
             'min_qty': 1, 'price': round(list_p, 3),
-            'currency': sym, 'save_pct': 0,
+            'currency': sym, 'save_pct': 0, 'capped': False,
         })
     return tiers
