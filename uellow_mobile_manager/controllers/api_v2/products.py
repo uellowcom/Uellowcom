@@ -106,9 +106,27 @@ def serialize_product_full(product, lang='en_US'):
     card = serialize_product_card(product, lang)
     if not card:
         return None
-    # Long description (jsonb-translated)
-    desc = bilingual(product, 'description_sale')
-    public_desc = bilingual(product, 'website_description')
+    # Long description (jsonb-translated). v2.0.77 — read the actual
+    # fields Odoo's product form writes to. `description_ecommerce` is the
+    # website e-commerce body editor (the rich block-editor the admin
+    # uses); `description_sale` is the order-line snippet;
+    # `website_description` is a legacy/duplicate field on some installs.
+    # Fall back through all three so admins can put the long body in
+    # whichever editor they're using.
+    def _firstNonEmpty(*candidates):
+        for c in candidates:
+            if c and (c.get('en') or c.get('ar')):
+                return c
+        return {'en': '', 'ar': ''}
+    public_desc = _firstNonEmpty(
+        bilingual(product, 'description_ecommerce')
+            if 'description_ecommerce' in product._fields else None,
+        bilingual(product, 'website_description'),
+    )
+    desc = _firstNonEmpty(
+        bilingual(product, 'description_sale'),
+        public_desc,
+    )
 
     # Variant attributes — for color, try to pull the matching variant's
     # image instead of the attribute-value swatch (so we show the actual
@@ -198,13 +216,19 @@ def serialize_product_full(product, lang='en_US'):
                 v = line.value_ids[:1]
                 if v:
                     img = None
-                    if v.image:
-                        img = img_url('product.attribute.value', v.id, 'image',
-                                      unique=v.write_date)
-                    # If the attribute value has no image, try to find a
-                    # product.brand record by name match (case + space
-                    # insensitive). Gives the user one upload spot per brand
-                    # that propagates to every product with that attribute.
+                    # v2.0.77 — try the binary fields actually populated in
+                    # this database. `dr_image` is the field used by the
+                    # `dr_*` brand module (logos are stored on the attribute
+                    # value via ir.attachment with res_field='dr_image').
+                    # Fall back to the standard `image` field for installs
+                    # that use it.
+                    for fld in ('dr_image', 'image'):
+                        if fld in v._fields and v[fld]:
+                            img = img_url('product.attribute.value', v.id, fld,
+                                          unique=v.write_date)
+                            break
+                    # If still none, try matching a product.brand record by
+                    # name (case + space insensitive).
                     if not img:
                         vname = (v.name or '').strip()
                         if vname:
