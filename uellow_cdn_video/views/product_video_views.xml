@@ -10,8 +10,20 @@
                        invisible="video_type != 'bunny_stream'">
                     <field name="bunny_video_id" placeholder="1a2b3c4d-..."/>
                     <field name="bunny_thumb_auto"/>
-                    <field name="bunny_playback_url" readonly="1"/>
-                    <field name="bunny_thumb_url" readonly="1"/>
+                    <field name="bunny_playback_url" widget="url" readonly="1"/>
+                    <field name="bunny_thumb_url" widget="image_url" readonly="1"/>
+                </group>
+                <group string="📊 Analytics" invisible="video_type != 'bunny_stream'">
+                    <field name="bunny_status" readonly="1"/>
+                    <field name="bunny_encode_progress" readonly="1"/>
+                    <field name="bunny_views" readonly="1"/>
+                    <field name="bunny_length_human" readonly="1"/>
+                    <field name="bunny_avg_watch" readonly="1"/>
+                    <field name="bunny_total_watch" readonly="1"/>
+                    <field name="bunny_storage_mb" readonly="1"/>
+                    <field name="bunny_synced_at" readonly="1"/>
+                    <button name="action_sync_bunny_stats" type="object"
+                            string="🔄 Refresh analytics" class="btn-secondary"/>
                 </group>
             </xpath>
             <!-- v2.1.2 — one-click upload of the attached file straight to
@@ -40,6 +52,23 @@
                         string="⬆ To Bunny" class="btn-link"
                         invisible="not video_file"
                         help="Upload this file to Bunny Stream and fill the GUID. Save the product first if the button looks inactive."/>
+                <!-- Bunny data so a bunny_stream row isn't blank -->
+                <field name="bunny_thumb_url" widget="image_url" optional="show"
+                       string="Preview" invisible="video_type != 'bunny_stream'"/>
+                <field name="bunny_status" optional="show"
+                       invisible="video_type != 'bunny_stream'"/>
+                <field name="bunny_views" optional="show" string="Views"
+                       invisible="video_type != 'bunny_stream'"/>
+                <field name="bunny_length_human" optional="show" string="Duration"
+                       invisible="video_type != 'bunny_stream'"/>
+                <field name="bunny_playback_url" widget="url" optional="hide"
+                       string="HLS link" invisible="video_type != 'bunny_stream'"/>
+                <field name="bunny_video_id" optional="hide" string="GUID"
+                       invisible="video_type != 'bunny_stream'"/>
+                <button name="action_sync_bunny_stats" type="object"
+                        string="🔄 Stats" class="btn-link"
+                        invisible="video_type != 'bunny_stream'"
+                        help="Refresh views / watch-time / status from Bunny."/>
             </xpath>
         </field>
     </record>

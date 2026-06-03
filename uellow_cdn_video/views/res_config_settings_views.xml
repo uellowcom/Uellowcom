@@ -15,8 +15,16 @@
                         <setting id="bunny_zone" string="CDN hostname (.b-cdn.net)">
                             <field name="bunny_stream_pull_zone"/>
                         </setting>
-                        <setting id="bunny_api" string="API key (server-only)">
+                        <setting id="bunny_api" string="API key (Stream library, server-only)">
                             <field name="bunny_stream_api_key" password="True"/>
+                        </setting>
+                        <setting id="bunny_del_local" string="Delete local file after upload"
+                                 help="Reclaim Odoo storage once the video is on Bunny.">
+                            <field name="bunny_delete_local_after_upload"/>
+                        </setting>
+                        <setting id="bunny_autosync" string="Auto-refresh analytics daily"
+                                 help="Daily job pulling views / watch-time / status into the dashboard.">
+                            <field name="bunny_auto_sync_stats"/>
                         </setting>
                     </block>
                 </app>

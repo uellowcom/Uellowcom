@@ -54,6 +54,27 @@ class ProductVideo(models.Model):
              'on this record is used instead.',
     )
 
+    # ── Bunny analytics (synced from the Stream API) ──────────────────
+    bunny_status = fields.Selection([
+        ('0', 'Created'), ('1', 'Uploaded'), ('2', 'Processing'),
+        ('3', 'Transcoding'), ('4', 'Ready'), ('5', 'Error'),
+        ('6', 'Upload failed'),
+    ], string='Bunny status', readonly=True)
+    bunny_encode_progress = fields.Integer('Encode %', readonly=True)
+    bunny_views = fields.Integer('Views', readonly=True)
+    bunny_length = fields.Integer('Duration (s)', readonly=True)
+    bunny_length_human = fields.Char('Duration', compute='_compute_bunny_length_human')
+    bunny_avg_watch = fields.Float('Avg watch (s)', readonly=True)
+    bunny_total_watch = fields.Float('Total watch (s)', readonly=True)
+    bunny_storage_mb = fields.Float('Size (MB)', readonly=True)
+    bunny_synced_at = fields.Datetime('Stats synced at', readonly=True)
+
+    @api.depends('bunny_length')
+    def _compute_bunny_length_human(self):
+        for rec in self:
+            s = int(rec.bunny_length or 0)
+            rec.bunny_length_human = '%d:%02d' % (s // 60, s % 60) if s else ''
+
     @api.depends('video_type', 'bunny_video_id')
     def _compute_bunny_urls(self):
         ICP = self.env['ir.config_parameter'].sudo()
@@ -126,14 +147,20 @@ class ProductVideo(models.Model):
             raise UserError(_(
                 'The video object was created (GUID %s) but uploading the file '
                 'failed: %s') % (guid, e))
-        # 3) Switch to the Bunny backend and free the local copy. Safe: the PUT
-        #    succeeded, so the bytes are already on Bunny.
-        self.write({
-            'video_type': 'bunny_stream',
-            'bunny_video_id': guid,
-            'video_file': False,
-            'video_filename': False,
-        })
+        # 3) Switch to the Bunny backend. Freeing the local copy is now a
+        #    setting (default on) so admins can keep a backup if they prefer.
+        vals = {'video_type': 'bunny_stream', 'bunny_video_id': guid}
+        keep = self.env['ir.config_parameter'].sudo().get_param(
+            'uellow_cdn_video.bunny_delete_local_after_upload', 'True')
+        if keep not in ('False', 'false', '0', ''):
+            vals['video_file'] = False
+            vals['video_filename'] = False
+        self.write(vals)
+        # Pull initial stats/status right away so the dashboard isn't blank.
+        try:
+            self._bunny_fetch_stats(api_key, lib)
+        except Exception:
+            pass
         return guid
 
     def action_upload_to_bunny(self):
@@ -195,3 +222,66 @@ class ProductVideo(models.Model):
                 'sticky': bool(failures),
             },
         }
+
+    # ── Analytics sync (views / watch time / status from Bunny) ───────
+    def _bunny_fetch_stats(self, api_key, lib):
+        """Pull one video's live stats from Bunny and store them."""
+        self.ensure_one()
+        if not self.bunny_video_id:
+            return False
+        try:
+            r = requests.get(
+                '%s/library/%s/videos/%s' % (_BUNNY_API, lib, self.bunny_video_id),
+                headers={'AccessKey': api_key, 'accept': 'application/json'},
+                timeout=30)
+            r.raise_for_status()
+            d = r.json() or {}
+        except Exception as e:
+            _logger.warning('Bunny stats fetch failed (%s): %s', self.bunny_video_id, e)
+            return False
+        status = d.get('status')
+        self.write({
+            'bunny_status': str(status) if status is not None else False,
+            'bunny_encode_progress': int(d.get('encodeProgress') or 0),
+            'bunny_views': int(d.get('views') or 0),
+            'bunny_length': int(d.get('length') or 0),
+            'bunny_avg_watch': float(d.get('averageWatchTime') or 0),
+            'bunny_total_watch': float(d.get('totalWatchTime') or 0),
+            'bunny_storage_mb': round(float(d.get('storageSize') or 0) / 1048576.0, 2),
+            'bunny_synced_at': fields.Datetime.now(),
+        })
+        return True
+
+    def action_sync_bunny_stats(self):
+        """Refresh stats for the selected Bunny videos (button / Action menu)."""
+        api_key, lib = self._bunny_config()
+        recs = self.filtered(lambda v: v.bunny_video_id)
+        ok = sum(1 for rec in recs if rec._bunny_fetch_stats(api_key, lib))
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Bunny analytics'),
+                'message': _('Refreshed stats for %s video(s).') % ok,
+                'type': 'success',
+                'sticky': False,
+            },
+        }
+
+    @api.model
+    def _cron_sync_bunny_stats(self):
+        """Daily refresh of all Bunny videos' stats (gated by a setting)."""
+        ICP = self.env['ir.config_parameter'].sudo()
+        if ICP.get_param('uellow_cdn_video.bunny_auto_sync_stats', 'True') in ('False', 'false', '0', ''):
+            return
+        try:
+            api_key, lib = self._bunny_config()
+        except Exception:
+            return
+        vids = self.sudo().search([
+            ('video_type', '=', 'bunny_stream'),
+            ('bunny_video_id', '!=', False),
+        ])
+        for rec in vids:
+            rec._bunny_fetch_stats(api_key, lib)
+            self.env.cr.commit()

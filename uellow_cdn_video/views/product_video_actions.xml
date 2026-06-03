@@ -1,36 +1,131 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- v2.1.2 — standalone "Product Videos" list so an admin can multi-select
-         videos and bulk-upload them to Bunny Stream in one action. -->
+    <!-- =====================================================================
+         v2.1.3 — Product Videos analytics dashboard (Bunny Stream)
+         List + Kanban + Graph + Pivot, bulk upload + bulk stats-sync,
+         a daily auto-sync cron, and a Settings shortcut — all under one menu.
+         ===================================================================== -->
+
+    <!-- Rich list / dashboard -->
     <record id="view_product_video_list_cdn" model="ir.ui.view">
         <field name="name">product.video.list.cdn</field>
         <field name="model">product.video</field>
         <field name="arch" type="xml">
-            <list>
-                <field name="product_tmpl_id"/>
+            <list string="Product Videos"
+                  decoration-success="bunny_status == '4'"
+                  decoration-warning="bunny_status in ('2','3')"
+                  decoration-danger="bunny_status in ('5','6')">
+                <field name="bunny_thumb_url" widget="image_url" optional="show" string="Preview"/>
+                <field name="product_tmpl_id" optional="show"/>
                 <field name="name"/>
-                <field name="video_type"/>
-                <field name="video_filename"/>
-                <field name="bunny_video_id"/>
+                <field name="video_type" optional="show"/>
+                <field name="bunny_status" optional="show"/>
+                <field name="bunny_encode_progress" optional="hide" string="Encode %"/>
+                <field name="bunny_views" sum="Total views"/>
+                <field name="bunny_length_human" string="Duration"/>
+                <field name="bunny_avg_watch" optional="show" string="Avg watch (s)"/>
+                <field name="bunny_total_watch" optional="hide" sum="Total watch (s)"/>
+                <field name="bunny_storage_mb" optional="hide" sum="Total MB"/>
+                <field name="bunny_playback_url" widget="url" optional="hide" string="HLS"/>
+                <field name="bunny_video_id" optional="hide" string="GUID"/>
+                <field name="bunny_synced_at" optional="show" string="Synced"/>
+                <field name="active" optional="hide"/>
             </list>
         </field>
     </record>
 
-    <record id="action_product_video_cdn" model="ir.actions.act_window">
-        <field name="name">Product Videos</field>
-        <field name="res_model">product.video</field>
-        <field name="view_mode">list,form</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Manage product videos</p>
-            <p>Attach an MP4 in the <b>Video File</b> field of a product's video,
-               then select one or many here and use
-               <b>Action → ⬆ Upload selected to Bunny Stream</b> to push them all
-               to the CDN at once. Local copies are removed after a successful
-               upload to save server space.</p>
+    <!-- Kanban — thumbnail cards with view counts -->
+    <record id="view_product_video_kanban_cdn" model="ir.ui.view">
+        <field name="name">product.video.kanban.cdn</field>
+        <field name="model">product.video</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_dashboard">
+                <field name="name"/>
+                <field name="bunny_thumb_url"/>
+                <field name="bunny_views"/>
+                <field name="bunny_status"/>
+                <field name="bunny_length_human"/>
+                <field name="product_tmpl_id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click" style="padding:0;overflow:hidden">
+                            <div t-attf-style="height:120px;background:#000 center/cover no-repeat url('#{record.bunny_thumb_url.raw_value or ''}')"/>
+                            <div style="padding:8px">
+                                <strong t-esc="record.name.value"/>
+                                <div class="text-muted" style="font-size:11px" t-esc="record.product_tmpl_id.value"/>
+                                <div style="margin-top:6px;display:flex;gap:10px;font-size:12px">
+                                    <span>👁 <t t-esc="record.bunny_views.value"/></span>
+                                    <span>⏱ <t t-esc="record.bunny_length_human.value"/></span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
-    <!-- Bulk upload action — appears in the list-view Action (⚙️) menu. -->
+    <!-- Graph — views per video -->
+    <record id="view_product_video_graph_cdn" model="ir.ui.view">
+        <field name="name">product.video.graph.cdn</field>
+        <field name="model">product.video</field>
+        <field name="arch" type="xml">
+            <graph string="Video views" type="bar" sample="1">
+                <field name="name"/>
+                <field name="bunny_views" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Pivot — views &amp; watch time by product -->
+    <record id="view_product_video_pivot_cdn" model="ir.ui.view">
+        <field name="name">product.video.pivot.cdn</field>
+        <field name="model">product.video</field>
+        <field name="arch" type="xml">
+            <pivot string="Video analytics" sample="1">
+                <field name="product_tmpl_id" type="row"/>
+                <field name="bunny_views" type="measure"/>
+                <field name="bunny_total_watch" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Search / filters -->
+    <record id="view_product_video_search_cdn" model="ir.ui.view">
+        <field name="name">product.video.search.cdn</field>
+        <field name="model">product.video</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="product_tmpl_id"/>
+                <filter name="f_bunny" string="On Bunny" domain="[('video_type','=','bunny_stream')]"/>
+                <filter name="f_ready" string="Ready" domain="[('bunny_status','=','4')]"/>
+                <filter name="f_processing" string="Processing" domain="[('bunny_status','in',('2','3'))]"/>
+                <filter name="f_error" string="Errors" domain="[('bunny_status','in',('5','6'))]"/>
+                <group expand="0" string="Group By">
+                    <filter name="g_product" string="Product" context="{'group_by':'product_tmpl_id'}"/>
+                    <filter name="g_type" string="Video type" context="{'group_by':'video_type'}"/>
+                    <filter name="g_status" string="Bunny status" context="{'group_by':'bunny_status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_product_video_cdn" model="ir.actions.act_window">
+        <field name="name">Video Dashboard</field>
+        <field name="res_model">product.video</field>
+        <field name="view_mode">kanban,list,graph,pivot,form</field>
+        <field name="search_view_id" ref="view_product_video_search_cdn"/>
+        <field name="context">{'search_default_f_bunny': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No product videos yet</p>
+            <p>Upload an MP4 in a product's <b>Videos</b> tab and push it to Bunny.
+               Views, watch-time and status sync here automatically every day —
+               or use <b>Action → Refresh Bunny analytics</b> anytime.</p>
+        </field>
+    </record>
+
+    <!-- Bulk upload to Bunny (list Action menu) -->
     <record id="action_bunny_bulk_upload" model="ir.actions.server">
         <field name="name">⬆ Upload selected to Bunny Stream</field>
         <field name="model_id" ref="model_product_video"/>
@@ -40,8 +135,44 @@
         <field name="code">action = records.action_upload_to_bunny_bulk()</field>
     </record>
 
-    <menuitem id="menu_product_video_cdn"
-              name="🎬 Product Videos"
-              action="action_product_video_cdn"
-              sequence="90"/>
+    <!-- Bulk refresh analytics (list Action menu) -->
+    <record id="action_bunny_sync_stats" model="ir.actions.server">
+        <field name="name">🔄 Refresh Bunny analytics</field>
+        <field name="model_id" ref="model_product_video"/>
+        <field name="binding_model_id" ref="model_product_video"/>
+        <field name="binding_view_types">list,form</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_sync_bunny_stats()</field>
+    </record>
+
+    <!-- Daily auto-sync cron (gated by the setting) -->
+    <record id="cron_bunny_sync_stats" model="ir.cron">
+        <field name="name">Bunny: refresh video analytics</field>
+        <field name="model_id" ref="model_product_video"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_sync_bunny_stats()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(DateTime.now() + timedelta(hours=2))"/>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Settings shortcut (opens the Bunny Stream settings page) -->
+    <record id="action_bunny_settings" model="ir.actions.act_window">
+        <field name="name">Bunny Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'uellow_cdn_video'}</field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="menu_product_video_root" name="🎬 Product Videos" sequence="90"/>
+    <menuitem id="menu_product_video_cdn" name="Video Dashboard"
+              parent="menu_product_video_root"
+              action="action_product_video_cdn" sequence="10"/>
+    <menuitem id="menu_bunny_settings" name="⚙️ Bunny Settings"
+              parent="menu_product_video_root"
+              action="action_bunny_settings" sequence="90"
+              groups="base.group_system"/>
 </odoo>
