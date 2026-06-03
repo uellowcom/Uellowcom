@@ -110,27 +110,16 @@ def serialize_product_full(product, lang='en_US'):
     card = serialize_product_card(product, lang)
     if not card:
         return None
-    # Long description (jsonb-translated). v2.0.77 — read the actual
-    # fields Odoo's product form writes to. `description_ecommerce` is the
-    # website e-commerce body editor (the rich block-editor the admin
-    # uses); `description_sale` is the order-line snippet;
-    # `website_description` is a legacy/duplicate field on some installs.
-    # Fall back through all three so admins can put the long body in
-    # whichever editor they're using.
-    def _firstNonEmpty(*candidates):
-        for c in candidates:
-            if c and (c.get('en') or c.get('ar')):
-                return c
-        return {'en': '', 'ar': ''}
-    public_desc = _firstNonEmpty(
-        bilingual(product, 'description_ecommerce')
-            if 'description_ecommerce' in product._fields else None,
-        bilingual(product, 'website_description'),
-    )
-    desc = _firstNonEmpty(
-        bilingual(product, 'description_sale'),
-        public_desc,
-    )
+    # Long description — v2.0.91: ONLY from description_ecommerce (the
+    # website e-commerce body editor, which is what admins actually edit).
+    # `description_sale` (order-line snippet) is still used for the short
+    # description. Removed website_description fallback per user request.
+    public_desc = bilingual(product, 'description_ecommerce') \
+        if 'description_ecommerce' in product._fields \
+        else {'en': '', 'ar': ''}
+    desc = bilingual(product, 'description_sale')
+    if not (desc.get('en') or desc.get('ar')):
+        desc = public_desc
 
     # Variant attributes — for color, try to pull the matching variant's
     # image instead of the attribute-value swatch (so we show the actual
