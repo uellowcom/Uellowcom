@@ -63,4 +63,5 @@ from . import fit
 from . import helpdesk
 from . import mockup
 from . import push
+from . import videos
 from . import well_known
