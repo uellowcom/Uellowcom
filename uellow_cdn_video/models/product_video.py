@@ -68,12 +68,8 @@ class ProductVideo(models.Model):
             rec.bunny_playback_url = f'https://{pull}/{gid}/playlist.m3u8'
             rec.bunny_thumb_url = f'https://{pull}/{gid}/thumbnail.jpg'
 
-    def action_upload_to_bunny(self):
-        """Push the locally-attached `video_file` straight to Bunny Stream:
-        create a video object, upload the bytes, then store the returned GUID
-        and switch this record to the bunny_stream backend. Lets admins upload
-        from the product page without ever opening the Bunny dashboard."""
-        self.ensure_one()
+    def _bunny_config(self):
+        """Return (api_key, library_id) or raise if Bunny isn't set up."""
         if requests is None:
             raise UserError(_('The Python "requests" library is missing on the server.'))
         ICP = self.env['ir.config_parameter'].sudo()
@@ -83,10 +79,16 @@ class ProductVideo(models.Model):
             raise UserError(_(
                 'Bunny Stream is not configured. Open Settings → 🐰 Bunny '
                 'Stream and fill the Library ID and API key first.'))
+        return api_key, lib
+
+    def _bunny_upload_one(self, api_key, lib):
+        """Upload this single record's `video_file` to Bunny: create the video
+        object, PUT the bytes, store the GUID, switch to the bunny_stream
+        backend and free the local copy. Returns the GUID. Raises on failure
+        (caller decides whether to abort or keep going)."""
+        self.ensure_one()
         if not self.video_file:
-            raise UserError(_(
-                'Attach a video file in the "Video File" field, save, then '
-                'click Upload to Bunny.'))
+            raise UserError(_('No video file attached.'))
         try:
             payload = base64.b64decode(self.video_file)
         except Exception:
@@ -124,16 +126,21 @@ class ProductVideo(models.Model):
             raise UserError(_(
                 'The video object was created (GUID %s) but uploading the file '
                 'failed: %s') % (guid, e))
-        # 3) Switch this record to the Bunny backend and free the local copy.
-        #    Safe: the PUT above succeeded, so the bytes are already on Bunny.
-        #    Clearing the attachment-backed video_file reclaims server storage
-        #    (the whole point of offloading to the CDN).
+        # 3) Switch to the Bunny backend and free the local copy. Safe: the PUT
+        #    succeeded, so the bytes are already on Bunny.
         self.write({
             'video_type': 'bunny_stream',
             'bunny_video_id': guid,
             'video_file': False,
             'video_filename': False,
         })
+        return guid
+
+    def action_upload_to_bunny(self):
+        """Single-record upload (the button on the product video form)."""
+        self.ensure_one()
+        api_key, lib = self._bunny_config()
+        guid = self._bunny_upload_one(api_key, lib)
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
@@ -145,5 +152,46 @@ class ProductVideo(models.Model):
                     'Bunny finishes processing — usually a minute or two.') % guid,
                 'type': 'success',
                 'sticky': False,
+            },
+        }
+
+    def action_upload_to_bunny_bulk(self):
+        """Bulk upload — runs over the selected records (list Action menu).
+        Skips records with no local file or already on Bunny. Each success is
+        committed immediately so a later failure (or a timeout on a big file)
+        never loses already-uploaded videos. Returns a summary notification."""
+        api_key, lib = self._bunny_config()
+        todo = self.filtered(
+            lambda v: v.video_file and not (
+                v.video_type == 'bunny_stream' and v.bunny_video_id))
+        skipped = len(self) - len(todo)
+        done = 0
+        failures = []
+        for rec in todo:
+            try:
+                rec._bunny_upload_one(api_key, lib)
+                done += 1
+                # Persist each success on its own so the batch is resumable
+                # and partial progress survives a later error / timeout.
+                self.env.cr.commit()
+            except Exception as e:
+                _logger.exception('Bunny bulk: %s failed', rec.display_name)
+                failures.append('%s: %s' % (rec.display_name, e))
+        parts = [_('%s uploaded') % done]
+        if skipped:
+            parts.append(_('%s skipped (no file / already on Bunny)') % skipped)
+        if failures:
+            parts.append(_('%s failed') % len(failures))
+        msg = ' · '.join(parts)
+        if failures:
+            msg += '\n' + '\n'.join(failures[:5])
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Bunny bulk upload'),
+                'message': msg,
+                'type': 'warning' if failures else 'success',
+                'sticky': bool(failures),
             },
         }

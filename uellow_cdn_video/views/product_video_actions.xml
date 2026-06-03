@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- v2.1.2 — standalone "Product Videos" list so an admin can multi-select
+         videos and bulk-upload them to Bunny Stream in one action. -->
+    <record id="view_product_video_list_cdn" model="ir.ui.view">
+        <field name="name">product.video.list.cdn</field>
+        <field name="model">product.video</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="product_tmpl_id"/>
+                <field name="name"/>
+                <field name="video_type"/>
+                <field name="video_filename"/>
+                <field name="bunny_video_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_product_video_cdn" model="ir.actions.act_window">
+        <field name="name">Product Videos</field>
+        <field name="res_model">product.video</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Manage product videos</p>
+            <p>Attach an MP4 in the <b>Video File</b> field of a product's video,
+               then select one or many here and use
+               <b>Action → ⬆ Upload selected to Bunny Stream</b> to push them all
+               to the CDN at once. Local copies are removed after a successful
+               upload to save server space.</p>
+        </field>
+    </record>
+
+    <!-- Bulk upload action — appears in the list-view Action (⚙️) menu. -->
+    <record id="action_bunny_bulk_upload" model="ir.actions.server">
+        <field name="name">⬆ Upload selected to Bunny Stream</field>
+        <field name="model_id" ref="model_product_video"/>
+        <field name="binding_model_id" ref="model_product_video"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_upload_to_bunny_bulk()</field>
+    </record>
+
+    <menuitem id="menu_product_video_cdn"
+              name="🎬 Product Videos"
+              action="action_product_video_cdn"
+              sequence="90"/>
+</odoo>
