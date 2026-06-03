@@ -962,10 +962,19 @@ class MobileOrdersAPI(http.Controller):
 
 def _cod_carrier_dict(order=None):
     cur = (order.currency_id if order else request.env.company.currency_id)
+    # Plain "Standard Delivery" (no COD-available suffix); when the cart
+    # already qualifies for free shipping, label it "Free delivery" instead.
+    name = {'en': 'Standard Delivery', 'ar': 'توصيل قياسي'}
+    try:
+        from .cart import _free_shipping_threshold
+        threshold = _free_shipping_threshold(order) if order else None
+        if threshold and order and order.amount_untaxed >= threshold:
+            name = {'en': 'Free delivery', 'ar': 'توصيل مجاني'}
+    except Exception:
+        pass
     return {
         'id': -1,
-        'name': {'en': 'Standard Delivery (COD available)',
-                  'ar': 'توصيل قياسي — متاح الدفع عند الاستلام'},
+        'name': name,
         'price': fmt_price(0, cur),
         'is_default': False,
         'zone': None,

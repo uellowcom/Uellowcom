@@ -108,6 +108,25 @@ def _get_or_create_order(create=True):
     return order
 
 
+def _consolidate_lines(order):
+    """Merge duplicate lines of the SAME product into one line (sum the
+    quantities). Duplicates crept in via older cart merges / reorders; the
+    customer expects re-adding a product to bump its qty, not add a new row."""
+    seen = {}
+    for l in order.order_line.filtered(
+            lambda l: not l.display_type and not l.is_reward_line
+            and not getattr(l, 'is_delivery', False)):
+        key = l.product_id.id
+        if key in seen:
+            try:
+                seen[key].product_uom_qty += l.product_uom_qty
+                l.sudo().unlink()
+            except Exception:
+                pass
+        else:
+            seen[key] = l
+
+
 def _free_shipping_threshold(order):
     """Resolve the free-shipping threshold. Priority:
        1. ir.config_parameter `uellow_mobile.free_shipping_threshold`
@@ -336,6 +355,7 @@ class MobileCartAPI(http.Controller):
                 'product_id': product.id,
                 'product_uom_qty': qty,
             })
+        _consolidate_lines(order)
         order = request.env['sale.order'].sudo().browse(order.id)
         return ok({'cart': serialize_cart(order)})
 
