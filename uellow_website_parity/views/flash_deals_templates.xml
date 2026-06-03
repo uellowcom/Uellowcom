@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="flash_deals_page" name="Uellow Flash Deals Page">
+        <t t-call="website.layout">
+            <t t-set="additional_title" t-value="page_title"/>
+            <div id="wrap" class="container py-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h1 class="mb-0" style="font-weight: 900; color: #412402;">
+                        ⚡ Flash deals
+                    </h1>
+                    <span class="badge text-bg-warning" style="font-size: 12px;"
+                          t-esc="len(sales)"/>
+                </div>
+
+                <t t-if="not sales">
+                    <div class="alert alert-light text-center my-5">
+                        <h3>No flash sales running right now</h3>
+                        <p class="text-muted">Come back soon — new deals are added every day.</p>
+                    </div>
+                </t>
+
+                <t t-foreach="sales" t-as="sale">
+                    <div class="card mb-4" style="border-radius: 16px; overflow: hidden; border: 0; box-shadow: 0 6px 24px rgba(0,0,0,0.06);">
+                        <div class="p-3 d-flex align-items-center"
+                             t-att-style="'background: %s; color: %s;' % (sale.background_color or '#F5C320', '#412402')">
+                            <div class="flex-grow-1">
+                                <h2 class="mb-1" style="font-weight: 900; font-size: 22px;">
+                                    <t t-esc="sale.name"/>
+                                </h2>
+                                <div style="font-size: 13px; opacity: 0.8;">
+                                    <t t-esc="sale.subtitle or ''"/>
+                                </div>
+                            </div>
+                            <t t-if="sale.is_live">
+                                <span class="badge text-bg-danger" style="font-size: 12px;">
+                                    LIVE
+                                </span>
+                            </t>
+                            <t t-elif="sale.start_date and sale.start_date.timestamp() > 0">
+                                <span class="badge text-bg-secondary" style="font-size: 12px;">
+                                    UPCOMING
+                                </span>
+                            </t>
+                            <t t-else="">
+                                <span class="badge text-bg-light" style="font-size: 12px;">
+                                    ENDED
+                                </span>
+                            </t>
+                        </div>
+
+                        <div class="p-3">
+                            <div class="row g-3">
+                                <t t-foreach="sale.product_ids[:24]" t-as="product">
+                                    <div class="col-6 col-md-3 col-lg-2">
+                                        <a t-attf-href="/shop/#{product.website_url or ('product/%d' % product.id)}"
+                                           class="text-decoration-none">
+                                            <div style="background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #f3edde;">
+                                                <div style="aspect-ratio: 1; background: #fafaf6;">
+                                                    <img t-attf-src="/web/image/product.template/#{product.id}/image_512"
+                                                         class="w-100 h-100" style="object-fit: cover;"
+                                                         t-att-alt="product.name"/>
+                                                </div>
+                                                <div class="p-2">
+                                                    <div style="font-size: 11.5px; color: #412402; font-weight: 700; line-height: 1.3;
+                                                                overflow: hidden; text-overflow: ellipsis;
+                                                                display: -webkit-box; -webkit-line-clamp: 2;
+                                                                -webkit-box-orient: vertical; min-height: 30px;"
+                                                         t-esc="product.name"/>
+                                                    <div class="mt-1">
+                                                        <span style="color: #C0392B; font-weight: 900; font-size: 13.5px;"
+                                                              t-esc="'%.3f' % product.list_price"/>
+                                                        <small style="color: #999;" t-esc="product.currency_id.symbol or 'KD'"/>
+                                                        <t t-if="product.compare_list_price and product.compare_list_price > product.list_price">
+                                                            <small class="text-muted text-decoration-line-through ms-1"
+                                                                   t-esc="'%.3f' % product.compare_list_price"/>
+                                                        </t>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+</odoo>
