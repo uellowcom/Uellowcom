@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="cron_recompute_product_ranks" model="ir.cron" forcecreate="True">
+        <field name="name">Uellow: recompute product ranks</field>
+        <field name="model_id" ref="model_uellow_product_rank"/>
+        <field name="state">code</field>
+        <field name="code">model.recompute_ranks()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

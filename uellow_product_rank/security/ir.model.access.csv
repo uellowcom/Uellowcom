@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_uellow_rank_config_mgr,uellow.rank.config manager,model_uellow_rank_config,base.group_system,1,1,1,1
+access_uellow_rank_config_usr,uellow.rank.config user,model_uellow_rank_config,base.group_user,1,0,0,0
+access_uellow_product_rank_mgr,uellow.product.rank manager,model_uellow_product_rank,base.group_system,1,1,1,1
+access_uellow_product_rank_usr,uellow.product.rank user,model_uellow_product_rank,base.group_user,1,0,0,0

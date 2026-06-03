@@ -191,10 +191,22 @@ def resolve_products(env, props, lang, block=None):
         }
 
     elif source == 'bestsellers':
-        # Approximation — products with most sales lines. For perf we just
-        # fall back to recently-updated published products if the join is
-        # too slow. Real bestseller scoring belongs in a daily job.
-        recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
+        # v2.1.24 — REAL bestsellers from the daily rank table
+        # (uellow_product_rank). Optional props.category_id narrows the
+        # ladder to one category ("Best of Smart Watches" block).
+        recs = Tmpl.browse([])
+        try:
+            Rank = env.get('uellow.product.rank')
+            if Rank is not None:
+                cat_id = props.get('category_id')
+                recs = Rank.sudo().top_products(
+                    category_id=int(cat_id) if cat_id else None,
+                    website_id=None, limit=limit)
+                recs = recs.filtered(lambda p: p.is_published)
+        except Exception:
+            recs = Tmpl.browse([])
+        if not recs:
+            recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
 
     elif source == 'newest':
         recs = Tmpl.search(base_dom, order='create_date desc', limit=limit)

@@ -68,6 +68,41 @@ def serialize_product_card(product, lang='en_US'):
         'badges': _product_badges(product),
         'vendor': _vendor_ref(product),
         'has_video': has_video,
+        'rank': _product_rank_badge(product),
+    }
+
+
+def _product_rank_badge(product):
+    """v2.1.24 — best 'Best Seller #N in <category>' badge for cards.
+    Only ranks ≤ badge_max_rank show on cards; None when unranked."""
+    try:
+        Rank = request.env.get('uellow.product.rank')
+        if Rank is None:
+            return None
+        cfg = request.env['uellow.rank.config'].sudo().get_config()
+        if not cfg.enabled:
+            return None
+        r = Rank.sudo().best_for(product.id, website_id=get_website().id)
+        if not r or r.rank > max(1, cfg.badge_max_rank):
+            return None
+        return _rank_dict(r)
+    except Exception:
+        return None
+
+
+def _rank_dict(r):
+    cat = bilingual(r.category_id, 'name')
+    if r.rank == 1:
+        label = {'en': 'Best Seller in %s' % (cat.get('en') or ''),
+                 'ar': 'الأفضل مبيعاً في %s' % (cat.get('ar') or cat.get('en') or '')}
+    else:
+        label = {'en': '#%s Best Seller in %s' % (r.rank, cat.get('en') or ''),
+                 'ar': '#%s الأكثر مبيعاً في %s' % (r.rank, cat.get('ar') or cat.get('en') or '')}
+    return {
+        'rank': r.rank,
+        'category_id': r.category_id.id,
+        'category': cat,
+        'label': label,
     }
 
 
@@ -278,6 +313,7 @@ def serialize_product_full(product, lang='en_US'):
         'flash_sale': flash_sale,
         'description_short': desc,
         'description_html': public_desc,
+        'ranks': _product_ranks_full(product),
         'images': images,
         'videos': videos,
         'has_video': bool(videos),
@@ -957,6 +993,22 @@ def _serialize_reviewer(r):
         'price_chat':    float(r.price_chat or 0),
         'specialty':     r.specialty_text or '',
     }
+
+
+def _product_ranks_full(product):
+    """All categories the product ranks in (product-page strip)."""
+    try:
+        Rank = request.env.get('uellow.product.rank')
+        if Rank is None:
+            return []
+        cfg = request.env['uellow.rank.config'].sudo().get_config()
+        if not cfg.enabled:
+            return []
+        return [_rank_dict(r) for r in
+                Rank.sudo().all_for(product.id,
+                                    website_id=get_website().id)[:3]]
+    except Exception:
+        return []
 
 
 def _bulk_pricing_tiers(product):

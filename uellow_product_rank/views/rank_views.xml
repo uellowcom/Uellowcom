@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Ranks (read-only browse) -->
+    <record id="view_product_rank_list" model="ir.ui.view">
+        <field name="name">uellow.product.rank.list</field>
+        <field name="model">uellow.product.rank</field>
+        <field name="arch" type="xml">
+            <list create="false" edit="false">
+                <field name="rank"/>
+                <field name="product_tmpl_id"/>
+                <field name="category_id"/>
+                <field name="website_id"/>
+                <field name="qty_sold"/>
+                <field name="revenue" sum="Revenue"/>
+                <field name="score"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_product_rank_search" model="ir.ui.view">
+        <field name="name">uellow.product.rank.search</field>
+        <field name="model">uellow.product.rank</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="product_tmpl_id"/>
+                <field name="category_id"/>
+                <filter string="🥇 Top 3" name="top3" domain="[('rank','&lt;=',3)]"/>
+                <filter string="Global ladder" name="global"
+                        domain="[('website_id','=',False)]"/>
+                <group expand="1" string="Group By">
+                    <filter string="Category" name="g_cat"
+                            context="{'group_by': 'category_id'}"/>
+                    <filter string="Website" name="g_site"
+                            context="{'group_by': 'website_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_product_ranks" model="ir.actions.act_window">
+        <field name="name">Product Ranks</field>
+        <field name="res_model">uellow.product.rank</field>
+        <field name="view_mode">list</field>
+        <field name="context">{'search_default_g_cat': 1, 'search_default_global': 1}</field>
+    </record>
+
+    <!-- Settings -->
+    <record id="view_rank_config_form" model="ir.ui.view">
+        <field name="name">uellow.rank.config.form</field>
+        <field name="model">uellow.rank.config</field>
+        <field name="arch" type="xml">
+            <form string="Product Rank Settings">
+                <header>
+                    <button name="action_recompute" type="object"
+                            string="🔄 Recompute Now" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1>🏆 Product Ranks</h1></div>
+                    <group>
+                        <group string="Engine">
+                            <field name="enabled"/>
+                            <field name="window_days"/>
+                            <field name="top_n"/>
+                            <field name="min_qty"/>
+                            <field name="per_website"/>
+                        </group>
+                        <group string="Scoring Weights">
+                            <field name="w_qty"/>
+                            <field name="w_revenue"/>
+                            <field name="w_rating"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Display">
+                            <field name="badge_max_rank"/>
+                        </group>
+                        <group string="Status">
+                            <field name="last_compute"/>
+                            <field name="rank_count"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <!-- Singleton settings — server action opens THE config record -->
+    <record id="action_rank_config" model="ir.actions.server">
+        <field name="name">Rank Settings</field>
+        <field name="model_id" ref="model_uellow_rank_config"/>
+        <field name="state">code</field>
+        <field name="code">action = {
+    'type': 'ir.actions.act_window',
+    'res_model': 'uellow.rank.config',
+    'view_mode': 'form',
+    'res_id': model.get_config().id,
+    'target': 'current',
+}</field>
+    </record>
+
+    <menuitem id="menu_product_rank_root" name="🏆 Product Ranks"
+              parent="sale.sale_menu_root" sequence="52"/>
+    <menuitem id="menu_product_ranks" name="Ranks"
+              parent="menu_product_rank_root" action="action_product_ranks"
+              sequence="1"/>
+    <menuitem id="menu_rank_config" name="Settings"
+              parent="menu_product_rank_root" action="action_rank_config"
+              sequence="9"/>
+</odoo>
