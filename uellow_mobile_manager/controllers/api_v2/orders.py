@@ -520,6 +520,119 @@ class MobileOrdersAPI(http.Controller):
             out.append(_cod_carrier_dict(order=order))
         return ok(out)
 
+    @http.route('/api/mobile/v2/orders/delivery-eta', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def delivery_eta(self, **kw):
+        """Product-page delivery block: per-carrier availability NOW vs
+        the next available day, computed from the unified weekly schedule
+        (delivery_carrier_portal). Example: a carrier that skips Friday,
+        asked on Thursday evening → "order now, receive Saturday"."""
+        from datetime import datetime, timedelta
+        import pytz
+        website = get_website()
+        country = (kw.get('country')
+                   or request.httprequest.headers.get('CF-IPCountry')
+                   or '').upper().strip()
+
+        DAYS_EN = ['Monday', 'Tuesday', 'Wednesday', 'Thursday',
+                   'Friday', 'Saturday', 'Sunday']
+        DAYS_AR = ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس',
+                   'الجمعة', 'السبت', 'الأحد']
+        tz = pytz.timezone(request.env.user.tz or 'Asia/Kuwait')
+        now = datetime.now(tz)
+
+        def scope_ok(c):
+            """Website/country/channel/date scope — WITHOUT the time check
+            (we need out-of-hours carriers too, to compute their next slot)."""
+            if getattr(c, 'uellow_channel', 'both') not in ('both', 'app'):
+                return False
+            ws = getattr(c, 'uellow_website_ids', None)
+            if ws and website and website.id not in ws.ids:
+                return False
+            cs = getattr(c, 'uellow_country_ids', None)
+            if cs and country and country not in [x.code for x in cs]:
+                return False
+            if getattr(c, 'vendor_id', False):
+                return False     # vendor methods are cart-specific
+            df = getattr(c, 'uellow_date_from', False)
+            dt_ = getattr(c, 'uellow_date_to', False)
+            today = now.date()
+            if df and today < df:
+                return False
+            if dt_ and today > dt_:
+                return False
+            return True
+
+        def next_slot(c):
+            """(is_now, day_offset, day_name_en, day_name_ar, from_hour).
+            Empty schedule = always available now."""
+            avail = getattr(c, 'availability_ids', None)
+            if not avail:
+                return True, 0, '', '', 0.0
+            hour = now.hour + now.minute / 60.0
+            for off in range(0, 8):
+                wd = (now.weekday() + off) % 7
+                wins = [a for a in avail if int(a.weekday) == wd]
+                for a in sorted(wins, key=lambda x: x.hour_from):
+                    if off == 0:
+                        if a.hour_from <= hour < a.hour_to:
+                            return True, 0, '', '', 0.0
+                        if hour < a.hour_from:
+                            return False, 0, DAYS_EN[wd], DAYS_AR[wd], a.hour_from
+                    else:
+                        return False, off, DAYS_EN[wd], DAYS_AR[wd], a.hour_from
+            return False, -1, '', '', 0.0
+
+        Carrier = request.env['delivery.carrier'].sudo()
+        carriers = Carrier.search([
+            ('is_published', '=', True), ('active', '=', True)])
+        lines = []
+        for c in carriers:
+            if not scope_ok(c):
+                continue
+            name = {
+                'en': getattr(c, 'public_label_en', '') or c.name,
+                'ar': getattr(c, 'public_label_ar', '')
+                      or getattr(c, 'public_label_en', '') or c.name,
+            }
+            desc_en = getattr(c, 'public_desc_en', '') or ''
+            desc_ar = getattr(c, 'public_desc_ar', '') or desc_en
+            is_now, off, den, dar, fh = next_slot(c)
+            if is_now:
+                # Cutoff from the carrier's zone rules when configured.
+                cutoff = ''
+                try:
+                    z = c.uellow_zone_ids[:1] if getattr(
+                        c, 'uellow_zone_ids', False) else None
+                    cutoff = (z.cutoff_time or '') if z else ''
+                except Exception:
+                    pass
+                txt_en = desc_en or (
+                    ('Available now — order before %s' % cutoff)
+                    if cutoff else 'Available now')
+                txt_ar = desc_ar or (
+                    ('متاح الآن — اطلب قبل %s' % cutoff)
+                    if cutoff else 'متاح الآن')
+                lines.append({'name': name, 'status': 'now',
+                              'text': {'en': txt_en, 'ar': txt_ar}})
+            elif off >= 0:
+                hh = '%02d:%02d' % (int(fh), round((fh % 1) * 60))
+                if off == 0:
+                    txt_en = 'Opens today at %s' % hh
+                    txt_ar = 'يبدأ اليوم الساعة %s' % hh
+                elif off == 1:
+                    txt_en = 'Order now — receive tomorrow (%s)' % den
+                    txt_ar = 'اطلب الآن واستلم غداً (%s)' % dar
+                else:
+                    txt_en = 'Order now — receive on %s' % den
+                    txt_ar = 'اطلب الآن واستلم يوم %s' % dar
+                lines.append({'name': name, 'status': 'later',
+                              'text': {'en': txt_en, 'ar': txt_ar}})
+        # "now" carriers first, then soonest
+        lines.sort(key=lambda l: 0 if l['status'] == 'now' else 1)
+        return ok({'country': country, 'lines': lines[:4]})
+
     @http.route('/api/mobile/v2/orders/checkout/geoip', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
