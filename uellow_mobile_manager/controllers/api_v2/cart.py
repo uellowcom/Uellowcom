@@ -126,9 +126,12 @@ def _available_shipping_methods(order):
                     c, order.partner_shipping_id or order.partner_id)
                 if z:
                     rate = z.price
+                    _win_en = getattr(z, 'delivery_window', '') or ''
+                    _win_ar = getattr(z, 'delivery_window_ar', '') or _win_en
                     zone_match = {
                         'id': z.id, 'name': z.name,
                         'cutoff_time': z.cutoff_time or '',
+                        'delivery_window': {'en': _win_en, 'ar': _win_ar},
                     }
             if rate is None:
                 try:

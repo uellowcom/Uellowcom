@@ -50,6 +50,19 @@ class UellowDeliveryZone(models.Model):
         help='HH:MM (24h). Orders placed after this time the same day are '
              'pushed to the next eligible day. Leave blank for no cutoff.',
     )
+    # v2.0.97 — purely informational delivery-window label shown to the
+    # customer in checkout (no pricing/logic impact). Bilingual per the
+    # EN-primary + AR rule; AR falls back to EN when left blank.
+    delivery_window = fields.Char(
+        'Delivery window (EN)', default='',
+        help='Free-text window/ETA shown in checkout, e.g. '
+             '"2:00 PM – 9:00 PM" or "Same day". Display only.',
+    )
+    delivery_window_ar = fields.Char(
+        'Delivery window (AR)', default='',
+        help='Arabic override for the delivery window. Leave blank to reuse '
+             'the English label.',
+    )
     weekday_mask = fields.Char(
         'Active weekdays', default='1234567',
         help='Digits 1-7 (Mon-Sun) indicating which days this rule is active. '

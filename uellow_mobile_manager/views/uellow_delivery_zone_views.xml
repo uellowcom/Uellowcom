@@ -11,6 +11,8 @@
         <field name="cities"/>
         <field name="price"/>
         <field name="cutoff_time"/>
+        <field name="delivery_window"/>
+        <field name="delivery_window_ar"/>
         <field name="weekday_mask"/>
         <field name="active"/>
       </list>
@@ -55,6 +57,8 @@
               <field name="cities"/>
               <field name="price"/>
               <field name="cutoff_time"/>
+              <field name="delivery_window"/>
+              <field name="delivery_window_ar"/>
               <field name="weekday_mask"/>
               <field name="active"/>
             </list>
