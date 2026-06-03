@@ -32,9 +32,13 @@ def _is_wishlisted(partner, tmpl):
     if Wish is None:
         return False
     try:
+        # Match exactly how add/remove store it: any variant of the template.
+        variant_ids = tmpl.product_variant_ids.ids
+        if not variant_ids:
+            return False
         return bool(Wish.sudo().search_count([
             ('partner_id', '=', partner.id),
-            ('product_id.product_tmpl_id', '=', tmpl.id)]))
+            ('product_id', 'in', variant_ids)]))
     except Exception:
         return False
 
@@ -113,14 +117,21 @@ def _build_video_item(p, lang, partner):
     }
 
 
-def _comment_json(c):
-    return {
+def _comment_json(c, with_replies=False):
+    d = {
         'id': c.id,
         'author': c.display_author(),
         'body': c.body or '',
         'likes': c.likes or 0,
+        'is_seller': bool(c.is_seller),
+        'parent_id': c.parent_id.id if c.parent_id else None,
         'created': c.create_date.isoformat() if c.create_date else '',
     }
+    if with_replies:
+        d['replies'] = [_comment_json(r)
+                        for r in c.reply_ids.filtered('active')
+                        .sorted(key=lambda x: x.create_date or x.id)]
+    return d
 
 
 class MobileVideosAPI(http.Controller):
@@ -241,9 +252,10 @@ class MobileVideosAPI(http.Controller):
             limit = max(1, min(100, int(kw.get('limit') or 50)))
         except Exception:
             limit = 50
-        recs = Comment.sudo().search(
-            [('video_id', '=', vid), ('active', '=', True)], limit=limit)
-        return ok({'items': [_comment_json(c) for c in recs],
+        tops = Comment.sudo().search(
+            [('video_id', '=', vid), ('active', '=', True),
+             ('parent_id', '=', False)], limit=limit)
+        return ok({'items': [_comment_json(c, with_replies=True) for c in tops],
                    'count': Comment.sudo().search_count(
                        [('video_id', '=', vid), ('active', '=', True)])})
 
@@ -266,12 +278,22 @@ class MobileVideosAPI(http.Controller):
         video = request.env['product.video'].sudo().browse(vid)
         if not video.exists():
             return fail('NOT_FOUND', 'Video not found', 404)
-        c = Comment.sudo().create({
+        vals = {
             'video_id': vid,
             'partner_id': partner.id if partner else False,
             'author_name': partner.name if partner else 'Guest',
             'body': body[:2000],
-        })
+        }
+        # Optional reply target.
+        parent = data.get('parent_id') or kw.get('parent_id')
+        if parent:
+            try:
+                pc = Comment.sudo().browse(int(parent))
+                if pc.exists() and pc.video_id.id == vid and not pc.parent_id:
+                    vals['parent_id'] = pc.id
+            except Exception:
+                pass
+        c = Comment.sudo().create(vals)
         return ok(_comment_json(c))
 
     @http.route('/api/mobile/v2/videos/<int:vid>/share', type='http',

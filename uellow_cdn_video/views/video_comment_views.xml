@@ -9,9 +9,12 @@
                 <field name="create_date" string="When"/>
                 <field name="product_tmpl_id"/>
                 <field name="video_id"/>
+                <field name="parent_id" string="Reply to"/>
                 <field name="partner_id"/>
                 <field name="author_name"/>
                 <field name="body"/>
+                <field name="is_seller" string="Store reply"/>
+                <field name="reply_count" string="Replies"/>
                 <field name="likes"/>
                 <field name="active"/>
             </list>
@@ -27,12 +30,19 @@
                     <group>
                         <field name="video_id"/>
                         <field name="product_tmpl_id" readonly="1"/>
+                        <field name="parent_id"
+                               domain="[('video_id','=',video_id),('parent_id','=',False)]"/>
+                        <field name="is_seller"/>
                         <field name="partner_id"/>
                         <field name="author_name"/>
                         <field name="likes"/>
                         <field name="active"/>
                     </group>
                     <field name="body"/>
+                    <field name="reply_ids" readonly="1">
+                        <list><field name="author_name"/><field name="body"/>
+                              <field name="is_seller"/><field name="create_date"/></list>
+                    </field>
                 </sheet>
             </form>
         </field>

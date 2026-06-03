@@ -84,8 +84,9 @@ class ProductVideo(models.Model):
             wl = 0
             if Wish is not None and rec.product_tmpl_id:
                 try:
-                    wl = Wish.sudo().search_count([
-                        ('product_id.product_tmpl_id', '=', rec.product_tmpl_id.id)])
+                    vids = rec.product_tmpl_id.product_variant_ids.ids
+                    if vids:
+                        wl = Wish.sudo().search_count([('product_id', 'in', vids)])
                 except Exception:
                     wl = 0
             rec.wishlist_count = wl
