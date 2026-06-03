@@ -47,8 +47,14 @@ class ShippingProAPI(http.Controller):
                 hay = [city.name_en, city.name_ar, city.aliases or '']
                 return any(tgt in norm(h) for h in hay if h)
             cities = cities.filtered(matches)
+        # v2.1.17 — the app's city picker loads the FULL country list
+        # (it filters client-side); typeahead callers can pass limit.
+        try:
+            limit = min(int(kw.get('limit') or (30 if q else 500)), 500)
+        except Exception:
+            limit = 30 if q else 500
         out = []
-        for city in cities[:30]:
+        for city in cities[:limit]:
             zone = city.zone_id
             out.append({
                 'id': city.id,
