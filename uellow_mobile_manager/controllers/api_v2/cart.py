@@ -60,20 +60,13 @@ def _get_or_create_order(create=True):
             ], limit=1)
             if (guest and guest.exists() and guest.partner_id.id != partner.id
                     and guest.order_line.filtered(lambda l: not l.display_type)):
-                if order and order.id != guest.id:
-                    # Partner already has a cart → move guest lines into it.
-                    for ln in guest.order_line.filtered(
-                            lambda l: not l.display_type and not l.is_reward_line):
-                        try:
-                            ln.sudo().write({'order_id': order.id})
-                        except Exception:
-                            pass
-                    try:
-                        guest.sudo().unlink()
-                    except Exception:
-                        pass
-                    return order
-                # No partner cart → just reassign the guest order to the partner.
+                # The GUEST cart wins. The user signed in mid-purchase (on the
+                # way to buy what's in this cart) — merging the partner's old
+                # draft cart into it silently inflated the checkout total
+                # ("8.500 in the cart but 28.210 at checkout"). So: adopt the
+                # guest cart as the partner's active cart and leave any old
+                # draft cart untouched — it resurfaces only when the user
+                # signs in WITHOUT an in-progress guest cart.
                 try:
                     guest.sudo().write({
                         'partner_id': partner.id,
