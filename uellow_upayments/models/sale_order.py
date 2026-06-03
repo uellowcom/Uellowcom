@@ -19,6 +19,9 @@ class SaleOrder(models.Model):
     upayments_link = fields.Char('UPayments link', readonly=True, copy=False)
     upayments_track_id = fields.Char('UPayments track id', readonly=True, copy=False)
     upayments_paid = fields.Boolean('Paid via UPayments', readonly=True, copy=False)
+    # Shipping rate captured at checkout (the draft order has no delivery line
+    # until payment succeeds; the webhook uses this to add it on confirm).
+    upayments_ship_rate = fields.Float('Pending shipping rate', readonly=True, copy=False)
 
     def _upayments_config(self):
         ICP = self.env['ir.config_parameter'].sudo()
@@ -27,8 +30,10 @@ class SaleOrder(models.Model):
         return base, token
 
     def _upayments_create_charge(self, return_url, cancel_url, notify_url,
-                                 lang='en', gateway=None):
-        """Create a UPayments charge and return the hosted payment link."""
+                                 lang='en', gateway=None, amount=None):
+        """Create a UPayments charge and return the hosted payment link.
+        `amount` overrides the charged total (used to include shipping, since
+        the draft order has no delivery line yet)."""
         self.ensure_one()
         if requests is None:
             raise UserError(_('The Python "requests" library is missing.'))
@@ -37,13 +42,15 @@ class SaleOrder(models.Model):
             raise UserError(_('UPayments is not configured (missing API token).'))
         p = self.partner_id
         lines = self.order_line.filtered(
-            lambda l: not l.display_type and not l.is_reward_line)
+            lambda l: not l.display_type and not l.is_reward_line
+            and not getattr(l, 'is_delivery', False))
+        charge_total = round(amount if amount is not None else (self.amount_total or 0.0), 3)
         payload = {
             'order': {
                 'id': (self.name or str(self.id))[:40],
                 'description': ('Order %s' % (self.name or self.id))[:500],
                 'currency': (self.currency_id.name or 'KWD')[:3],
-                'amount': round(self.amount_total or 0.0, 3),
+                'amount': charge_total,
             },
             'language': 'ar' if (lang or 'en').startswith('ar') else 'en',
             'reference': {'id': str(self.id)[:35]},
@@ -109,6 +116,15 @@ class SaleOrder(models.Model):
         if track_id:
             vals['upayments_track_id'] = track_id
         self.sudo().write(vals)
+        # Add the shipping (delivery) line now — it was kept off the draft cart.
+        try:
+            if (self.carrier_id and self.state in ('draft', 'sent')
+                    and not self.order_line.filtered(
+                        lambda l: getattr(l, 'is_delivery', False))):
+                self.sudo().set_delivery_line(self.carrier_id,
+                                              self.upayments_ship_rate or 0.0)
+        except Exception:
+            _logger.exception('UPayments: set_delivery_line on capture failed for %s', self.id)
         try:
             if self.state in ('draft', 'sent'):
                 self.sudo().action_confirm()

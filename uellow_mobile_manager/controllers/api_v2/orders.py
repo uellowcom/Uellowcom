@@ -18,6 +18,32 @@ from ._common import (
 from .cart import _get_or_create_order, serialize_cart
 
 
+def _apply_delivery_preserving_rewards(order, carrier, price):
+    """Add the delivery line via set_delivery_line but keep coupon reward
+    lines (Odoo's set_delivery_line can drop them)."""
+    saved = [(r.product_id.id, r.product_uom_qty, r.price_unit, r.name)
+             for r in order.order_line.filtered('is_reward_line')]
+    try:
+        order.set_delivery_line(carrier, price)
+    except Exception:
+        pass
+    try:
+        if hasattr(order, '_update_programs_and_rewards'):
+            order._update_programs_and_rewards()
+    except Exception:
+        pass
+    if (not order.order_line.filtered('is_reward_line')) and saved:
+        for prod_id, qty, price_unit, name in saved:
+            try:
+                order.env['sale.order.line'].sudo().create({
+                    'order_id': order.id, 'product_id': prod_id,
+                    'product_uom_qty': qty, 'price_unit': price_unit,
+                    'name': name, 'is_reward_line': True,
+                })
+            except Exception:
+                pass
+
+
 def serialize_order(order, detail=False):
     cur = order.currency_id or request.env.company.currency_id
     u_status = _uellow_status(order)
@@ -718,62 +744,39 @@ class MobileOrdersAPI(http.Controller):
         except Exception:
             pass
 
-        # Apply chosen carrier — but preserve coupon reward lines. The
-        # Odoo `set_delivery_line` rebuilds the order.line list including
-        # delivery and would otherwise drop reward lines, blanking out
-        # the discount the customer applied in the cart.
+        # Resolve the chosen carrier + shipping rate WITHOUT persisting a
+        # delivery line yet. Persisting it on a draft cart was the bug: it
+        # showed shipping as a cart "product" and got double-counted at
+        # checkout. The delivery line is added only when the order is actually
+        # placed (COD now, or online after payment capture).
+        carrier = None
+        ship_rate = 0.0
         try:
             cid = int(p.get('carrier_id') or 0)
-            if cid and cid > 0:
+            if cid > 0:
                 carrier = request.env['delivery.carrier'].sudo().browse(cid)
-                if carrier.exists():
-                    rewards_before = order.order_line.filtered('is_reward_line')
-                    saved_rewards = [
-                        (r.product_id.id, r.product_uom_qty, r.price_unit, r.name)
-                        for r in rewards_before
-                    ]
-                    coupons_before = list(getattr(order, 'applied_coupon_ids', [])) \
-                        if hasattr(order, 'applied_coupon_ids') else []
-                    try:
-                        # rate first to get the price; set_delivery_line
-                        # expects a rate dict-style price as second arg.
-                        r = carrier.rate_shipment(order)
-                        price = (r or {}).get('price', 0) if isinstance(r, dict) else 0
-                    except Exception:
-                        price = 0
-                    try:
-                        order.set_delivery_line(carrier, price)
-                    except Exception:
-                        pass
-                    # Recompute rewards after carrier set
-                    try:
-                        if hasattr(order, '_update_programs_and_rewards'):
-                            order._update_programs_and_rewards()
-                    except Exception:
-                        pass
-                    # Final safety net — if rewards vanished, restore them.
-                    if (not order.order_line.filtered('is_reward_line')) and saved_rewards:
-                        for prod_id, qty, price_unit, name in saved_rewards:
-                            try:
-                                request.env['sale.order.line'].sudo().create({
-                                    'order_id': order.id,
-                                    'product_id': prod_id,
-                                    'product_uom_qty': qty,
-                                    'price_unit': price_unit,
-                                    'name': name,
-                                    'is_reward_line': True,
-                                })
-                            except Exception:
-                                pass
+                if not carrier.exists():
+                    carrier = None
         except Exception:
-            pass
+            carrier = None
+        if carrier is not None:
+            try:
+                rr = carrier.rate_shipment(order)
+                ship_rate = (rr or {}).get('price', 0) if isinstance(rr, dict) else 0
+            except Exception:
+                ship_rate = 0.0
+            try:
+                order.carrier_id = carrier.id   # remember the choice
+            except Exception:
+                pass
 
-        # Confirm ONLY for COD. Online orders stay a draft cart until the
-        # UPayments webhook captures payment — so a failed/cancelled payment
-        # never confirms the order and the customer's cart stays intact.
         pm = (p.get('payment_method') or '').lower()
         cod = pm == 'cod'
+
         if cod:
+            # Place now: add the delivery line (preserving reward lines) + confirm.
+            if carrier is not None:
+                _apply_delivery_preserving_rewards(order, carrier, ship_rate)
             try:
                 order.action_confirm()
             except Exception as e:
@@ -788,13 +791,21 @@ class MobileOrdersAPI(http.Controller):
             base = base_url().rstrip('/')
             gateway = {'knet': 'knet', 'card': 'cc', 'apple_pay': 'apple-pay',
                        'google_pay': 'google-pay'}.get(pm)
+            # Charge total INCLUDES shipping (the draft order has no delivery
+            # line so amount_total excludes it). Stash the rate so the webhook
+            # can add the delivery line when it confirms on capture.
+            charge_amount = round((order.amount_total or 0.0) + (ship_rate or 0.0), 3)
+            try:
+                order.sudo().write({'upayments_ship_rate': ship_rate})
+            except Exception:
+                pass
             if hasattr(order, '_upayments_create_charge'):
                 try:
                     result['payment_url'] = order._upayments_create_charge(
                         return_url='%s/payments/upayments/return' % base,
                         cancel_url='%s/payments/upayments/cancel' % base,
                         notify_url='%s/payments/upayments/webhook' % base,
-                        lang=get_lang(), gateway=gateway)
+                        lang=get_lang(), gateway=gateway, amount=charge_amount)
                 except Exception as e:
                     return fail('PAYMENT_INIT_FAILED', str(e), 400)
             else:

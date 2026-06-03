@@ -202,7 +202,10 @@ def serialize_cart(order):
         return _empty_cart()
     cur = order.currency_id or request.env.company.currency_id
     lines = []
-    for line in order.order_line.filtered(lambda l: not l.display_type):
+    # Exclude delivery (shipping) lines — they are NOT cart products and must
+    # never show as an item or inflate the subtotal.
+    for line in order.order_line.filtered(
+            lambda l: not l.display_type and not getattr(l, 'is_delivery', False)):
         product = line.product_id
         lines.append({
             'id':           line.id,
@@ -228,7 +231,8 @@ def serialize_cart(order):
     # subtotal − discount (+ shipping + tax) == total. For carts with no
     # discount this is identical to the old behaviour (gross == net).
     sale_lines = order.order_line.filtered(
-        lambda l: not l.display_type and not l.is_reward_line)
+        lambda l: not l.display_type and not l.is_reward_line
+        and not getattr(l, 'is_delivery', False))
     gross = sum((l.price_unit or 0.0) * (l.product_uom_qty or 0.0) for l in sale_lines)
     net = sum(l.price_subtotal for l in sale_lines)
     line_discount = max(0.0, gross - net)
