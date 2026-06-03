@@ -59,8 +59,32 @@ def _video_stats(vrec, tmpl):
             'comments': comments, 'wishlist': wishlist}
 
 
+def _oos_blocked(p):
+    """True when the product is out of stock AND not allowed to continue
+    selling — such products are hidden from the Reels feed/search."""
+    # "Continue selling when out of stock" → always show.
+    if getattr(p, 'allow_out_of_stock_order', True):
+        return False
+    # Only stockable products can be out of stock.
+    storable = getattr(p, 'is_storable', None)
+    if storable is None:
+        storable = (getattr(p, 'type', '') == 'product')
+    if not storable:
+        return False
+    try:
+        qty = p.virtual_available
+    except Exception:
+        try:
+            qty = p.qty_available
+        except Exception:
+            qty = 0
+    return (qty or 0) <= 0
+
+
 def _build_video_item(p, lang, partner):
     """Full Reels slide for one product (or None if no playable video)."""
+    if _oos_blocked(p):
+        return None
     videos = _serialize_product_videos(p)
     playable = [v for v in videos
                 if (v.get('file_url') or v.get('embed_url')

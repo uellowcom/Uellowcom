@@ -627,6 +627,17 @@ def resolve_reels_strip(env, props, lang, block=None):
     candidates = Tmpl.search(base_dom, order=order, limit=limit * 4)
     items = []
     for p in candidates:
+        # Skip products that are out of stock and not "continue selling".
+        if not getattr(p, 'allow_out_of_stock_order', True):
+            storable = getattr(p, 'is_storable', None)
+            if storable is None:
+                storable = (getattr(p, 'type', '') == 'product')
+            if storable:
+                try:
+                    if (p.virtual_available or 0) <= 0:
+                        continue
+                except Exception:
+                    pass
         try:
             vids = getattr(p, 'video_ids', None) or getattr(p, 'product_video_ids', None)
         except Exception:
