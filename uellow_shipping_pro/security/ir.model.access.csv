@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+delivery_zone_admin,delivery.zone admin,model_delivery_zone,base.group_system,1,1,1,1
+delivery_zone_user,delivery.zone user,model_delivery_zone,base.group_user,1,0,0,0
+delivery_city_admin,delivery.city admin,model_delivery_city,base.group_system,1,1,1,1
+delivery_city_user,delivery.city user,model_delivery_city,base.group_user,1,0,0,0
+delivery_city_public,delivery.city public read,model_delivery_city,base.group_public,1,0,0,0
+delivery_city_portal,delivery.city portal read,model_delivery_city,base.group_portal,1,0,0,0

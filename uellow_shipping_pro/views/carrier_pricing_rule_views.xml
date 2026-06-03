@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="carrier_pricing_rule_form_inherit_shipping_pro" model="ir.ui.view">
+        <field name="name">carrier.pricing.rule.form.shipping_pro</field>
+        <field name="model">carrier.pricing.rule</field>
+        <field name="inherit_id" ref="delivery_carrier_portal.view_carrier_pricing_rule_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='zone_name']" position="before">
+                <field name="zone_id"/>
+            </xpath>
+            <xpath expr="//field[@name='cash_commission_value']" position="after">
+                <field name="cash_surcharge_fixed"/>
+            </xpath>
+            <xpath expr="//field[@name='cancel_fee_full']" position="before">
+                <separator string="Availability window (24h clock)"/>
+                <field name="time_window_start"/>
+                <field name="time_window_end"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

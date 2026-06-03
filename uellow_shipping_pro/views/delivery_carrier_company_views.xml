@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_delivery_carrier_company_form_inherit_shipping_pro" model="ir.ui.view">
+        <field name="name">delivery.carrier.company.form.shipping_pro</field>
+        <field name="model">delivery.carrier.company</field>
+        <field name="inherit_id" ref="delivery_carrier_portal.view_carrier_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="carrier_kind"/>
+                <field name="description_en"/>
+                <field name="description_ar"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

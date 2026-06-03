@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Kuwait — three pricing tiers (normal/remote/far) -->
+    <record id="zone_kw_capital" model="delivery.zone">
+        <field name="name_en">Kuwait — Capital area</field>
+        <field name="name_ar">الكويت — العاصمة</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="governorate">capital</field>
+        <field name="tier">0</field>
+    </record>
+    <record id="zone_kw_hawalli" model="delivery.zone">
+        <field name="name_en">Kuwait — Hawalli</field>
+        <field name="name_ar">الكويت — حولي</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="governorate">hawalli</field>
+        <field name="tier">0</field>
+    </record>
+    <record id="zone_kw_farwaniya" model="delivery.zone">
+        <field name="name_en">Kuwait — Farwaniya</field>
+        <field name="name_ar">الكويت — الفروانية</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="governorate">farwaniya</field>
+        <field name="tier">0</field>
+    </record>
+    <record id="zone_kw_ahmadi" model="delivery.zone">
+        <field name="name_en">Kuwait — Ahmadi</field>
+        <field name="name_ar">الكويت — الأحمدي</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="governorate">ahmadi</field>
+        <field name="tier">1</field>
+    </record>
+    <record id="zone_kw_jahra" model="delivery.zone">
+        <field name="name_en">Kuwait — Jahra (remote)</field>
+        <field name="name_ar">الكويت — الجهراء (بعيد)</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="governorate">jahra</field>
+        <field name="tier">1</field>
+    </record>
+    <record id="zone_kw_mubarak" model="delivery.zone">
+        <field name="name_en">Kuwait — Mubarak Al-Kabeer</field>
+        <field name="name_ar">الكويت — مبارك الكبير</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="governorate">mubarak</field>
+        <field name="tier">0</field>
+    </record>
+    <record id="zone_kw_far" model="delivery.zone">
+        <field name="name_en">Kuwait — Far (Abdali, Wafra, Salmi)</field>
+        <field name="name_ar">الكويت — البعيد (العبدلي، الوفرة، السالمي)</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="governorate">other</field>
+        <field name="tier">2</field>
+    </record>
+</odoo>

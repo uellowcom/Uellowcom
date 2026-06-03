@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Capital -->
+    <record id="city_kw_kuwait_city" model="delivery.city">
+        <field name="name_en">Kuwait City</field>
+        <field name="name_ar">مدينة الكويت</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_capital"/>
+        <field name="aliases">Kuwait,Al Kuwait,al-kuwait,kuwait city,مدينه الكويت</field>
+        <field name="lat">29.378586</field>
+        <field name="lng">47.990341</field>
+    </record>
+    <record id="city_kw_sharq" model="delivery.city">
+        <field name="name_en">Sharq</field>
+        <field name="name_ar">الشرق</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_capital"/>
+    </record>
+    <record id="city_kw_dasman" model="delivery.city">
+        <field name="name_en">Dasman</field>
+        <field name="name_ar">دسمان</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_capital"/>
+    </record>
+    <record id="city_kw_qibla" model="delivery.city">
+        <field name="name_en">Qibla</field>
+        <field name="name_ar">القبلة</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_capital"/>
+    </record>
+    <record id="city_kw_mirqab" model="delivery.city">
+        <field name="name_en">Mirqab</field>
+        <field name="name_ar">المرقاب</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_capital"/>
+    </record>
+
+    <!-- Hawalli -->
+    <record id="city_kw_hawalli" model="delivery.city">
+        <field name="name_en">Hawalli</field>
+        <field name="name_ar">حولي</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_hawalli"/>
+        <field name="aliases">Hawally,حولى</field>
+    </record>
+    <record id="city_kw_salmiya" model="delivery.city">
+        <field name="name_en">Salmiya</field>
+        <field name="name_ar">السالمية</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_hawalli"/>
+        <field name="aliases">Salmiyah,as-salimiyah</field>
+    </record>
+    <record id="city_kw_jabriya" model="delivery.city">
+        <field name="name_en">Jabriya</field>
+        <field name="name_ar">الجابرية</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_hawalli"/>
+    </record>
+    <record id="city_kw_bayan" model="delivery.city">
+        <field name="name_en">Bayan</field>
+        <field name="name_ar">بيان</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_hawalli"/>
+    </record>
+    <record id="city_kw_mishref" model="delivery.city">
+        <field name="name_en">Mishref</field>
+        <field name="name_ar">مشرف</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_hawalli"/>
+    </record>
+    <record id="city_kw_salwa" model="delivery.city">
+        <field name="name_en">Salwa</field>
+        <field name="name_ar">سلوى</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_hawalli"/>
+    </record>
+    <record id="city_kw_rumaithiya" model="delivery.city">
+        <field name="name_en">Rumaithiya</field>
+        <field name="name_ar">الرميثية</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_hawalli"/>
+    </record>
+
+    <!-- Farwaniya -->
+    <record id="city_kw_farwaniya" model="delivery.city">
+        <field name="name_en">Farwaniya</field>
+        <field name="name_ar">الفروانية</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_farwaniya"/>
+        <field name="aliases">Farwania</field>
+    </record>
+    <record id="city_kw_khaitan" model="delivery.city">
+        <field name="name_en">Khaitan</field>
+        <field name="name_ar">خيطان</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_farwaniya"/>
+    </record>
+    <record id="city_kw_jleeb" model="delivery.city">
+        <field name="name_en">Jleeb Al-Shuyoukh</field>
+        <field name="name_ar">جليب الشيوخ</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_farwaniya"/>
+    </record>
+    <record id="city_kw_andalous" model="delivery.city">
+        <field name="name_en">Al-Andalous</field>
+        <field name="name_ar">الأندلس</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_farwaniya"/>
+    </record>
+    <record id="city_kw_ardiya" model="delivery.city">
+        <field name="name_en">Ardiya</field>
+        <field name="name_ar">العارضية</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_farwaniya"/>
+    </record>
+
+    <!-- Ahmadi (tier 1) -->
+    <record id="city_kw_ahmadi" model="delivery.city">
+        <field name="name_en">Ahmadi</field>
+        <field name="name_ar">الأحمدي</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_ahmadi"/>
+        <field name="aliases">Al Ahmadi</field>
+    </record>
+    <record id="city_kw_fahaheel" model="delivery.city">
+        <field name="name_en">Fahaheel</field>
+        <field name="name_ar">الفحيحيل</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_ahmadi"/>
+    </record>
+    <record id="city_kw_mahboula" model="delivery.city">
+        <field name="name_en">Mahboula</field>
+        <field name="name_ar">المهبولة</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_ahmadi"/>
+    </record>
+    <record id="city_kw_mangaf" model="delivery.city">
+        <field name="name_en">Mangaf</field>
+        <field name="name_ar">المنقف</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_ahmadi"/>
+    </record>
+    <record id="city_kw_fintas" model="delivery.city">
+        <field name="name_en">Fintas</field>
+        <field name="name_ar">الفنطاس</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_ahmadi"/>
+    </record>
+
+    <!-- Jahra (tier 1) -->
+    <record id="city_kw_jahra" model="delivery.city">
+        <field name="name_en">Jahra</field>
+        <field name="name_ar">الجهراء</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_jahra"/>
+        <field name="aliases">Al Jahra</field>
+    </record>
+    <record id="city_kw_naseem" model="delivery.city">
+        <field name="name_en">Naseem</field>
+        <field name="name_ar">النسيم</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_jahra"/>
+    </record>
+    <record id="city_kw_taima" model="delivery.city">
+        <field name="name_en">Taima</field>
+        <field name="name_ar">تيماء</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_jahra"/>
+    </record>
+
+    <!-- Mubarak Al-Kabeer -->
+    <record id="city_kw_mubarak_city" model="delivery.city">
+        <field name="name_en">Mubarak Al-Kabeer</field>
+        <field name="name_ar">مبارك الكبير</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_mubarak"/>
+    </record>
+    <record id="city_kw_qurain" model="delivery.city">
+        <field name="name_en">Al-Qurain</field>
+        <field name="name_ar">القرين</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_mubarak"/>
+    </record>
+    <record id="city_kw_adan" model="delivery.city">
+        <field name="name_en">Adan</field>
+        <field name="name_ar">العدان</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_mubarak"/>
+    </record>
+
+    <!-- Far -->
+    <record id="city_kw_abdali" model="delivery.city">
+        <field name="name_en">Abdali</field>
+        <field name="name_ar">العبدلي</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_far"/>
+    </record>
+    <record id="city_kw_wafra" model="delivery.city">
+        <field name="name_en">Wafra</field>
+        <field name="name_ar">الوفرة</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_far"/>
+    </record>
+    <record id="city_kw_salmi" model="delivery.city">
+        <field name="name_en">Salmi</field>
+        <field name="name_ar">السالمي</field>
+        <field name="country_id" ref="base.kw"/>
+        <field name="zone_id" ref="zone_kw_far"/>
+    </record>
+</odoo>
