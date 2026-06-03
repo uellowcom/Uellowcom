@@ -124,15 +124,24 @@ class ProductVideo(models.Model):
             raise UserError(_(
                 'The video object was created (GUID %s) but uploading the file '
                 'failed: %s') % (guid, e))
-        # 3) Switch this record to the Bunny backend.
-        self.write({'video_type': 'bunny_stream', 'bunny_video_id': guid})
+        # 3) Switch this record to the Bunny backend and free the local copy.
+        #    Safe: the PUT above succeeded, so the bytes are already on Bunny.
+        #    Clearing the attachment-backed video_file reclaims server storage
+        #    (the whole point of offloading to the CDN).
+        self.write({
+            'video_type': 'bunny_stream',
+            'bunny_video_id': guid,
+            'video_file': False,
+            'video_filename': False,
+        })
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _('Uploaded to Bunny Stream'),
                 'message': _(
-                    'Video sent to Bunny (GUID %s). It becomes playable once '
+                    'Video sent to Bunny (GUID %s) and the local copy was '
+                    'removed to save server space. It becomes playable once '
                     'Bunny finishes processing — usually a minute or two.') % guid,
                 'type': 'success',
                 'sticky': False,
