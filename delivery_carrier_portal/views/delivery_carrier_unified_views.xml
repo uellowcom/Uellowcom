@@ -21,6 +21,14 @@
                             <field name="uellow_date_to"/>
                         </group>
                     </group>
+                    <group>
+                        <group string="Public Name &amp; Description (app / website)">
+                            <field name="public_label_en"/>
+                            <field name="public_label_ar"/>
+                            <field name="public_desc_en"/>
+                            <field name="public_desc_ar"/>
+                        </group>
+                    </group>
                     <group string="Weekly Schedule (empty = 24/7)">
                         <field name="availability_ids" nolabel="1">
                             <list editable="bottom">

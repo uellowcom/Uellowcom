@@ -462,7 +462,21 @@ class MobileOrdersAPI(http.Controller):
             if price is None:
                 price = getattr(c, 'fixed_price', None) or 0
             # Dedupe by translated name (avoids 7× "Bosta Delivery")
+            # v2.1.18 — customer-facing label override + small description
+            # (delivery_carrier_portal unified fields).
             name_dict = bilingual(c, 'name')
+            if getattr(c, 'public_label_en', '') or getattr(c, 'public_label_ar', ''):
+                name_dict = {
+                    'en': c.public_label_en or name_dict.get('en') or '',
+                    'ar': c.public_label_ar or c.public_label_en
+                          or name_dict.get('ar') or '',
+                }
+            desc_dict = None
+            if getattr(c, 'public_desc_en', '') or getattr(c, 'public_desc_ar', ''):
+                desc_dict = {
+                    'en': c.public_desc_en or '',
+                    'ar': c.public_desc_ar or c.public_desc_en or '',
+                }
             label_key = (name_dict.get('en') or '').strip().lower()
             if label_key in seen_names:
                 continue
@@ -479,6 +493,7 @@ class MobileOrdersAPI(http.Controller):
             out.append({
                 'id': c.id,
                 'name': name_dict,
+                'description': desc_dict,
                 'price': fmt_price(price, order.currency_id),
                 'is_default': c.is_default if 'is_default' in c._fields else False,
                 'zone': zone,

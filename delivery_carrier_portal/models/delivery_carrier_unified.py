@@ -86,6 +86,18 @@ class DeliveryCarrier(models.Model):
         help='Empty = available 24/7. Otherwise the method only shows '
              'during these windows (website timezone).')
 
+    # ── Public label + description (website / app) ─────────────────────
+    public_label_en = fields.Char(
+        'Public Name (EN)',
+        help='Customer-facing name shown in the app/website checkout. '
+             'Empty = use the internal method name.')
+    public_label_ar = fields.Char('Public Name (AR)')
+    public_desc_en = fields.Char(
+        'Public Description (EN)',
+        help='Small line shown under the method name in checkout, e.g. '
+             '"Delivered within 2–4 hours inside Kuwait City".')
+    public_desc_ar = fields.Char('Public Description (AR)')
+
     # ── Vendor-owned methods ───────────────────────────────────────────
     vendor_id = fields.Many2one(
         'uellow.vendor', string='Owned by Vendor', index=True,

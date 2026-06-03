@@ -2,10 +2,13 @@
 <odoo>
 
   <!-- Dashboard — opens /delivery/dashboard in same tab -->
+  <!-- v2.1.18 — open the portal dashboard in a NEW tab so the normal
+       Odoo backend menu stays put (it used to hijack the whole tab and
+       replace Odoo's chrome with the portal layout). -->
   <record id="action_delivery_dashboard_client" model="ir.actions.act_url">
     <field name="name">Delivery Dashboard</field>
     <field name="url">/delivery/dashboard</field>
-    <field name="target">self</field>
+    <field name="target">new</field>
   </record>
 
   <!-- All Delivery Orders -->

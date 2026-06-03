@@ -24,7 +24,7 @@
               name="Dashboard"
               parent="menu_delivery_portal_root"
               action="action_delivery_dashboard_client"
-              sequence="1"/>
+              sequence="90"/>
 
     <menuitem id="menu_carrier_companies"
               name="Carrier Companies"
@@ -48,7 +48,7 @@
               name="All Delivery Orders"
               parent="menu_delivery_portal_root"
               action="action_all_delivery_orders"
-              sequence="40"/>
+              sequence="5"/>
 
     <menuitem id="menu_delivered_orders"
               name="Delivered Orders"
