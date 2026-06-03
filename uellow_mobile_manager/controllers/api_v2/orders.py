@@ -537,8 +537,58 @@ class MobileOrdersAPI(http.Controller):
             providers = Provider.search(domain + [('website_id', '=', False)])
         if not providers:
             providers = Provider.search(domain)
-        # Always surface Cash on Delivery + wallet as universal fallbacks
-        # so customers can always pay even if a provider is misconfigured.
+        # ── Curated list: Cash on Delivery + UPayments methods ──────────
+        # The DB has accumulated many duplicate manual providers; the app only
+        # needs a clean set. Online card methods (KNET / Visa·Mastercard /
+        # Apple Pay / Google Pay) all route through the real UPayments provider
+        # (the checkout-confirm redirect to /shop/payment lets UPayments handle
+        # the actual charge), and COD stays a direct option.
+        def _name_lc(prov):
+            try:
+                return (prov.with_context(lang='en_US').name or '').lower()
+            except Exception:
+                raw = prov.name
+                return (raw.get('en_US', '') if isinstance(raw, dict) else (raw or '')).lower()
+
+        cod_prov = upay_prov = None
+        for prov in providers:
+            nm = _name_lc(prov)
+            if upay_prov is None and (prov.code == 'upayments' or 'upayments' in nm):
+                upay_prov = prov
+            if cod_prov is None and ('cash on delivery' in nm or nm.strip() == 'cod'):
+                cod_prov = prov
+
+        curated = []
+        if cod_prov:
+            curated.append({
+                'id': cod_prov.id, 'code': 'cod', 'provider_code': cod_prov.code,
+                'name': {'en': 'Cash on Delivery', 'ar': 'الدفع عند الاستلام'},
+                'image': None, 'is_default': False,
+            })
+        if upay_prov:
+            upay_logo = (img_url('payment.provider', upay_prov.id, 'image_128',
+                                 unique=upay_prov.write_date) if upay_prov.image_128 else None)
+            subs = [
+                ('knet',       {'en': 'KNET',               'ar': 'كي نت'}),
+                ('card',       {'en': 'Visa / Mastercard',  'ar': 'فيزا / ماستركارد'}),
+                ('apple_pay',  {'en': 'Apple Pay',          'ar': 'Apple Pay'}),
+                ('google_pay', {'en': 'Google Pay',         'ar': 'Google Pay'}),
+            ]
+            for idx, (code, nm) in enumerate(subs):
+                curated.append({
+                    # Synthetic unique id for UI selection; confirm routes by `code`
+                    # (any non-cod code → online → /shop/payment → UPayments).
+                    'id': -(900 + idx),
+                    'code': code, 'provider_code': 'upayments',
+                    'name': nm, 'image': upay_logo, 'is_default': idx == 0,
+                    'via_upayments': True,
+                })
+        if curated:
+            # COD always last so an online method is the default selection.
+            curated.sort(key=lambda m: m['code'] == 'cod')
+            return ok(curated)
+
+        # ── Fallback (no curated providers found) — legacy enumeration ──
         out = []
         seen_ui_codes = set()
         for prov in providers:
