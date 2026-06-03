@@ -1181,6 +1181,10 @@ const SNIPPETS = [
     { kind:'image-banner',    icon:'🖼', label:'Image Banner (full / 2-col / 3-col)' },
     { kind:'reels-strip',     icon:'🎥', label:'Reels Strip (circular video thumbs → opens /reels)' },
   ]},
+  // v2.0.96: themed occasion headers (Eid / Ramadan / Black Friday / …)
+  { cat:'🎉 Occasion headers', items:[
+    { kind:'occasion-header', icon:'🎉', label:'Occasion Header (themed: Eid / Ramadan / Black Friday …)' },
+  ]},
   // v2.0.34: new pro variants matching reference designs
   { cat:'✨ Pro Designs', items:[
     { kind:'quick-pills',    icon:'⭕', label:'Quick Pills Row' },
@@ -1403,6 +1407,24 @@ const KIND_DEFAULTS = {
     limit:8,
     bubble_size:62,         // px diameter
     ring_color:'#F5C320',
+  }),
+  // v2.0.96 — themed occasion header. Defaults to the "Eid al-Fitr" preset;
+  // the editor's preset picker re-fills accent/accent2/icon/pattern + copy.
+  'occasion-header': () => ({
+    show_title:false, pad_y:8,
+    preset:'eid_fitr',
+    variant:'banner',                // banner | compact | ribbon
+    titleEn:'Eid Mubarak', titleAr:'عيد مبارك',
+    subtitleEn:'Celebrate with up to 50% off', subtitleAr:'احتفل بخصومات تصل إلى ٥٠٪',
+    icon:'🌙',
+    accent:'#1F8A40', accent2:'#0B5D2E',
+    text_color:'#FFFFFF',
+    pattern:'lanterns',              // none|dots|lines|grid|mesh|waves|confetti|lanterns
+    height:130,
+    bg_image:'', bg_image_ar:'',
+    show_countdown:false, event_end:'',
+    cta_textEn:'Shop now', cta_textAr:'تسوّق الآن',
+    cta_link:{type:'screen',value:'shop'},
   }),
   'explore-more': () => ({
     titleEn:'Explore More',   titleAr:'استكشف المزيد',
@@ -3295,6 +3317,85 @@ function renderContent(b){
             ${['#F5C320','#E63946','#1F8A40','#1D6FB7','#6E4AB0','#FF4500','#412402','#FFD340'].map(c=>`
               <div class="sw ${p.ring_color===c?'on':''}" style="background:${c}" data-color-prop="${c}" data-color-target="ring_color"></div>`).join('')}
           </div></div>`;
+    case 'occasion-header': {
+      const OCC_PRESETS = [
+        ['eid_fitr',      '🌙', 'Eid al-Fitr',   '#1F8A40'],
+        ['eid_adha',      '🐑', 'Eid al-Adha',   '#0B5D2E'],
+        ['ramadan',       '🕌', 'Ramadan',       '#5B3A8E'],
+        ['black_friday',  '🛍', 'Black Friday',  '#111111'],
+        ['white_wed',     '🤍', 'White Wed.',    '#1D6FB7'],
+        ['national_day',  '🇰🇼', 'National Day',  '#C0392B'],
+        ['new_year',      '🎆', 'New Year',      '#0B2A6B'],
+        ['summer',        '☀️', 'Summer',        '#FF7A00'],
+        ['winter',        '❄️', 'Winter',        '#1565C0'],
+        ['back_to_school','🎒', 'Back to School','#1D6FB7'],
+        ['custom',        '🎨', 'Custom',        '#E63946'],
+      ];
+      const VARS = [['banner','🎨','Full banner'],['compact','▭','Compact'],['ribbon','▬','Slim ribbon']];
+      const PATS = ['none','lanterns','confetti','waves','dots','lines','grid','mesh'];
+      return `<p class="hint">Themed full-width header for seasonal events. Pick a preset to auto-fill colours, emoji, pattern & copy — then tweak anything below.</p>
+        <div class="sub-h">Occasion preset</div>
+        <div class="variant-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+          ${OCC_PRESETS.map(([k,ic,lbl,col])=>`
+            <div class="variant-card ${p.preset===k?'on':''}" data-occasion-preset="${k}">
+              <div style="font-size:18px">${ic}</div>
+              <div style="font-size:10px;font-weight:900">${lbl}</div>
+              <div style="height:4px;border-radius:2px;margin-top:3px;background:${col}"></div>
+            </div>`).join('')}
+        </div>
+        <div class="sub-h">Layout</div>
+        <div class="field"><label>Variant</label>
+          <div class="variant-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+            ${VARS.map(([v,ic,lbl])=>`
+              <div class="variant-card ${(p.variant||'banner')===v?'on':''}" data-prop="variant" data-prop-val="${v}">
+                <div style="font-size:16px">${ic}</div>
+                <div style="font-size:10px;font-weight:900">${lbl}</div>
+              </div>`).join('')}
+          </div></div>
+        ${(p.variant!=='ribbon') ? `<div class="field"><label>Height (px)</label>
+          <input type="number" data-prop-num="height" min="70" max="260" value="${p.height||130}"/></div>` : ''}
+        <div class="sub-h">Content</div>
+        ${mlField(b,'title','Headline')}
+        ${(p.variant!=='ribbon') ? mlField(b,'subtitle','Subtitle') : ''}
+        <div class="field"><label>Emoji / icon</label>
+          <input type="text" data-prop="icon" value="${(p.icon||'').replace(/"/g,'&quot;')}" maxlength="4" placeholder="🌙"/></div>
+        <div class="sub-h">Call-to-action (optional)</div>
+        ${mlField(b,'cta_text','Button text (leave empty to hide)')}
+        <div class="field"><label>Button goes to</label>
+          <div class="variant-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+            ${[['shop','🛍 Shop'],['flash','⚡ Flash'],['free-shipping','🚚 Free ship'],['reels','🎥 Reels'],['wishlist','❤ Wishlist'],['categories','📦 Categories']].map(([v,lbl])=>`
+              <div class="variant-card ${((p.cta_link&&p.cta_link.value)||'shop')===v?'on':''}" data-occasion-cta="${v}">
+                <div style="font-size:10.5px;font-weight:900">${lbl}</div>
+              </div>`).join('')}
+          </div></div>
+        <div class="sub-h">Theme</div>
+        <div class="field"><label>Primary colour</label>
+          <div class="swatch-row">
+            ${['#1F8A40','#0B5D2E','#5B3A8E','#111111','#1D6FB7','#C0392B','#0B2A6B','#FF7A00','#1565C0','#F5C320','#E63946'].map(c=>`
+              <div class="sw ${p.accent===c?'on':''}" style="background:${c}" data-color-prop="${c}" data-color-target="accent"></div>`).join('')}
+          </div></div>
+        <div class="field"><label>Gradient end colour</label>
+          <div class="swatch-row">
+            ${['#0B5D2E','#412402','#2A1A47','#000000','#0B3E73','#7A1F1F','#06163D','#B85600','#0D47A1','#B8910E','#A01F2C'].map(c=>`
+              <div class="sw ${p.accent2===c?'on':''}" style="background:${c}" data-color-prop="${c}" data-color-target="accent2"></div>`).join('')}
+          </div></div>
+        <div class="field"><label>Text colour</label>
+          <div class="swatch-row">
+            ${['#FFFFFF','#412402','#000000','#F5C320'].map(c=>`
+              <div class="sw ${(p.text_color||'#FFFFFF').toUpperCase()===c?'on':''}" style="background:${c};${c==='#FFFFFF'?'border:1px solid #ccc':''}" data-color-prop="${c}" data-color-target="text_color"></div>`).join('')}
+          </div></div>
+        <div class="field"><label>Decorative pattern</label>
+          <select data-prop="pattern">
+            ${PATS.map(pt=>`<option value="${pt}" ${(p.pattern||'none')===pt?'selected':''}>${pt}</option>`).join('')}
+          </select></div>
+        <div class="sub-h">Background image (optional — overrides gradient)</div>
+        ${imageFieldBtn(b, '', 'bg_image', 'Background')}
+        <div class="sub-h">Countdown (optional)</div>
+        <label class="switch-row"><span>Show countdown to event end</span>
+          <input type="checkbox" data-toggle-prop="show_countdown" ${p.show_countdown?'checked':''}/></label>
+        ${p.show_countdown ? `<div class="field"><label>Event ends (ISO, e.g. 2026-04-10T23:59:59)</label>
+          <input type="text" data-prop="event_end" value="${(p.event_end||'').replace(/"/g,'&quot;')}" placeholder="2026-04-10T23:59:59"/></div>` : ''}`;
+    }
     case 'explore-more':
       return `${mlField(b,'title','Section title')}
         ${mlField(b,'sub','Subtitle (small label)')}
@@ -4003,6 +4104,38 @@ function wirePropsBody(b){
       const val = el.dataset.propVal;
       if (!key) return;
       b.props[key] = val;
+      renderRight(); renderCanvas(); scheduleSave();
+    });
+  });
+  // v2.0.96 — Occasion Header preset picker: one click re-fills the theme
+  // (accent/accent2/icon/pattern + bilingual copy). 'custom' only stamps
+  // the preset key so nothing else is overwritten.
+  document.querySelectorAll('[data-occasion-preset]').forEach(el => {
+    el.addEventListener('click', () => {
+      const OCC = {
+        eid_fitr:   {accent:'#1F8A40',accent2:'#0B5D2E',icon:'🌙',pattern:'lanterns',text_color:'#FFFFFF',titleEn:'Eid Mubarak',titleAr:'عيد مبارك',subtitleEn:'Celebrate with up to 50% off',subtitleAr:'احتفل بخصومات تصل إلى ٥٠٪'},
+        eid_adha:   {accent:'#0B5D2E',accent2:'#412402',icon:'🐑',pattern:'lanterns',text_color:'#FFFFFF',titleEn:'Eid al-Adha Mubarak',titleAr:'عيد أضحى مبارك',subtitleEn:'Blessed Eid offers',subtitleAr:'عروض العيد المباركة'},
+        ramadan:    {accent:'#5B3A8E',accent2:'#2A1A47',icon:'🕌',pattern:'lanterns',text_color:'#FFFFFF',titleEn:'Ramadan Kareem',titleAr:'رمضان كريم',subtitleEn:'Special deals all month',subtitleAr:'عروض خاصة طوال الشهر'},
+        black_friday:{accent:'#111111',accent2:'#000000',icon:'🛍',pattern:'lines',text_color:'#F5C320',titleEn:'Black Friday',titleAr:'الجمعة البيضاء',subtitleEn:'Up to 70% off — limited time',subtitleAr:'حتى ٧٠٪ خصم — لفترة محدودة'},
+        white_wed:  {accent:'#1D6FB7',accent2:'#0B3E73',icon:'🤍',pattern:'dots',text_color:'#FFFFFF',titleEn:'White Wednesday',titleAr:'الأربعاء الأبيض',subtitleEn:'Mid-week mega deals',subtitleAr:'صفقات منتصف الأسبوع'},
+        national_day:{accent:'#C0392B',accent2:'#1F8A40',icon:'🇰🇼',pattern:'confetti',text_color:'#FFFFFF',titleEn:'Kuwait National Day',titleAr:'العيد الوطني الكويتي',subtitleEn:'Celebrating with you',subtitleAr:'نحتفل معكم'},
+        new_year:   {accent:'#0B2A6B',accent2:'#06163D',icon:'🎆',pattern:'confetti',text_color:'#F5C320',titleEn:'Happy New Year',titleAr:'سنة جديدة سعيدة',subtitleEn:'Start the year with savings',subtitleAr:'ابدأ العام بالتوفير'},
+        summer:     {accent:'#FF7A00',accent2:'#B85600',icon:'☀️',pattern:'waves',text_color:'#FFFFFF',titleEn:'Summer Sale',titleAr:'تخفيضات الصيف',subtitleEn:'Hot deals all season',subtitleAr:'عروض ساخنة طوال الموسم'},
+        winter:     {accent:'#1565C0',accent2:'#0D47A1',icon:'❄️',pattern:'dots',text_color:'#FFFFFF',titleEn:'Winter Sale',titleAr:'تخفيضات الشتاء',subtitleEn:'Cozy savings inside',subtitleAr:'توفير دافئ بالداخل'},
+        back_to_school:{accent:'#1D6FB7',accent2:'#B8910E',icon:'🎒',pattern:'grid',text_color:'#FFFFFF',titleEn:'Back to School',titleAr:'العودة إلى المدارس',subtitleEn:'Everything they need',subtitleAr:'كل ما يحتاجونه'},
+        custom:     {},
+      };
+      const key = el.dataset.occasionPreset;
+      b.props.preset = key;
+      Object.assign(b.props, OCC[key] || {});
+      renderRight(); renderCanvas(); scheduleSave();
+      toast('🎉 ' + key.replace(/_/g,' ') + ' theme applied');
+    });
+  });
+  // Occasion Header CTA destination → writes the nested link object.
+  document.querySelectorAll('[data-occasion-cta]').forEach(el => {
+    el.addEventListener('click', () => {
+      b.props.cta_link = {type:'screen', value: el.dataset.occasionCta};
       renderRight(); renderCanvas(); scheduleSave();
     });
   });

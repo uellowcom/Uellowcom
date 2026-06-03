@@ -694,6 +694,7 @@ RESOLVERS = {
     'sticky-cta':      resolve_passthrough,
     'image-banner':    resolve_passthrough,
     'reels-strip':     resolve_reels_strip,
+    'occasion-header': resolve_passthrough,
 }
 
 
