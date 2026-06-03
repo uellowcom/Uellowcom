@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_video_form_inherit_cdn" model="ir.ui.view">
+        <field name="name">product.video.form.cdn</field>
+        <field name="model">product.video</field>
+        <field name="inherit_id" ref="uellow_tiktok_video.view_product_video_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='video_type']" position="after">
+                <group string="🐰 Bunny Stream"
+                       invisible="video_type != 'bunny_stream'">
+                    <field name="bunny_video_id" placeholder="1a2b3c4d-..."/>
+                    <field name="bunny_thumb_auto"/>
+                    <field name="bunny_playback_url" readonly="1"/>
+                    <field name="bunny_thumb_url" readonly="1"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

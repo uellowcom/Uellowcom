@@ -341,6 +341,16 @@ def _serialize_product_videos(product):
                 fname = (v.video_filename or 'video.mp4').replace('/', '-')
                 item['file_url'] = f'/web/content/product.video/{v.id}/video_file/{fname}'
                 item['mime'] = v.video_mimetype or 'video/mp4'
+            # v2.0.87 — Bunny Stream: external CDN, HLS playback. The
+            # `bunny_playback_url` field is computed from the library's
+            # pull zone in res.config.settings.
+            if (getattr(v, 'video_type', '') == 'bunny_stream'
+                    and getattr(v, 'bunny_playback_url', '')):
+                item['file_url'] = v.bunny_playback_url
+                item['mime'] = 'application/vnd.apple.mpegurl'
+                # Prefer the auto thumbnail when set and no local one was uploaded
+                if (not item['thumbnail']) and getattr(v, 'bunny_thumb_auto', False):
+                    item['thumbnail'] = getattr(v, 'bunny_thumb_url', '') or None
             out.append(item)
     except Exception:
         return []
