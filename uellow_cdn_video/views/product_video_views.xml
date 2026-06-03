@@ -14,6 +14,16 @@
                     <field name="bunny_thumb_url" readonly="1"/>
                 </group>
             </xpath>
+            <!-- v2.1.2 — one-click upload of the attached file straight to
+                 Bunny Stream (no Bunny dashboard needed). Shows once a file
+                 is attached; on success it fills the GUID + switches the
+                 backend to Bunny automatically. -->
+            <xpath expr="//field[@name='video_file']" position="after">
+                <button name="action_upload_to_bunny" type="object"
+                        string="⬆ Upload this file to Bunny Stream"
+                        class="btn-primary" invisible="not video_file"
+                        help="Sends the attached video file to Bunny Stream and fills the GUID automatically. Save the record first if the button looks inactive."/>
+            </xpath>
         </field>
     </record>
 </odoo>
