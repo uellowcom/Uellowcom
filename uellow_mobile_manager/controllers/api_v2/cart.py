@@ -48,6 +48,41 @@ def _get_or_create_order(create=True):
             ('state', '=', 'draft'),
             ('website_id', '!=', False),
         ], limit=1, order='id desc')
+        # Claim the guest cart: items added before signing in live on a
+        # cart-token order owned by the public user. Without this, checkout
+        # after the sign-in dialog sees the partner's (empty) order and
+        # reports "cart is empty". Adopt it into the partner.
+        tok = _cart_token()
+        if tok:
+            guest = Order.search([
+                ('mobile_cart_token', '=', tok),
+                ('state', '=', 'draft'),
+            ], limit=1)
+            if (guest and guest.exists() and guest.partner_id.id != partner.id
+                    and guest.order_line.filtered(lambda l: not l.display_type)):
+                if order and order.id != guest.id:
+                    # Partner already has a cart → move guest lines into it.
+                    for ln in guest.order_line.filtered(
+                            lambda l: not l.display_type and not l.is_reward_line):
+                        try:
+                            ln.sudo().write({'order_id': order.id})
+                        except Exception:
+                            pass
+                    try:
+                        guest.sudo().unlink()
+                    except Exception:
+                        pass
+                    return order
+                # No partner cart → just reassign the guest order to the partner.
+                try:
+                    guest.sudo().write({
+                        'partner_id': partner.id,
+                        'partner_invoice_id': partner.id,
+                        'partner_shipping_id': partner.id,
+                    })
+                except Exception:
+                    guest.sudo().write({'partner_id': partner.id})
+                return guest
         if not order and create:
             website = request.env['website'].sudo().search([], limit=1)
             order = Order.create({
@@ -146,10 +181,13 @@ def _available_shipping_methods(order):
             is_free = bool(c.free_over and order.amount_untaxed >= (c.amount or 0))
             if is_free:
                 rate = 0.0
+            _rate_money = fmt_price(rate or 0, cur) if rate is not None else None
             out.append({
                 'id': c.id,
                 'name': bilingual(c, 'name'),
-                'rate': fmt_price(rate or 0, cur) if rate is not None else None,
+                # 'price' is what the app reads; keep 'rate' for compatibility.
+                'price': _rate_money,
+                'rate': _rate_money,
                 'delivery_type': c.delivery_type,
                 'is_free': is_free,
                 'zone': zone_match,

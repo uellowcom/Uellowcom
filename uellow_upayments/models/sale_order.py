@@ -85,12 +85,19 @@ class SaleOrder(models.Model):
         return link
 
     def _upayments_mark_paid(self, track_id=None, payment_id=None):
-        """Flag the order as paid (called from the webhook on CAPTURED)."""
+        """Flag the order paid + confirm it (called from the webhook on
+        CAPTURED). Online orders stay a draft cart at checkout, so a successful
+        payment is what actually confirms them."""
         self.ensure_one()
         vals = {'upayments_paid': True}
         if track_id:
             vals['upayments_track_id'] = track_id
         self.sudo().write(vals)
+        try:
+            if self.state in ('draft', 'sent'):
+                self.sudo().action_confirm()
+        except Exception:
+            _logger.exception('UPayments: confirm-on-capture failed for %s', self.id)
         try:
             self.sudo().message_post(body=_(
                 'UPayments payment captured (track: %s, payment_id: %s).')

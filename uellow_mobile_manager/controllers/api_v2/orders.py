@@ -13,7 +13,7 @@ from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, current_partner, require_auth,
-    img_url, base_url, fmt_price, bilingual,
+    img_url, base_url, fmt_price, bilingual, get_lang,
 )
 from .cart import _get_or_create_order, serialize_cart
 
@@ -768,18 +768,17 @@ class MobileOrdersAPI(http.Controller):
         except Exception:
             pass
 
-        # Confirm order (state becomes sale)
-        try:
-            order.action_confirm()
-        except Exception as e:
-            return fail('CONFIRM_FAILED', str(e), 400)
-
-        # Determine payment URL — for COD we're done. For online, create a
-        # real UPayments charge and return its hosted payment link (the app
-        # opens it in a webview). Falls back to the website payment page only
-        # if UPayments isn't available.
+        # Confirm ONLY for COD. Online orders stay a draft cart until the
+        # UPayments webhook captures payment — so a failed/cancelled payment
+        # never confirms the order and the customer's cart stays intact.
         pm = (p.get('payment_method') or '').lower()
         cod = pm == 'cod'
+        if cod:
+            try:
+                order.action_confirm()
+            except Exception as e:
+                return fail('CONFIRM_FAILED', str(e), 400)
+
         result = {
             'order_id': order.id,
             'order_name': order.name,
