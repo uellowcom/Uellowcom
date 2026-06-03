@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sidebar link in the vendor portal (after Stock) -->
+    <template id="vendor_layout_shipping_link"
+              inherit_id="uellow_multivendor.portal_vendor_layout">
+        <xpath expr="//a[contains(@t-attf-class, 'vendor_stock')]" position="after">
+            <a t-attf-class="vp-nav-item #{page_name == 'vendor_shipping' and 'active' or ''}"
+               href="/my/vendor/shipping">🚚 Shipping / الشحن</a>
+        </xpath>
+    </template>
+
+    <!-- Vendor shipping methods page -->
+    <template id="portal_vendor_shipping" name="Vendor Shipping Methods">
+        <t t-call="uellow_multivendor.portal_vendor_layout">
+            <t t-set="page_name" t-value="'vendor_shipping'"/>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+                <div>
+                    <div style="font-size:18px;font-weight:800;color:#085041">
+                        Shipping Methods <span style="color:#0F6E56;font-weight:600">/ وسائل الشحن</span>
+                    </div>
+                    <div style="font-size:12px;color:#0F6E56">
+                        Offer your own delivery on orders made up only of your products
+                        — اعرض توصيلك الخاص للطلبات المكوّنة من منتجاتك فقط
+                    </div>
+                </div>
+            </div>
+
+            <t t-if="not enabled">
+                <div style="background:#FFF5F5;border:1px solid #fca5a5;border-radius:12px;padding:16px;color:#B91C1C;font-size:13px;font-weight:600">
+                    ⚠️ Vendor shipping is currently disabled by the marketplace.
+                    Contact Uellow to activate it.
+                    — خدمة شحن التجار غير مفعّلة حالياً من إدارة المنصة.
+                </div>
+            </t>
+
+            <t t-if="enabled">
+                <!-- Existing methods -->
+                <t t-foreach="carriers" t-as="c">
+                    <form method="post" t-attf-action="/my/vendor/shipping/save"
+                          style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:10px">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <input type="hidden" name="carrier_id" t-att-value="c.id"/>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">
+                            <div>
+                                <label style="font-size:11px;color:#64748b;font-weight:700">Internal name</label>
+                                <input class="form-control form-control-sm" name="name" t-att-value="c.name" required="required"/>
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#64748b;font-weight:700">Public name (EN)</label>
+                                <input class="form-control form-control-sm" name="label_en" t-att-value="c.public_label_en or ''"/>
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#64748b;font-weight:700">الاسم الظاهر (AR)</label>
+                                <input class="form-control form-control-sm" name="label_ar" t-att-value="c.public_label_ar or ''"/>
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#64748b;font-weight:700">Price (KD)</label>
+                                <input class="form-control form-control-sm" type="number" step="0.001" name="price" t-att-value="c.fixed_price"/>
+                            </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+                            <div>
+                                <label style="font-size:11px;color:#64748b;font-weight:700">Description (EN)</label>
+                                <input class="form-control form-control-sm" name="desc_en" t-att-value="c.public_desc_en or ''"/>
+                            </div>
+                            <div>
+                                <label style="font-size:11px;color:#64748b;font-weight:700">الوصف (AR)</label>
+                                <input class="form-control form-control-sm" name="desc_ar" t-att-value="c.public_desc_ar or ''"/>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+                            <button type="submit" class="btn btn-sm"
+                                    style="background:#085041;color:#fff;font-weight:700">Save / حفظ</button>
+                            <span t-if="c.active" style="background:#DCFCE7;color:#15803D;font-size:11px;padding:2px 10px;border-radius:20px;font-weight:700">Active</span>
+                            <span t-if="not c.active" style="background:#FEE2E2;color:#B91C1C;font-size:11px;padding:2px 10px;border-radius:20px;font-weight:700">Disabled</span>
+                        </div>
+                    </form>
+                    <form method="post" t-attf-action="/my/vendor/shipping/toggle/#{c.id}"
+                          style="margin:-6px 0 12px 0;text-align:right">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <button type="submit" class="btn btn-sm btn-link"
+                                style="font-size:11px;color:#64748b">
+                            <t t-if="c.active">Disable / تعطيل</t>
+                            <t t-else="">Enable / تفعيل</t>
+                        </button>
+                    </form>
+                </t>
+
+                <!-- New method -->
+                <div style="background:#F8FAFC;border:1px dashed #cbd5e1;border-radius:12px;padding:14px;margin-top:6px">
+                    <div style="font-size:13px;font-weight:800;color:#334155;margin-bottom:8px">
+                        ➕ Add a delivery method / أضف وسيلة توصيل
+                    </div>
+                    <form method="post" action="/my/vendor/shipping/save">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">
+                            <input class="form-control form-control-sm" name="name" placeholder="Internal name *" required="required"/>
+                            <input class="form-control form-control-sm" name="label_en" placeholder="Public name (EN)"/>
+                            <input class="form-control form-control-sm" name="label_ar" placeholder="الاسم الظاهر (AR)"/>
+                            <input class="form-control form-control-sm" type="number" step="0.001" name="price" placeholder="Price KD"/>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+                            <input class="form-control form-control-sm" name="desc_en" placeholder="Description (EN)"/>
+                            <input class="form-control form-control-sm" name="desc_ar" placeholder="الوصف (AR)"/>
+                        </div>
+                        <button type="submit" class="btn btn-sm mt-2"
+                                style="background:#F5C320;color:#412402;font-weight:800">Create / إنشاء</button>
+                    </form>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

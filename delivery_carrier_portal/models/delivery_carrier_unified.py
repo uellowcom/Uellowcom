@@ -162,3 +162,24 @@ class DeliveryCarrier(models.Model):
             if enabled not in ('1', 'True', 'true'):
                 return False
         return self.is_available_now()
+
+    def available_for_order(self, order, website=None, country_code=None,
+                            channel='app'):
+        # available_for + the vendor-cart rule: a vendor-owned method is
+        # only offered when EVERY product in the cart belongs to that
+        # vendor (mixed carts can't be delivered by one vendor).
+        self.ensure_one()
+        if not self.available_for(website=website, country_code=country_code,
+                                  channel=channel):
+            return False
+        if self.vendor_id and order:
+            lines = order.order_line.filtered(
+                lambda l: not l.display_type and not l.is_reward_line
+                and not getattr(l, 'is_delivery', False))
+            if not lines:
+                return False
+            for l in lines:
+                v = getattr(l.product_id.product_tmpl_id, 'vendor_id', False)
+                if not v or v.id != self.vendor_id.id:
+                    return False
+        return True

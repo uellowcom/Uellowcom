@@ -13,6 +13,8 @@
         'views/delivery_carrier_company_views.xml',
         'views/carrier_pricing_views.xml',
         'views/delivery_carrier_unified_views.xml',
+        'views/vendor_shipping_templates.xml',
+        'views/res_config_settings_views.xml',
         'views/delivery_driver_views.xml',
         'views/delivery_cash_remittance_views.xml',
         'views/sale_order_delivery_views.xml',

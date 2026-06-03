@@ -431,9 +431,9 @@ class MobileOrdersAPI(http.Controller):
             if ship_to and ship_to.country_id:
                 _cc = ship_to.country_id.code or ''
             carriers = carriers.filtered(
-                lambda c: not hasattr(c, 'available_for')
-                or c.available_for(website=website, country_code=_cc,
-                                   channel='app'))
+                lambda c: not hasattr(c, 'available_for_order')
+                or c.available_for_order(order, website=website,
+                                         country_code=_cc, channel='app'))
         except Exception:
             pass
 
@@ -786,15 +786,15 @@ class MobileOrdersAPI(http.Controller):
                     carrier = None
         except Exception:
             carrier = None
-        if carrier is not None and hasattr(carrier, 'available_for'):
+        if carrier is not None and hasattr(carrier, 'available_for_order'):
             try:
                 _cc2 = ''
                 _st = order.partner_shipping_id or order.partner_id
                 if _st and _st.country_id:
                     _cc2 = _st.country_id.code or ''
-                if not carrier.available_for(website=get_website(),
-                                             country_code=_cc2,
-                                             channel='app'):
+                if not carrier.available_for_order(
+                        order, website=get_website(),
+                        country_code=_cc2, channel='app'):
                     return fail('CARRIER_UNAVAILABLE',
                                 'This delivery method is not available right '
                                 'now — pick another one / وسيلة التوصيل غير '
