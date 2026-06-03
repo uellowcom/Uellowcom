@@ -50,19 +50,35 @@ class SaleOrder(models.Model):
             'returnUrl': (return_url or '')[:250],
             'cancelUrl': (cancel_url or '')[:250],
             'notificationUrl': (notify_url or '')[:250],
-            'customer': {
-                'uniqueId': str(p.id)[:50],
-                'name': (p.name or 'Customer')[:50],
-                'email': (p.email or 'guest@uellow.com')[:50],
-                'mobile': (p.mobile or p.phone or '')[:15],
-            },
-            'products': [{
-                'name': (l.product_id.display_name or 'Item')[:255],
-                'description': '',
-                'price': round(l.price_unit or 0.0, 3),
-                'quantity': int(l.product_uom_qty or 1),
-            } for l in lines][:50],
         }
+        # Customer (optional) — only include a mobile that looks valid
+        # (UPayments rejects malformed mobiles), and only attach customer at all
+        # when we have something meaningful.
+        customer = {
+            'uniqueId': str(p.id)[:50],
+            'name': (p.name or 'Customer')[:50],
+            'email': (p.email or 'guest@uellow.com')[:50],
+        }
+        raw_mobile = (p.mobile or p.phone or '').strip()
+        digits = ''.join(ch for ch in raw_mobile if ch.isdigit())
+        if len(digits) >= 8:
+            customer['mobile'] = ('+' + digits)[:15]
+        payload['customer'] = customer
+        # Products are OPTIONAL — only send well-formed line items (name +
+        # positive price + quantity). A malformed/zero-price line makes
+        # UPayments reject the whole charge ("check product name/quantity/
+        # price"), so skip anything that doesn't qualify and omit the array
+        # entirely if none qualify (the charge still runs on order.amount).
+        products = []
+        for l in lines:
+            name = (l.product_id.display_name or '').strip()
+            price = round(l.price_unit or 0.0, 3)
+            qty = int(l.product_uom_qty or 0)
+            if name and price > 0 and qty > 0:
+                products.append({'name': name[:255], 'description': name[:255],
+                                 'price': price, 'quantity': qty})
+        if products:
+            payload['products'] = products[:50]
         if gateway:
             payload['paymentGateway'] = {'src': gateway}
         try:
