@@ -760,11 +760,31 @@ class MobileOrdersAPI(http.Controller):
         except Exception:
             carrier = None
         if carrier is not None:
-            try:
-                rr = carrier.rate_shipment(order)
-                ship_rate = (rr or {}).get('price', 0) if isinstance(rr, dict) else 0
-            except Exception:
-                ship_rate = 0.0
+            # Resolve the price with the SAME fallback chain the picker
+            # (shipping-methods endpoint) uses, so the charged shipping always
+            # matches what the customer saw: zone quote → rate_shipment (only
+            # when success) → fixed_price. rate_shipment alone returns
+            # success=False/price=0 for out-of-zone addresses even though the
+            # picker displayed a real price.
+            price = None
+            if 'uellow_zone_ids' in carrier._fields and carrier.uellow_zone_ids:
+                try:
+                    z = request.env['uellow.delivery.zone'].sudo().quote_for(
+                        carrier, order.partner_shipping_id or order.partner_id)
+                    if z:
+                        price = z.price
+                except Exception:
+                    pass
+            if price is None:
+                try:
+                    rr = carrier.rate_shipment(order)
+                    if isinstance(rr, dict) and rr.get('success'):
+                        price = rr.get('price', 0)
+                except Exception:
+                    pass
+            if price is None:
+                price = getattr(carrier, 'fixed_price', None) or 0
+            ship_rate = float(price or 0.0)
             try:
                 order.carrier_id = carrier.id   # remember the choice
             except Exception:
