@@ -8,7 +8,7 @@ set-country        POST  country_id       → persist user choice in session
 from odoo import http
 from odoo.http import request
 
-from ._common import safe_endpoint, get_payload, ok, fail, current_session
+from ._common import safe_endpoint, get_payload, ok, fail, current_session, get_website
 
 
 class MobileGeoAPI(http.Controller):
@@ -64,7 +64,7 @@ class MobileGeoAPI(http.Controller):
 
         # Source 5: hard fallback — current request website
         if not mapping:
-            ws = env['website'].sudo().search([], limit=1)
+            ws = get_website()
             return ok({
                 'detected_country': None,
                 'recommended': {

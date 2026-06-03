@@ -23,7 +23,7 @@ from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, current_partner,
-    img_url, base_url, fmt_price, bilingual,
+    img_url, base_url, fmt_price, bilingual, get_website,
 )
 
 _logger = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ def _get_or_create_order(create=True):
                     guest.sudo().write({'partner_id': partner.id})
                 return guest
         if not order and create:
-            website = request.env['website'].sudo().search([], limit=1)
+            website = get_website()
             order = Order.create({
                 'partner_id': partner.id,
                 'website_id': website.id,
@@ -96,7 +96,7 @@ def _get_or_create_order(create=True):
             return order
     if not create:
         return Order.browse([])
-    website = request.env['website'].sudo().search([], limit=1)
+    website = get_website()
     public_user = website.user_id or request.env.ref('base.public_user')
     import secrets
     new_token = secrets.token_urlsafe(24)

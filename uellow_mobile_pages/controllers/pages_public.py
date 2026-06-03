@@ -56,6 +56,18 @@ def _country_code():
             or '').upper()
 
 
+def _website_id():
+    """Website scoping — the app sends X-Website-Id (or ?website_id=).
+    Returns int id or None. Every public builder endpoint honours it so
+    each website gets its OWN pages / navbar / designs."""
+    try:
+        wid = int(request.httprequest.headers.get('X-Website-Id')
+                  or request.httprequest.args.get('website_id') or 0)
+        return wid or None
+    except Exception:
+        return None
+
+
 class PagesPublic(http.Controller):
 
     @http.route('/api/mobile/v2/pages', type='http', auth='public',
@@ -66,6 +78,10 @@ class PagesPublic(http.Controller):
         if country_code:
             dom += ['|', ('country_ids', '=', False),
                     ('country_ids.code', '=', country_code)]
+        wid = _website_id()
+        if wid:
+            # Pages targeted to this website + untargeted (global) pages.
+            dom += ['|', ('website_ids', '=', False), ('website_ids', 'in', [wid])]
         recs = request.env['mobile.page'].sudo().search(dom)
         return _ok({
             'pages': [{
@@ -79,8 +95,19 @@ class PagesPublic(http.Controller):
     @http.route('/api/mobile/v2/pages/<string:slug>', type='http',
                 auth='public', methods=['GET'], csrf=False)
     def get_page(self, slug, **kw):
-        rec = request.env['mobile.page'].sudo().search(
-            [('slug', '=', slug)], limit=1)
+        wid = _website_id()
+        rec = request.env['mobile.page'].sudo().browse([])
+        if wid:
+            # Same slug may exist per-website with a different design —
+            # prefer the page explicitly targeted to this website.
+            rec = request.env['mobile.page'].sudo().search(
+                [('slug', '=', slug), ('website_ids', 'in', [wid])], limit=1)
+        if not rec:
+            rec = request.env['mobile.page'].sudo().search(
+                [('slug', '=', slug), ('website_ids', '=', False)], limit=1)
+        if not rec:
+            rec = request.env['mobile.page'].sudo().search(
+                [('slug', '=', slug)], limit=1)
         if not rec:
             return _fail('NOT_FOUND', 'Page not found', 404)
         if rec.status != 'published' and not request.env.user.has_group('base.group_user'):
@@ -90,7 +117,8 @@ class PagesPublic(http.Controller):
     @http.route('/api/mobile/v2/navbar', type='http', auth='public',
                 methods=['GET'], csrf=False)
     def get_navbar(self, **kw):
-        website_id = getattr(request, 'website', None) and request.website.id or None
+        website_id = _website_id() or (
+            getattr(request, 'website', None) and request.website.id or None)
         nav = request.env['mobile.navbar'].sudo().get_for(
             website_id=website_id, country_code=_country_code())
         if not nav:

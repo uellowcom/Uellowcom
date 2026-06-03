@@ -16,14 +16,14 @@ import urllib.request
 from odoo import http, fields
 from odoo.http import request
 
-from ._common import safe_endpoint, get_payload, ok, fail
+from ._common import safe_endpoint, get_payload, ok, fail, app_setting
 from .orders import _stage_label, _delivery_tracking
 
 _logger = logging.getLogger(__name__)
 
 
 def _fcm_server_key():
-    s = request.env['mobile.app.setting'].sudo().search([], limit=1)
+    s = app_setting()
     return (s and s.fcm_server_key) or ''
 
 

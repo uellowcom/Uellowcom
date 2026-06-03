@@ -2,7 +2,7 @@
 from odoo import http
 from odoo.http import request
 
-from ._common import safe_endpoint, get_payload, ok, fail, current_partner, require_auth, get_lang
+from ._common import safe_endpoint, get_payload, ok, fail, current_partner, require_auth, get_lang, get_website
 from .products import serialize_product_card
 
 
@@ -46,7 +46,7 @@ class MobileWishlistAPI(http.Controller):
         if existing:
             existing.active = True
         else:
-            website = request.env['website'].sudo().search([], limit=1)
+            website = get_website()
             request.env['product.wishlist'].sudo().create({
                 'partner_id': partner.id,
                 'product_id': variant.id,

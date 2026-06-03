@@ -26,7 +26,7 @@ _EXPLORE_IDS_CACHE = {}
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, current_partner,
-    img_url, base_url, get_lang, fmt_price, paginate, bilingual,
+    img_url, base_url, get_lang, fmt_price, paginate, bilingual, get_website,
 )
 
 _logger = logging.getLogger(__name__)
@@ -110,13 +110,17 @@ def serialize_product_full(product, lang='en_US'):
     card = serialize_product_card(product, lang)
     if not card:
         return None
-    # Long description — v2.0.91: ONLY from description_ecommerce (the
-    # website e-commerce body editor, which is what admins actually edit).
-    # `description_sale` (order-line snippet) is still used for the short
-    # description. Removed website_description fallback per user request.
-    public_desc = bilingual(product, 'description_ecommerce') \
-        if 'description_ecommerce' in product._fields \
-        else {'en': '', 'ar': ''}
+    # Long description — v2.1.16: PRIMARY source is website_description
+    # (the "وصف الصفحة" website tab, full HTML incl. images, per user
+    # request) with description_ecommerce as the fallback.
+    # `description_sale` (order-line snippet) is still the short description.
+    public_desc = {'en': '', 'ar': ''}
+    if 'website_description' in product._fields:
+        public_desc = bilingual(product, 'website_description')
+    if not (public_desc.get('en') or public_desc.get('ar')):
+        public_desc = bilingual(product, 'description_ecommerce') \
+            if 'description_ecommerce' in product._fields \
+            else {'en': '', 'ar': ''}
     desc = bilingual(product, 'description_sale')
     if not (desc.get('en') or desc.get('ar')):
         desc = public_desc
@@ -337,6 +341,15 @@ def _serialize_product_videos(product):
                     and getattr(v, 'bunny_playback_url', '')):
                 item['file_url'] = v.bunny_playback_url
                 item['mime'] = 'application/vnd.apple.mpegurl'
+                # Bunny iframe embed — the app's webview player can't play
+                # raw HLS in a <video> tag, but Bunny's hosted player can.
+                gid = (getattr(v, 'bunny_video_id', '') or '').strip()
+                lib = (request.env['ir.config_parameter'].sudo()
+                       .get_param('uellow_cdn_video.bunny_library_id') or '').strip()
+                if gid and lib:
+                    item['embed_url'] = (
+                        'https://iframe.mediadelivery.net/embed/%s/%s'
+                        '?autoplay=true&preload=true' % (lib, gid))
                 # Prefer the auto thumbnail when set and no local one was uploaded
                 if (not item['thumbnail']) and getattr(v, 'bunny_thumb_auto', False):
                     item['thumbnail'] = getattr(v, 'bunny_thumb_url', '') or None
@@ -355,7 +368,7 @@ def _domain_published_for_app(include_oos=False):
     out of stock AND don't allow backorder are excluded. Search calls
     pass `include_oos=True` so users can still find an OOS item if
     they ask for it explicitly."""
-    website = request.env['website'].sudo().search([], limit=1)
+    website = get_website()
     base = [
         ('is_published', '=', True),
         ('active', '=', True),
@@ -957,7 +970,7 @@ def _bulk_pricing_tiers(product):
     # Resolve the right pricelist for the current website (country).
     pricelist = None
     try:
-        website = request.env['website'].sudo().search([], limit=1)
+        website = get_website()
         if website:
             # Odoo 18 stores the website pricelist on website.pricelist_id
             pricelist = getattr(website, 'pricelist_id', None) \

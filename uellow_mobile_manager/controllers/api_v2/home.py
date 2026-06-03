@@ -11,7 +11,7 @@ from datetime import datetime
 from odoo import http
 from odoo.http import request
 
-from ._common import safe_endpoint, ok, base_url, img_url, bilingual, get_lang
+from ._common import safe_endpoint, ok, base_url, img_url, bilingual, get_lang, get_website
 
 
 class MobileHomeAPI(http.Controller):
@@ -61,7 +61,7 @@ class MobileHomeAPI(http.Controller):
         from .flash_sale import _serialize_sale
         from ._common import get_lang
         lang = get_lang()
-        website = env['website'].sudo().search([], limit=1)
+        website = get_website()
         flash_sales_recs = env['mobile.flash.sale'].sudo().search([
             ('active', '=', True),
             '|', ('website_id', '=', False), ('website_id', '=', website.id),

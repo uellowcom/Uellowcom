@@ -28,7 +28,7 @@ class WellKnown(http.Controller):
     @http.route('/.well-known/assetlinks.json', type='http', auth='public',
                 methods=['GET'], csrf=False)
     def assetlinks(self):
-        setting = request.env['mobile.app.setting'].sudo().search([], limit=1)
+        setting = app_setting()
         pkg = (setting and getattr(setting, 'android_package', None)) or _ANDROID_PACKAGE
         fp = (setting and getattr(setting, 'android_fingerprint', None)) or _ANDROID_FINGERPRINT
         payload = [
@@ -47,7 +47,7 @@ class WellKnown(http.Controller):
     @http.route('/.well-known/apple-app-site-association', type='http',
                 auth='public', methods=['GET'], csrf=False)
     def aasa(self):
-        setting = request.env['mobile.app.setting'].sudo().search([], limit=1)
+        setting = app_setting()
         appid = (setting and getattr(setting, 'ios_app_id', None)) or _IOS_TEAM_AND_BUNDLE
         payload = {
             'applinks': {

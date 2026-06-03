@@ -13,7 +13,7 @@ from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, current_partner, require_auth,
-    img_url, base_url, fmt_price, bilingual, get_lang,
+    img_url, base_url, fmt_price, bilingual, get_lang, get_website, app_setting,
 )
 from .cart import _get_or_create_order, serialize_cart
 
@@ -191,7 +191,7 @@ def _delivery_tracking(order):
     except Exception:
         stage = 'placed'
     # Warehouse pin — from mobile.app.setting (one per website).
-    setting = request.env['mobile.app.setting'].sudo().search([], limit=1)
+    setting = app_setting()
     warehouse = None
     if setting and (setting.warehouse_lat or setting.warehouse_lng):
         warehouse = {
@@ -408,8 +408,7 @@ class MobileOrdersAPI(http.Controller):
         #   3. ALL active carriers
         # Always append a synthetic "Cash on Delivery" entry so the
         # customer can pick at-door cash even if no carrier is set up.
-        website = (request.env['website'].get_current_website()
-                    if hasattr(request.env['website'], 'get_current_website') else False)
+        website = get_website()
         Carrier = request.env['delivery.carrier'].sudo()
         carriers = Carrier
         if website:
@@ -550,8 +549,7 @@ class MobileOrdersAPI(http.Controller):
                 logging.getLogger(__name__).warning('country->website lookup failed: %s', e)
         # Fall back to current website if country didn't resolve a mapping
         website = target_website or (
-            request.env['website'].get_current_website()
-            if hasattr(request.env['website'], 'get_current_website') else False)
+            get_website())
         domain = [('state', 'in', ['enabled', 'test'])]
         Provider = request.env['payment.provider'].sudo()
         providers = Provider

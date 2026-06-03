@@ -2,7 +2,7 @@
 from odoo import fields, http
 from odoo.http import request
 
-from ._common import safe_endpoint, ok, fail, get_lang, bilingual, img_url  # noqa: F401
+from ._common import safe_endpoint, ok, fail, get_lang, bilingual, img_url  # noqa: F401, get_website
 from .products import serialize_product_card
 
 
@@ -67,7 +67,7 @@ class MobileFlashSaleAPI(http.Controller):
         FlashScreen's period chips (now / upcoming / ended) work even when
         no sale is currently live."""
         lang = get_lang()
-        website = request.env['website'].sudo().search([], limit=1)
+        website = get_website()
         Sale = request.env['mobile.flash.sale'].sudo()
         sales = Sale.search([
             ('active', '=', True),

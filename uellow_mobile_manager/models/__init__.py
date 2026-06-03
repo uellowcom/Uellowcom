@@ -7,6 +7,7 @@ from . import mobile_notification
 from . import notification_preference
 from . import mobile_app_setting
 from . import mobile_session
+from . import mobile_otp
 from . import mobile_popup
 from . import mobile_extras
 from . import mobile_dashboard

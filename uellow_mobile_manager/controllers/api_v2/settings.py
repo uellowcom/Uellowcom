@@ -3,7 +3,7 @@ import json
 from odoo import http
 from odoo.http import request
 
-from ._common import safe_endpoint, ok, img_url
+from ._common import safe_endpoint, ok, img_url, get_website, app_setting
 
 
 class MobileAppSettingsAPI(http.Controller):
@@ -12,10 +12,10 @@ class MobileAppSettingsAPI(http.Controller):
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
     def settings(self, **kw):
-        setting = request.env['mobile.app.setting'].sudo().search([], limit=1)
+        setting = app_setting()
         if not setting:
             setting = request.env['mobile.app.setting'].sudo().create({})
-        website = request.env['website'].sudo().search([], limit=1)
+        website = get_website()
         platform = request.httprequest.args.get('platform', 'android').lower()
         return ok({
             'app_name':       setting.app_name or 'Uellow',
@@ -128,7 +128,7 @@ class MobileAppSettingsAPI(http.Controller):
           • "update REQUIRED, can't proceed" (block all UI)
           • "maintenance mode" (block + show message)
         """
-        setting = request.env['mobile.app.setting'].sudo().search([], limit=1)
+        setting = app_setting()
         client_v = request.httprequest.args.get('version', '0.0.0')
         platform = request.httprequest.args.get('platform', 'android').lower()
 

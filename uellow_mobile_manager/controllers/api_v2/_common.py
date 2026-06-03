@@ -112,12 +112,60 @@ def get_lang():
 
 
 def get_website():
-    """Active website — `mobile.app.setting.website_id` is the trusted
-    source. Defaults to website 1 if nothing else found."""
+    """Active website for this request — EVERYTHING (settings, builder
+    pages, payment methods, carts, product publishing) is scoped per
+    website. Order:
+    1. X-Website-Id header (the app sends its selected website)
+    2. ?website_id= query param
+    3. first website (legacy fallback)
+    """
+    Website = request.env['website'].sudo()
     try:
-        return request.env['website'].sudo().search([], limit=1, order='id asc')
+        raw = (request.httprequest.headers.get('X-Website-Id')
+               or request.httprequest.args.get('website_id') or 0)
+        wid = int(raw)
+        if wid:
+            w = Website.browse(wid)
+            if w.exists():
+                return w
     except Exception:
-        return request.env['website'].sudo().browse(1)
+        pass
+    # Host-based: the app switches base domain per country
+    # (kwapp.uellow.com, saapp.uellow.com, …) — match it to the website
+    # whose `domain` ends with that host. Works with zero app changes.
+    try:
+        host = (request.httprequest.headers.get('X-Forwarded-Host')
+                or request.httprequest.host or '').split(':')[0].lower()
+        if host and 'localhost' not in host and '127.0.0.1' not in host:
+            for w in Website.search([('domain', '!=', False)]):
+                dom = (w.domain or '').lower()
+                dom = dom.split('//')[-1].rstrip('/')
+                if dom == host:
+                    return w
+    except Exception:
+        pass
+    try:
+        return Website.search([], limit=1, order='id asc')
+    except Exception:
+        return Website.browse(1)
+
+
+# Alias — clearer name at call sites.
+current_website = get_website
+
+
+def app_setting():
+    """The mobile.app.setting row for the request's website (falls back to
+    any row so a missing per-website config never breaks the app)."""
+    S = request.env['mobile.app.setting'].sudo()
+    try:
+        w = get_website()
+        rec = S.search([('website_id', '=', w.id)], limit=1)
+        if rec:
+            return rec
+    except Exception:
+        pass
+    return S.search([], limit=1)
 
 
 def base_url():
