@@ -8,7 +8,9 @@ import base64
 from odoo import http, fields
 from odoo.http import request
 
-from ._common import safe_endpoint, get_payload, ok, fail, current_partner, require_auth
+from ._common import (safe_endpoint, get_payload, ok, fail, current_partner,
+                      require_auth, app_setting)
+from .cart import _get_or_create_order
 from .orders import _addr_dict
 
 
@@ -26,16 +28,41 @@ class MobileAddressesAPI(http.Controller):
         addrs = request.env['res.partner'].sudo().search([
             ('parent_id', '=', partner.id),
             ('type', 'in', ('delivery', 'invoice')),
-        ], order='create_date desc')
+        ], order='is_default_shipping desc, create_date desc')
         return ok([*[_addr_dict(a) for a in addrs], _addr_dict(partner)])
 
     @http.route('/api/mobile/v2/addresses/create', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)
     @safe_endpoint
-    @require_auth
     def create_address(self, **kw):
         p = get_payload()
         partner = current_partner()
+        # v2.1.20 — GUEST checkout: when enabled (per-website setting) and
+        # the client sent guest=1, the address becomes an ad-hoc partner
+        # attached to the guest cart order (no account involved).
+        if not partner:
+            guest_flag = str(p.get('guest') or '') in ('1', 'true', 'True')
+            enabled = bool(getattr(app_setting(), 'guest_checkout_enabled',
+                                   False))
+            if not (guest_flag and enabled):
+                return fail('AUTH_REQUIRED', 'You must be logged in.', 401)
+            order = _get_or_create_order(create=False)
+            if not order:
+                return fail('EMPTY_CART', 'Cart is empty', 400)
+            vals = _validate_addr(p)
+            if isinstance(vals, str):
+                return fail('VALIDATION', vals)
+            vals['type'] = 'contact'
+            addr = request.env['res.partner'].sudo().create(vals)
+            _attach_landmark_photo(addr, p)
+            _save_lat_lng(addr, p)
+            _save_address_label(addr, p)
+            order.sudo().write({
+                'partner_id': addr.id,
+                'partner_invoice_id': addr.id,
+                'partner_shipping_id': addr.id,
+            })
+            return ok({'address': _addr_dict(addr)})
         vals = _validate_addr(p)
         if isinstance(vals, str):
             return fail('VALIDATION', vals)
@@ -45,6 +72,25 @@ class MobileAddressesAPI(http.Controller):
         _attach_landmark_photo(addr, p)
         _save_lat_lng(addr, p)
         _save_address_label(addr, p)
+        return ok({'address': _addr_dict(addr)})
+
+    @http.route('/api/mobile/v2/addresses/<int:addr_id>/set-default',
+                type='http', auth='public', methods=['POST', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    @require_auth
+    def set_default_address(self, addr_id, **kw):
+        """Mark ONE address as the primary/default delivery address."""
+        partner = current_partner()
+        addr = request.env['res.partner'].sudo().browse(addr_id)
+        if not addr.exists() or (addr.parent_id != partner and addr != partner):
+            return fail('NOT_FOUND', 'Address not found', 404)
+        siblings = request.env['res.partner'].sudo().search([
+            '|', ('id', '=', partner.id), ('parent_id', '=', partner.id),
+            ('is_default_shipping', '=', True),
+        ])
+        siblings.write({'is_default_shipping': False})
+        addr.write({'is_default_shipping': True})
         return ok({'address': _addr_dict(addr)})
 
     @http.route('/api/mobile/v2/addresses/<int:addr_id>/update', type='http',

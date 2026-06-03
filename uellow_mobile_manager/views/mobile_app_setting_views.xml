@@ -36,6 +36,8 @@
                             <group>
                                 <group string="Social Channels">
                                     <field name="whatsapp_number" placeholder="+96594709709"/>
+                                    <field name="guest_checkout_enabled"/>
+                                    <field name="returns_url" placeholder="https://kw.uellow.com/returns"/>
                                     <field name="facebook_url" placeholder="https://facebook.com/uellow"/>
                                     <field name="instagram_url" placeholder="https://instagram.com/uellow"/>
                                     <field name="youtube_url"/>

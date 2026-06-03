@@ -18,6 +18,20 @@ from ._common import (
 from .cart import _get_or_create_order, serialize_cart
 
 
+def _guest_gate(p_or_kw):
+    """Guest checkout gate: returns (partner, error_response). Guests pass
+    only when the per-website setting is ON and the client explicitly sent
+    guest=1 (the app shows the lose-perks warning first)."""
+    partner = current_partner()
+    if partner:
+        return partner, None
+    guest_flag = str(p_or_kw.get('guest') or '') in ('1', 'true', 'True')
+    enabled = bool(getattr(app_setting(), 'guest_checkout_enabled', False))
+    if guest_flag and enabled:
+        return None, None
+    return None, fail('AUTH_REQUIRED', 'You must be logged in.', 401)
+
+
 def _apply_delivery_preserving_rewards(order, carrier, price):
     """Add the delivery line via set_delivery_line but keep coupon reward
     lines (Odoo's set_delivery_line can drop them)."""
@@ -725,9 +739,10 @@ class MobileOrdersAPI(http.Controller):
     @http.route('/api/mobile/v2/orders/checkout/summary', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
-    @require_auth
     def checkout_summary(self, **kw):
-        partner = current_partner()
+        partner, err = _guest_gate(kw)
+        if err:
+            return err
         order = _get_or_create_order(create=False)
         if not order or not order.order_line:
             return fail('EMPTY_CART', 'Cart is empty', 400)
@@ -742,22 +757,33 @@ class MobileOrdersAPI(http.Controller):
                 order._update_programs_and_rewards()
         except Exception:
             pass
-        addrs = request.env['res.partner'].sudo().search([
-            ('parent_id', '=', partner.id),
-            ('type', 'in', ('delivery', 'invoice')),
-        ], order='create_date desc')
+        if partner:
+            addrs = request.env['res.partner'].sudo().search([
+                ('parent_id', '=', partner.id),
+                ('type', 'in', ('delivery', 'invoice')),
+            ], order='is_default_shipping desc, create_date desc')
+            addr_list = [_addr_dict(a) for a in addrs] + [_addr_dict(partner)]
+        else:
+            # Guest — the ad-hoc partner created by the guest address flow
+            # (skip while the order still belongs to the public user).
+            ship = order.partner_shipping_id
+            public_partners = request.env['website'].sudo().search([]) \
+                .mapped('user_id.partner_id').ids
+            addr_list = ([_addr_dict(ship)]
+                         if ship and ship.id not in public_partners else [])
         return ok({
             'cart': serialize_cart(order),
-            'addresses': [_addr_dict(a) for a in addrs] + [_addr_dict(partner)],
+            'addresses': addr_list,
         })
 
     @http.route('/api/mobile/v2/orders/checkout/confirm', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)
     @safe_endpoint
-    @require_auth
     def checkout_confirm(self, **kw):
         p = get_payload()
-        partner = current_partner()
+        partner, err = _guest_gate(p)
+        if err:
+            return err
         order = _get_or_create_order(create=False)
         if not order or not order.order_line:
             return fail('EMPTY_CART', 'Cart is empty', 400)
@@ -831,6 +857,17 @@ class MobileOrdersAPI(http.Controller):
                 order.carrier_id = carrier.id   # remember the choice
             except Exception:
                 pass
+
+        # Guests must have provided a delivery address (the guest address
+        # flow attaches an ad-hoc partner to the order).
+        if not partner:
+            public_partners = request.env['website'].sudo().search([]) \
+                .mapped('user_id.partner_id').ids
+            ship = order.partner_shipping_id
+            if not ship or ship.id in public_partners:
+                return fail('ADDRESS_REQUIRED',
+                            'Add a delivery address first / أضف عنوان التوصيل '
+                            'أولاً', 400)
 
         pm = (p.get('payment_method') or '').lower()
         cod = pm == 'cod'

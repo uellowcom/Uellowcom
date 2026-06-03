@@ -33,6 +33,11 @@ class MobileAppSetting(models.Model):
 
     # Social Media Links
     whatsapp_number = fields.Char(string='WhatsApp Number', help='Include country code e.g. +96594709709')
+    guest_checkout_enabled = fields.Boolean(
+        string='Guest Checkout',
+        help='Let guests place orders without an account (after a warning '
+             'that they lose order tracking, loyalty points, etc.). '
+             'Per-website like every app setting.')
     facebook_url = fields.Char(string='Facebook URL')
     instagram_url = fields.Char(string='Instagram URL')
     youtube_url = fields.Char(string='YouTube URL')
@@ -126,3 +131,12 @@ class MobileAppSetting(models.Model):
             'res_id':     rec.id,
             'target':     'current',
         }
+
+
+class ResPartnerDefaultAddress(models.Model):
+    """v2.1.20 — primary (default) delivery address flag. Exactly one
+    address per customer carries it; the app preselects it at checkout."""
+    _inherit = 'res.partner'
+
+    is_default_shipping = fields.Boolean('Default Delivery Address',
+                                         default=False, index=True)
