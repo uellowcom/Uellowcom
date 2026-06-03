@@ -12,6 +12,7 @@ comments) + `is_wishlisted` for the current user, so the Reels UI can show the
 counter row and a filled red heart.
 """
 import json
+import random
 
 from odoo import http
 from odoo.http import request
@@ -140,6 +141,38 @@ class MobileVideosAPI(http.Controller):
             limit = 10
 
         Tmpl = request.env['product.template'].sudo()
+        # Random-order mode: when the app passes a per-open `seed`, the whole
+        # video-bearing catalogue is deterministically shuffled by that seed
+        # and paginated by offset (the `cursor` param doubles as the offset).
+        # A fresh seed on each tab-open => a different order every time.
+        seed = kw.get('seed')
+        try:
+            seed = int(seed) if seed not in (None, '') else None
+        except Exception:
+            seed = None
+
+        if seed is not None:
+            base = _domain_published_for_app(include_oos=True)
+            if 'has_product_video' in Tmpl._fields:
+                base.append(('has_product_video', '=', True))
+            all_ids = Tmpl.search(base).ids
+            random.Random(seed).shuffle(all_ids)
+            offset = cursor if cursor > 0 else 0
+            window = all_ids[offset:offset + limit * 4]
+            items = []
+            consumed = 0
+            for p in Tmpl.browse(window):
+                consumed += 1
+                item = _build_video_item(p, lang, partner)
+                if not item:
+                    continue
+                items.append(item)
+                if len(items) >= limit:
+                    break
+            new_off = offset + consumed
+            return ok({'items': items, 'cursor': new_off,
+                       'has_more': new_off < len(all_ids)})
+
         domain = _domain_published_for_app(include_oos=True)
         if cursor > 0:
             domain.append(('id', '<', cursor))
