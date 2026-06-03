@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_free_shipping" model="ir.ui.view">
+        <field name="name">res.config.settings.free_shipping</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Uellow Free Shipping" string="🚚 Free Shipping"
+                     name="uellow_free_shipping" groups="base.group_system">
+                    <block title="🚚 Uellow Free-Shipping" id="uellow_free_shipping_block">
+                        <setting id="uellow_free_shipping_threshold" string="Global free-shipping threshold (KWD)">
+                            <field name="free_shipping_threshold_kwd"/>
+                        </setting>
+                        <setting id="uellow_free_shipping_label_en" string="Badge label (EN)">
+                            <field name="free_shipping_badge_label_en"/>
+                        </setting>
+                        <setting id="uellow_free_shipping_label_ar" string="Badge label (AR)">
+                            <field name="free_shipping_badge_label_ar"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

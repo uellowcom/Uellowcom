@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="product_template_form_free_shipping" model="ir.ui.view">
+        <field name="name">product.template.form.free_shipping</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='sales']" position="inside">
+                <group string="🚚 Free Shipping" name="free_shipping_grp">
+                    <field name="free_shipping"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="product_tag_form_free_shipping" model="ir.ui.view">
+        <field name="name">product.tag.form.free_shipping</field>
+        <field name="model">product.tag</field>
+        <field name="inherit_id" ref="product.product_tag_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="free_shipping"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -199,6 +199,20 @@ def resolve_products(env, props, lang, block=None):
     elif source == 'newest':
         recs = Tmpl.search(base_dom, order='create_date desc', limit=limit)
 
+    elif source == 'free_shipping':
+        # v2.0.82 — surface products tagged free-shipping (via the
+        # product flag OR any of its public categories / tags). Slightly
+        # expensive Python-side filter because the flag chain isn't a
+        # plain DB index, but limit caps the scan.
+        all_recs = Tmpl.search(base_dom, order='create_date desc', limit=limit * 3)
+        filtered = []
+        for p in all_recs:
+            if hasattr(p, '_is_free_shipping') and p._is_free_shipping():
+                filtered.append(p)
+                if len(filtered) >= limit:
+                    break
+        recs = Tmpl.browse([p.id for p in filtered])
+
     elif source == 'recent':
         # Personal — can't resolve at page-fetch time; let the app fall
         # back to its own /recently-viewed endpoint.

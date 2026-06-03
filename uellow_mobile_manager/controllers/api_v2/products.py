@@ -98,6 +98,10 @@ def _product_badges(product):
         badges.append('sale')
     if getattr(product, 'qty_available', 0) <= 0 and product.is_storable:
         badges.append('out_of_stock')
+    # v2.0.82 — free-shipping badge surfaced via the new uellow_free_shipping
+    # module. `_is_free_shipping` checks product → category → tag in order.
+    if hasattr(product, '_is_free_shipping') and product._is_free_shipping():
+        badges.append('free_shipping')
     return badges
 
 
