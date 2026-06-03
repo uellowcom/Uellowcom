@@ -423,6 +423,20 @@ class MobileOrdersAPI(http.Controller):
         if not carriers:
             carriers = Carrier.search([('active', '=', True)])
 
+        # Unified delivery filter — website / destination country / channel
+        # / weekly schedule / vendor gating (delivery_carrier_portal).
+        try:
+            _cc = ''
+            ship_to = order.partner_shipping_id or order.partner_id
+            if ship_to and ship_to.country_id:
+                _cc = ship_to.country_id.code or ''
+            carriers = carriers.filtered(
+                lambda c: not hasattr(c, 'available_for')
+                or c.available_for(website=website, country_code=_cc,
+                                   channel='app'))
+        except Exception:
+            pass
+
         out = []
         seen_names = set()
         for c in carriers:
@@ -757,6 +771,21 @@ class MobileOrdersAPI(http.Controller):
                     carrier = None
         except Exception:
             carrier = None
+        if carrier is not None and hasattr(carrier, 'available_for'):
+            try:
+                _cc2 = ''
+                _st = order.partner_shipping_id or order.partner_id
+                if _st and _st.country_id:
+                    _cc2 = _st.country_id.code or ''
+                if not carrier.available_for(website=get_website(),
+                                             country_code=_cc2,
+                                             channel='app'):
+                    return fail('CARRIER_UNAVAILABLE',
+                                'This delivery method is not available right '
+                                'now — pick another one / وسيلة التوصيل غير '
+                                'متاحة حالياً، اختر وسيلة أخرى', 400)
+            except Exception:
+                pass
         if carrier is not None:
             # Resolve the price with the SAME fallback chain the picker
             # (shipping-methods endpoint) uses, so the charged shipping always

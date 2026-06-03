@@ -15,6 +15,7 @@
         'views/delivery_city_views.xml',
         'views/carrier_pricing_rule_views.xml',
         'views/delivery_carrier_company_views.xml',
+        'views/res_partner_city_views.xml',
         'data/kuwait_zones_seed.xml',
         'data/kuwait_cities_seed.xml',
         'data/carrier_seed.xml',

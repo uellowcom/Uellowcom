@@ -406,6 +406,121 @@ class MobileAuthAPI(http.Controller):
         )
         return ok({'token': token, 'user': _serialize_user(user.partner_id)})
 
+    # ─── Combined OTP: email OR phone (SMS via Odoo IAP) ──────────────
+    @http.route('/api/mobile/v2/auth/otp/send', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def otp_send(self, **kw):
+        """One endpoint for both channels. `target` with '@' → email code;
+        digits → SMS code via Odoo's built-in SMS (IAP). Returns the
+        channel used + masked destination."""
+        import random
+        p = get_payload()
+        target = (p.get('target') or p.get('email_or_phone') or '').strip()
+        if not target:
+            return fail('MISSING_TARGET', 'Email or phone required', 400)
+        code = '%06d' % random.randint(0, 999999)
+        if '@' in target:
+            email_to = target.lower()
+            request.env['mobile.otp.code'].sudo().issue(email_to, code)
+            try:
+                request.env['mail.mail'].sudo().create({
+                    'subject': 'Uellow sign-in code: %s' % code,
+                    'email_to': email_to,
+                    'body_html': (
+                        '<div style="font-family:sans-serif">'
+                        '<h2 style="color:#412402">Uellow</h2>'
+                        '<p>Your sign-in code / رمز الدخول:</p>'
+                        '<p style="font-size:30px;font-weight:bold;'
+                        'letter-spacing:6px;color:#412402">%s</p>'
+                        '<p>Valid for 10 minutes. صالح لمدة ١٠ دقائق.</p>'
+                        '</div>') % code,
+                }).send()
+            except Exception:
+                return fail('SEND_FAILED', 'Could not send the code', 500)
+            u, d = email_to.split('@', 1)
+            return ok({'sent': True, 'channel': 'email',
+                       'to': u[:2] + '***@' + d})
+        # Phone → SMS. Default country code +965 for bare 8-digit numbers.
+        digits = ''.join(ch for ch in target if ch.isdigit())
+        if len(digits) < 8:
+            return fail('BAD_PHONE', 'Invalid phone number', 400)
+        number = '+' + digits if not digits.startswith('00') else '+' + digits[2:]
+        if len(digits) == 8:
+            number = '+965' + digits
+        request.env['mobile.otp.code'].sudo().issue(digits[-8:], code)
+        try:
+            sms = request.env['sms.sms'].sudo().create({
+                'number': number,
+                'body': 'Uellow code / رمز يلو: %s (10 min)' % code,
+            })
+            sms.send(unlink_failed=False, unlink_sent=False,
+                     raise_exception=True)
+            if sms.exists() and sms.state == 'error':
+                raise Exception(sms.failure_type or 'sms error')
+        except Exception as e:
+            _logger.warning('OTP SMS send failed for %s: %s', number, e)
+            return fail('SMS_FAILED',
+                        'SMS could not be sent — try your email instead / '
+                        'تعذر إرسال الرسالة — جرب بريدك الإلكتروني', 502)
+        return ok({'sent': True, 'channel': 'sms',
+                   'to': number[:4] + '*****' + number[-2:]})
+
+    @http.route('/api/mobile/v2/auth/otp/check', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def otp_check(self, **kw):
+        """Verify a code sent by /otp/send (email or SMS) and sign in,
+        creating a portal account when the target is new."""
+        p = get_payload()
+        target = (p.get('target') or p.get('email_or_phone') or '').strip()
+        code = (p.get('code') or '').strip()
+        if not target or not code:
+            return fail('MISSING_FIELDS', 'Target and code required', 400)
+        Users = request.env['res.users'].sudo()
+        if '@' in target:
+            key = target.lower()
+            if not request.env['mobile.otp.code'].sudo().check(key, code):
+                return fail('INVALID_CODE', 'Wrong or expired code', 401)
+            user = Users.search([('login', '=', key)], limit=1)
+            if not user:
+                import secrets as _sec
+                user = Users.with_context(no_reset_password=True).create({
+                    'name': (p.get('name') or key.split('@')[0]),
+                    'login': key, 'email': key,
+                    'password': _sec.token_urlsafe(24),
+                    'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])],
+                })
+        else:
+            digits = ''.join(ch for ch in target if ch.isdigit())
+            key = digits[-8:]
+            if not request.env['mobile.otp.code'].sudo().check(key, code):
+                return fail('INVALID_CODE', 'Wrong or expired code', 401)
+            Partner = request.env['res.partner'].sudo()
+            pr = Partner.search(['|', ('phone', 'like', key),
+                                 ('mobile', 'like', key)], limit=1)
+            user = (Users.search([('partner_id', '=', pr.id)], limit=1)
+                    if pr else Users.browse([]))
+            if not user:
+                import secrets as _sec
+                number = '+965' + key if len(digits) == 8 else '+' + digits
+                login = 'otp-%s@uellow.app' % digits
+                user = Users.with_context(no_reset_password=True).create({
+                    'name': (p.get('name') or number),
+                    'login': login,
+                    'phone': number, 'mobile': number,
+                    'password': _sec.token_urlsafe(24),
+                    'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])],
+                })
+        token = issue_token(
+            partner_id=user.partner_id.id,
+            device_id=p.get('device_id'),
+            device_name=p.get('device_name'),
+            push_token=p.get('push_token'),
+            app_version=p.get('app_version'),
+        )
+        return ok({'token': token, 'user': _serialize_user(user.partner_id)})
+
     # ─── Forgot password ──────────────────────────────────────────────
     @http.route('/api/mobile/v2/auth/forgot', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)

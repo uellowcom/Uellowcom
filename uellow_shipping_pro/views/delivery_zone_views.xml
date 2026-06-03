@@ -58,9 +58,11 @@
         <field name="view_mode">list,form</field>
     </record>
 
+    <!-- v2.1.17 — merged into the Delivery Carrier Portal workspace -->
     <menuitem id="menu_delivery_zone_root"
-              name="Shipping Pro" parent="stock.menu_stock_root"
-              sequence="50"/>
+              name="Zones &amp; Cities"
+              parent="delivery_carrier_portal.menu_delivery_portal_root"
+              sequence="30"/>
     <menuitem id="menu_delivery_zone"
               name="Delivery zones" parent="menu_delivery_zone_root"
               action="action_delivery_zone" sequence="10"/>

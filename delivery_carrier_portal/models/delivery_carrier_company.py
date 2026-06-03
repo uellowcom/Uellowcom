@@ -58,3 +58,15 @@ class DeliveryCarrierCompany(models.Model):
         'carrier.pricing.rule', 'carrier_company_id',
         string='Pricing Rules',
     )
+
+
+class DeliveryCarrierCompanySortingCenter(models.Model):
+    """Physical sorting-center location (moved here from
+    uellow_mobile_manager so the portal views own their fields)."""
+    _inherit = 'delivery.carrier.company'
+
+    center_lat = fields.Float(string='Center Latitude', digits=(10, 7),
+        help='Latitude of this carrier sorting center.')
+    center_lng = fields.Float(string='Center Longitude', digits=(10, 7),
+        help='Longitude of this carrier sorting center.')
+    center_address = fields.Char(string='Center Address')

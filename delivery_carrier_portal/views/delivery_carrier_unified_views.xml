@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Unified delivery: extra page on the native delivery.carrier form -->
+    <record id="view_delivery_carrier_form_unified" model="ir.ui.view">
+        <field name="name">delivery.carrier.form.unified</field>
+        <field name="model">delivery.carrier</field>
+        <field name="inherit_id" ref="delivery.view_delivery_carrier_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="🚚 Uellow Delivery" name="uellow_delivery">
+                    <group>
+                        <group string="Execution">
+                            <field name="carrier_company_id"/>
+                            <field name="vendor_id"/>
+                        </group>
+                        <group string="Scope">
+                            <field name="uellow_channel"/>
+                            <field name="uellow_website_ids" widget="many2many_tags"/>
+                            <field name="uellow_country_ids" widget="many2many_tags"/>
+                            <field name="uellow_date_from"/>
+                            <field name="uellow_date_to"/>
+                        </group>
+                    </group>
+                    <group string="Weekly Schedule (empty = 24/7)">
+                        <field name="availability_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="weekday"/>
+                                <field name="hour_from" widget="float_time"/>
+                                <field name="hour_to" widget="float_time"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Quick columns on the carrier list -->
+    <record id="view_delivery_carrier_tree_unified" model="ir.ui.view">
+        <field name="name">delivery.carrier.tree.unified</field>
+        <field name="model">delivery.carrier</field>
+        <field name="inherit_id" ref="delivery.view_delivery_carrier_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="carrier_company_id" optional="show"/>
+                <field name="uellow_channel" optional="show"/>
+                <field name="availability_summary" optional="show"/>
+                <field name="vendor_id" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Shipping Methods menu inside the Delivery portal workspace -->
+    <record id="action_unified_delivery_methods" model="ir.actions.act_window">
+        <field name="name">Shipping Methods</field>
+        <field name="res_model">delivery.carrier</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <menuitem id="menu_unified_shipping_methods"
+              name="Shipping Methods"
+              parent="menu_delivery_portal_root"
+              action="action_unified_delivery_methods"
+              sequence="28"/>
+</odoo>

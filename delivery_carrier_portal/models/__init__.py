@@ -5,3 +5,4 @@ from . import delivery_trip
 from . import delivery_cash_remittance
 from . import sale_order
 from . import carrier_pricing_rule
+from . import delivery_carrier_unified

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- City dropdown on the contact form, right above the free-text city -->
+    <record id="view_partner_form_delivery_city" model="ir.ui.view">
+        <field name="name">res.partner.form.delivery.city</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='city']" position="before">
+                <field name="delivery_city_id"
+                       options="{'no_create': True}"
+                       placeholder="City (from list)"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -20,3 +20,4 @@ access_remittance_line_manager,delivery.cash.remittance.line.manager,delivery_ca
 access_remittance_line_admin,delivery.cash.remittance.line.admin,delivery_carrier_portal.model_delivery_cash_remittance_line,base.group_system,1,1,1,1
 access_carrier_pricing_rule_admin,carrier.pricing.rule.admin,delivery_carrier_portal.model_carrier_pricing_rule,base.group_system,1,1,1,1
 access_carrier_pricing_rule_manager,carrier.pricing.rule.manager,delivery_carrier_portal.model_carrier_pricing_rule,delivery_carrier_portal.group_carrier_manager,1,0,0,0
+access_delivery_carrier_availability_mgr,delivery.carrier.availability manager,model_delivery_carrier_availability,base.group_user,1,1,1,1

@@ -78,16 +78,6 @@ class MobileAppSettingTracking(models.Model):
         default=True)
 
 
-class DeliveryCarrierCompanyLocation(models.Model):
-    _inherit = 'delivery.carrier.company'
-
-    center_lat = fields.Float(string='Center Latitude', digits=(10, 7),
-        help='Latitude of this carrier sorting center.')
-    center_lng = fields.Float(string='Center Longitude', digits=(10, 7),
-        help='Longitude of this carrier sorting center.')
-    center_address = fields.Char(string='Center Address')
-
-
 class DeliveryDriverLocation(models.Model):
     _inherit = 'delivery.driver'
 

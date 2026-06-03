@@ -7,7 +7,7 @@
     'author': 'Uellow',
     'website': 'https://uellow.com',
     'depends': ['base', 'website', 'sale', 'product', 'web', 'delivery',
-                'dev_facebook_shop_integration'],
+                'dev_facebook_shop_integration', 'delivery_carrier_portal'],
     'data': [
         'security/ir.model.access.csv',
         'views/mobile_dashboard_views.xml',
