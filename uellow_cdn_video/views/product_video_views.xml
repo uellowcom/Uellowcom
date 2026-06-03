@@ -26,4 +26,21 @@
             </xpath>
         </field>
     </record>
+
+    <!-- v2.1.2 — add the same upload button INTO the inline Videos list on the
+         product form, so admins upload to Bunny right from the product page
+         (the editable one2many list never opens the standalone form). -->
+    <record id="product_template_form_video_bunny_btn" model="ir.ui.view">
+        <field name="name">product.template.form.video.bunny.button</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="uellow_tiktok_video.view_product_template_form_video"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_video_ids']/list/field[@name='active']" position="before">
+                <button name="action_upload_to_bunny" type="object"
+                        string="⬆ To Bunny" class="btn-link"
+                        invisible="not video_file"
+                        help="Upload this file to Bunny Stream and fill the GUID. Save the product first if the button looks inactive."/>
+            </xpath>
+        </field>
+    </record>
 </odoo>
