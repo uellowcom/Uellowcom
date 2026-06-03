@@ -211,6 +211,20 @@ def resolve_products(env, props, lang, block=None):
     elif source == 'newest':
         recs = Tmpl.search(base_dom, order='create_date desc', limit=limit)
 
+    elif source == 'price_drops':
+        # v2.1.25 — products whose price recently DROPPED (internal price
+        # intelligence). props.days narrows the window (default 14).
+        recs = Tmpl.browse([])
+        try:
+            Hist = env.get('uellow.price.history')
+            if Hist is not None:
+                recs = Hist.sudo().top_drops(
+                    days=int(props.get('days') or 14), limit=limit)
+        except Exception:
+            recs = Tmpl.browse([])
+        if not recs:
+            recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
+
     elif source == 'free_shipping':
         # v2.0.82 — surface products tagged free-shipping (via the
         # product flag OR any of its public categories / tags). Slightly

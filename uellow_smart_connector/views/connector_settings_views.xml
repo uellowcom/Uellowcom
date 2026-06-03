@@ -22,6 +22,7 @@
           </group>
           <group string="Price Intelligence">
             <field name="price_check_enabled" string="Enable Price Monitoring"/>
+            <field name="internal_price_watch" string="Internal Price Watch (history + indicators)"/>
             <field name="price_check_sources"
                    string="Comparison Sources (comma-separated URLs)"
                    placeholder="https://site1.com, https://site2.com"/>

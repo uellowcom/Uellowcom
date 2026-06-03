@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_price_history_list" model="ir.ui.view">
+        <field name="name">uellow.price.history.list</field>
+        <field name="model">uellow.price.history</field>
+        <field name="arch" type="xml">
+            <list create="false" edit="false"
+                  decoration-success="direction == 'down'"
+                  decoration-danger="direction == 'up'">
+                <field name="recorded_at"/>
+                <field name="product_tmpl_id"/>
+                <field name="prev_price"/>
+                <field name="price"/>
+                <field name="change_pct"/>
+                <field name="direction"/>
+                <field name="source" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_price_history_graph" model="ir.ui.view">
+        <field name="name">uellow.price.history.graph</field>
+        <field name="model">uellow.price.history</field>
+        <field name="arch" type="xml">
+            <graph string="Price Trends" type="line" sample="1">
+                <field name="recorded_at" interval="day"/>
+                <field name="price" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_price_history_pivot" model="ir.ui.view">
+        <field name="name">uellow.price.history.pivot</field>
+        <field name="model">uellow.price.history</field>
+        <field name="arch" type="xml">
+            <pivot string="Price Changes">
+                <field name="product_tmpl_id" type="row"/>
+                <field name="direction" type="col"/>
+                <field name="change_pct" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_price_history_search" model="ir.ui.view">
+        <field name="name">uellow.price.history.search</field>
+        <field name="model">uellow.price.history</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="product_tmpl_id"/>
+                <filter string="▼ انخفاضات" name="drops"
+                        domain="[('direction','=','down')]"/>
+                <filter string="▲ ارتفاعات" name="ups"
+                        domain="[('direction','=','up')]"/>
+                <separator/>
+                <filter string="آخر 7 أيام" name="d7"
+                        domain="[('recorded_at','&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter string="آخر 30 يوم" name="d30"
+                        domain="[('recorded_at','&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <group expand="1" string="Group By">
+                    <filter string="المنتج" name="g_prod"
+                            context="{'group_by': 'product_tmpl_id'}"/>
+                    <filter string="الاتجاه" name="g_dir"
+                            context="{'group_by': 'direction'}"/>
+                    <filter string="اليوم" name="g_day"
+                            context="{'group_by': 'recorded_at:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_price_history" model="ir.actions.act_window">
+        <field name="name">📈 سجل الأسعار</field>
+        <field name="res_model">uellow.price.history</field>
+        <field name="view_mode">list,graph,pivot</field>
+        <field name="context">{'search_default_d30': 1}</field>
+    </record>
+
+    <!-- Dashboard = graph-first view of the same data -->
+    <record id="action_price_dashboard" model="ir.actions.act_window">
+        <field name="name">📊 داشبورد الأسعار</field>
+        <field name="res_model">uellow.price.history</field>
+        <field name="view_mode">graph,pivot,list</field>
+        <field name="context">{'search_default_d30': 1, 'search_default_g_dir': 1}</field>
+    </record>
+
+    <menuitem id="menu_sc_price_history" name="سجل الأسعار"
+              parent="menu_sc_root" action="action_price_history"
+              sequence="28"/>
+    <menuitem id="menu_sc_price_dashboard" name="داشبورد الأسعار"
+              parent="menu_sc_root" action="action_price_dashboard"
+              sequence="29"/>
+
+    <!-- Daily snapshot cron -->
+    <record id="cron_price_snapshot" model="ir.cron" forcecreate="True">
+        <field name="name">Uellow: daily internal price snapshot</field>
+        <field name="model_id" ref="model_uellow_price_history"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_daily_snapshot()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

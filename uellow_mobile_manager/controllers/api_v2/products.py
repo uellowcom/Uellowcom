@@ -69,6 +69,7 @@ def serialize_product_card(product, lang='en_US'):
         'vendor': _vendor_ref(product),
         'has_video': has_video,
         'rank': _product_rank_badge(product),
+        'price_trend': _price_trend(product),
     }
 
 
@@ -86,6 +87,32 @@ def _product_rank_badge(product):
         if not r or r.rank > max(1, cfg.badge_max_rank):
             return None
         return _rank_dict(r)
+    except Exception:
+        return None
+
+
+def _price_trend(product):
+    """v2.1.25 — internal price-intelligence indicator for cards.
+    {'direction','change_pct','is_lowest','label{en,ar}'} or None."""
+    try:
+        Hist = request.env.get('uellow.price.history')
+        if Hist is None:
+            return None
+        t = Hist.sudo().trend_for(product.id)
+        if not t:
+            return None
+        if t['is_lowest']:
+            label = {'en': 'Lowest price in %s days' % t['lowest_days'],
+                     'ar': 'أقل سعر خلال %s يوم' % t['lowest_days']}
+        elif t['direction'] == 'down':
+            label = {'en': 'Price dropped %s%%' % t['change_pct'],
+                     'ar': 'انخفض السعر %s%%' % t['change_pct']}
+        elif t['direction'] == 'up':
+            label = {'en': 'Price up %s%%' % t['change_pct'],
+                     'ar': 'ارتفع السعر %s%%' % t['change_pct']}
+        else:
+            return None
+        return {**t, 'label': label}
     except Exception:
         return None
 
@@ -314,6 +341,7 @@ def serialize_product_full(product, lang='en_US'):
         'description_short': desc,
         'description_html': public_desc,
         'ranks': _product_ranks_full(product),
+        'price_history': _price_history(product),
         'images': images,
         'videos': videos,
         'has_video': bool(videos),
@@ -993,6 +1021,17 @@ def _serialize_reviewer(r):
         'price_chat':    float(r.price_chat or 0),
         'specialty':     r.specialty_text or '',
     }
+
+
+def _price_history(product):
+    """Sparkline payload for the product page (90 days)."""
+    try:
+        Hist = request.env.get('uellow.price.history')
+        if Hist is None:
+            return None
+        return Hist.sudo().history_for(product.id)
+    except Exception:
+        return None
 
 
 def _product_ranks_full(product):

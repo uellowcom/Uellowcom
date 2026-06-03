@@ -24,6 +24,7 @@
         'views/import_job_views.xml',
         'views/import_job_line_views.xml',
         'views/price_intelligence_views.xml',
+        'views/price_history_views.xml',
         'views/dead_stock_views.xml',
         'views/connector_settings_views.xml',
         'views/menus.xml',

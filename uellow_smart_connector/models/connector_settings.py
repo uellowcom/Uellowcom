@@ -10,6 +10,7 @@ _PARAMS = [
     ('enable_ai_default',     'uellow.sc.enable_ai_default',   True,                                     bool),
     ('max_products_default',  'uellow.sc.max_products_default',500,                                      int),
     ('price_check_enabled',   'uellow.sc.price_check',         True,                                     bool),
+    ('internal_price_watch',  'uellow.sc.internal_price_watch',True,                                     bool),
     ('price_check_sources',   'uellow.sc.price_sources',       '',                                       str),
     ('dead_stock_days',       'uellow.sc.dead_stock_days',     30,                                       int),
     ('dead_stock_alert_email','uellow.sc.dead_stock_email',    True,                                     bool),
@@ -56,6 +57,7 @@ class ConnectorSettings(models.TransientModel):
 
     # Price Intelligence settings
     price_check_enabled = fields.Boolean('تفعيل مراقبة الأسعار', default=True)
+    internal_price_watch = fields.Boolean('مراقبة أسعارنا الداخلية (سجل + مؤشرات)', default=True)
     price_check_sources = fields.Char(
         'مصادر المقارنة (URLs مفصولة بفاصلة)',
     )
