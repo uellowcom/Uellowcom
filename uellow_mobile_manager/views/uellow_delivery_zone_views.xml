@@ -13,6 +13,7 @@
         <field name="cutoff_time"/>
         <field name="delivery_window"/>
         <field name="delivery_window_ar"/>
+        <field name="cash_surcharge"/>
         <field name="weekday_mask"/>
         <field name="active"/>
       </list>
@@ -59,6 +60,7 @@
               <field name="cutoff_time"/>
               <field name="delivery_window"/>
               <field name="delivery_window_ar"/>
+              <field name="cash_surcharge"/>
               <field name="weekday_mask"/>
               <field name="active"/>
             </list>

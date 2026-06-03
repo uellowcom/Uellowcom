@@ -132,6 +132,9 @@ def _available_shipping_methods(order):
                         'id': z.id, 'name': z.name,
                         'cutoff_time': z.cutoff_time or '',
                         'delivery_window': {'en': _win_en, 'ar': _win_ar},
+                        # v2.1.2 — COD surcharge (config only; not yet folded
+                        # into the total — awaiting activation decision).
+                        'cash_surcharge': getattr(z, 'cash_surcharge', 0.0) or 0.0,
                     }
             if rate is None:
                 try:

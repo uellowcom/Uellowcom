@@ -63,6 +63,20 @@ class UellowDeliveryZone(models.Model):
         help='Arabic override for the delivery window. Leave blank to reuse '
              'the English label.',
     )
+    # v2.1.2 — Cash-on-delivery surcharge the customer bears. Per ali@uellow:
+    # when activated it is FOLDED INTO the delivery price (not shown as a
+    # separate line) for COD orders only. Configured here now; the actual
+    # application to the order total is intentionally NOT wired yet — it
+    # stays 0 / inert until the COD-surcharge feature is switched on after
+    # review. Exposed in the checkout serialization so the app can fold it in
+    # the moment it's activated.
+    cash_surcharge = fields.Float(
+        'COD surcharge', default=0.0, digits=(10, 3),
+        help='Cash-on-delivery surcharge (same currency as Price). When the '
+             'COD-surcharge feature is enabled it is added INTO the delivery '
+             'price for cash orders — not shown separately. 0 = no surcharge. '
+             'Currently configurable only; not yet applied to order totals.',
+    )
     weekday_mask = fields.Char(
         'Active weekdays', default='1234567',
         help='Digits 1-7 (Mon-Sun) indicating which days this rule is active. '
