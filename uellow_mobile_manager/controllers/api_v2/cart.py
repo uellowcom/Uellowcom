@@ -134,7 +134,10 @@ def _free_shipping_threshold(order):
        Returns the amount or None if no free-shipping promo is set up."""
     try:
         ICP = request.env['ir.config_parameter'].sudo()
-        raw = ICP.get_param('uellow_mobile.free_shipping_threshold', '')
+        # v2.1.23 — the Settings field (uellow_free_shipping.threshold_kwd)
+        # now feeds the cart progress bar too; legacy param kept as backup.
+        raw = (ICP.get_param('uellow_free_shipping.threshold_kwd', '')
+               or ICP.get_param('uellow_mobile.free_shipping_threshold', ''))
         if raw:
             try:
                 v = float(raw)

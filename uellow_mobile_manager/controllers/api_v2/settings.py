@@ -27,6 +27,10 @@ class MobileAppSettingsAPI(http.Controller):
             'support_phone':  getattr(setting, 'support_phone', '') or '',
             'whatsapp':       getattr(setting, 'whatsapp_number', '') or '',
             'guest_checkout': bool(getattr(setting, 'guest_checkout_enabled', False)),
+            # v2.1.23 — Google OAuth WEB client id (public by design); the
+            # app passes it as serverClientId to google_sign_in.
+            'google_client_id': (request.env['ir.config_parameter'].sudo()
+                .get_param('uellow_mobile.google_client_id') or '').split(',')[0].strip(),
             'force_update':   bool(getattr(setting, 'force_update', False)),
             'min_version':    (getattr(setting, 'app_version_ios', '') if platform == 'ios'
                                else getattr(setting, 'app_version_android', '')) or '',
