@@ -4754,6 +4754,10 @@ function renderLinkPickerMode(){
       ['account','👤 Account'], ['orders','📦 My orders'], ['beena','💬 Beena AI'],
       ['loyalty','💎 Loyalty'], ['wallet','💰 Wallet'], ['coupons','🎟 Coupons'],
       ['notifications','🔔 Notifications'], ['search','🔍 Search'], ['tryon','✨ Virtual try-on'],
+      // v2.1.2 — newer screens now routable from nav/CTAs (Flutter nav map
+      // handles these): Reels feed, Free-shipping grid, Delivery coverage.
+      ['reels','🎥 Reels'], ['free-shipping','🚚 Free shipping'],
+      ['delivery-coverage','📍 Delivery coverage'],
     ];
     return `<p style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Built-in app screens that exist in the Flutter codebase.</p>
       <div class="lp-list">${screens.map(([v,l])=>{
