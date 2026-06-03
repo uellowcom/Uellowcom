@@ -1,25 +1,101 @@
-"""TikTok-style vertical video feed for the mobile app's Reels tab.
+"""TikTok-style vertical video feed + social layer for the Reels tab.
 
-Endpoint: GET /api/mobile/v2/videos/feed?cursor=...&limit=10
+Endpoints:
+  GET  /api/mobile/v2/videos/feed?cursor=&limit=
+  GET  /api/mobile/v2/videos/search?q=&limit=        — grid search by product name
+  GET  /api/mobile/v2/videos/<id>/comments           — list comments
+  POST /api/mobile/v2/videos/<id>/comments           — add a comment (auth)
+  POST /api/mobile/v2/videos/<id>/share              — bump the share counter
 
-Returns products that have at least one playable video, paginated via a
-cursor (last seen product id). Each entry includes everything the Reels
-UI needs to render a full slide: product card + first video URL +
-thumbnail + cart/wishlist hints.
-
-Algorithm: trending-first (sales_count desc when available), then newest,
-then a deterministic shuffle on the rest. Products without a usable
-video are dropped server-side so the client doesn't have to filter.
+Each feed/search item carries engagement stats (views / wishlist / shares /
+comments) + `is_wishlisted` for the current user, so the Reels UI can show the
+counter row and a filled red heart.
 """
+import json
+
 from odoo import http
 from odoo.http import request
 
-from ._common import safe_endpoint, ok, get_lang
+from ._common import safe_endpoint, ok, fail, get_lang, current_partner, require_auth
 from .products import (
     serialize_product_card,
     _serialize_product_videos,
     _domain_published_for_app,
 )
+
+
+def _is_wishlisted(partner, tmpl):
+    if not partner or not tmpl:
+        return False
+    Wish = request.env.get('mobile.wishlist')
+    if Wish is None:
+        return False
+    try:
+        return bool(Wish.sudo().search_count([
+            ('partner_id', '=', partner.id),
+            ('product_id.product_tmpl_id', '=', tmpl.id)]))
+    except Exception:
+        return False
+
+
+def _video_stats(vrec, tmpl):
+    """Engagement counters for one product.video record."""
+    views = 0
+    shares = 0
+    comments = 0
+    wishlist = 0
+    if vrec is not None:
+        views = int(getattr(vrec, 'bunny_views', 0) or 0)
+        shares = int(getattr(vrec, 'share_count', 0) or 0)
+        try:
+            comments = int(getattr(vrec, 'comment_count', 0) or 0)
+        except Exception:
+            comments = 0
+        try:
+            wishlist = int(getattr(vrec, 'wishlist_count', 0) or 0)
+        except Exception:
+            wishlist = 0
+    return {'views': views, 'shares': shares,
+            'comments': comments, 'wishlist': wishlist}
+
+
+def _build_video_item(p, lang, partner):
+    """Full Reels slide for one product (or None if no playable video)."""
+    videos = _serialize_product_videos(p)
+    playable = [v for v in videos
+                if (v.get('file_url') or v.get('embed_url')
+                    or v.get('tiktok_url') or v.get('video_url'))]
+    if not playable:
+        return None
+    card = serialize_product_card(p, lang)
+    if not card:
+        return None
+    vid = playable[0]
+    vrec = None
+    try:
+        if vid.get('id'):
+            vrec = request.env['product.video'].sudo().browse(int(vid['id']))
+            if not vrec.exists():
+                vrec = None
+    except Exception:
+        vrec = None
+    return {
+        'product': card,
+        'video': vid,
+        'video_count': len(playable),
+        'stats': _video_stats(vrec, p),
+        'is_wishlisted': _is_wishlisted(partner, p),
+    }
+
+
+def _comment_json(c):
+    return {
+        'id': c.id,
+        'author': c.display_author(),
+        'body': c.body or '',
+        'likes': c.likes or 0,
+        'created': c.create_date.isoformat() if c.create_date else '',
+    }
 
 
 class MobileVideosAPI(http.Controller):
@@ -29,6 +105,7 @@ class MobileVideosAPI(http.Controller):
     @safe_endpoint
     def videos_feed(self, **kw):
         lang = get_lang()
+        partner = current_partner()
         try:
             cursor = int(kw.get('cursor') or 0)
         except Exception:
@@ -40,18 +117,11 @@ class MobileVideosAPI(http.Controller):
 
         Tmpl = request.env['product.template'].sudo()
         domain = _domain_published_for_app(include_oos=True)
-        # Optional cursor — pull templates whose id is less than the cursor
-        # to avoid showing the same slides as before.
         if cursor > 0:
             domain.append(('id', '<', cursor))
-        # Optional: only video-bearing products. The cheap filter is to
-        # look at the `has_product_video` cached flag if it exists,
-        # otherwise scan-and-filter Python-side.
         if 'has_product_video' in Tmpl._fields:
             domain.append(('has_product_video', '=', True))
 
-        # Pull a bigger batch (3x limit) since some may have no videos
-        # serializable for the app even when has_product_video is True.
         order = 'sales_count desc, write_date desc' \
             if 'sales_count' in Tmpl._fields else 'write_date desc'
         try:
@@ -63,27 +133,100 @@ class MobileVideosAPI(http.Controller):
         items = []
         last_id = cursor
         for p in candidates:
-            videos = _serialize_product_videos(p)
-            # Need at least one playable URL (file, embed, or tiktok)
-            playable = [v for v in videos
-                        if (v.get('file_url') or v.get('embed_url')
-                            or v.get('tiktok_url') or v.get('video_url'))]
-            if not playable:
+            item = _build_video_item(p, lang, partner)
+            if not item:
                 continue
-            card = serialize_product_card(p, lang)
-            if not card:
-                continue
-            items.append({
-                'product': card,
-                'video': playable[0],   # first usable video
-                'video_count': len(playable),
-            })
+            items.append(item)
             last_id = p.id
             if len(items) >= limit:
                 break
 
-        return ok({
-            'items': items,
-            'cursor': last_id,
-            'has_more': len(items) >= limit,
+        return ok({'items': items, 'cursor': last_id,
+                   'has_more': len(items) >= limit})
+
+    @http.route('/api/mobile/v2/videos/search', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def videos_search(self, **kw):
+        """Grid search: products matching `q` by name that have a video."""
+        lang = get_lang()
+        partner = current_partner()
+        q = (kw.get('q') or '').strip()
+        try:
+            limit = max(1, min(60, int(kw.get('limit') or 40)))
+        except Exception:
+            limit = 40
+        if not q:
+            return ok({'items': []})
+        Tmpl = request.env['product.template'].sudo()
+        domain = _domain_published_for_app(include_oos=True)
+        domain += ['|', ('name', 'ilike', q), ('default_code', 'ilike', q)]
+        if 'has_product_video' in Tmpl._fields:
+            domain.append(('has_product_video', '=', True))
+        candidates = Tmpl.search(domain, limit=limit * 3)
+        items = []
+        for p in candidates:
+            item = _build_video_item(p, lang, partner)
+            if item:
+                items.append(item)
+            if len(items) >= limit:
+                break
+        return ok({'items': items, 'query': q})
+
+    @http.route('/api/mobile/v2/videos/<int:vid>/comments', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def video_comments(self, vid, **kw):
+        Comment = request.env.get('product.video.comment')
+        if Comment is None:
+            return ok({'items': []})
+        try:
+            limit = max(1, min(100, int(kw.get('limit') or 50)))
+        except Exception:
+            limit = 50
+        recs = Comment.sudo().search(
+            [('video_id', '=', vid), ('active', '=', True)], limit=limit)
+        return ok({'items': [_comment_json(c) for c in recs],
+                   'count': Comment.sudo().search_count(
+                       [('video_id', '=', vid), ('active', '=', True)])})
+
+    @http.route('/api/mobile/v2/videos/<int:vid>/comments', type='http',
+                auth='public', methods=['POST'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def video_comment_add(self, vid, **kw):
+        Comment = request.env.get('product.video.comment')
+        if Comment is None:
+            return fail('NOT_SUPPORTED', 'Comments not available', 400)
+        try:
+            data = json.loads(request.httprequest.get_data() or b'{}')
+        except Exception:
+            data = {}
+        body = (data.get('body') or kw.get('body') or '').strip()
+        if not body:
+            return fail('EMPTY', 'Comment text is required', 400)
+        partner = current_partner()
+        video = request.env['product.video'].sudo().browse(vid)
+        if not video.exists():
+            return fail('NOT_FOUND', 'Video not found', 404)
+        c = Comment.sudo().create({
+            'video_id': vid,
+            'partner_id': partner.id if partner else False,
+            'author_name': partner.name if partner else 'Guest',
+            'body': body[:2000],
         })
+        return ok(_comment_json(c))
+
+    @http.route('/api/mobile/v2/videos/<int:vid>/share', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def video_share(self, vid, **kw):
+        video = request.env['product.video'].sudo().browse(vid)
+        if not video.exists():
+            return fail('NOT_FOUND', 'Video not found', 404)
+        try:
+            video.share_count = (video.share_count or 0) + 1
+            request.env.cr.commit()
+        except Exception:
+            pass
+        return ok({'shares': video.share_count or 0})

@@ -22,6 +22,9 @@
                 <field name="bunny_status" optional="show"/>
                 <field name="bunny_encode_progress" optional="hide" string="Encode %"/>
                 <field name="bunny_views" sum="Total views"/>
+                <field name="wishlist_count" string="❤ Saves"/>
+                <field name="share_count" string="↗ Shares" sum="Total shares"/>
+                <field name="comment_count" string="💬 Comments"/>
                 <field name="bunny_length_human" string="Duration"/>
                 <field name="bunny_avg_watch" optional="show" string="Avg watch (s)"/>
                 <field name="bunny_total_watch" optional="hide" sum="Total watch (s)"/>

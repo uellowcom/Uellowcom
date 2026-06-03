@@ -6,8 +6,10 @@
     'license': 'LGPL-3',
     'depends': ['uellow_tiktok_video'],
     'data': [
+        'security/ir.model.access.csv',
         'views/product_video_views.xml',
         'views/product_video_actions.xml',
+        'views/video_comment_views.xml',
         'views/res_config_settings_views.xml',
     ],
     'installable': True,

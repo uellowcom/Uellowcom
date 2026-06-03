@@ -69,6 +69,27 @@ class ProductVideo(models.Model):
     bunny_storage_mb = fields.Float('Size (MB)', readonly=True)
     bunny_synced_at = fields.Datetime('Stats synced at', readonly=True)
 
+    # ── Social engagement counters ────────────────────────────────────
+    share_count = fields.Integer('Shares', default=0, readonly=True)
+    comment_ids = fields.One2many('product.video.comment', 'video_id', string='Comments')
+    comment_count = fields.Integer('Comments', compute='_compute_social_counts')
+    wishlist_count = fields.Integer('Wishlist saves', compute='_compute_social_counts')
+
+    def _compute_social_counts(self):
+        Comment = self.env['product.video.comment']
+        Wish = self.env.get('mobile.wishlist')
+        for rec in self:
+            rec.comment_count = Comment.search_count([
+                ('video_id', '=', rec.id), ('active', '=', True)])
+            wl = 0
+            if Wish is not None and rec.product_tmpl_id:
+                try:
+                    wl = Wish.sudo().search_count([
+                        ('product_id.product_tmpl_id', '=', rec.product_tmpl_id.id)])
+                except Exception:
+                    wl = 0
+            rec.wishlist_count = wl
+
     @api.depends('bunny_length')
     def _compute_bunny_length_human(self):
         for rec in self:

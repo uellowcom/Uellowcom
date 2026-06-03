@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- v2.1.4 — Reels video comments (separate from product reviews) -->
+    <record id="view_video_comment_list" model="ir.ui.view">
+        <field name="name">product.video.comment.list</field>
+        <field name="model">product.video.comment</field>
+        <field name="arch" type="xml">
+            <list string="Video Comments" editable="bottom">
+                <field name="create_date" string="When"/>
+                <field name="product_tmpl_id"/>
+                <field name="video_id"/>
+                <field name="partner_id"/>
+                <field name="author_name"/>
+                <field name="body"/>
+                <field name="likes"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_video_comment_form" model="ir.ui.view">
+        <field name="name">product.video.comment.form</field>
+        <field name="model">product.video.comment</field>
+        <field name="arch" type="xml">
+            <form string="Video Comment">
+                <sheet>
+                    <group>
+                        <field name="video_id"/>
+                        <field name="product_tmpl_id" readonly="1"/>
+                        <field name="partner_id"/>
+                        <field name="author_name"/>
+                        <field name="likes"/>
+                        <field name="active"/>
+                    </group>
+                    <field name="body"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_video_comment_search" model="ir.ui.view">
+        <field name="name">product.video.comment.search</field>
+        <field name="model">product.video.comment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="body"/>
+                <field name="product_tmpl_id"/>
+                <field name="partner_id"/>
+                <filter name="f_active" string="Visible" domain="[('active','=',True)]"/>
+                <filter name="f_hidden" string="Hidden" domain="[('active','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="g_product" string="Product" context="{'group_by':'product_tmpl_id'}"/>
+                    <filter name="g_video" string="Video" context="{'group_by':'video_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_video_comment" model="ir.actions.act_window">
+        <field name="name">Video Comments</field>
+        <field name="res_model">product.video.comment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_video_comment_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No comments yet</p>
+            <p>Comments customers leave on Reels videos appear here — separate
+               from product star reviews. Untick <b>Active</b> to hide one.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_video_comment" name="Video Comments"
+              parent="menu_product_video_root"
+              action="action_video_comment" sequence="20"/>
+</odoo>
