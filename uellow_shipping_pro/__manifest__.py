@@ -17,6 +17,7 @@
         'views/delivery_carrier_company_views.xml',
         'data/kuwait_zones_seed.xml',
         'data/kuwait_cities_seed.xml',
+        'data/carrier_seed.xml',
     ],
     'installable': True,
     'application': False,

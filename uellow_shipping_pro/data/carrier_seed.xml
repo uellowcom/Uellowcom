@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- ─── Arsl — third-party next-day delivery ───────────────────────── -->
+    <record id="carrier_company_arsl" model="delivery.carrier.company">
+        <field name="name">Arsl Delivery</field>
+        <field name="carrier_kind">third_party</field>
+        <field name="description_en">Next-day delivery anywhere in Kuwait</field>
+        <field name="description_ar">توصيل في اليوم التالي لجميع مناطق الكويت</field>
+    </record>
+
+    <!-- Arsl pricing per zone tier (0 = normal 1.000, 1 = remote 2.500, 2 = far 2.500) -->
+    <record id="rule_arsl_capital" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_arsl"/>
+        <field name="zone_id" ref="zone_kw_capital"/>
+        <field name="zone_name">Capital</field>
+        <field name="governorate">capital</field>
+        <field name="delivery_fee">1.000</field>
+        <field name="cash_surcharge_fixed">0.250</field>
+        <field name="cancel_fee_only">0.500</field>
+    </record>
+    <record id="rule_arsl_hawalli" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_arsl"/>
+        <field name="zone_id" ref="zone_kw_hawalli"/>
+        <field name="zone_name">Hawalli</field>
+        <field name="governorate">hawalli</field>
+        <field name="delivery_fee">1.000</field>
+        <field name="cash_surcharge_fixed">0.250</field>
+        <field name="cancel_fee_only">0.500</field>
+    </record>
+    <record id="rule_arsl_farwaniya" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_arsl"/>
+        <field name="zone_id" ref="zone_kw_farwaniya"/>
+        <field name="zone_name">Farwaniya</field>
+        <field name="governorate">farwaniya</field>
+        <field name="delivery_fee">1.000</field>
+        <field name="cash_surcharge_fixed">0.250</field>
+        <field name="cancel_fee_only">0.500</field>
+    </record>
+    <record id="rule_arsl_mubarak" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_arsl"/>
+        <field name="zone_id" ref="zone_kw_mubarak"/>
+        <field name="zone_name">Mubarak Al-Kabeer</field>
+        <field name="governorate">mubarak</field>
+        <field name="delivery_fee">1.000</field>
+        <field name="cash_surcharge_fixed">0.250</field>
+        <field name="cancel_fee_only">0.500</field>
+    </record>
+    <record id="rule_arsl_ahmadi" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_arsl"/>
+        <field name="zone_id" ref="zone_kw_ahmadi"/>
+        <field name="zone_name">Ahmadi (remote)</field>
+        <field name="governorate">ahmadi</field>
+        <field name="delivery_fee">2.500</field>
+        <field name="cash_surcharge_fixed">0.250</field>
+        <field name="cancel_fee_only">0.500</field>
+    </record>
+    <record id="rule_arsl_jahra" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_arsl"/>
+        <field name="zone_id" ref="zone_kw_jahra"/>
+        <field name="zone_name">Jahra (remote)</field>
+        <field name="governorate">jahra</field>
+        <field name="delivery_fee">2.500</field>
+        <field name="cash_surcharge_fixed">0.250</field>
+        <field name="cancel_fee_only">0.500</field>
+    </record>
+    <record id="rule_arsl_far" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_arsl"/>
+        <field name="zone_id" ref="zone_kw_far"/>
+        <field name="zone_name">Far (Abdali/Wafra/Salmi)</field>
+        <field name="governorate">other</field>
+        <field name="delivery_fee">2.500</field>
+        <field name="cash_surcharge_fixed">0.250</field>
+        <field name="cancel_fee_only">0.500</field>
+    </record>
+
+    <!-- ─── Uellow Drivers — in-house 3-hour delivery, 14:00-21:00 ─────── -->
+    <record id="carrier_company_uellow_drivers" model="delivery.carrier.company">
+        <field name="name">Uellow Drivers</field>
+        <field name="carrier_kind">in_house</field>
+        <field name="description_en">3-hour delivery · 2pm to 9pm only</field>
+        <field name="description_ar">توصيل خلال ٣ ساعات · من ٢ ظهراً حتى ٩ مساءً فقط</field>
+    </record>
+
+    <!-- Uellow Drivers — flat 2.000 KD any-pay for normal zones, 2.500 remote, 5.000 far -->
+    <record id="rule_uellow_capital" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_uellow_drivers"/>
+        <field name="zone_id" ref="zone_kw_capital"/>
+        <field name="zone_name">Capital · 3hr</field>
+        <field name="governorate">capital</field>
+        <field name="delivery_fee">2.000</field>
+        <field name="time_window_start">14.0</field>
+        <field name="time_window_end">21.0</field>
+    </record>
+    <record id="rule_uellow_hawalli" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_uellow_drivers"/>
+        <field name="zone_id" ref="zone_kw_hawalli"/>
+        <field name="zone_name">Hawalli · 3hr</field>
+        <field name="governorate">hawalli</field>
+        <field name="delivery_fee">2.000</field>
+        <field name="time_window_start">14.0</field>
+        <field name="time_window_end">21.0</field>
+    </record>
+    <record id="rule_uellow_farwaniya" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_uellow_drivers"/>
+        <field name="zone_id" ref="zone_kw_farwaniya"/>
+        <field name="zone_name">Farwaniya · 3hr</field>
+        <field name="governorate">farwaniya</field>
+        <field name="delivery_fee">2.000</field>
+        <field name="time_window_start">14.0</field>
+        <field name="time_window_end">21.0</field>
+    </record>
+    <record id="rule_uellow_mubarak" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_uellow_drivers"/>
+        <field name="zone_id" ref="zone_kw_mubarak"/>
+        <field name="zone_name">Mubarak · 3hr</field>
+        <field name="governorate">mubarak</field>
+        <field name="delivery_fee">2.000</field>
+        <field name="time_window_start">14.0</field>
+        <field name="time_window_end">21.0</field>
+    </record>
+    <record id="rule_uellow_ahmadi" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_uellow_drivers"/>
+        <field name="zone_id" ref="zone_kw_ahmadi"/>
+        <field name="zone_name">Ahmadi · 3hr (remote)</field>
+        <field name="governorate">ahmadi</field>
+        <field name="delivery_fee">2.500</field>
+        <field name="time_window_start">14.0</field>
+        <field name="time_window_end">21.0</field>
+    </record>
+    <record id="rule_uellow_jahra" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_uellow_drivers"/>
+        <field name="zone_id" ref="zone_kw_jahra"/>
+        <field name="zone_name">Jahra · 3hr (remote)</field>
+        <field name="governorate">jahra</field>
+        <field name="delivery_fee">2.500</field>
+        <field name="time_window_start">14.0</field>
+        <field name="time_window_end">21.0</field>
+    </record>
+    <record id="rule_uellow_far" model="carrier.pricing.rule">
+        <field name="carrier_company_id" ref="carrier_company_uellow_drivers"/>
+        <field name="zone_id" ref="zone_kw_far"/>
+        <field name="zone_name">Far · 3hr</field>
+        <field name="governorate">other</field>
+        <field name="delivery_fee">5.000</field>
+        <field name="time_window_start">14.0</field>
+        <field name="time_window_end">21.0</field>
+    </record>
+</odoo>
