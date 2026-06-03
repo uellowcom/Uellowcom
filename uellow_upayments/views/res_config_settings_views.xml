@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_upayments" model="ir.ui.view">
+        <field name="name">res.config.settings.upayments</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="UPayments" string="💳 UPayments"
+                     name="uellow_upayments" groups="base.group_system">
+                    <block title="UPayments gateway" id="upayments_block">
+                        <setting id="upay_enabled" string="Enable UPayments">
+                            <field name="upayments_enabled"/>
+                        </setting>
+                        <setting id="upay_token" string="API token (Bearer)"
+                                 help='Sandbox test token is "jtest123".'>
+                            <field name="upayments_token" password="True"/>
+                        </setting>
+                        <setting id="upay_base" string="API base URL"
+                                 help="Sandbox: https://sandboxapi.upayments.com/api/v1">
+                            <field name="upayments_base_url"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Sensible sandbox defaults so the flow works out of the box; admins
+         override these in Settings → 💳 UPayments. noupdate=1 keeps edits. -->
+    <data noupdate="1">
+        <record id="param_upay_base" model="ir.config_parameter">
+            <field name="key">uellow_upayments.base_url</field>
+            <field name="value">https://sandboxapi.upayments.com/api/v1</field>
+        </record>
+        <record id="param_upay_token" model="ir.config_parameter">
+            <field name="key">uellow_upayments.token</field>
+            <field name="value">jtest123</field>
+        </record>
+        <record id="param_upay_enabled" model="ir.config_parameter">
+            <field name="key">uellow_upayments.enabled</field>
+            <field name="value">1</field>
+        </record>
+    </data>
+</odoo>

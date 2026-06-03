@@ -774,17 +774,32 @@ class MobileOrdersAPI(http.Controller):
         except Exception as e:
             return fail('CONFIRM_FAILED', str(e), 400)
 
-        # Determine payment URL — for COD we're done. For online, the
-        # Flutter side opens our existing /shop/payment in a webview.
-        cod = (p.get('payment_method') or '').lower() == 'cod'
+        # Determine payment URL — for COD we're done. For online, create a
+        # real UPayments charge and return its hosted payment link (the app
+        # opens it in a webview). Falls back to the website payment page only
+        # if UPayments isn't available.
+        pm = (p.get('payment_method') or '').lower()
+        cod = pm == 'cod'
         result = {
             'order_id': order.id,
             'order_name': order.name,
             'payment_required': not cod,
         }
         if not cod:
-            base = base_url()
-            result['payment_url'] = f"{base}/shop/payment?order_id={order.id}"
+            base = base_url().rstrip('/')
+            gateway = {'knet': 'knet', 'card': 'cc', 'apple_pay': 'apple-pay',
+                       'google_pay': 'google-pay'}.get(pm)
+            if hasattr(order, '_upayments_create_charge'):
+                try:
+                    result['payment_url'] = order._upayments_create_charge(
+                        return_url='%s/payments/upayments/return' % base,
+                        cancel_url='%s/payments/upayments/cancel' % base,
+                        notify_url='%s/payments/upayments/webhook' % base,
+                        lang=get_lang(), gateway=gateway)
+                except Exception as e:
+                    return fail('PAYMENT_INIT_FAILED', str(e), 400)
+            else:
+                result['payment_url'] = f"{base}/shop/payment?order_id={order.id}"
         return ok(result)
 
 
