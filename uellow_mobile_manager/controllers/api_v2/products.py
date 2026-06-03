@@ -449,6 +449,43 @@ class MobileProductsAPI(http.Controller):
         if p.get('on_sale') in ('1', 'true', True):
             domain.append(('compare_list_price', '>', 0))
 
+        # v2.0.89 — Free shipping filter. The DB-level filter only covers
+        # products explicitly flagged; products inheriting via category /
+        # tag get filtered Python-side below.
+        free_shipping_flag = p.get('free_shipping') in ('1', 'true', True)
+        if free_shipping_flag:
+            # Cheap pre-filter: products that ARE directly flagged OR
+            # belong to ANY free-shipping category OR carry ANY free-
+            # shipping tag. We use Python post-filter to honor parent
+            # category traversal that `_is_free_shipping` does.
+            Tmpl_check = request.env['product.template']
+            cat_dom = []
+            if 'free_shipping' in request.env['product.public.category']._fields:
+                free_cats = request.env['product.public.category'].sudo().search(
+                    [('free_shipping', '=', True)])
+                if free_cats:
+                    cat_dom = [('public_categ_ids', 'in', free_cats.ids)]
+            tag_dom = []
+            if ('free_shipping' in request.env['product.tag']._fields
+                    and 'product_tag_ids' in Tmpl_check._fields):
+                free_tags = request.env['product.tag'].sudo().search(
+                    [('free_shipping', '=', True)])
+                if free_tags:
+                    tag_dom = [('product_tag_ids', 'in', free_tags.ids)]
+            or_parts = []
+            if 'free_shipping' in Tmpl_check._fields:
+                or_parts.append([('free_shipping', '=', True)])
+            if cat_dom:
+                or_parts.append(cat_dom)
+            if tag_dom:
+                or_parts.append(tag_dom)
+            if or_parts:
+                # Combine all parts with OR
+                combined = or_parts[0]
+                for part in or_parts[1:]:
+                    combined = ['|'] + combined + part
+                domain += combined
+
         # v2.0.80 — minimum rating filter (4 = "4★ & up"). Only applied
         # when the product.template has a `rating_avg` aggregate.
         try:
