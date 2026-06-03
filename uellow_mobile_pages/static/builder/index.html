@@ -1179,6 +1179,7 @@ const SNIPPETS = [
   // v2.0.74: image-only banner grid (1 / 2 / 3 columns) with per-language image
   { cat:'🖼 v2.0.74 Image blocks', items:[
     { kind:'image-banner',    icon:'🖼', label:'Image Banner (full / 2-col / 3-col)' },
+    { kind:'reels-strip',     icon:'🎥', label:'Reels Strip (circular video thumbs → opens /reels)' },
   ]},
   // v2.0.34: new pro variants matching reference designs
   { cat:'✨ Pro Designs', items:[
@@ -1395,6 +1396,13 @@ const KIND_DEFAULTS = {
       {image_url:'', image_url_ar:'', altEn:'Banner', altAr:'بانر',
        link:{type:'screen',value:'shop'}},
     ],
+  }),
+  'reels-strip': () => ({
+    show_title:true, title_gap:6, pad_y:8,
+    titleEn:'🔥 Trending videos', titleAr:'🔥 الفيديوهات الرائجة',
+    limit:8,
+    bubble_size:62,         // px diameter
+    ring_color:'#F5C320',
   }),
   'explore-more': () => ({
     titleEn:'Explore More',   titleAr:'استكشف المزيد',
@@ -2353,6 +2361,21 @@ function renderBlockContent(b){
       const h = Math.round(320 * aspect);
       return `<div style="padding:6px 10px">${tile(banners[0]||{}, h)}</div>`;
     }
+    case 'reels-strip': {
+      const sz = p.bubble_size || 62;
+      const ring = p.ring_color || '#F5C320';
+      return `<div style="padding:6px 10px">
+        ${p.titleEn?`<div style="font-size:12px;font-weight:900;color:var(--dark);padding:0 4px 6px">${p.titleEn}</div>`:''}
+        <div style="display:flex;gap:8px;overflow:hidden">
+          ${[0,1,2,3,4,5].map(i=>`
+            <div style="display:flex;flex-direction:column;align-items:center;width:${sz+4}px">
+              <div style="width:${sz}px;height:${sz}px;border-radius:50%;background:linear-gradient(135deg,#f5e8dd,#e8d5b8);border:2.5px solid ${ring};display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px">▶</div>
+              <div style="font-size:9px;color:#999;margin-top:3px">Reel ${i+1}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    }
     case 'explore-more': {
       const cols = parseInt(p.columns || '2');
       const items = Math.min(parseInt(p.per_page || '12'), 8);
@@ -3260,6 +3283,18 @@ function renderContent(b){
           </div>`).join('')}
         ${addItemBtn('banners', 'Add banner')}`;
     }
+    case 'reels-strip':
+      return `<p class="hint">Circular video thumbs sourced from your trending products with videos. Tap any bubble to jump straight into the full Reels feed (/reels).</p>
+        ${mlField(b,'title','Section title')}
+        <div class="field"><label>Number of bubbles</label>
+          <input type="number" data-prop-num="limit" min="3" max="20" value="${p.limit||8}"/></div>
+        <div class="field"><label>Bubble size (px)</label>
+          <input type="number" data-prop-num="bubble_size" min="40" max="120" value="${p.bubble_size||62}"/></div>
+        <div class="field"><label>Ring color</label>
+          <div class="swatch-row">
+            ${['#F5C320','#E63946','#1F8A40','#1D6FB7','#6E4AB0','#FF4500','#412402','#FFD340'].map(c=>`
+              <div class="sw ${p.ring_color===c?'on':''}" style="background:${c}" data-color-prop="${c}" data-color-target="ring_color"></div>`).join('')}
+          </div></div>`;
     case 'explore-more':
       return `${mlField(b,'title','Section title')}
         ${mlField(b,'sub','Subtitle (small label)')}

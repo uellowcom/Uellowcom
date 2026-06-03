@@ -612,6 +612,54 @@ def resolve_passthrough(env, props, lang, block=None):
     return {}
 
 
+def resolve_reels_strip(env, props, lang, block=None):
+    """v2.0.90 — collect trending products that have a video so the home
+    `reels-strip` block can render circular thumbnails the user taps to
+    jump into the full Reels feed."""
+    Tmpl = env['product.template'].sudo()
+    limit = int(props.get('limit') or 8)
+    base_dom = [('is_published', '=', True), ('active', '=', True)]
+    # Cheap pre-filter when the cached flag exists
+    if 'has_product_video' in Tmpl._fields:
+        base_dom.append(('has_product_video', '=', True))
+    order = 'sales_count desc, write_date desc' \
+        if 'sales_count' in Tmpl._fields else 'write_date desc'
+    candidates = Tmpl.search(base_dom, order=order, limit=limit * 4)
+    items = []
+    for p in candidates:
+        try:
+            vids = getattr(p, 'video_ids', None) or getattr(p, 'product_video_ids', None)
+        except Exception:
+            vids = None
+        if not vids:
+            continue
+        v = vids.filtered(lambda x: getattr(x, 'active', True))[:1]
+        if not v:
+            continue
+        v = v[0]
+        # Thumbnail priority: local upload → bunny auto → product image
+        thumb = ''
+        try:
+            if getattr(v, 'thumbnail', False):
+                thumb = (f'/web/image/product.video/{v.id}/thumbnail'
+                         f'?unique={v.write_date}')
+            elif getattr(v, 'bunny_thumb_auto', False) and getattr(v, 'bunny_thumb_url', ''):
+                thumb = v.bunny_thumb_url
+            else:
+                thumb = (f'/web/image/product.template/{p.id}/image_512'
+                         f'?unique={p.write_date}')
+        except Exception:
+            pass
+        items.append({
+            'product_id': p.id,
+            'product_name': p.name,
+            'thumbnail': thumb,
+        })
+        if len(items) >= limit:
+            break
+    return {'items': items}
+
+
 RESOLVERS = {
     'cats-grid':       resolve_categories,
     'cats-strip':      resolve_categories,
@@ -645,6 +693,7 @@ RESOLVERS = {
     'lookbook':        resolve_passthrough,
     'sticky-cta':      resolve_passthrough,
     'image-banner':    resolve_passthrough,
+    'reels-strip':     resolve_reels_strip,
 }
 
 
