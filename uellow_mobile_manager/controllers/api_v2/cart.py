@@ -184,14 +184,22 @@ def serialize_cart(order):
             } for ptav in product.product_template_attribute_value_ids],
         })
 
-    # Discounts (coupons / loyalty)
-    discount = 0
+    # Discounts (coupons / loyalty / per-line %). Computed robustly so the
+    # value shows whether the coupon is a reward LINE or a per-line percentage
+    # discount. `subtotal` below is the GROSS (pre-discount) so that
+    # subtotal − discount (+ shipping + tax) == total. For carts with no
+    # discount this is identical to the old behaviour (gross == net).
+    sale_lines = order.order_line.filtered(
+        lambda l: not l.display_type and not l.is_reward_line)
+    gross = sum((l.price_unit or 0.0) * (l.product_uom_qty or 0.0) for l in sale_lines)
+    net = sum(l.price_subtotal for l in sale_lines)
+    line_discount = max(0.0, gross - net)
+    reward_discount = sum(-cl.price_total
+                          for cl in order.order_line.filtered(lambda l: l.is_reward_line))
+    discount = line_discount + reward_discount
     coupon_codes = []
-    for cl in order.order_line.filtered(lambda l: l.is_reward_line):
-        discount += -cl.price_total
     try:
-        coupons = order.applied_coupon_ids
-        coupon_codes = [c.code for c in coupons]
+        coupon_codes = [c.code for c in order.applied_coupon_ids]
     except Exception:
         pass
 
@@ -214,7 +222,7 @@ def serialize_cart(order):
         'lines': lines,
         'line_count': len(lines),
         'totals': {
-            'subtotal': fmt_price(order.amount_untaxed, cur),
+            'subtotal': fmt_price(gross if discount else order.amount_untaxed, cur),
             'tax':      fmt_price(order.amount_tax, cur),
             'shipping': fmt_price(order.amount_delivery or 0, cur),
             'discount': fmt_price(discount, cur),
