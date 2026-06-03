@@ -96,12 +96,22 @@ class MobileAddressesAPI(http.Controller):
     @http.route('/api/mobile/v2/addresses/<int:addr_id>/update', type='http',
                 auth='public', methods=['POST', 'OPTIONS'], csrf=False)
     @safe_endpoint
-    @require_auth
     def update_address(self, addr_id, **kw):
         p = get_payload()
         partner = current_partner()
         addr = request.env['res.partner'].sudo().browse(addr_id)
-        if not addr.exists() or (addr.parent_id != partner and addr != partner):
+        if not partner:
+            # v2.1.21 — guests may edit THEIR OWN cart's ad-hoc address.
+            guest_flag = str(p.get('guest') or '') in ('1', 'true', 'True')
+            enabled = bool(getattr(app_setting(), 'guest_checkout_enabled',
+                                   False))
+            order = _get_or_create_order(create=False) \
+                if (guest_flag and enabled) else None
+            owned = (order and addr.exists() and addr.id in
+                     (order.partner_id.id, order.partner_shipping_id.id))
+            if not owned:
+                return fail('AUTH_REQUIRED', 'You must be logged in.', 401)
+        elif not addr.exists() or (addr.parent_id != partner and addr != partner):
             return fail('NOT_FOUND', 'Address not found', 404)
         vals = _validate_addr(p, partial=True)
         if isinstance(vals, str):

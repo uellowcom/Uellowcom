@@ -136,3 +136,24 @@ class SaleOrder(models.Model):
                 % (track_id or '-', payment_id or '-'))
         except Exception:
             pass
+        # v2.1.21 — online-payment cashback: credit the customer's wallet
+        # on capture (idempotent — webhooks can fire more than once).
+        try:
+            Setting = self.env['mobile.app.setting'].sudo()
+            setting = (Setting.search(
+                [('website_id', '=', self.website_id.id)], limit=1)
+                or Setting.search([], limit=1))
+            cb = setting.cashback_for(self.amount_total or 0.0) \
+                if setting and hasattr(setting, 'cashback_for') else 0.0
+            Tx = self.env.get('uellow.customer.wallet.tx')
+            ref = 'CASHBACK-%s' % self.id
+            if (cb > 0 and Tx is not None and self.partner_id
+                    and not Tx.sudo().search([('reference', '=', ref)], limit=1)):
+                Tx.sudo().credit(
+                    self.partner_id, cb, tx_type='cashback',
+                    description='Online payment cashback — %s' % self.name,
+                    reference=ref, order_id=self.id)
+                self.sudo().message_post(body=_(
+                    'Wallet cashback credited: %s (online payment).') % cb)
+        except Exception:
+            _logger.exception('Cashback credit failed for order %s', self.id)

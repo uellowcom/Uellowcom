@@ -513,10 +513,11 @@ class MobileOrdersAPI(http.Controller):
                 'zone': zone,
                 'logo': logo,
             })
-        # Always offer Cash on Delivery as a synthetic option — works as
-        # both shipping + payment hint. id=-1 so the Flutter side can
-        # detect and route to COD without a real carrier_id.
-        out.append(_cod_carrier_dict(order=order))
+        # v2.1.21 — the synthetic "Standard Delivery" (id=-1, price 0) is
+        # ONLY a fallback for when no real carrier matched; with real
+        # carriers configured it confused customers (free-looking option).
+        if not out:
+            out.append(_cod_carrier_dict(order=order))
         return ok(out)
 
     @http.route('/api/mobile/v2/orders/checkout/geoip', type='http', auth='public',
@@ -886,6 +887,21 @@ class MobileOrdersAPI(http.Controller):
             'order_name': order.name,
             'payment_required': not cod,
         }
+        # v2.1.21 — online-payment cashback teaser (credited on capture by
+        # the payment webhook; cash orders earn nothing).
+        if not cod and partner:
+            try:
+                setting = app_setting()
+                cb = setting.cashback_for(
+                    (order.amount_total or 0.0) + (ship_rate or 0.0)) \
+                    if setting else 0.0
+                if cb > 0:
+                    result['cashback'] = {
+                        'amount': cb,
+                        'currency': order.currency_id.name or 'KWD',
+                    }
+            except Exception:
+                pass
         if not cod:
             base = base_url().rstrip('/')
             gateway = {'knet': 'knet', 'card': 'cc', 'apple_pay': 'apple-pay',

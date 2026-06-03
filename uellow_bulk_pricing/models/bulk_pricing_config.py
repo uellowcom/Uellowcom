@@ -82,7 +82,7 @@ class BulkPricingConfig(models.Model):
              'floor still applies, so loss-making products auto-cap.')
     default_tier_template = fields.Text(
         string='Default tier template',
-        default='5,5\n10,10\n25,15\n50,20',
+        default='2,5\n4,8\n6,12\n10,15',
         help='One tier per line: "min_qty,save_pct". Used when '
              'auto-generate is ON and a product has no pricelist tiers.')
 

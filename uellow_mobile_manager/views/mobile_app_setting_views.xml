@@ -31,13 +31,32 @@
                             </group>
                         </page>
 
+                        <!-- TAB: Checkout (v2.1.21) -->
+                        <page string="🛒 Checkout" name="checkout">
+                            <group>
+                                <group string="Guest Checkout">
+                                    <field name="guest_checkout_enabled"/>
+                                </group>
+                                <group string="Returns &amp; Refunds">
+                                    <field name="returns_url" placeholder="https://kw.uellow.com/returns"/>
+                                </group>
+                            </group>
+                            <group>
+                                <group string="💳 Online Payment Cashback">
+                                    <field name="online_cashback_enabled"/>
+                                    <field name="online_cashback_amount" invisible="not online_cashback_enabled"/>
+                                    <field name="online_cashback_pct" invisible="not online_cashback_enabled"/>
+                                    <field name="online_cashback_cap" invisible="not online_cashback_enabled"/>
+                                    <field name="online_cashback_min_order" invisible="not online_cashback_enabled"/>
+                                </group>
+                            </group>
+                        </page>
+
                         <!-- TAB 2: Social Media -->
                         <page string="Social Media" name="social">
                             <group>
                                 <group string="Social Channels">
                                     <field name="whatsapp_number" placeholder="+96594709709"/>
-                                    <field name="guest_checkout_enabled"/>
-                                    <field name="returns_url" placeholder="https://kw.uellow.com/returns"/>
                                     <field name="facebook_url" placeholder="https://facebook.com/uellow"/>
                                     <field name="instagram_url" placeholder="https://instagram.com/uellow"/>
                                     <field name="youtube_url"/>

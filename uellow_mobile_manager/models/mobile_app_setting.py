@@ -33,6 +33,39 @@ class MobileAppSetting(models.Model):
 
     # Social Media Links
     whatsapp_number = fields.Char(string='WhatsApp Number', help='Include country code e.g. +96594709709')
+    # ── Online-payment cashback (v2.1.21) ────────────────────────────
+    online_cashback_enabled = fields.Boolean(
+        string='Online Payment Cashback',
+        help='When the customer pays ONLINE (KNET/card/…), credit a '
+             'cashback to their wallet on payment capture. Cash orders '
+             'get nothing — this nudges customers away from COD.')
+    online_cashback_amount = fields.Float(
+        string='Cashback Fixed Amount',
+        help='Fixed amount (e.g. the cash-handling fee you save).')
+    online_cashback_pct = fields.Float(
+        string='Cashback % of Order', default=0.0,
+        help='Extra percentage of the order total (0 = off). '
+             'Total cashback = fixed + pct, capped below.')
+    online_cashback_cap = fields.Float(
+        string='Cashback Max per Order', default=0.0,
+        help='Ceiling per order (0 = no cap).')
+    online_cashback_min_order = fields.Float(
+        string='Min Order for Cashback', default=0.0,
+        help='Orders below this total earn nothing (0 = no minimum).')
+
+    def cashback_for(self, total):
+        """Resolve the cashback amount for an order total (0 if off)."""
+        self.ensure_one()
+        if not self.online_cashback_enabled:
+            return 0.0
+        if self.online_cashback_min_order and total < self.online_cashback_min_order:
+            return 0.0
+        amt = (self.online_cashback_amount or 0.0) + \
+              total * (self.online_cashback_pct or 0.0) / 100.0
+        if self.online_cashback_cap:
+            amt = min(amt, self.online_cashback_cap)
+        return round(max(amt, 0.0), 3)
+
     guest_checkout_enabled = fields.Boolean(
         string='Guest Checkout',
         help='Let guests place orders without an account (after a warning '
