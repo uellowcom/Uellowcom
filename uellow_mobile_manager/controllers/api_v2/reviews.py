@@ -109,6 +109,59 @@ class MobileReviewsAPI(http.Controller):
         if isinstance(photos, list) and photos:
             _attach_review_photos(r, photos[:8])     # cap at 8 to be safe
 
+        # v2.1.29 — ALSO sync into the native rating.rating record so the
+        # review appears in the new Reviews module (product_reviews wraps
+        # rating.rating) AND feeds product.rating_avg/rating_count.
+        try:
+            Rating = request.env['rating.rating'].sudo()
+            IrModel = request.env['ir.model'].sudo()
+            model_rec = IrModel.search(
+                [('model', '=', 'product.template')], limit=1)
+            ex = Rating.search([
+                ('res_model', '=', 'product.template'),
+                ('res_id', '=', product_id),
+                ('partner_id', '=', partner.id),
+            ], limit=1)
+            rvals = {
+                'res_model_id': model_rec.id,
+                'res_id': product_id,
+                'partner_id': partner.id,
+                'rated_partner_id': partner.id,
+                'rating': float(rating),
+                'feedback': body,
+                'consumed': True,
+            }
+            if 'review_title' in Rating._fields:
+                rvals['review_title'] = title
+            if 'is_verified_purchase' in Rating._fields:
+                # verified = the customer actually bought it
+                bought = request.env['sale.order.line'].sudo().search_count([
+                    ('order_id.partner_id', '=', partner.id),
+                    ('order_id.state', 'in', ('sale', 'done')),
+                    ('product_id.product_tmpl_id', '=', product_id),
+                ]) > 0
+                rvals['is_verified_purchase'] = bought
+            rec = ex if ex else Rating.create(rvals)
+            if ex:
+                ex.write(rvals)
+            # mirror the photos into rating.review.image
+            if (isinstance(photos, list) and photos
+                    and 'rating.review.image' in request.env):
+                Img = request.env['rating.review.image'].sudo()
+                for i, ph in enumerate(photos[:8]):
+                    data = ph.get('data') if isinstance(ph, dict) else ph
+                    if not data:
+                        continue
+                    if isinstance(data, str) and ',' in data[:64]:
+                        data = data.split(',', 1)[1]
+                    Img.create({'rating_id': rec.id, 'sequence': i,
+                                'image': data,
+                                'name': 'review-%s-%s' % (rec.id, i)})
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                'rating.rating sync failed for review %s', r.id)
+
         return ok({
             'id': r.id,
             'state': r.state,

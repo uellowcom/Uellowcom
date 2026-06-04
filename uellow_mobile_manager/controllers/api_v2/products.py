@@ -834,9 +834,22 @@ class MobileProductsAPI(http.Controller):
             ('id', '!=', product.id),
             ('public_categ_ids', 'in', categ_ids),
         ]
-        items = request.env['product.template'].sudo().search(
-            domain, order='create_date desc', limit=12)
-        return ok([serialize_product_card(p, lang) for p in items])
+        # v2.1.29 — unbounded related with pagination (the app infinite-
+        # loads 3 pages then shows a Load-more button).
+        try:
+            page = max(1, int(kw.get('page') or 1))
+            per_page = min(40, max(1, int(kw.get('per_page') or 12)))
+        except Exception:
+            page, per_page = 1, 12
+        Tmpl = request.env['product.template'].sudo()
+        total = Tmpl.search_count(domain)
+        items = Tmpl.search(domain, order='create_date desc',
+                            limit=per_page, offset=(page - 1) * per_page)
+        return ok({
+            'items': [serialize_product_card(p, lang) for p in items],
+            'page': page, 'per_page': per_page, 'total': total,
+            'has_next': page * per_page < total,
+        })
 
     # ─── Top selling ──────────────────────────────────────────────────
     @http.route('/api/mobile/v2/products/top-selling', type='http',

@@ -50,7 +50,9 @@ def _video_stats(vrec, tmpl):
     comments = 0
     wishlist = 0
     if vrec is not None:
-        views = int(getattr(vrec, 'bunny_views', 0) or 0)
+        # v2.1.29 — Bunny views (daily sync) + instant local plays.
+        views = int(getattr(vrec, 'bunny_views', 0) or 0) \
+            + int(getattr(vrec, 'local_view_count', 0) or 0)
         shares = int(getattr(vrec, 'share_count', 0) or 0)
         try:
             comments = int(getattr(vrec, 'comment_count', 0) or 0)
@@ -295,6 +297,23 @@ class MobileVideosAPI(http.Controller):
                 pass
         c = Comment.sudo().create(vals)
         return ok(_comment_json(c))
+
+    @http.route('/api/mobile/v2/videos/<int:vid>/view', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def video_view(self, vid, **kw):
+        """v2.1.29 — instant local view counter (Bunny stats sync lags by
+        a day; the reels UI needs numbers that move immediately)."""
+        v = request.env['product.video'].sudo().browse(vid)
+        if not v.exists():
+            return fail('NOT_FOUND', 'Video not found', 404)
+        try:
+            if 'local_view_count' in v._fields:
+                v.write({'local_view_count': (v.local_view_count or 0) + 1})
+            request.env.cr.commit()
+        except Exception:
+            pass
+        return ok({'done': True})
 
     @http.route('/api/mobile/v2/videos/<int:vid>/share', type='http',
                 auth='public', methods=['POST', 'OPTIONS'], csrf=False)

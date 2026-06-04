@@ -62,6 +62,8 @@ class ProductVideo(models.Model):
     ], string='Bunny status', readonly=True)
     bunny_encode_progress = fields.Integer('Encode %', readonly=True)
     bunny_views = fields.Integer('Views', readonly=True)
+    local_view_count = fields.Integer('App Views (live)', default=0,
+        help='Counted instantly by the app on play; Bunny views sync daily.')
     bunny_length = fields.Integer('Duration (s)', readonly=True)
     bunny_length_human = fields.Char('Duration', compute='_compute_bunny_length_human')
     bunny_avg_watch = fields.Float('Avg watch (s)', readonly=True)
