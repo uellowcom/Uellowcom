@@ -70,6 +70,8 @@ def serialize_product_card(product, lang='en_US'):
         'has_video': has_video,
         'rank': _product_rank_badge(product),
         'price_trend': _price_trend(product),
+        'cart_adds': _cart_adds_count(product),
+        'promo': _promo_badge(product),
     }
 
 
@@ -89,6 +91,35 @@ def _product_rank_badge(product):
         return _rank_dict(r)
     except Exception:
         return None
+
+
+def _promo_badge(product):
+    """v2.1.30 — active promotion coin for this product (or None)."""
+    try:
+        Promo = request.env.get('mobile.app.promotion')
+        if Promo is None:
+            return None
+        return Promo.sudo().badge_for(product.id,
+                                      website_id=get_website().id)
+    except Exception:
+        return None
+
+
+def _cart_adds_count(product):
+    """v2.1.30 — how many carts the product was added to (30 days,
+    any order state — social proof for the card ticker)."""
+    try:
+        request.env.cr.execute("""
+            SELECT COUNT(DISTINCT sol.order_id)
+              FROM sale_order_line sol
+              JOIN product_product pp ON pp.id = sol.product_id
+              JOIN sale_order so ON so.id = sol.order_id
+             WHERE pp.product_tmpl_id = %s
+               AND so.date_order >= (NOW() - INTERVAL '30 days')
+        """, [product.id])
+        return int(request.env.cr.fetchone()[0] or 0)
+    except Exception:
+        return 0
 
 
 def _price_trend(product):

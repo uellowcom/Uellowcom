@@ -7,7 +7,7 @@
     'author': 'Uellow',
     'website': 'https://uellow.com',
     'depends': ['base', 'website', 'sale', 'product', 'web', 'delivery',
-                'dev_facebook_shop_integration', 'delivery_carrier_portal'],
+                'dev_facebook_shop_integration', 'delivery_carrier_portal', 'uellow_multivendor'],
     'data': [
         'security/ir.model.access.csv',
         'views/mobile_dashboard_views.xml',
@@ -18,6 +18,8 @@
         'views/mobile_notification_views.xml',
         'views/mobile_app_setting_views.xml',
         'views/mobile_app_ad_views.xml',
+        'views/mobile_promotion_views.xml',
+        'views/vendor_promotions_templates.xml',
         'views/mobile_session_views.xml',
         'views/mobile_popup_views.xml',
         'views/mobile_extras_views.xml',

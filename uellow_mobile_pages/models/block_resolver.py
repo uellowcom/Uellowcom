@@ -211,6 +211,23 @@ def resolve_products(env, props, lang, block=None):
     elif source == 'newest':
         recs = Tmpl.search(base_dom, order='create_date desc', limit=limit)
 
+    elif source == 'promotion':
+        # v2.1.30 — products of one promotion campaign (props.promotion_id).
+        recs = Tmpl.browse([])
+        try:
+            pid = int(props.get('promotion_id') or 0)
+            Line = env.get('mobile.promotion.line')
+            if pid and Line is not None:
+                lines = Line.sudo().search([
+                    ('promotion_id', '=', pid),
+                    ('state', '=', 'approved')], limit=limit * 2)
+                recs = lines.mapped('product_tmpl_id').filtered(
+                    lambda p: p.active and p.is_published)[:limit]
+        except Exception:
+            recs = Tmpl.browse([])
+        if not recs:
+            recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
+
     elif source == 'price_drops':
         # v2.1.25 — products whose price recently DROPPED (internal price
         # intelligence). props.days narrows the window (default 14).

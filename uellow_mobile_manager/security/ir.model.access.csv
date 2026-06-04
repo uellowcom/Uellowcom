@@ -50,3 +50,7 @@ access_mobile_cart_share_portal,mobile.cart.share portal,model_mobile_cart_share
 access_mobile_otp_code_mgr,mobile.otp.code manager,model_mobile_otp_code,base.group_system,1,1,1,1
 access_mobile_app_ad_mgr,mobile.app.ad manager,model_mobile_app_ad,base.group_system,1,1,1,1
 access_mobile_app_ad_usr,mobile.app.ad user,model_mobile_app_ad,base.group_user,1,0,0,0
+access_mobile_app_promotion_mgr,mobile.app.promotion manager,model_mobile_app_promotion,base.group_system,1,1,1,1
+access_mobile_app_promotion_usr,mobile.app.promotion user,model_mobile_app_promotion,base.group_user,1,0,0,0
+access_mobile_promotion_line_mgr,mobile.promotion.line manager,model_mobile_promotion_line,base.group_system,1,1,1,1
+access_mobile_promotion_line_usr,mobile.promotion.line user,model_mobile_promotion_line,base.group_user,1,1,1,0
