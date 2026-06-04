@@ -17,6 +17,7 @@
         'views/mobile_feature_banner_views.xml',
         'views/mobile_notification_views.xml',
         'views/mobile_app_setting_views.xml',
+        'views/mobile_app_ad_views.xml',
         'views/mobile_session_views.xml',
         'views/mobile_popup_views.xml',
         'views/mobile_extras_views.xml',

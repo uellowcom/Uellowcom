@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mobile_app_ad_list" model="ir.ui.view">
+        <field name="name">mobile.app.ad.list</field>
+        <field name="model">mobile.app.ad</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="ad_type"/>
+                <field name="link_type" optional="show"/>
+                <field name="date_from" optional="hide"/>
+                <field name="date_to" optional="hide"/>
+                <field name="view_count"/>
+                <field name="click_count"/>
+                <field name="ctr"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mobile_app_ad_form" model="ir.ui.view">
+        <field name="name">mobile.app.ad.form</field>
+        <field name="model">mobile.app.ad</field>
+        <field name="arch" type="xml">
+            <form string="App Ad">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="اسم الإعلان"/></h1>
+                    </div>
+                    <group>
+                        <group string="النوع والجدولة">
+                            <field name="ad_type" widget="radio"/>
+                            <field name="active"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="website_ids" widget="many2many_tags"/>
+                        </group>
+                        <group string="الوسائط">
+                            <field name="title_en"/>
+                            <field name="title_ar"/>
+                            <field name="image" widget="image"
+                                   options="{'size': [200, 200]}"/>
+                            <field name="image_url"
+                                   placeholder="https://cdn... (بديل للرفع)"/>
+                            <field name="video_url"
+                                   placeholder="https://...mp4 أو m3u8"
+                                   invisible="ad_type == 'infeed'"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="عند الضغط">
+                            <field name="link_type" widget="radio"/>
+                            <field name="target_product_id"
+                                   invisible="link_type != 'product'"
+                                   required="link_type == 'product'"/>
+                            <field name="target_category_id"
+                                   invisible="link_type != 'category'"
+                                   required="link_type == 'category'"/>
+                            <field name="target_url"
+                                   invisible="link_type != 'url'"
+                                   required="link_type == 'url'"/>
+                        </group>
+                        <group string="خيارات النوع">
+                            <field name="popup_frequency"
+                                   invisible="ad_type != 'popup'"/>
+                            <field name="popup_delay"
+                                   invisible="ad_type != 'popup'"/>
+                            <field name="splash_seconds"
+                                   invisible="ad_type != 'splash'"/>
+                            <field name="splash_skippable"
+                                   invisible="ad_type != 'splash'"/>
+                            <field name="infeed_mode"
+                                   invisible="ad_type != 'infeed'"/>
+                            <field name="infeed_every_n"
+                                   invisible="ad_type != 'infeed' or infeed_mode != 'every_n'"/>
+                            <field name="infeed_category_ids" widget="many2many_tags"
+                                   invisible="ad_type != 'infeed'"/>
+                        </group>
+                    </group>
+                    <group string="📊 الإحصائيات">
+                        <group>
+                            <field name="view_count"/>
+                            <field name="click_count"/>
+                        </group>
+                        <group>
+                            <field name="ctr"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_mobile_app_ad_search" model="ir.ui.view">
+        <field name="name">mobile.app.ad.search</field>
+        <field name="model">mobile.app.ad</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter string="🪟 Popup" name="popup" domain="[('ad_type','=','popup')]"/>
+                <filter string="⚡ Splash" name="splash" domain="[('ad_type','=','splash')]"/>
+                <filter string="📦 وسط المنتجات" name="infeed" domain="[('ad_type','=','infeed')]"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active','=',False)]"/>
+                <group expand="1" string="Group By">
+                    <filter string="النوع" name="g_type" context="{'group_by': 'ad_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_mobile_app_ads" model="ir.actions.act_window">
+        <field name="name">📢 إعلانات التطبيق</field>
+        <field name="res_model">mobile.app.ad</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">أنشئ أول إعلان</p>
+            <p>Popup عند الفتح · فلاش مؤقت · إعلانات وسط المنتجات</p>
+        </field>
+    </record>
+    <menuitem id="menu_mobile_app_ads" name="📢 الإعلانات"
+              parent="uellow_mobile_manager.menu_mobile_root"
+              action="action_mobile_app_ads" sequence="35"/>
+</odoo>

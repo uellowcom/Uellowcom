@@ -20,3 +20,4 @@ from . import product_brand_image
 from . import wallet
 from . import tracking_extras
 from . import cart_share
+from . import mobile_app_ad
