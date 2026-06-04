@@ -105,14 +105,16 @@ class UellowPriceHistory(models.Model):
         current = rows[-1].price
         win_rows = [r for r in rows
                     if r.recorded_at >= now - timedelta(days=window_days)]
-        base = win_rows[0].price if win_rows else rows[0].price
-        change = ((current - base) / base * 100.0) if base else 0.0
+        # v2.1.28 — the indicator follows the LAST actual change (current
+        # vs previous price point). Comparing to the window start hid the
+        # arrow for any price that round-tripped back to its old value.
+        prev = rows[-2].price
+        change = ((current - prev) / prev * 100.0) if prev else 0.0
         prices = [r.price for r in rows]
         is_lowest = current <= min(prices) + 0.0005 and max(prices) > current
-        direction = ('down' if change < -0.5 else
-                     'up' if change > 0.5 else 'stable')
-        if not is_lowest and direction == 'stable':
-            return None
+        direction = ('down' if change < -0.05 else
+                     'up' if change > 0.05 else 'stable')
+        # v2.1.28 — stable is a signal too (shown with its own icon).
         return {
             'direction': direction,
             'change_pct': round(abs(change), 1),

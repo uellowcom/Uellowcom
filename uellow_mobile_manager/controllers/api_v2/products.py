@@ -111,7 +111,7 @@ def _price_trend(product):
             label = {'en': 'Price up %s%%' % t['change_pct'],
                      'ar': 'ارتفع السعر %s%%' % t['change_pct']}
         else:
-            return None
+            label = {'en': 'Stable price', 'ar': 'سعر مستقر'}
         return {**t, 'label': label}
     except Exception:
         return None
