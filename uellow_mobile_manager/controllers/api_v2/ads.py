@@ -13,9 +13,15 @@ from ._common import (safe_endpoint, get_payload, ok, fail, img_url,
 
 
 def _serialize_ad(a):
+    # v2.1.30 — uploaded images are served through our own PUBLIC route:
+    # /web/image requires read access on mobile.app.ad which guests don't
+    # have, so the app got 404s (empty placeholders).
+    from ._common import base_url
     image = None
     if a.image:
-        image = img_url('mobile.app.ad', a.id, 'image', unique=a.write_date)
+        image = '%s/api/mobile/v2/ads/%s/image?u=%s' % (
+            base_url().rstrip('/'), a.id,
+            a.write_date.strftime('%Y%m%d%H%M%S') if a.write_date else '0')
     elif a.image_url:
         image = a.image_url
     return {
@@ -55,6 +61,28 @@ class MobileAdsAPI(http.Controller):
         ads = request.env['mobile.app.ad'].sudo().active_ads(
             ad_type, website_id=get_website().id, category_id=cat)
         return ok([_serialize_ad(a) for a in ads])
+
+    @http.route('/api/mobile/v2/ads/<int:ad_id>/image', type='http',
+                auth='public', methods=['GET'], csrf=False)
+    def ad_image(self, ad_id, **kw):
+        """Public binary endpoint for uploaded ad images (PNG/JPG/GIF)."""
+        import base64
+        a = request.env['mobile.app.ad'].sudo().browse(ad_id)
+        if not a.exists() or not a.image:
+            return request.not_found()
+        data = base64.b64decode(a.image)
+        mime = 'image/png'
+        if data[:3] == b'GIF':
+            mime = 'image/gif'
+        elif data[:2] == b'\xff\xd8':
+            mime = 'image/jpeg'
+        elif data[:4] == b'RIFF':
+            mime = 'image/webp'
+        return request.make_response(data, headers=[
+            ('Content-Type', mime),
+            ('Content-Length', str(len(data))),
+            ('Cache-Control', 'public, max-age=3600'),
+        ])
 
     @http.route('/api/mobile/v2/ads/<int:ad_id>/event', type='http',
                 auth='public', methods=['POST', 'OPTIONS'], csrf=False)
