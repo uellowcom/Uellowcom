@@ -66,3 +66,4 @@ from . import push
 from . import videos
 from . import well_known
 from . import ads
+from . import reviewers
