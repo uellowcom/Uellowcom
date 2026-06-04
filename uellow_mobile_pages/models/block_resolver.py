@@ -284,6 +284,24 @@ def resolve_products(env, props, lang, block=None):
 
 
 def _product_brief(env, p, lang):
+    # v2.1.33 — reuse the FULL api_v2 card serializer when an HTTP
+    # request context exists (rank, promo coin, price trend, cart adds,
+    # video flag, real ratings/stock) so builder blocks render the same
+    # rich cards as the category page. Falls back to the brief shape.
+    try:
+        from odoo.http import request as _rq
+        if _rq:
+            from odoo.addons.uellow_mobile_manager.controllers.api_v2 \
+                .products import serialize_product_card
+            card = serialize_product_card(p, lang)
+            if card:
+                return card
+    except Exception:
+        pass
+    return _product_brief_fallback(env, p, lang)
+
+
+def _product_brief_fallback(env, p, lang):
     price = p.list_price
     compare = getattr(p, 'compare_list_price', 0.0) or 0.0
     cur = p.currency_id
