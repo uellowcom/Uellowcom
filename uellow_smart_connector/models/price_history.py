@@ -26,28 +26,28 @@ _logger = logging.getLogger(__name__)
 
 class UellowPriceHistory(models.Model):
     _name = 'uellow.price.history'
-    _description = 'سجل تغيرات الأسعار'
+    _description = 'Price Change History'
     _order = 'recorded_at desc'
     _rec_name = 'product_tmpl_id'
 
     product_tmpl_id = fields.Many2one('product.template', required=True,
                                       ondelete='cascade', index=True,
-                                      string='المنتج')
-    price = fields.Float('السعر', required=True, digits=(16, 3))
-    compare_price = fields.Float('السعر قبل الخصم', digits=(16, 3))
-    prev_price = fields.Float('السعر السابق', digits=(16, 3))
-    change_pct = fields.Float('نسبة التغير %', digits=(8, 2))
+                                      string='Product')
+    price = fields.Float('Price', required=True, digits=(16, 3))
+    compare_price = fields.Float('Compare Price', digits=(16, 3))
+    prev_price = fields.Float('Previous Price', digits=(16, 3))
+    change_pct = fields.Float('Change %', digits=(8, 2))
     direction = fields.Selection([
-        ('up', '▲ ارتفع'),
-        ('down', '▼ انخفض'),
-        ('stable', '— مستقر'),
-    ], default='stable', index=True, string='الاتجاه')
+        ('up', '▲ Increased'),
+        ('down', '▼ Decreased'),
+        ('stable', '— Stable'),
+    ], default='stable', index=True, string='Direction')
     source = fields.Selection([
-        ('write', 'تعديل مباشر'),
-        ('snapshot', 'لقطة يومية'),
-        ('baseline', 'خط أساس'),
-    ], default='write', string='المصدر')
-    recorded_at = fields.Datetime('وقت التسجيل', required=True, index=True,
+        ('write', 'Direct edit'),
+        ('snapshot', 'Daily snapshot'),
+        ('baseline', 'Baseline'),
+    ], default='write', string='Source')
+    recorded_at = fields.Datetime('Recorded At', required=True, index=True,
                                   default=fields.Datetime.now)
 
     # ── capture ────────────────────────────────────────────────────────

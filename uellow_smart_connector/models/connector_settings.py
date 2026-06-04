@@ -44,27 +44,27 @@ class ConnectorSettings(models.TransientModel):
       - D11: form wouldn't close after save; we now return an action_close.
     """
     _name = 'uellow.connector.settings'
-    _description = 'إعدادات Smart Connector'
+    _description = 'Smart Connector Settings'
 
     anthropic_api_key = fields.Char('Anthropic API Key')
     default_warranty_text = fields.Char(
-        'نص الضمان الافتراضي',
+        'Default Warranty Text',
         default='ضمان Uellow سنة كاملة — توصيل خلال 24 ساعة',
     )
-    default_price_variance = fields.Float('حد تغير السعر الافتراضي (%)', default=20.0)
-    enable_ai_default = fields.Boolean('تفعيل AI بشكل افتراضي', default=True)
-    max_products_default = fields.Integer('أقصى عدد منتجات افتراضي', default=500)
+    default_price_variance = fields.Float('Default Price Variance Limit (%)', default=20.0)
+    enable_ai_default = fields.Boolean('Enable AI by Default', default=True)
+    max_products_default = fields.Integer('Default Max Products', default=500)
 
     # Price Intelligence settings
-    price_check_enabled = fields.Boolean('تفعيل مراقبة الأسعار', default=True)
-    internal_price_watch = fields.Boolean('مراقبة أسعارنا الداخلية (سجل + مؤشرات)', default=True)
+    price_check_enabled = fields.Boolean('Enable Price Monitoring', default=True)
+    internal_price_watch = fields.Boolean('Internal Price Watch (history + indicators)', default=True)
     price_check_sources = fields.Char(
-        'مصادر المقارنة (URLs مفصولة بفاصلة)',
+        'Comparison Sources (comma-separated URLs)',
     )
 
     # Dead stock settings
-    dead_stock_days = fields.Integer('أيام الركود للتحذير', default=30)
-    dead_stock_alert_email = fields.Boolean('إرسال تنبيه بريد إلكتروني', default=True)
+    dead_stock_days = fields.Integer('Dead-stock Alert Days', default=30)
+    dead_stock_alert_email = fields.Boolean('Send Email Alert', default=True)
 
     @api.model
     def default_get(self, fields_list):
@@ -100,8 +100,8 @@ class ConnectorSettings(models.TransientModel):
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': _('تم الحفظ'),
-                'message': _('تم حفظ إعدادات Smart Connector.'),
+                'title': _('Saved'),
+                'message': _('Smart Connector settings saved.'),
                 'type': 'success',
                 'next': {'type': 'ir.actions.act_window_close'},
             },

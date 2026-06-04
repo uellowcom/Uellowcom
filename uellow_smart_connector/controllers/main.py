@@ -22,7 +22,7 @@ def _ensure_manager():
     """Raise AccessError unless the current user is a Smart Connector manager."""
     user = request.env.user
     if not user.has_group(_MANAGER_GROUP):
-        raise AccessError(_('غير مصرّح. تحتاج صلاحية "مدير Smart Connector".'))
+        raise AccessError(_('Not authorized. You need the "Smart Connector Manager" permission.'))
 
 
 class SmartConnectorController(http.Controller):
@@ -96,17 +96,17 @@ class SmartConnectorController(http.Controller):
         settings = request.env['uellow.connector.settings'].get_settings()
         api_key = (settings.get('anthropic_api_key') or '').strip()
         if not api_key:
-            return {'ok': False, 'message': _('لم يتم ضبط مفتاح API')}
+            return {'ok': False, 'message': _('API key is not configured')}
         # Cheap format sanity check before paying for any HTTP.
         if not api_key.startswith('sk-ant-') or len(api_key) < 50:
-            return {'ok': False, 'message': _('شكل المفتاح يبدو غير صحيح')}
+            return {'ok': False, 'message': _('The key format looks invalid')}
         try:
             import anthropic
             client = anthropic.Anthropic(api_key=api_key, timeout=8)
             # Free, fast endpoint — returns immediately if the key is valid.
             client.models.list()
-            return {'ok': True, 'message': _('الاتصال يعمل')}
+            return {'ok': True, 'message': _('Connection works')}
         except ImportError:
-            return {'ok': False, 'message': _('مكتبة anthropic غير مثبّتة')}
+            return {'ok': False, 'message': _('The anthropic library is not installed')}
         except Exception as e:
             return {'ok': False, 'message': str(e)[:200]}

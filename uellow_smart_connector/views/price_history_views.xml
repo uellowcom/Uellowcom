@@ -47,21 +47,21 @@
         <field name="arch" type="xml">
             <search>
                 <field name="product_tmpl_id"/>
-                <filter string="▼ انخفاضات" name="drops"
+                <filter string="▼ Drops" name="drops"
                         domain="[('direction','=','down')]"/>
-                <filter string="▲ ارتفاعات" name="ups"
+                <filter string="▲ Increases" name="ups"
                         domain="[('direction','=','up')]"/>
                 <separator/>
-                <filter string="آخر 7 أيام" name="d7"
+                <filter string="Last 7 days" name="d7"
                         domain="[('recorded_at','&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
-                <filter string="آخر 30 يوم" name="d30"
+                <filter string="Last 30 days" name="d30"
                         domain="[('recorded_at','&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
                 <group expand="1" string="Group By">
-                    <filter string="المنتج" name="g_prod"
+                    <filter string="Product" name="g_prod"
                             context="{'group_by': 'product_tmpl_id'}"/>
-                    <filter string="الاتجاه" name="g_dir"
+                    <filter string="Direction" name="g_dir"
                             context="{'group_by': 'direction'}"/>
-                    <filter string="اليوم" name="g_day"
+                    <filter string="Day" name="g_day"
                             context="{'group_by': 'recorded_at:day'}"/>
                 </group>
             </search>
@@ -69,7 +69,7 @@
     </record>
 
     <record id="action_price_history" model="ir.actions.act_window">
-        <field name="name">📈 سجل الأسعار</field>
+        <field name="name">📈 Price History</field>
         <field name="res_model">uellow.price.history</field>
         <field name="view_mode">list,graph,pivot</field>
         <field name="context">{'search_default_d30': 1}</field>
@@ -77,16 +77,16 @@
 
     <!-- Dashboard = graph-first view of the same data -->
     <record id="action_price_dashboard" model="ir.actions.act_window">
-        <field name="name">📊 داشبورد الأسعار</field>
+        <field name="name">📊 Price Dashboard</field>
         <field name="res_model">uellow.price.history</field>
         <field name="view_mode">graph,pivot,list</field>
         <field name="context">{'search_default_d30': 1, 'search_default_g_dir': 1}</field>
     </record>
 
-    <menuitem id="menu_sc_price_history" name="سجل الأسعار"
+    <menuitem id="menu_sc_price_history" name="Price History"
               parent="menu_sc_root" action="action_price_history"
               sequence="28"/>
-    <menuitem id="menu_sc_price_dashboard" name="داشبورد الأسعار"
+    <menuitem id="menu_sc_price_dashboard" name="Price Dashboard"
               parent="menu_sc_root" action="action_price_dashboard"
               sequence="29"/>
 

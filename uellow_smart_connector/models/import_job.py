@@ -22,65 +22,65 @@ class ImportJob(models.Model):
     Lifecycle: draft → processing → review → done | rolled_back
     """
     _name = 'uellow.import.job'
-    _description = 'عملية استيراد المنتجات'
+    _description = 'Product Import Job'
     _inherit = ['mail.thread', 'mail.activity.mixin']
     _rec_name = 'name'
     _order = 'id desc'
 
-    name = fields.Char('رقم العملية', readonly=True, default='جديد', copy=False)
+    name = fields.Char('Job Reference', readonly=True, default='New', copy=False)
     job_type = fields.Selection([
-        ('url',  'URL Import — استيراد من رابط'),
-        ('file', 'File Update — تحديث ملف'),
-    ], required=True, default='url', string='نوع العملية')
+        ('url',  'URL Import'),
+        ('file', 'File Update'),
+    ], required=True, default='url', string='Job Type')
 
     state = fields.Selection([
-        ('draft',       'مسودة'),
-        ('processing',  'جاري التنفيذ'),
-        ('review',      'مراجعة'),
-        ('done',        'مكتملة'),
-        ('rolled_back', 'تراجع'),
-        ('error',       'خطأ'),
-    ], default='draft', string='الحالة', tracking=True, index=True)
+        ('draft',       'Draft'),
+        ('processing',  'In Progress'),
+        ('review',      'Review'),
+        ('done',        'Done'),
+        ('rolled_back', 'Rollback'),
+        ('error',       'Error'),
+    ], default='draft', string='Status', tracking=True, index=True)
 
     # Source
-    source_url = fields.Char('رابط المصدر')
+    source_url = fields.Char('Source URL')
     attachment_id = fields.Many2one(
-        'ir.attachment', string='الملف المرفوع (Excel/PDF)',
+        'ir.attachment', string='Uploaded File (Excel/PDF)',
         ondelete='set null',
     )
 
     # AI options
-    enable_translation = fields.Boolean('ترجمة عربي/إنجليزي', default=True)
-    enable_seo = fields.Boolean('كتابة وصف SEO', default=True)
+    enable_translation = fields.Boolean('AR/EN Translation', default=True)
+    enable_seo = fields.Boolean('SEO Description Writing', default=True)
     warranty_text = fields.Char(
-        'نص ضمان Uellow',
+        'Uellow Warranty Text',
         default='ضمان Uellow سنة كاملة — توصيل خلال 24 ساعة',
     )
 
     # Safety
     price_variance_limit = fields.Float(
-        'حد تغير السعر (%)', default=20.0,
-        help='رفض تلقائي إذا تجاوز تغيير السعر هذه النسبة',
+        'Price Variance Limit (%)', default=20.0,
+        help='Auto-reject when the price change exceeds this percentage',
     )
-    max_products_per_run = fields.Integer('أقصى عدد منتجات', default=500)
+    max_products_per_run = fields.Integer('Max Products', default=500)
 
     # Results
     imported_product_ids = fields.Many2many(
-        'product.template', string='المنتجات المستوردة',
+        'product.template', string='Imported Products',
     )
     line_ids = fields.One2many(
-        'uellow.import.job.line', 'job_id', string='السطور',
+        'uellow.import.job.line', 'job_id', string='Lines',
     )
 
-    total_lines = fields.Integer(compute='_compute_stats', string='الإجمالي')
-    new_count = fields.Integer(compute='_compute_stats', string='جديد')
-    update_count = fields.Integer(compute='_compute_stats', string='تحديث')
-    warning_count = fields.Integer(compute='_compute_stats', string='تحذيرات')
-    approved_count = fields.Integer(compute='_compute_stats', string='معتمد')
+    total_lines = fields.Integer(compute='_compute_stats', string='Total')
+    new_count = fields.Integer(compute='_compute_stats', string='New')
+    update_count = fields.Integer(compute='_compute_stats', string='Update')
+    warning_count = fields.Integer(compute='_compute_stats', string='Warnings')
+    approved_count = fields.Integer(compute='_compute_stats', string='Approved')
 
     # Rollback snapshot — stores original product values as JSON
-    rollback_data = fields.Text('بيانات الاسترجاع (JSON)', readonly=True)
-    error_message = fields.Text('رسالة الخطأ', readonly=True)
+    rollback_data = fields.Text('Rollback Data (JSON)', readonly=True)
+    error_message = fields.Text('Error Message', readonly=True)
 
     @api.depends('line_ids.line_state', 'line_ids.product_action', 'line_ids.has_warning')
     def _compute_stats(self):
@@ -96,15 +96,15 @@ class ImportJob(models.Model):
     def _check_limits(self):
         for j in self:
             if j.max_products_per_run <= 0:
-                raise UserError(_('"أقصى عدد منتجات" يجب أن يكون أكبر من صفر.'))
+                raise UserError(_('"Max products" must be greater than zero.'))
             if j.price_variance_limit < 0:
-                raise UserError(_('"حد تغير السعر" لا يمكن أن يكون سالباً.'))
+                raise UserError(_('"Price variance limit" cannot be negative.'))
 
     @api.model_create_multi
     def create(self, vals_list):
         for v in vals_list:
-            if v.get('name', 'جديد') == 'جديد':
-                v['name'] = self.env['ir.sequence'].next_by_code('uellow.import.job') or 'جديد'
+            if v.get('name', 'New') == 'New':
+                v['name'] = self.env['ir.sequence'].next_by_code('uellow.import.job') or 'New'
         return super().create(vals_list)
 
     # ── Actions ─────────────────────────────────────────
@@ -113,11 +113,11 @@ class ImportJob(models.Model):
         """Validate then queue the import job."""
         self.ensure_one()
         if self.state != 'draft':
-            raise UserError(_('يمكن تشغيل المسودات فقط.'))
+            raise UserError(_('Only drafts can be run.'))
         if self.job_type == 'url' and not self.source_url:
-            raise UserError(_('أدخل رابط المصدر.'))
+            raise UserError(_('Enter the source URL.'))
         if self.job_type == 'file' and not self.attachment_id:
-            raise UserError(_('ارفع ملفاً.'))
+            raise UserError(_('Upload a file.'))
         # Clear stale error from previous failed run
         self.write({'error_message': False, 'state': 'processing'})
         self._process_job()
@@ -140,7 +140,7 @@ class ImportJob(models.Model):
                     raw_products = raw_products[:self.max_products_per_run]
 
                 if not raw_products:
-                    raise UserError(_('لم يتم العثور على أي منتج في المصدر.'))
+                    raise UserError(_('No products found in the source.'))
 
                 # Fuzzy match against existing products
                 lines_data = self._fuzzy_match_products(raw_products)
@@ -156,19 +156,19 @@ class ImportJob(models.Model):
 
                 self.state = 'review'
                 self.message_post(body=_(
-                    'تمت المعالجة. %d منتج جاهز للمراجعة.') % len(lines_data))
+                    'Processed. %d products ready for review.') % len(lines_data))
         except UserError as ue:
             # User-facing message — re-raise so it shows in the UI
             self.state = 'error'
             self.error_message = str(ue)
-            self.message_post(body=_('فشل المعالجة: %s') % ue.args[0])
+            self.message_post(body=_('Processing failed: %s') % ue.args[0])
             raise
         except Exception as e:
             self.state = 'error'
             self.error_message = str(e)
             _logger.exception('Smart Connector job %s failed', self.name)
-            self.message_post(body=_('فشل المعالجة (خطأ تقني): %s') % str(e)[:200])
-            raise UserError(_('فشل المعالجة. راجع صفحة "سجل الأخطاء" للتفاصيل.'))
+            self.message_post(body=_('Processing failed (technical error): %s') % str(e)[:200])
+            raise UserError(_('Processing failed. Check the error log for details.'))
 
     def _scrape_url(self, url):
         """Scrape product data from a URL using JSON-LD parsing."""
@@ -179,7 +179,7 @@ class ImportJob(models.Model):
             resp = requests.get(url, headers=headers, timeout=30)
             resp.raise_for_status()
         except Exception as e:
-            raise UserError(_('فشل الاتصال بالرابط: %s') % str(e))
+            raise UserError(_('Failed to reach the URL: %s') % str(e))
 
         products = []
         json_ld_matches = re.findall(
@@ -217,8 +217,8 @@ class ImportJob(models.Model):
         # Fail loudly when nothing found — silent placeholder would waste AI tokens
         if not products:
             raise UserError(_(
-                'لم يتم العثور على بيانات منتج في الرابط. '
-                'الموقع قد لا يستخدم JSON-LD المعياري.'))
+                'No product data found at the URL. '
+                'The site may not use standard JSON-LD.'))
         return products
 
     def _parse_file(self, attachment):
@@ -234,13 +234,13 @@ class ImportJob(models.Model):
         elif fname.endswith('.pdf'):
             return self._parse_pdf(content)
         else:
-            raise UserError(_('صيغة الملف غير مدعومة. يُقبل: xlsx, xls, pdf'))
+            raise UserError(_('Unsupported file format. Accepted: xlsx, xls, pdf'))
 
     def _parse_excel(self, content):
         try:
             import openpyxl
         except ImportError:
-            raise UserError(_('مكتبة openpyxl غير مثبّتة. نفّذ: pip install openpyxl'))
+            raise UserError(_('openpyxl is not installed. Run: pip install openpyxl'))
 
         wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True)
         ws = wb.active
@@ -288,7 +288,7 @@ class ImportJob(models.Model):
             import pdfplumber
         except ImportError:
             raise UserError(_(
-                'مكتبة pdfplumber غير مثبّتة. نفّذ: pip install pdfplumber'))
+                'pdfplumber is not installed. Run: pip install pdfplumber'))
         products = []
         with pdfplumber.open(io.BytesIO(content)) as pdf:
             for page in pdf.pages:
@@ -372,7 +372,7 @@ class ImportJob(models.Model):
                     if change_pct > self.price_variance_limit:
                         has_warning = True
                         warning_reason = _(
-                            'تغير السعر %.1f%% يتجاوز الحد %.0f%%') % (
+                            'Price change %.1f%% exceeds the %.0f%% limit') % (
                             change_pct, self.price_variance_limit)
 
             lines.append(self._line_from_raw(
@@ -467,7 +467,7 @@ class ImportJob(models.Model):
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
-            'name': f'مراجعة — {self.name}',
+            'name': f'Review — {self.name}',
             'res_model': 'uellow.import.review.wizard',
             'view_mode': 'form',
             'target': 'new',
@@ -482,9 +482,9 @@ class ImportJob(models.Model):
         """
         self.ensure_one()
         if not self.rollback_data:
-            raise UserError(_('لا توجد بيانات استرجاع لهذه العملية.'))
+            raise UserError(_('No rollback data for this job.'))
         if self.state != 'done':
-            raise UserError(_('يمكن التراجع عن العمليات المكتملة فقط.'))
+            raise UserError(_('Only completed jobs can be rolled back.'))
 
         try:
             data = json.loads(self.rollback_data)
@@ -505,10 +505,10 @@ class ImportJob(models.Model):
 
             self.state = 'rolled_back'
             self.message_post(body=_(
-                'تم التراجع — استُعيد %d منتج وأُرشِف %d منتج جديد.'
+                'Rolled back — %d products restored, %d new products archived.'
             ) % (len(updates or {}), len(creates or [])))
         except UserError:
             raise
         except Exception as e:
             _logger.exception('Rollback failed for job %s', self.name)
-            raise UserError(_('فشل التراجع: %s') % str(e))
+            raise UserError(_('Rollback failed: %s') % str(e))

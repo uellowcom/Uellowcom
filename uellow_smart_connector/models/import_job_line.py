@@ -16,7 +16,7 @@ class ImportJobLine(models.Model):
     Stores raw extracted data + AI-enriched data + review decision.
     """
     _name = 'uellow.import.job.line'
-    _description = 'سطر عملية الاستيراد'
+    _description = 'Import Job Line'
     _order = 'job_id, has_warning desc, id'
 
     job_id = fields.Many2one(
@@ -25,67 +25,67 @@ class ImportJobLine(models.Model):
     )
 
     # Product names
-    name_en = fields.Char('الاسم (إنجليزي)', required=True)
-    name_ar = fields.Char('الاسم (عربي)')
+    name_en = fields.Char('Name (EN)', required=True)
+    name_ar = fields.Char('Name (AR)')
 
     # Descriptions
-    description_en = fields.Text('الوصف (إنجليزي)')
-    description_ar = fields.Text('الوصف (عربي)')
+    description_en = fields.Text('Description (EN)')
+    description_ar = fields.Text('Description (AR)')
 
     # Pricing
-    new_price = fields.Float('السعر الجديد')
-    old_price = fields.Float('السعر الحالي', readonly=True)
+    new_price = fields.Float('New Price')
+    old_price = fields.Float('Current Price', readonly=True)
     price_diff_pct = fields.Float(
-        compute='_compute_price_diff', string='فرق السعر (%)', store=True,
+        compute='_compute_price_diff', string='Price Diff (%)', store=True,
     )
 
     # Stock
-    new_qty = fields.Integer('الكمية الجديدة')
+    new_qty = fields.Integer('New Quantity')
 
     # Source info
-    source_sku = fields.Char('SKU المصدر')
-    source_url = fields.Char('رابط المصدر')
-    image_url = fields.Char('رابط الصورة')
+    source_sku = fields.Char('Source SKU')
+    source_url = fields.Char('Source URL')
+    image_url = fields.Char('Image URL')
 
     # Matching
     product_action = fields.Selection([
-        ('new',    'منتج جديد'),
-        ('update', 'تحديث منتج موجود'),
-        ('skip',   'تجاهل'),
-    ], default='new', string='الإجراء', required=True)
+        ('new',    'New Product'),
+        ('update', 'Update Existing Product'),
+        ('skip',   'Ignore'),
+    ], default='new', string='Action', required=True)
 
-    match_score = fields.Integer('نسبة التطابق (%)', default=0)
+    match_score = fields.Integer('Match Confidence (%)', default=0)
     existing_product_id = fields.Many2one(
-        'product.template', string='المنتج الموجود',
+        'product.template', string='Existing Product',
         ondelete='set null',
     )
 
     # Line status — `index` accelerates the (job_id, line_state) lookup that
     # the review wizard and dashboard hit constantly.
     line_state = fields.Selection([
-        ('pending',  'بانتظار المراجعة'),
-        ('approved', 'معتمد'),
-        ('rejected', 'مرفوض'),
-        ('applied',  'تم التطبيق'),
-    ], default='pending', string='حالة السطر', index=True)
+        ('pending',  'Awaiting Review'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('applied',  'Applied'),
+    ], default='pending', string='Line Status', index=True)
 
-    has_warning = fields.Boolean('تحذير', default=False, index=True)
-    warning_reason = fields.Char('سبب التحذير')
-    ai_enriched = fields.Boolean('AI أثرى', default=False)
+    has_warning = fields.Boolean('Warning', default=False, index=True)
+    warning_reason = fields.Char('Warning Reason')
+    ai_enriched = fields.Boolean('AI Enriched', default=False)
 
     reject_reason = fields.Selection([
-        ('price_unrealistic',   'سعر غير منطقي'),
-        ('bad_description',     'وصف غير كافٍ'),
-        ('bad_images',          'صور سيئة'),
-        ('wrong_category',      'فئة خاطئة'),
-        ('duplicate',           'منتج مكرر'),
-        ('other',               'أخرى'),
-    ], string='سبب الرفض')
-    reject_note = fields.Char('ملاحظة الرفض')
+        ('price_unrealistic',   'Unreasonable Price'),
+        ('bad_description',     'Insufficient Description'),
+        ('bad_images',          'Bad Images'),
+        ('wrong_category',      'Wrong Category'),
+        ('duplicate',           'Duplicate Product'),
+        ('other',               'Other'),
+    ], string='Rejection Reason')
+    reject_note = fields.Char('Rejection Note')
 
     # Applied product
     applied_product_id = fields.Many2one(
-        'product.template', string='المنتج المُطبَّق', readonly=True,
+        'product.template', string='Applied Product', readonly=True,
     )
 
     @api.depends('new_price', 'old_price')
@@ -100,9 +100,9 @@ class ImportJobLine(models.Model):
     def _check_non_negative(self):
         for l in self:
             if l.new_price < 0:
-                raise UserError(_('السعر لا يمكن أن يكون سالباً.'))
+                raise UserError(_('Price cannot be negative.'))
             if l.new_qty < 0:
-                raise UserError(_('الكمية لا يمكن أن تكون سالبة.'))
+                raise UserError(_('Quantity cannot be negative.'))
 
     def action_approve(self):
         # B6: ensure scalar writes on a recordset don't crash with `expected singleton`.
@@ -116,7 +116,7 @@ class ImportJobLine(models.Model):
         for line in self:
             if not line.reject_reason:
                 raise UserError(_(
-                    'حدد سبب الرفض قبل رفض السطر "%s".') % (line.name_en or line.id))
+                    'Set a rejection reason before rejecting line "%s".') % (line.name_en or line.id))
             line.line_state = 'rejected'
 
     def action_apply(self):

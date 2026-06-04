@@ -20,31 +20,31 @@ class PriceIntelligence(models.Model):
     Cron runs daily to check current competitor price.
     """
     _name = 'uellow.price.intelligence'
-    _description = 'مراقبة أسعار المنافسين'
+    _description = 'Competitor Price Intelligence'
     _rec_name = 'product_id'
     _order = 'price_diff_pct desc'
 
     product_id = fields.Many2one(
         'product.template', required=True, ondelete='cascade', index=True,
-        string='المنتج',
+        string='Product',
     )
-    source_name = fields.Char('المصدر', required=True)
-    source_url = fields.Char('رابط المنافس', required=True)
-    our_price = fields.Float('سعرنا', related='product_id.list_price', store=True)
-    competitor_price = fields.Float('سعر المنافس', readonly=True)
-    competitor_currency = fields.Char('عملة المنافس', readonly=True)
-    last_checked = fields.Datetime('آخر فحص', readonly=True)
-    last_error = fields.Char('آخر خطأ', readonly=True)
-    price_diff_pct = fields.Float('فرق السعر (%)', readonly=True, store=True)
+    source_name = fields.Char('Source', required=True)
+    source_url = fields.Char('Competitor URL', required=True)
+    our_price = fields.Float('Our Price', related='product_id.list_price', store=True)
+    competitor_price = fields.Float('Competitor Price', readonly=True)
+    competitor_currency = fields.Char('Competitor Currency', readonly=True)
+    last_checked = fields.Datetime('Last Checked', readonly=True)
+    last_error = fields.Char('Last Error', readonly=True)
+    price_diff_pct = fields.Float('Price Diff (%)', readonly=True, store=True)
 
     state = fields.Selection([
-        ('ok',      'طبيعي'),
-        ('cheaper', 'نحن أرخص'),
-        ('pricier', 'نحن أغلى'),
-        ('error',   'خطأ في الفحص'),
-    ], default='ok', string='الحالة', index=True)
+        ('ok',      'Normal'),
+        ('cheaper', 'We are cheaper'),
+        ('pricier', 'We are pricier'),
+        ('error',   'Check failed'),
+    ], default='ok', string='Status', index=True)
 
-    alert_sent = fields.Boolean('تنبيه أُرسل', default=False)
+    alert_sent = fields.Boolean('Alert Sent', default=False)
 
     @api.model
     def cron_check_prices(self):
@@ -91,7 +91,7 @@ class PriceIntelligence(models.Model):
         price, currency = self._extract_price(resp.text)
         if price is None:
             self.state = 'error'
-            self.last_error = _('تعذّر استخراج سعر من الصفحة (لا توجد JSON-LD أو OG tags).')
+            self.last_error = _('Could not extract a price from the page (no JSON-LD or OG tags).')
             self.last_checked = fields.Datetime.now()
             return
 
@@ -101,7 +101,7 @@ class PriceIntelligence(models.Model):
             # Refuse to compare — would produce wildly wrong "diff %"
             self.state = 'error'
             self.last_error = _(
-                'عملة المنافس (%s) لا تطابق عملتنا (%s) — تجاوز الفحص.'
+                'Competitor currency (%s) does not match ours (%s) — check skipped.'
             ) % (comp_currency, our_currency)
             self.competitor_price = price
             self.competitor_currency = comp_currency

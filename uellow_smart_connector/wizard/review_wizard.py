@@ -8,20 +8,20 @@ class ImportReviewWizard(models.TransientModel):
     Opens from the import job form view.
     """
     _name = 'uellow.import.review.wizard'
-    _description = 'مراجعة نتائج الاستيراد'
+    _description = 'Import Review Wizard'
 
     job_id = fields.Many2one('uellow.import.job', required=True, ondelete='cascade')
     job_name = fields.Char(related='job_id.name', readonly=True)
 
     filter_type = fields.Selection([
-        ('all',      'الكل'),
-        ('warnings', 'التحذيرات فقط'),
-        ('new',      'المنتجات الجديدة فقط'),
-        ('updates',  'التحديثات فقط'),
-    ], default='all', string='عرض')
+        ('all',      'All'),
+        ('warnings', 'Warnings only'),
+        ('new',      'New products only'),
+        ('updates',  'Updates only'),
+    ], default='all', string='Show')
 
-    approve_all = fields.Boolean('اعتماد الكل تلقائياً')
-    reject_warnings = fields.Boolean('رفض التحذيرات تلقائياً')
+    approve_all = fields.Boolean('Auto-approve All')
+    reject_warnings = fields.Boolean('Auto-reject Warnings')
 
     line_count = fields.Integer(compute='_compute_counts')
     warning_count = fields.Integer(compute='_compute_counts')
@@ -91,15 +91,15 @@ class ImportReviewWizard(models.TransientModel):
                 '• %s — %s' % (name, err) for name, err in failures[:20]
             )
             job.message_post(body=_(
-                'تم التطبيق: %d منتج · مرفوض: %d · فشل: %d.\n%s'
+                'Applied: %d products · rejected: %d · failed: %d.\n%s'
             ) % (applied, rejected_count, len(failures), failure_lines))
             # Keep job in review so the user can retry the failed lines.
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': _('تمت المعالجة مع وجود أخطاء'),
-                    'message': _('تم تطبيق %d منتج، وفشل %d. راجع المحادثة للتفاصيل.')
+                    'title': _('Processed with errors'),
+                    'message': _('%d products applied, %d failed. See the chatter for details.')
                                % (applied, len(failures)),
                     'type': 'warning',
                     'sticky': True,
@@ -110,14 +110,14 @@ class ImportReviewWizard(models.TransientModel):
         # All clean → mark done
         job.state = 'done'
         job.message_post(body=_(
-            'تم التطبيق: %d منتج · مرفوض: %d سطر.') % (applied, rejected_count))
+            'Applied: %d products · rejected: %d lines.') % (applied, rejected_count))
         return {'type': 'ir.actions.act_window_close'}
 
     def action_open_lines(self):
         """Open line list for manual review."""
         return {
             'type': 'ir.actions.act_window',
-            'name': f'سطور — {self.job_id.name}',
+            'name': f'Lines — {self.job_id.name}',
             'res_model': 'uellow.import.job.line',
             'view_mode': 'list,form',
             'domain': [('job_id', '=', self.job_id.id)],

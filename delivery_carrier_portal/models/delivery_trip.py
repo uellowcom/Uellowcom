@@ -46,8 +46,8 @@ class DeliveryTrip(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': 'تحذير / Warning',
-                    'message': '%d طلب لم يتم تسليمه بعد. هل تريد إغلاق الرحلة؟' % len(undelivered),
+                    'title': 'Warning',
+                    'message': '%d orders are not delivered yet. Close the trip anyway?' % len(undelivered),
                     'type': 'warning',
                     'sticky': True,
                 }

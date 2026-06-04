@@ -4,38 +4,38 @@
     <field name="name">uellow.import.review.wizard.form</field>
     <field name="model">uellow.import.review.wizard</field>
     <field name="arch" type="xml">
-      <form string="مراجعة نتائج الاستيراد">
+      <form string="Import Review">
         <sheet>
           <div class="o_field_widget oe_button_box">
             <button class="oe_stat_button" icon="fa-list" type="object"
                     name="action_open_lines">
-              <field name="line_count" widget="statinfo" string="سطر"/>
+              <field name="line_count" widget="statinfo" string="Lines"/>
             </button>
             <button class="oe_stat_button" icon="fa-exclamation-triangle">
-              <field name="warning_count" widget="statinfo" string="تحذير"/>
+              <field name="warning_count" widget="statinfo" string="Warnings"/>
             </button>
             <button class="oe_stat_button" icon="fa-plus">
-              <field name="new_count" widget="statinfo" string="جديد"/>
+              <field name="new_count" widget="statinfo" string="New"/>
             </button>
             <button class="oe_stat_button" icon="fa-refresh">
-              <field name="update_count" widget="statinfo" string="تحديث"/>
+              <field name="update_count" widget="statinfo" string="Updates"/>
             </button>
           </div>
           <group>
             <field name="job_id" readonly="1"/>
             <field name="filter_type"/>
           </group>
-          <group string="خيارات الاعتماد السريع">
+          <group string="Quick Approval Options">
             <field name="approve_all"/>
             <field name="reject_warnings"/>
           </group>
         </sheet>
         <footer>
-          <button name="action_apply_review" string="تطبيق وإغلاق"
+          <button name="action_apply_review" string="Apply &amp; Close"
                   type="object" class="oe_highlight"/>
-          <button name="action_open_lines" string="مراجعة يدوية"
+          <button name="action_open_lines" string="Manual Review"
                   type="object"/>
-          <button string="إلغاء" special="cancel" class="btn-secondary"/>
+          <button string="Cancel" special="cancel" class="btn-secondary"/>
         </footer>
       </form>
     </field>

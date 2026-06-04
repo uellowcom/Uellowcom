@@ -132,16 +132,16 @@
     <field name="arch" type="xml">
       <search string="Search Import Jobs">
         <field name="name" string="Job Number"/>
-        <filter string="Pending Review — للمراجعة" name="review"
+        <filter string="Pending Review" name="review"
                 domain="[('state','=','review')]"/>
-        <filter string="Done — مكتملة" name="done"
+        <filter string="Done" name="done"
                 domain="[('state','=','done')]"/>
-        <filter string="Error — خطأ" name="error"
+        <filter string="Error" name="error"
                 domain="[('state','=','error')]"/>
         <separator/>
-        <filter string="URL Import — رابط" name="url"
+        <filter string="URL Import" name="url"
                 domain="[('job_type','=','url')]"/>
-        <filter string="File Import — ملف" name="file"
+        <filter string="File Import" name="file"
                 domain="[('job_type','=','file')]"/>
         <group expand="0" string="Group By">
           <filter string="State" name="group_state"

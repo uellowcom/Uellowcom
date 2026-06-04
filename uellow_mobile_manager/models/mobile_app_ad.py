@@ -21,74 +21,74 @@ from odoo import api, fields, models
 
 class MobileAppAd(models.Model):
     _name = 'mobile.app.ad'
-    _description = 'إعلانات التطبيق'
+    _description = 'Mobile App Ads'
     _order = 'sequence, id desc'
 
-    name = fields.Char('الاسم الداخلي', required=True)
+    name = fields.Char('Internal Name', required=True)
     active = fields.Boolean(default=True)
     sequence = fields.Integer(default=10)
 
     ad_type = fields.Selection([
-        ('popup', '🪟 Popup عند الفتح'),
-        ('splash', '⚡ فلاش عند الفتح (يختفي تلقائياً)'),
-        ('infeed', '📦 وسط المنتجات'),
-    ], required=True, default='popup', index=True, string='النوع')
+        ('popup', '🪟 Popup on open'),
+        ('splash', '⚡ Splash flash on open (auto-dismiss)'),
+        ('infeed', '📦 In-feed (between products)'),
+    ], required=True, default='popup', index=True, string='Type')
 
     # ── media ───────────────────────────────────────────────────────
-    title_en = fields.Char('العنوان (EN)')
-    title_ar = fields.Char('العنوان (AR)')
-    image = fields.Image('الصورة (PNG/JPG/GIF)', max_width=1600,
+    title_en = fields.Char('Title (EN)')
+    title_ar = fields.Char('Title (AR)')
+    image = fields.Image('Image (PNG/JPG/GIF)', max_width=1600,
                          max_height=1600)
-    image_url = fields.Char('أو رابط صورة خارجي',
+    image_url = fields.Char('or External Image URL',
         help='CDN URL — used when no image is uploaded.')
-    video_url = fields.Char('أو رابط فيديو (MP4/HLS)',
+    video_url = fields.Char('or Video URL (MP4/HLS)',
         help='Popup/Splash can play a muted auto-play video instead of '
              'an image.')
 
     # ── tap target ──────────────────────────────────────────────────
     link_type = fields.Selection([
-        ('none', 'بدون'),
-        ('product', 'منتج'),
-        ('category', 'قسم'),
-        ('url', 'رابط'),
-    ], default='none', string='عند الضغط')
-    target_product_id = fields.Many2one('product.template', 'المنتج')
-    target_category_id = fields.Many2one('product.public.category', 'القسم')
-    target_url = fields.Char('الرابط')
+        ('none', 'None'),
+        ('product', 'Product'),
+        ('category', 'Category'),
+        ('url', 'URL'),
+    ], default='none', string='On Tap')
+    target_product_id = fields.Many2one('product.template', 'Target Product')
+    target_category_id = fields.Many2one('product.public.category', 'Target Category')
+    target_url = fields.Char('Target URL')
 
     # ── scheduling + scope ──────────────────────────────────────────
-    date_from = fields.Datetime('يبدأ في')
-    date_to = fields.Datetime('ينتهي في')
+    date_from = fields.Datetime('Starts At')
+    date_to = fields.Datetime('Ends At')
     website_ids = fields.Many2many(
         'website', 'mobile_app_ad_website_rel', 'ad_id', 'website_id',
-        string='الويبسايتات', help='فارغ = كل الويبسايتات')
+        string='Websites', help='Empty = all websites')
 
     # ── popup options ───────────────────────────────────────────────
     popup_frequency = fields.Selection([
-        ('always', 'كل مرة يفتح التطبيق'),
-        ('day', 'مرة واحدة يومياً'),
-        ('once', 'مرة واحدة فقط'),
-    ], default='day', string='تكرار الظهور')
-    popup_delay = fields.Integer('تأخير الظهور (ثواني)', default=1)
+        ('always', 'Every app open'),
+        ('day', 'Once per day'),
+        ('once', 'Only once ever'),
+    ], default='day', string='Frequency')
+    popup_delay = fields.Integer('Show Delay (seconds)', default=1)
 
     # ── splash options ──────────────────────────────────────────────
-    splash_seconds = fields.Integer('مدة العرض (ثواني)', default=4)
-    splash_skippable = fields.Boolean('قابل للتخطي', default=True)
+    splash_seconds = fields.Integer('Display Duration (seconds)', default=4)
+    splash_skippable = fields.Boolean('Skippable', default=True)
 
     # ── infeed options ──────────────────────────────────────────────
     infeed_mode = fields.Selection([
-        ('every_n', 'كل N منتج'),
-        ('random', 'عشوائي'),
-    ], default='every_n', string='طريقة التوزيع')
-    infeed_every_n = fields.Integer('كل كم منتج', default=8)
+        ('every_n', 'Every N products'),
+        ('random', 'Random'),
+    ], default='every_n', string='Placement Mode')
+    infeed_every_n = fields.Integer('Every N Products', default=8)
     infeed_category_ids = fields.Many2many(
         'product.public.category', 'mobile_app_ad_categ_rel',
-        'ad_id', 'categ_id', string='في الأقسام',
-        help='فارغ = كل الأقسام')
+        'ad_id', 'categ_id', string='Limit to Categories',
+        help='Empty = all categories')
 
     # ── stats ───────────────────────────────────────────────────────
-    view_count = fields.Integer('المشاهدات', readonly=True)
-    click_count = fields.Integer('النقرات', readonly=True)
+    view_count = fields.Integer('Views', readonly=True)
+    click_count = fields.Integer('Clicks', readonly=True)
     ctr = fields.Float('CTR %', compute='_compute_ctr', store=False)
 
     @api.depends('view_count', 'click_count')

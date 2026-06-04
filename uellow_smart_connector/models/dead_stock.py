@@ -17,45 +17,45 @@ class DeadStockMonitor(models.Model):
     Cron runs weekly and generates alerts.
     """
     _name = 'uellow.dead.stock'
-    _description = 'مراقبة المخزون الراكد'
+    _description = 'Dead Stock Monitoring'
     _rec_name = 'product_id'
     _order = 'days_since_last_sale desc'
 
     product_id = fields.Many2one(
         'product.product', required=True, ondelete='cascade',
-        string='المنتج (Variant)', index=True,
+        string='Product (Variant)', index=True,
     )
     product_tmpl_id = fields.Many2one(
         'product.template',
         compute='_compute_product_info',
         store=True,
-        string='المنتج الأب',
+        string='Parent Product',
     )
     # NB: not store=True — vendor on the product can change after we cached,
     # which would silently leave the stored value stale (audit B5).
     vendor_partner_id = fields.Many2one(
         'res.partner',
         compute='_compute_product_info',
-        string='التاجر',
+        string='Vendor',
     )
 
-    qty_on_hand = fields.Float('الكمية في المخزن', readonly=True)
-    last_sale_date = fields.Date('آخر بيعة', readonly=True)
-    days_since_last_sale = fields.Integer('أيام منذ آخر بيعة', readonly=True)
+    qty_on_hand = fields.Float('Qty On Hand', readonly=True)
+    last_sale_date = fields.Date('Last Sale', readonly=True)
+    days_since_last_sale = fields.Integer('Days Since Last Sale', readonly=True)
 
     suggested_action = fields.Selection([
-        ('discount',      'خصم Flash Sale'),
-        ('bundle',        'دمج في حزمة Bundle'),
-        ('return_vendor', 'إرجاع للتاجر'),
-        ('write_off',     'شطب'),
-        ('none',          'لا إجراء'),
-    ], default='discount', string='الإجراء المقترح')
+        ('discount',      'Flash Sale Discount'),
+        ('bundle',        'Merge into Bundle'),
+        ('return_vendor', 'Return to Vendor'),
+        ('write_off',     'Write Off'),
+        ('none',          'No Action'),
+    ], default='discount', string='Suggested Action')
 
     state = fields.Selection([
-        ('active',   'راكد'),
-        ('resolved', 'تمت المعالجة'),
-        ('ignored',  'متجاهل'),
-    ], default='active', string='الحالة', index=True)
+        ('active',   'Stale'),
+        ('resolved', 'Processed'),
+        ('ignored',  'Ignored'),
+    ], default='active', string='Status', index=True)
 
     alert_sent = fields.Boolean(default=False)
 
