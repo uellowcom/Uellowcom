@@ -28,7 +28,10 @@ class AffiliatePortal(CustomerPortal):
 
     @http.route('/my/affiliate', type='http', auth='user', website=True)
     def my_affiliate(self, **kw):
+        # v2 — the rich standalone console replaced the inline portal page.
         aff = _portal_affiliate()
+        if aff:
+            return request.redirect('/affiliate/panel')
         values = self._prepare_portal_layout_values()
         if not aff:
             values['aff'] = None

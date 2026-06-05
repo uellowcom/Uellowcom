@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Bonus campaigns ────────────────────────────────────────── -->
+    <record id="campaign_list" model="ir.ui.view">
+        <field name="name">uellow.affiliate.campaign.list</field>
+        <field name="model">uellow.affiliate.campaign</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="boost_pct"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="categ_id"/>
+                <field name="product_tmpl_id"/>
+                <field name="tiers"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="campaign_form" model="ir.ui.view">
+        <field name="name">uellow.affiliate.campaign.form</field>
+        <field name="model">uellow.affiliate.campaign</field>
+        <field name="arch" type="xml">
+            <form string="Bonus Campaign">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"
+                                   placeholder="Weekend boost"/></h1>
+                    </div>
+                    <group>
+                        <group string="Boost">
+                            <field name="name_ar"/>
+                            <field name="boost_pct"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Scope">
+                            <field name="tiers"/>
+                            <field name="categ_id"/>
+                            <field name="product_tmpl_id"/>
+                        </group>
+                    </group>
+                    <group string="Banner shown to partners">
+                        <field name="note"/>
+                        <field name="note_ar"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="campaign_action" model="ir.actions.act_window">
+        <field name="name">Bonus Campaigns</field>
+        <field name="res_model">uellow.affiliate.campaign</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a bonus campaign</p>
+            <p>Extra commission points during a window — global, per
+               category, or per product; optionally tier-gated.</p>
+        </field>
+    </record>
+
+    <!-- ── Partner news ───────────────────────────────────────────── -->
+    <record id="news_list" model="ir.ui.view">
+        <field name="name">uellow.affiliate.news.list</field>
+        <field name="model">uellow.affiliate.news</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="emoji"/>
+                <field name="title"/>
+                <field name="title_ar"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="news_form" model="ir.ui.view">
+        <field name="name">uellow.affiliate.news.form</field>
+        <field name="model">uellow.affiliate.news</field>
+        <field name="arch" type="xml">
+            <form string="Partner News">
+                <sheet>
+                    <group>
+                        <field name="emoji"/>
+                        <field name="title"/>
+                        <field name="title_ar"/>
+                        <field name="body"/>
+                        <field name="body_ar"/>
+                        <field name="active"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="news_action" model="ir.actions.act_window">
+        <field name="name">Partner News</field>
+        <field name="res_model">uellow.affiliate.news</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="click_action" model="ir.actions.act_window">
+        <field name="name">Link Clicks</field>
+        <field name="res_model">uellow.affiliate.click</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <record id="click_list" model="ir.ui.view">
+        <field name="name">uellow.affiliate.click.list</field>
+        <field name="model">uellow.affiliate.click</field>
+        <field name="arch" type="xml">
+            <list create="false">
+                <field name="create_date"/>
+                <field name="affiliate_id"/>
+                <field name="product_tmpl_id"/>
+            </list>
+        </field>
+    </record>
+
+    <menuitem id="menu_affiliate_campaigns" name="Bonus Campaigns"
+              parent="menu_affiliate_root" action="campaign_action"
+              sequence="50"/>
+    <menuitem id="menu_affiliate_news" name="Partner News"
+              parent="menu_affiliate_root" action="news_action"
+              sequence="55"/>
+    <menuitem id="menu_affiliate_clicks" name="Link Clicks"
+              parent="menu_affiliate_root" action="click_action"
+              sequence="60"/>
+</odoo>

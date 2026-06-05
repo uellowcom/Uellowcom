@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html>
+        <head>
+            <meta charset="utf-8"/>
+            <meta name="viewport"
+                  content="width=device-width, initial-scale=1"/>
+            <title>Uellow Partners Console</title>
+            <style>
+:root{--dark:#412402;--dark2:#2C1801;--gold:#F5C320;--goldL:#FFD75E;
+ --bg:#F4F1E9;--green:#1F8A40;--red:#C0392B;--card:#fff;--muted:#8a8a8a}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Tajawal',
+ 'Segoe UI',Tahoma,sans-serif}
+body{background:var(--bg);display:flex;min-height:100vh}
+a{text-decoration:none;color:inherit}
+/* sidebar */
+.side{width:235px;background:linear-gradient(180deg,var(--dark),
+ var(--dark2));color:#fff;display:flex;flex-direction:column;
+ position:fixed;top:0;bottom:0;inset-inline-start:0;z-index:5;
+ transition:transform .25s}
+.side .logo{padding:22px 18px;font-size:19px;font-weight:900;
+ color:var(--goldL);border-bottom:1px solid #ffffff14}
+.side .logo small{display:block;font-size:10.5px;color:#ffffff70;
+ font-weight:500;margin-top:2px}
+.nav{flex:1;padding:10px 0;overflow:auto}
+.nav a{display:flex;align-items:center;gap:11px;padding:12px 18px;
+ font-size:13.5px;font-weight:700;color:#ffffffb0;cursor:pointer;
+ border-inline-start:3px solid transparent}
+.nav a:hover{background:#ffffff0d;color:#fff}
+.nav a.on{background:#ffffff14;color:var(--goldL);
+ border-inline-start-color:var(--gold)}
+.nav .ic{font-size:17px;width:22px;text-align:center}
+.side .foot{padding:14px 18px;border-top:1px solid #ffffff14;
+ font-size:11px;color:#ffffff60}
+/* main */
+.main{flex:1;margin-inline-start:235px;padding:0 0 40px}
+.topbar{background:#fff;padding:13px 24px;display:flex;
+ align-items:center;gap:12px;box-shadow:0 1px 6px #0000000d;
+ position:sticky;top:0;z-index:4}
+.topbar h2{font-size:16px;font-weight:900;color:var(--dark);flex:1}
+.chip{background:var(--bg);border-radius:999px;padding:5px 13px;
+ font-size:12px;font-weight:800;color:var(--dark)}
+.btn{background:var(--gold);color:var(--dark);border:none;
+ border-radius:10px;padding:9px 16px;font-weight:900;font-size:12.5px;
+ cursor:pointer;font-family:inherit}
+.btn.dark{background:var(--dark);color:var(--goldL)}
+.btn.ghost{background:#fff;border:1px solid #e3e3e3;color:var(--dark)}
+.btn:disabled{opacity:.5;cursor:default}
+section{display:none;padding:20px 24px;max-width:1080px}
+section.on{display:block}
+.grid{display:grid;gap:12px}
+.g3{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+.card{background:var(--card);border-radius:14px;padding:16px;
+ box-shadow:0 1px 5px #00000009}
+.stat .v{font-size:21px;font-weight:900}
+.stat .l{font-size:11px;color:var(--muted);font-weight:700;
+ margin-top:2px}
+.codecard{background:linear-gradient(120deg,var(--dark),#6B4A1B);
+ color:#fff;border-radius:16px;padding:20px;display:flex;gap:14px;
+ align-items:center;flex-wrap:wrap}
+.codecard .code{font-size:30px;font-weight:900;letter-spacing:4px;
+ color:var(--goldL)}
+.codecard input{background:#ffffff18;border:1px solid #ffffff30;
+ color:#fff;border-radius:9px;padding:8px 12px;font-size:12px;
+ width:300px;max-width:60vw}
+h3.sec{font-size:14px;font-weight:900;color:var(--dark);
+ margin:18px 0 10px}
+table{width:100%;border-collapse:collapse;background:#fff;
+ border-radius:12px;overflow:hidden;font-size:12.5px}
+th{background:#FAF7EE;text-align:start;padding:10px 12px;font-size:11px;
+ color:var(--muted)}
+td{padding:10px 12px;border-top:1px solid #f1ece0}
+.tag{border-radius:999px;padding:3px 10px;font-size:10.5px;
+ font-weight:800;display:inline-block}
+.tag.ok{background:#E6F7EF;color:var(--green)}
+.tag.warn{background:#FFF3D6;color:#8B6508}
+.tag.bad{background:#FDE8E8;color:var(--red)}
+.tag.mut{background:#efefef;color:#777}
+.bars{display:flex;align-items:flex-end;gap:4px;height:110px;
+ padding-top:8px}
+.bars .b{flex:1;background:linear-gradient(180deg,var(--gold),#E5A900);
+ border-radius:4px 4px 0 0;position:relative;min-height:3px}
+.bars .b i{position:absolute;top:-15px;inset-inline:0;font-size:9px;
+ text-align:center;font-style:normal;font-weight:800;color:var(--dark)}
+.bars .b u{position:absolute;bottom:-16px;inset-inline:0;font-size:8px;
+ text-align:center;text-decoration:none;color:var(--muted)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:11.5px;font-weight:800;
+ color:var(--muted);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;
+ border:1px solid #e3dccb;border-radius:10px;padding:9px 12px;
+ font-size:13px;font-family:inherit;background:#fff}
+.prod{display:flex;gap:10px;align-items:center;background:#fff;
+ border-radius:12px;padding:10px;margin-bottom:8px}
+.prod img{width:52px;height:52px;border-radius:9px;object-fit:cover;
+ background:#efefef}
+.prod .nm{font-size:12.5px;font-weight:800;flex:1}
+.prod .cm{font-size:11px;color:var(--green);font-weight:900}
+.banner{background:linear-gradient(120deg,#FF7A00,#FFB347);color:#fff;
+ border-radius:13px;padding:13px 16px;font-weight:800;font-size:13px;
+ margin-bottom:10px;display:flex;gap:10px;align-items:center}
+.news{background:#fff;border-radius:12px;padding:12px 14px;
+ margin-bottom:8px}
+.feed{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid
+ #f1ece0;font-size:12px;align-items:center}
+.menu-btn{display:none;background:none;border:none;font-size:22px;
+ cursor:pointer;color:var(--dark)}
+@media(max-width:860px){
+ .side{transform:translateX(var(--hide,100%))}
+ [dir=ltr] .side{--hide:-100%}
+ .side.open{transform:none}
+ .main{margin-inline-start:0}
+ .menu-btn{display:block}
+}
+            </style>
+        </head>
+        <body>
+            <aside class="side" id="side">
+                <div class="logo">🤝 Uellow Partners
+                    <small id="subTitle">لوحة تحكم الشريك</small></div>
+                <nav class="nav" id="nav"></nav>
+                <div class="foot" id="footId">—</div>
+            </aside>
+            <div class="main">
+                <div class="topbar">
+                    <button class="menu-btn"
+                            onclick="document.getElementById('side').classList.toggle('open')">☰</button>
+                    <h2 id="pageTitle">لوحة التحكم</h2>
+                    <span class="chip" id="tierChip">…</span>
+                    <button class="btn ghost" id="langBtn"
+                            onclick="toggleLang()">EN</button>
+                    <a class="btn dark" href="/web/session/logout?redirect=/partners">⎋</a>
+                </div>
+                <section id="sec-dash" class="on"></section>
+                <section id="sec-products"></section>
+                <section id="sec-sales"></section>
+                <section id="sec-orders"></section>
+                <section id="sec-payouts"></section>
+                <section id="sec-tools"></section>
+                <section id="sec-news"></section>
+                <section id="sec-settings"></section>
+            </div>
+<script>
+// ── i18n ─────────────────────────────────────────────────────────────
+let LANG = localStorage.getItem('aff_lang') || 'ar';
+const TR = {
+ dash:['لوحة التحكم','Dashboard'], products:['منتجاتي وروابطي','Products & links'],
+ sales:['مبيعاتي','My sales'], orders:['طلباتي المسجلة','My orders'],
+ payouts:['السحوبات','Payouts'], tools:['أدوات تسويقية','Marketing tools'],
+ news:['الأخبار','News'], settings:['الإعدادات','Settings'],
+ available:['متاح للسحب','Available'], pending:['قيد التوصيل','Pending'],
+ paid:['مدفوع','Paid'], month:['عمولة الشهر','This month'],
+ totalSales:['إجمالي المبيعات','Total sales'], clicks:['فتحات الرابط','Link opens'],
+ copy:['نسخ','Copy'], copied:['✓ نُسخ','✓ Copied'],
+ newOrder:['+ طلب جديد لعميل','+ New customer order'],
+ reqPayout:['طلب سحب','Request payout'], save:['حفظ','Save'],
+ search:['ابحث عن منتج…','Search…'], activity:['آخر النشاطات','Recent activity'],
+ earn14:['أرباحك — آخر 14 يوماً','Earnings — last 14 days'],
+ clicks14:['نقرات رابطك — آخر 14 يوماً','Link clicks — last 14 days'],
+};
+function t(k){ return (TR[k]||[k,k])[LANG==='ar'?0:1]; }
+function toggleLang(){
+  LANG = LANG==='ar' ? 'en' : 'ar';
+  localStorage.setItem('aff_lang', LANG);
+  applyLang(); renderAll();
+}
+function applyLang(){
+  document.documentElement.dir = LANG==='ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = LANG;
+  document.getElementById('langBtn').textContent =
+      LANG==='ar' ? 'EN' : 'عربي';
+  document.getElementById('subTitle').textContent =
+      LANG==='ar' ? 'لوحة تحكم الشريك' : 'Partner console';
+}
+// ── rpc ──────────────────────────────────────────────────────────────
+async function rpc(path, params={}){
+  const r = await fetch(path, {method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({jsonrpc:'2.0', method:'call', params})});
+  const j = await r.json();
+  return j.result || {};
+}
+// ── nav ──────────────────────────────────────────────────────────────
+const SECTIONS = [
+ ['dash','📊'], ['products','🛍️'], ['sales','💰'], ['orders','📝'],
+ ['payouts','💸'], ['tools','🧰'], ['news','📣'], ['settings','⚙️'],
+];
+let D = null;          // dashboard payload cache
+function buildNav(){
+  const nav = document.getElementById('nav');
+  nav.innerHTML = SECTIONS.map(([k,ic]) =>
+    `<a data-k="${k}" class="${k==='dash'?'on':''}"
+        onclick="go('${k}')"><span class="ic">${ic}</span>
+        <span class="lbl">${t(k)}</span></a>`).join('');
+}
+function go(k){
+  document.querySelectorAll('.nav a').forEach(a =>
+      a.classList.toggle('on', a.dataset.k===k));
+  document.querySelectorAll('section').forEach(s =>
+      s.classList.toggle('on', s.id==='sec-'+k));
+  document.getElementById('pageTitle').textContent = t(k);
+  document.getElementById('side').classList.remove('open');
+  ({products:loadProducts, sales:loadSales, orders:loadOrders,
+    payouts:loadPayouts}[k]||(()=>{}))();
+}
+// ── helpers ──────────────────────────────────────────────────────────
+const fx = n => (Number(n)||0).toFixed(3);
+const esc = s => String(s??'').replace(/[&<>"]/g,
+    c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function bars(series, key, money){
+  const max = Math.max(1, ...series.map(x=>Number(x[key])||0));
+  return `<div class="bars">${series.map(x=>{
+    const v = Number(x[key])||0;
+    return `<div class="b" style="height:${4+96*v/max}%">
+      ${v?`<i>${money?v.toFixed(1):v}</i>`:''}
+      <u>${x.date.slice(8)}</u></div>`;}).join('')}</div>
+    <div style="height:18px"></div>`;
+}
+function tag(state){
+  const map = {confirmed:'ok', paid:'ok', delivered:'ok', approved:'ok',
+    pending:'warn', submitted:'warn', requested:'warn',
+    cancelled:'bad', rejected:'bad', failed:'bad'};
+  return `<span class="tag ${map[state]||'mut'}">${esc(state)}</span>`;
+}
+// ── dashboard ────────────────────────────────────────────────────────
+async function loadDash(){
+  D = await rpc('/affiliate/panel/data');
+  renderDash();
+}
+function renderDash(){
+  if(!D) return;
+  const tierEmoji = {bronze:'🥉',silver:'🥈',gold:'🥇',
+      platinum:'💎'}[D.tier]||'🥉';
+  document.getElementById('footId').textContent = D.name + ' · ' + D.code;
+  document.getElementById('tierChip').textContent =
+      `${tierEmoji} ${D.tier.toUpperCase()} ×${D.tier_mult}`;
+  const s = document.getElementById('sec-dash');
+  s.innerHTML = `
+    ${(D.campaigns||[]).map(c=>`<div class="banner">🔥
+      <div><b>${esc(c.name[LANG])}</b> — +${c.boost_pct}%
+      ${esc(c.note[LANG]||'')}
+      ${c.scope?`<small style="opacity:.85"> · ${esc(c.scope)}</small>`:''}
+      </div></div>`).join('')}
+    <div class="codecard">
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:11px;opacity:.7">
+          ${LANG==='ar'?'كود الشريك':'Partner code'}</div>
+        <div class="code">${esc(D.code)}</div>
+      </div>
+      <div>
+        <input readonly id="refLink" value="${esc(D.link)}"/>
+        <button class="btn" style="margin-inline-start:6px"
+          onclick="navigator.clipboard.writeText(D.link);this.textContent=t('copied')">
+          ${t('copy')}</button>
+      </div>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      ${[['available',D.available,'var(--green)'],
+         ['pending',D.pending,'#B8860B'],
+         ['paid',D.paid,'#888'],
+         ['month',D.month,'var(--dark)'],
+         ['totalSales',D.total_sales,'var(--dark)'],
+         ['clicks',D.clicks_total,'var(--dark)']].map(([k,v,c])=>
+        `<div class="card stat"><div class="v" style="color:${c}">
+          ${typeof v==='number'&&k!=='clicks'?fx(v):v}</div>
+          <div class="l">${t(k)}</div></div>`).join('')}
+    </div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:14px">
+      <div class="card"><h3 class="sec" style="margin-top:0">
+        ${t('earn14')}</h3>${bars(D.earnings_series,'amount',true)}</div>
+      <div class="card"><h3 class="sec" style="margin-top:0">
+        ${t('clicks14')}</h3>${bars(D.clicks_series,'clicks',false)}</div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3 class="sec" style="margin-top:0">${t('activity')}</h3>
+      ${(D.activity||[]).map(e=>`<div class="feed">
+        <span style="font-size:16px">${e.icon}</span>
+        <span style="flex:1">${esc(e.text[LANG])}</span>
+        <span style="color:var(--muted);font-size:10px">
+          ${(e.when||'').slice(0,10)}</span></div>`).join('')
+        || `<div style="color:var(--muted);font-size:12px">—</div>`}
+    </div>`;
+}
+// ── products ─────────────────────────────────────────────────────────
+async function loadProducts(q=''){
+  const s = document.getElementById('sec-products');
+  s.innerHTML = `<div class="field"><input id="pq"
+      placeholder="${t('search')}" value="${esc(q)}"
+      onkeydown="if(event.key==='Enter')loadProducts(this.value)"/></div>
+    <div id="plist" style="color:var(--muted)">…</div>`;
+  const res = await rpc('/affiliate/panel/products', {q});
+  document.getElementById('plist').innerHTML =
+    (res.products||[]).map(p=>`<div class="prod">
+      <img src="${p.image}" loading="lazy"/>
+      <div style="flex:1">
+        <div class="nm">${esc(p.name)}</div>
+        <div style="font-size:12px;font-weight:900;color:var(--dark)">
+          ${fx(p.price)} KD
+          <span class="cm"> · ${LANG==='ar'?'عمولتك':'earn'}
+          ${fx(p.commission)} (${p.pct}%)</span></div>
+      </div>
+      <button class="btn ghost" onclick="
+        navigator.clipboard.writeText('${p.link}');
+        this.textContent=t('copied')">🔗 ${t('copy')}</button>
+      <a class="btn" target="_blank" rel="noopener"
+        href="https://wa.me/?text=${encodeURIComponent(p.name+'\\n'+p.link)}">
+        WhatsApp</a>
+    </div>`).join('') || '—';
+}
+// ── sales ────────────────────────────────────────────────────────────
+async function loadSales(){
+  const s = document.getElementById('sec-sales');
+  s.innerHTML = '…';
+  const res = await rpc('/affiliate/panel/sales');
+  s.innerHTML = `<table><tr><th>${LANG==='ar'?'الطلب':'Order'}</th>
+    <th>${LANG==='ar'?'التاريخ':'Date'}</th>
+    <th>${LANG==='ar'?'قيمة البيع':'Base'}</th>
+    <th>${LANG==='ar'?'عمولتك':'Commission'}</th>
+    <th>${LANG==='ar'?'المصدر':'Source'}</th>
+    <th>${LANG==='ar'?'الحالة':'State'}</th></tr>
+    ${(res.sales||[]).map(x=>`<tr><td>${esc(x.order)}</td>
+      <td>${x.date}</td><td>${fx(x.base)}</td>
+      <td style="color:var(--green);font-weight:900">+${fx(x.commission)}</td>
+      <td>${x.source==='link'?'🔗':'📝'}</td>
+      <td>${tag(x.state)}</td></tr>`).join('')}
+    </table>`;
+}
+// ── orders (submitted) ───────────────────────────────────────────────
+let LINES = [];
+async function loadOrders(){
+  const s = document.getElementById('sec-orders');
+  s.innerHTML = `<button class="btn" onclick="orderForm()">
+      ${t('newOrder')}</button><div id="olist" style="margin-top:12px">…</div>
+      <div id="oform"></div>`;
+  const res = await rpc('/affiliate/panel/orders');
+  document.getElementById('olist').innerHTML =
+    `<table><tr><th>#</th><th>${LANG==='ar'?'العميل':'Customer'}</th>
+     <th>${LANG==='ar'?'الإجمالي':'Total'}</th>
+     <th>${LANG==='ar'?'عمولتك':'Comm.'}</th>
+     <th>${LANG==='ar'?'الحالة':'State'}</th></tr>
+     ${(res.orders||[]).map(o=>`<tr><td>${esc(o.name)}</td>
+       <td>${esc(o.customer)} · ${esc(o.phone)}</td>
+       <td>${fx(o.total)}</td>
+       <td style="color:var(--green)">+${fx(o.commission)}</td>
+       <td>${tag(o.state)}</td></tr>`).join('')}</table>`;
+}
+function orderForm(){
+  LINES = [];
+  document.getElementById('oform').innerHTML = `
+    <div class="card" style="margin-top:14px">
+      <h3 class="sec" style="margin-top:0">${t('newOrder')}</h3>
+      ${['name|'+(LANG==='ar'?'اسم العميل *':'Customer name *'),
+         'phone|'+(LANG==='ar'?'الهاتف *':'Phone *'),
+         'area|'+(LANG==='ar'?'المنطقة':'Area'),
+         'address|'+(LANG==='ar'?'العنوان':'Address')].map(f=>{
+        const [k,l]=f.split('|');
+        return `<div class="field"><label>${l}</label>
+          <input id="of_${k}"/></div>`;}).join('')}
+      <div class="field"><label>
+        ${LANG==='ar'?'أضف منتجاً (ابحث ثم اختر)':'Add item'}</label>
+        <input id="of_q" onkeydown="if(event.key==='Enter')pSearch()"/></div>
+      <div id="of_results"></div>
+      <div id="of_lines"></div>
+      <button class="btn" style="margin-top:8px" onclick="submitOrder()">
+        📨 ${LANG==='ar'?'إرسال للمراجعة':'Submit for review'}</button>
+      <span id="of_msg" style="margin-inline-start:8px;font-size:12px"></span>
+    </div>`;
+}
+async function pSearch(){
+  const q = document.getElementById('of_q').value;
+  const res = await rpc('/affiliate/panel/products', {q});
+  document.getElementById('of_results').innerHTML =
+    (res.products||[]).slice(0,6).map(p=>`<div class="prod"
+      style="cursor:pointer" onclick='addLine(${JSON.stringify(p)})'>
+      <img src="${p.image}"/><div class="nm">${esc(p.name)}</div>
+      <div class="cm">${fx(p.price)}</div></div>`).join('');
+}
+function addLine(p){
+  LINES.push({product_id:p.id, qty:1, name:p.name, price:p.price,
+              commission:p.commission});
+  document.getElementById('of_results').innerHTML='';
+  document.getElementById('of_q').value='';
+  renderLines();
+}
+function renderLines(){
+  document.getElementById('of_lines').innerHTML = LINES.map((l,i)=>
+    `<div class="prod"><div class="nm">${esc(l.name)}</div>
+     <input type="number" min="1" value="${l.qty}" style="width:64px;
+       border:1px solid #ddd;border-radius:8px;padding:5px"
+       onchange="LINES[${i}].qty=Number(this.value)||1"/>
+     <button class="btn ghost" onclick="LINES.splice(${i},1);renderLines()">
+       ✕</button></div>`).join('');
+}
+async function submitOrder(){
+  const v = k => document.getElementById('of_'+k).value.trim();
+  const msg = document.getElementById('of_msg');
+  const res = await rpc('/affiliate/panel/order/create', {
+    customer_name:v('name'), customer_phone:v('phone'),
+    customer_area:v('area'), customer_address:v('address'),
+    lines: LINES.map(l=>({product_id:l.product_id, qty:l.qty}))});
+  if(res.ok){ msg.textContent = '✓ '+res.name; loadOrders(); }
+  else msg.textContent = '⚠ ' + (res.error||'');
+}
+// ── payouts ──────────────────────────────────────────────────────────
+async function loadPayouts(){
+  const s = document.getElementById('sec-payouts');
+  const d = D || await rpc('/affiliate/panel/data');
+  s.innerHTML = `
+    <div class="card">
+      <h3 class="sec" style="margin-top:0">💸 ${t('reqPayout')}
+        <small style="color:var(--muted)">
+          (${LANG==='ar'?'المتاح':'available'}: ${fx(d.available)} ·
+          ${LANG==='ar'?'الحد الأدنى':'min'}: ${fx(d.min_payout)})</small>
+      </h3>
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr auto">
+        <div class="field"><label>${LANG==='ar'?'المبلغ':'Amount'}</label>
+          <input id="po_amount" value="${fx(d.available)}"/></div>
+        <div class="field"><label>${LANG==='ar'?'الطريقة':'Method'}</label>
+          <select id="po_method">
+            <option value="wallet">👛 ${LANG==='ar'?'محفظة يلو':'Wallet'}</option>
+            <option value="knet">💳 KNET</option>
+            <option value="bank">🏦 ${LANG==='ar'?'بنك':'Bank'}</option>
+          </select></div>
+        <div class="field"><label>IBAN / phone</label>
+          <input id="po_details"/></div>
+        <div style="align-self:end;padding-bottom:10px">
+          <button class="btn" onclick="reqPayout()">↗</button></div>
+      </div>
+      <span id="po_msg" style="font-size:12px"></span>
+    </div>
+    <div id="po_list" style="margin-top:12px">…</div>`;
+  const res = await rpc('/affiliate/panel/payouts');
+  document.getElementById('po_list').innerHTML =
+    `<table><tr><th>#</th><th>${LANG==='ar'?'التاريخ':'Date'}</th>
+     <th>${LANG==='ar'?'المبلغ':'Amount'}</th>
+     <th>${LANG==='ar'?'الطريقة':'Method'}</th>
+     <th>${LANG==='ar'?'الحالة':'State'}</th></tr>
+     ${(res.payouts||[]).map(p=>`<tr><td>${esc(p.name)}</td>
+       <td>${p.date}</td><td>${fx(p.amount)}</td>
+       <td>${esc(p.method)}</td><td>${tag(p.state)}</td></tr>`).join('')}
+    </table>`;
+}
+async function reqPayout(){
+  const res = await rpc('/affiliate/panel/payout/create', {
+    amount: document.getElementById('po_amount').value,
+    method: document.getElementById('po_method').value,
+    details: document.getElementById('po_details').value});
+  const msg = document.getElementById('po_msg');
+  if(res.ok){ msg.textContent='✓ '+res.name; loadDash(); loadPayouts(); }
+  else msg.textContent='⚠ '+(res.error||'');
+}
+// ── tools / news / settings ──────────────────────────────────────────
+function renderTools(){
+  if(!D) return;
+  const s = document.getElementById('sec-tools');
+  const share = LANG==='ar'
+    ? `تسوّق من يلو عبر رابطي 🛍️\\n${D.link}`
+    : `Shop Uellow through my link 🛍️\\n${D.link}`;
+  s.innerHTML = `
+    <div class="grid" style="grid-template-columns:auto 1fr;align-items:start">
+      <div class="card" style="text-align:center">
+        <img width="170" height="170" alt="QR"
+          src="https://api.qrserver.com/v1/create-qr-code/?size=340x340&amp;data=${encodeURIComponent(D.link)}"/>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">
+          ${LANG==='ar'?'كود QR لرابط إحالتك — اطبعه أو شاركه':'Your referral QR — print or share it'}</div>
+      </div>
+      <div class="card">
+        <h3 class="sec" style="margin-top:0">
+          ${LANG==='ar'?'نص جاهز للمشاركة':'Ready share text'}</h3>
+        <textarea rows="4" id="shareTxt"
+          style="width:100%;border:1px solid #e3dccb;border-radius:10px;
+          padding:10px;font-family:inherit">${share}</textarea>
+        <button class="btn" style="margin-top:8px" onclick="
+          navigator.clipboard.writeText(document.getElementById('shareTxt').value);
+          this.textContent=t('copied')">${t('copy')}</button>
+        <a class="btn dark" style="margin-inline-start:6px"
+          target="_blank" rel="noopener"
+          href="https://wa.me/?text=${encodeURIComponent(share)}">WhatsApp</a>
+      </div>
+    </div>`;
+}
+function renderNews(){
+  if(!D) return;
+  document.getElementById('sec-news').innerHTML =
+    (D.news||[]).map(n=>`<div class="news">
+      <div style="font-weight:900;font-size:13.5px">
+        ${n.emoji} ${esc(n.title[LANG])}</div>
+      <div style="font-size:12.5px;color:#555;margin-top:4px;
+        white-space:pre-line">${esc(n.body[LANG])}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">
+        ${(n.date||'').slice(0,10)}</div></div>`).join('')
+    || `<div class="card" style="color:var(--muted)">
+        ${LANG==='ar'?'لا توجد أخبار حالياً':'No news yet'}</div>`;
+}
+function renderSettings(){
+  if(!D) return;
+  document.getElementById('sec-settings').innerHTML = `
+    <div class="card" style="max-width:480px">
+      <h3 class="sec" style="margin-top:0">
+        ${LANG==='ar'?'طريقة استلام أرباحك':'Default payout method'}</h3>
+      <div class="field"><label>${LANG==='ar'?'الطريقة':'Method'}</label>
+        <select id="st_method">
+          ${['wallet|👛 '+(LANG==='ar'?'محفظة يلو':'Uellow wallet'),
+             'knet|💳 KNET','bank|🏦 '+(LANG==='ar'?'بنك':'Bank')]
+            .map(o=>{const [v,l]=o.split('|');
+              return `<option value="${v}"
+                ${D.payout_method===v?'selected':''}>${l}</option>`;})
+            .join('')}
+        </select></div>
+      <div class="field"><label>IBAN / phone</label>
+        <input id="st_details" value="${esc(D.payout_details)}"/></div>
+      <button class="btn" onclick="saveSettings()">${t('save')}</button>
+      <span id="st_msg" style="font-size:12px"></span>
+    </div>`;
+}
+async function saveSettings(){
+  const res = await rpc('/affiliate/panel/settings/save', {
+    payout_method: document.getElementById('st_method').value,
+    payout_details: document.getElementById('st_details').value});
+  document.getElementById('st_msg').textContent = res.ok ? ' ✓' : ' ⚠';
+}
+function renderAll(){
+  buildNav(); renderDash(); renderTools(); renderNews();
+  renderSettings();
+  document.getElementById('pageTitle').textContent =
+      t(document.querySelector('.nav a.on')?.dataset.k || 'dash');
+}
+// ── boot ─────────────────────────────────────────────────────────────
+applyLang(); buildNav();
+loadDash().then(()=>{ renderTools(); renderNews(); renderSettings(); });
+</script>
+        </body>
+        </html>

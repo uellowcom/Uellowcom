@@ -377,6 +377,85 @@ class UellowAffiliateAPI(http.Controller):
                             'me': bool(me and aid == me.id)})
         return ok({'top': out, 'my_rank': my_rank})
 
+    # ── attributed SALES (link + submitted orders that became SOs) ───
+    @http.route('/api/mobile/v2/affiliate/sales', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def sales(self, **kw):
+        aff = _my_affiliate()
+        if not aff:
+            return fail('NOT_AFFILIATE', 'Affiliate account required', 403)
+        out = []
+        for c in aff.commission_ids[:60]:
+            so = c.sale_order_id
+            out.append({
+                'id': c.id,
+                'order': so.name if so else '—',
+                'customer': (so.partner_id.name or '')[:3] + '***'
+                            if so and so.partner_id else '',
+                'date': c.create_date.isoformat()
+                        if c.create_date else None,
+                'base': _money(c.base_amount, c.currency_id),
+                'commission': _money(c.amount, c.currency_id),
+                'source': c.source,
+                'state': c.state,
+                'delivery': getattr(so, 'delivery_status', '') or ''
+                            if so else '',
+            })
+        return ok({'sales': out})
+
+    @http.route('/api/mobile/v2/affiliate/campaigns', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def campaigns(self, **kw):
+        aff = _my_affiliate()
+        camps = request.env['uellow.affiliate.campaign'].active_now()
+        out = []
+        for c in camps:
+            d = c.to_public_dict()
+            if aff:
+                # is THIS partner eligible (tier check on a wildcard)?
+                d['eligible'] = c.tiers == 'all' or (
+                    (c.tiers == 'bronze_silver'
+                     and aff.tier in ('bronze', 'silver')) or
+                    (c.tiers == 'gold_platinum'
+                     and aff.tier in ('gold', 'platinum')))
+            out.append(d)
+        return ok({'campaigns': out})
+
+    @http.route('/api/mobile/v2/affiliate/news', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def news(self, **kw):
+        rows = request.env['uellow.affiliate.news'].sudo().search(
+            [('active', '=', True)], limit=20)
+        return ok({'news': [n.to_public_dict() for n in rows]})
+
+    @http.route('/api/mobile/v2/affiliate/activity', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def activity(self, **kw):
+        aff = _my_affiliate()
+        if not aff:
+            return fail('NOT_AFFILIATE', 'Affiliate account required', 403)
+        return ok({'events': aff.activity_feed()})
+
+    @http.route('/api/mobile/v2/affiliate/series', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def series(self, **kw):
+        aff = _my_affiliate()
+        if not aff:
+            return fail('NOT_AFFILIATE', 'Affiliate account required', 403)
+        clicks = request.env['uellow.affiliate.click'].series_for(aff)
+        earnings = aff.earnings_series()
+        return ok({'clicks': clicks, 'earnings': earnings})
+
     # ── referral attribution ─────────────────────────────────────────
     @http.route('/api/mobile/v2/cart/affiliate', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)
@@ -409,6 +488,10 @@ class UellowAffiliateAPI(http.Controller):
         if aff:
             try:
                 aff.click_count += 1
+                request.env['uellow.affiliate.click'].sudo().create({
+                    'affiliate_id': aff.id,
+                    'product_tmpl_id': pid or False,
+                })
                 request.env.cr.commit()
             except Exception:
                 pass

@@ -13,3 +13,9 @@ access_uellow_affiliate_order_line_mgr,aff line manager,model_uellow_affiliate_o
 access_uellow_affiliate_order_line_usr,aff line user,model_uellow_affiliate_order_line,base.group_user,1,1,1,0
 access_uellow_affiliate_dashboard,aff dashboard,model_uellow_affiliate_dashboard,base.group_user,1,1,1,1
 access_uellow_affiliate_settings,aff settings,model_uellow_affiliate_settings,base.group_system,1,1,1,1
+access_uellow_affiliate_campaign_mgr,aff campaign manager,model_uellow_affiliate_campaign,base.group_system,1,1,1,1
+access_uellow_affiliate_campaign_usr,aff campaign user,model_uellow_affiliate_campaign,base.group_user,1,0,0,0
+access_uellow_affiliate_news_mgr,aff news manager,model_uellow_affiliate_news,base.group_system,1,1,1,1
+access_uellow_affiliate_news_usr,aff news user,model_uellow_affiliate_news,base.group_user,1,0,0,0
+access_uellow_affiliate_click_mgr,aff click manager,model_uellow_affiliate_click,base.group_system,1,1,1,1
+access_uellow_affiliate_click_usr,aff click user,model_uellow_affiliate_click,base.group_user,1,1,1,0

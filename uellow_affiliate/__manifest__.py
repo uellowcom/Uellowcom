@@ -30,6 +30,7 @@ Uellow Affiliate Program
         'views/affiliate_views.xml',
         'views/affiliate_order_views.xml',
         'views/affiliate_dashboard_views.xml',
+        'views/affiliate_extras_views.xml',
         'views/portal_templates.xml',
         'views/website_page_templates.xml',
         'data/cron.xml',
