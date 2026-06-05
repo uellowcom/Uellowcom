@@ -3246,6 +3246,10 @@ function renderContent(b){
     case 'trust-strip': {
       const items = p.items || [];
       return `<p class="hint">Thin trust/services bar — "After-sales | Secure payment | Logistics". Edit the items any time; they ship to the app instantly.</p>
+        <div class="field"><label>Background</label>
+          <input type="color" value="${(p.strip_bg&&p.strip_bg!=='none')?p.strip_bg:'#FFFFFF'}" data-prop="strip_bg" style="height:32px;padding:2px"/>
+          <button class="btn-sm" style="margin-top:4px" data-prop="strip_bg" data-prop-val="none">⬚ No background</button>
+          <button class="btn-sm" style="margin-top:4px" data-prop="strip_bg" data-prop-val="">↺ White (default)</button></div>
         <div class="field"><label>Style</label>
           ${sourceSelect(b, 'style', [
             ['plain','— Plain row'],
@@ -3672,6 +3676,11 @@ function renderContent(b){
 
         ${(b.kind==='bestsellers') ? `
         <div class="sub-h">🏆 Bestsellers Pro</div>
+        <div class="field"><label>Design</label>
+          <select data-prop="bs_style">
+            <option value="arena" ${(p.bs_style||'arena')==='arena'?'selected':''}>👑 Champions Arena — hero #1 + racing pack (new)</option>
+            <option value="podium" ${p.bs_style==='podium'?'selected':''}>🥇 Classic podium + list</option>
+          </select></div>
         <p class="hint">Podium design: #1 crowned on a gold stand, #2 silver, #3 bronze, then a ranked list — fed by the REAL daily sales ranking.</p>
         <div class="field"><label>Theme</label>
           <select data-prop="bs_theme">

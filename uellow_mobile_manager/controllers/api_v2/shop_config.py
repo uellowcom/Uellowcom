@@ -14,13 +14,25 @@ from ._common import safe_endpoint, ok, get_website, img_url, bilingual
 
 
 def _brand_dict(value, Brand, Tmpl, base_dom):
+    # v2.1.60 — SAME resolution as the product page: the value's own
+    # binary (dr_image / image) first, then a product.brand matched by
+    # normalized name (case/space/dash-insensitive).
     logo = None
-    if Brand is not None:
-        b = Brand.search([('name', '=ilike', value.name)], limit=1) \
-            or Brand.search([('name', 'ilike', value.name)], limit=1)
-        if b and getattr(b, 'image_1024', False):
-            logo = img_url('product.brand', b.id, 'image_1024',
-                           unique=b.write_date)
+    for fld in ('dr_image', 'image'):
+        if fld in value._fields and value[fld]:
+            logo = img_url('product.attribute.value', value.id, fld,
+                           unique=value.write_date)
+            break
+    if not logo and Brand is not None:
+        cmp = (value.name or '').lower().replace(' ', '').replace('-', '')
+        if cmp:
+            for b in Brand.search([]):
+                pn = (b.name or '').lower().replace(' ', '') \
+                    .replace('-', '')
+                if pn == cmp and getattr(b, 'image_1024', False):
+                    logo = img_url('product.brand', b.id, 'image_1024',
+                                   unique=b.write_date)
+                    break
     n = Tmpl.search_count(
         base_dom + [('attribute_line_ids.value_ids', 'in', [value.id])])
     return {'value_id': value.id, 'name': value.name,

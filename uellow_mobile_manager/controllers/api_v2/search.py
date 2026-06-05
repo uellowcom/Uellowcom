@@ -44,24 +44,21 @@ def _search_brands(q, limit=6):
             ('attribute_id.name', 'ilike', 'ماركة'),
             ('attribute_id.name', 'ilike', 'علامة'),
         ], limit=limit)
+        # v2.1.60 — identical logo resolution to the product page +
+        # /brands: value binary (dr_image/image) → normalized
+        # product.brand name match.
+        from .shop_config import _brand_dict
         Brand = None
         if 'product.brand' in request.env:
             Brand = request.env['product.brand'].sudo()
         Tmpl = request.env['product.template'].sudo()
         base = _domain_published_for_app(include_oos=True)
         for v in vals:
-            logo = None
-            if Brand is not None:
-                b = Brand.search([('name', '=ilike', v.name)], limit=1) \
-                    or Brand.search([('name', 'ilike', v.name)], limit=1)
-                if b and getattr(b, 'image_1024', False):
-                    logo = img_url('product.brand', b.id, 'image_1024',
-                                   unique=b.write_date)
-            n = Tmpl.search_count(
-                base + [('attribute_line_ids.value_ids', 'in', [v.id])])
-            if n:
-                out.append({'id': v.id, 'name': v.name,
-                            'image': logo, 'product_count': n})
+            d = _brand_dict(v, Brand, Tmpl, base)
+            if d['product_count']:
+                out.append({'id': d['value_id'], 'name': d['name'],
+                            'image': d['image'],
+                            'product_count': d['product_count']})
     except Exception:
         pass
     return out
@@ -121,7 +118,12 @@ class MobileSearchAPI(http.Controller):
                 'vendors': [], 'suggestions': [],
             })
 
-        Tmpl = request.env['product.template'].sudo()
+        # v2.1.60 — searches run in the requester's LANGUAGE context so
+        # Arabic queries match the Arabic translations (they previously
+        # only matched the en_US base names).
+        ctx_lang = 'ar_001' if str(lang).startswith('ar') else 'en_US'
+        Tmpl = request.env['product.template'].sudo() \
+            .with_context(lang=ctx_lang)
         # Search surfaces out-of-stock items so the user can still find
         # a specific product they're looking for, even when it's not
         # listed elsewhere in the app.
@@ -148,7 +150,8 @@ class MobileSearchAPI(http.Controller):
         )
 
         # Matched categories (with image) + brands + sellers + suggestions
-        categories = request.env['product.public.category'].sudo().search(
+        categories = request.env['product.public.category'].sudo() \
+            .with_context(lang=ctx_lang).search(
             [('name', 'ilike', q)], limit=8)
         brands = _search_brands(q)
         vendors = _search_vendors(q)
