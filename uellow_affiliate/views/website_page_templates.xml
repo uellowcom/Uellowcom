@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Public landing: /partners ──────────────────────────────── -->
+    <template id="partners_landing" name="Partners Program page">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <!-- hero -->
+                <section class="text-center py-5"
+                         style="background:linear-gradient(120deg,#412402,#6B4A1B);color:#fff">
+                    <div class="container">
+                        <div style="font-size:56px">🤝</div>
+                        <h1 class="fw-bolder" style="color:#FFD75E">
+                            Uellow Partners Program
+                            <br/><span style="font-size:24px">برنامج شركاء يلو</span>
+                        </h1>
+                        <p class="lead" style="opacity:.85;max-width:680px;margin:auto">
+                            Sell Uellow products to your audience and earn a
+                            commission on every delivered order.
+                            <br/>
+                            بِع منتجات يلو لجمهورك واربح عمولة على كل طلب
+                            يتم تسليمه بنجاح.
+                        </p>
+                        <a href="#apply" class="btn btn-warning btn-lg fw-bold mt-2">
+                            Join now / انضم الآن
+                        </a>
+                    </div>
+                </section>
+
+                <!-- how it works -->
+                <section class="py-5">
+                    <div class="container">
+                        <h2 class="text-center mb-4">How it works · كيف يعمل</h2>
+                        <div class="row g-3 text-center">
+                            <t t-foreach="[
+                                ('1️⃣', 'Apply &amp; get your code', 'قدّم طلبك واحصل على كودك الخاص بعد موافقة الإدارة'),
+                                ('2️⃣', 'Share your product links', 'شارك روابط منتجاتك مع عملائك — أو سجّل الطلب بنفسك'),
+                                ('3️⃣', 'Customer orders &amp; receives', 'يطلب عميلك ويستلم طلبه من يلو بكل احترافية'),
+                                ('4️⃣', 'You get paid', 'تنزل عمولتك تلقائياً بعد التسليم وتسحبها وقتما تشاء'),
+                            ]" t-as="step">
+                                <div class="col-6 col-lg-3">
+                                    <div class="p-4 bg-white rounded-3 shadow-sm h-100">
+                                        <div style="font-size:34px" t-esc="step[0]"/>
+                                        <h6 class="fw-bold mt-2" t-out="step[1]"/>
+                                        <div class="text-muted" style="font-size:13px"
+                                             t-esc="step[2]"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- benefits -->
+                <section class="py-5" style="background:#FBF7EC">
+                    <div class="container">
+                        <h2 class="text-center mb-4">Why join? · لماذا تنضم؟</h2>
+                        <div class="row g-3">
+                            <t t-foreach="[
+                                ('💰', 'Commission on every product', 'عمولة واضحة على كل منتج تراها قبل البيع'),
+                                ('🔗', 'Ready share links + tracking', 'روابط جاهزة للمشاركة مع تتبع كامل للنقرات والطلبات'),
+                                ('📝', 'Order on behalf of your customer', 'سجّل طلب عميلك بنفسك وأرسله للإدارة بضغطة'),
+                                ('🏆', 'Tier upgrades = higher commission', 'مستويات تلقائية ترفع عمولتك كلما بعت أكثر'),
+                                ('💸', 'Flexible payouts', 'اسحب أرباحك: بنك / KNET / رصيد محفظة يلو'),
+                                ('📱', 'Dedicated app + web dashboard', 'تطبيق مستقل ولوحة تحكم على الموقع لمتابعة كل شيء'),
+                            ]" t-as="b">
+                                <div class="col-md-6 col-lg-4">
+                                    <div class="d-flex p-3 bg-white rounded-3 shadow-sm h-100">
+                                        <div style="font-size:26px" class="me-3"
+                                             t-esc="b[0]"/>
+                                        <div>
+                                            <div class="fw-bold" t-esc="b[1]"/>
+                                            <div class="text-muted"
+                                                 style="font-size:13px" t-esc="b[2]"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- tiers -->
+                <section class="py-5">
+                    <div class="container" style="max-width:760px">
+                        <h2 class="text-center mb-4">Partner tiers · مستويات الشركاء</h2>
+                        <table class="table table-bordered text-center bg-white shadow-sm">
+                            <thead class="table-dark"><tr>
+                                <th>Tier · المستوى</th>
+                                <th>Monthly sales · مبيعات شهرية</th>
+                                <th>Commission boost · زيادة العمولة</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr><td>🥉 Bronze</td><td>—</td><td>×1.00</td></tr>
+                                <tr><td>🥈 Silver</td>
+                                    <td><t t-esc="'%g' % rules['silver'][1]"/> KD</td>
+                                    <td>×<t t-esc="'%g' % rules['silver'][0]"/></td></tr>
+                                <tr><td>🥇 Gold</td>
+                                    <td><t t-esc="'%g' % rules['gold'][1]"/> KD</td>
+                                    <td>×<t t-esc="'%g' % rules['gold'][0]"/></td></tr>
+                                <tr><td>💎 Platinum</td>
+                                    <td><t t-esc="'%g' % rules['platinum'][1]"/> KD</td>
+                                    <td>×<t t-esc="'%g' % rules['platinum'][0]"/></td></tr>
+                            </tbody>
+                        </table>
+                        <div class="text-muted text-center" style="font-size:13px">
+                            Upgrades are automatic — we never downgrade you.
+                            · الترقية تلقائية ولا يوجد تنزيل للمستوى أبداً.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- FAQ -->
+                <section class="py-5" style="background:#FBF7EC">
+                    <div class="container" style="max-width:760px">
+                        <h2 class="text-center mb-4">FAQ · أسئلة شائعة</h2>
+                        <t t-foreach="[
+                            ('When do I get my commission? · متى تنزل عمولتي؟',
+                             'The commission books when the order is placed and is CONFIRMED automatically once the order is delivered. تُسجَّل العمولة عند الطلب وتتأكد تلقائياً بعد تسليمه.'),
+                            ('How do I withdraw? · كيف أسحب أرباحي؟',
+                             'From your dashboard: bank transfer, KNET, or instant Uellow wallet credit. من لوحتك: بنك أو KNET أو رصيد فوري في محفظة يلو.'),
+                            ('What can I sell? · ماذا أبيع؟',
+                             'Everything in the Uellow catalog, or a custom selection the admin assigns to you with special commissions. كل الكتالوج أو تشكيلة مخصصة بعمولات خاصة.'),
+                            ('Do I need a company? · هل أحتاج سجلاً تجارياً؟',
+                             'No — individuals are welcome. Just a Uellow account. لا — الأفراد مرحب بهم، يكفي حساب يلو.'),
+                        ]" t-as="f">
+                            <div class="bg-white rounded-3 p-3 mb-2 shadow-sm">
+                                <div class="fw-bold" t-esc="f[0]"/>
+                                <div class="text-muted" style="font-size:13.5px"
+                                     t-esc="f[1]"/>
+                            </div>
+                        </t>
+                    </div>
+                </section>
+
+                <!-- application form -->
+                <section class="py-5" id="apply">
+                    <div class="container" style="max-width:620px">
+                        <h2 class="text-center mb-1">Apply for membership</h2>
+                        <h4 class="text-center text-muted mb-4">تقديم طلب عضوية</h4>
+                        <t t-if="msg == 'ok'">
+                            <div class="alert alert-success text-center">
+                                ✅ Application received! We will review and
+                                activate you soon. · تم استلام طلبك وسيتم
+                                تفعيلك قريباً.
+                            </div>
+                        </t>
+                        <t t-if="msg == 'already'">
+                            <div class="alert alert-info text-center">
+                                You already have a partner account — open
+                                <a href="/my/affiliate">your dashboard</a>.
+                                · لديك حساب شريك بالفعل — افتح لوحتك.
+                            </div>
+                        </t>
+                        <t t-if="msg == 'missing'">
+                            <div class="alert alert-danger text-center">
+                                Name and phone are required · الاسم والهاتف
+                                مطلوبان
+                            </div>
+                        </t>
+                        <t t-if="already">
+                            <div class="alert alert-info text-center">
+                                You are already a partner 🎉 — open
+                                <a href="/my/affiliate">your dashboard</a>
+                                · أنت شريك بالفعل، افتح لوحة تحكمك.
+                            </div>
+                        </t>
+                        <t t-if="not already">
+                            <form action="/partners/apply" method="post"
+                                  class="bg-white rounded-3 p-4 shadow-sm">
+                                <input type="hidden" name="csrf_token"
+                                       t-att-value="request.csrf_token()"/>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        Full name · الاسم الكامل *</label>
+                                    <input type="text" name="name"
+                                           class="form-control" required="required"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        Phone · الهاتف *</label>
+                                    <input type="tel" name="phone"
+                                           class="form-control" required="required"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        Email · البريد الإلكتروني</label>
+                                    <input type="email" name="email"
+                                           class="form-control"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        Tell us about your audience ·
+                                        حدّثنا عن جمهورك</label>
+                                    <textarea name="note" rows="3"
+                                              class="form-control"
+                                              placeholder="Instagram / TikTok / WhatsApp groups…"/>
+                                </div>
+                                <button type="submit"
+                                        class="btn btn-warning btn-lg w-100 fw-bold">
+                                    🤝 Submit application · إرسال الطلب
+                                </button>
+                            </form>
+                        </t>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+    <!-- footer link (theme-agnostic: appended inside <footer>) -->
+    <template id="footer_partners_link" name="Footer: Partners link"
+              inherit_id="website.layout">
+        <xpath expr="//footer" position="inside">
+            <div class="text-center py-2"
+                 style="background:#412402">
+                <a href="/partners"
+                   style="color:#FFD75E;font-weight:700;text-decoration:none">
+                    🤝 Partners Program · برنامج الشركاء — اربح مع يلو
+                </a>
+            </div>
+        </xpath>
+    </template>
+</odoo>
