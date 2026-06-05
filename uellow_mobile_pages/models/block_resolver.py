@@ -815,6 +815,12 @@ RESOLVERS = {
     'occasion-header': resolve_passthrough,
     'new-user':        resolve_products,
     'trust-strip':     resolve_passthrough,
+    # v2.1.75 — 5 promo-section presets (all fetch products by source).
+    'promo-spotlight': resolve_products,
+    'promo-category':  resolve_products,
+    'promo-rank':      resolve_products,
+    'promo-arrivals':  resolve_products,
+    'promo-mega':      resolve_products,
 }
 
 

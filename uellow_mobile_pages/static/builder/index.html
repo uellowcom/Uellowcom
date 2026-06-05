@@ -1171,6 +1171,11 @@ const SNIPPETS = [
   // v2.1.57: conversion blocks
   { cat:'💎 v2.1.57 Conversion', items:[
     { kind:'new-user',        icon:'🧧', label:'New User Discount' },
+    { kind:'promo-spotlight', icon:'✨', label:'Promo · Spotlight Offer' },
+    { kind:'promo-category',  icon:'🛍', label:'Promo · Category Showcase' },
+    { kind:'promo-rank',      icon:'🏆', label:'Promo · Best Sellers' },
+    { kind:'promo-arrivals',  icon:'🆕', label:'Promo · New Arrivals' },
+    { kind:'promo-mega',      icon:'🔥', label:'Promo · Mega Sale' },
     { kind:'trust-strip',     icon:'🛡', label:'Trust / Services strip' },
   ]},
   // v2.0.38: 6 powerful new blocks
@@ -1390,6 +1395,12 @@ const KIND_DEFAULTS = {
     audience:'all',            // all | guests | new
     badgeEn:'New User Bonus', badgeAr:'مكافأة العميل الجديد',
   }),
+  'promo-spotlight': () => ({ titleEn:'Spotlight Offer', titleAr:'عرض مميّز', subEn:'Hand-picked deals you will love', subAr:'صفقات مختارة بعناية', logo:'✨', c1:'#7B2FF7', c2:'#B86CFF', ctaEn:'See all', ctaAr:'الكل', badgeEn:'Featured', badgeAr:'مميّز', source:'discounted', limit:10, layout:'rail' }),
+  'promo-category': () => ({ titleEn:'Shop the Category', titleAr:'تسوّق القسم', subEn:'Top picks from this section', subAr:'أفضل المنتجات من هذا القسم', logo:'🛍', c1:'#2F6E62', c2:'#3E9C88', ctaEn:'Browse', ctaAr:'تصفّح', badgeEn:'Shop', badgeAr:'تسوّق', source:'collection', category_id:0, limit:8, layout:'grid' }),
+  'promo-rank': () => ({ titleEn:'Best Sellers', titleAr:'الأكثر مبيعاً', subEn:'What everyone is buying now', subAr:'الأكثر طلباً الآن', logo:'🏆', c1:'#C19A2E', c2:'#E8C45A', ctaEn:'See ranking', ctaAr:'الترتيب', badgeEn:'Best Seller', badgeAr:'الأكثر مبيعاً', source:'bestsellers', limit:10, layout:'rail' }),
+  'promo-arrivals': () => ({ titleEn:'New Arrivals', titleAr:'وصل حديثاً', subEn:'Fresh in store', subAr:'أحدث ما وصل', logo:'🆕', c1:'#1E88A8', c2:'#43C0D6', ctaEn:'See all', ctaAr:'الكل', badgeEn:'New', badgeAr:'جديد', source:'newest', limit:10, layout:'rail' }),
+  'promo-mega': () => ({ titleEn:'Mega Sale', titleAr:'تخفيضات كبرى', subEn:'Limited-time offers — grab them fast', subAr:'عروض لوقت محدود', logo:'🔥', c1:'#E63946', c2:'#FF7A85', ctaEn:'Shop sale', ctaAr:'تسوّق العروض', badgeEn:'SALE', badgeAr:'تخفيض', source:'discounted', limit:10, layout:'rail' }),
+  'products': () => ({ pad_top:2 }),
   'trust-strip': () => ({
     show_title:false, pad_y:0,
     style:'plain',             // plain | cards | divided
@@ -2466,6 +2477,12 @@ function renderBlockContent(b){
           ${[1,2,3].map(()=>`<div style="background:rgba(255,255,255,.92);border-radius:8px;width:44px;height:44px"></div>`).join('')}
         </div>
       </div>`;
+    case 'promo-spotlight': case 'promo-category': case 'promo-rank':
+    case 'promo-arrivals':  case 'promo-mega': {
+      const dmap = { 'promo-spotlight':['#7B2FF7','#B86CFF','✨','Spotlight Offer'],'promo-category':['#2F6E62','#3E9C88','🛍','Shop the Category'],'promo-rank':['#C19A2E','#E8C45A','🏆','Best Sellers'],'promo-arrivals':['#1E88A8','#43C0D6','🆕','New Arrivals'],'promo-mega':['#E63946','#FF7A85','🔥','Mega Sale'] }[b.kind];
+      const g1=p.c1||dmap[0], g2=p.c2||dmap[1], lg=p.logo||dmap[2], ti=p.titleEn||dmap[3];
+      return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)"><div style="background:linear-gradient(135deg,${g1},${g2});padding:10px;color:#fff;display:flex;align-items:center;gap:8px"><span style="background:rgba(255,255,255,.25);border-radius:8px;padding:3px 6px;font-size:14px">${lg}</span><b style="font-size:12px">${ti}</b></div><div style="display:flex;gap:6px;padding:8px;background:#fff">${[1,2,3].map(()=>`<div style="border:1px solid #eee;border-radius:8px;width:54px;height:74px"></div>`).join('')}</div></div>`;
+    }
     case 'trust-strip': return `
       <div style="display:flex;gap:10px;justify-content:space-around;background:#fff;border-radius:8px;padding:7px 4px;font-size:9px;color:#333">
         ${(p.items||[]).slice(0,4).map(it=>`<span>${it.icon||'🛡️'} ${it.labelEn||''}</span>`).join('') || '🛡️ After-sales · 💳 Secure · 🚚 Logistics'}
@@ -3242,6 +3259,24 @@ function renderContent(b){
         ${(p.source==='manual') ? productsPickerBtn(b) : ''}
         <div class="field"><label>Maximum products</label>
           <input type="number" min="2" max="20" data-prop-num="limit" value="${p.limit||8}"/></div>`;
+    }
+    case 'promo-spotlight': case 'promo-category': case 'promo-rank':
+    case 'promo-arrivals':  case 'promo-mega': {
+      return `<p class="hint">Powerful promo section — gradient header with a logo, then product cards. Use it for a category, best-sellers, new arrivals or items on offer. Everything below is editable.</p>
+        ${mlField(b,'title','Title')}
+        ${mlField(b,'sub','Subtitle')}
+        ${mlField(b,'cta','Button text (blank = arrow only)')}
+        ${mlField(b,'badge','Card badge text')}
+        <div class="field"><label>Logo (emoji)</label><input data-prop="logo" value="${p.logo||'✨'}" style="max-width:80px"/></div>
+        <div class="field"><label>Logo image URL (optional)</label><input data-prop="logo_image" value="${p.logo_image||''}" placeholder="https://…"/></div>
+        <div class="field"><label>Gradient start</label><input type="color" value="${p.c1||'#7B2FF7'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Gradient end</label><input type="color" value="${p.c2||'#B86CFF'}" data-prop="c2" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Layout</label>${sourceSelect(b,'layout',[['rail','Horizontal rail'],['grid','2-column grid']],'rail')}</div>
+        <div class="sub-h">Products</div>
+        <div class="field"><label>Source</label>${sourceSelect(b,'source',[['discounted','On offer — biggest discounts'],['bestsellers','Best sellers'],['newest','New arrivals'],['collection','A specific category…'],['manual','Hand-picked…']],p.source||'discounted')}</div>
+        ${(p.source==='collection') ? `<div class="field"><label>Category ID</label><input type="number" data-prop-num="category_id" value="${p.category_id||0}"/></div>` : ''}
+        ${(p.source==='manual') ? productsPickerBtn(b) : ''}
+        <div class="field"><label>Maximum products</label><input type="number" min="2" max="20" data-prop-num="limit" value="${p.limit||10}"/></div>`;
     }
     case 'trust-strip': {
       const items = p.items || [];

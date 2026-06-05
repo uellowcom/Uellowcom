@@ -22,9 +22,31 @@ class DeliveryTrip(models.Model):
         ('cancelled',   'Cancelled'),
     ], default='draft', tracking=True)
 
+    # v2.1.75 — trip-level driver. Views referenced delivery.trip.driver_id
+    # but the field never existed, which broke the form (every field went
+    # read-only / the new-trip record couldn't be edited). Adding it both
+    # fixes that AND is genuinely useful: set one driver for the whole
+    # trip and it cascades to every order line.
+    driver_id = fields.Many2one(
+        'delivery.driver', string='Driver',
+        domain="[('carrier_company_id', '=', carrier_company_id)]")
     line_ids = fields.One2many('delivery.trip.line', 'trip_id', string='Orders')
     line_count = fields.Integer(compute='_compute_line_count', string='Orders Count')
     notes = fields.Text(string='Notes')
+
+    @api.onchange('driver_id')
+    def _onchange_driver_id(self):
+        # cascade the trip driver to its order lines
+        if self.driver_id:
+            for ln in self.line_ids:
+                ln.driver_id = self.driver_id
+
+    def write(self, vals):
+        res = super().write(vals)
+        if vals.get('driver_id'):
+            for trip in self:
+                trip.line_ids.write({'driver_id': trip.driver_id.id})
+        return res
 
     @api.depends('line_ids')
     def _compute_line_count(self):
