@@ -17,8 +17,11 @@ class MobileNotificationsAPI(http.Controller):
         Notif = request.env['mobile.notification'].sudo()
         # `partner_id` was never declared on mobile.notification — broadcasts
         # have target_audience='all', specific users go via user_ids.
+        # v2.1.70 — `.id` on a partner with >1 linked user (e.g. the
+        # admin/staff account) raised a singleton ValueError → the whole
+        # endpoint returned empty ("no notifications show"). Use `.ids`.
         items = Notif.search([
-            '|', ('user_ids', 'in', [partner.user_ids.id] if partner.user_ids else []),
+            '|', ('user_ids', 'in', partner.user_ids.ids),
                  ('target_audience', '=', 'all'),
         ], order='create_date desc', limit=100)
         lang_hdr = (request.httprequest.headers.get('X-Lang') or '').lower()
@@ -101,8 +104,7 @@ class MobileNotificationsAPI(http.Controller):
         try:
             Notif = request.env['mobile.notification'].sudo()
             bcs = Notif.search([
-                '|', ('user_ids', 'in', [partner.user_ids.id]
-                      if partner.user_ids else []),
+                '|', ('user_ids', 'in', partner.user_ids.ids),
                      ('target_audience', '=', 'all'),
                 ('read_partner_ids', 'not in', partner.id),
             ], limit=200)

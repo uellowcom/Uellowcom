@@ -285,9 +285,15 @@ class MobileLoyaltyAPI(http.Controller):
     @require_auth
     def loyalty_overview(self, **kw):
         partner = current_partner()
-        cards = request.env['loyalty.card'].sudo().search([
+        # v2.1.71 — count ONLY loyalty-program cards. Including gift_card /
+        # ewallet / issued promo-code (redeemed-points) cards inflated the
+        # displayed balance (e.g. 200 real pts showed as 210 after a
+        # redemption left a 10-value coupon card).
+        all_cards = request.env['loyalty.card'].sudo().search([
             ('partner_id', '=', partner.id),
         ])
+        cards = all_cards.filtered(
+            lambda c: c.program_id.program_type == 'loyalty')
         total_points = int(sum(cards.mapped('points')))
         thresholds, rate, min_redeem, mult, earn = _tier_thresholds_and_rate()
         tier = _tier_for(total_points, thresholds)
