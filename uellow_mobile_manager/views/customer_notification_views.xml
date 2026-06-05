@@ -17,7 +17,11 @@
                     <group>
                         <group string="Master">
                             <field name="master_enabled"/>
-                            <field name="fcm_server_key" password="True"/>
+                        </group>
+                        <group string="Push (Firebase)">
+                            <field name="fcm_service_account"
+                                   placeholder="Paste service-account JSON here"
+                                   widget="text"/>
                         </group>
                     </group>
                     <group>

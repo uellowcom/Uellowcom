@@ -76,10 +76,13 @@ class MobileNotificationSetting(models.Model):
 
     # future push transport — engine stores rows either way
     fcm_server_key = fields.Char(
-        string='FCM server key (optional)',
-        help='When set, events are also pushed over Firebase Cloud '
-             'Messaging to the device tokens already registered by the '
-             'app. Leave empty to use the in-app inbox only.')
+        string='FCM server key (legacy, unused)',
+        help='Deprecated by Google — kept for reference only.')
+    fcm_service_account = fields.Text(
+        string='Firebase service account JSON',
+        help='Paste the Service Account private-key JSON (Project '
+             'Settings ▸ Service Accounts). Enables system-tray push '
+             'over FCM HTTP v1 to all registered devices.')
 
     @api.model
     def get_conf(self):
@@ -140,24 +143,86 @@ class MobileCustomerNotification(models.Model):
         self._try_fcm(conf, partner, rec)
         return rec
 
-    def _try_fcm(self, conf, partner, rec):
-        """Best-effort FCM push — only when a server key is configured
-        and the partner has a registered token. Never raises."""
+    # ── FCM HTTP v1 (v2.1.64) ─────────────────────────────────────
+    # OAuth access tokens minted from the service-account JSON are cached
+    # process-wide for ~50 min (they live 60).
+    _fcm_tok_cache = {}
+
+    @api.model
+    def _fcm_access_token(self, conf):
+        import time as _t
+        cache = type(self)._fcm_tok_cache
+        if cache.get('exp', 0) > _t.time() + 60:
+            return cache.get('tok')
+        sa_raw = (conf.fcm_service_account or '').strip()
+        if not sa_raw:
+            return None
         try:
-            key = (conf.fcm_server_key or '').strip()
-            token = getattr(partner, 'fcm_token', '') or ''
-            if not key or not token:
-                return
+            import jwt as _jwt
             import requests as _rq
-            _rq.post(
-                'https://fcm.googleapis.com/fcm/send',
-                headers={'Authorization': 'key=%s' % key,
+            sa = json.loads(sa_raw)
+            now = int(_t.time())
+            assertion = _jwt.encode({
+                'iss': sa['client_email'], 'sub': sa['client_email'],
+                'aud': sa['token_uri'], 'iat': now, 'exp': now + 3600,
+                'scope':
+                    'https://www.googleapis.com/auth/firebase.messaging',
+            }, sa['private_key'], algorithm='RS256')
+            if isinstance(assertion, bytes):
+                assertion = assertion.decode()
+            r = _rq.post(sa['token_uri'], data={
+                'grant_type':
+                    'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion': assertion}, timeout=6)
+            tok = r.json().get('access_token')
+            if tok:
+                cache['tok'] = tok
+                cache['exp'] = now + 3000
+                cache['project'] = sa.get('project_id', '')
+            return tok
+        except Exception:
+            _logger.warning('FCM token mint failed', exc_info=True)
+            return None
+
+    @api.model
+    def send_fcm(self, conf, token, title, body, data=None):
+        """Send ONE push over FCM HTTP v1. Returns True on success."""
+        access = self._fcm_access_token(conf)
+        if not access or not token:
+            return False
+        try:
+            import requests as _rq
+            project = type(self)._fcm_tok_cache.get('project') or                 json.loads(conf.fcm_service_account)['project_id']
+            r = _rq.post(
+                'https://fcm.googleapis.com/v1/projects/%s/messages:send'
+                % project,
+                headers={'Authorization': 'Bearer %s' % access,
                          'Content-Type': 'application/json'},
-                json={'to': token,
-                      'notification': {'title': rec.title,
-                                       'body': rec.body or ''},
-                      'data': json.loads(rec.payload or '{}')},
-                timeout=4)
+                json={'message': {
+                    'token': token,
+                    'notification': {'title': title or '',
+                                     'body': body or ''},
+                    'data': {k: str(v) for k, v in (data or {}).items()},
+                    'android': {'priority': 'HIGH'},
+                }}, timeout=6)
+            return r.status_code == 200
+        except Exception:
+            _logger.debug('FCM send failed', exc_info=True)
+            return False
+
+    def _try_fcm(self, conf, partner, rec):
+        """Best-effort push to the customer's device(s). Localizes to
+        Arabic when their latest session was Arabic? — we send the AR
+        text when available since most customers browse in Arabic, with
+        EN fallback. Never raises."""
+        try:
+            token = getattr(partner, 'fcm_token', '') or ''
+            if not token:
+                return
+            self.send_fcm(conf, token,
+                          rec.title_ar or rec.title,
+                          rec.body_ar or rec.body or '',
+                          json.loads(rec.payload or '{}'))
         except Exception:
             _logger.debug('FCM push skipped/failed', exc_info=True)
 

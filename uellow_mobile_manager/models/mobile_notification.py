@@ -75,11 +75,35 @@ class MobileNotification(models.Model):
     )
 
     def action_send_now(self):
-        """Mark as sent (actual FCM integration done via API)."""
+        """v2.1.64 — really sends over FCM HTTP v1 to every registered
+        device token (respecting each customer's category preference),
+        then marks the record sent. Without Firebase creds it still
+        lands in the in-app inbox as before."""
+        sent = 0
+        try:
+            Engine = self.env['mobile.customer.notification']
+            conf = self.env['mobile.notification.setting'].get_conf()
+            Pref = self.env['mobile.notification.preference'].sudo()
+            sessions = self.env['mobile.session'].sudo().search(
+                [('fcm_token', '!=', False)])
+            seen = set()
+            for sess in sessions:
+                tok = sess.fcm_token
+                if not tok or tok in seen:
+                    continue
+                seen.add(tok)
+                partner = getattr(sess, 'partner_id', None)
+                if partner and self.category != 'system':
+                    if not Pref.for_partner(partner).allows(self.category):
+                        continue
+                if Engine.send_fcm(conf, tok, self.name, self.body or ''):
+                    sent += 1
+        except Exception:
+            pass
         self.write({
             'state': 'sent',
             'sent_date': datetime.now(),
-            'sent_count': 0,  # Will be updated by Flutter FCM service
+            'sent_count': sent,
         })
         return {
             'type': 'ir.actions.client',
