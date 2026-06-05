@@ -2103,4 +2103,177 @@
   </t>
 </template>
 
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     ADD PRODUCTS — chooser / manual form / file import / URL import
+     (v2.1.69 — these routes existed but their templates were missing,
+     every link returned a 500)
+═══════════════════════════════════════════════════════════════════ -->
+<template id="portal_vendor_product_new" name="Vendor Add Product">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_products'"/>
+    <div style="font-size:18px;font-weight:800;color:#085041;margin-bottom:14px">
+      Add Products <span style="color:#0F6E56;font-weight:600">/ إضافة منتجات</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px">
+      <a href="/my/vendor/products/manual" style="text-decoration:none;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;display:block">
+        <div style="font-size:30px">📝</div>
+        <div style="font-weight:800;color:#085041;margin-top:8px">Add manually / إضافة يدوية</div>
+        <div style="font-size:12px;color:#64748b;margin-top:4px">One product at a time with name, price and photo — منتج واحد بالتفاصيل والصورة</div>
+      </a>
+      <a href="/my/vendor/products/import" style="text-decoration:none;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;display:block">
+        <div style="font-size:30px">📄</div>
+        <div style="font-weight:800;color:#085041;margin-top:8px">Import a file / استيراد ملف</div>
+        <div style="font-size:12px;color:#64748b;margin-top:4px">Upload CSV / Excel with many products — رفع ملف يحتوي عدة منتجات</div>
+      </a>
+      <a href="/my/vendor/products/url" style="text-decoration:none;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px;display:block">
+        <div style="font-size:30px">🔗</div>
+        <div style="font-weight:800;color:#085041;margin-top:8px">Import from URL / استيراد من رابط</div>
+        <div style="font-size:12px;color:#64748b;margin-top:4px">Paste a product page link, we fetch it — الصق رابط صفحة منتج ونجلبه لك</div>
+      </a>
+    </div>
+  </t>
+</template>
+
+<template id="portal_vendor_import" name="Vendor Import Products File">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_products'"/>
+    <div style="font-size:18px;font-weight:800;color:#085041;margin-bottom:4px">
+      Import Products <span style="color:#0F6E56;font-weight:600">/ استيراد المنتجات</span>
+    </div>
+    <div style="font-size:12px;color:#0F6E56;margin-bottom:14px">
+      Upload a CSV or Excel file — our team reviews and imports it into your store /
+      ارفع ملف CSV أو Excel وسيراجعه فريقنا ويضيفه لمتجرك
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;max-width:560px">
+      <form method="post" action="/my/vendor/products/import/submit" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+        <label style="font-size:12px;font-weight:800;color:#334155">File (CSV / XLSX) / الملف</label>
+        <input class="form-control" type="file" name="import_file" required="required"
+               accept=".csv,.xlsx,.xls" style="margin:8px 0 14px"/>
+        <button type="submit" class="btn"
+                style="background:#F5C320;color:#412402;font-weight:800;border-radius:10px">
+          Upload &amp; Submit / رفع وإرسال
+        </button>
+      </form>
+      <div style="margin-top:16px;border-top:1px dashed #e2e8f0;padding-top:12px;font-size:11.5px;color:#64748b">
+        <b>Expected columns / الأعمدة المتوقعة:</b>
+        name_en, name_ar, price, cost, barcode, qty, category, image_url
+      </div>
+    </div>
+    <t t-if="imports">
+      <div style="font-size:14px;font-weight:800;color:#085041;margin:18px 0 8px">
+        My uploads / ملفاتي المرفوعة
+      </div>
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;max-width:560px">
+        <table class="table table-sm" style="margin:0;font-size:12px">
+          <thead style="background:#F8FAFC"><tr><th>File</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody>
+            <t t-foreach="imports" t-as="imp">
+              <tr>
+                <td><t t-esc="imp.file_name"/></td>
+                <td><t t-esc="imp.create_date" t-options='{"widget": "date"}'/></td>
+                <td>
+                  <t t-if="imp.state == 'done'"><span style="color:#15803D;font-weight:800">✅ Imported</span></t>
+                  <t t-elif="imp.state == 'rejected'"><span style="color:#B91C1C;font-weight:800">❌ Rejected<t t-if="imp.note"> — <t t-esc="imp.note"/></t></span></t>
+                  <t t-else=""><span style="color:#B45309;font-weight:800">⏳ Pending review</span></t>
+                </td>
+              </tr>
+            </t>
+          </tbody>
+        </table>
+      </div>
+    </t>
+  </t>
+</template>
+
+<template id="portal_vendor_product_manual" name="Vendor Manual Product">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_products'"/>
+    <div style="font-size:18px;font-weight:800;color:#085041;margin-bottom:14px">
+      Add Product <span style="color:#0F6E56;font-weight:600">/ إضافة منتج</span>
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;max-width:640px">
+      <form method="post" action="/my/vendor/products/manual/submit" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <label style="font-size:12px;font-weight:800;color:#334155">Name (EN) *</label>
+            <input class="form-control form-control-sm" name="name_en" required="required"
+                   t-att-value="product and product.name or ''"/>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:800;color:#334155">الاسم (عربي)</label>
+            <input class="form-control form-control-sm" name="description_ar" dir="rtl"/>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:800;color:#334155">Selling price / سعر البيع *</label>
+            <input class="form-control form-control-sm" type="number" step="0.001" name="list_price" required="required"
+                   t-att-value="product and product.list_price or ''"/>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:800;color:#334155">Cost / التكلفة</label>
+            <input class="form-control form-control-sm" type="number" step="0.001" name="standard_price"
+                   t-att-value="product and product.standard_price or ''"/>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:800;color:#334155">Barcode / الباركود</label>
+            <input class="form-control form-control-sm" name="barcode"
+                   t-att-value="product and product.barcode or ''"/>
+          </div>
+          <div>
+            <label style="font-size:12px;font-weight:800;color:#334155">Initial stock / الكمية</label>
+            <input class="form-control form-control-sm" type="number" name="qty" value="0"/>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <label style="font-size:12px;font-weight:800;color:#334155">Description (EN) / الوصف</label>
+          <textarea class="form-control form-control-sm" name="description_en" rows="3"/>
+        </div>
+        <div style="margin-top:12px">
+          <label style="font-size:12px;font-weight:800;color:#334155">Photo / الصورة</label>
+          <input class="form-control" type="file" name="image" accept="image/*"/>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+          <button type="submit" class="btn"
+                  style="background:#F5C320;color:#412402;font-weight:800;border-radius:10px">
+            Submit for approval / إرسال للاعتماد
+          </button>
+          <span style="font-size:11px;color:#64748b">
+            Goes live after admin approval / يُنشر بعد موافقة الإدارة
+          </span>
+        </div>
+      </form>
+    </div>
+  </t>
+</template>
+
+<template id="portal_vendor_product_url" name="Vendor URL Import">
+  <t t-call="uellow_multivendor.portal_vendor_layout">
+    <t t-set="page_name" t-value="'vendor_products'"/>
+    <div style="font-size:18px;font-weight:800;color:#085041;margin-bottom:4px">
+      Import from URL <span style="color:#0F6E56;font-weight:600">/ استيراد من رابط</span>
+    </div>
+    <div style="font-size:12px;color:#0F6E56;margin-bottom:14px">
+      Paste a product page link — we fetch the details automatically /
+      الصق رابط صفحة المنتج وسنجلب التفاصيل تلقائياً
+    </div>
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;max-width:560px">
+      <form method="post" action="/my/vendor/products/url/submit">
+        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+        <label style="font-size:12px;font-weight:800;color:#334155">Product URL / رابط المنتج</label>
+        <input class="form-control" type="url" name="source_url" required="required"
+               placeholder="https://..." style="margin:8px 0 12px"/>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#334155;margin-bottom:12px">
+          <input type="checkbox" name="enable_ai" value="1" checked="checked"/>
+          Auto-translate + SEO / ترجمة تلقائية وتحسين
+        </label>
+        <button type="submit" class="btn"
+                style="background:#F5C320;color:#412402;font-weight:800;border-radius:10px">
+          Fetch product / جلب المنتج
+        </button>
+      </form>
+    </div>
+  </t>
+</template>
 </odoo>

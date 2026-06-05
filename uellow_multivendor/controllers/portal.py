@@ -513,8 +513,11 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        imports = request.env['uellow.product.import'].sudo().search(
+            [('vendor_id', '=', vendor.id)], limit=20)
         return request.render('uellow_multivendor.portal_vendor_import', {
             'vendor': vendor,
+            'imports': imports,
             'page_name': 'vendor_products',
         })
 

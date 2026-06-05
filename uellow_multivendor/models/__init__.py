@@ -7,4 +7,5 @@ from . import flash_sale
 from . import vendor_settings
 from . import sale_order_inherit
 from . import product_inherit
+from . import product_import
 from . import vendor_restock

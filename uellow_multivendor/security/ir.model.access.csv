@@ -30,3 +30,6 @@ access_marketplace_dashboard,access.marketplace.dashboard,model_uellow_marketpla
 access_vendor_restock_user,vend.restock.user,model_uellow_vendor_restock,base.group_user,1,0,0,0
 access_vendor_restock_admin,vend.restock.admin,model_uellow_vendor_restock,base.group_system,1,1,1,1
 access_vendor_restock_portal,vend.restock.portal,model_uellow_vendor_restock,base.group_portal,1,1,1,0
+access_uellow_product_import_admin,uellow.product.import admin,model_uellow_product_import,base.group_system,1,1,1,1
+access_uellow_product_import_portal,uellow.product.import portal,model_uellow_product_import,base.group_portal,1,1,1,0
+access_uellow_product_import_user,uellow.product.import user,model_uellow_product_import,base.group_user,1,0,0,0

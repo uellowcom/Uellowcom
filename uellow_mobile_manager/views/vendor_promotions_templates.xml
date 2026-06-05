@@ -60,7 +60,7 @@
                                            t-attf-name="discount_#{prod.id}"
                                            t-att-min="int(p.min_discount_pct)"
                                            t-att-max="int(p.max_discount_pct)"
-                                           t-att-placeholder="'%s%%' % int(p.min_discount_pct)"
+                                           t-att-placeholder="str(int(p.min_discount_pct)) + '%'"
                                            style="width:84px"/>
                                 </label>
                             </t>
