@@ -88,7 +88,7 @@ class MobileAppSetting(models.Model):
         string='Shop: Show Brands row', default=True,
         help='Horizontal brands row under "Recently arrived".')
     shop_foryou_enabled = fields.Boolean(
-        string='Shop: "For You" sidebar entry', default=False,
+        string='Shop: "For You" sidebar entry', default=True,
         help='Adds a "For You" entry at the TOP of the shop sidebar '
              'showing the hand-picked categories + brands below.')
     shop_foryou_categ_ids = fields.Many2many(

@@ -629,6 +629,12 @@ class MobileCartAPI(http.Controller):
             except Exception:
                 pass
             programs = cards.mapped('program_id') | rules.mapped('program_id')
+            # v2.1.59 — rule-code programs auto-create a CARD with a
+            # DIFFERENT code; it stayed in applied_coupon_ids and
+            # _update_programs_and_rewards re-applied the reward → the
+            # "removed but comes back" bug. Sweep program siblings.
+            cards |= order.applied_coupon_ids.filtered(
+                lambda c: c.program_id in programs)
             order.order_line.filtered(
                 lambda l: l.is_reward_line and (
                     (l.coupon_id and l.coupon_id in cards)

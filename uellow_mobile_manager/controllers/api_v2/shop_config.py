@@ -89,7 +89,16 @@ class MobileShopConfigAPI(http.Controller):
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
     def brands(self, **kw):
-        """Top brand attribute values by product count (limit 20)."""
+        """Top brand attribute values by product count.
+        v2.1.59 — optional ?category_id= filter + bigger limit for the
+        dedicated Brands screen."""
+        from ._common import get_payload
+        p = get_payload()
+        cat_id = 0
+        try:
+            cat_id = int(p.get('category_id') or 0)
+        except Exception:
+            pass
         Val = request.env['product.attribute.value'].sudo()
         vals = Val.search([
             '|', '|',
@@ -99,6 +108,8 @@ class MobileShopConfigAPI(http.Controller):
         ], limit=120)
         Tmpl = request.env['product.template'].sudo()
         base_dom = [('is_published', '=', True)]
+        if cat_id:
+            base_dom.append(('public_categ_ids', 'child_of', cat_id))
         Brand = None
         if 'product.brand' in request.env:
             Brand = request.env['product.brand'].sudo()
@@ -113,4 +124,4 @@ class MobileShopConfigAPI(http.Controller):
             if d['product_count'] > 0:
                 out.append(d)
         out.sort(key=lambda d: -d['product_count'])
-        return ok({'brands': out[:20]})
+        return ok({'brands': out[:60]})

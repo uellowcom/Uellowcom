@@ -179,8 +179,8 @@ def _price_trend_uncached(product):
         if not t:
             return None
         if t['is_lowest']:
-            label = {'en': 'Lowest price in %s days' % t['lowest_days'],
-                     'ar': 'أقل سعر خلال %s يوم' % t['lowest_days']}
+            # v2.1.59 — short label so it never wraps on the card line.
+            label = {'en': 'Lowest price ✓', 'ar': 'أقل سعر ✓'}
         elif t['direction'] == 'down':
             label = {'en': 'Price dropped %s%%' % t['change_pct'],
                      'ar': 'انخفض السعر %s%%' % t['change_pct']}
