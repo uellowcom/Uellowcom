@@ -368,8 +368,9 @@ def _stage_label(stage):
     return {
         'placed':       {'en': 'Order placed',           'ar': 'تم استلام الطلب'},
         'at_warehouse': {'en': 'Preparing at warehouse', 'ar': 'قيد التحضير بالمخزن'},
-        'at_carrier':   {'en': 'At delivery hub',        'ar': 'في مركز التوصيل'},
-        'in_transit':   {'en': 'Driver on the way',      'ar': 'السائق في الطريق'},
+        # v2.1.72 — "assigned to a courier" wording (مندوب), not "driver".
+        'at_carrier':   {'en': 'Assigned to a courier',  'ar': 'تم إسناد طلبك إلى أحد المناديب'},
+        'in_transit':   {'en': 'Courier on the way',     'ar': 'المندوب في الطريق إليك'},
         'arriving':     {'en': 'Arriving — be ready',    'ar': 'يقترب — كن جاهزاً'},
         'delivered':    {'en': 'Delivered',              'ar': 'تم التسليم'},
         'cancelled':    {'en': 'Cancelled',              'ar': 'ملغي'},
@@ -382,10 +383,10 @@ def _eta_text(order):
     ds = getattr(order, 'delivery_status', None)
     if ds == 'out_for_delivery':
         return {'en': 'Out for delivery · arriving soon',
-                'ar': 'في الطريق · يصل قريباً'}
+                'ar': 'في الطريق إليك · يصل قريباً'}
     if ds == 'assigned':
-        return {'en': 'Driver assigned · awaiting pickup',
-                'ar': 'تم تعيين السائق · بانتظار الاستلام'}
+        return {'en': 'Assigned to a courier · preparing pickup',
+                'ar': 'تم إسناد طلبك إلى أحد المناديب · جارٍ التحضير للاستلام'}
     if ds == 'delivered':
         return {'en': 'Delivered', 'ar': 'تم التسليم'}
     if ds == 'arrived_sorting':
@@ -393,24 +394,72 @@ def _eta_text(order):
     return {'en': 'Order placed', 'ar': 'تم استلام الطلب'}
 
 
+# v2.1.72 — per-step bilingual descriptions for the tracking timeline.
+_TIMELINE_DESC = {
+    'draft':     {'en': 'Your order was received',
+                  'ar': 'تم استلام طلبك'},
+    'confirmed': {'en': 'Order confirmed and being processed',
+                  'ar': 'تم تأكيد الطلب وجارٍ معالجته'},
+    'preparing': {'en': 'Your items are being packed',
+                  'ar': 'جارٍ تجهيز وتغليف منتجاتك'},
+    'shipping':  {'en': 'Handed to a courier, on the way to you',
+                  'ar': 'تم تسليمه لأحد المناديب في طريقه إليك'},
+    'delivered': {'en': 'Delivered — enjoy!',
+                  'ar': 'تم التسليم — نتمنى لك تجربة سعيدة'},
+}
+
+
+def _fmt_dt(dt):
+    """ISO + a friendly 'YYYY-MM-DD HH:MM' for the timeline."""
+    if not dt:
+        return None, ''
+    try:
+        return dt.isoformat(), dt.strftime('%Y-%m-%d %H:%M')
+    except Exception:
+        return None, ''
+
+
+def _step_timestamp(order, code):
+    """Best-effort real timestamp for each step, from the order's own
+    dates (no extra audit model needed)."""
+    if code == 'draft':
+        return order.create_date
+    if code == 'confirmed':
+        return order.date_order or order.create_date
+    if code == 'delivered':
+        return getattr(order, 'delivery_date_actual', None) or order.write_date
+    # preparing / shipping — we don't keep a dedicated stamp; fall back to
+    # the order write_date only for the CURRENT step so past steps still
+    # show their natural time and future ones stay blank.
+    return None
+
+
 def _order_timeline(order):
     """Per-step timeline used by the tracking screen — every Uellow
-    status with done/current/upcoming markers."""
+    status with done/current/upcoming markers, a real date+time, and a
+    short human description."""
     current = _uellow_status(order)['code']
     cur_idx = _UELLOW_STATUS_DICT[current]['idx']
     out = []
-    # Show only the linear positive flow (skip cancelled/returned)
     for code in ('draft', 'confirmed', 'preparing', 'shipping', 'delivered'):
         meta = _UELLOW_STATUS_DICT[code]
         state = 'done' if meta['idx'] < cur_idx else (
             'current' if meta['idx'] == cur_idx else 'upcoming')
-        # Special-case if we're at cancelled/returned, mark all upcoming
         if current in ('cancelled', 'returned'):
             state = 'done' if meta['idx'] <= 1 else 'upcoming'
+        # timestamp: real stamp where we have one; for the CURRENT step
+        # with no dedicated stamp use write_date so it isn't blank.
+        ts = _step_timestamp(order, code)
+        if ts is None and state == 'current':
+            ts = order.write_date
+        iso, human = _fmt_dt(ts) if (state != 'upcoming' and ts) else (None, '')
         out.append({
             'code': code,
             'label': {'en': meta['en'], 'ar': meta['ar']},
+            'description': _TIMELINE_DESC.get(code, {'en': '', 'ar': ''}),
             'state': state,
+            'date': iso,
+            'date_text': human,
         })
     return out
 

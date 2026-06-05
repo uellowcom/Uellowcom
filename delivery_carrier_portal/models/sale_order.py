@@ -159,6 +159,40 @@ class SaleOrder(models.Model):
     )
 
 
+    def write(self, vals):
+        res = super().write(vals)
+        # v2.1.72 — assigning a driver on the order form must make the
+        # order appear in the DRIVER APP. The app reads delivery.trip.line
+        # (by driver_id); a bare delivery_driver_id never created one, so
+        # directly-assigned orders were invisible to the driver. Sync a
+        # trip line on assignment + flip status to 'assigned'.
+        if 'delivery_driver_id' in vals and vals.get('delivery_driver_id'):
+            for order in self:
+                order._sync_driver_trip_line()
+        return res
+
+    def _sync_driver_trip_line(self):
+        self.ensure_one()
+        drv = self.delivery_driver_id
+        if not drv:
+            return
+        Line = self.env['delivery.trip.line'].sudo()
+        line = Line.search([('sale_order_id', '=', self.id)], limit=1)
+        if line:
+            if line.driver_id.id != drv.id:
+                line.driver_id = drv.id
+        else:
+            Line.create({
+                'sale_order_id': self.id,
+                'driver_id': drv.id,
+                'trip_id': self.delivery_trip_id.id
+                           if self.delivery_trip_id else False,
+            })
+        # Move to 'assigned' so the driver sees it as a new active task
+        # (don't downgrade an already-progressed status).
+        if self.delivery_status in ('pending', 'arrived_sorting', False):
+            self.delivery_status = 'assigned'
+
     def action_confirm_return_received(self):
         """Opens wizard-like dialog via return URL - handled via portal controller."""
         return {
