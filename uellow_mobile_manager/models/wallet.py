@@ -101,7 +101,12 @@ class ResPartnerWallet(models.Model):
         string='Wallet Transactions',
     )
 
+    @api.depends('wallet_transaction_ids.amount',
+                 'wallet_transaction_ids.state')
     def _compute_wallet_balance(self):
+        # v2.1.70 — the missing @api.depends made the cached balance go
+        # STALE within a request: /wallet/send debited correctly but
+        # returned the pre-send balance to the app.
         # Cheap aggregation — read_group keeps this fast even with many txs.
         if not self:
             return

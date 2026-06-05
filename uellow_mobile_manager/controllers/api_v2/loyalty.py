@@ -512,6 +512,10 @@ class MobileWalletAPI(http.Controller):
                   description=f'Gift card {code}',
                   reference=code)
         card.write({'points': 0})
+        try:
+            partner.invalidate_recordset(['wallet_balance'])
+        except Exception:
+            pass
         bal = float(getattr(partner, 'wallet_balance', 0) or 0)
         return ok({
             'credited': fmt_price(amount),
@@ -556,6 +560,12 @@ class MobileWalletAPI(http.Controller):
         Tx.credit(rec, amount, tx_type='receive',
                   description=note or f'Received from {partner.name}',
                   counter_partner_id=partner.id)
+        # belt & braces with the @api.depends fix — always answer with
+        # the POST-transfer balance
+        try:
+            partner.invalidate_recordset(['wallet_balance'])
+        except Exception:
+            pass
         bal = float(getattr(partner, 'wallet_balance', 0) or 0)
         return ok({
             'sent':      fmt_price(amount),
