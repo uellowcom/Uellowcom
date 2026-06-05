@@ -7,21 +7,18 @@
     <field name="arch" type="xml">
       <form>
         <header>
-          <button name="action_cancel" string="Cancel" type="object" invisible="state == 'cancelled'"/>
-          <button name="action_edit" string="Edit" type="object" invisible="state != 'draft'" class="btn-secondary"/>
-          ><button name="action_edit" string="✏️ Edit" type="object" class="btn-secondary"/>
-          <button name="action_assign" string="Assign" type="object" invisible="state != 'draft'"/> class="btn-primary"/>
+          <button name="action_assign" string="Assign" type="object" invisible="state != 'draft'" class="btn-primary"/>
           <button name="action_start" string="Start Trip" type="object" invisible="state != 'assigned'" class="btn-primary"/>
           <button name="action_done" string="Mark Done" type="object" invisible="state != 'in_progress'" class="btn-success" confirm="Are you sure? Some orders may not be delivered yet."/>
+          <button name="action_cancel" string="Cancel" type="object" invisible="state == 'cancelled'"/>
           <field name="state" widget="statusbar" statusbar_visible="draft,assigned,in_progress,done"/>
         </header>
         <sheet>
-          <h1><field name="name"/></h1>
+          <h1><field name="name" placeholder="New Trip"/></h1>
           <group>
             <group>
               <field name="carrier_company_id"/>
               <field name="date_trip"/>
-              <field name="driver_id"/>
             </group>
             <group>
               <field name="line_count" string="Orders"/>

@@ -779,42 +779,66 @@ class MobileCartAPI(http.Controller):
         code = (p.get('code') or '').strip()
         order = _get_or_create_order(create=False)
         if order and code:
+            # v2.1.73 — COMPREHENSIVE coupon removal. A typed code spawns
+            # several linked records that each, if left behind, make
+            # _update_programs_and_rewards() re-apply the discount:
+            #   • applied_coupon_ids (the card, code may differ from typed)
+            #   • code_enabled_rule_ids (the rule that was unlocked)
+            #   • coupon_point_ids (Odoo 18 point ledger — THE main culprit)
+            #   • reward lines on the order
+            # We resolve the program from ALL of: typed code on a card, the
+            # rule code, applied cards, and coupon_point_ids — then nuke
+            # everything tied to those programs.
+            # Resolve the program(s) for this code. The typed code lives
+            # on the RULE (and order.code_enabled_rule_ids) while the
+            # coupon card gets an auto-generated code — so search globally.
+            programs = request.env['loyalty.program']
+            try:
+                programs |= request.env['loyalty.rule'].sudo().search(
+                    [('code', '=', code)]).mapped('program_id')
+                programs |= request.env['loyalty.card'].sudo().search(
+                    [('code', '=', code)]).mapped('program_id')
+                programs |= order.code_enabled_rule_ids.filtered(
+                    lambda r: (r.code or '') == code).mapped('program_id')
+            except Exception:
+                pass
+            # cards/rules belonging to those programs (any code)
             cards = order.applied_coupon_ids.filtered(
-                lambda c: (c.code or '') == code)
+                lambda c: c.program_id in programs or (c.code or '') == code)
             rules = request.env['loyalty.rule']
             try:
                 rules = order.code_enabled_rule_ids.filtered(
-                    lambda r: (r.code or '') == code)
+                    lambda r: r.program_id in programs or (r.code or '') == code)
             except Exception:
                 pass
-            programs = cards.mapped('program_id') | rules.mapped('program_id')
-            # v2.1.59 — rule-code programs auto-create a CARD with a
-            # DIFFERENT code; it stayed in applied_coupon_ids and
-            # _update_programs_and_rewards re-applied the reward → the
-            # "removed but comes back" bug. Sweep program siblings.
-            cards |= order.applied_coupon_ids.filtered(
-                lambda c: c.program_id in programs)
+            # reward lines
             order.order_line.filtered(
                 lambda l: l.is_reward_line and (
-                    (l.coupon_id and l.coupon_id in cards)
+                    (l.coupon_id and (l.coupon_id in cards
+                                      or l.coupon_id.program_id in programs))
                     or (l.reward_id and l.reward_id.program_id in programs))
             ).unlink()
+            # point ledger — by program OR by the typed code on the coupon
+            try:
+                order.coupon_point_ids.filtered(
+                    lambda cp: cp.coupon_id.program_id in programs
+                    or (cp.coupon_id.code or '') == code).unlink()
+            except Exception:
+                pass
             if cards:
                 order.applied_coupon_ids = [(3, c.id) for c in cards]
             if rules:
                 order.code_enabled_rule_ids = [(3, r.id) for r in rules]
-            # v2.1.70 — THE "removed but comes back" root cause: Odoo 18
-            # also tracks the applied program through coupon_point_ids;
-            # leaving those rows made _update_programs_and_rewards()
-            # re-create the reward line immediately after removal.
-            try:
-                order.coupon_point_ids.filtered(
-                    lambda cp: cp.coupon_id.program_id in programs
-                    or cp.coupon_id in cards).unlink()
-            except Exception:
-                pass
             try:
                 order._update_programs_and_rewards()
+            except Exception:
+                pass
+            # safety net: if the recompute somehow re-created a reward line
+            # for a removed program, strip it again.
+            try:
+                order.order_line.filtered(
+                    lambda l: l.is_reward_line and l.reward_id
+                    and l.reward_id.program_id in programs).unlink()
             except Exception:
                 pass
         elif order:
