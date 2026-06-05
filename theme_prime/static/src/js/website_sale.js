@@ -152,7 +152,13 @@ publicWidget.registry.WebsiteSale.include({
         }
         let $images = $productContainer.find(this._getProductImageContainerSelector());
         if ($images.length && !this._isEditorEnabled()) {
-            const $newImages = $(newImages);
+            // v2.1.55 — $(htmlString) keeps whitespace TEXT nodes in the
+            // set; Bootstrap's carousel(0) then calls getAttribute on a
+            // Text node → "element.getAttribute is not a function" dialog.
+            // Keep ELEMENT nodes only.
+            const $newImages = $(newImages).filter(function () {
+                return this.nodeType === 1;
+            });
             $images.after($newImages);
             $images.remove();
             $images = $newImages;

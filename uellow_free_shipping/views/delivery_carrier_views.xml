@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- v2.1.51 — Express flag on the delivery method -->
+    <record id="view_delivery_carrier_form_express" model="ir.ui.view">
+        <field name="name">delivery.carrier.form.express</field>
+        <field name="model">delivery.carrier</field>
+        <field name="inherit_id" ref="delivery.view_delivery_carrier_form"/>
+        <field name="arch" type="xml">
+            <field name="delivery_type" position="after">
+                <div class="o_row mt-2">
+                    <field name="uellow_is_express"/>
+                    <label for="uellow_is_express" string="⚡ Express Service"/>
+                </div>
+                <div class="text-muted" invisible="not uellow_is_express">
+                    Excluded from free-shipping offers when the Settings
+                    toggle "Exclude EXPRESS delivery" is ON.
+                </div>
+            </field>
+        </field>
+    </record>
+</odoo>

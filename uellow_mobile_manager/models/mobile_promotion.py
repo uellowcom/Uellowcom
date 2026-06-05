@@ -71,8 +71,53 @@ class MobileAppPromotion(models.Model):
     bg_color = fields.Char('Badge Background', default='#FFF8E1',
                            help='Hex color, e.g. #FFF8E1')
     fg_color = fields.Char('Badge Text Color', default='#8B6508')
-    banner_image = fields.Image('Product-page Banner', max_width=1600,
-        help='Optional wide banner shown on participating product pages.')
+    banner_image = fields.Image('Product-page Banner (deprecated)',
+        max_width=1600,
+        help='DEPRECATED — replaced by the flash-sale-style banner below.')
+
+    # ── product-page banner (flash-sale style, v2.1.35) ─────────────
+    banner_enabled = fields.Boolean('Show Product-page Banner', default=True,
+        help='Render a flash-sale-style strip (icon + gradient + countdown) '
+             'under the gallery on participating product pages.')
+    banner_title_en = fields.Char('Banner Title (EN)')
+    banner_title_ar = fields.Char('Banner Title (AR)')
+    banner_subtitle_en = fields.Char('Banner Subtitle (EN)')
+    banner_subtitle_ar = fields.Char('Banner Subtitle (AR)')
+    banner_color_1 = fields.Char('Banner Color 1', default='#F5C320',
+        help='Hex. With Color 2 set → gradient; alone → solid color.')
+    banner_color_2 = fields.Char('Banner Color 2 (gradient end)',
+        default='#EA580C', help='Hex. Leave empty for a single solid color.')
+    banner_pattern = fields.Boolean('Pattern Overlay', default=True,
+        help='Subtle white pattern over the banner color.')
+    banner_pattern_style = fields.Selection([
+        ('stripes', 'Diagonal stripes'),
+        ('stripes_bold', 'Bold stripes'),
+        ('crosshatch', 'Crosshatch'),
+        ('mesh', 'Fine mesh'),
+        ('grid', 'Grid'),
+        ('dots', 'Micro dots'),
+        ('polka', 'Polka dots'),
+        ('bubbles', 'Bubbles'),
+        ('circles', 'Circle outlines'),
+        ('rings', 'Corner rings'),
+        ('scales', 'Fish scales'),
+        ('waves', 'Waves'),
+        ('zigzag', 'Zigzag'),
+        ('chevrons', 'Chevrons'),
+        ('diamonds', 'Diamonds'),
+        ('triangles', 'Triangles'),
+        ('hexagons', 'Hexagons'),
+        ('plus', 'Plus signs'),
+        ('sparkles', 'Sparkles'),
+        ('stars', 'Stars'),
+        ('confetti', 'Confetti'),
+        ('moons', 'Crescents'),
+    ], string='Pattern Style', default='stripes')
+    banner_icon = fields.Image('Banner Icon', max_width=256, max_height=256,
+        help='Round icon shown at the start of the product-page banner '
+             '(replaces the discount % circle when set).')
+    banner_icon_bg = fields.Char('Icon Circle Color', default='#FFFFFF',
+        help='Background color of the round icon holder on the banner.')
 
     # ── schedule + scope ────────────────────────────────────────────
     date_from = fields.Datetime('Starts At', required=True)
@@ -133,6 +178,16 @@ class MobileAppPromotion(models.Model):
             if p.apply_discounts:
                 p._restore_prices()
             p.state = 'ended'
+
+    def action_reset_draft(self):
+        """v2.1.37 — bring a stopped/ended (or open/running) campaign back
+        to DRAFT so it can be re-dated and reused. Prices are restored
+        first if the campaign had auto-discounts applied; vendor lines and
+        their approvals are kept."""
+        for p in self:
+            if p.apply_discounts and p.state == 'running':
+                p._restore_prices()
+            p.state = 'draft'
 
     def _apply_prices(self):
         for l in self.line_ids.filtered(
@@ -198,6 +253,29 @@ class MobileAppPromotion(models.Model):
                 'discount_pct': l.discount_pct,
                 'ends_at': p.date_to.isoformat() if p.date_to else None,
                 'has_banner': bool(p.banner_image),
+                # v2.1.35 — flash-sale-style product-page banner config.
+                'banner': {
+                    'title': {
+                        'en': p.banner_title_en or p.label_en or '',
+                        'ar': p.banner_title_ar or p.label_ar
+                              or p.banner_title_en or '',
+                    },
+                    'subtitle': {
+                        'en': p.banner_subtitle_en or '',
+                        'ar': p.banner_subtitle_ar
+                              or p.banner_subtitle_en or '',
+                    },
+                    'colors': [c for c in (p.banner_color_1,
+                                           p.banner_color_2) if c],
+                    'pattern': bool(p.banner_pattern),
+                    'pattern_style': p.banner_pattern_style or 'stripes',
+                    'emoji': p.emoji or '🎯',
+                    # public icon route (guests lack model read ACL)
+                    'icon_url': ('/api/mobile/v2/promotions/%s/icon?u=%s'
+                                 % (p.id, int(p.write_date.timestamp())))
+                                if p.banner_icon else '',
+                    'icon_bg': p.banner_icon_bg or '#FFFFFF',
+                } if p.banner_enabled else None,
             }
         return None
 

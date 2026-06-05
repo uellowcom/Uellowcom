@@ -60,6 +60,10 @@ class CustomerBodyProfile(models.Model):
         ('loose',   'Loose Fit'),
     ], string='تفضيل القصة', default='regular')
 
+    # v2.1.54 — measurement history: JSON list of snapshots appended on
+    # every app save ({date, values{field: num}}), newest first, max 20.
+    measure_history_json = fields.Text(default='[]')
+
     preferred_unit = fields.Selection([
         ('cm',   'Centimeters (cm)'),
         ('inch', 'Inches (in)'),

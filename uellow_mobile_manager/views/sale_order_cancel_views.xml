@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- v2.1.42 — customer cancellation requests (paid app orders) -->
+    <record id="view_order_form_cancel_request" model="ir.ui.view">
+        <field name="name">sale.order.form.cancel.request</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_approve_cancel_request" type="object"
+                        string="✅ Approve Cancellation"
+                        class="btn-danger" invisible="not cancel_request"
+                        confirm="Cancel this PAID order? Handle the customer's refund separately."/>
+                <button name="action_reject_cancel_request" type="object"
+                        string="🚫 Reject Cancellation Request"
+                        invisible="not cancel_request"/>
+            </xpath>
+            <xpath expr="//sheet" position="before">
+                <div class="alert alert-warning" role="alert"
+                     invisible="not cancel_request">
+                    📱 <b>The customer requested to CANCEL this paid order from the app</b>
+                    <field name="cancel_request_date" readonly="1" class="ms-2"/>
+                    — Reason: <field name="cancel_request_reason" readonly="1"/>
+                    <field name="cancel_request" invisible="1"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_order_filter_cancel_request" model="ir.ui.view">
+        <field name="name">sale.order.search.cancel.request</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <filter name="my_sale_orders_filter" position="after">
+                <filter string="📱 Cancellation Requests" name="cancel_requests"
+                        domain="[('cancel_request','=',True)]"/>
+            </filter>
+        </field>
+    </record>
+</odoo>

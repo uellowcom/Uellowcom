@@ -64,11 +64,28 @@ class MobileNavbar(models.Model):
 
     def to_public_dict(self, lang=None):
         """Flatten labels to the active lang."""
+        import re as _re
         d = self.to_admin_dict()
+        # v2.1.42 — _lang() hands us full Odoo codes ('ar_001') while the
+        # items store SHORT keys ('ar'), so Arabic always fell back to EN.
+        short = (lang or 'en').split('_')[0].lower()
+        Att = self.env['ir.attachment'].sudo()
         for it in d['items']:
             lbl = it.get('label') or {}
             if isinstance(lbl, dict):
-                it['label'] = lbl.get(lang or 'en') or lbl.get('en') or ''
+                it['label'] = (lbl.get(short) or lbl.get('en')
+                               or next(iter(lbl.values()), '') or '')
+            # v2.1.42 — uploaded SVG icons: /web/image/<id> URLs carry no
+            # type hint, so the app decoded them as bitmaps → broken icon.
+            # Append a marker the app's renderer detects ('svg+xml').
+            icon = (it.get('icon') or '')
+            if '/web/image/' in icon and 'svg' not in icon.lower():
+                m = _re.search(r'/web/image/(\d+)', icon)
+                if m:
+                    att = Att.browse(int(m.group(1)))
+                    if att.exists() and 'svg' in (att.mimetype or ''):
+                        it['icon'] = icon + ('&' if '?' in icon else '?') \
+                            + 'mime=svg+xml'
         return d
 
     @api.model

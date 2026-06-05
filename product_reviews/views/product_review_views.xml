@@ -5,11 +5,17 @@
         <field name="model">rating.rating</field>
         <field name="arch" type="xml">
             <list string="Product Reviews" decoration-success="consumed==True" decoration-muted="consumed==False">
-                <field name="write_date" string="Date"/>
+                <field name="create_date" string="Date"/>
+                <field name="res_name" string="Product"/>
                 <field name="partner_id" string="Customer"/>
                 <field name="rating" string="Rating"/>
+                <field name="review_title" string="Title" optional="show"/>
                 <field name="feedback" string="Review" optional="show"/>
+                <field name="is_verified_purchase" string="Verified" optional="show"/>
                 <field name="consumed" string="Published" widget="boolean_toggle"/>
+                <button name="action_approve" type="object" string="Approve"
+                        icon="fa-check" invisible="consumed"
+                        class="btn btn-sm btn-success"/>
             </list>
         </field>
     </record>
@@ -18,10 +24,42 @@
         <field name="model">rating.rating</field>
         <field name="priority">20</field>
         <field name="arch" type="xml">
-            <form><sheet><group>
-                <group string="Info"><field name="partner_id"/><field name="rating"/><field name="write_date"/><field name="consumed" string="Published"/></group>
-                <group string="Content"><field name="feedback" widget="text" nolabel="1"/></group>
-            </group></sheet></form>
+            <form>
+                <header>
+                    <button name="action_approve" type="object"
+                            string="✅ Approve &amp; Publish"
+                            class="btn-primary" invisible="consumed"/>
+                    <button name="action_reject" type="object"
+                            string="🚫 Unpublish"
+                            invisible="not consumed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Info">
+                            <field name="res_name" string="Product"/>
+                            <field name="partner_id" string="Customer"/>
+                            <field name="rating"/>
+                            <field name="is_verified_purchase"/>
+                            <field name="create_date"/>
+                            <field name="consumed" string="Published"/>
+                        </group>
+                        <group string="Content">
+                            <field name="review_title" string="Title"/>
+                            <field name="feedback" widget="text" nolabel="1"/>
+                        </group>
+                    </group>
+                    <group string="Photos">
+                        <field name="review_image_ids" nolabel="1">
+                            <kanban>
+                                <templates><t t-name="card">
+                                    <field name="image" widget="image"
+                                           options="{'size': [120, 120]}"/>
+                                </t></templates>
+                            </kanban>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
         </field>
     </record>
     <record id="view_product_rating_search" model="ir.ui.view">
@@ -31,8 +69,9 @@
             <search>
                 <field name="partner_id"/>
                 <field name="feedback"/>
+                <field name="res_name"/>
                 <filter string="Published" name="published" domain="[('consumed','=',True)]"/>
-                <filter string="Pending" name="pending" domain="[('consumed','=',False)]"/>
+                <filter string="Pending Approval" name="pending" domain="[('consumed','=',False)]"/>
             </search>
         </field>
     </record>
@@ -41,7 +80,9 @@
         <field name="res_model">rating.rating</field>
         <field name="view_mode">list,form</field>
         <field name="domain">[('res_model','=','product.template')]</field>
-        <field name="context">{'search_default_pending':1}</field>
+        <!-- No default filter: ALL reviews visible on open; pending rows
+             are muted with an inline Approve button, so nothing hides. -->
+        <field name="context">{}</field>
         <field name="search_view_id" ref="view_product_rating_search"/>
     </record>
     <menuitem id="menu_product_reviews_root" name="Reviews" sequence="51"/>

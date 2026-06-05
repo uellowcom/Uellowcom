@@ -146,10 +146,23 @@ def _free_shipping_threshold(order):
             except Exception:
                 pass
         Carrier = request.env['delivery.carrier'].sudo()
-        carriers = Carrier.search([
-            ('website_published', '=', True),
-            ('free_over', '=', True),
-        ])
+        dom = [('website_published', '=', True), ('free_over', '=', True)]
+        # v2.1.56 — website scoping (17 sites: a carrier of another
+        # country must not feed this site's progress bar).
+        try:
+            from ._common import get_website
+            wid = get_website().id
+            dom = ['|', ('website_id', '=', False),
+                   ('website_id', '=', wid)] + dom
+        except Exception:
+            pass
+        carriers = Carrier.search(dom)
+        # v2.1.56 — express carriers are outside the free-shipping engine
+        # (per Settings), so their free-over must not set the bar either.
+        excl = (ICP.get_param('uellow_free_shipping.express_excluded', '1')
+                or '1').strip() in ('1', 'True', 'true')
+        if excl:
+            carriers = carriers.filtered(lambda c: not carrier_is_express(c))
         if not carriers:
             return None
         amounts = [c.amount for c in carriers if c.amount]
@@ -158,13 +171,129 @@ def _free_shipping_threshold(order):
         return None
 
 
+
+# ─── v2.1.51 — FREE-SHIPPING ENGINE ──────────────────────────────────
+# One source of truth used by the cart methods list, the checkout
+# picker AND the confirm pricing, so what the customer sees is always
+# what they pay. Free sources (standard delivery only when the express
+# exclusion is ON):
+#   1. carrier's own "free over" amount
+#   2. a free-shipping COUPON reward applied on the order
+#   3. product flags (rule: any / all / off — Settings)
+#   4. the global threshold (Settings)
+
+def carrier_is_express(c):
+    """Explicit flag first, name heuristic (express/سريع) as fallback."""
+    try:
+        if 'uellow_is_express' in c._fields and c.uellow_is_express:
+            return True
+        blob = ' '.join(filter(None, [
+            c.name or '',
+            getattr(c, 'public_label_en', '') or '',
+            getattr(c, 'public_label_ar', '') or '',
+        ])).lower()
+        return 'express' in blob or 'سريع' in blob
+    except Exception:
+        return False
+
+
+def order_free_shipping_reason(order):
+    """Order-level free-shipping source or None.
+    Returns {'reason': code, 'label': {en, ar}}."""
+    ICP = request.env['ir.config_parameter'].sudo()
+    # 1) coupon with a free-shipping reward
+    try:
+        for l in order.order_line:
+            rw = getattr(l, 'reward_id', False)
+            if rw and getattr(rw, 'reward_type', '') == 'shipping':
+                return {'reason': 'coupon',
+                        'label': {'en': 'Free shipping coupon',
+                                  'ar': 'كوبون شحن مجاني'}}
+        for prog in getattr(order, 'no_code_promo_program_ids',
+                            request.env['loyalty.program'].browse([])):
+            pass
+    except Exception:
+        pass
+    # 2) product flags per rule
+    try:
+        rule = (ICP.get_param('uellow_free_shipping.product_rule', 'any')
+                or 'any').strip()
+        if rule in ('any', 'all'):
+            prods = [l.product_id.product_tmpl_id
+                     for l in order.order_line
+                     if l.product_id and not l.display_type
+                     and not getattr(l, 'is_reward_line', False)
+                     and not getattr(l, 'is_delivery', False)]
+            if prods:
+                flags = [bool(hasattr(t, '_is_free_shipping')
+                              and t._is_free_shipping()) for t in prods]
+                hit = any(flags) if rule == 'any' else all(flags)
+                if hit:
+                    return {'reason': 'product',
+                            'label': {'en': 'Free-shipping product',
+                                      'ar': 'منتج بشحن مجاني'}}
+    except Exception:
+        pass
+    # 3) global threshold
+    try:
+        thr = _free_shipping_threshold(order)
+        if thr and order.amount_untaxed >= thr:
+            return {'reason': 'threshold',
+                    'label': {'en': 'Order above %s' % thr,
+                              'ar': 'طلب فوق %s' % thr}}
+    except Exception:
+        pass
+    return None
+
+
+def effective_shipping_price(order, carrier, base_price):
+    """(price, free_label_or_None) after the engine. Express services
+    are untouched when the exclusion setting is ON (default)."""
+    try:
+        ICP = request.env['ir.config_parameter'].sudo()
+        excl = (ICP.get_param('uellow_free_shipping.express_excluded', '1')
+                or '1').strip() in ('1', 'True', 'true')
+        if excl and carrier_is_express(carrier):
+            return base_price, None
+        # carrier's own free-over
+        if getattr(carrier, 'free_over', False) and                 order.amount_untaxed >= (getattr(carrier, 'amount', 0) or 0):
+            return 0.0, {'en': 'Free over %s' % (carrier.amount or 0),
+                         'ar': 'مجاني فوق %s' % (carrier.amount or 0)}
+        r = order_free_shipping_reason(order)
+        if r:
+            return 0.0, r['label']
+    except Exception:
+        pass
+    return base_price, None
+
+
 def _available_shipping_methods(order):
     """List published delivery carriers + their rate for this cart.
     Uses Uellow's per-zone pricing when configured; falls back to the
     carrier's standard rate_shipment / fixed price."""
     try:
         Carrier = request.env['delivery.carrier'].sudo()
-        carriers = Carrier.search([('website_published', '=', True)])
+        # v2.1.56 — website + destination scoping (was: every published
+        # carrier on every site).
+        dom = [('website_published', '=', True)]
+        try:
+            from ._common import get_website
+            wid = get_website().id
+            dom = ['|', ('website_id', '=', False),
+                   ('website_id', '=', wid)] + dom
+        except Exception:
+            pass
+        carriers = Carrier.search(dom)
+        try:
+            ship_to = order.partner_shipping_id or order.partner_id
+            cc = (ship_to.country_id.code or '') if ship_to and \
+                ship_to.country_id else ''
+            carriers = carriers.filtered(
+                lambda c: not hasattr(c, 'available_for_order')
+                or c.available_for_order(order, country_code=cc,
+                                         channel='app'))
+        except Exception:
+            pass
         cur = order.currency_id or request.env.company.currency_id
         out = []
         for c in carriers:
@@ -193,9 +322,10 @@ def _available_shipping_methods(order):
                         rate = res.get('price', 0)
                 except Exception:
                     pass
-            is_free = bool(c.free_over and order.amount_untaxed >= (c.amount or 0))
-            if is_free:
-                rate = 0.0
+            # v2.1.51 — unified free-shipping engine (flags / threshold /
+            # coupon / carrier free-over; express excluded per Settings).
+            rate, free_label = effective_shipping_price(order, c, rate)
+            is_free = free_label is not None
             _rate_money = fmt_price(rate or 0, cur) if rate is not None else None
             out.append({
                 'id': c.id,
@@ -205,6 +335,8 @@ def _available_shipping_methods(order):
                 'rate': _rate_money,
                 'delivery_type': c.delivery_type,
                 'is_free': is_free,
+                'free_label': free_label,
+                'is_express': carrier_is_express(c),
                 'zone': zone_match,
             })
         return out
@@ -257,6 +389,13 @@ def serialize_cart(order):
     coupon_codes = []
     try:
         coupon_codes = [c.code for c in order.applied_coupon_ids]
+    except Exception:
+        pass
+    # v2.1.56 — promo-code PROGRAMS (rule codes) don't live in
+    # applied_coupon_ids; surface them too so the app can show/remove them.
+    try:
+        coupon_codes += [r.code for r in order.code_enabled_rule_ids
+                         if r.code and r.code not in coupon_codes]
     except Exception:
         pass
 
@@ -424,7 +563,34 @@ class MobileCartAPI(http.Controller):
             res = order._try_apply_code(code) if hasattr(order, '_try_apply_code') else None
             if isinstance(res, dict) and res.get('error'):
                 return fail('COUPON_INVALID', res['error'], 400)
-            applied = True
+            # v2.1.51 — _try_apply_code only REGISTERS the code; the reward
+            # still has to be claimed or no discount line ever appears
+            # (the "coupon does nothing" bug). Claim the first applicable
+            # reward of each returned coupon, Odoo-policy compliant.
+            if isinstance(res, dict):
+                for coupon, rewards in res.items():
+                    for reward in rewards:
+                        try:
+                            r2 = order._apply_program_reward(reward, coupon)
+                            if not (isinstance(r2, dict) and r2.get('error')):
+                                applied = True
+                                break
+                        except Exception:
+                            continue
+            try:
+                if hasattr(order, '_update_programs_and_rewards'):
+                    order._update_programs_and_rewards()
+            except Exception:
+                pass
+            # a discount line present = definitely applied (covers
+            # automatic programs that skip the claim step)
+            if order.order_line.filtered('is_reward_line'):
+                applied = True
+            if not applied:
+                return fail('COUPON_NOT_APPLICABLE',
+                            'This coupon does not apply to your cart — '
+                            'check its conditions / هذا الكوبون لا ينطبق '
+                            'على سلتك، راجع شروطه', 400)
         except Exception as e:
             return fail('COUPON_FAILED', str(e), 400)
         return ok({'applied': applied, 'cart': serialize_cart(order)})
@@ -433,12 +599,44 @@ class MobileCartAPI(http.Controller):
                 methods=['POST', 'OPTIONS'], csrf=False)
     @safe_endpoint
     def remove_coupon(self, **kw):
+        # v2.1.56 — accepts an optional `code`: removes ONLY that coupon and
+        # its reward lines (the × button used to wipe every applied coupon).
+        # Without a code it keeps the old wipe-all behaviour.
+        p = get_payload()
+        code = (p.get('code') or '').strip()
         order = _get_or_create_order(create=False)
-        if order:
+        if order and code:
+            cards = order.applied_coupon_ids.filtered(
+                lambda c: (c.code or '') == code)
+            rules = request.env['loyalty.rule']
+            try:
+                rules = order.code_enabled_rule_ids.filtered(
+                    lambda r: (r.code or '') == code)
+            except Exception:
+                pass
+            programs = cards.mapped('program_id') | rules.mapped('program_id')
+            order.order_line.filtered(
+                lambda l: l.is_reward_line and (
+                    (l.coupon_id and l.coupon_id in cards)
+                    or (l.reward_id and l.reward_id.program_id in programs))
+            ).unlink()
+            if cards:
+                order.applied_coupon_ids = [(3, c.id) for c in cards]
+            if rules:
+                order.code_enabled_rule_ids = [(3, r.id) for r in rules]
+            try:
+                order._update_programs_and_rewards()
+            except Exception:
+                pass
+        elif order:
             # Drop reward lines
             order.order_line.filtered('is_reward_line').unlink()
             try:
                 order.applied_coupon_ids = [(5, 0, 0)]
+            except Exception:
+                pass
+            try:
+                order.code_enabled_rule_ids = [(5, 0, 0)]
             except Exception:
                 pass
         return ok({'cart': serialize_cart(order)})

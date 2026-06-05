@@ -14,7 +14,8 @@ class MobileCartShare(models.Model):
     _description = 'Mobile cart share link'
     _order = 'create_date desc'
 
-    token = fields.Char(required=True, index=True, default=_gen_token, copy=False)
+    token = fields.Char(required=True, index=True,
+                        default=lambda self: _gen_token(), copy=False)
     order_id = fields.Many2one('sale.order', ondelete='set null',
                                string='Source cart')
     partner_id = fields.Many2one('res.partner', string='Shared by')

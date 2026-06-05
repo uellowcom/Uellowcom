@@ -75,7 +75,36 @@ def serialize_product_card(product, lang='en_US'):
     }
 
 
+
+# ─── v2.1.48 — card-enrichment cache ─────────────────────────────────
+# rank / promo / cart-adds / price-trend each cost a query PER PRODUCT;
+# a builder home with ~60 cards fired 200+ queries per request and the
+# app start felt heavy. These signals change slowly, so a short
+# worker-local TTL cache amortizes them across users and requests.
+import time as _time
+
+_CARD_CACHE = {}
+
+
+def _card_cached(kind, key, ttl, fn):
+    now = _time.time()
+    hit = _CARD_CACHE.get((kind, key))
+    if hit is not None and now - hit[1] < ttl:
+        return hit[0]
+    val = fn()
+    _CARD_CACHE[(kind, key)] = (val, now)
+    if len(_CARD_CACHE) > 12000:        # bound worker memory
+        for k in sorted(_CARD_CACHE, key=lambda k: _CARD_CACHE[k][1])[:6000]:
+            _CARD_CACHE.pop(k, None)
+    return val
+
+
 def _product_rank_badge(product):
+    return _card_cached('rank', (product.id, get_website().id),
+                        600, lambda: _rank_badge_uncached(product))
+
+
+def _rank_badge_uncached(product):
     """v2.1.24 — best 'Best Seller #N in <category>' badge for cards.
     Only ranks ≤ badge_max_rank show on cards; None when unranked."""
     try:
@@ -94,6 +123,11 @@ def _product_rank_badge(product):
 
 
 def _promo_badge(product):
+    return _card_cached('promo', (product.id, get_website().id),
+                        120, lambda: _promo_badge_uncached(product))
+
+
+def _promo_badge_uncached(product):
     """v2.1.30 — active promotion coin for this product (or None)."""
     try:
         Promo = request.env.get('mobile.app.promotion')
@@ -102,10 +136,17 @@ def _promo_badge(product):
         return Promo.sudo().badge_for(product.id,
                                       website_id=get_website().id)
     except Exception:
+        _logger.exception('promo badge_for failed for product %s',
+                          product.id)
         return None
 
 
 def _cart_adds_count(product):
+    return _card_cached('cart_adds', product.id,
+                        900, lambda: _cart_adds_uncached(product))
+
+
+def _cart_adds_uncached(product):
     """v2.1.30 — how many carts the product was added to (30 days,
     any order state — social proof for the card ticker)."""
     try:
@@ -123,6 +164,11 @@ def _cart_adds_count(product):
 
 
 def _price_trend(product):
+    return _card_cached('trend', product.id,
+                        600, lambda: _price_trend_uncached(product))
+
+
+def _price_trend_uncached(product):
     """v2.1.25 — internal price-intelligence indicator for cards.
     {'direction','change_pct','is_lowest','label{en,ar}'} or None."""
     try:
@@ -796,34 +842,60 @@ class MobileProductsAPI(http.Controller):
         if not product.exists():
             return fail('NOT_FOUND', 'Product not found', 404)
 
-        Review = request.env.get('product.review')
+        # v2.1.35 — the live source is rating.rating (the Reviews module):
+        # app-submitted reviews land there consumed=False (pending) and
+        # appear here only after an admin approves (consumed=True).
         items = []
         meta = {'page': 1, 'per_page': 20, 'total': 0}
         breakdown = {'5': 0, '4': 0, '3': 0, '2': 0, '1': 0}
-        if Review is not None:
+        avg, total = 0.0, 0
+        try:
+            Rating = request.env['rating.rating'].sudo()
+            recs = Rating.search([
+                ('res_model', '=', 'product.template'),
+                ('res_id', '=', product.id),
+                ('consumed', '=', True),
+                ('rating', '>', 0),
+            ], order='create_date desc')
+            # v2.1.38 — the AUTHOR also sees their own still-pending
+            # review (flagged so the app shows an "under review" chip).
             try:
-                recs = Review.sudo().search([
-                    ('product_id', '=', product.id),
-                    ('state', '=', 'approved'),
-                ], order='create_date desc')
-                # Star breakdown
-                for r in recs:
-                    rating = int(r.rating or 0)
-                    if 1 <= rating <= 5:
-                        breakdown[str(rating)] = breakdown.get(str(rating), 0) + 1
-                items, meta = paginate(
-                    recs,
-                    page=p.get('page', 1),
-                    per_page=p.get('per_page', 20),
-                    serializer=_serialize_review,
-                )
+                partner = current_partner()
             except Exception:
-                pass
+                partner = None
+            if partner:
+                mine = Rating.search([
+                    ('res_model', '=', 'product.template'),
+                    ('res_id', '=', product.id),
+                    ('consumed', '=', False),
+                    ('partner_id', '=', partner.id),
+                    ('rating', '>', 0),
+                ])
+                if mine:
+                    recs = mine | recs
+            ratings = []
+            for r in recs:
+                if not r.consumed:
+                    continue          # pending: shown to author, NOT counted
+                rating = int(round(r.rating or 0))
+                ratings.append(float(r.rating or 0))
+                if 1 <= rating <= 5:
+                    breakdown[str(rating)] = breakdown.get(str(rating), 0) + 1
+            total = len(ratings)
+            avg = round(sum(ratings) / total, 1) if total else 0.0
+            items, meta = paginate(
+                recs,
+                page=p.get('page', 1),
+                per_page=p.get('per_page', 20),
+                serializer=_serialize_rating_review,
+            )
+        except Exception:
+            pass
         return ok({
             'reviews': items,
             'summary': {
-                'avg': round(float(getattr(product, 'rating_avg', 0) or 0), 1),
-                'total': int(getattr(product, 'rating_count', 0) or 0),
+                'avg': avg,
+                'total': total,
                 'breakdown': breakdown,
             },
         }, meta)
@@ -1018,6 +1090,32 @@ class MobileProductsAPI(http.Controller):
 
 
 # ─── Review + Reviewer serializers ────────────────────────────────────
+
+def _serialize_rating_review(r):
+    """v2.1.35 — rating.rating record → the app's review JSON shape."""
+    photos = []
+    for img in getattr(r, 'review_image_ids', []):
+        if img.image:
+            photos.append(img_url('rating.review.image', img.id, 'image',
+                                  unique=img.write_date))
+    return {
+        'id':     r.id,
+        'rating': int(round(r.rating or 0)),
+        'title':  getattr(r, 'review_title', '') or '',
+        'body':   r.feedback or '',
+        'author': r.partner_id.name if r.partner_id else 'Anonymous',
+        'avatar': img_url('res.partner', r.partner_id.id, 'image_128',
+                          unique=r.partner_id.write_date)
+                  if r.partner_id else None,
+        'date':   r.create_date.isoformat() if r.create_date else None,
+        'verified_purchase': bool(getattr(r, 'is_verified_purchase', False)),
+        'helpful_count': int(getattr(r, 'helpful_count', 0) or 0),
+        'photos': photos,
+        'pending': not r.consumed,
+        'video_url': '',
+        'vendor_reply': '',
+    }
+
 
 def _serialize_review(r):
     """Single review with photos + verified-purchase + helpful count."""

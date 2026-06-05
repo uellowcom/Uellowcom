@@ -22,6 +22,35 @@ class SaleOrder(models.Model):
         'mobile.session', string='Mobile Session', index=True, copy=False,
     )
 
+    # ── customer cancellation (v2.1.42) ─────────────────────────────
+    # Unpaid draft/confirmed orders cancel instantly from the app; PAID
+    # orders raise a request that an admin approves/rejects here.
+    cancel_request = fields.Boolean(
+        string='Cancellation Requested', default=False, copy=False,
+        index=True,
+        help='The customer asked to cancel this PAID order from the app. '
+             'Approve to cancel (handle the refund separately) or reject.')
+    cancel_request_date = fields.Datetime(copy=False)
+    cancel_request_reason = fields.Char(copy=False,
+        string='Cancellation Reason')
+
+    def action_approve_cancel_request(self):
+        for o in self:
+            try:
+                o.with_context(disable_cancel_warning=True).action_cancel()
+            except Exception:
+                o.state = 'cancel'
+            o.cancel_request = False
+            o.message_post(body='✅ Customer cancellation request APPROVED '
+                                '— order cancelled. Remember the refund if '
+                                'a payment was captured.')
+
+    def action_reject_cancel_request(self):
+        for o in self:
+            o.cancel_request = False
+            o.message_post(body='🚫 Customer cancellation request rejected '
+                                '— order continues normally.')
+
     @api.model
     def merge_mobile_cart_into_partner(self, partner_id, cart_token):
         """At login time, if a guest cart token was active, move its

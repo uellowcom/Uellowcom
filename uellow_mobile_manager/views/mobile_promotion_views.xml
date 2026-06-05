@@ -33,6 +33,10 @@
                             class="btn-primary" invisible="state not in ('draft', 'open')"/>
                     <button name="action_end" type="object" string="■ End Now"
                             invisible="state != 'running'"/>
+                    <button name="action_reset_draft" type="object"
+                            string="↺ Reset to Draft"
+                            confirm="Bring this campaign back to Draft? Auto-applied prices (if any) are restored; vendor lines are kept."
+                            invisible="state == 'draft'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,open,running,ended"/>
                 </header>
@@ -54,8 +58,25 @@
                             <field name="label_ar"/>
                             <field name="bg_color" widget="color"/>
                             <field name="fg_color" widget="color"/>
-                            <field name="banner_image" widget="image"
-                                   options="{'size': [240, 80]}"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="⚡ Product-page Banner (flash-sale style)">
+                            <field name="banner_enabled"/>
+                            <field name="banner_title_en" invisible="not banner_enabled"/>
+                            <field name="banner_title_ar" invisible="not banner_enabled"/>
+                            <field name="banner_subtitle_en" invisible="not banner_enabled"/>
+                            <field name="banner_subtitle_ar" invisible="not banner_enabled"/>
+                            <field name="banner_color_1" widget="color" invisible="not banner_enabled"/>
+                            <field name="banner_color_2" widget="color" invisible="not banner_enabled"/>
+                            <field name="banner_pattern" invisible="not banner_enabled"/>
+                            <field name="banner_pattern_style"
+                                   invisible="not banner_enabled or not banner_pattern"/>
+                            <field name="banner_icon" widget="image"
+                                   options="{'size': [80, 80]}"
+                                   invisible="not banner_enabled"/>
+                            <field name="banner_icon_bg" widget="color"
+                                   invisible="not banner_enabled"/>
                         </group>
                     </group>
                     <group>

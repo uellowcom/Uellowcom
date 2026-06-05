@@ -215,6 +215,10 @@
                                 <group>
                                     <field name="enable_app_banner"/>
                                 </group>
+                                <group string="🏆 Best-Seller Badge">
+                                    <field name="rank_badge_scope"
+                                           help="Quiet 'Best seller in X' line under the product name on app cards. Off hides it everywhere."/>
+                                </group>
                             </group>
                             <div class="alert alert-info mt-2">
                                 <i class="fa fa-toggle-on me-1"/>

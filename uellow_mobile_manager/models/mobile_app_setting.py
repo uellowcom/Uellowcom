@@ -71,6 +71,14 @@ class MobileAppSetting(models.Model):
         help='Let guests place orders without an account (after a warning '
              'that they lose order tracking, loyalty points, etc.). '
              'Per-website like every app setting.')
+    rank_badge_scope = fields.Selection([
+        ('off', 'Off'),
+        ('category', 'Category products only'),
+        ('related', 'Related products only'),
+        ('all', 'Everywhere'),
+    ], string='Best-Seller Badge Placement', default='off',
+        help='Where the quiet "Best seller in X" line (under the product '
+             'name, no background) appears on app product cards.')
     facebook_url = fields.Char(string='Facebook URL')
     instagram_url = fields.Char(string='Instagram URL')
     youtube_url = fields.Char(string='YouTube URL')

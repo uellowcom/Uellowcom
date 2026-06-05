@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- App header slides inside each eCommerce category form -->
+    <record id="product_public_category_form_app_slides" model="ir.ui.view">
+        <field name="name">product.public.category.form.app.slides</field>
+        <field name="model">product.public.category</field>
+        <field name="inherit_id" ref="website_sale.product_public_category_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <notebook>
+                    <page string="App Header Slides" name="uellow_app_slides">
+                        <div class="text-muted mb-2">
+                            Slides shown as an image slider at the top of the
+                            mobile app Shop page when this MAIN category is
+                            selected. If no slides are added the app shows
+                            its built-in default banners.
+                        </div>
+                        <field name="uellow_slide_ids">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="image" widget="image" options="{'size': [90, 50]}"/>
+                                <field name="name"/>
+                                <field name="link_type"/>
+                                <field name="link_product_id"
+                                       invisible="link_type != 'product'"
+                                       required="link_type == 'product'"/>
+                                <field name="link_category_id"
+                                       invisible="link_type != 'category'"
+                                       required="link_type == 'category'"/>
+                                <field name="link_url"
+                                       invisible="link_type != 'url'"
+                                       required="link_type == 'url'"/>
+                                <field name="website_id" optional="hide"/>
+                                <field name="active" widget="boolean_toggle"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -27,6 +27,8 @@ class MobileAppSettingsAPI(http.Controller):
             'support_phone':  getattr(setting, 'support_phone', '') or '',
             'whatsapp':       getattr(setting, 'whatsapp_number', '') or '',
             'guest_checkout': bool(getattr(setting, 'guest_checkout_enabled', False)),
+            # v2.1.34 — best-seller badge placement on product cards.
+            'rank_badge_scope': getattr(setting, 'rank_badge_scope', 'off') or 'off',
             # v2.1.23 — Google OAuth WEB client id (public by design); the
             # app passes it as serverClientId to google_sign_in.
             'google_client_id': (request.env['ir.config_parameter'].sudo()

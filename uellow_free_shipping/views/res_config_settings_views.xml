@@ -18,6 +18,16 @@
                         <setting id="uellow_free_shipping_label_ar" string="Badge label (AR)">
                             <field name="free_shipping_badge_label_ar"/>
                         </setting>
+                        <setting id="uellow_free_shipping_express"
+                                 string="Exclude EXPRESS delivery"
+                                 help="Express carriers always keep their full price — free-shipping flags, thresholds, coupons and the cart progress bar apply to STANDARD delivery only. Mark express carriers via the 'Express Service' checkbox on the delivery method (name auto-detection covers 'express/سريع' too).">
+                            <field name="free_shipping_express_excluded"/>
+                        </setting>
+                        <setting id="uellow_free_shipping_product_rule"
+                                 string="Product-flag rule"
+                                 help="ANY: one flagged product makes the order's standard delivery free. ALL: every product must be flagged. Badges only: flags show the badge but never change delivery prices.">
+                            <field name="free_shipping_product_rule"/>
+                        </setting>
                     </block>
                 </app>
             </xpath>

@@ -1336,6 +1336,7 @@ const KIND_DEFAULTS = {
   'tab-nav': () => ({
     show_title:false, pad_y:0, title_gap:0,
     style:'underline',        // underline | pill | chip
+    align:'start',            // start | center | end (start follows language)
     sticky:false,
     tabs:[
       {labelEn:'All',      labelAr:'الكل',     link:{type:'screen',value:'shop'}},
@@ -3177,6 +3178,8 @@ function renderContent(b){
       return `<p class="hint">Horizontal sticky tabs — SHEIN/Trendyol-style. Each tab routes to a target.</p>
         <div class="field"><label>Style</label>
           ${sourceSelect(b, 'style', [['underline','— Underline'],['pill','⬭ Pill'],['chip','◯ Chip']], 'underline')}</div>
+        <div class="field"><label>Alignment</label>
+          ${sourceSelect(b, 'align', [['start','⇤ Start (follows language — right in AR, left in EN)'],['center','⇆ Center'],['end','⇥ End']], 'start')}</div>
         <div class="toggle"><div class="nm">📌 Sticky at top of screen</div>
           <div class="switch ${(p.sticky)?'on':''}" data-toggle-prop="sticky"></div></div>
         <div class="sub-h">Tabs (${tabs.length})</div>
@@ -3542,6 +3545,9 @@ function renderContent(b){
         </div>
         <div class="toggle"><div class="nm">🎨 Colored backgrounds (different soft color per item)</div>
           <div class="switch ${(p.colored_bg)?'on':''}" data-toggle-prop="colored_bg"></div></div>
+        <div class="field"><label>Tile background color (free pick — overrides the above; default gray)</label>
+          <input type="color" value="${p.tile_bg||'#EFEFEF'}" data-prop="tile_bg" style="height:32px;padding:2px"/>
+          <button class="btn-sm" style="margin-top:4px" data-prop="tile_bg" data-prop-val="">↺ Reset to default</button></div>
         <div class="toggle"><div class="nm">⭕ Ring border around icon</div>
           <div class="switch ${(p.show_ring!==false)?'on':''}" data-toggle-prop="show_ring"></div></div>
         <div class="toggle"><div class="nm">🔢 Show product count badge</div>
@@ -3574,7 +3580,24 @@ function renderContent(b){
         ${mlField(b,'title','Section title')}
         ${isFlash ? flashVariantPicker(b) : ''}
 
-        ${!isFlash ? `
+        ${(b.kind==='bestsellers') ? `
+        <div class="sub-h">🏆 Bestsellers Pro</div>
+        <p class="hint">Podium design: #1 crowned on a gold stand, #2 silver, #3 bronze, then a ranked list — fed by the REAL daily sales ranking.</p>
+        <div class="field"><label>Theme</label>
+          <select data-prop="bs_theme">
+            <option value="gold" ${(p.bs_theme||'gold')==='gold'?'selected':''}>🥇 Royal gold (cream)</option>
+            <option value="dark" ${p.bs_theme==='dark'?'selected':''}>🌑 Midnight dark</option>
+            <option value="clean" ${p.bs_theme==='clean'?'selected':''}>⬜ Clean white</option>
+          </select></div>
+        <div class="toggle"><div class="nm">👑 Top-3 podium</div>
+          <div class="switch ${p.show_podium!==false?'on':''}" data-toggle-prop="show_podium"></div></div>
+        <div class="toggle"><div class="nm">🔥 Show sold counts</div>
+          <div class="switch ${p.show_sold!==false?'on':''}" data-toggle-prop="show_sold"></div></div>
+        <div class="field"><label>List rows (after the podium)</label>
+          <input type="number" min="0" max="20" value="${p.bs_list_count??7}" data-prop-num="bs_list_count"/></div>
+        ` : ''}
+
+        ${(!isFlash && b.kind!=='bestsellers') ? `
         <div class="sub-h">Layout</div>
         <div class="field"><label>Variant</label>
           <div class="variant-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:4px">
@@ -3592,6 +3615,7 @@ function renderContent(b){
           ${sourceSelect(b, 'source', [
             ...(isFlash ? [
               ['flash_sale','🔥 Linked vendor flash sale (auto-timer)'],
+              ['promotion','🎉 Linked promotion campaign (auto-timer)'],
             ] : []),
             ['discounted','⚡ Active discount'],
             ['bestsellers','🏆 Bestsellers'],
@@ -3608,12 +3632,19 @@ function renderContent(b){
         ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
         ${(p.source==='vendor') ? vendorPickerBtn(b) : ''}
         ${(isFlash && p.source==='flash_sale') ? flashSalePickerBtn(b) : ''}
+        ${(isFlash && p.source==='promotion') ? promotionPickerBtn(b) : ''}
         <div class="field"><label>Maximum items</label>
           <input type="number" data-prop="limit" value="${p.limit||12}"/></div>
-        ${(isFlash && p.source!=='flash_sale') ? `<div class="field"><label>Countdown ends at</label><input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/></div>` : ''}
-        ${(isFlash && p.source==='flash_sale') ? `<p class="hint" style="background:#e6f7ef;padding:8px 12px;border-left:3px solid #2cb67d;border-radius:6px;margin-top:6px">⏰ Timer + products come automatically from the selected flash sale(s). The earliest end_datetime is used as the countdown.</p>` : ''}
+        ${(isFlash && p.source!=='flash_sale' && p.source!=='promotion') ? `<div class="field"><label>Countdown ends at</label><input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/></div>` : ''}
+        ${(isFlash && (p.source==='flash_sale' || p.source==='promotion')) ? `<p class="hint" style="background:#e6f7ef;padding:8px 12px;border-left:3px solid #2cb67d;border-radius:6px;margin-top:6px">⏰ Timer + products come automatically from the linked record(s). The earliest end time is used as the countdown.</p>` : ''}
 
-        ${!isFlash ? `
+        ${isFlash ? `
+        <div class="sub-h">Tap target</div>
+        <p class="hint">Where the block opens on tap ("See more" included). Default: the built-in Flash screen. Pick a builder <b>Page</b> to open your own designed promotion landing page.</p>
+        ${linkFieldBtn(p.link)}
+        ${p.link ? `<button class="btn btn-secondary" style="margin-top:6px;font-size:11px;padding:5px 9px" onclick="(function(){const b=cur().blocks.find(x=>x.id===selectedBlockId); if(b){delete b.props.link; renderRight(); scheduleSave();}})()">✕ Reset to Flash screen</button>` : ''}` : ''}
+
+        ${(!isFlash && b.kind!=='bestsellers') ? `
         <div class="sub-h">Card style</div>
         <div class="field"><label>Card style</label>
           <select data-prop="card_style">
@@ -3716,14 +3747,14 @@ function imageFieldBtn(b, idProp, urlProp, label){
   const url   = b.props[urlProp];
   const tile  = (u, ip, up, ph) => `
     <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
-      <div onclick="openImagePicker(${JSON.stringify(ip)}, ${JSON.stringify(up)})"
+      <div onclick="openImagePicker('${ip}', '${up}')"
            style="flex:1;height:60px;border:1px dashed var(--border-2);border-radius:8px;
                   display:flex;align-items:center;justify-content:center;cursor:pointer;
                   background:${u ? `center/cover no-repeat url('${u}')` : 'var(--bg-2)'};
                   color:#fff;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.6)">
         ${u ? '✎ Change image' : ph}
       </div>
-      ${u ? `<button onclick="clearImageProp(${JSON.stringify(ip)}, ${JSON.stringify(up)})"
+      ${u ? `<button onclick="clearImageProp('${ip}', '${up}')"
              style="padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:11px;cursor:pointer">✕</button>` : ''}
     </div>`;
   return `<div class="field"><label>🇬🇧 ${label} (English / default)</label>
@@ -3733,6 +3764,22 @@ function imageFieldBtn(b, idProp, urlProp, label){
     ${tile(arUrl, arIdProp, arUrlProp, '+ Pick AR image')}
     <div class="hint">Leave empty to reuse the English image when the app is in Arabic mode.</div>
   </div>`;
+}
+function headerImgTile(p, idProp, urlProp){
+  const u = p[urlProp];
+  return `
+      <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+        <div onclick="openImagePicker('${idProp}','${urlProp}')"
+             style="flex:1;height:60px;border:1px ${u?'solid var(--success)':'dashed var(--border-2)'};border-radius:8px;
+                    display:flex;align-items:center;justify-content:center;cursor:pointer;
+                    background:${u ? `center/contain no-repeat url('${encodeURI(u)}'), repeating-linear-gradient(45deg,#f5f5f5,#f5f5f5 6px,#fff 6px,#fff 12px)` : 'var(--bg-2)'};
+                    color:${u?'#fff':'var(--muted)'};font-weight:800;font-size:11px;
+                    text-shadow:${u?'0 1px 4px rgba(0,0,0,.7)':'none'}">
+          ${u ? '✓ Selected — tap to change' : '🖼 Pick or upload an image'}
+        </div>
+        ${u ? `<button onclick="clearImageProp('${idProp}','${urlProp}')"
+               style="padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:11px;cursor:pointer">✕</button>` : ''}
+      </div>`;
 }
 function clearImageProp(idProp, urlProp){
   const b = cur().blocks.find(x => x.id === selectedBlockId);
@@ -3864,6 +3911,79 @@ async function openFlashSalesPicker(){
     toast('Failed to load flash sales — ' + (e.message||e));
   }
 }
+function promotionPickerBtn(b){
+  const ids = b.props.promotion_ids || (b.props.promotion_id ? [b.props.promotion_id] : []);
+  const labels = b.props.promotion_labels || [];
+  return `<div class="field"><label>Linked promotions (${ids.length} selected)</label>
+    <button class="link-field" onclick="openPromotionsPicker()">
+      <div class="lk-ic">🎉</div>
+      <div class="lk-info">
+        <div class="lk-t">${labels.length ? labels.slice(0,2).join(' · ') + (labels.length>2?' …':'') : 'Click to pick — shows promotion campaigns'}</div>
+        <div class="lk-s">${ids.length ? ids.length+' linked' : 'none — block stays empty'}</div>
+      </div>
+      <div class="lk-chev">✏</div>
+    </button></div>`;
+}
+async function openPromotionsPicker(){
+  try {
+    const r = await api('GET', '/api/admin/v2/lookups/promotions');
+    const promos = r.promotions || [];
+    const p0 = cur();
+    const block = p0 && selectedBlockId
+        ? p0.blocks.find(x => x.id === selectedBlockId) : null;
+    const curIds = (block && (block.props.promotion_ids
+        || (block.props.promotion_id ? [block.props.promotion_id] : []))) || [];
+    const sel = new Set(curIds);
+    const fmt = (s) => {
+      const rem = s.remaining_seconds || 0;
+      const days = Math.floor(rem / 86400);
+      const hours = Math.floor((rem % 86400) / 3600);
+      const remStr = rem ? (days ? days+'d ' : '') + hours + 'h' : 'expired';
+      return `<label style="display:flex;gap:8px;padding:8px;border:1px solid #eee;border-radius:8px;cursor:pointer;background:${sel.has(s.id)?'#fff8d6':'#fff'}">
+        <input type="checkbox" data-pr-id="${s.id}" ${sel.has(s.id)?'checked':''}/>
+        <div style="flex:1">
+          <div style="font-weight:800;color:#412402">${s.emoji||'🎯'} ${s.name||'(no name)'} <span style="color:#888;font-weight:600">· ${s.label_en||''}</span></div>
+          <div style="font-size:11px;color:#666">${s.product_count} approved products · ⏰ ${remStr} remaining</div>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:${s.state==='running'?'#2cb67d':'#888'};text-transform:uppercase">${s.state}</div>
+      </label>`;
+    };
+    const html = `
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center" id="prPickerModal">
+        <div style="background:#fff;border-radius:12px;padding:20px;width:560px;max-height:80vh;overflow:auto">
+          <h3 style="margin:0 0 12px">🎉 Pick promotion campaigns to link</h3>
+          <p style="color:#666;font-size:12px;margin:0 0 14px">Campaigns from Mobile App → 🎉 Promotions. The block shows all APPROVED products and counts down to the earliest end date.</p>
+          <div style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto" id="prList">
+            ${promos.length ? promos.map(fmt).join('') : '<p style="color:#999">No campaigns yet — create one under Mobile App → 🎉 Promotions.</p>'}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="document.getElementById('prPickerModal').remove()">Cancel</button>
+            <button class="btn btn-primary" id="prPickApply">Apply</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('prPickApply').addEventListener('click', () => {
+      const checked = Array.from(document.querySelectorAll('#prList input[type=checkbox]:checked'));
+      const ids = checked.map(c => parseInt(c.dataset.prId));
+      const labels = checked.map(c => {
+        const s = promos.find(x => x.id === parseInt(c.dataset.prId));
+        return s ? s.name : '';
+      });
+      const p1 = cur();
+      const blk = p1 && selectedBlockId
+        ? p1.blocks.find(x => x.id === selectedBlockId) : null;
+      if (blk) {
+        blk.props.promotion_ids = ids;
+        blk.props.promotion_labels = labels;
+        renderRight(); renderCanvas(); scheduleSave();
+      }
+      document.getElementById('prPickerModal').remove();
+    });
+  } catch(e){
+    toast('Failed to load promotions — ' + (e.message||e));
+  }
+}
 /* ─── Variant picker — visual thumbnails for design variants ──── */
 function flashVariantPicker(b){
   const current = b.props.variant || 'classic';
@@ -3880,6 +4000,12 @@ function flashVariantPicker(b){
     { id:'hero', label:'Hero',
       bg:'linear-gradient(135deg,#C0392B,#F59E0B,#FFD340)',
       stripes:false, accent:'#fff' },
+    { id:'royal', label:'Royal',
+      bg:'linear-gradient(135deg,#2E1065,#4C1D95,#6D28D9)',
+      stripes:false, accent:'#FFE082' },
+    { id:'custom', label:'🎨 Custom (your colors)',
+      bg:`linear-gradient(135deg,${b.props.flash_c1||'#F5C320'},${b.props.flash_c2||b.props.flash_c1||'#EA580C'})`,
+      stripes:(b.props.flash_pattern!==false), accent:b.props.flash_text_color||'#fff' },
   ];
   return `<div class="field"><label>Design variant</label>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -3922,8 +4048,46 @@ function flashVariantPicker(b){
         </div>`).join('')}
     </div>
     <p style="font-size:10.5px;color:var(--muted);margin-top:6px">
-      Same data, four different looks — pick whichever fits this campaign.
+      Same data, different looks — pick whichever fits this campaign.
     </p>
+    ${current==='custom' ? `
+    <div class="sub-h">🎨 Custom design</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Color 1</label>
+        <input type="color" value="${b.props.flash_c1||'#F5C320'}" data-prop="flash_c1" style="height:32px;padding:2px"/></div>
+      <div class="field"><label>Color 2 (empty = solid)</label>
+        <input type="color" value="${b.props.flash_c2||'#EA580C'}" data-prop="flash_c2" style="height:32px;padding:2px"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Text color</label>
+        <input type="color" value="${b.props.flash_text_color||'#FFFFFF'}" data-prop="flash_text_color" style="height:32px;padding:2px"/></div>
+      <div class="field"><label>Icon (emoji)</label>
+        <input type="text" maxlength="4" value="${b.props.flash_emoji||'⚡'}" data-prop="flash_emoji"/></div>
+    </div>
+    ${mlField(b,'flash_badge','Small badge text (optional)')}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Corner radius (px)</label>
+        <input type="number" min="0" max="32" value="${b.props.flash_radius??18}" data-prop-num="flash_radius"/></div>
+      <div class="field"><label>Card width (px)</label>
+        <input type="number" min="100" max="180" value="${b.props.flash_card_width??132}" data-prop-num="flash_card_width"/></div>
+    </div>
+    <div class="toggle"><div class="nm">Pattern overlay</div>
+      <div class="switch ${b.props.flash_pattern!==false?'on':''}" data-toggle-prop="flash_pattern"></div></div>
+    ${b.props.flash_pattern!==false ? `
+    <div class="field"><label>Pattern style (22)</label>
+      <select data-prop="flash_pattern_style">
+        ${[['stripes','▨ Diagonal stripes'],['stripes_bold','▰ Bold stripes'],['crosshatch','╳ Crosshatch'],
+           ['mesh','▤ Fine mesh'],['grid','▦ Grid'],['dots','⠿ Micro dots'],['polka','● Polka dots'],
+           ['bubbles','○ Bubbles'],['circles','◯ Circle outlines'],['rings','◎ Corner rings'],
+           ['scales','᭯ Fish scales'],['waves','∿ Waves'],['zigzag','〽 Zigzag'],['chevrons','⟩ Chevrons'],
+           ['diamonds','◆ Diamonds'],['triangles','△ Triangles'],['hexagons','⬡ Hexagons'],
+           ['plus','＋ Plus signs'],['sparkles','✧ Sparkles'],['stars','✦ Stars'],
+           ['confetti','🎊 Confetti'],['moons','☾ Crescents']]
+          .map(([v,l])=>`<option value="${v}" ${(b.props.flash_pattern_style||'stripes')===v?'selected':''}>${l}</option>`).join('')}
+      </select></div>` : ''}
+    <div class="toggle"><div class="nm">Show countdown</div>
+      <div class="switch ${b.props.flash_show_counter!==false?'on':''}" data-toggle-prop="flash_show_counter"></div></div>
+    ` : ''}
   </div>`;
 }
 
@@ -3969,12 +4133,24 @@ function renderStyle(b){
     <p class="hint">Show a small icon (emoji) or image next to the section title — or replace the title with the image entirely.</p>
     <div class="field"><label>Icon (emoji)</label>
       <input type="text" placeholder="🔥  🎁  ⭐  ⚡  🛒" value="${(p.header_icon||'').replace(/"/g,'&quot;')}" data-prop="header_icon" maxlength="4"/></div>
-    <div class="field"><label>OR image (URL / upload)</label>
-      <input type="text" placeholder="https://… or pick" value="${(p.header_image_url||'').replace(/"/g,'&quot;')}" data-prop="header_image_url" />
-      <button class="btn btn-secondary" style="margin-top:6px;font-size:11px;padding:5px 9px"
-              onclick="openImagePicker('header_image_id','header_image_url')">📁 Pick image…</button></div>
+    <div class="field"><label>OR image — 🇬🇧 English / default</label>
+      <!-- v2.1.46 — bilingual header image: EN/default + optional AR
+           override (Flutter picks the AR one in Arabic mode). -->
+      ${headerImgTile(p, 'header_image_id', 'header_image_url')}
+      <input type="text" placeholder="…or paste an image URL" value="${(p.header_image_url||'').replace(/"/g,'&quot;')}" data-prop="header_image_url" style="margin-top:6px"/></div>
+    <div class="field"><label>Image — 🇰🇼 Arabic (optional override)</label>
+      ${headerImgTile(p, 'header_image_id_ar', 'header_image_url_ar')}
+      <input type="text" placeholder="…or paste an image URL" value="${(p.header_image_url_ar||'').replace(/"/g,'&quot;')}" data-prop="header_image_url_ar" style="margin-top:6px"/>
+      <p class="hint">Leave empty to reuse the English image in Arabic mode.</p></div>
     <div class="field"><label>Icon / image size (px)</label>
       <input type="number" min="12" max="64" value="${p.header_icon_size||22}" data-prop-num="header_icon_size"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Image width (px)</label>
+        <input type="number" min="12" max="240" placeholder="= size" value="${p.header_image_w||''}" data-prop-num="header_image_w"/></div>
+      <div class="field"><label>Image height (px)</label>
+        <input type="number" min="12" max="160" placeholder="= size" value="${p.header_image_h||''}" data-prop-num="header_image_h"/></div>
+    </div>
+    <p class="hint">Width/height apply to header IMAGES only (beside / replace modes). Leave empty to use the square size above.</p>
     <div class="field"><label>Display mode</label>
       <select data-prop="header_image_mode">
         <option value="beside" ${(p.header_image_mode||'beside')==='beside'?'selected':''}>Beside the title (small icon)</option>
@@ -4014,9 +4190,20 @@ function renderStyle(b){
       </div>
     </div>
     <div class="field"><label>Background image (URL or upload)</label>
-      <input type="text" placeholder="https://… or pick" value="${(p.bg_image||'').replace(/"/g,'&quot;')}" data-prop="bg_image" />
-      <button class="btn btn-secondary" style="margin-top:6px;font-size:11px;padding:5px 9px"
-              onclick="openImagePicker('bg_image_id','bg_image')">📁 Pick image…</button>
+      <!-- v2.1.37 — live preview tile (same UX as the header image). -->
+      <div style="display:flex;gap:6px;align-items:center;margin-top:4px">
+        <div onclick="openImagePicker('bg_image_id','bg_image')"
+             style="flex:1;height:60px;border:1px ${p.bg_image?'solid var(--success)':'dashed var(--border-2)'};border-radius:8px;
+                    display:flex;align-items:center;justify-content:center;cursor:pointer;
+                    background:${p.bg_image ? `center/cover no-repeat url('${p.bg_image}')` : 'var(--bg-2)'};
+                    color:${p.bg_image?'#fff':'var(--muted)'};font-weight:800;font-size:11px;
+                    text-shadow:${p.bg_image?'0 1px 4px rgba(0,0,0,.7)':'none'}">
+          ${p.bg_image ? '✓ Selected — tap to change' : '🖼 Pick or upload an image'}
+        </div>
+        ${p.bg_image ? `<button onclick="clearImageProp('bg_image_id','bg_image')"
+               style="padding:6px 10px;background:#fff;border:1px solid var(--border);border-radius:6px;color:var(--danger);font-size:11px;cursor:pointer">✕</button>` : ''}
+      </div>
+      <input type="text" placeholder="…or paste an image URL" value="${(p.bg_image||'').replace(/"/g,'&quot;')}" data-prop="bg_image" style="margin-top:6px"/>
     </div>
 
     <div class="sub-h">Background frame (when colored/patterned)</div>
@@ -4905,15 +5092,22 @@ async function loadImagePickerList(){
       host.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);padding:14px;text-align:center;font-size:11.5px">No existing hero images. Upload one above.</div>';
       return;
     }
-    host.innerHTML = items.map(s => `
-      <div onclick="pickExistingImage(${s.id}, '${s.image}')"
-           style="height:90px;border-radius:8px;background:center/cover no-repeat url('${s.image}');
+    // v2.1.46 — NO inline onclick: URLs containing quotes/specials used
+    // to break the generated attribute ("Unexpected end of input" on
+    // click). Tiles now carry an index and bind real listeners.
+    host.innerHTML = items.map((s, i) => `
+      <div data-pick-idx="${i}"
+           style="height:90px;border-radius:8px;background:center/cover no-repeat url('${encodeURI(s.image || '')}');
                   cursor:pointer;border:2px solid transparent;transition:all .15s;position:relative">
         <div style="position:absolute;inset:auto 0 0 0;background:linear-gradient(transparent,rgba(0,0,0,.7));
-                    color:#fff;font-size:10px;padding:4px;font-weight:600">${s.name || 'Slider #'+s.id}</div>
+                    color:#fff;font-size:10px;padding:4px;font-weight:600">${(s.name || 'Slider #'+s.id).toString().replace(/</g,'&lt;')}</div>
       </div>
     `).join('');
-    host.querySelectorAll('[onclick^="pickExistingImage"]').forEach(el => {
+    host.querySelectorAll('[data-pick-idx]').forEach(el => {
+      el.addEventListener('click', () => {
+        const s = items[parseInt(el.dataset.pickIdx)];
+        if (s) pickExistingImage(s.id, s.image);
+      });
       el.addEventListener('mouseover', () => el.style.borderColor = 'var(--yellow)');
       el.addEventListener('mouseout',  () => el.style.borderColor = 'transparent');
     });

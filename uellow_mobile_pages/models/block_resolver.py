@@ -213,18 +213,41 @@ def resolve_products(env, props, lang, block=None):
 
     elif source == 'promotion':
         # v2.1.30 — products of one promotion campaign (props.promotion_id).
+        # v2.1.37 — also accepts promotion_ids (multi) and, for the FLASH
+        # block, returns the campaign timer + label so the countdown and
+        # title come automatically from the backend campaign.
         recs = Tmpl.browse([])
+        promos = None
         try:
-            pid = int(props.get('promotion_id') or 0)
+            pids = [int(x) for x in (props.get('promotion_ids') or [])]
+            if not pids and props.get('promotion_id'):
+                pids = [int(props['promotion_id'])]
             Line = env.get('mobile.promotion.line')
-            if pid and Line is not None:
+            Promo = env.get('mobile.app.promotion')
+            if pids and Line is not None:
                 lines = Line.sudo().search([
-                    ('promotion_id', '=', pid),
+                    ('promotion_id', 'in', pids),
                     ('state', '=', 'approved')], limit=limit * 2)
                 recs = lines.mapped('product_tmpl_id').filtered(
                     lambda p: p.active and p.is_published)[:limit]
+                if Promo is not None:
+                    promos = Promo.sudo().browse(pids).exists()
         except Exception:
             recs = Tmpl.browse([])
+        if (block or {}).get('kind') == 'flash' and promos:
+            earliest = min((p.date_to for p in promos if p.date_to),
+                           default=False)
+            first = promos[:1]
+            return {
+                'items': [_product_brief(env, p, lang) for p in recs],
+                'flash_end_datetime':
+                    earliest.isoformat() if earliest else '',
+                'flash_label': {
+                    'en': first.label_en or first.name or '',
+                    'ar': first.label_ar or first.label_en or '',
+                },
+                'flash_count': len(promos),
+            }
         if not recs:
             recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
 
@@ -243,18 +266,40 @@ def resolve_products(env, props, lang, block=None):
             recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
 
     elif source == 'free_shipping':
-        # v2.0.82 — surface products tagged free-shipping (via the
-        # product flag OR any of its public categories / tags). Slightly
-        # expensive Python-side filter because the flag chain isn't a
-        # plain DB index, but limit caps the scan.
-        all_recs = Tmpl.search(base_dom, order='create_date desc', limit=limit * 3)
-        filtered = []
-        for p in all_recs:
-            if hasattr(p, '_is_free_shipping') and p._is_free_shipping():
-                filtered.append(p)
-                if len(filtered) >= limit:
-                    break
-        recs = Tmpl.browse([p.id for p in filtered])
+        # v2.1.46 — a proper SQL domain. The old code scanned only the
+        # NEWEST limit*3 products and filtered in Python, so a catalog
+        # whose free-shipping items aren't recent showed just 1-2 of
+        # them. Now: product flag OR tag flag OR (category-or-parent
+        # flag, via child_of on the marked categories).
+        recs = Tmpl.browse([])
+        if 'free_shipping' in Tmpl._fields:
+            try:
+                ors = [('free_shipping', '=', True)]
+                if 'product_tag_ids' in Tmpl._fields:
+                    ors.append(
+                        ('product_tag_ids.free_shipping', '=', True))
+                free_cats = env['product.public.category'].sudo().search(
+                    [('free_shipping', '=', True)])
+                if free_cats:
+                    ors.append(
+                        ('public_categ_ids', 'child_of', free_cats.ids))
+                dom_free = ['|'] * (len(ors) - 1) + ors
+                recs = Tmpl.search(base_dom + dom_free,
+                                   order='create_date desc', limit=limit)
+            except Exception:
+                recs = Tmpl.browse([])
+        if not recs:
+            # Legacy fallback — python-side walk over a wider window.
+            all_recs = Tmpl.search(base_dom, order='create_date desc',
+                                   limit=max(limit * 10, 200))
+            filtered = []
+            for prod in all_recs:
+                if hasattr(prod, '_is_free_shipping') \
+                        and prod._is_free_shipping():
+                    filtered.append(prod.id)
+                    if len(filtered) >= limit:
+                        break
+            recs = Tmpl.browse(filtered)
 
     elif source == 'recent':
         # Personal — can't resolve at page-fetch time; let the app fall

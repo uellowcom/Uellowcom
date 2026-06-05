@@ -67,3 +67,5 @@ from . import videos
 from . import well_known
 from . import ads
 from . import reviewers
+from . import promotions
+from . import category_slides

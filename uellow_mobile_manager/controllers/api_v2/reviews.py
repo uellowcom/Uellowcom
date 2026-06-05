@@ -54,6 +54,44 @@ def _attach_review_photos(review, photos):
         review.write({'photo_ids': [(4, aid) for aid in new_ids]})
 
 
+
+def _award_review_points(partner, has_photo):
+    """v2.1.50 — loyalty points for a verified review. Reads the earn
+    values from uellow.loyalty.program (points_review_text/photo) and
+    credits the partner's LIVE loyalty.card. Returns the points granted
+    (0 when the program/module is missing)."""
+    try:
+        Prog = request.env.get('uellow.loyalty.program')
+        pts_text, pts_photo = 5, 15
+        if Prog is not None:
+            prog = Prog.sudo().search([], limit=1)
+            if prog:
+                pts_text = int(getattr(prog, 'points_review_text', 5) or 5)
+                pts_photo = int(getattr(prog, 'points_review_photo', 15)
+                                or 15)
+        pts = pts_photo if has_photo else pts_text
+        if pts <= 0:
+            return 0
+        Card = request.env['loyalty.card'].sudo()
+        card = Card.search([
+            ('partner_id', '=', partner.id),
+            ('program_id.program_type', '=', 'loyalty'),
+        ], limit=1)
+        if not card:
+            program = request.env['loyalty.program'].sudo().search(
+                [('program_type', '=', 'loyalty')], limit=1)
+            if not program:
+                return 0
+            card = Card.create({'partner_id': partner.id,
+                                'program_id': program.id, 'points': 0})
+        card.write({'points': card.points + pts})
+        return pts
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception('review points award failed')
+        return 0
+
+
 class MobileReviewsAPI(http.Controller):
 
     @http.route('/api/mobile/v2/reviews/create', type='http', auth='public',
@@ -112,6 +150,7 @@ class MobileReviewsAPI(http.Controller):
         # v2.1.29 — ALSO sync into the native rating.rating record so the
         # review appears in the new Reviews module (product_reviews wraps
         # rating.rating) AND feeds product.rating_avg/rating_count.
+        points_awarded = 0
         try:
             Rating = request.env['rating.rating'].sudo()
             IrModel = request.env['ir.model'].sudo()
@@ -129,7 +168,10 @@ class MobileReviewsAPI(http.Controller):
                 'rated_partner_id': partner.id,
                 'rating': float(rating),
                 'feedback': body,
-                'consumed': True,
+                # v2.1.35 — reviews land PENDING: consumed=False keeps them
+                # out of the app list + product stats until an admin clicks
+                # Publish in the Reviews module (which sets consumed=True).
+                'consumed': False,
             }
             if 'review_title' in Rating._fields:
                 rvals['review_title'] = title
@@ -144,6 +186,11 @@ class MobileReviewsAPI(http.Controller):
             rec = ex if ex else Rating.create(rvals)
             if ex:
                 ex.write(rvals)
+            # v2.1.50 — loyalty reward: first review of a product the
+            # customer actually BOUGHT earns points (photo pays more).
+            if not ex and rvals.get('is_verified_purchase'):
+                points_awarded = _award_review_points(
+                    partner, bool(isinstance(photos, list) and photos))
             # mirror the photos into rating.review.image
             if (isinstance(photos, list) and photos
                     and 'rating.review.image' in request.env):
@@ -166,11 +213,73 @@ class MobileReviewsAPI(http.Controller):
             'id': r.id,
             'state': r.state,
             'pending_approval': r.state != 'approved',
+            'points_awarded': points_awarded,
             'photo_urls': [
                 img_url('ir.attachment', a.id, 'datas', unique=a.write_date)
                 for a in r.photo_ids
             ],
         })
+
+    @http.route('/api/mobile/v2/reviews/prompt', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def review_prompt(self, **kw):
+        """v2.1.50 — post-delivery review nudge. Returns the most recent
+        DELIVERED order (last 21 days) that still has unreviewed products
+        for this customer, plus the loyalty reward amounts — or
+        {'prompt': None} when there's nothing to ask about."""
+        from datetime import datetime, timedelta
+        partner = current_partner()
+        Order = request.env['sale.order'].sudo()
+        orders = Order.search([
+            ('partner_id', '=', partner.id),
+            ('state', 'in', ('sale', 'done')),
+            ('date_order', '>=', datetime.now() - timedelta(days=21)),
+        ], order='date_order desc', limit=10)
+        delivered = orders.filtered(
+            lambda o: getattr(o, 'delivery_status', '') == 'delivered')
+        if not delivered:
+            return ok({'prompt': None})
+        Rating = request.env['rating.rating'].sudo()
+        reviewed_ids = set(Rating.search([
+            ('res_model', '=', 'product.template'),
+            ('partner_id', '=', partner.id),
+        ]).mapped('res_id'))
+        # earn values for the message
+        pts_text, pts_photo = 5, 15
+        Prog = request.env.get('uellow.loyalty.program')
+        if Prog is not None:
+            prog = Prog.sudo().search([], limit=1)
+            if prog:
+                pts_text = int(getattr(prog, 'points_review_text', 5) or 5)
+                pts_photo = int(getattr(prog, 'points_review_photo', 15)
+                                or 15)
+        for o in delivered:
+            items = []
+            for l in o.order_line:
+                if l.display_type or getattr(l, 'is_reward_line', False):
+                    continue
+                tmpl = l.product_id.product_tmpl_id
+                if not tmpl or tmpl.id in reviewed_ids:
+                    continue
+                if any(it['product_id'] == tmpl.id for it in items):
+                    continue
+                items.append({
+                    'product_id': tmpl.id,
+                    'name': bilingual(tmpl, 'name'),
+                    'image': img_url('product.template', tmpl.id,
+                                     'image_256', unique=tmpl.write_date),
+                })
+            if items:
+                return ok({'prompt': {
+                    'order_id': o.id,
+                    'order_name': o.name,
+                    'items': items[:6],
+                    'points_text': pts_text,
+                    'points_photo': pts_photo,
+                }})
+        return ok({'prompt': None})
 
     @http.route('/api/mobile/v2/reviews/mine', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)

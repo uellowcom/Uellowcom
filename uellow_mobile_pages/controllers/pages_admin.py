@@ -434,6 +434,45 @@ class AdminLookups(http.Controller):
             })
         return _ok({'flash_sales': out})
 
+    @http.route('/api/admin/v2/lookups/promotions', type='http',
+                auth='user', methods=['GET'], csrf=False)
+    def promotions(self, **kw):
+        """v2.1.37 — surface mobile.app.promotion campaigns to the builder
+        so the Flash Deal block can be linked to one (timer + products
+        come from the campaign)."""
+        guard = _require_internal()
+        if guard:
+            return guard
+        Promo = request.env.get('mobile.app.promotion')
+        if Promo is None:
+            return _ok({'promotions': []})
+        from datetime import datetime
+        now = datetime.utcnow()
+        recs = Promo.sudo().search([
+            ('active', '=', True),
+            ('state', 'in', ('draft', 'open', 'running')),
+        ], order='date_from asc', limit=200)
+        out = []
+        for p in recs:
+            remaining = 0
+            if p.date_to and p.date_to > now:
+                remaining = int((p.date_to - now).total_seconds())
+            approved = len(p.line_ids.filtered(
+                lambda l: l.state == 'approved'))
+            out.append({
+                'id': p.id,
+                'name': p.name,
+                'label_en': p.label_en or '',
+                'label_ar': p.label_ar or '',
+                'emoji': p.emoji or '🎯',
+                'state': p.state,
+                'date_from': p.date_from.isoformat() if p.date_from else '',
+                'date_to': p.date_to.isoformat() if p.date_to else '',
+                'remaining_seconds': remaining,
+                'product_count': approved,
+            })
+        return _ok({'promotions': out})
+
     @http.route('/api/admin/v2/lookups/sliders', type='http', auth='user',
                 methods=['GET'], csrf=False)
     def sliders(self, **kw):

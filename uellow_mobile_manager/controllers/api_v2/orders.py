@@ -8,6 +8,8 @@ payment_methods     GET   /payment-methods            → available providers
 checkout_summary    GET   /checkout/summary           → totals + addresses + methods
 checkout_confirm    POST  /checkout/confirm           → place order, returns payment URL or order
 """
+from datetime import datetime
+
 from odoo import http, fields
 from odoo.http import request
 
@@ -15,7 +17,8 @@ from ._common import (
     safe_endpoint, get_payload, ok, fail, current_partner, require_auth,
     img_url, base_url, fmt_price, bilingual, get_lang, get_website, app_setting,
 )
-from .cart import _get_or_create_order, serialize_cart
+from .cart import (_get_or_create_order, serialize_cart,
+                   effective_shipping_price, carrier_is_express)
 
 
 def _guest_gate(p_or_kw):
@@ -74,6 +77,12 @@ def serialize_order(order, detail=False):
         'date': order.date_order and order.date_order.isoformat() or None,
         'total': fmt_price(order.amount_total, cur),
         'line_count': len(order.order_line.filtered(lambda l: not l.display_type and not l.is_reward_line)),
+        # v2.1.42 — customer cancellation: allowed while draft/confirmed.
+        # Paid orders turn into an admin-approval request instead.
+        'can_cancel': (u_status['code'] in ('draft', 'confirmed')
+                       and not getattr(order, 'cancel_request', False)),
+        'cancel_requested': bool(getattr(order, 'cancel_request', False)),
+        'is_paid': _order_is_paid(order),
     }
     if not detail:
         return base
@@ -152,6 +161,66 @@ def _state_label(state):
 #
 # Each entry returns {code, label{en,ar}, badge_color, step_index} so
 # the app can render chips, timelines and filter buttons consistently.
+def _carrier_now_availability(c):
+    """v2.1.55 — (available_now, note{en,ar}|None) from the weekly
+    schedule windows + the zone cutoff. Mirrors delivery-eta."""
+    from datetime import datetime
+    import pytz
+    try:
+        tz = pytz.timezone(request.env.user.tz or 'Asia/Kuwait')
+        now = datetime.now(tz)
+        is_now = True
+        opens_note = None
+        avail = getattr(c, 'availability_ids', None)
+        if avail:
+            hour = now.hour + now.minute / 60.0
+            wins = [a for a in avail if int(a.weekday) == now.weekday()]
+            is_now = any(a.hour_from <= hour < a.hour_to for a in wins)
+        if is_now:
+            cutoff = ''
+            try:
+                z = c.uellow_zone_ids[:1] if getattr(
+                    c, 'uellow_zone_ids', False) else None
+                cutoff = (z.cutoff_time or '') if z else ''
+            except Exception:
+                pass
+            if cutoff:
+                try:
+                    parts = (cutoff.split(':') + ['0'])[:2] \
+                        if ':' in cutoff else [cutoff, '0']
+                    if (now.hour * 60 + now.minute) >= \
+                            (int(parts[0]) * 60 + int(parts[1])):
+                        is_now = False
+                        opens_note = {
+                            'en': 'Unavailable now — order cutoff %s '
+                                  'passed, delivers tomorrow' % cutoff,
+                            'ar': 'غير متاح الآن — انتهى وقت الطلب '
+                                  '(%s)، التوصيل غداً' % cutoff,
+                        }
+                except Exception:
+                    pass
+        if not is_now and opens_note is None:
+            opens_note = {'en': 'Unavailable right now',
+                          'ar': 'غير متاح حالياً'}
+        return is_now, (None if is_now else opens_note)
+    except Exception:
+        return True, None
+
+
+def _order_is_paid(order):
+    """v2.1.42 — captured/authorized online payment OR a paid invoice."""
+    try:
+        if any(t.state in ('done', 'authorized')
+               for t in order.transaction_ids):
+            return True
+        if any(inv.payment_state in ('paid', 'in_payment')
+               for inv in order.invoice_ids):
+            return True
+    except Exception:
+        pass
+    return False
+
+
 _UELLOW_STATUS_DICT = {
     'draft':     {'en': 'Draft',      'ar': 'مسودة',     'color': '#9C8A5E', 'idx': 0},
     'confirmed': {'en': 'Confirmed',  'ar': 'مؤكد',      'color': '#0EA5E9', 'idx': 1},
@@ -408,6 +477,60 @@ class MobileOrdersAPI(http.Controller):
             return fail('NOT_FOUND', 'Order not found', 404)
         return ok({'order': serialize_order(order, detail=True)})
 
+    @http.route('/api/mobile/v2/orders/<int:order_id>/cancel', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def order_cancel(self, order_id, **kw):
+        """v2.1.42 — customer cancellation.
+        draft / confirmed + UNPAID  → cancel immediately.
+        draft / confirmed + PAID    → raise an admin-approval request.
+        anything later              → not allowed."""
+        partner = current_partner()
+        order = request.env['sale.order'].sudo().browse(order_id)
+        if not order.exists() or order.partner_id != partner:
+            return fail('NOT_FOUND', 'Order not found', 404)
+        if getattr(order, 'cancel_request', False):
+            return ok({'result': 'requested'})
+        code = _uellow_status(order)['code']
+        if code not in ('draft', 'confirmed'):
+            return fail('NOT_ALLOWED',
+                        'Order can no longer be cancelled', 400)
+        p = get_payload()
+        reason = (p.get('reason') or '').strip()[:300]
+        paid = _order_is_paid(order)
+        if paid and code != 'draft':
+            # paid → needs admin approval (refund handled by the admin)
+            order.write({
+                'cancel_request': True,
+                'cancel_request_date': datetime.now(),
+                'cancel_request_reason': reason,
+            })
+            order.message_post(
+                body='📱 Customer requested CANCELLATION of this paid '
+                     'order from the app.%s' % (
+                         ' Reason: %s' % reason if reason else ''))
+            try:
+                request.env.cr.commit()
+            except Exception:
+                pass
+            return ok({'result': 'requested'})
+        # unpaid (or still a draft cart) → cancel right away
+        try:
+            order.with_context(disable_cancel_warning=True).action_cancel()
+        except Exception:
+            order.state = 'cancel'
+        if order.state != 'cancel':
+            order.state = 'cancel'
+        order.message_post(body='📱 Cancelled by the customer from the '
+                                'app.%s' % (' Reason: %s' % reason
+                                            if reason else ''))
+        try:
+            request.env.cr.commit()
+        except Exception:
+            pass
+        return ok({'result': 'cancelled'})
+
     @http.route('/api/mobile/v2/orders/shipping-methods', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
@@ -504,11 +627,22 @@ class MobileOrdersAPI(http.Controller):
                                    'image_128', unique=c.product_id.write_date)
             except Exception:
                 pass
+            # v2.1.51 — unified free-shipping engine (product flags /
+            # threshold / coupon / carrier free-over; express excluded).
+            price, free_label = effective_shipping_price(order, c, price)
+            # v2.1.55 — schedule/cutoff awareness for the picker (the
+            # express row shows a clear "unavailable now" marker).
+            now_ok, now_note = _carrier_now_availability(c)
             out.append({
                 'id': c.id,
                 'name': name_dict,
                 'description': desc_dict,
                 'price': fmt_price(price, order.currency_id),
+                'is_free': free_label is not None,
+                'free_label': free_label,
+                'available_now': now_ok,
+                'availability_note': now_note,
+                'is_express': carrier_is_express(c),
                 'is_default': c.is_default if 'is_default' in c._fields else False,
                 'zone': zone,
                 'logo': logo,
@@ -599,36 +733,68 @@ class MobileOrdersAPI(http.Controller):
             desc_en = getattr(c, 'public_desc_en', '') or ''
             desc_ar = getattr(c, 'public_desc_ar', '') or desc_en
             is_now, off, den, dar, fh = next_slot(c)
-            if is_now:
-                # Cutoff from the carrier's zone rules when configured.
-                cutoff = ''
+            # Cutoff from the carrier's zone rules when configured.
+            cutoff = ''
+            try:
+                z = c.uellow_zone_ids[:1] if getattr(
+                    c, 'uellow_zone_ids', False) else None
+                cutoff = (z.cutoff_time or '') if z else ''
+            except Exception:
+                pass
+            # v2.1.35 — ENFORCE the cutoff: a carrier whose schedule says
+            # "open" but whose order cutoff already passed (express ends
+            # 21:00, it's 23:00) is NOT available now — it ships tomorrow.
+            if is_now and cutoff:
                 try:
-                    z = c.uellow_zone_ids[:1] if getattr(
-                        c, 'uellow_zone_ids', False) else None
-                    cutoff = (z.cutoff_time or '') if z else ''
+                    # tolerate "21" as well as "21:00"
+                    parts = (cutoff.split(':') + ['0'])[:2] \
+                        if ':' in cutoff else [cutoff, '0']
+                    ch, cm = parts
+                    if (now.hour * 60 + now.minute) >= \
+                            (int(ch) * 60 + int(cm)):
+                        is_now, off = False, 1
+                        wd = (now.weekday() + 1) % 7
+                        den, dar = DAYS_EN[wd], DAYS_AR[wd]
+                        fh = 0.0
                 except Exception:
                     pass
+            # Extra facts for the delivery details dialog (v2.1.35).
+            extra = {'cutoff': cutoff}
+            try:
+                if c.delivery_type == 'fixed':
+                    extra['price'] = float(c.fixed_price or 0)
+                if getattr(c, 'free_over', False):
+                    extra['free_over'] = float(getattr(c, 'amount', 0) or 0)
+            except Exception:
+                pass
+            if is_now:
                 txt_en = desc_en or (
                     ('Available now — order before %s' % cutoff)
                     if cutoff else 'Available now')
                 txt_ar = desc_ar or (
                     ('متاح الآن — اطلب قبل %s' % cutoff)
                     if cutoff else 'متاح الآن')
-                lines.append({'name': name, 'status': 'now',
-                              'text': {'en': txt_en, 'ar': txt_ar}})
+                lines.append(dict(extra, name=name, status='now',
+                              text={'en': txt_en, 'ar': txt_ar}))
             elif off >= 0:
                 hh = '%02d:%02d' % (int(fh), round((fh % 1) * 60))
                 if off == 0:
                     txt_en = 'Opens today at %s' % hh
                     txt_ar = 'يبدأ اليوم الساعة %s' % hh
                 elif off == 1:
-                    txt_en = 'Order now — receive tomorrow (%s)' % den
-                    txt_ar = 'اطلب الآن واستلم غداً (%s)' % dar
+                    if cutoff and not fh:
+                        txt_en = ("Today's cutoff (%s) passed — "
+                                  'delivers tomorrow (%s)') % (cutoff, den)
+                        txt_ar = ('انتهى وقت الطلب اليوم (%s) — '
+                                  'التوصيل غداً (%s)') % (cutoff, dar)
+                    else:
+                        txt_en = 'Order now — receive tomorrow (%s)' % den
+                        txt_ar = 'اطلب الآن واستلم غداً (%s)' % dar
                 else:
                     txt_en = 'Order now — receive on %s' % den
                     txt_ar = 'اطلب الآن واستلم يوم %s' % dar
-                lines.append({'name': name, 'status': 'later',
-                              'text': {'en': txt_en, 'ar': txt_ar}})
+                lines.append(dict(extra, name=name, status='later',
+                              text={'en': txt_en, 'ar': txt_ar}))
         # "now" carriers first, then soonest
         lines.sort(key=lambda l: 0 if l['status'] == 'now' else 1)
         return ok({'country': country, 'lines': lines[:4]})
@@ -966,6 +1132,9 @@ class MobileOrdersAPI(http.Controller):
                     pass
             if price is None:
                 price = getattr(carrier, 'fixed_price', None) or 0
+            # v2.1.51 — the engine decides the FINAL charged rate so the
+            # invoice always matches the picker (free stays free).
+            price, _free_lbl = effective_shipping_price(order, carrier, price)
             ship_rate = float(price or 0.0)
             try:
                 order.carrier_id = carrier.id   # remember the choice

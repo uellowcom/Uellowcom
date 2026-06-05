@@ -92,10 +92,21 @@ class PagesPublic(http.Controller):
             } for r in recs]
         })
 
+    # v2.1.48 — short worker-local cache for resolved PUBLIC pages.
+    # Resolving every block (products, ranks, promos…) on every app open
+    # made startup feel heavy; page content tolerates 45 s of staleness.
+    _PAGE_CACHE = {}
+
     @http.route('/api/mobile/v2/pages/<string:slug>', type='http',
                 auth='public', methods=['GET'], csrf=False)
     def get_page(self, slug, **kw):
+        import time as _t
         wid = _website_id()
+        cache_key = (slug, wid, _lang(), _country_code())
+        hit = self._PAGE_CACHE.get(cache_key)
+        if hit and _t.time() - hit[1] < 45 \
+                and not request.env.user.has_group('base.group_user'):
+            return _ok(hit[0])
         rec = request.env['mobile.page'].sudo().browse([])
         if wid:
             # Same slug may exist per-website with a different design —
@@ -112,7 +123,15 @@ class PagesPublic(http.Controller):
             return _fail('NOT_FOUND', 'Page not found', 404)
         if rec.status != 'published' and not request.env.user.has_group('base.group_user'):
             return _fail('NOT_PUBLISHED', 'Page is not live yet', 403)
-        return _ok(rec.to_public_dict(lang=_lang()))
+        payload = rec.to_public_dict(lang=_lang())
+        if rec.status == 'published':
+            self._PAGE_CACHE[cache_key] = (payload, _t.time())
+            if len(self._PAGE_CACHE) > 400:
+                stale = sorted(self._PAGE_CACHE,
+                               key=lambda k: self._PAGE_CACHE[k][1])[:200]
+                for k in stale:
+                    self._PAGE_CACHE.pop(k, None)
+        return _ok(payload)
 
     @http.route('/api/mobile/v2/navbar', type='http', auth='public',
                 methods=['GET'], csrf=False)

@@ -22,3 +22,4 @@ from . import tracking_extras
 from . import cart_share
 from . import mobile_app_ad
 from . import mobile_promotion
+from . import mobile_category_slide
