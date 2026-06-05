@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Affiliates ─────────────────────────────────────────────── -->
+    <record id="affiliate_list" model="ir.ui.view">
+        <field name="name">uellow.affiliate.list</field>
+        <field name="model">uellow.affiliate</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'active'"
+                  decoration-muted="state == 'suspended'">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="tier"/>
+                <field name="state"/>
+                <field name="total_sales" sum="Total"/>
+                <field name="confirmed_amount"/>
+                <field name="pending_amount"/>
+                <field name="click_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="affiliate_form" model="ir.ui.view">
+        <field name="name">uellow.affiliate.form</field>
+        <field name="model">uellow.affiliate</field>
+        <field name="arch" type="xml">
+            <form string="Affiliate">
+                <header>
+                    <button name="action_activate" string="✅ Activate"
+                            type="object" class="btn-primary"
+                            invisible="state == 'active'"/>
+                    <button name="action_suspend" string="🚫 Suspend"
+                            type="object"
+                            invisible="state != 'active'"/>
+                    <button name="action_recompute_tier"
+                            string="🔄 Recompute tier" type="object"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="Agent name"/></h1>
+                        <h3>Code: <field name="code" class="oe_inline"/></h3>
+                    </div>
+                    <group>
+                        <group string="Account">
+                            <field name="partner_id"/>
+                            <field name="phone"/>
+                            <field name="email"/>
+                            <field name="website_ids" widget="many2many_tags"/>
+                        </group>
+                        <group string="Commission">
+                            <field name="tier"/>
+                            <field name="default_commission_pct"/>
+                            <field name="payout_method"/>
+                            <field name="payout_details"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Balances">
+                            <field name="pending_amount"/>
+                            <field name="confirmed_amount" string="Available"/>
+                            <field name="paid_amount"/>
+                        </group>
+                        <group string="Performance">
+                            <field name="total_sales"/>
+                            <field name="order_count"/>
+                            <field name="click_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Assignments" name="assignments">
+                            <div class="text-muted mb-2">
+                                What this agent may sell + the commission per
+                                row. NO rows = the agent can sell the WHOLE
+                                catalog at the default %.
+                            </div>
+                            <field name="assignment_ids">
+                                <list editable="bottom">
+                                    <field name="product_tmpl_id"/>
+                                    <field name="categ_id"/>
+                                    <field name="commission_pct"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Commissions" name="commissions">
+                            <field name="commission_ids" readonly="1">
+                                <list>
+                                    <field name="create_date"/>
+                                    <field name="sale_order_id"/>
+                                    <field name="source"/>
+                                    <field name="base_amount"/>
+                                    <field name="amount"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Payouts" name="payouts">
+                            <field name="payout_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="amount"/>
+                                    <field name="method"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="affiliate_action" model="ir.actions.act_window">
+        <field name="name">Affiliates</field>
+        <field name="res_model">uellow.affiliate</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add your first affiliate agent</p>
+        </field>
+    </record>
+
+    <!-- ── Commissions ────────────────────────────────────────────── -->
+    <record id="commission_list" model="ir.ui.view">
+        <field name="name">uellow.affiliate.commission.list</field>
+        <field name="model">uellow.affiliate.commission</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'confirmed'"
+                  decoration-info="state == 'pending'"
+                  decoration-muted="state in ('paid', 'cancelled')">
+                <field name="create_date"/>
+                <field name="affiliate_id"/>
+                <field name="sale_order_id"/>
+                <field name="source"/>
+                <field name="base_amount" sum="Base"/>
+                <field name="amount" sum="Commission"/>
+                <field name="state"/>
+                <button name="action_confirm" string="Confirm" type="object"
+                        icon="fa-check" invisible="state != 'pending'"/>
+                <button name="action_cancel" string="Cancel" type="object"
+                        icon="fa-times"
+                        invisible="state not in ('pending', 'confirmed')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="commission_action" model="ir.actions.act_window">
+        <field name="name">Commissions</field>
+        <field name="res_model">uellow.affiliate.commission</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- ── Payouts ────────────────────────────────────────────────── -->
+    <record id="payout_list" model="ir.ui.view">
+        <field name="name">uellow.affiliate.payout.list</field>
+        <field name="model">uellow.affiliate.payout</field>
+        <field name="arch" type="xml">
+            <list decoration-warning="state == 'requested'">
+                <field name="name"/>
+                <field name="create_date"/>
+                <field name="affiliate_id"/>
+                <field name="amount" sum="Total"/>
+                <field name="method"/>
+                <field name="details"/>
+                <field name="state"/>
+                <button name="action_mark_paid" string="Mark paid"
+                        type="object" icon="fa-check"
+                        invisible="state != 'requested'"/>
+                <button name="action_reject" string="Reject" type="object"
+                        icon="fa-times" invisible="state != 'requested'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="payout_action" model="ir.actions.act_window">
+        <field name="name">Payout Requests</field>
+        <field name="res_model">uellow.affiliate.payout</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- ── Menus ──────────────────────────────────────────────────── -->
+    <menuitem id="menu_affiliate_root" name="Affiliates" sequence="86"/>
+    <menuitem id="menu_affiliate_agents" name="Agents"
+              parent="menu_affiliate_root" action="affiliate_action"
+              sequence="10"/>
+    <menuitem id="menu_affiliate_commissions" name="Commissions"
+              parent="menu_affiliate_root" action="commission_action"
+              sequence="30"/>
+    <menuitem id="menu_affiliate_payouts" name="Payouts"
+              parent="menu_affiliate_root" action="payout_action"
+              sequence="40"/>
+</odoo>

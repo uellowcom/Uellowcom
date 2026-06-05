@@ -1,0 +1,13 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_uellow_affiliate_mgr,uellow.affiliate manager,model_uellow_affiliate,base.group_system,1,1,1,1
+access_uellow_affiliate_usr,uellow.affiliate user,model_uellow_affiliate,base.group_user,1,1,1,0
+access_uellow_affiliate_assignment_mgr,assignment manager,model_uellow_affiliate_assignment,base.group_system,1,1,1,1
+access_uellow_affiliate_assignment_usr,assignment user,model_uellow_affiliate_assignment,base.group_user,1,1,1,0
+access_uellow_affiliate_commission_mgr,commission manager,model_uellow_affiliate_commission,base.group_system,1,1,1,1
+access_uellow_affiliate_commission_usr,commission user,model_uellow_affiliate_commission,base.group_user,1,1,1,0
+access_uellow_affiliate_payout_mgr,payout manager,model_uellow_affiliate_payout,base.group_system,1,1,1,1
+access_uellow_affiliate_payout_usr,payout user,model_uellow_affiliate_payout,base.group_user,1,1,1,0
+access_uellow_affiliate_order_mgr,aff order manager,model_uellow_affiliate_order,base.group_system,1,1,1,1
+access_uellow_affiliate_order_usr,aff order user,model_uellow_affiliate_order,base.group_user,1,1,1,0
+access_uellow_affiliate_order_line_mgr,aff line manager,model_uellow_affiliate_order_line,base.group_system,1,1,1,1
+access_uellow_affiliate_order_line_usr,aff line user,model_uellow_affiliate_order_line,base.group_user,1,1,1,0
