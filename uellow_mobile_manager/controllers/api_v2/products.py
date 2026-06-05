@@ -966,6 +966,54 @@ class MobileProductsAPI(http.Controller):
         items = Tmpl.search(domain, order=order_field, limit=20)
         return ok([serialize_product_card(p, lang) for p in items])
 
+    # ─── Bestsellers page (v2.1.61) — ranked + paginated ─────────────
+    # Backs the «عرض المزيد» of the Champions Arena block: same daily
+    # rank ladder the block uses (uellow.product.rank), then fills the
+    # tail with sales_count ordering so deeper pages stay meaningful.
+    @http.route('/api/mobile/v2/products/bestsellers', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def bestsellers_page(self, **kw):
+        p = get_payload()
+        try:
+            page = max(1, int(p.get('page') or 1))
+        except Exception:
+            page = 1
+        try:
+            per = min(40, max(1, int(p.get('per_page') or 20)))
+        except Exception:
+            per = 20
+        lang = get_lang()
+        Tmpl = request.env['product.template'].sudo()
+        domain = _domain_published_for_app()
+        ranked = Tmpl.browse([])
+        try:
+            Rank = request.env.get('uellow.product.rank')
+            if Rank is not None:
+                ranked = Rank.sudo().top_products(
+                    category_id=None, website_id=None, limit=120)
+                ranked = ranked.filtered(lambda t: t.is_published)
+        except Exception:
+            ranked = Tmpl.browse([])
+        ids = list(ranked.ids)
+        need = page * per + 1
+        if len(ids) < need:
+            order_field = ('sales_count desc'
+                           if 'sales_count' in Tmpl._fields
+                           else 'create_date desc')
+            extra = Tmpl.search(domain + [('id', 'not in', ids)],
+                                order=order_field, limit=need - len(ids))
+            ids += list(extra.ids)
+        sl = ids[(page - 1) * per: page * per]
+        items = []
+        for n, t in enumerate(Tmpl.browse(sl)):
+            d = serialize_product_card(t, lang)
+            # 'rank' is already the badge map on the card → own key.
+            d['bs_rank'] = (page - 1) * per + n + 1
+            items.append(d)
+        return ok({'items': items, 'page': page,
+                   'has_more': len(ids) > page * per})
+
     # ─── Recommended (personalised when logged in) ────────────────────
     @http.route('/api/mobile/v2/products/recommended', type='http',
                 auth='public', methods=['GET', 'OPTIONS'], csrf=False)

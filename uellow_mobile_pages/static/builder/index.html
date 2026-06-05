@@ -4225,8 +4225,12 @@ function renderStyle(b){
     <div class="sub-h">Title</div>
     <div class="toggle"><div class="nm">Show title</div>
       <div class="switch ${showTitle?'on':''}" data-toggle-prop="show_title"></div></div>
-    <div class="field"><label>Title-to-content gap (px)</label>
-      <input type="number" min="0" max="40" value="${titleGap}" data-prop-num="title_gap"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Gap before title (px)</label>
+        <input type="number" min="0" max="60" placeholder="6" value="${p.title_gap_top??''}" data-prop-num-opt="title_gap_top"/></div>
+      <div class="field"><label>Gap after title (px)</label>
+        <input type="number" min="0" max="60" value="${titleGap}" data-prop-num="title_gap"/></div>
+    </div>
 
     <div class="sub-h">Header icon / image</div>
     <p class="hint">Show a small icon (emoji) or image next to the section title — or replace the title with the image entirely.</p>
@@ -4270,17 +4274,31 @@ function renderStyle(b){
     ` : ''}
 
     <div class="sub-h">Spacing between blocks</div>
-    <div class="field"><label>Block vertical padding (px)</label>
+    <div class="field"><label>Block vertical padding (px) — base</label>
       <input type="number" min="0" max="40" value="${padY}" data-prop-num="pad_y"/></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Gap before block (px)</label>
+        <input type="number" min="0" max="80" placeholder="= base" value="${p.pad_top??''}" data-prop-num-opt="pad_top"/></div>
+      <div class="field"><label>Gap after block (px)</label>
+        <input type="number" min="0" max="80" placeholder="= base" value="${p.pad_bottom??''}" data-prop-num-opt="pad_bottom"/></div>
+    </div>
+    <p class="hint">Leave before/after empty to use the base padding.</p>
 
     <div class="sub-h">Background</div>
-    <div class="field"><label>Color</label>
-      <div class="swatch-row" style="flex-wrap:wrap;gap:6px">
+    <div class="field"><label>Color — pick ANY color</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="color" value="${/^#[0-9A-Fa-f]{6}$/.test(bgColor)?bgColor:'#FAF6EB'}" data-prop="bg_color"
+               style="width:46px;height:32px;padding:2px;border:1px solid var(--border-2);border-radius:8px;cursor:pointer;background:#fff"/>
+        <input type="text" placeholder="#RRGGBB" value="${bgColor}" data-prop="bg_color" style="flex:1;font-family:monospace"/>
+        <button class="btn-sm" data-prop="bg_color" data-prop-val="">⬚ None</button>
+      </div>
+      <div class="swatch-row" style="flex-wrap:wrap;gap:6px;margin-top:6px">
         ${PALETTE.map(c => `<div class="sw ${ (bgColor||'none')===c?'on':''}"
             style="background:${c==='none'?'repeating-linear-gradient(45deg,#eee,#eee 4px,#fff 4px,#fff 8px)':c};
                    ${c==='none'?'':''}"
             data-bg-color="${c==='none'?'':c}" title="${c==='none'?'transparent':c}"></div>`).join('')}
       </div>
+      <p class="hint">↑ quick swatches — or use the picker / hex field for any color.</p>
     </div>
     <div class="field"><label>Pattern overlay</label>
       <div class="swatch-row" style="flex-wrap:wrap;gap:6px">
@@ -4354,6 +4372,16 @@ function wirePropsBody(b){
       // Re-render the right panel only when the change toggles which
       // pickers are visible (e.g. source switch).
       if (inp.dataset.prop === 'source') renderRight();
+      renderCanvas(); scheduleSave();
+    });
+  });
+  // v2.1.61 — OPTIONAL numeric props: empty field deletes the prop so the
+  // app falls back to its default (used by pad_top/pad_bottom/title_gap_top).
+  document.querySelectorAll('[data-prop-num-opt]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const k = inp.dataset.propNumOpt;
+      if (inp.value === '') delete b.props[k];
+      else b.props[k] = Number(inp.value) || 0;
       renderCanvas(); scheduleSave();
     });
   });
