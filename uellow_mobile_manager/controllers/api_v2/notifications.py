@@ -65,6 +65,33 @@ class MobileNotificationsAPI(http.Controller):
             pass
         return ok(out)
 
+    @http.route('/api/mobile/v2/notifications/unread-count', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def unread_count(self, **kw):
+        """v2.1.63 — badge counter for the account page: number of
+        UNREAD personal event notifications (broadcasts excluded — they
+        carry no per-user read state)."""
+        partner = current_partner()
+        n = request.env['mobile.customer.notification'].sudo().search_count(
+            [('partner_id', '=', partner.id), ('is_read', '=', False)])
+        return ok({'unread': n})
+
+    @http.route('/api/mobile/v2/notifications/read-all', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def read_all(self, **kw):
+        """v2.1.63 — clears the account-page badge: marks every personal
+        event notification of the customer as read."""
+        partner = current_partner()
+        recs = request.env['mobile.customer.notification'].sudo().search(
+            [('partner_id', '=', partner.id), ('is_read', '=', False)])
+        recs.write({'is_read': True})
+        request.env.cr.commit()
+        return ok({'read': len(recs)})
+
     @http.route('/api/mobile/v2/notifications/preferences', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
