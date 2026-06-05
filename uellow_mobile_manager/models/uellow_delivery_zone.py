@@ -20,6 +20,8 @@ table first, then falls back to whatever fixed price the carrier had.
 """
 from datetime import datetime, time
 
+import pytz
+
 from odoo import api, fields, models
 
 
@@ -109,9 +111,16 @@ class UellowDeliveryZone(models.Model):
         return False
 
     def _is_active_today(self):
-        """Apply weekday_mask + cutoff_time. ISO weekday is 1..7."""
+        """Apply weekday_mask + cutoff_time. ISO weekday is 1..7.
+        v2.1.67 — LOCAL time (Asia/Kuwait default), matching the carrier
+        weekly-schedule engine. The naive datetime.now() before was UTC
+        (container clock): a 21:00 cutoff really fired at midnight KW."""
         self.ensure_one()
-        now = datetime.now()
+        try:
+            tz = pytz.timezone(self.env.user.tz or 'Asia/Kuwait')
+            now = datetime.now(tz)
+        except Exception:
+            now = datetime.now()
         wd = str(now.isoweekday())
         if self.weekday_mask and wd not in self.weekday_mask:
             return False
