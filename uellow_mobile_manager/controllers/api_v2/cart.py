@@ -803,6 +803,16 @@ class MobileCartAPI(http.Controller):
                 order.applied_coupon_ids = [(3, c.id) for c in cards]
             if rules:
                 order.code_enabled_rule_ids = [(3, r.id) for r in rules]
+            # v2.1.70 — THE "removed but comes back" root cause: Odoo 18
+            # also tracks the applied program through coupon_point_ids;
+            # leaving those rows made _update_programs_and_rewards()
+            # re-create the reward line immediately after removal.
+            try:
+                order.coupon_point_ids.filtered(
+                    lambda cp: cp.coupon_id.program_id in programs
+                    or cp.coupon_id in cards).unlink()
+            except Exception:
+                pass
             try:
                 order._update_programs_and_rewards()
             except Exception:
@@ -816,6 +826,10 @@ class MobileCartAPI(http.Controller):
                 pass
             try:
                 order.code_enabled_rule_ids = [(5, 0, 0)]
+            except Exception:
+                pass
+            try:
+                order.coupon_point_ids.unlink()
             except Exception:
                 pass
         return ok({'cart': serialize_cart(order)})

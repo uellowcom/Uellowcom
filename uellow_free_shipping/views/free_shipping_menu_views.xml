@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- v2.1.70 — "who ships free?" control center: clear lists of every
+         product / category / tag flagged Free Shipping, editable inline,
+         grouped under Inventory ▸ Delivery (per ali@uellow). -->
+
+    <!-- Flagged PRODUCTS -->
+    <record id="view_free_shipping_product_list" model="ir.ui.view">
+        <field name="name">product.template.free.shipping.list</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" create="false" delete="false"
+                  decoration-success="free_shipping">
+                <field name="name" readonly="1"/>
+                <field name="default_code" readonly="1" optional="show"/>
+                <field name="public_categ_ids" widget="many2many_tags"
+                       readonly="1" optional="show"/>
+                <field name="list_price" readonly="1"/>
+                <field name="is_published" readonly="1" string="Published"/>
+                <field name="free_shipping" string="🚚 Free Shipping"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_free_shipping_product_search" model="ir.ui.view">
+        <field name="name">product.template.free.shipping.search</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="public_categ_ids"/>
+                <filter name="flagged" string="🚚 Free shipping ON"
+                        domain="[('free_shipping', '=', True)]"/>
+                <filter name="not_flagged" string="Free shipping OFF"
+                        domain="[('free_shipping', '=', False)]"/>
+                <separator/>
+                <filter name="published" string="Published"
+                        domain="[('is_published', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="by_categ" string="Category"
+                            context="{'group_by': 'public_categ_ids'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_free_shipping_products" model="ir.actions.act_window">
+        <field name="name">Free-Shipping Products</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_free_shipping_product_list"/>
+        <field name="search_view_id" ref="view_free_shipping_product_search"/>
+        <field name="context">{'search_default_flagged': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No free-shipping products yet</p>
+            <p>Every product listed here ships FREE for the customer
+               (per the rule in Settings: any/all items in the cart).
+               Toggle the switch to flag/unflag without leaving the list —
+               remove the "Free shipping ON" filter to browse the whole
+               catalog and flag new ones.</p>
+        </field>
+    </record>
+
+    <!-- Flagged CATEGORIES -->
+    <record id="view_free_shipping_categ_list" model="ir.ui.view">
+        <field name="name">product.public.category.free.shipping.list</field>
+        <field name="model">product.public.category</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" create="false" delete="false"
+                  decoration-success="free_shipping">
+                <field name="display_name" string="Category"/>
+                <field name="free_shipping" string="🚚 Free Shipping"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_free_shipping_categories" model="ir.actions.act_window">
+        <field name="name">Free-Shipping Categories</field>
+        <field name="res_model">product.public.category</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_free_shipping_categ_list"/>
+        <field name="context">{'search_default_flagged': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No free-shipping categories</p>
+            <p>Flagging a category makes EVERY product inside it ship free.</p>
+        </field>
+    </record>
+
+    <record id="view_free_shipping_categ_search" model="ir.ui.view">
+        <field name="name">product.public.category.free.shipping.search</field>
+        <field name="model">product.public.category</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter name="flagged" string="🚚 Free shipping ON"
+                        domain="[('free_shipping', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+    <record id="action_free_shipping_categories" model="ir.actions.act_window">
+        <field name="search_view_id" ref="view_free_shipping_categ_search"/>
+    </record>
+
+    <!-- Flagged TAGS -->
+    <record id="view_free_shipping_tag_list" model="ir.ui.view">
+        <field name="name">product.tag.free.shipping.list</field>
+        <field name="model">product.tag</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" create="false" delete="false"
+                  decoration-success="free_shipping">
+                <field name="name" string="Tag"/>
+                <field name="free_shipping" string="🚚 Free Shipping"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_free_shipping_tags" model="ir.actions.act_window">
+        <field name="name">Free-Shipping Tags</field>
+        <field name="res_model">product.tag</field>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_free_shipping_tag_list"/>
+    </record>
+
+    <!-- Menus — under Inventory ▸ Delivery, next to Delivery Methods -->
+    <menuitem id="menu_free_shipping_root"
+              name="🚚 Free Shipping"
+              parent="stock.menu_delivery"
+              sequence="20"/>
+    <menuitem id="menu_free_shipping_products"
+              name="Flagged Products"
+              parent="menu_free_shipping_root"
+              action="action_free_shipping_products" sequence="10"/>
+    <menuitem id="menu_free_shipping_categories"
+              name="Flagged Categories"
+              parent="menu_free_shipping_root"
+              action="action_free_shipping_categories" sequence="20"/>
+    <menuitem id="menu_free_shipping_tags"
+              name="Flagged Tags"
+              parent="menu_free_shipping_root"
+              action="action_free_shipping_tags" sequence="30"/>
+</odoo>
