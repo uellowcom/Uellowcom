@@ -99,6 +99,21 @@ class UellowVendor(models.Model):
     ], default='bronze', string='Vendor Tier', tracking=True)
     tier_manual = fields.Boolean('Manual Tier Override', default=False)
 
+    # ── Products (v2.1.66) ────────────────────────────────
+    # Admin can assign ANY existing catalog product to this vendor from
+    # the vendor form (widget=many2many picker on this one2many) or from
+    # the product form's Vendor field. Assigned products appear on the
+    # vendor's storefront in the app.
+    product_ids = fields.One2many(
+        'product.template', 'vendor_id', string='Products')
+    product_total = fields.Integer(
+        compute='_compute_product_total', string='Product Count')
+
+    def _compute_product_total(self):
+        for v in self:
+            v.product_total = self.env['product.template'].sudo() \
+                .search_count([('vendor_id', '=', v.id)])
+
     # ── Metrics (auto-computed) ───────────────────────────
     total_sales = fields.Float(
         compute='_compute_metrics', store=True, string='Total Sales',

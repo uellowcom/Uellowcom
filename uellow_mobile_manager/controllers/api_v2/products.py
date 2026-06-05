@@ -210,6 +210,30 @@ def _rank_dict(r):
     }
 
 
+def _top_selling_ids(domain, limit=200):
+    """Product ids ranked by REAL sold quantity (sale.report aggregate),
+    then the rest of the domain as filler. product.template.sales_count
+    is a NON-STORED compute — using it as a search order raises
+    'Cannot convert ... to SQL' (v2.1.66 fix)."""
+    Tmpl = request.env['product.template'].sudo()
+    base_ids = Tmpl.search(domain, limit=1000).ids
+    if not base_ids:
+        return []
+    ranked = []
+    try:
+        groups = request.env['sale.report'].sudo().read_group(
+            [('product_tmpl_id', 'in', base_ids),
+             ('state', 'in', ('sale', 'done'))],
+            ['product_uom_qty'], ['product_tmpl_id'],
+            orderby='product_uom_qty desc', limit=limit)
+        ranked = [g['product_tmpl_id'][0] for g in groups
+                  if g.get('product_tmpl_id')]
+    except Exception:
+        ranked = []
+    seen = set(ranked)
+    return (ranked + [i for i in base_ids if i not in seen])[:limit]
+
+
 def _vendor_ref(product):
     """Compact vendor reference on each product. Returns None when the
     multivendor module isn't installed or the product has no vendor."""
@@ -645,13 +669,18 @@ class MobileProductsAPI(http.Controller):
             'price_asc':    'list_price asc',
             'price_desc':   'list_price desc',
             'name':         'name asc',
-            'popular':      'sales_count desc' if 'sales_count' in request.env['product.template']._fields else 'create_date desc',
+            # v2.1.66 — 'popular' handled below (sales_count is a
+            # non-stored compute and cannot be a search order).
+            'popular':      'create_date desc',
             'top_rated':    'rating_avg desc' if 'rating_avg' in request.env['product.template']._fields else 'create_date desc',
         }
         order = sort_map.get(p.get('sort', 'newest'), 'create_date desc')
 
         Tmpl = request.env['product.template'].sudo()
-        all_recs = Tmpl.search(domain, order=order)
+        if p.get('sort') == 'popular':
+            all_recs = Tmpl.browse(_top_selling_ids(domain, limit=1000))
+        else:
+            all_recs = Tmpl.search(domain, order=order)
         items, meta = paginate(
             all_recs,
             page=p.get('page', 1),
@@ -962,8 +991,8 @@ class MobileProductsAPI(http.Controller):
         lang = get_lang()
         Tmpl = request.env['product.template'].sudo()
         domain = _domain_published_for_app()
-        order_field = 'sales_count desc' if 'sales_count' in Tmpl._fields else 'create_date desc'
-        items = Tmpl.search(domain, order=order_field, limit=20)
+        # v2.1.66 — sales_count is non-stored; rank via sale.report.
+        items = Tmpl.browse(_top_selling_ids(domain, limit=20))
         return ok([serialize_product_card(p, lang) for p in items])
 
     # ─── Bestsellers page (v2.1.61) — ranked + paginated ─────────────
@@ -998,12 +1027,11 @@ class MobileProductsAPI(http.Controller):
         ids = list(ranked.ids)
         need = page * per + 1
         if len(ids) < need:
-            order_field = ('sales_count desc'
-                           if 'sales_count' in Tmpl._fields
-                           else 'create_date desc')
-            extra = Tmpl.search(domain + [('id', 'not in', ids)],
-                                order=order_field, limit=need - len(ids))
-            ids += list(extra.ids)
+            # v2.1.66 — fill the tail by REAL sold qty (sale.report);
+            # ordering by the non-stored sales_count crashed page 2+.
+            extra = _top_selling_ids(
+                domain + [('id', 'not in', ids)], limit=need - len(ids))
+            ids += extra
         sl = ids[(page - 1) * per: page * per]
         items = []
         for n, t in enumerate(Tmpl.browse(sl)):

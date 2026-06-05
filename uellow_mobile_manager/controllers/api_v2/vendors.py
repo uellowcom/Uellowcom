@@ -1,5 +1,5 @@
 """Vendor (multi-vendor) endpoints — /api/mobile/v2/vendors/*"""
-from odoo import http
+from odoo import fields, http
 from odoo.http import request
 
 from ._common import (
@@ -114,6 +114,178 @@ class MobileVendorsAPI(http.Controller):
             'phone':       vendor.contact_phone or '',
             'business_name': vendor.business_name or '',
             'categories':  _vendor_category_breakdown(vendor),
+        })
+
+    @http.route('/api/mobile/v2/vendors/<int:vendor_id>/storefront',
+                type='http', auth='public', methods=['GET', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    def vendor_storefront(self, vendor_id, **kw):
+        """v2.1.66 — everything the redesigned vendor page needs in ONE
+        call: hero/info, flash sale, new arrivals, best sellers,
+        category rails, offers (flash + joined campaigns), reviews."""
+        lang = get_lang()
+        Vendor = request.env.get('uellow.vendor')
+        if Vendor is None:
+            return fail('UNAVAILABLE', 'Vendor module not installed', 503)
+        vendor = Vendor.sudo().browse(vendor_id)
+        if not vendor.exists():
+            return fail('NOT_FOUND', 'Vendor not found', 404)
+        Tmpl = request.env['product.template'].sudo()
+        base_dom = _domain_published_for_app() + [('vendor_id', '=', vendor_id)]
+
+        def cards(recs):
+            out = []
+            for r in recs:
+                try:
+                    out.append(serialize_product_card(r, lang))
+                except Exception:
+                    continue
+            return out
+
+        # One catalog scan; best-sellers ranked by REAL sold quantity
+        # (sale.report aggregate — product.template.sales_count is a
+        # non-stored compute and cannot be used as a search order).
+        all_prods = Tmpl.search(base_dom, order='create_date desc',
+                                limit=400)
+        rank = {}
+        try:
+            for g in request.env['sale.report'].sudo().read_group(
+                    [('product_tmpl_id', 'in', all_prods.ids),
+                     ('state', 'in', ('sale', 'done'))],
+                    ['product_uom_qty'], ['product_tmpl_id']):
+                tid = (g.get('product_tmpl_id') or (0,))[0]
+                rank[tid] = float(g.get('product_uom_qty') or 0)
+        except Exception:
+            rank = {}
+
+        def by_rank(recs):
+            return sorted(recs, key=lambda p: -rank.get(p.id, 0))
+
+        new_arrivals = cards(all_prods[:10])
+        best_sellers = cards(by_rank(all_prods)[:10])
+
+        # ── flash sale (this vendor's active campaign) ────────────────
+        flash = None
+        offers = []
+        FS = request.env.get('uellow.flash.sale')
+        if FS is not None:
+            try:
+                now = fields.Datetime.now()
+                for f in FS.sudo().search([
+                        ('vendor_id', '=', vendor_id),
+                        ('state', '=', 'active'),
+                        ('end_datetime', '>', now)], limit=3):
+                    fp = f.product_ids.filtered(
+                        lambda p: p.active and p.is_published)
+                    entry = {
+                        'name': {'en': f.name or '',
+                                 'ar': getattr(f, 'name_ar', '') or f.name or ''},
+                        'discount_pct': float(f.discount_pct or 0),
+                        'ends_at': f.end_datetime.isoformat()
+                                   if f.end_datetime else None,
+                        'products': cards(fp[:10]),
+                    }
+                    if flash is None and entry['products']:
+                        flash = entry
+                    offers.append({
+                        'type': 'flash', 'emoji': '⚡',
+                        'label': entry['name'],
+                        'discount_pct': entry['discount_pct'],
+                        'date_to': entry['ends_at'],
+                    })
+            except Exception:
+                pass
+
+        # ── joined marketplace campaigns (approved lines) ─────────────
+        try:
+            Line = request.env.get('mobile.promotion.line')
+            if Line is not None:
+                seen_promos = set()
+                for l in Line.sudo().search([
+                        ('vendor_id', '=', vendor_id),
+                        ('state', '=', 'approved')], limit=50):
+                    pr = l.promotion_id
+                    if not pr or pr.id in seen_promos or \
+                            pr.state not in ('open', 'running'):
+                        continue
+                    seen_promos.add(pr.id)
+                    offers.append({
+                        'type': 'campaign',
+                        'emoji': pr.emoji or '🎉',
+                        'label': {'en': pr.label_en or '',
+                                  'ar': pr.label_ar or pr.label_en or ''},
+                        'discount_pct': float(l.discount_pct or 0),
+                        'date_to': pr.date_to.isoformat()
+                                   if pr.date_to else None,
+                    })
+        except Exception:
+            pass
+
+        # ── category rails (direct category match, best sellers first) ─
+        cats = _vendor_category_breakdown(vendor)
+        rails = []
+        for c in cats[:6]:
+            prods = by_rank(all_prods.filtered(
+                lambda p: c['id'] in p.public_categ_ids.ids))[:10]
+            if prods:
+                rails.append({'category': c, 'products': cards(prods)})
+
+        # ── recent reviews on this vendor's products ──────────────────
+        reviews = []
+        try:
+            pids = all_prods.ids
+            if pids:
+                Rating = request.env['rating.rating'].sudo()
+                for r in Rating.search([
+                        ('res_model', '=', 'product.template'),
+                        ('res_id', 'in', pids),
+                        ('consumed', '=', True),
+                        ('rating', '>', 0)],
+                        order='create_date desc', limit=10):
+                    prod = Tmpl.browse(r.res_id)
+                    reviews.append({
+                        'stars': round(float(r.rating or 0), 1),
+                        'title': getattr(r, 'review_title', '') or '',
+                        'text': r.feedback or '',
+                        'customer': (r.partner_id.name or '').split(' ')[0]
+                                    if r.partner_id else '',
+                        'verified': bool(getattr(
+                            r, 'is_verified_purchase', False)),
+                        'date': r.create_date.isoformat()
+                                if r.create_date else None,
+                        'product': {
+                            'id': prod.id,
+                            'name': bilingual(prod, 'name'),
+                            'image': img_url('product.template', prod.id,
+                                             'image_256',
+                                             unique=prod.write_date),
+                        } if prod.exists() else None,
+                    })
+        except Exception:
+            pass
+
+        card = serialize_vendor_card(vendor, lang)
+        return ok({
+            'vendor': {
+                **card,
+                'about': {
+                    'en': getattr(vendor, 'store_about_en', '') or
+                          getattr(vendor, 'store_description_en', '') or '',
+                    'ar': getattr(vendor, 'store_about_ar', '') or
+                          getattr(vendor, 'store_description_ar', '') or '',
+                },
+                'sla_hours': vendor.sla_hours or 0,
+            },
+            'flash_sale': flash,
+            'new_arrivals': new_arrivals,
+            'best_sellers': best_sellers,
+            'categories': cats,
+            'category_rails': rails,
+            'offers': offers,
+            'reviews': {'summary': card.get('rating') or
+                        {'avg': 0, 'count': 0},
+                        'items': reviews},
         })
 
     @http.route('/api/mobile/v2/vendors/<int:vendor_id>/products', type='http',

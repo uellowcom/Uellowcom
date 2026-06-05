@@ -40,8 +40,10 @@
                 <sheet>
                     <group>
                         <group string="Message">
-                            <field name="name" placeholder="Notification Title"/>
-                            <field name="body" placeholder="Message body..."/>
+                            <field name="name" placeholder="Notification Title (English)"/>
+                            <field name="body" placeholder="Message body (English)..."/>
+                            <field name="name_ar" placeholder="عنوان الإشعار (عربي)"/>
+                            <field name="body_ar" placeholder="نص الإشعار (عربي)..."/>
                             <field name="image" widget="image" options="{'size': [200, 100]}"/>
                         </group>
                         <group string="Targeting">

@@ -93,7 +93,11 @@ class ResPartnerPush(models.Model):
 
     fcm_token = fields.Char(string='FCM Push Token')
     apns_token = fields.Char(string='APNS Push Token')
-    push_lang = fields.Char(string='Push Language', default='en')
+    # Live app language for push localization — written by register-device
+    # on every app open / login / language switch. Default 'ar': the
+    # customer base is Arabic-first and an 'en' default poisoned everyone
+    # into English pushes before their app re-registered.
+    push_lang = fields.Char(string='Push Language', default='ar')
 
 
 class MobileSessionPush(models.Model):

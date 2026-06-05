@@ -42,6 +42,8 @@ _WHITELIST = {
     ('product.brand',           'image_128'),
     ('res.partner',             'image_128'),
     ('res.partner',             'image_256'),
+    ('uellow.vendor',           'logo_image'),
+    ('uellow.vendor',           'banner_image'),
 }
 
 

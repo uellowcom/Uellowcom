@@ -111,6 +111,27 @@
                 <field name="wallet_id" readonly="1"/>
               </group>
             </page>
+            <!-- v2.1.66 — assign ANY catalog product to this vendor.
+                 widget=many2many turns the one2many into a picker:
+                 "Add" links an existing product (sets its vendor_id),
+                 removing a line just unassigns it (vendor_id cleared). -->
+            <page string="Products">
+              <field name="product_total" invisible="1"/>
+              <p class="text-muted">
+                Pick products from the whole Odoo catalog — they will show
+                in this vendor's storefront in the app. Removing a line
+                only unassigns the product (it is never deleted).
+              </p>
+              <field name="product_ids" widget="many2many" nolabel="1">
+                <list>
+                  <field name="name"/>
+                  <field name="default_code" optional="show"/>
+                  <field name="list_price" widget="monetary"/>
+                  <field name="is_published" string="Published"/>
+                  <field name="vendor_approval_state" optional="show"/>
+                </list>
+              </field>
+            </page>
           </notebook>
         </sheet>
         <chatter/>

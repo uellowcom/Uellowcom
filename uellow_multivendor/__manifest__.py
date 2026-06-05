@@ -31,6 +31,7 @@
         'wizard/payout_wizard_views.xml',
         'wizard/product_reject_wizard_views.xml',
         'views/vendor_product_approval_views.xml',
+        'views/product_template_vendor_views.xml',
     ],
     'assets': {
         'web.assets_backend': [

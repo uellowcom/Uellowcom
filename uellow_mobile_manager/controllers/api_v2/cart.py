@@ -883,7 +883,67 @@ class MobileCartAPI(http.Controller):
         site = (request.env['ir.config_parameter'].sudo()
                 .get_param('web.base.url') or base_url()).rstrip('/')
         url = '%s/cart/share/%s' % (site, share.token)
-        return ok({'url': url, 'token': share.token})
+        serial = share.serial or ''
+        return ok({
+            'url': url, 'token': share.token,
+            # v2.1.66 — human serial (typed instead of scanning) + the
+            # grouped display form the dialog shows.
+            'serial': serial,
+            'serial_display': '-'.join(
+                [serial[i:i + 4] for i in range(0, len(serial), 4)]),
+        })
+
+    @http.route('/api/mobile/v2/cart/import', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def import_cart(self, **kw):
+        """v2.1.66 — adopt a shared cart by QR scan / pasted link /
+        typed serial. Merges the shared items into the caller's cart
+        (guest or logged-in) and returns the updated cart."""
+        import json as _json
+        p = get_payload()
+        share = request.env['mobile.cart.share'].sudo().find_by_code(
+            p.get('code') or '')
+        if not share:
+            return fail('SHARE_NOT_FOUND',
+                        'Cart code not found or expired / الرمز غير صحيح '
+                        'أو منتهي الصلاحية', 404)
+        try:
+            items = _json.loads(share.lines_json or '[]')
+        except Exception:
+            items = []
+        if not items:
+            return fail('SHARE_EMPTY', 'This shared cart is empty', 400)
+        order = _get_or_create_order(create=True)
+        added = 0
+        Product = request.env['product.product'].sudo()
+        for it in items:
+            try:
+                pid = int(it.get('product_id') or 0)
+                qty = float(it.get('qty') or 1)
+            except Exception:
+                continue
+            product = Product.browse(pid)
+            if not product.exists() or not product.active:
+                continue
+            same = order.order_line.filtered(
+                lambda l: l.product_id.id == pid and not l.display_type
+                and not l.is_reward_line
+                and not getattr(l, 'is_delivery', False))
+            try:
+                if same:
+                    same[0].product_uom_qty += qty
+                else:
+                    order.order_line = [(0, 0, {
+                        'product_id': pid,
+                        'product_uom_qty': qty,
+                    })]
+                added += 1
+            except Exception:
+                _logger.warning('cart import: failed product %s', pid,
+                                exc_info=True)
+        share.adopted_count += 1
+        return ok({'cart': serialize_cart(order), 'added': added})
 
 
 def _share_lines_snapshot(order):

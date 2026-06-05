@@ -198,6 +198,13 @@ def base_url():
 _PROXY_MODELS = {
     'mobile.slider', 'mobile.category.icon', 'mobile.popup', 'mobile.section',
     'product.brand',
+    # v2.1.66 — profile avatars: /web/image/res.partner is ACL-blocked for
+    # the app's bearer (non-session) requests, so the account-page photo
+    # never rendered. The proxy sudo-reads it (image_128/256 whitelisted).
+    'res.partner',
+    # v2.1.66 — vendor logo/banner never rendered on the vendor page for
+    # the same reason.
+    'uellow.vendor',
 }
 
 def img_url(model, rec_id, field='image_1024', unique=None):

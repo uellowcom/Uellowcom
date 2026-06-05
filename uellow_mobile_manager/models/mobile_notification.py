@@ -10,6 +10,11 @@ class MobileNotification(models.Model):
 
     name = fields.Char(string='Notification Title', required=True)
     body = fields.Text(string='Message Body', required=True)
+    # Bilingual broadcast — each recipient gets the text matching the
+    # language THEIR app runs in (res.partner.push_lang, kept live by
+    # register-device). Empty AR fields fall back to the EN text.
+    name_ar = fields.Char(string='Title (Arabic)')
+    body_ar = fields.Text(string='Body (Arabic)')
     image = fields.Binary(string='Notification Image', attachment=True)
 
     # Category drives delivery filtering — every user has a preference
@@ -69,6 +74,13 @@ class MobileNotification(models.Model):
     sent_count = fields.Integer(string='Sent To', readonly=True, default=0)
     sent_date = fields.Datetime(string='Sent On', readonly=True)
 
+    # Per-customer read state for broadcasts (the app's "mark all read"
+    # was a no-op for these — a broadcast has no single is_read flag).
+    read_partner_ids = fields.Many2many(
+        'res.partner', 'mobile_notification_read_rel',
+        'notification_id', 'partner_id',
+        string='Read By', copy=False)
+
     website_id = fields.Many2one(
         'website', string='Website',
         default=lambda self: self.env['website'].search([], limit=1)
@@ -96,7 +108,15 @@ class MobileNotification(models.Model):
                 if partner and self.category != 'system':
                     if not Pref.for_partner(partner).allows(self.category):
                         continue
-                if Engine.send_fcm(conf, tok, self.name, self.body or ''):
+                # Localize per recipient: partner.push_lang is the live
+                # app language; guests fall back to the session's chosen
+                # splash language. Default Arabic.
+                lang = (getattr(partner, 'push_lang', '') if partner else '') \
+                    or (sess.chosen_lang or '')
+                en = (lang or 'ar').lower().startswith('en')
+                title = (self.name if en else (self.name_ar or self.name))
+                body = (self.body if en else (self.body_ar or self.body)) or ''
+                if Engine.send_fcm(conf, tok, title, body):
                     sent += 1
         except Exception:
             pass

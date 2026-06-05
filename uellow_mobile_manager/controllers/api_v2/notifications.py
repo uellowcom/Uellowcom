@@ -21,6 +21,8 @@ class MobileNotificationsAPI(http.Controller):
             '|', ('user_ids', 'in', [partner.user_ids.id] if partner.user_ids else []),
                  ('target_audience', '=', 'all'),
         ], order='create_date desc', limit=100)
+        lang_hdr = (request.httprequest.headers.get('X-Lang') or '').lower()
+        ar_hdr = lang_hdr.startswith('ar')
         out = []
         for n in items:
             category = n.category or 'general'
@@ -28,12 +30,16 @@ class MobileNotificationsAPI(http.Controller):
                 continue
             out.append({
                 'id': n.id,
-                'title': n.name or '',
-                'body':  n.body or '',
+                'title': ((n.name_ar if ar_hdr and getattr(n, 'name_ar', '')
+                           else n.name) or ''),
+                'body': ((n.body_ar if ar_hdr and getattr(n, 'body_ar', '')
+                          else n.body) or ''),
                 'image': '',
                 'category': category,
                 'data':  {},
-                'is_read': False,
+                # per-user read state (mark-read adds the partner)
+                'is_read': partner.id in n.read_partner_ids.ids
+                           if 'read_partner_ids' in n._fields else False,
                 'date':  n.create_date.isoformat() if n.create_date else None,
             })
         # v2.1.62 — merge PERSONAL event notifications (orders, wallet,
@@ -89,8 +95,24 @@ class MobileNotificationsAPI(http.Controller):
         recs = request.env['mobile.customer.notification'].sudo().search(
             [('partner_id', '=', partner.id), ('is_read', '=', False)])
         recs.write({'is_read': True})
+        # Broadcasts too — add this partner to every targeted broadcast's
+        # read list so the list view shows them read as well.
+        n_bc = 0
+        try:
+            Notif = request.env['mobile.notification'].sudo()
+            bcs = Notif.search([
+                '|', ('user_ids', 'in', [partner.user_ids.id]
+                      if partner.user_ids else []),
+                     ('target_audience', '=', 'all'),
+                ('read_partner_ids', 'not in', partner.id),
+            ], limit=200)
+            if bcs:
+                bcs.write({'read_partner_ids': [(4, partner.id)]})
+                n_bc = len(bcs)
+        except Exception:
+            pass
         request.env.cr.commit()
-        return ok({'read': len(recs)})
+        return ok({'read': len(recs) + n_bc})
 
     @http.route('/api/mobile/v2/notifications/preferences', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
@@ -153,8 +175,11 @@ class MobileNotificationsAPI(http.Controller):
                 request.env.cr.commit()
             return ok({'read': True})
         n = request.env['mobile.notification'].sudo().browse(notif_id)
-        if n.exists() and 'is_read' in n._fields:
-            n.is_read = True
+        if n.exists() and 'read_partner_ids' in n._fields:
+            partner = current_partner()
+            if partner:
+                n.write({'read_partner_ids': [(4, partner.id)]})
+                request.env.cr.commit()
         return ok({'read': True})
 
     @http.route('/api/mobile/v2/notifications/register-device', type='http',
