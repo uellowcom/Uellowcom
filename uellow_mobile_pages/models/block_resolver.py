@@ -130,9 +130,18 @@ def resolve_products(env, props, lang, block=None):
             recs = Tmpl.search(base_dom, limit=limit)
 
     elif source == 'discounted':
+        # v2.1.76 — when a "Minimum discount %" filter is set, the small
+        # `limit` window made the filter look broken (it only kept the few
+        # high-discount items that happened to be in the first N rows).
+        # Fetch a WIDER pool here; the post-filter below trims to `limit`.
+        try:
+            _min_d = int(props.get('min_discount_pct') or 0)
+        except Exception:
+            _min_d = 0
+        _pool = min(max(limit * 12, 200), 600) if _min_d > 0 else limit
         recs = Tmpl.search(
             base_dom + [('compare_list_price', '>', 0)],
-            order='write_date desc', limit=limit)
+            order='write_date desc', limit=_pool)
         if not recs:
             # Fallback: any recent published product
             recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
@@ -318,6 +327,8 @@ def resolve_products(env, props, lang, block=None):
         min_disc = 0
     if min_disc > 0:
         items = [x for x in items if (x.get('discount_pct') or 0) >= min_disc]
+        # we widened the fetch pool above; trim back to the block's limit.
+        items = items[:limit]
     sort_by = (props.get('sort') or '').strip()
     if sort_by == 'discount_desc':
         items.sort(key=lambda x: -(x.get('discount_pct') or 0))
