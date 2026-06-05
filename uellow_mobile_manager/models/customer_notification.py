@@ -74,6 +74,18 @@ class MobileNotificationSetting(models.Model):
     notify_promotions = fields.Boolean(
         string='Promotions / module campaigns', default=True)
 
+    # ── program-app pushes (v2.1.65 fleet rollout) ──
+    notify_reviewer_new_request = fields.Boolean(
+        string='Reviewers app: new review request', default=True)
+    notify_vendor_new_order = fields.Boolean(
+        string='Vendors app: new order with their products', default=True)
+    notify_driver_assigned = fields.Boolean(
+        string='Drivers app: order assigned to driver', default=True)
+    notify_carrier_new_order = fields.Boolean(
+        string='Delivery app: order assigned to carrier', default=True)
+    notify_affiliate_news = fields.Boolean(
+        string='Partners app: news & campaigns', default=True)
+
     # future push transport — engine stores rows either way
     fcm_server_key = fields.Char(
         string='FCM server key (legacy, unused)',
@@ -210,18 +222,52 @@ class MobileCustomerNotification(models.Model):
             _logger.debug('FCM send failed', exc_info=True)
             return False
 
+    @api.model
+    def push_role(self, toggle_field, partners, title_en, title_ar,
+                  body_en='', body_ar='', data=None):
+        """Fleet-app broadcast (v2.1.65): push to PROGRAM users (vendors,
+        drivers, reviewers, carriers, partners) over FCM directly. Gated
+        by the master switch + the given settings toggle. Localized per
+        recipient via res.partner.push_lang (AR default — program users
+        are Arabic-first), EN when their app runs in English."""
+        conf = self.env['mobile.notification.setting'].get_conf()
+        if not conf.master_enabled or not getattr(conf, toggle_field, True):
+            return 0
+        sent = 0
+        for partner in partners[:200]:
+            try:
+                token = getattr(partner, 'fcm_token', '') or ''
+                if not token:
+                    continue
+                en = (getattr(partner, 'push_lang', '') or 'ar') \
+                    .lower().startswith('en')
+                if self.send_fcm(
+                        conf, token,
+                        (title_en or title_ar) if en else (title_ar or title_en),
+                        (body_en or body_ar) if en else (body_ar or body_en),
+                        data or {}):
+                    sent += 1
+            except Exception:
+                continue
+        return sent
+
     def _try_fcm(self, conf, partner, rec):
-        """Best-effort push to the customer's device(s). Localizes to
-        Arabic when their latest session was Arabic? — we send the AR
-        text when available since most customers browse in Arabic, with
-        EN fallback. Never raises."""
+        """Best-effort push to the customer's device(s). Localized to
+        the customer's LIVE app language: register-device mirrors the
+        app's current language onto res.partner.push_lang every time the
+        app starts / logs in / switches language, so we read it here.
+        Arabic is the default when nothing is stored. Never raises."""
         try:
             token = getattr(partner, 'fcm_token', '') or ''
             if not token:
                 return
-            self.send_fcm(conf, token,
-                          rec.title_ar or rec.title,
-                          rec.body_ar or rec.body or '',
+            en = (getattr(partner, 'push_lang', '') or 'ar') \
+                .lower().startswith('en')
+            title = (rec.title or rec.title_ar) if en \
+                else (rec.title_ar or rec.title)
+            body = (rec.body or rec.body_ar or '') if en \
+                else (rec.body_ar or rec.body or '')
+            self.send_fcm(conf, token, title, body,
                           json.loads(rec.payload or '{}'))
         except Exception:
             _logger.debug('FCM push skipped/failed', exc_info=True)
@@ -247,7 +293,29 @@ class SaleOrderNotify(models.Model):
             except Exception:
                 _logger.debug('order_confirmed notify failed',
                               exc_info=True)
+        self._notify_vendors_new_order()
         return res
+
+    def _notify_vendors_new_order(self):
+        """v2.1.65 — each vendor whose products are in the order gets a
+        push in the Vendors app."""
+        Engine = self.env['mobile.customer.notification']
+        for so in self:
+            try:
+                vendors = so.order_line.mapped(
+                    'product_id.product_tmpl_id.vendor_id').filtered(
+                    lambda v: v.user_id and v.user_id.partner_id)
+                for v in vendors:
+                    Engine.push_role(
+                        'notify_vendor_new_order',
+                        [v.user_id.partner_id],
+                        'New order %s 🛒' % so.name,
+                        'طلب جديد %s 🛒' % so.name,
+                        'An order containing your products was placed.',
+                        'وصل طلب جديد يحتوي منتجاتك — افتح تطبيق البائعين.',
+                        {'type': 'order', 'id': str(so.id)})
+            except Exception:
+                _logger.debug('vendor notify failed', exc_info=True)
 
     _DELIVERY_EVENTS = {
         'arrived_sorting':  ('order_shipped',
@@ -278,6 +346,40 @@ class SaleOrderNotify(models.Model):
             prev = {so.id: getattr(so, 'delivery_status', '')
                     for so in self}
         res = super().write(vals)
+        # v2.1.65 — program-app pushes on assignment
+        Engine = self.env['mobile.customer.notification']
+        if vals.get('delivery_driver_id'):
+            try:
+                drv = self.env['delivery.driver'].sudo().browse(
+                    vals['delivery_driver_id'])
+                pr = drv.portal_user_id.partner_id if drv.portal_user_id                     else None
+                if pr:
+                    for so in self:
+                        Engine.push_role(
+                            'notify_driver_assigned', [pr],
+                            'New delivery assigned: %s 🛵' % so.name,
+                            'تم إسناد طلب جديد إليك: %s 🛵' % so.name,
+                            'Open the app to view the order.',
+                            'افتح التطبيق لعرض تفاصيل الطلب والعنوان.',
+                            {'type': 'order', 'id': str(so.id)})
+            except Exception:
+                _logger.debug('driver notify failed', exc_info=True)
+        if vals.get('delivery_carrier_company_id'):
+            try:
+                comp = self.env['delivery.carrier.company'].sudo().browse(
+                    vals['delivery_carrier_company_id'])
+                prs = comp.portal_user_ids.mapped('partner_id')
+                if prs:
+                    for so in self:
+                        Engine.push_role(
+                            'notify_carrier_new_order', list(prs),
+                            'New order for your company: %s 📦' % so.name,
+                            'طلب جديد لشركتكم: %s 📦' % so.name,
+                            'Receive it from the sorting center.',
+                            'استلموه من مركز الفرز وأسندوه لسائق.',
+                            {'type': 'order', 'id': str(so.id)})
+            except Exception:
+                _logger.debug('carrier notify failed', exc_info=True)
         if watch and watch in self._DELIVERY_EVENTS:
             ev, t_en, t_ar, b_en, b_ar = self._DELIVERY_EVENTS[watch]
             for so in self:

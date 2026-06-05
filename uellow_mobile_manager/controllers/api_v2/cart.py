@@ -17,6 +17,7 @@ use their res.partner; we transparently merge any guest token cart on
 login (handled when issue_token is called by the v2 auth login).
 """
 import logging
+from datetime import datetime, timedelta
 
 from odoo import fields, http
 from odoo.http import request
@@ -106,6 +107,161 @@ def _get_or_create_order(create=True):
         'mobile_cart_token': new_token,
     })
     return order
+
+
+# ── Selective checkout (v2.1.65) ────────────────────────────────────
+# The customer checks SOME lines in the cart and pays for only those.
+# Mechanics: at confirm time the UNSELECTED lines move to a fresh draft
+# order which becomes the live cart (it gets the guest token / is the
+# newest draft for logged-in users). The original order proceeds through
+# the untouched payment/confirm pipeline with only the selected lines,
+# so shipping, free-shipping thresholds, coupons and webhooks all see
+# the correct subset totals automatically.
+
+def selected_line_ids(src):
+    """Parse a `line_ids` value from query/payload — accepts a list or a
+    comma-separated string. Returns a list of ints (possibly empty)."""
+    raw = src.get('line_ids')
+    if raw in (None, '', []):
+        return []
+    items = raw if isinstance(raw, (list, tuple)) \
+        else str(raw).replace(' ', '').split(',')
+    out = []
+    for x in items:
+        try:
+            out.append(int(x))
+        except Exception:
+            continue
+    return out
+
+
+def _product_lines(order):
+    return order.order_line.filtered(
+        lambda l: not l.display_type and not l.is_reward_line
+        and not getattr(l, 'is_delivery', False))
+
+
+class _SubsetRollback(Exception):
+    """Internal: forces the savepoint in subset_view to roll back."""
+
+
+def subset_view(order, line_ids, fn):
+    """Run fn() with the order TEMPORARILY reduced to the selected lines
+    (inside a savepoint that is always rolled back). Used by the summary
+    and shipping-rate endpoints so the customer sees totals/rates for
+    exactly what they selected, without mutating the real cart."""
+    keep = set(line_ids)
+    drop = _product_lines(order).filtered(lambda l: l.id not in keep)
+    if not drop or len(drop) == len(_product_lines(order)):
+        return fn()                      # nothing to trim / bad selection
+    holder = {}
+    try:
+        with request.env.cr.savepoint():
+            drop.sudo().unlink()
+            try:
+                if hasattr(order, '_update_programs_and_rewards'):
+                    order._update_programs_and_rewards()
+            except Exception:
+                pass
+            holder['v'] = fn()
+            raise _SubsetRollback()
+    except _SubsetRollback:
+        pass
+    request.env.invalidate_all()
+    return holder['v']
+
+
+def split_cart_for_checkout(order, line_ids):
+    """Keep ONLY the selected lines on the order being placed; move the
+    rest to a fresh draft order that becomes the customer's cart.
+    Returns the remainder order, or None when everything was selected.
+    Raises ValueError when none of the ids belong to this cart."""
+    keep = set(line_ids)
+    plines = _product_lines(order)
+    selected = plines.filtered(lambda l: l.id in keep)
+    if not selected:
+        raise ValueError('none of the selected lines belong to this cart')
+    move = plines - selected
+    if not move:
+        return None
+    Order = request.env['sale.order'].sudo()
+    vals = {
+        'partner_id': order.partner_id.id,
+        'partner_invoice_id': order.partner_invoice_id.id,
+        'partner_shipping_id': order.partner_shipping_id.id,
+        'website_id': order.website_id.id if order.website_id else False,
+        'company_id': order.company_id.id,
+        'team_id': order.team_id.id if order.team_id else False,
+    }
+    if order.pricelist_id:
+        vals['pricelist_id'] = order.pricelist_id.id
+    tok = order.mobile_cart_token or ''
+    if tok:
+        vals['mobile_cart_token'] = tok    # guest cart identity follows the remainder
+    remainder = Order.create(vals)
+    move.sudo().write({'order_id': remainder.id})
+    order.sudo().write({
+        'mobile_checkout_split': True,
+        'mobile_split_token': tok or False,
+        'mobile_cart_token': False,
+    })
+    # Re-evaluate coupon rewards on both sides — a coupon whose minimum
+    # is no longer met by the paid subset must not keep its discount.
+    for o in (order, remainder):
+        try:
+            if hasattr(o, '_update_programs_and_rewards'):
+                o._update_programs_and_rewards()
+        except Exception:
+            pass
+    _logger.info('selective checkout: order %s keeps %s line(s), '
+                 'remainder cart %s got %s line(s)',
+                 order.id, len(selected), remainder.id, len(move))
+    return remainder
+
+
+def reclaim_stale_splits(cart):
+    """Merge back the lines of selective-checkout orders whose ONLINE
+    payment was abandoned: still draft, split flag set, idle for 90+
+    minutes and no live payment transaction. Runs on cart open (cheap,
+    indexed search) so the customer never loses products."""
+    try:
+        if not cart:
+            return
+        Order = request.env['sale.order'].sudo()
+        cutoff = (datetime.now() - timedelta(minutes=90)) \
+            .strftime('%Y-%m-%d %H:%M:%S')
+        dom = [('id', '!=', cart.id), ('state', '=', 'draft'),
+               ('mobile_checkout_split', '=', True),
+               ('write_date', '<', cutoff)]
+        partner = current_partner()
+        if partner:
+            dom.append(('partner_id', '=', partner.id))
+        else:
+            tok = _cart_token()
+            if not tok:
+                return
+            dom.append(('mobile_split_token', '=', tok))
+        for stale in Order.search(dom, limit=5):
+            txs = getattr(stale, 'transaction_ids', None)
+            if txs and any(t.state in ('done', 'authorized', 'pending')
+                           for t in txs):
+                continue                     # a payment may still land
+            for l in _product_lines(stale):
+                same = _product_lines(cart).filtered(
+                    lambda x: x.product_id == l.product_id)
+                if same:
+                    same[0].product_uom_qty += l.product_uom_qty
+                else:
+                    l.sudo().write({'order_id': cart.id})
+            stale.sudo().write({'mobile_checkout_split': False})
+            try:
+                stale.action_cancel()
+            except Exception:
+                stale.sudo().write({'state': 'cancel'})
+            _logger.info('selective checkout: reclaimed abandoned split '
+                         'order %s back into cart %s', stale.id, cart.id)
+    except Exception:
+        _logger.debug('reclaim_stale_splits failed', exc_info=True)
 
 
 def _consolidate_lines(order):
@@ -470,6 +626,9 @@ class MobileCartAPI(http.Controller):
     @safe_endpoint
     def get_cart(self, **kw):
         order = _get_or_create_order(create=False)
+        if order:
+            # Recover products from any abandoned selective checkout.
+            reclaim_stale_splits(order)
         return ok({'cart': serialize_cart(order)})
 
     @http.route('/api/mobile/v2/cart/add', type='http', auth='public',

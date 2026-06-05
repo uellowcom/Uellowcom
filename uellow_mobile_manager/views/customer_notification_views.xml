@@ -40,6 +40,13 @@
                             <field name="notify_affiliate"/>
                             <field name="notify_promotions"/>
                         </group>
+                        <group string="Program Apps (fleet)">
+                            <field name="notify_reviewer_new_request"/>
+                            <field name="notify_vendor_new_order"/>
+                            <field name="notify_driver_assigned"/>
+                            <field name="notify_carrier_new_order"/>
+                            <field name="notify_affiliate_news"/>
+                        </group>
                     </group>
                 </sheet>
             </form>

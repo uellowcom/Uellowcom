@@ -18,7 +18,8 @@ from ._common import (
     img_url, base_url, fmt_price, bilingual, get_lang, get_website, app_setting,
 )
 from .cart import (_get_or_create_order, serialize_cart,
-                   effective_shipping_price, carrier_is_express)
+                   effective_shipping_price, carrier_is_express,
+                   selected_line_ids, subset_view, split_cart_for_checkout)
 
 
 def _guest_gate(p_or_kw):
@@ -538,6 +539,16 @@ class MobileOrdersAPI(http.Controller):
         order = _get_or_create_order(create=False)
         if not order:
             return ok([_cod_carrier_dict()])
+        # Selective checkout: rate against ONLY the selected lines so the
+        # picker shows exactly what will be charged (free-shipping
+        # thresholds re-judged on the paid subset).
+        sel = selected_line_ids(kw)
+        if sel:
+            return subset_view(order, sel,
+                               lambda: self._shipping_methods_for(order))
+        return self._shipping_methods_for(order)
+
+    def _shipping_methods_for(self, order):
         # Build a permissive carrier list — three rounds of fallback so
         # the picker is never empty:
         #   1. Published + scoped to this website (or universal)
@@ -1051,8 +1062,12 @@ class MobileOrdersAPI(http.Controller):
                 .mapped('user_id.partner_id').ids
             addr_list = ([_addr_dict(ship)]
                          if ship and ship.id not in public_partners else [])
+        # Selective checkout: show totals for ONLY the selected lines.
+        sel = selected_line_ids(kw)
+        cart_json = subset_view(order, sel, lambda: serialize_cart(order)) \
+            if sel else serialize_cart(order)
         return ok({
-            'cart': serialize_cart(order),
+            'cart': cart_json,
             'addresses': addr_list,
         })
 
@@ -1067,6 +1082,22 @@ class MobileOrdersAPI(http.Controller):
         order = _get_or_create_order(create=False)
         if not order or not order.order_line:
             return fail('EMPTY_CART', 'Cart is empty', 400)
+
+        # Selective checkout (v2.1.65): pay for ONLY the selected lines.
+        # The unselected lines move to a fresh draft order that becomes
+        # the customer's cart; everything below (shipping, coupons,
+        # payment, webhooks) runs unchanged on the reduced order.
+        sel = selected_line_ids(p)
+        if sel:
+            try:
+                split_cart_for_checkout(order, sel)
+            except ValueError:
+                return fail('BAD_SELECTION',
+                            'Selected items are no longer in the cart — '
+                            'refresh and try again / المنتجات المحددة لم '
+                            'تعد في السلة، حدّث السلة وحاول مجدداً', 400)
+            except Exception as e:
+                return fail('SPLIT_FAILED', str(e), 400)
 
         # Apply chosen addresses
         try:

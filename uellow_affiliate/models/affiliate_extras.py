@@ -96,6 +96,27 @@ class UellowAffiliateNews(models.Model):
     emoji = fields.Char(default='📣', size=8)
     active = fields.Boolean(default=True)
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        recs = super().create(vals_list)
+        # v2.1.65 — push every published news item to active partners
+        # (Partners app), toggleable in Notification Settings.
+        try:
+            if 'mobile.customer.notification' in self.env:
+                Engine = self.env['mobile.customer.notification']
+                partners = self.env['uellow.affiliate'].sudo().search(
+                    [('state', '=', 'active')]).mapped('partner_id')
+                for r in recs.filtered('active'):
+                    Engine.push_role(
+                        'notify_affiliate_news', list(partners),
+                        '%s %s' % (r.emoji or '📣', r.title or ''),
+                        '%s %s' % (r.emoji or '📣', r.title_ar or r.title),
+                        r.body or '', r.body_ar or r.body or '',
+                        {'type': 'screen', 'value': 'news'})
+        except Exception:
+            pass
+        return recs
+
     def to_public_dict(self):
         self.ensure_one()
         return {

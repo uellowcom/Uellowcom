@@ -109,6 +109,31 @@ class ReviewRequest(models.Model):
         # Increment reviewer review count
         self.reviewer_id.review_count += 1
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        recs = super().create(vals_list)
+        # v2.1.65 — push to online approved reviewers (Reviewers app)
+        try:
+            if 'mobile.customer.notification' in self.env:
+                Engine = self.env['mobile.customer.notification']
+                profiles = self.env['reviewer.profile'].sudo().search(
+                    [('state', '=', 'approved'), ('is_online', '=', True)],
+                    limit=100)
+                partners = [pr.partner_id for pr in profiles
+                            if pr.partner_id]
+                for r in recs:
+                    pname = r.product_id.name or ''
+                    Engine.push_role(
+                        'notify_reviewer_new_request', partners,
+                        'New review request 🎓 %s' % pname,
+                        'طلب مراجعة جديد 🎓 %s' % pname,
+                        'A customer is waiting for a specialist opinion.',
+                        'عميل ينتظر رأي مختص الآن — اقبل الطلب من التطبيق.',
+                        {'type': 'review_request', 'id': str(r.id)})
+        except Exception:
+            pass
+        return recs
+
     def action_complete(self, verdict=None, notes=None):
         vals = {'state': 'completed', 'completed_at': fields.Datetime.now()}
         if verdict: vals['reviewer_verdict'] = verdict

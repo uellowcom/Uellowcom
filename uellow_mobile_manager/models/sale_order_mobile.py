@@ -22,6 +22,23 @@ class SaleOrder(models.Model):
         'mobile.session', string='Mobile Session', index=True, copy=False,
     )
 
+    # ── selective checkout (v2.1.65) ─────────────────────────────────
+    # The customer checks SOME cart lines and pays for only those. At
+    # confirm time the unselected lines move to a fresh draft order that
+    # becomes the new cart; the original order (selected lines) carries
+    # this flag while it waits for online payment so an abandoned payment
+    # can be detected and its lines merged back into the live cart.
+    mobile_checkout_split = fields.Boolean(
+        string='Selective Checkout Split', default=False, copy=False,
+        index=True,
+        help='This order was carved out of a mobile cart via selective '
+             'checkout and is awaiting payment/confirmation.')
+    mobile_split_token = fields.Char(
+        string='Origin Cart Token', copy=False,
+        help='Guest cart token of the cart this selective-checkout order '
+             'was split from (used to reclaim lines if payment is '
+             'abandoned).')
+
     # ── customer cancellation (v2.1.42) ─────────────────────────────
     # Unpaid draft/confirmed orders cancel instantly from the app; PAID
     # orders raise a request that an admin approves/rejects here.

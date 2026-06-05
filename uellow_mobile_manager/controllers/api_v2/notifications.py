@@ -164,6 +164,14 @@ class MobileNotificationsAPI(http.Controller):
         """Update the push token for the current device. Works for
         guests too — the token is attached to the mobile.session row."""
         p = get_payload()
+        # Live app language — sent in the payload (preferred) or the
+        # X-Lang header every app already attaches. Normalized to
+        # 'ar' / 'en' and mirrored onto the partner so push texts follow
+        # whatever language the customer is using RIGHT NOW.
+        raw_lang = (p.get('lang')
+                    or request.httprequest.headers.get('X-Lang') or '')
+        push_lang = ('en' if raw_lang.lower().startswith('en')
+                     else 'ar') if raw_lang else ''
         sess = current_session()
         if sess:
             sess.sudo().write({
@@ -173,6 +181,7 @@ class MobileNotificationsAPI(http.Controller):
                 'os_version':  p.get('os_version')  or sess.os_version,
                 'device_name': p.get('device_name') or sess.device_name,
                 'platform':    p.get('platform')    or sess.platform,
+                **({'chosen_lang': raw_lang} if raw_lang else {}),
             })
             # Mirror onto res.partner so push helpers can resolve token
             # directly from partner_id (e.g. when sending order updates).
@@ -180,6 +189,8 @@ class MobileNotificationsAPI(http.Controller):
                 partner = current_partner()
                 if partner and p.get('push_token'):
                     vals = {'fcm_token': p['push_token']}
+                    if push_lang:
+                        vals['push_lang'] = push_lang
                     if (p.get('platform') or '').lower() == 'ios' and p.get('apns_token'):
                         vals['apns_token'] = p['apns_token']
                     partner.sudo().write(vals)

@@ -117,6 +117,20 @@ class DriverAuthAPI(http.Controller):
         token = (p.get('push_token') or '').strip()
         sess = current_session()
         sess.sudo().write({'push_token': token})
+        # Mirror onto the driver's partner so the fleet push engine
+        # (mobile.customer.notification.push_role) can target it, and
+        # store the app language so pushes arrive localized.
+        try:
+            partner = (sess.user_id.partner_id
+                       or sess.driver_id.portal_user_id.partner_id)
+            if partner and token:
+                vals = {'fcm_token': token}
+                lang = (p.get('lang') or '').lower()
+                if lang:
+                    vals['push_lang'] = 'en' if lang.startswith('en') else 'ar'
+                partner.sudo().write(vals)
+        except Exception:
+            pass
         return ok({'saved': True})
 
     @http.route('/api/driver/v1/me/preferences', type='http', auth='public',
