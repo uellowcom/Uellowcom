@@ -1,20 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+  <!-- ════════ Zone rules — professional editor (v2.1.69) ════════ -->
+  <record id="view_uellow_delivery_zone_form" model="ir.ui.view">
+    <field name="name">uellow.delivery.zone.form</field>
+    <field name="model">uellow.delivery.zone</field>
+    <field name="arch" type="xml">
+      <form string="Delivery Zone Rule">
+        <sheet>
+          <div class="oe_title">
+            <label for="name"/>
+            <h1><field name="name" placeholder='e.g. "Tier 3 · Jahra &amp; remote areas"'/></h1>
+          </div>
+          <group>
+            <group string="Rule">
+              <field name="carrier_id" options="{'no_create': True}"/>
+              <field name="sequence"/>
+              <field name="active"/>
+              <field name="price" widget="monetary"/>
+              <field name="cash_surcharge"/>
+            </group>
+            <group string="Timing">
+              <field name="cutoff_time" placeholder="HH:MM — e.g. 21:00 (Kuwait time, blank = none)"/>
+              <label for="day_mon" string="Active days"/>
+              <div class="d-flex flex-wrap gap-3">
+                <span><field name="day_mon"/> Mon</span>
+                <span><field name="day_tue"/> Tue</span>
+                <span><field name="day_wed"/> Wed</span>
+                <span><field name="day_thu"/> Thu</span>
+                <span><field name="day_fri"/> Fri</span>
+                <span><field name="day_sat"/> Sat</span>
+                <span><field name="day_sun"/> Sun</span>
+              </div>
+              <field name="delivery_window" placeholder='Shown in checkout — e.g. "Same day"'/>
+              <field name="delivery_window_ar" placeholder="مثال: نفس اليوم"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Coverage" name="coverage">
+              <group>
+                <field name="match_mode" widget="radio"/>
+                <field name="coverage_summary" readonly="1"/>
+              </group>
+              <group invisible="match_mode == 'all'">
+                <group string="Whole governorates">
+                  <field name="governorate_ids" nolabel="1"
+                         widget="many2many_checkboxes"/>
+                </group>
+                <group string="Specific cities / areas">
+                  <field name="city_ids" nolabel="1"
+                         widget="many2many_tags"
+                         options="{'no_create': True}"/>
+                </group>
+              </group>
+              <div class="text-muted" invisible="match_mode != 'all'">
+                This is the FALLBACK rule — it applies to any city not
+                covered by another rule of the same carrier. Keep exactly
+                one per carrier, with the highest sequence number.
+              </div>
+            </page>
+            <page string="Advanced" name="advanced">
+              <group>
+                <field name="cities"
+                       placeholder="optional extra spellings, comma-separated"/>
+                <field name="weekday_mask" readonly="1"/>
+              </group>
+              <div class="text-muted">
+                Prefer adding spelling variants to the city's
+                <b>Spelling aliases</b> (Delivery Cities menu) so every
+                rule benefits — use the extra tokens above only for
+                one-off cases.
+              </div>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
   <record id="view_uellow_delivery_zone_tree" model="ir.ui.view">
     <field name="name">uellow.delivery.zone.list</field>
     <field name="model">uellow.delivery.zone</field>
     <field name="arch" type="xml">
-      <list editable="bottom">
+      <list>
         <field name="sequence" widget="handle"/>
         <field name="carrier_id"/>
         <field name="name"/>
-        <field name="cities"/>
+        <field name="coverage_summary"/>
         <field name="price"/>
-        <field name="cutoff_time"/>
-        <field name="delivery_window"/>
-        <field name="delivery_window_ar"/>
-        <field name="cash_surcharge"/>
-        <field name="weekday_mask"/>
+        <field name="cutoff_time" optional="show"/>
+        <field name="delivery_window" optional="hide"/>
+        <field name="delivery_window_ar" optional="hide"/>
+        <field name="cash_surcharge" optional="hide"/>
         <field name="active"/>
       </list>
     </field>
@@ -23,17 +99,12 @@
   <record id="action_uellow_delivery_zone" model="ir.actions.act_window">
     <field name="name">Delivery Zones (Uellow)</field>
     <field name="res_model">uellow.delivery.zone</field>
-    <field name="view_mode">list</field>
+    <field name="view_mode">list,form</field>
     <field name="help" type="html">
-      <p class="o_view_nocontent_smiling_face">Define delivery zones</p>
-      <p>For each delivery carrier, list which cities cost what.
-         Use <code>*</code> as a wildcard for the default rate, and put
-         remote-city overrides on separate rows above it.</p>
-      <p>Example for Kuwait next-day:</p>
-      <ul>
-        <li>Row 1 — cities: <code>abdali, sabah al ahmad</code> · price <code>2.500</code></li>
-        <li>Row 2 — cities: <code>*</code> · price <code>1.250</code></li>
-      </ul>
+      <p class="o_view_nocontent_smiling_face">Define delivery zone rules</p>
+      <p>Each rule = a price for a set of governorates/cities of one
+         carrier. Pick coverage with checkboxes; add ONE fallback rule
+         ("All cities") per carrier for everything else.</p>
     </field>
   </record>
 
@@ -42,8 +113,57 @@
             parent="uellow_mobile_manager.menu_mobile_root"
             action="action_uellow_delivery_zone" sequence="60"/>
 
-  <!-- Add the zone tab on delivery.carrier so an admin can also manage
-       zones directly from the carrier form. -->
+  <!-- ════════ City / governorate master data ════════ -->
+  <record id="view_uellow_city_tree" model="ir.ui.view">
+    <field name="name">uellow.city.list</field>
+    <field name="model">uellow.city</field>
+    <field name="arch" type="xml">
+      <list editable="bottom">
+        <field name="name"/>
+        <field name="name_ar"/>
+        <field name="governorate_id"/>
+        <field name="aliases"/>
+        <field name="active"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_uellow_governorate_tree" model="ir.ui.view">
+    <field name="name">uellow.governorate.list</field>
+    <field name="model">uellow.governorate</field>
+    <field name="arch" type="xml">
+      <list editable="bottom" default_order="sequence">
+        <field name="sequence" widget="handle"/>
+        <field name="name"/>
+        <field name="name_ar"/>
+        <field name="country_id"/>
+        <field name="city_count"/>
+        <field name="active"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_uellow_city" model="ir.actions.act_window">
+    <field name="name">Delivery Cities</field>
+    <field name="res_model">uellow.city</field>
+    <field name="view_mode">list</field>
+  </record>
+  <record id="action_uellow_governorate" model="ir.actions.act_window">
+    <field name="name">Governorates</field>
+    <field name="res_model">uellow.governorate</field>
+    <field name="view_mode">list</field>
+  </record>
+
+  <menuitem id="menu_uellow_city"
+            name="Delivery Cities"
+            parent="uellow_mobile_manager.menu_mobile_root"
+            action="action_uellow_city" sequence="61"/>
+  <menuitem id="menu_uellow_governorate"
+            name="Governorates"
+            parent="uellow_mobile_manager.menu_mobile_root"
+            action="action_uellow_governorate" sequence="62"/>
+
+  <!-- Zone tab on delivery.carrier — opens the full form per row. -->
   <record id="view_delivery_carrier_form_uellow_zones" model="ir.ui.view">
     <field name="name">delivery.carrier.form.uellow.zones</field>
     <field name="model">delivery.carrier</field>
@@ -52,16 +172,14 @@
       <xpath expr="//notebook" position="inside">
         <page string="Uellow Zones" name="uellow_zones">
           <field name="uellow_zone_ids">
-            <list editable="bottom">
+            <list>
               <field name="sequence" widget="handle"/>
               <field name="name"/>
-              <field name="cities"/>
+              <field name="coverage_summary"/>
               <field name="price"/>
-              <field name="cutoff_time"/>
-              <field name="delivery_window"/>
-              <field name="delivery_window_ar"/>
-              <field name="cash_surcharge"/>
-              <field name="weekday_mask"/>
+              <field name="cutoff_time" optional="show"/>
+              <field name="delivery_window" optional="hide"/>
+              <field name="cash_surcharge" optional="hide"/>
               <field name="active"/>
             </list>
           </field>

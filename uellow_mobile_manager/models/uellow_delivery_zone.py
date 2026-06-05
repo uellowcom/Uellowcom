@@ -25,6 +25,74 @@ import pytz
 from odoo import api, fields, models
 
 
+class UellowGovernorate(models.Model):
+    """v2.1.69 — governorate master data so zone rules are configured by
+    PICKING areas instead of typing comma-separated tokens."""
+    _name = 'uellow.governorate'
+    _description = 'Governorate (delivery zones)'
+    _order = 'sequence, id'
+
+    name = fields.Char('Name (EN)', required=True)
+    name_ar = fields.Char('Name (AR)')
+    sequence = fields.Integer(default=10)
+    country_id = fields.Many2one('res.country', string='Country')
+    active = fields.Boolean(default=True)
+    city_ids = fields.One2many('uellow.city', 'governorate_id',
+                               string='Cities / Areas')
+    city_count = fields.Integer(compute='_compute_city_count')
+
+    def _compute_city_count(self):
+        for g in self:
+            g.city_count = len(g.city_ids)
+
+    def name_get(self):
+        return [(g.id, '%s — %s' % (g.name, g.name_ar)
+                 if g.name_ar else g.name) for g in self]
+
+
+class UellowCity(models.Model):
+    """City/area master data. `aliases` holds every spelling customers
+    actually type in their address (EN variants + Arabic) — matching is
+    case-insensitive exact-token against name/name_ar/aliases."""
+    _name = 'uellow.city'
+    _description = 'City / Area (delivery zones)'
+    _order = 'governorate_id, name'
+
+    name = fields.Char('Name (EN)', required=True)
+    name_ar = fields.Char('Name (AR)')
+    governorate_id = fields.Many2one('uellow.governorate',
+                                     string='Governorate', index=True,
+                                     ondelete='set null')
+    aliases = fields.Char(
+        'Spelling aliases',
+        help='Comma-separated extra spellings customers type, e.g. '
+             '"salmia, salmiyah". Name (EN) and Name (AR) always match.')
+    active = fields.Boolean(default=True)
+
+    def all_tokens(self):
+        toks = set()
+        for c in self:
+            for t in [c.name or '', c.name_ar or ''] + \
+                     (c.aliases or '').split(','):
+                t = t.strip().lower()
+                if t:
+                    toks.add(t)
+        return toks
+
+    def name_get(self):
+        return [(c.id, '%s — %s' % (c.name, c.name_ar)
+                 if c.name_ar else c.name) for c in self]
+
+    @api.model
+    def name_search(self, name='', args=None, operator='ilike', limit=100):
+        args = args or []
+        if name:
+            args = ['|', '|', ('name', operator, name),
+                    ('name_ar', operator, name),
+                    ('aliases', operator, name)] + args
+        return self.search(args, limit=limit).name_get()
+
+
 class UellowDeliveryZone(models.Model):
     _name = 'uellow.delivery.zone'
     _description = 'Uellow Delivery Zone Rule'
@@ -38,11 +106,67 @@ class UellowDeliveryZone(models.Model):
         'delivery.carrier', string='Delivery Carrier',
         required=True, ondelete='cascade', index=True,
     )
+    # ── v2.1.69 — professional coverage picker ───────────────────────
+    # Pick whole governorates and/or individual cities with checkboxes;
+    # 'all' = the fallback rule. The legacy comma-line lives on only as
+    # an ADVANCED extra-tokens field.
+    match_mode = fields.Selection([
+        ('pick', 'Selected governorates / cities'),
+        ('all', 'All cities (fallback rule)'),
+    ], string='Coverage', default='pick', required=True)
+    governorate_ids = fields.Many2many(
+        'uellow.governorate', 'uellow_zone_gov_rel', 'zone_id', 'gov_id',
+        string='Governorates',
+        help='Every city/area of the checked governorates is covered.')
+    city_ids = fields.Many2many(
+        'uellow.city', 'uellow_zone_city_rel', 'zone_id', 'city_id',
+        string='Specific cities / areas',
+        help='Additional individual cities on top of the governorates.')
+    coverage_summary = fields.Char(compute='_compute_coverage_summary',
+                                   string='Covers')
+
     cities = fields.Char(
-        'Cities', required=True,
-        help='Comma-separated city tokens (lower-cased). Use "*" to '
-             'match all cities — typically your fallback / default rule.',
+        'Extra tokens (advanced)',
+        help='OPTIONAL comma-separated extra spellings not in the city '
+             'master data. Legacy "*" still works as a fallback marker.',
     )
+
+    @api.depends('match_mode', 'governorate_ids', 'city_ids', 'cities')
+    def _compute_coverage_summary(self):
+        for z in self:
+            if z.match_mode == 'all' or '*' in (z.cities or ''):
+                z.coverage_summary = '🌍 All cities (fallback)'
+                continue
+            parts = []
+            if z.governorate_ids:
+                parts.append('Gov: ' + ', '.join(
+                    z.governorate_ids.mapped('name')))
+            if z.city_ids:
+                n = len(z.city_ids)
+                names = ', '.join(z.city_ids[:4].mapped('name'))
+                parts.append('Cities: %s%s' % (
+                    names, ' +%d' % (n - 4) if n > 4 else ''))
+            extra = [t for t in (z.cities or '').split(',') if t.strip()]
+            if extra:
+                parts.append('+%d token(s)' % len(extra))
+            z.coverage_summary = ' · '.join(parts) or '— nothing selected —'
+
+    def _match_tokens(self):
+        """Lower-cased token set this rule covers."""
+        self.ensure_one()
+        toks = self.city_ids.all_tokens()
+        for g in self.governorate_ids:
+            toks |= g.city_ids.all_tokens()
+        for t in (self.cities or '').split(','):
+            t = t.strip().lower()
+            if t and t != '*':
+                toks.add(t)
+        return toks
+
+    def _is_fallback(self):
+        self.ensure_one()
+        return self.match_mode == 'all' or \
+            '*' in [t.strip() for t in (self.cities or '').split(',')]
     price = fields.Float(
         'Price', required=True, digits=(10, 3),
         help='Flat delivery price for any address in this zone.',
@@ -80,10 +204,20 @@ class UellowDeliveryZone(models.Model):
              'Currently configurable only; not yet applied to order totals.',
     )
     weekday_mask = fields.Char(
-        'Active weekdays', default='1234567',
-        help='Digits 1-7 (Mon-Sun) indicating which days this rule is active. '
-             'Example: "12345" = Mon-Fri only.',
+        'Active weekdays (legacy)', default='1234567',
+        help='Digits 1-7 (Mon-Sun). Superseded by the day checkboxes.',
     )
+    # v2.1.69 — friendly per-day checkboxes (replace the digit mask).
+    day_mon = fields.Boolean('Mon', default=True)
+    day_tue = fields.Boolean('Tue', default=True)
+    day_wed = fields.Boolean('Wed', default=True)
+    day_thu = fields.Boolean('Thu', default=True)
+    day_fri = fields.Boolean('Fri', default=True)
+    day_sat = fields.Boolean('Sat', default=True)
+    day_sun = fields.Boolean('Sun', default=True)
+
+    _DAY_FIELDS = ['day_mon', 'day_tue', 'day_wed', 'day_thu',
+                   'day_fri', 'day_sat', 'day_sun']
 
     @api.model
     def quote_for(self, carrier, partner):
@@ -97,17 +231,17 @@ class UellowDeliveryZone(models.Model):
             ('carrier_id', '=', carrier.id),
             ('active', '=', True),
         ])
-        # Two passes: exact city tokens first, then wildcard fallback
+        # Two passes: explicit coverage first (governorates / cities /
+        # extra tokens), then the fallback rule.
         for z in zones:
-            tokens = [t.strip().lower() for t in (z.cities or '').split(',') if t.strip()]
-            if city and city in tokens:
+            if z._is_fallback():
+                continue
+            if city and city in z._match_tokens():
                 if z._is_active_today():
                     return z
         for z in zones:
-            tokens = [t.strip().lower() for t in (z.cities or '').split(',')]
-            if '*' in tokens:
-                if z._is_active_today():
-                    return z
+            if z._is_fallback() and z._is_active_today():
+                return z
         return False
 
     def _is_active_today(self):
@@ -121,8 +255,8 @@ class UellowDeliveryZone(models.Model):
             now = datetime.now(tz)
         except Exception:
             now = datetime.now()
-        wd = str(now.isoweekday())
-        if self.weekday_mask and wd not in self.weekday_mask:
+        wd = now.isoweekday()                 # 1=Mon … 7=Sun
+        if not getattr(self, self._DAY_FIELDS[wd - 1], True):
             return False
         if self.cutoff_time and ':' in self.cutoff_time:
             try:

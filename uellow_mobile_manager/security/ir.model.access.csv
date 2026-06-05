@@ -62,3 +62,7 @@ access_mobile_notification_setting_mgr,mobile.notification.setting manager,model
 access_mobile_notification_setting_usr,mobile.notification.setting user,model_mobile_notification_setting,base.group_user,1,0,0,0
 access_mobile_customer_notification_mgr,mobile.customer.notification manager,model_mobile_customer_notification,base.group_system,1,1,1,1
 access_mobile_customer_notification_usr,mobile.customer.notification user,model_mobile_customer_notification,base.group_user,1,1,1,0
+access_uellow_governorate_mgr,uellow.governorate manager,model_uellow_governorate,base.group_system,1,1,1,1
+access_uellow_governorate_usr,uellow.governorate user,model_uellow_governorate,base.group_user,1,0,0,0
+access_uellow_city_mgr,uellow.city manager,model_uellow_city,base.group_system,1,1,1,1
+access_uellow_city_usr,uellow.city user,model_uellow_city,base.group_user,1,0,0,0
