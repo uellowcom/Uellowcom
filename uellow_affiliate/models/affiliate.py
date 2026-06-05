@@ -22,6 +22,27 @@ TIER_RULES = {
 }
 
 
+def tier_rules(env):
+    """TIER_RULES with admin overrides from Affiliate Settings (ICP)."""
+    ICP = env['ir.config_parameter'].sudo()
+
+    def num(key, default):
+        try:
+            v = float(ICP.get_param('uellow_affiliate.' + key, '') or 0)
+            return v if v > 0 else default
+        except Exception:
+            return default
+    return {
+        'bronze': (1.00, 0),
+        'silver': (num('silver_mult', 1.10),
+                   num('silver_threshold', 500)),
+        'gold': (num('gold_mult', 1.25),
+                 num('gold_threshold', 2000)),
+        'platinum': (num('platinum_mult', 1.40),
+                     num('platinum_threshold', 6000)),
+    }
+
+
 class UellowAffiliate(models.Model):
     _name = 'uellow.affiliate'
     _description = 'Uellow affiliate agent'
@@ -44,7 +65,10 @@ class UellowAffiliate(models.Model):
     tier = fields.Selection(TIERS, default='bronze', required=True,
                             tracking=True)
     default_commission_pct = fields.Float(
-        string='Default Commission %', default=5.0,
+        string='Default Commission %',
+        default=lambda self: float(
+            self.env['ir.config_parameter'].sudo().get_param(
+                'uellow_affiliate.default_commission_pct', '5') or 5),
         help='Used when no product/category assignment matches.')
     phone = fields.Char()
     email = fields.Char()
@@ -141,7 +165,7 @@ class UellowAffiliate(models.Model):
                     pct = max(hits.mapped('commission_pct'))
         if pct is None:
             pct = self.default_commission_pct or 0.0
-        mult = TIER_RULES.get(self.tier, (1.0, 0))[0]
+        mult = tier_rules(self.env).get(self.tier, (1.0, 0))[0]
         return pct * mult
 
     def allowed_product_domain(self):
@@ -169,12 +193,13 @@ class UellowAffiliate(models.Model):
     def action_recompute_tier(self):
         """Auto-upgrade tier from the last 30 days of CONFIRMED sales."""
         since = fields.Datetime.now() - timedelta(days=30)
+        rules = tier_rules(self.env)
         for a in self:
             sales = sum(c.base_amount for c in a.commission_ids
                         if c.state in ('confirmed', 'paid')
                         and c.create_date and c.create_date >= since)
             new_tier = 'bronze'
-            for tier, (_m, need) in TIER_RULES.items():
+            for tier, (_m, need) in rules.items():
                 if sales >= need:
                     new_tier = tier
             order = ['bronze', 'silver', 'gold', 'platinum']

@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- /my home card (icon entry) -->
+    <template id="portal_my_home_affiliate" name="Portal: Affiliate entry"
+              inherit_id="portal.portal_my_home" priority="60">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/uellow_affiliate/static/img/affiliate.svg'"/>
+                <t t-set="title">Affiliate Program / برنامج الشركاء</t>
+                <t t-set="text">Your partner dashboard — commissions, links, payouts</t>
+                <t t-set="url" t-value="'/my/affiliate'"/>
+                <t t-set="config_card" t-value="True"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- join page (no affiliate account yet) -->
+    <template id="portal_affiliate_join" name="Affiliate: join">
+        <t t-call="portal.portal_layout">
+            <div class="container py-5 text-center" style="max-width:620px">
+                <div style="font-size:54px">🤝</div>
+                <h2>Earn with Uellow / اربح مع يلو</h2>
+                <p class="text-muted">
+                    Sell Uellow products to your customers and earn a
+                    commission on every delivered order.<br/>
+                    بِع منتجات يلو لعملائك واربح عمولة على كل طلب ناجح.
+                </p>
+                <form action="/my/affiliate/apply" method="post">
+                    <input type="hidden" name="csrf_token"
+                           t-att-value="request.csrf_token()"/>
+                    <button type="submit" class="btn btn-warning btn-lg fw-bold">
+                        Apply now / قدّم الآن
+                    </button>
+                </form>
+            </div>
+        </t>
+    </template>
+
+    <!-- the partner dashboard -->
+    <template id="portal_affiliate_dashboard" name="Affiliate: dashboard">
+        <t t-call="portal.portal_layout">
+            <div class="container py-4">
+                <t t-if="aff.state == 'pending'">
+                    <div class="alert alert-warning">
+                        ⏳ Your application is under review — code:
+                        <b t-esc="aff.code"/> /
+                        طلبك قيد المراجعة وسيُفعَّل قريباً.
+                    </div>
+                </t>
+                <t t-if="aff.state == 'suspended'">
+                    <div class="alert alert-danger">
+                        🚫 Your affiliate account is suspended — contact
+                        Uellow. / حسابك موقوف مؤقتاً.
+                    </div>
+                </t>
+                <t t-if="aff.state == 'active'">
+                    <!-- header card -->
+                    <div class="p-4 rounded-3 mb-3 d-flex flex-wrap align-items-center"
+                         style="background:linear-gradient(120deg,#412402,#6B4A1B);color:#fff">
+                        <div class="me-auto">
+                            <div style="opacity:.7;font-size:12px">
+                                Partner code / كود الشريك</div>
+                            <div style="font-size:30px;font-weight:900;letter-spacing:3px;color:#FFD75E"
+                                 t-esc="aff.code"/>
+                            <div style="font-size:13px">
+                                <t t-esc="dict(bronze='🥉 BRONZE', silver='🥈 SILVER', gold='🥇 GOLD', platinum='💎 PLATINUM').get(aff.tier)"/>
+                                · ×<t t-esc="tier_mult"/>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div style="font-size:12px;opacity:.7">
+                                Your referral link / رابط الإحالة</div>
+                            <div class="input-group" style="max-width:380px">
+                                <input type="text" class="form-control form-control-sm"
+                                       readonly="readonly" t-att-value="ref_link"
+                                       id="aff_link"/>
+                                <button class="btn btn-warning btn-sm fw-bold"
+                                        onclick="navigator.clipboard.writeText(document.getElementById('aff_link').value);this.innerText='✓';">
+                                    Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- stat cards -->
+                    <div class="row g-2 mb-3">
+                        <t t-foreach="[
+                            ('Available / متاح للسحب', aff.available_amount, '#1F8A40'),
+                            ('Pending / قيد التوصيل', aff.pending_amount, '#B8860B'),
+                            ('Paid / مدفوع', aff.paid_amount, '#888'),
+                            ('This month / عمولة الشهر', month_comm, '#412402'),
+                            ('Total sales / إجمالي المبيعات', aff.total_sales, '#412402'),
+                            ('Link opens / فتحات الرابط', aff.click_count, '#412402'),
+                        ]" t-as="card">
+                            <div class="col-6 col-md-4 col-lg-2">
+                                <div class="bg-white rounded-3 p-3 text-center h-100 shadow-sm">
+                                    <div style="font-weight:900;font-size:18px"
+                                         t-attf-style="color: {{card[2]}}">
+                                        <t t-esc="'%.3f' % card[1] if isinstance(card[1], float) else card[1]"/>
+                                    </div>
+                                    <div class="text-muted" style="font-size:11px"
+                                         t-esc="card[0]"/>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                    <t t-if="payout_msg == 'ok'">
+                        <div class="alert alert-success">
+                            💸 Payout request sent ✓ / تم إرسال طلب السحب
+                        </div>
+                    </t>
+                    <t t-if="payout_msg == 'invalid'">
+                        <div class="alert alert-danger">
+                            Amount below the minimum or above your balance /
+                            المبلغ أقل من الحد الأدنى أو أكبر من رصيدك
+                        </div>
+                    </t>
+                    <!-- payout request -->
+                    <div class="bg-white rounded-3 p-3 mb-3 shadow-sm">
+                        <h5>💸 Request payout / طلب سحب</h5>
+                        <form action="/my/affiliate/payout" method="post"
+                              class="row g-2 align-items-end">
+                            <input type="hidden" name="csrf_token"
+                                   t-att-value="request.csrf_token()"/>
+                            <div class="col-md-3">
+                                <label class="form-label" style="font-size:12px">
+                                    Amount (min <t t-esc="min_payout"/>)</label>
+                                <input type="number" step="0.001" name="amount"
+                                       class="form-control"
+                                       t-att-value="'%.3f' % aff.available_amount"/>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" style="font-size:12px">
+                                    Method / الطريقة</label>
+                                <select name="method" class="form-select">
+                                    <option value="wallet">👛 Uellow wallet</option>
+                                    <option value="knet">💳 KNET</option>
+                                    <option value="bank">🏦 Bank</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label" style="font-size:12px">
+                                    IBAN / phone (if not wallet)</label>
+                                <input type="text" name="details"
+                                       class="form-control"/>
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-warning fw-bold w-100">
+                                    Send / إرسال</button>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- products + commissions -->
+                    <div class="bg-white rounded-3 p-3 mb-3 shadow-sm">
+                        <h5>🛍 Your catalog / كتالوجك
+                            <small class="text-muted">(top 30)</small></h5>
+                        <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead><tr>
+                                <th>Product</th><th>Price</th>
+                                <th>Commission / عمولتك</th>
+                                <th>Share link</th>
+                            </tr></thead>
+                            <tbody>
+                                <t t-foreach="prod_rows" t-as="row">
+                                    <tr>
+                                        <td style="max-width:280px">
+                                            <t t-esc="row['rec'].name"/></td>
+                                        <td><t t-esc="'%.3f' % (row['rec'].list_price or 0)"/></td>
+                                        <td style="color:#1F8A40;font-weight:bold">
+                                            <t t-esc="'%.3f' % row['comm']"/>
+                                            (<t t-esc="'%.1f' % row['pct']"/>%)</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-dark"
+                                                    t-attf-onclick="navigator.clipboard.writeText('{{row['link']}}');this.innerText='✓ Copied';">
+                                                🔗 Copy link</button>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                    <!-- submitted orders -->
+                    <div class="bg-white rounded-3 p-3 mb-3 shadow-sm">
+                        <h5>📨 Submitted orders / طلباتك المسجلة</h5>
+                        <table class="table table-sm">
+                            <thead><tr><th>Ref</th><th>Customer</th>
+                                <th>Total</th><th>Commission</th>
+                                <th>Status</th></tr></thead>
+                            <tbody>
+                                <t t-foreach="aff.submitted_order_ids" t-as="o">
+                                    <tr>
+                                        <td t-esc="o.name"/>
+                                        <td><t t-esc="o.customer_name"/> ·
+                                            <t t-esc="o.customer_phone"/></td>
+                                        <td t-esc="'%.3f' % o.amount_total"/>
+                                        <td style="color:#1F8A40"
+                                            t-esc="'%.3f' % o.est_commission"/>
+                                        <td>
+                                            <t t-if="o.state == 'submitted'">📨 Under review</t>
+                                            <t t-if="o.state == 'approved'">✅ Approved</t>
+                                            <t t-if="o.state == 'rejected'">❌ Rejected</t>
+                                            <t t-if="o.state == 'draft'">✏️ Draft</t>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- ledger -->
+                    <div class="bg-white rounded-3 p-3 shadow-sm">
+                        <h5>📒 Commission ledger / سجل العمولات</h5>
+                        <table class="table table-sm">
+                            <thead><tr><th>Date</th><th>Order</th>
+                                <th>Source</th><th>Amount</th>
+                                <th>Status</th></tr></thead>
+                            <tbody>
+                                <t t-foreach="aff.commission_ids" t-as="c">
+                                    <tr>
+                                        <td t-esc="c.create_date and c.create_date.date()"/>
+                                        <td t-esc="c.sale_order_id.name if c.sale_order_id else '—'"/>
+                                        <td>
+                                            <t t-if="c.source == 'link'">🔗 Link</t>
+                                            <t t-if="c.source == 'submitted'">📝 Order</t>
+                                            <t t-if="c.source == 'bonus'">🎁 Bonus</t>
+                                            <t t-if="c.source == 'adjustment'">✏️ Adj.</t>
+                                        </td>
+                                        <td style="color:#1F8A40;font-weight:bold"
+                                            t-esc="'+%.3f' % c.amount"/>
+                                        <td>
+                                            <t t-if="c.state == 'pending'">⏳ Pending delivery</t>
+                                            <t t-if="c.state == 'confirmed'">✅ Confirmed</t>
+                                            <t t-if="c.state == 'paid'">💸 Paid</t>
+                                            <t t-if="c.state == 'cancelled'">❌ Cancelled</t>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+</odoo>

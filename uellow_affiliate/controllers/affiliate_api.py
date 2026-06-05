@@ -76,7 +76,8 @@ class UellowAffiliateAPI(http.Controller):
             return ok({'status': 'none'})
         cur = aff.currency_id
         # next-tier progress (30d confirmed sales)
-        from ..models.affiliate import TIER_RULES
+        from ..models.affiliate import tier_rules
+        TIER_RULES = tier_rules(request.env)
         since = datetime.utcnow() - timedelta(days=30)
         sales30 = sum(c.base_amount for c in aff.commission_ids
                       if c.state in ('confirmed', 'paid')
@@ -419,7 +420,14 @@ class UellowAffiliateAPI(http.Controller):
             target = '%s%saff=%s' % (target, sep, aff.code)
         resp = request.redirect(target)
         if aff:
-            # 30-day attribution cookie for the website path
+            # attribution cookie (days configurable in Affiliate Settings)
+            try:
+                days = int(float(request.env['ir.config_parameter'].sudo()
+                                 .get_param('uellow_affiliate.cookie_days',
+                                            '30') or 30))
+            except Exception:
+                days = 30
             resp.set_cookie('uellow_aff', aff.code,
-                            max_age=30 * 24 * 3600, samesite='Lax')
+                            max_age=max(1, days) * 24 * 3600,
+                            samesite='Lax')
         return resp

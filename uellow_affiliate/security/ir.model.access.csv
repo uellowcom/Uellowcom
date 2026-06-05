@@ -11,3 +11,5 @@ access_uellow_affiliate_order_mgr,aff order manager,model_uellow_affiliate_order
 access_uellow_affiliate_order_usr,aff order user,model_uellow_affiliate_order,base.group_user,1,1,1,0
 access_uellow_affiliate_order_line_mgr,aff line manager,model_uellow_affiliate_order_line,base.group_system,1,1,1,1
 access_uellow_affiliate_order_line_usr,aff line user,model_uellow_affiliate_order_line,base.group_user,1,1,1,0
+access_uellow_affiliate_dashboard,aff dashboard,model_uellow_affiliate_dashboard,base.group_user,1,1,1,1
+access_uellow_affiliate_settings,aff settings,model_uellow_affiliate_settings,base.group_system,1,1,1,1

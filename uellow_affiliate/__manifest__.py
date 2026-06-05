@@ -24,11 +24,13 @@ Uellow Affiliate Program
 • Mobile API for the in-app Affiliate Center.
 """,
     'author': 'Uellow',
-    'depends': ['mail', 'sale_management', 'stock', 'website_sale', 'uellow_mobile_manager'],
+    'depends': ['mail', 'portal', 'sale_management', 'stock', 'website_sale', 'uellow_mobile_manager'],
     'data': [
         'security/ir.model.access.csv',
         'views/affiliate_views.xml',
         'views/affiliate_order_views.xml',
+        'views/affiliate_dashboard_views.xml',
+        'views/portal_templates.xml',
         'data/cron.xml',
     ],
     'installable': True,

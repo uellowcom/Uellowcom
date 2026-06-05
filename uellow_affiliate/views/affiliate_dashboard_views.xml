@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Dashboard ──────────────────────────────────────────────── -->
+    <record id="affiliate_dashboard_form" model="ir.ui.view">
+        <field name="name">uellow.affiliate.dashboard.form</field>
+        <field name="model">uellow.affiliate.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Affiliate Dashboard" create="false" edit="false"
+                  delete="false">
+                <sheet>
+                    <h1>📊 Affiliate Program Dashboard</h1>
+                    <div class="text-muted mb-3">
+                        Live snapshot — reopen the menu to refresh.
+                    </div>
+                    <group string="👥 Agents">
+                        <group>
+                            <field name="agents_total"/>
+                            <field name="agents_active"/>
+                        </group>
+                        <group>
+                            <field name="agents_pending"/>
+                            <field name="agents_suspended"/>
+                        </group>
+                    </group>
+                    <group string="💰 Commissions">
+                        <group>
+                            <field name="comm_pending"
+                                   string="Pending (awaiting delivery)"/>
+                            <field name="comm_confirmed"
+                                   string="Confirmed (owed to agents)"/>
+                        </group>
+                        <group>
+                            <field name="comm_paid" string="Paid out"/>
+                            <field name="comm_count"
+                                   string="Ledger entries"/>
+                        </group>
+                    </group>
+                    <group string="📈 Sales performance">
+                        <group>
+                            <field name="sales_total"
+                                   string="Attributed sales (all time)"/>
+                            <field name="sales_month"
+                                   string="Attributed sales (this month)"/>
+                            <field name="comm_month"
+                                   string="Commission (this month)"/>
+                        </group>
+                        <group>
+                            <field name="orders_month"
+                                   string="Orders this month"/>
+                            <field name="clicks_total"
+                                   string="Referral link opens"/>
+                            <field name="conversion_pct"/>
+                        </group>
+                    </group>
+                    <group string="⏳ Needs your action">
+                        <group>
+                            <field name="awaiting_orders"/>
+                            <field name="awaiting_payouts"/>
+                        </group>
+                        <group>
+                            <field name="payouts_requested_amount"
+                                   string="Requested payout total"/>
+                            <field name="payouts_paid_amount"
+                                   string="Paid payout total"/>
+                        </group>
+                    </group>
+                    <div class="mt-2 mb-3">
+                        <button name="open_awaiting_orders" type="object"
+                                string="📨 Review submitted orders"
+                                class="btn btn-primary me-2"/>
+                        <button name="open_payout_requests" type="object"
+                                string="💸 Review payout requests"
+                                class="btn btn-warning me-2"/>
+                        <button name="open_agents" type="object"
+                                string="👥 Agents" class="btn btn-secondary me-2"/>
+                        <button name="open_commissions" type="object"
+                                string="📒 Ledger" class="btn btn-secondary"/>
+                    </div>
+                    <group string="🏆 Top agents (last 30 days)">
+                        <field name="top_agents_html" nolabel="1" colspan="2"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="affiliate_dashboard_action" model="ir.actions.server">
+        <field name="name">Affiliate Dashboard</field>
+        <field name="model_id" ref="model_uellow_affiliate_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open()</field>
+    </record>
+
+    <!-- ── Settings ───────────────────────────────────────────────── -->
+    <record id="affiliate_settings_form" model="ir.ui.view">
+        <field name="name">uellow.affiliate.settings.form</field>
+        <field name="model">uellow.affiliate.settings</field>
+        <field name="arch" type="xml">
+            <form string="Affiliate Settings">
+                <sheet>
+                    <h1>⚙️ Affiliate Program Settings</h1>
+                    <group string="💸 Payouts &amp; Commission">
+                        <field name="min_payout"/>
+                        <field name="default_commission_pct"/>
+                        <field name="cookie_days"/>
+                    </group>
+                    <group string="🏆 Tiers — monthly confirmed sales thresholds">
+                        <group>
+                            <field name="silver_threshold"/>
+                            <field name="gold_threshold"/>
+                            <field name="platinum_threshold"/>
+                        </group>
+                        <group>
+                            <field name="silver_mult"/>
+                            <field name="gold_mult"/>
+                            <field name="platinum_mult"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-info">
+                        Multipliers scale every agent's commission while he
+                        holds the tier (e.g. 1.25 = +25%). Upgrades are
+                        automatic and never downgrade.
+                    </div>
+                    <footer>
+                        <button name="action_save" type="object"
+                                string="💾 Save settings"
+                                class="btn btn-primary"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="affiliate_settings_action" model="ir.actions.server">
+        <field name="name">Affiliate Settings</field>
+        <field name="model_id" ref="model_uellow_affiliate_settings"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open()</field>
+    </record>
+
+    <menuitem id="menu_affiliate_dashboard" name="Dashboard"
+              parent="menu_affiliate_root"
+              action="affiliate_dashboard_action" sequence="1"/>
+    <menuitem id="menu_affiliate_settings" name="Settings"
+              parent="menu_affiliate_root"
+              action="affiliate_settings_action" sequence="99"/>
+</odoo>
