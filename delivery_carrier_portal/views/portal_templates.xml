@@ -70,17 +70,26 @@
                             <span class="dp-nav-icon">💰</span>
                             Financial Remitting
                         </a>
-                    </t>
-                        <a href="/delivery-portal/driver/orders"
-                           t-attf-class="dp-nav-item #{'active' if active_page == 'driver_orders' else ''}">
-                            <span class="dp-nav-icon">📋</span>
-                            My Orders
+                        <!-- v2.1.73 — manager driver management (add/list) -->
+                        <a href="/delivery-portal/drivers"
+                           t-attf-class="dp-nav-item #{'active' if active_page == 'drivers' else ''}">
+                            <span class="dp-nav-icon">🛵</span>
+                            Drivers
                         </a>
-                    <t t-if="role != 'driver'">
                         <a href="/delivery-portal/returns"
                            t-attf-class="dp-nav-item #{'active' if active_page == 'returns' else ''}">
                             <span class="dp-nav-icon">↩</span>
                             Returns
+                        </a>
+                    </t>
+                    <!-- v2.1.73 — "My Orders" is the DRIVER's own list only;
+                         managers already have the full "Orders" page, so it
+                         no longer double-shows for them. -->
+                    <t t-if="role == 'driver'">
+                        <a href="/delivery-portal/driver/orders"
+                           t-attf-class="dp-nav-item #{'active' if active_page == 'driver_orders' else ''}">
+                            <span class="dp-nav-icon">📋</span>
+                            My Orders
                         </a>
                     </t>
                     <a href="/web/session/logout" class="dp-nav-item" style="margin-top:auto;">
@@ -3393,6 +3402,118 @@
             </t>
         </div>
     </xpath>
+</template>
+
+<!-- ════════ Drivers management (manager) — v2.1.73 ════════ -->
+<template id="portal_drivers" name="Delivery Portal Drivers">
+    <t t-call="delivery_carrier_portal.portal_layout">
+        <t t-set="active_page" t-value="'drivers'"/>
+        <div class="dp-content">
+            <div class="dp-card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <h2 class="dp-card-title">🛵 Drivers / المناديب</h2>
+                <button class="dp-btn primary" onclick="document.getElementById('dp-add-driver').style.display='block';this.style.display='none';">
+                    ➕ Add Driver / إضافة مندوب
+                </button>
+            </div>
+
+            <t t-set="qok" t-value="request.httprequest.args.get('ok')"/>
+            <t t-set="qerr" t-value="request.httprequest.args.get('err')"/>
+            <div t-if="qok" class="dp-card" style="background:#EAF5EF;border:1px solid #BFE0D6;color:#15803D;margin-bottom:12px;">
+                ✅ Driver added successfully. / تمت إضافة المندوب بنجاح.
+            </div>
+            <div t-if="qerr" class="dp-card" style="background:#FBEAE7;border:1px solid #E8C0B8;color:#B23A2E;margin-bottom:12px;">
+                <t t-if="qerr == 'login'">⚠ That login email already exists. / هذا البريد مستخدم بالفعل.</t>
+                <t t-elif="qerr == 'missing'">⚠ Name and phone are required. / الاسم والهاتف مطلوبان.</t>
+                <t t-else="">⚠ Could not add the driver. / تعذّرت إضافة المندوب.</t>
+            </div>
+
+            <!-- Add-driver form (hidden until the button is clicked) -->
+            <div id="dp-add-driver" class="dp-card" style="display:none;margin-bottom:16px;">
+                <h3 class="dp-card-title" style="margin-bottom:12px;">New Driver / مندوب جديد</h3>
+                <form method="post" action="/delivery-portal/drivers/add">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <div class="dp-detail-grid">
+                        <div class="dp-field">
+                            <label>Name * / الاسم</label>
+                            <input class="dp-input" type="text" name="name" required="required"/>
+                        </div>
+                        <div class="dp-field">
+                            <label>Phone * / الهاتف</label>
+                            <input class="dp-input" type="text" name="phone" required="required"/>
+                        </div>
+                        <div class="dp-field">
+                            <label>Vehicle / المركبة</label>
+                            <input class="dp-input" type="text" name="vehicle" placeholder="e.g. Bike — plate 12345"/>
+                        </div>
+                        <div class="dp-field">
+                            <label>App login email / بريد دخول التطبيق</label>
+                            <input class="dp-input" type="email" name="login" placeholder="driver@example.com"/>
+                        </div>
+                        <div class="dp-field">
+                            <label>App password / كلمة مرور التطبيق</label>
+                            <input class="dp-input" type="text" name="password" placeholder="min 6 chars"/>
+                        </div>
+                    </div>
+                    <div style="font-size:12px;color:var(--dp-muted);margin:6px 0 12px;">
+                        Fill the login + password to give this driver access to the Driver app. / املأ البريد وكلمة المرور لمنح المندوب دخولاً لتطبيق المناديب.
+                    </div>
+                    <button type="submit" class="dp-btn primary lg">Save Driver / حفظ</button>
+                    <button type="button" class="dp-btn secondary lg" onclick="document.getElementById('dp-add-driver').style.display='none';">Cancel / إلغاء</button>
+                </form>
+            </div>
+
+            <!-- Drivers list -->
+            <div class="dp-card">
+                <table class="dp-table" style="width:100%;">
+                    <thead>
+                        <tr>
+                            <th>Name / الاسم</th>
+                            <th>Phone / الهاتف</th>
+                            <th>Vehicle / المركبة</th>
+                            <th>App access / دخول التطبيق</th>
+                            <th>Deliveries</th>
+                            <th>Status / الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="drivers" t-as="d">
+                            <td style="font-weight:700;"><t t-esc="d.name"/></td>
+                            <td><t t-esc="d.phone"/></td>
+                            <td><t t-esc="d.vehicle_info or '—'"/></td>
+                            <td>
+                                <t t-if="d.portal_user_id"><span style="color:#15803D;">✓ <t t-esc="d.portal_user_id.login"/></span></t>
+                                <t t-else=""><span style="color:var(--dp-muted);">No app login</span></t>
+                            </td>
+                            <td><t t-esc="d.delivery_count"/></td>
+                            <td>
+                                <span t-attf-style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:#{'#EAF5EF' if d.status=='active' else '#F1F1F1'};color:#{'#15803D' if d.status=='active' else '#888'};"
+                                      t-att-data-driver-id="d.id" class="dp-driver-status" style="cursor:pointer;"
+                                      onclick="dpToggleDriver(this);">
+                                    <t t-esc="'● Active' if d.status=='active' else '○ Inactive'"/>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr t-if="not drivers">
+                            <td colspan="6" style="text-align:center;color:var(--dp-muted);padding:24px;">
+                                No drivers yet — add your first courier. / لا يوجد مناديب بعد.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <script type="text/javascript">
+            function dpToggleDriver(el){
+                var id = el.getAttribute('data-driver-id');
+                fetch('/delivery-portal/drivers/toggle', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({jsonrpc:'2.0', method:'call', params:{driver_id:id}})
+                }).then(function(r){return r.json();}).then(function(res){
+                    if(res.result &amp;&amp; res.result.ok){ location.reload(); }
+                });
+            }
+        </script>
+    </t>
 </template>
 
 </odoo>

@@ -728,6 +728,77 @@ class DeliveryPortalController(http.Controller):
             'role': 'manager',
         })
 
+    # ─── Drivers management (manager) ─────────────────────────────────────
+    @http.route('/delivery-portal/drivers', type='http', auth='user', website=True)
+    def drivers_list(self, **kwargs):
+        uid = request.env.user.id
+        if not _is_manager(uid):
+            return request.redirect('/delivery-portal/dashboard')
+        company = _get_carrier_company(uid)
+        if not company:
+            return request.render('delivery_carrier_portal.portal_no_access')
+        drivers = request.env['delivery.driver'].sudo().search(
+            [('carrier_company_id', '=', company.id)], order='name')
+        return request.render('delivery_carrier_portal.portal_drivers', {
+            'company': company,
+            'drivers': drivers,
+            'active_page': 'drivers',
+            'role': 'manager',
+        })
+
+    @http.route('/delivery-portal/drivers/add', type='http', auth='user',
+                website=True, methods=['POST'])
+    def drivers_add(self, **post):
+        uid = request.env.user.id
+        if not _is_manager(uid):
+            return request.redirect('/delivery-portal/dashboard')
+        company = _get_carrier_company(uid)
+        if not company:
+            return request.render('delivery_carrier_portal.portal_no_access')
+        name = (post.get('name') or '').strip()
+        phone = (post.get('phone') or '').strip()
+        login = (post.get('login') or '').strip().lower()
+        password = (post.get('password') or '').strip()
+        vehicle = (post.get('vehicle') or '').strip()
+        if not (name and phone):
+            return request.redirect('/delivery-portal/drivers?err=missing')
+        try:
+            Users = request.env['res.users'].sudo()
+            portal_user = False
+            if login and password:
+                if Users.search_count([('login', '=', login)]):
+                    return request.redirect('/delivery-portal/drivers?err=login')
+                portal_user = Users.with_context(no_reset_password=True).create({
+                    'name': name, 'login': login, 'password': password,
+                    'groups_id': [(4, request.env.ref(
+                        'delivery_carrier_portal.group_carrier_driver').id)],
+                })
+            request.env['delivery.driver'].sudo().create({
+                'name': name, 'phone': phone,
+                'vehicle_info': vehicle or False,
+                'carrier_company_id': company.id,
+                'portal_user_id': portal_user.id if portal_user else False,
+                'status': 'active',
+            })
+        except Exception as e:
+            _logger.warning('drivers_add error: %s', e)
+            return request.redirect('/delivery-portal/drivers?err=1')
+        return request.redirect('/delivery-portal/drivers?ok=1')
+
+    @http.route('/delivery-portal/drivers/toggle', type='json', csrf=False,
+                auth='user', website=True)
+    def drivers_toggle(self, driver_id, **kwargs):
+        uid = request.env.user.id
+        if not _is_manager(uid):
+            return {'ok': False}
+        company = _get_carrier_company(uid)
+        drv = request.env['delivery.driver'].sudo().browse(int(driver_id))
+        if not drv.exists() or drv.carrier_company_id != company:
+            return {'ok': False}
+        new_status = 'inactive' if drv.status == 'active' else 'active'
+        drv.status = new_status
+        return {'ok': True, 'status': new_status}
+
     # ─── AJAX: Schedule Return ────────────────────────────────────────────
     @http.route('/delivery-portal/schedule-return', type='json', csrf=False, auth='user', website=True)
     def schedule_return(self, order_id, scheduled_date=None, notes='', **kwargs):

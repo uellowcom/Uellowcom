@@ -234,6 +234,16 @@ html[dir="rtl"] .dp-wrapper {
 .dp-filter.active { background: var(--dp-primary); color: #fff; border-color: var(--dp-primary); }
 
 /* ── Table ────────────────────────────────────────── */
+/* v2.1.73 — portal form input (drivers add-form etc.) */
+.dp-input {
+  width: 100%; padding: 9px 12px; border: 1px solid var(--dp-border);
+  border-radius: var(--dp-radius-sm); font-size: 13px; color: var(--dp-text);
+  background: #fff; outline: none; transition: border-color .15s;
+}
+.dp-input:focus { border-color: var(--dp-brand); }
+.dp-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.dp-field label { font-size: 12px; font-weight: 700; color: var(--dp-muted); }
+
 .dp-table { width: 100%; border-collapse: collapse; }
 .dp-table th {
   background: #f8fafc;
@@ -289,14 +299,48 @@ html[dir="rtl"] .dp-wrapper {
 .dp-btn:hover { opacity: 0.88; transform: translateY(-1px); text-decoration: none; }
 .dp-btn:active { transform: translateY(0); }
 .dp-btn.sm { padding: 5px 12px; font-size: 11px; }
-.dp-btn.primary    { background: var(--dp-primary); color: #fff; }
 .dp-btn.secondary  { background: var(--dp-bg); color: var(--dp-text); border: 1px solid var(--dp-border); }
-.dp-btn.green      { background: #dcfce7; color: var(--dp-green); }
-.dp-btn.red        { background: #fee2e2; color: var(--dp-red); }
-.dp-btn.blue-light { background: #dbeafe; color: var(--dp-primary); }
-.dp-btn.purple     { background: #ede9fe; color: var(--dp-purple); }
 .dp-btn.full       { width: 100%; justify-content: center; padding: 12px; }
 .dp-btn.lg         { padding: 13px 20px; font-size: 14px; }
+
+/* =========================================================
+   v2.1.73 — FUNCTION-CODED buttons (blue / red / yellow).
+   The portal speaks one colour language so any operator reads
+   an action at a glance:
+     • BLUE   = positive / confirm / proceed (primary actions)
+     • RED    = destructive / fail / reject / unassign / cancel
+     • YELLOW = in-progress / dispatch / payment / attention
+   ========================================================= */
+:root {
+  --dp-fn-blue:   #2D6CB5;  --dp-fn-blue-d:   #245A99;
+  --dp-fn-red:    #D14A3C;  --dp-fn-red-d:    #B23A2E;
+  --dp-fn-yellow: #E6A817;  --dp-fn-yellow-d: #C68C0C;
+}
+/* BLUE — primary / confirm / receive / proceed */
+.dp-btn.primary, .dp-btn.blue, .dp-btn.blue-light,
+.dp-btn-confirm, .dp-btn-receive, .dp-btn-proceed, .dp-btn-view-signature,
+.dp-btn-mark-returned {
+  background: var(--dp-fn-blue) !important; color: #fff !important;
+  border: none !important;
+}
+/* RED — fail / reject / unassign / cancel / no-receive */
+.dp-btn.red, .dp-btn.danger,
+.dp-btn-fail, .dp-btn-reject, .dp-btn-unassign, .dp-btn-cancel,
+.dp-btn-no-receive, .dp-btn-decline {
+  background: var(--dp-fn-red) !important; color: #fff !important;
+  border: none !important;
+}
+/* YELLOW — assign / start / dispatch / payment link / schedule */
+.dp-btn.green, .dp-btn.yellow, .dp-btn.warn, .dp-btn.purple,
+.dp-btn-assign, .dp-btn-start, .dp-btn-paylink, .dp-btn-payment,
+.dp-btn-schedule-return, .dp-btn-dispatch {
+  background: var(--dp-fn-yellow) !important; color: #2A2008 !important;
+  border: none !important;
+}
+.dp-btn.green:hover, .dp-btn.yellow:hover, .dp-btn-assign:hover,
+.dp-btn-start:hover, .dp-btn-paylink:hover { background: var(--dp-fn-yellow-d) !important; }
+.dp-btn.primary:hover, .dp-btn.blue:hover, .dp-btn-confirm:hover { background: var(--dp-fn-blue-d) !important; }
+.dp-btn.red:hover, .dp-btn-fail:hover { background: var(--dp-fn-red-d) !important; }
 
 /* ── Order Detail Layout ──────────────────────────── */
 .dp-detail-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
