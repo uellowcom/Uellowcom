@@ -7,9 +7,11 @@
     'author': 'Uellow',
     'website': 'https://uellow.com',
     'depends': ['base', 'website', 'sale', 'product', 'web', 'delivery',
+                'loyalty',
                 'dev_facebook_shop_integration', 'delivery_carrier_portal', 'uellow_multivendor'],
     'data': [
         'security/ir.model.access.csv',
+        'views/customer_notification_views.xml',
         'views/mobile_dashboard_views.xml',
         'views/mobile_slider_views.xml',
         'views/mobile_category_icon_views.xml',

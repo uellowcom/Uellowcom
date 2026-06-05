@@ -283,6 +283,22 @@ class UellowAffiliateCommission(models.Model):
                 continue
             if self._order_is_delivered(so):
                 c.state = 'confirmed'
+                # v2.1.62 — notify the partner their commission confirmed
+                try:
+                    if ('mobile.customer.notification' in self.env
+                            and c.affiliate_id.partner_id):
+                        self.env['mobile.customer.notification']                             .push_event(
+                            c.affiliate_id.partner_id,
+                            'affiliate_commission',
+                            'Commission confirmed: %.3f 💸' % c.amount,
+                            'تم تأكيد عمولتك: %.3f 💸' % c.amount,
+                            'Order %s was delivered — your commission is '
+                            'now confirmed.' % (so.name or ''),
+                            'تم توصيل الطلب %s وأصبحت عمولتك مؤكدة.'
+                            % (so.name or ''),
+                            {'type': 'screen', 'value': 'affiliate'})
+                except Exception:
+                    pass
         # monthly-ish tier recompute piggybacks on the same cron
         self.env['uellow.affiliate'].search(
             [('state', '=', 'active')]).action_recompute_tier()

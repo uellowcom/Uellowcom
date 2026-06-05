@@ -36,6 +36,33 @@ class MobileNotificationsAPI(http.Controller):
                 'is_read': False,
                 'date':  n.create_date.isoformat() if n.create_date else None,
             })
+        # v2.1.62 — merge PERSONAL event notifications (orders, wallet,
+        # loyalty, review replies, affiliate…). Their ids are offset by
+        # 1e9 so mark-read can route to the right model.
+        try:
+            import json as _json
+            lang = (request.httprequest.headers.get('X-Lang')
+                    or '').lower()
+            ar = lang.startswith('ar')
+            Personal = request.env['mobile.customer.notification'].sudo()
+            for n in Personal.search([('partner_id', '=', partner.id)],
+                                     order='create_date desc', limit=100):
+                out.append({
+                    'id': 1000000000 + n.id,
+                    'title': (n.title_ar if ar and n.title_ar
+                              else n.title) or '',
+                    'body': (n.body_ar if ar and n.body_ar
+                             else n.body) or '',
+                    'image': '',
+                    'category': n.category or 'general',
+                    'data': _json.loads(n.payload or '{}'),
+                    'is_read': bool(n.is_read),
+                    'date': n.create_date.isoformat()
+                            if n.create_date else None,
+                })
+            out.sort(key=lambda d: d['date'] or '', reverse=True)
+        except Exception:
+            pass
         return ok(out)
 
     @http.route('/api/mobile/v2/notifications/preferences', type='http', auth='public',
@@ -91,6 +118,13 @@ class MobileNotificationsAPI(http.Controller):
     @safe_endpoint
     @require_auth
     def mark_read(self, notif_id, **kw):
+        # ids ≥ 1e9 are personal event rows (see list merge above)
+        if notif_id >= 1000000000:
+            n = request.env['mobile.customer.notification'].sudo()                 .browse(notif_id - 1000000000)
+            if n.exists():
+                n.is_read = True
+                request.env.cr.commit()
+            return ok({'read': True})
         n = request.env['mobile.notification'].sudo().browse(notif_id)
         if n.exists() and 'is_read' in n._fields:
             n.is_read = True

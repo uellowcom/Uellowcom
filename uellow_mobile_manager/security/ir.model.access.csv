@@ -58,3 +58,7 @@ access_mobile_category_slide_mgr,mobile.category.slide manager,model_mobile_cate
 access_mobile_category_slide_usr,mobile.category.slide user,model_mobile_category_slide,base.group_user,1,1,1,0
 access_mobile_announcement_mgr,mobile.announcement manager,model_mobile_announcement,base.group_system,1,1,1,1
 access_mobile_announcement_usr,mobile.announcement user,model_mobile_announcement,base.group_user,1,1,1,0
+access_mobile_notification_setting_mgr,mobile.notification.setting manager,model_mobile_notification_setting,base.group_system,1,1,1,1
+access_mobile_notification_setting_usr,mobile.notification.setting user,model_mobile_notification_setting,base.group_user,1,0,0,0
+access_mobile_customer_notification_mgr,mobile.customer.notification manager,model_mobile_customer_notification,base.group_system,1,1,1,1
+access_mobile_customer_notification_usr,mobile.customer.notification user,model_mobile_customer_notification,base.group_user,1,1,1,0

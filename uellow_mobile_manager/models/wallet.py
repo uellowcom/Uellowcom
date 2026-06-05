@@ -48,7 +48,7 @@ class UellowWalletTransaction(models.Model):
                order_id=None, counter_partner_id=None):
         if amount <= 0 or not partner:
             return self.browse()
-        return self.create({
+        tx = self.create({
             'partner_id': partner.id,
             'amount': abs(amount),
             'transaction_type': tx_type,
@@ -57,6 +57,18 @@ class UellowWalletTransaction(models.Model):
             'order_id': order_id,
             'counter_partner_id': counter_partner_id,
         })
+        # v2.1.62 — wallet-credit event notification (admin-toggleable)
+        try:
+            cur = self.env.company.currency_id
+            self.env['mobile.customer.notification'].push_event(
+                partner, 'wallet_credit',
+                '+%.3f %s added to your wallet 💰' % (abs(amount), cur.name),
+                'تمت إضافة %.3f %s إلى محفظتك 💰' % (abs(amount), cur.name),
+                description or '', description or '',
+                {'type': 'screen', 'value': 'wallet'})
+        except Exception:
+            pass
+        return tx
 
     @api.model
     def debit(self, partner, amount, tx_type='spend', description='', reference=None,

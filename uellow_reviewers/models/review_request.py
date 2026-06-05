@@ -115,6 +115,23 @@ class ReviewRequest(models.Model):
         if notes:   vals['reviewer_notes']   = notes
         self.write(vals)
         self._calculate_commission()
+        # v2.1.62 — tell the customer their specialist replied
+        # (toggleable in Mobile App > Marketing > Notification Settings).
+        for r in self:
+            try:
+                if ('mobile.customer.notification' in self.env
+                        and r.customer_id):
+                    pname = r.product_id.name or ''
+                    self.env['mobile.customer.notification'].push_event(
+                        r.customer_id, 'review_reply',
+                        'Specialist replied about %s ✅' % pname,
+                        'رد عليك المختص بخصوص %s ✅' % pname,
+                        'Open the app to read the full review.',
+                        'افتح التطبيق لقراءة الرأي كاملاً.',
+                        {'type': 'product',
+                         'id': r.product_id.id if r.product_id else 0})
+            except Exception:
+                pass
 
     def action_expire(self):
         self.write({'state': 'expired'})
