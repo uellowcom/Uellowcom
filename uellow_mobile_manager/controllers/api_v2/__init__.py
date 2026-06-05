@@ -69,3 +69,5 @@ from . import ads
 from . import reviewers
 from . import promotions
 from . import category_slides
+from . import announcements
+from . import shop_config

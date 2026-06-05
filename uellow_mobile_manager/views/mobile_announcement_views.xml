@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mobile_announcement_list" model="ir.ui.view">
+        <field name="name">mobile.announcement.list</field>
+        <field name="model">mobile.announcement</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="emoji"/>
+                <field name="message_en"/>
+                <field name="audience"/>
+                <field name="show_on_home" string="Home"/>
+                <field name="show_on_cart" string="Cart"/>
+                <field name="show_on_shop" string="Shop"/>
+                <field name="date_to"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="mobile_announcement_form" model="ir.ui.view">
+        <field name="name">mobile.announcement.form</field>
+        <field name="model">mobile.announcement</field>
+        <field name="arch" type="xml">
+            <form string="Announcement Strip">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <group>
+                        <group string="Content">
+                            <field name="name"/>
+                            <field name="emoji"/>
+                            <field name="message_en"/>
+                            <field name="message_ar"/>
+                            <field name="cta_label_en"/>
+                            <field name="cta_label_ar"/>
+                        </group>
+                        <group string="Look">
+                            <field name="bg_color" widget="color"/>
+                            <field name="text_color" widget="color"/>
+                            <field name="button_color" widget="color"/>
+                            <field name="button_text_color" widget="color"/>
+                            <field name="dismissible"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Who sees it">
+                            <field name="audience"/>
+                            <field name="website_ids" widget="many2many_tags"/>
+                        </group>
+                        <group string="Where + When">
+                            <field name="show_on_home"/>
+                            <field name="show_on_cart"/>
+                            <field name="show_on_shop"/>
+                            <field name="show_on_account"/>
+                            <field name="show_on_product"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="sequence" groups="base.group_no_one"/>
+                        </group>
+                    </group>
+                    <group string="Tap Action">
+                        <field name="link_type"/>
+                        <field name="link_screen" invisible="link_type != 'screen'"
+                               required="link_type == 'screen'"/>
+                        <field name="link_product_id" invisible="link_type != 'product'"
+                               required="link_type == 'product'"/>
+                        <field name="link_category_id" invisible="link_type != 'category'"
+                               required="link_type == 'category'"/>
+                        <field name="link_url" invisible="link_type != 'url'"
+                               required="link_type == 'url'"/>
+                    </group>
+                    <field name="active" invisible="1"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="mobile_announcement_action" model="ir.actions.act_window">
+        <field name="name">Announcement Strips</field>
+        <field name="res_model">mobile.announcement</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create an announcement strip</p>
+            <p>Slim bars shown in the app on chosen screens to a chosen
+               audience — new-user bonuses, free-shipping weekends, etc.</p>
+        </field>
+    </record>
+    <menuitem id="menu_mobile_announcement" name="Announcement Strips"
+              parent="menu_mobile_marketing" action="mobile_announcement_action"
+              sequence="15"/>
+</odoo>

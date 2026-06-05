@@ -27,6 +27,7 @@
         'views/uellow_delivery_zone_views.xml',
         'views/sale_order_cancel_views.xml',
         'views/mobile_category_slide_views.xml',
+        'views/mobile_announcement_views.xml',
         'views/cart_share_templates.xml',
     ],
     'assets': {

@@ -401,7 +401,20 @@ def serialize_cart(order):
 
     threshold = _free_shipping_threshold(order)
     free_ship = None
-    if threshold:
+    # v2.1.57 — a flagged product / flagged category / free-shipping
+    # coupon means the order ALREADY ships free: show the bar fully
+    # qualified instead of asking the customer to add more.
+    _reason = order_free_shipping_reason(order)
+    if _reason and _reason.get('reason') in ('product', 'coupon'):
+        free_ship = {
+            'threshold': fmt_price(threshold or 0, cur),
+            'remaining': fmt_price(0, cur),
+            'progress': 1.0,
+            'qualified': True,
+            'reason': _reason['reason'],
+            'label': _reason.get('label'),
+        }
+    elif threshold:
         gap = max(0.0, threshold - order.amount_untaxed)
         pct = min(1.0, (order.amount_untaxed / threshold) if threshold else 0)
         free_ship = {
@@ -409,6 +422,7 @@ def serialize_cart(order):
             'remaining': fmt_price(gap, cur),
             'progress': round(pct, 4),
             'qualified': gap <= 0,
+            'reason': 'threshold',
         }
 
     return {

@@ -1168,6 +1168,11 @@ const SNIPPETS = [
     { kind:'spacer',      icon:'↕', label:'Spacer' },
     { kind:'divider',     icon:'━', label:'Divider' },
   ]},
+  // v2.1.57: conversion blocks
+  { cat:'💎 v2.1.57 Conversion', items:[
+    { kind:'new-user',        icon:'🧧', label:'New User Discount' },
+    { kind:'trust-strip',     icon:'🛡', label:'Trust / Services strip' },
+  ]},
   // v2.0.38: 6 powerful new blocks
   { cat:'🆕 v2.0.38 Pro blocks', items:[
     { kind:'slider',          icon:'🎞', label:'Slider (image/video/text)' },
@@ -1373,6 +1378,25 @@ const KIND_DEFAULTS = {
       {image_url:'', link:{type:'screen',value:'shop'}},
       {image_url:'', link:{type:'screen',value:'shop'}},
       {image_url:'', link:{type:'screen',value:'shop'}},
+    ],
+  }),
+  'new-user': () => ({
+    titleEn:'New User Exclusive', titleAr:'حصري للعملاء الجدد',
+    subEn:'Up to 90% off your first order', subAr:'خصومات تصل إلى 90% على أول طلب',
+    pack_value:'9.5', pack_currency:'KD',
+    c1:'#FF7A00', c2:'#FFB347',
+    ctaEn:'Collect', ctaAr:'اجمعها',
+    source:'discounted', limit:8,
+    audience:'all',            // all | guests | new
+    badgeEn:'New User Bonus', badgeAr:'مكافأة العميل الجديد',
+  }),
+  'trust-strip': () => ({
+    show_title:false, pad_y:0,
+    style:'plain',             // plain | cards | divided
+    items:[
+      {icon:'🛡️', labelEn:'After-sales assurance', labelAr:'ضمان ما بعد البيع', link:{type:'none',value:''}},
+      {icon:'💳', labelEn:'Secure payment',        labelAr:'دفع آمن',           link:{type:'none',value:''}},
+      {icon:'🚚', labelEn:'Logistics support',      labelAr:'دعم لوجستي',        link:{type:'none',value:''}},
     ],
   }),
   'sticky-cta': () => ({
@@ -2433,6 +2457,19 @@ function renderBlockContent(b){
         ${p.show_live_activity?`<div style="margin-top:8px;background:#0E5E2E;color:#fff;padding:6px 10px;border-radius:18px;font-size:9.5px;font-weight:700"><span style="margin-right:4px">🎉</span>Sara from Salmiya bought 2 mins ago</div>`:''}
       </div>`;
     }
+    case 'new-user': return `
+      <div style="background:linear-gradient(135deg,${p.c1||'#FF7A00'},${p.c2||'#FFB347'});border-radius:12px;padding:10px;color:#fff">
+        <b style="font-size:12px">🧧 ${p.titleEn||'New User Exclusive'}</b>
+        <div style="font-size:10px;opacity:.9">${p.subEn||'Up to 90% off'}</div>
+        <div style="display:flex;gap:6px;margin-top:6px">
+          <div style="background:#fff;color:#FF7A00;border-radius:8px;padding:6px 8px;font-size:10px;font-weight:800">${p.pack_value||'9.5'} ${p.pack_currency||'KD'}<br><span style="font-size:8px">Coupon pack</span></div>
+          ${[1,2,3].map(()=>`<div style="background:rgba(255,255,255,.92);border-radius:8px;width:44px;height:44px"></div>`).join('')}
+        </div>
+      </div>`;
+    case 'trust-strip': return `
+      <div style="display:flex;gap:10px;justify-content:space-around;background:#fff;border-radius:8px;padding:7px 4px;font-size:9px;color:#333">
+        ${(p.items||[]).slice(0,4).map(it=>`<span>${it.icon||'🛡️'} ${it.labelEn||''}</span>`).join('') || '🛡️ After-sales · 💳 Secure · 🚚 Logistics'}
+      </div>`;
     default: return `<div class="b-text">[${b.kind}]</div>`;
   }
 }
@@ -3172,6 +3209,59 @@ function renderContent(b){
             ${itemText('slides', i, 'variant',          'A/B variant label (e.g. A, B, control)', it)}
           </div>`).join('')}
         ${addItemBtn('slides', 'Add slide')}`;
+    }
+    case 'new-user': {
+      return `${mlField(b,'title','Title')}
+        ${mlField(b,'sub','Subtitle')}
+        <p class="hint">Banggood-style exclusive block: coupon-pack card + product cards with a "New User Bonus" badge and coupon prices.</p>
+        <div class="field"><label>Coupon pack value</label>
+          <input data-prop="pack_value" value="${p.pack_value||'9.5'}" style="max-width:90px"/></div>
+        <div class="field"><label>Currency label</label>
+          <input data-prop="pack_currency" value="${p.pack_currency||'KD'}" style="max-width:90px"/></div>
+        ${mlField(b,'cta','Collect button text')}
+        ${mlField(b,'badge','Product badge text')}
+        <div class="field"><label>Gradient start</label>
+          <input type="color" value="${p.c1||'#FF7A00'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Gradient end</label>
+          <input type="color" value="${p.c2||'#FFB347'}" data-prop="c2" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Who sees it</label>
+          ${sourceSelect(b, 'audience', [
+            ['all','Everyone'],
+            ['guests','Guests only (not signed in)'],
+            ['new','New customers (guests + no orders yet)'],
+          ], 'all')}
+        </div>
+        <div class="sub-h">Products</div>
+        <div class="field"><label>Source</label>
+          ${sourceSelect(b, 'source', [
+            ['discounted','Biggest discounts (auto)'],
+            ['newest','Newest products'],
+            ['manual','Hand-picked…'],
+          ], 'discounted')}
+        </div>
+        ${(p.source==='manual') ? productsPickerBtn(b) : ''}
+        <div class="field"><label>Maximum products</label>
+          <input type="number" min="2" max="20" data-prop-num="limit" value="${p.limit||8}"/></div>`;
+    }
+    case 'trust-strip': {
+      const items = p.items || [];
+      return `<p class="hint">Thin trust/services bar — "After-sales | Secure payment | Logistics". Edit the items any time; they ship to the app instantly.</p>
+        <div class="field"><label>Style</label>
+          ${sourceSelect(b, 'style', [
+            ['plain','— Plain row'],
+            ['cards','▢ Soft cards'],
+            ['divided','| Divided row'],
+          ], 'plain')}
+        </div>
+        <div class="sub-h">Items (${items.length})</div>
+        ${items.map((it,i)=>`
+          <div class="item-card">
+            ${itemHeader('Item', 'items', i, items.length)}
+            ${itemIcon('items', i, 'icon', it)}
+            ${itemMl('items', i, 'labelEn', 'labelAr', 'Text', it)}
+            ${itemLink('items', i, 'link', it)}
+          </div>`).join('')}
+        ${addItemBtn('items', 'Add item')}`;
     }
     case 'tab-nav': {
       const tabs = p.tabs || [];

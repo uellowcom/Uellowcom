@@ -79,6 +79,26 @@ class MobileAppSetting(models.Model):
     ], string='Best-Seller Badge Placement', default='off',
         help='Where the quiet "Best seller in X" line (under the product '
              'name, no background) appears on app product cards.')
+    # ── Shop page (v2.1.57) — full control over the shop tab sections ──
+    shop_show_recent = fields.Boolean(
+        string='Shop: Show "Recently arrived"', default=True)
+    shop_show_products = fields.Boolean(
+        string='Shop: Show "All products" grid', default=True)
+    shop_show_brands = fields.Boolean(
+        string='Shop: Show Brands row', default=True,
+        help='Horizontal brands row under "Recently arrived".')
+    shop_foryou_enabled = fields.Boolean(
+        string='Shop: "For You" sidebar entry', default=False,
+        help='Adds a "For You" entry at the TOP of the shop sidebar '
+             'showing the hand-picked categories + brands below.')
+    shop_foryou_categ_ids = fields.Many2many(
+        'product.public.category', 'mobile_setting_foryou_categ_rel',
+        'setting_id', 'categ_id', string='For You: Categories')
+    shop_foryou_brand_value_ids = fields.Many2many(
+        'product.attribute.value', 'mobile_setting_foryou_brand_rel',
+        'setting_id', 'value_id', string='For You: Brands',
+        domain="[('attribute_id.name', 'ilike', 'brand')]")
+
     facebook_url = fields.Char(string='Facebook URL')
     instagram_url = fields.Char(string='Instagram URL')
     youtube_url = fields.Char(string='YouTube URL')

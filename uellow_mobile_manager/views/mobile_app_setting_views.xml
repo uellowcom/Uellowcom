@@ -219,6 +219,20 @@
                                     <field name="rank_badge_scope"
                                            help="Quiet 'Best seller in X' line under the product name on app cards. Off hides it everywhere."/>
                                 </group>
+                                <group string="🛍 Shop Page Sections">
+                                    <field name="shop_show_recent"/>
+                                    <field name="shop_show_products"/>
+                                    <field name="shop_show_brands"/>
+                                </group>
+                                <group string="⭐ Shop 'For You' Entry">
+                                    <field name="shop_foryou_enabled"/>
+                                    <field name="shop_foryou_categ_ids"
+                                           widget="many2many_tags"
+                                           invisible="not shop_foryou_enabled"/>
+                                    <field name="shop_foryou_brand_value_ids"
+                                           widget="many2many_tags"
+                                           invisible="not shop_foryou_enabled"/>
+                                </group>
                             </group>
                             <div class="alert alert-info mt-2">
                                 <i class="fa fa-toggle-on me-1"/>

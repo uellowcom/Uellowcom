@@ -98,6 +98,7 @@ def resolve_products(env, props, lang, block=None):
         elif kind == 'rec-ai':     source = 'bestsellers'
         elif kind == 'recent':     source = 'recent'
         elif kind == 'grid':       source = 'newest'
+        elif kind == 'new-user':   source = 'discounted'
         else:                      source = 'newest'
 
     limit = int(props.get('limit') or 12)
@@ -812,6 +813,8 @@ RESOLVERS = {
     'image-banner':    resolve_passthrough,
     'reels-strip':     resolve_reels_strip,
     'occasion-header': resolve_passthrough,
+    'new-user':        resolve_products,
+    'trust-strip':     resolve_passthrough,
 }
 
 
