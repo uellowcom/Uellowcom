@@ -34,6 +34,12 @@ for rec in records:
       <!-- Add Assign/Recall buttons to header -->
       <xpath expr="//div[@name='button_box']" position="before">
         <div style="display:flex;gap:6px;align-items:center;margin-left:8px;">
+          <!-- v2.1.73 — one-click professional dispatch wizard -->
+          <button name="%(delivery_carrier_portal.action_assign_delivery_wizard)d"
+                  type="action"
+                  string="🚚 Assign to Delivery"
+                  class="btn btn-primary btn-sm"
+                  invisible="state == 'draft' or delivery_status in ('delivered','out_for_delivery')"/>
           <button name="%(delivery_carrier_portal.action_server_assign_carrier)d"
                   type="action"
                   string="✅ Assign to Carrier"

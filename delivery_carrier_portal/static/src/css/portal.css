@@ -4,35 +4,38 @@
    ===================================================== */
 
 :root {
-  /* Brand-locked palette — Uellow yellow + dark, with semantic colors
-     for status (green ok, red error). Was a mix of teal/orange that
-     fought the rest of the marketplace. */
-  --dp-brand:        #F5C320;
-  --dp-brand-l:      #ffd84a;
-  --dp-brand-d:      #c69b00;
-  --dp-brand-soft:   rgba(245,195,32,.12);
-  --dp-dark:         #412402;
-  --dp-dark-soft:    #5c3508;
-  --dp-primary:      #F5C320;          /* alias for brand */
-  --dp-green:        #10b981;
-  --dp-green-soft:   rgba(16,185,129,.12);
-  --dp-red:          #ef4444;
-  --dp-red-soft:     rgba(239,68,68,.12);
-  --dp-yellow:       #d97706;
-  --dp-blue:         #3b82f6;
-  --dp-blue-soft:    rgba(59,130,246,.12);
-  --dp-purple:       #8b5cf6;
-  --dp-bg:           #fafaf7;
+  /* v2.1.73 — CALM, COORDINATED professional palette.
+     A muted deep slate-teal carries the chrome (sidebar / primary),
+     surfaces are soft neutral, and the Uellow yellow is kept only as a
+     gentle accent. Easier on the eyes for all-day operations use. */
+  --dp-brand:        #2F6E62;   /* calm deep teal — primary */
+  --dp-brand-l:      #3E8576;
+  --dp-brand-d:      #245449;
+  --dp-brand-soft:   rgba(47,110,98,.10);
+  --dp-dark:         #1F3A35;   /* deep slate-green ink */
+  --dp-dark-soft:    #2A4B45;
+  --dp-primary:      #2F6E62;          /* alias for brand */
+  --dp-accent:       #E8B53A;   /* soft gold accent (not the loud yellow) */
+  --dp-accent-soft:  rgba(232,181,58,.14);
+  --dp-green:        #2E9E6B;
+  --dp-green-soft:   rgba(46,158,107,.12);
+  --dp-red:          #D2604E;   /* muted terracotta, not alarm red */
+  --dp-red-soft:     rgba(210,96,78,.12);
+  --dp-yellow:       #C99A2E;
+  --dp-blue:         #4C7DAE;   /* dusty blue */
+  --dp-blue-soft:    rgba(76,125,174,.12);
+  --dp-purple:       #8A7BB0;
+  --dp-bg:           #F4F6F5;   /* soft neutral canvas */
   --dp-white:        #ffffff;
-  --dp-border:       #e7e2cd;
-  --dp-text:         #1a1208;
-  --dp-muted:        #6a5a40;
-  --dp-sidebar:      #412402;
-  --dp-sidebar-active: #5c3508;
-  --dp-radius:       12px;
-  --dp-radius-sm:    8px;
-  --dp-shadow:       0 4px 14px rgba(65,36,2,.08);
-  --dp-shadow-l:     0 8px 24px rgba(65,36,2,.12);
+  --dp-border:       #E3E8E6;   /* quiet cool border */
+  --dp-text:         #233330;
+  --dp-muted:        #6E7C78;
+  --dp-sidebar:      #264E47;   /* calm teal sidebar (was dark brown) */
+  --dp-sidebar-active: #336056;
+  --dp-radius:       14px;
+  --dp-radius-sm:    9px;
+  --dp-shadow:       0 4px 16px rgba(31,58,53,.07);
+  --dp-shadow-l:     0 10px 28px rgba(31,58,53,.10);
 }
 
 /* ── Layout ───────────────────────────────────────── */

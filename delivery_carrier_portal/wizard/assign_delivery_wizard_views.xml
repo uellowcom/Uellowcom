@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_assign_delivery_wizard_form" model="ir.ui.view">
+        <field name="name">delivery.assign.wizard.form</field>
+        <field name="model">delivery.assign.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Assign to Delivery">
+                <div class="alert alert-info" role="status"
+                     style="background:#EAF3F0;border:1px solid #BFE0D6;color:#0F5C49">
+                    <field name="order_count" class="oe_inline"/>
+                    <span> order(s) will be dispatched. </span>
+                    <field name="gov_hint" class="oe_inline" readonly="1"
+                           invisible="not gov_hint"/>
+                    <span invisible="not gov_hint"> destination detected.</span>
+                </div>
+                <group>
+                    <group string="Courier">
+                        <field name="carrier_company_id"
+                               options="{'no_create': True}"/>
+                        <field name="driver_id" options="{'no_create': True}"
+                               invisible="not carrier_company_id"/>
+                        <field name="pricing_rule_id"
+                               options="{'no_create': True}"
+                               invisible="not carrier_company_id"/>
+                    </group>
+                    <group string="Dispatch">
+                        <field name="payment_method_type"/>
+                        <field name="carrier_order_type"/>
+                        <field name="set_status"/>
+                        <field name="create_trip" invisible="order_count &lt; 2"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="note" placeholder="Optional note for the courier"/>
+                </group>
+                <div class="o_row" style="margin-top:6px;padding:10px 12px;
+                     background:#F6F8F7;border-radius:8px">
+                    <i class="fa fa-calculator" style="color:#0F6E56"/>
+                    <field name="preview_text" class="oe_inline" readonly="1"
+                           style="margin-left:8px;font-weight:600;color:#0F5C49"/>
+                </div>
+                <field name="order_ids" invisible="1"/>
+                <footer>
+                    <button name="action_assign" string="🚚 Dispatch"
+                            type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action used by the form-header button and the list action -->
+    <record id="action_assign_delivery_wizard" model="ir.actions.act_window">
+        <field name="name">Assign to Delivery</field>
+        <field name="res_model">delivery.assign.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_view_types">list,form</field>
+    </record>
+</odoo>

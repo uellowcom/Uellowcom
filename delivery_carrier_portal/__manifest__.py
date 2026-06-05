@@ -17,6 +17,7 @@
         'views/res_config_settings_views.xml',
         'views/delivery_driver_views.xml',
         'views/delivery_cash_remittance_views.xml',
+        'wizard/assign_delivery_wizard_views.xml',
         'views/sale_order_delivery_views.xml',
         'views/delivery_dashboard_views.xml',
         'views/delivery_portal_menus.xml',
