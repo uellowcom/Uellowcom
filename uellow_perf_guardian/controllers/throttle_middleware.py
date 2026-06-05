@@ -8,6 +8,8 @@ Hooks on ``ir.http``:
 import logging
 import time
 
+from werkzeug.exceptions import HTTPException
+
 from odoo import models
 from odoo.http import request, Response
 
@@ -78,9 +80,33 @@ class IrHttpInherit(models.AbstractModel):
     def _pre_dispatch(cls, rule, arguments):
         try:
             cls._perf_guardian_throttle()
+        except HTTPException:
+            # v2.1.70 — THE enforcement bug: the 429/403 response is
+            # raised as an HTTPException, but the catch-all below was
+            # swallowing it ("throttle skipped") — so over-quota bots
+            # sailed through and rendered full pages (~70k junk
+            # requests/day saturating both CPUs). Re-raise: this
+            # exception IS the intended throttle response.
+            raise
         except Exception as e:
             _logger.warning('[perf-guardian] throttle skipped: %s', e)
         return super()._pre_dispatch(rule, arguments)
+
+    @classmethod
+    def _handle_error(cls, exception):
+        # v2.1.70 — serve throttle responses AS-IS. Without this,
+        # http_routing's frontend handler caught the 429, found no
+        # 'http_routing.429' template, fell back to 418 and rendered a
+        # FULL themed error page (~200KB) — burning the same CPU the
+        # throttle was meant to save.
+        resp = getattr(exception, 'response', None)
+        try:
+            if resp is not None and \
+                    resp.headers.get('X-Perf-Guardian') == 'throttled':
+                return resp
+        except Exception:
+            pass
+        return super()._handle_error(exception)
 
     @classmethod
     def _post_dispatch(cls, response):
