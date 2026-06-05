@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="reviewers_landing" name="Uellow Reviewers page">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <!-- hero -->
+                <section class="text-center py-5"
+                         style="background:linear-gradient(120deg,#1D2733,#34495E);color:#fff">
+                    <div class="container">
+                        <div style="font-size:56px">🎓</div>
+                        <h1 class="fw-bolder" style="color:#FFD75E">
+                            Uellow Reviewers
+                            <br/><span style="font-size:24px">أخصائيو يلو — آراء الخبراء</span>
+                        </h1>
+                        <p class="lead" style="opacity:.85;max-width:680px;margin:auto">
+                            Help shoppers decide with your expert opinion —
+                            earn POINTS for every session and a share of
+                            every sale you influence.
+                            <br/>
+                            ساعد المتسوقين برأيك المتخصص — اكسب نقاطاً عن كل
+                            جلسة ونسبة من كل عملية بيع ساهمت فيها.
+                        </p>
+                        <a href="#apply" class="btn btn-warning btn-lg fw-bold mt-2">
+                            Become a reviewer / كن أخصائياً
+                        </a>
+                    </div>
+                </section>
+
+                <!-- how it works -->
+                <section class="py-5">
+                    <div class="container">
+                        <h2 class="text-center mb-4">How it works · كيف يعمل</h2>
+                        <div class="row g-3 text-center">
+                            <t t-foreach="[
+                                ('1️⃣', 'Apply with your specialty', 'قدّم طلبك بتخصصك (موضة، إلكترونيات…) وانتظر اعتماد الإدارة'),
+                                ('2️⃣', 'Receive customer requests', 'تصلك طلبات العملاء: رأي مكتوب، شات، صورة، أو رأي على التراي-أون'),
+                                ('3️⃣', 'Give your expert verdict', 'أعط رأيك بسرعة: أنصح / محايد / لا أنصح + تقييم الجودة والقيمة'),
+                                ('4️⃣', 'Earn points + sales share', 'اكسب نقاطاً فورية + نسبة من المبيعة لو اشترى العميل واستلم'),
+                            ]" t-as="step">
+                                <div class="col-6 col-lg-3">
+                                    <div class="p-4 bg-white rounded-3 shadow-sm h-100">
+                                        <div style="font-size:34px" t-esc="step[0]"/>
+                                        <h6 class="fw-bold mt-2" t-esc="step[1]"/>
+                                        <div class="text-muted" style="font-size:13px"
+                                             t-esc="step[2]"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- earnings -->
+                <section class="py-5" style="background:#F4F7FA">
+                    <div class="container" style="max-width:760px">
+                        <h2 class="text-center mb-4">Earnings · أرباحك</h2>
+                        <table class="table table-bordered text-center bg-white shadow-sm">
+                            <thead class="table-dark"><tr>
+                                <th>Session · الجلسة</th>
+                                <th>Points · النقاط</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr><td>✍️ Written opinion · رأي مكتوب</td>
+                                    <td class="fw-bold" t-esc="pts['written']"/></tr>
+                                <tr><td>💬 Live chat · شات مباشر</td>
+                                    <td class="fw-bold" t-esc="pts['chat']"/></tr>
+                                <tr><td>📷 Photo review · صورة + رأي</td>
+                                    <td class="fw-bold" t-esc="pts['photo']"/></tr>
+                                <tr><td>🎥 Video call · مكالمة فيديو</td>
+                                    <td class="fw-bold" t-esc="pts['video']"/></tr>
+                                <tr><td>🪞 Try-on opinion · رأي التراي-أون</td>
+                                    <td class="fw-bold" t-esc="pts['tryon']"/></tr>
+                            </tbody>
+                        </table>
+                        <div class="row g-2 text-center">
+                            <div class="col-md-6">
+                                <div class="bg-white rounded-3 p-3 shadow-sm h-100">
+                                    <div style="font-size:26px">🔄</div>
+                                    <b>Every <t t-esc="rate"/> points = 1 KD</b>
+                                    <div class="text-muted" style="font-size:13px">
+                                        كل <t t-esc="rate"/> نقطة = 1 د.ك —
+                                        حوّلها لرصيد تسحبه أو تتسوق به من يلو
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="bg-white rounded-3 p-3 shadow-sm h-100">
+                                    <div style="font-size:26px">🛒</div>
+                                    <b><t t-esc="'%g' % profit_pct"/>% of every sale you influence</b>
+                                    <div class="text-muted" style="font-size:13px">
+                                        لو اشترى العميل المنتج واستلمه بنجاح
+                                        تحصل على <t t-esc="'%g' % profit_pct"/>٪
+                                        من قيمة البيع — تلقائياً
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- levels -->
+                <section class="py-5">
+                    <div class="container" style="max-width:680px">
+                        <h2 class="text-center mb-4">Levels · المستويات</h2>
+                        <table class="table table-bordered text-center bg-white shadow-sm">
+                            <thead class="table-dark"><tr>
+                                <th>Level</th><th>Completed reviews · مراجعات مكتملة</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr><td>⭐ Starter</td><td>0 – 10</td></tr>
+                                <tr><td>⭐⭐ Regular</td><td>11 – 50</td></tr>
+                                <tr><td>⭐⭐⭐ Expert</td><td>51 – 199</td></tr>
+                                <tr><td>⭐⭐⭐⭐ Elite</td><td>200+</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- FAQ -->
+                <section class="py-5" style="background:#F4F7FA">
+                    <div class="container" style="max-width:760px">
+                        <h2 class="text-center mb-4">FAQ · أسئلة شائعة</h2>
+                        <t t-foreach="[
+                            ('Do I get paid per review? · هل أتقاضى مبلغاً لكل مراجعة؟',
+                             'You earn POINTS per session — convert them to KD any time. Plus a % of every delivered sale you influenced. تكسب نقاطاً عن كل جلسة وتحولها لرصيد متى شئت + نسبة من كل بيع ساهمت فيه.'),
+                            ('What do customers ask? · ماذا يطلب العملاء؟',
+                             'Written opinions, live chat, photo feedback, and opinions on their virtual try-on photos. آراء مكتوبة، شات مباشر، رأي على صورة، وآراء على صور التراي-أون.'),
+                            ('How fast must I answer? · ما سرعة الرد المطلوبة؟',
+                             'Requests expire in minutes — stay ONLINE in the app when you are available. الطلبات تنتهي خلال دقائق — فعّل وضع أونلاين عندما تكون متاحاً.'),
+                            ('How do I withdraw? · كيف أسحب أرباحي؟',
+                             'KNET, bank transfer, or instant Uellow wallet credit. KNET أو تحويل بنكي أو رصيد فوري في محفظة يلو.'),
+                        ]" t-as="f">
+                            <div class="bg-white rounded-3 p-3 mb-2 shadow-sm">
+                                <div class="fw-bold" t-esc="f[0]"/>
+                                <div class="text-muted" style="font-size:13.5px"
+                                     t-esc="f[1]"/>
+                            </div>
+                        </t>
+                    </div>
+                </section>
+
+                <!-- application form -->
+                <section class="py-5" id="apply">
+                    <div class="container" style="max-width:620px">
+                        <h2 class="text-center mb-1">Apply for membership</h2>
+                        <h4 class="text-center text-muted mb-4">تقديم طلب عضوية</h4>
+                        <t t-if="msg == 'ok'">
+                            <div class="alert alert-success text-center">
+                                ✅ Application received! We will review and
+                                activate you soon. · تم استلام طلبك وسيتم
+                                اعتمادك قريباً.
+                            </div>
+                        </t>
+                        <t t-if="msg == 'already'">
+                            <div class="alert alert-info text-center">
+                                You already have a reviewer profile ·
+                                لديك ملف أخصائي بالفعل.
+                            </div>
+                        </t>
+                        <t t-if="msg == 'missing'">
+                            <div class="alert alert-danger text-center">
+                                Name and phone are required · الاسم والهاتف
+                                مطلوبان
+                            </div>
+                        </t>
+                        <t t-if="already">
+                            <div class="alert alert-info text-center">
+                                You are already a reviewer 🎉 ·
+                                أنت أخصائي معتمد بالفعل.
+                            </div>
+                        </t>
+                        <t t-if="not already">
+                            <form action="/reviewers/apply" method="post"
+                                  class="bg-white rounded-3 p-4 shadow-sm">
+                                <input type="hidden" name="csrf_token"
+                                       t-att-value="request.csrf_token()"/>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        Full name · الاسم الكامل *</label>
+                                    <input type="text" name="name"
+                                           class="form-control"
+                                           required="required"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        Phone · الهاتف *</label>
+                                    <input type="tel" name="phone"
+                                           class="form-control"
+                                           required="required"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        Email · البريد الإلكتروني</label>
+                                    <input type="email" name="email"
+                                           class="form-control"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        Specialties · تخصصاتك *</label>
+                                    <input type="text" name="specialties"
+                                           class="form-control"
+                                           placeholder="موضة رجالي، إلكترونيات، عطور…"
+                                           required="required"/>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        About you · نبذة عنك</label>
+                                    <textarea name="bio" rows="3"
+                                              class="form-control"
+                                              placeholder="خبرتك، حساباتك، لماذا أنت الأنسب…"/>
+                                </div>
+                                <button type="submit"
+                                        class="btn btn-warning btn-lg w-100 fw-bold">
+                                    🎓 Submit application · إرسال الطلب
+                                </button>
+                            </form>
+                        </t>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+</odoo>

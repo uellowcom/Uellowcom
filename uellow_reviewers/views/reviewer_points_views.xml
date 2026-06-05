@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ── Points ledger ──────────────────────────────────────────── -->
+    <record id="view_reviewer_point_list" model="ir.ui.view">
+        <field name="name">reviewer.point.list</field>
+        <field name="model">reviewer.point</field>
+        <field name="arch" type="xml">
+            <list decoration-success="points &gt; 0 or kd_amount &gt; 0"
+                  decoration-danger="points &lt; 0">
+                <field name="create_date"/>
+                <field name="reviewer_id"/>
+                <field name="source"/>
+                <field name="points" sum="Points"/>
+                <field name="kd_amount" sum="KD"/>
+                <field name="request_id"/>
+                <field name="order_id"/>
+                <field name="note"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_reviewer_points" model="ir.actions.act_window">
+        <field name="name">Points Ledger</field>
+        <field name="res_model">reviewer.point</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- ── Dashboard ──────────────────────────────────────────────── -->
+    <record id="view_reviewer_dashboard_form" model="ir.ui.view">
+        <field name="name">reviewer.dashboard.form</field>
+        <field name="model">reviewer.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Reviewers Dashboard" create="false" edit="false">
+                <sheet>
+                    <h1>📊 Reviewers Program Dashboard</h1>
+                    <div class="text-muted mb-3">Live snapshot — reopen the
+                        menu to refresh.</div>
+                    <group string="🧑‍⚖️ Reviewers">
+                        <group>
+                            <field name="reviewers_total"/>
+                            <field name="reviewers_approved"/>
+                            <field name="reviewers_online"/>
+                        </group>
+                        <group>
+                            <field name="reviewers_pending"/>
+                            <field name="reviewers_suspended"/>
+                        </group>
+                    </group>
+                    <group string="📨 Sessions">
+                        <group>
+                            <field name="requests_total"/>
+                            <field name="requests_pending"/>
+                            <field name="requests_active"/>
+                        </group>
+                        <group>
+                            <field name="requests_completed"/>
+                            <field name="requests_month"/>
+                            <field name="avg_response_minutes"/>
+                        </group>
+                    </group>
+                    <group string="⭐ Points economy">
+                        <group>
+                            <field name="points_issued"/>
+                            <field name="points_redeemed"/>
+                            <field name="points_outstanding"/>
+                        </group>
+                        <group>
+                            <field name="profit_share_paid"/>
+                            <field name="wallets_total"/>
+                        </group>
+                    </group>
+                    <group string="💸 Payouts">
+                        <group>
+                            <field name="payouts_pending"/>
+                            <field name="payouts_pending_amount"/>
+                        </group>
+                        <group>
+                            <field name="payouts_paid_amount"/>
+                        </group>
+                    </group>
+                    <div class="mt-2 mb-3">
+                        <button name="open_pending_reviewers" type="object"
+                                string="🧑‍⚖️ Approve reviewers"
+                                class="btn btn-primary me-2"/>
+                        <button name="open_pending_payouts" type="object"
+                                string="💸 Pending payouts"
+                                class="btn btn-warning me-2"/>
+                        <button name="open_points" type="object"
+                                string="⭐ Points ledger"
+                                class="btn btn-secondary me-2"/>
+                        <button name="open_requests" type="object"
+                                string="📨 Requests"
+                                class="btn btn-secondary"/>
+                    </div>
+                    <group string="🏆 Top reviewers (30 days)">
+                        <field name="top_reviewers_html" nolabel="1"
+                               colspan="2"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_reviewer_dashboard" model="ir.actions.server">
+        <field name="name">Reviewers Dashboard</field>
+        <field name="model_id" ref="model_reviewer_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open()</field>
+    </record>
+
+    <!-- ── Settings: points + profit-share sections ───────────────── -->
+    <record id="view_reviewer_settings_points" model="ir.ui.view">
+        <field name="name">reviewer.settings.points</field>
+        <field name="model">reviewer.settings</field>
+        <field name="inherit_id" ref="view_reviewer_settings_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="⭐ نقاط الجلسات (بدل السعر الثابت)">
+                    <group>
+                        <field name="points_written"/>
+                        <field name="points_chat"/>
+                        <field name="points_photo"/>
+                    </group>
+                    <group>
+                        <field name="points_video"/>
+                        <field name="points_tryon"/>
+                    </group>
+                </group>
+                <group string="🔄 تحويل النقاط إلى فلوس">
+                    <group>
+                        <field name="points_per_kd"/>
+                        <field name="min_redeem_points"/>
+                    </group>
+                </group>
+                <group string="🛒 نسبة الريفيور من المبيعات الناجحة">
+                    <group>
+                        <field name="profit_share_pct"/>
+                        <field name="profit_basis"/>
+                    </group>
+                    <group>
+                        <field name="profit_window_days"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ── Profile: points page ───────────────────────────────────── -->
+    <record id="view_reviewer_profile_points" model="ir.ui.view">
+        <field name="name">reviewer.profile.points</field>
+        <field name="model">reviewer.profile</field>
+        <field name="inherit_id" ref="view_reviewer_profile_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="⭐ Points &amp; earnings">
+                    <group>
+                        <field name="points_balance"/>
+                        <field name="points_earned_total"/>
+                    </group>
+                    <group>
+                        <field name="profit_earned_total"/>
+                        <field name="wallet_balance" readonly="1"/>
+                    </group>
+                </group>
+                <field name="point_ids" readonly="1">
+                    <list>
+                        <field name="create_date"/>
+                        <field name="source"/>
+                        <field name="points"/>
+                        <field name="kd_amount"/>
+                        <field name="note"/>
+                    </list>
+                </field>
+            </xpath>
+        </field>
+    </record>
+
+    <menuitem id="menu_reviewer_dashboard" name="Dashboard"
+              parent="menu_reviewers_root"
+              action="action_reviewer_dashboard" sequence="1"/>
+    <menuitem id="menu_reviewer_points" name="Points Ledger"
+              parent="menu_reviewers_root"
+              action="action_reviewer_points" sequence="35"/>
+</odoo>

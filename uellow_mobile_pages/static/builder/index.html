@@ -5438,6 +5438,65 @@ function pickVendorItem(id, name){
    NEW PAGE
    ============================================================ */
 function openNewPage(){ document.getElementById('newPageBd').classList.add('on'); }
+
+// v2.1.59 — the template / theme / language tiles in the new-page modal
+// had NO click handlers (nothing was selectable). Delegated wiring:
+document.getElementById('newPageBd').addEventListener('click', e => {
+  const tpl = e.target.closest('.tpl');
+  if (tpl) {
+    document.querySelectorAll('#newPageBd .tpl').forEach(t =>
+        t.classList.toggle('on', t === tpl));
+    return;
+  }
+  const preset = e.target.closest('.preset');
+  if (preset) {
+    document.querySelectorAll('#newPageBd .preset').forEach(t =>
+        t.classList.toggle('on', t === preset));
+    return;
+  }
+  const chip = e.target.closest('#npLangs .chip');
+  if (chip) chip.classList.toggle('on');
+});
+
+// Starter blocks per template (picked by the .tpl tile name).
+function templateBlocks(tplName, pageName){
+  const n = (tplName || '').toLowerCase();
+  if (n.includes('promo')) return [
+    block('hero', {titleEn: pageName, titleAr: pageName,
+        subEn: 'Limited-time offers', subAr: 'عروض لفترة محدودة'}),
+    block('countdown', {}),
+    block('flash', {titleEn: '⚡ Flash deals', titleAr: '⚡ صفقات سريعة'}),
+    block('discount-strip', {titleEn: 'Hot deals', titleAr: 'صفقات ساخنة'}),
+    block('sticky-cta', {}),
+  ];
+  if (n.includes('brand')) return [
+    block('hero', {titleEn: pageName, titleAr: pageName}),
+    block('text', {titleEn: 'About the brand', titleAr: 'عن الماركة'}),
+    block('products', {titleEn: 'Products', titleAr: 'المنتجات',
+        variant: 'grid_2'}),
+  ];
+  if (n.includes('collection')) return [
+    block('image-banner', {}),
+    block('pill-filter', {}),
+    block('products', {titleEn: pageName, titleAr: pageName,
+        variant: 'grid_2'}),
+    block('explore-more', {}),
+  ];
+  if (n.includes('editorial')) return [
+    block('hero', {titleEn: pageName, titleAr: pageName}),
+    block('text', {}),
+    block('lookbook', {titleEn: 'Gallery', titleAr: 'معرض الصور'}),
+    block('sticky-cta', {}),
+  ];
+  if (n.includes('info')) return [
+    block('hero', {titleEn: pageName, titleAr: pageName}),
+    block('text', {titleEn: 'Section 1', titleAr: 'قسم 1'}),
+    block('text', {titleEn: 'Section 2', titleAr: 'قسم 2'}),
+    block('reviews', {}),
+  ];
+  // Blank
+  return [block('hero', {titleEn: pageName, titleAr: pageName})];
+}
 async function confirmNewPage(){
   const name = document.getElementById('npName').value || 'Untitled page';
   const slug = document.getElementById('npSlug').value || name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
@@ -5456,7 +5515,11 @@ async function confirmNewPage(){
       name, slug, kind, theme_code: themeCode,
       website_ids: websiteIds,
       lang_codes: langs.length ? langs : ['en', 'ar'],
-      blocks: [block('hero', {titleEn:name, titleAr:name})],
+      // v2.1.59 — build the starter layout from the SELECTED template
+      // (the choice was ignored before).
+      blocks: templateBlocks(
+          document.querySelector('#newPageBd .tpl.on .nm')?.textContent
+          || 'Blank', name),
     });
     const mapped = mapAdminPage(created);
     pages.push(mapped);

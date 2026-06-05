@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="cron_reviewer_profit_share" model="ir.cron">
+            <field name="name">Reviewers: purchase profit share</field>
+            <field name="model_id" ref="model_review_request"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_profit_share()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="active" eval="True"/>
+        </record>
+        <record id="cron_reviewer_expire" model="ir.cron">
+            <field name="name">Reviewers: expire stale requests</field>
+            <field name="model_id" ref="model_review_request"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_expire_requests()</field>
+            <field name="interval_number">10</field>
+            <field name="interval_type">minutes</field>
+            <field name="active" eval="True"/>
+        </record>
+    </data>
+</odoo>
