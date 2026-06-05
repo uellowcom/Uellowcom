@@ -6,9 +6,10 @@
     'summary': 'Full control panel for the Uellow Flutter mobile application',
     'author': 'Uellow',
     'website': 'https://uellow.com',
-    'depends': ['base', 'website', 'sale', 'product', 'web', 'delivery',
+    'depends': ['base', 'website', 'website_sale', 'sale', 'product', 'web', 'delivery',
                 'loyalty',
-                'dev_facebook_shop_integration', 'delivery_carrier_portal', 'uellow_multivendor'],
+                'dev_facebook_shop_integration', 'delivery_carrier_portal', 'uellow_multivendor',
+                'uellow_checkout'],
     'data': [
         'security/ir.model.access.csv',
         'views/customer_notification_views.xml',
@@ -31,6 +32,7 @@
         'views/mobile_category_slide_views.xml',
         'views/mobile_announcement_views.xml',
         'views/cart_share_templates.xml',
+        'views/website_selective_checkout_templates.xml',
     ],
     'assets': {
         'web.assets_backend': [

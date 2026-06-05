@@ -7,3 +7,4 @@ from . import api_v2_preview_screens  # screen renderers used by app_preview
 from . import app_download  # APK download at /download/uellow-app
 from . import cart_share_public  # /cart/share/<token> share-cart landing
 from . import vendor_promotions
+from . import website_selective_checkout  # /shop/cart/checkout-selected (selective checkout)

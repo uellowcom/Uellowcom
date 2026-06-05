@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- v2.1.69 — selective checkout on the website cart.
+         A checkbox on every cart line + a yellow "Checkout selected
+         only" button. Mirrors the mobile app feature. -->
+
+    <!-- Checkbox per line -->
+    <template id="cart_lines_selective_checkbox"
+              inherit_id="website_sale.cart_lines">
+        <!-- the line div uses t-attf-class, so hasclass() can't see it -->
+        <xpath expr="//div[@id='cart_products']//div[contains(@t-attf-class, 'o_cart_product')]"
+               position="inside">
+            <div class="d-flex align-items-center uellow-sel-wrap"
+                 style="order:-1">
+                <input type="checkbox" class="form-check-input uellow-sel-line"
+                       style="width:1.15rem;height:1.15rem;cursor:pointer;border-color:#F5C320"
+                       t-att-data-line-id="line.id"
+                       t-att-data-line-total="line.price_total"/>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- ════ uellow_checkout theme (the LIVE cart on all 17 sites) ════ -->
+    <!-- Checkbox on every line — mobile + desktop sections -->
+    <template id="uc_cart_selective_checkboxes"
+              inherit_id="uellow_checkout.cart">
+        <xpath expr="//div[@class='uc-item']" position="inside">
+            <input type="checkbox" class="uellow-sel-line"
+                   style="width:1.15rem;height:1.15rem;cursor:pointer;accent-color:#F5C320;align-self:center"
+                   t-att-data-line-id="line.id"/>
+        </xpath>
+        <xpath expr="//div[@class='uc-desk-item']" position="inside">
+            <input type="checkbox" class="uellow-sel-line"
+                   style="width:1.15rem;height:1.15rem;cursor:pointer;accent-color:#F5C320;align-self:center;order:-1"
+                   t-att-data-line-id="line.id"/>
+        </xpath>
+        <!-- Selective button under the mobile footer CTA -->
+        <xpath expr="//button[@id='uc-to-shipping']" position="after">
+            <button type="button" class="uc-btn uellow-sel-go"
+                    style="display:none;margin-top:8px;background:#fff;color:#412402;border:2px solid #F5C320">
+                <t t-if="uc_lang=='ar'">الدفع للمحدّد فقط (<span class="uellow-sel-n"/>)</t>
+                <t t-else="">Checkout selected only (<span class="uellow-sel-n"/>)</t>
+            </button>
+        </xpath>
+        <!-- …and under the desktop sidebar CTA -->
+        <xpath expr="//button[@id='uc-to-shipping-desk']" position="after">
+            <button type="button" class="uc-desk-btn uellow-sel-go"
+                    style="display:none;margin-top:8px;background:#fff;color:#412402;border:2px solid #F5C320">
+                <t t-if="uc_lang=='ar'">الدفع للمحدّد فقط (<span class="uellow-sel-n"/>)</t>
+                <t t-else="">Checkout selected only (<span class="uellow-sel-n"/>)</t>
+            </button>
+        </xpath>
+        <!-- glue: show button on PARTIAL selection, POST line_ids -->
+        <xpath expr="//div[@class='uc-mobile-wrap']" position="after">
+            <script type="text/javascript">
+                document.addEventListener('DOMContentLoaded', function () {
+                    var boxes = document.querySelectorAll('.uellow-sel-line');
+                    var gos = document.querySelectorAll('.uellow-sel-go');
+                    if (!boxes.length || !gos.length) { return; }
+                    function refresh() {
+                        var c = document.querySelectorAll('.uellow-sel-line:checked');
+                        var partial = c.length &amp;&amp; c.length &lt; boxes.length;
+                        gos.forEach(function (g) {
+                            g.style.display = partial ? '' : 'none';
+                            var n = g.querySelector('.uellow-sel-n');
+                            if (n) { n.textContent = c.length; }
+                        });
+                    }
+                    boxes.forEach(function (b) {
+                        b.addEventListener('change', refresh);
+                    });
+                    gos.forEach(function (g) {
+                        g.addEventListener('click', function () {
+                            var f = document.createElement('form');
+                            f.method = 'POST';
+                            f.action = '/shop/cart/checkout-selected';
+                            var t = document.createElement('input');
+                            t.type = 'hidden'; t.name = 'csrf_token';
+                            t.value = (window.odoo &amp;&amp; odoo.csrf_token) || '';
+                            f.appendChild(t);
+                            document.querySelectorAll('.uellow-sel-line:checked')
+                                .forEach(function (b) {
+                                    var i = document.createElement('input');
+                                    i.type = 'hidden'; i.name = 'line_ids';
+                                    i.value = b.dataset.lineId;
+                                    f.appendChild(i);
+                                });
+                            document.body.appendChild(f);
+                            f.submit();
+                        });
+                    });
+                });
+            </script>
+        </xpath>
+    </template>
+
+    <!-- Button + tiny script under the cart (stock website_sale fallback) -->
+    <template id="cart_selective_checkout_button"
+              inherit_id="website_sale.cart">
+        <xpath expr="//div[@id='oe_structure_website_sale_cart_2']"
+               position="before">
+            <div class="container my-3" id="uellow_selective_checkout"
+                 style="display:none">
+                <form action="/shop/cart/checkout-selected" method="post"
+                      id="uellow_sel_form">
+                    <input type="hidden" name="csrf_token"
+                           t-att-value="request.csrf_token()"/>
+                    <div id="uellow_sel_inputs"/>
+                    <button type="submit" class="btn w-100 fw-bold"
+                            style="background:#F5C320;color:#412402;border-radius:12px;padding:.7rem">
+                        <i class="fa fa-check-square-o me-2"/>
+                        <span>Checkout selected only / الدفع للمحدّد فقط</span>
+                        <span id="uellow_sel_count" class="badge ms-2"
+                              style="background:#412402;color:#F5C320"/>
+                    </button>
+                    <div class="text-muted small text-center mt-1">
+                        Unselected items stay safely in your cart /
+                        المنتجات غير المحددة تبقى في سلتك
+                    </div>
+                </form>
+            </div>
+            <script type="text/javascript">
+                document.addEventListener('DOMContentLoaded', function () {
+                    var boxes = document.querySelectorAll('.uellow-sel-line');
+                    var wrap = document.getElementById('uellow_selective_checkout');
+                    var inputs = document.getElementById('uellow_sel_inputs');
+                    var count = document.getElementById('uellow_sel_count');
+                    if (!boxes.length || !wrap) { return; }
+                    function refresh() {
+                        var checked = document.querySelectorAll('.uellow-sel-line:checked');
+                        inputs.innerHTML = '';
+                        checked.forEach(function (b) {
+                            var i = document.createElement('input');
+                            i.type = 'hidden'; i.name = 'line_ids';
+                            i.value = b.dataset.lineId;
+                            inputs.appendChild(i);
+                        });
+                        count.textContent = checked.length;
+                        // Show the button only for a PARTIAL selection —
+                        // all/none selected = the normal checkout button.
+                        wrap.style.display =
+                            (checked.length &amp;&amp; checked.length &lt; boxes.length)
+                                ? '' : 'none';
+                    }
+                    boxes.forEach(function (b) {
+                        b.addEventListener('change', refresh);
+                    });
+                });
+            </script>
+        </xpath>
+    </template>
+</odoo>
