@@ -411,6 +411,21 @@ def effective_shipping_price(order, carrier, base_price):
                 or '1').strip() in ('1', 'True', 'true')
         if excl and carrier_is_express(carrier):
             return base_price, None
+        # v2.1.76 — free shipping as a COURIER-COMPANY property, applied
+        # ONLY to its normal (non-express) methods. The carrier method
+        # links to a company (delivery.carrier.company) via
+        # carrier_company_id; if that company has free shipping enabled and
+        # the order subtotal meets its threshold → normal delivery is free.
+        if not carrier_is_express(carrier):
+            cc = getattr(carrier, 'carrier_company_id', False)
+            if cc and getattr(cc, 'free_shipping_enabled', False):
+                thr = cc.free_shipping_threshold or 0.0
+                if order.amount_untaxed >= thr:
+                    lbl = ({'en': 'Free delivery', 'ar': 'توصيل مجاني'}
+                           if thr <= 0 else
+                           {'en': 'Free over %.3f' % thr,
+                            'ar': 'مجاني فوق %.3f' % thr})
+                    return 0.0, lbl
         # carrier's own free-over
         if getattr(carrier, 'free_over', False) and                 order.amount_untaxed >= (getattr(carrier, 'amount', 0) or 0):
             return 0.0, {'en': 'Free over %s' % (carrier.amount or 0),

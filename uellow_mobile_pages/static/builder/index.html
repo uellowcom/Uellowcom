@@ -3274,7 +3274,7 @@ function renderContent(b){
         <div class="field"><label>Layout</label>${sourceSelect(b,'layout',[['rail','Horizontal rail'],['grid','2-column grid']],'rail')}</div>
         <div class="sub-h">Products</div>
         <div class="field"><label>Source</label>${sourceSelect(b,'source',[['discounted','On offer — biggest discounts'],['bestsellers','Best sellers'],['newest','New arrivals'],['collection','A specific category…'],['manual','Hand-picked…']],p.source||'discounted')}</div>
-        ${(p.source==='collection') ? `<div class="field"><label>Category ID</label><input type="number" data-prop-num="category_id" value="${p.category_id||0}"/></div>` : ''}
+        ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
         ${(p.source==='manual') ? productsPickerBtn(b) : ''}
         <div class="field"><label>Maximum products</label><input type="number" min="2" max="20" data-prop-num="limit" value="${p.limit||10}"/></div>`;
     }

@@ -20,6 +20,21 @@ class DeliveryCarrierCompany(models.Model):
         ('monthly', 'Monthly'),
     ], string='Cash Settlement Mode', default='weekly', required=True, tracking=True)
 
+    # ── Free shipping (v2.1.76) ──────────────────────────────────────
+    # Free delivery is a property of the COURIER COMPANY and applies ONLY
+    # to its NORMAL (non-express) methods: when the order subtotal reaches
+    # the threshold, the normal delivery fee for this company becomes 0.
+    # Express/same-day methods are never made free.
+    free_shipping_enabled = fields.Boolean(
+        string='Free Shipping (normal delivery)', default=False, tracking=True,
+        help='When ON, this company\'s NORMAL (non-express) delivery is free '
+             'once the order subtotal reaches the threshold below. Express '
+             'methods are always charged.')
+    free_shipping_threshold = fields.Float(
+        string='Free Over (KD)', digits=(10, 3), default=0.0, tracking=True,
+        help='Order subtotal (excl. delivery) at/above which normal delivery '
+             'is free. 0 = always free for normal delivery.')
+
     portal_user_ids = fields.Many2many(
         'res.users', 'carrier_company_portal_users_rel',
         'company_id', 'user_id',

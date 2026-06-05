@@ -25,6 +25,17 @@
                             <field name="pending_cash" string="Pending Cash (KD)"/>
                         </group>
                     </group>
+                    <group string="🚚 Free Shipping (normal delivery only)">
+                        <field name="free_shipping_enabled"/>
+                        <field name="free_shipping_threshold"
+                               invisible="not free_shipping_enabled"/>
+                        <div colspan="2" class="text-muted"
+                             invisible="not free_shipping_enabled">
+                            Applies to this company's NORMAL (non-express)
+                            delivery only. Express / same-day methods are
+                            always charged.
+                        </div>
+                    </group>
                     <group string="Sorting Center Location (shown on customer live-tracking map)">
                         <group>
                             <field name="center_address" placeholder="Street, city"/>
