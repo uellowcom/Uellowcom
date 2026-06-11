@@ -208,14 +208,21 @@ class ImportJob(models.Model):
         # Products are now persisted & visible. Enrich each line in place,
         # committing per line, so a timeout only loses the un-enriched tail —
         # never the products themselves.
-        if self.state == 'review' and (self.enable_translation or self.enable_seo):
+        if self.state == 'review':
             self.env.cr.commit()
+            # Fetch Drive-hosted photos for rows that had no embedded image.
             try:
-                self._ai_enrich_lines(self.line_ids)
+                self._attach_drive_candidates(self.line_ids)
             except Exception:
-                # Enrichment is optional polish; products are already saved.
                 _logger.exception(
-                    'Smart Connector AI enrichment pass failed for %s', self.name)
+                    'Smart Connector Drive image pass failed for %s', self.name)
+            if self.enable_translation or self.enable_seo:
+                try:
+                    self._ai_enrich_lines(self.line_ids)
+                except Exception:
+                    # Enrichment is optional polish; products are already saved.
+                    _logger.exception(
+                        'Smart Connector AI enrichment pass failed for %s', self.name)
 
     def _attach_embedded_candidates(self, lines, embedded):
         """Create image candidates from the photos embedded in the sheet.
@@ -426,6 +433,10 @@ class ImportJob(models.Model):
         except Exception:
             img_cap = 5
         images_by_row = self._extract_xlsx_images(ws, img_cap)
+        # hyperlink target behind an "Image" cell (often a Google Drive folder
+        # link shown as the text "link") → fetched later for rows with no
+        # embedded photo.
+        image_links = self._extract_xlsx_image_links(ws)
 
         all_rows = list(ws.iter_rows(values_only=True))
         if not all_rows:
@@ -522,7 +533,8 @@ class ImportJob(models.Model):
                                 exclude=('barcode',)),
                 'qty': qty,
                 'out_of_stock': out_of_stock,
-                'image_url': _s('image', 'img', 'photo'),
+                # prefer the real hyperlink (Drive link) over the "link" text
+                'image_url': image_links.get(ridx) or _s('image', 'img', 'photo'),
                 'source_url': '',
                 # embedded photos for this spreadsheet row (largest first)
                 '_embedded_images': images_by_row.get(ridx, []),
@@ -571,6 +583,115 @@ class ImportJob(models.Model):
                     break
             result[row] = b64s
         return result
+
+    def _extract_xlsx_image_links(self, ws):
+        """Map {row_index: hyperlink_url} for cells under an image column.
+
+        Supplier sheets often show the word "link" in an Image/Video column
+        with the real URL (commonly a Google Drive folder) as the cell's
+        hyperlink — invisible to a values-only read.
+        """
+        links = {}
+        try:
+            header = ws[1]
+        except Exception:
+            return links
+        img_cols = [c.column for c in header
+                    if any(k in str(c.value or '').lower()
+                           for k in ('image', 'img', 'photo', 'picture'))]
+        for col in img_cols:
+            for (cell,) in ws.iter_cols(min_col=col, max_col=col, min_row=2):
+                tgt = cell.hyperlink.target if cell.hyperlink else None
+                if tgt:
+                    # cell.row is 1-indexed (header = row 1) → all_rows idx = row-1
+                    links.setdefault(cell.row - 1, tgt)
+        return links
+
+    def _attach_drive_candidates(self, lines):
+        """Best-effort: for lines with NO image yet but a Google Drive link in
+        image_url, fetch the photos from Drive and add them as candidates
+        (largest/first = main). Commits per line."""
+        Cand = self.env['uellow.import.image.candidate']
+        try:
+            cap = int(self.env['uellow.connector.settings']
+                      .get_settings().get('import_images_per_product') or 5)
+        except Exception:
+            cap = 5
+        for line in lines:
+            if line.candidate_ids:
+                continue
+            url = (line.image_url or '').strip()
+            if 'drive.google.com' not in url:
+                continue
+            imgs = self._drive_folder_images(url, cap)
+            if not imgs:
+                continue
+            Cand.create([{
+                'line_id': line.id, 'source': 'import',
+                'title': (line.name_en or '')[:60],
+                'image': b, 'is_main': i == 0, 'include': True,
+                'sequence': 10 + i,
+            } for i, b in enumerate(imgs)])
+            self.env.cr.commit()
+
+    def _drive_folder_images(self, url, cap):
+        """Public Google Drive folder/file link → list of base64 images.
+
+        Scrapes the folder's public page (_DRIVE_ivd payload) for image file
+        ids, then downloads each via the direct-download endpoint. Needs no API
+        key as long as the folder is shared "anyone with the link".
+        """
+        import requests
+        ua = {'User-Agent': 'Mozilla/5.0'}
+        try:
+            # direct single-file link
+            m = re.search(r'/file/d/([A-Za-z0-9_-]+)', url)
+            if m:
+                b = self._drive_download(m.group(1))
+                return [b] if b else []
+            m = (re.search(r'/folders/([A-Za-z0-9_-]+)', url)
+                 or re.search(r'[?&]id=([A-Za-z0-9_-]+)', url))
+            if not m:
+                return []
+            r = requests.get('https://drive.google.com/drive/folders/%s' % m.group(1),
+                             timeout=25, headers=ua)
+            mm = re.search(r"window\['_DRIVE_ivd'\]\s*=\s*'(.+?)';", r.text, re.S)
+            if not mm:
+                return []
+            data = json.loads(mm.group(1).encode().decode('unicode_escape'))
+            files = data[0] if data and isinstance(data[0], list) else []
+            imgs = []
+            for f in files:
+                try:
+                    if isinstance(f[3], str) and f[3].startswith('image/'):
+                        imgs.append((f[0], str(f[2])))
+                except Exception:
+                    continue
+            imgs.sort(key=lambda t: t[1])   # name order → "1.jpg" becomes main
+            out = []
+            for fid, _name in imgs[:cap]:
+                b = self._drive_download(fid)
+                if b:
+                    out.append(b)
+            return out
+        except Exception as e:
+            _logger.info('Smart Connector: Drive fetch failed for %s: %s', url, e)
+            return []
+
+    def _drive_download(self, fid):
+        """Download one Drive file id as base64, if it is a sane-sized image."""
+        import requests
+        try:
+            dr = requests.get(
+                'https://drive.google.com/uc?export=download&id=%s' % fid,
+                timeout=30, headers={'User-Agent': 'Mozilla/5.0'})
+            ctype = (dr.headers.get('Content-Type') or '')
+            if (dr.status_code == 200 and ctype.startswith('image/')
+                    and 1024 < len(dr.content) < 8 * 1024 * 1024):
+                return base64.b64encode(dr.content)
+        except Exception:
+            pass
+        return None
 
     def _parse_pdf(self, content):
         """Basic PDF text extraction — each non-trivial line becomes a product."""
