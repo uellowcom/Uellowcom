@@ -54,6 +54,9 @@ _PARAMS = [
     ('publish_set_published', 'uellow.sc.publish_set_published',True,                                    bool),
     # Max images attached per product on import (1 main + the rest as gallery)
     ('import_images_per_product','uellow.sc.import_img_per_product',5,                                   int),
+    # Daily safety-net cron: auto-translate any published product still missing
+    # an Arabic name (catches manual/Beena/Publish-Studio products too).
+    ('autotranslate_names',   'uellow.sc.autotranslate_names', True,                                     bool),
 ]
 
 
@@ -188,6 +191,11 @@ class ConnectorSettings(models.TransientModel):
     publish_set_published = fields.Boolean(
         'Publish products live by default', default=True,
         help='When publishing from the Studio, set the product website-published.')
+    autotranslate_names = fields.Boolean(
+        'Auto-translate product names to Arabic (daily)', default=True,
+        help='A daily job translates any published product that still has no '
+             'Arabic name, so nothing stays English-only on the /ar storefront. '
+             'مهمة يومية تترجم أسماء المنتجات المنشورة التي بلا اسم عربي.')
 
     @api.constrains('anthropic_api_key')
     def _check_api_key(self):

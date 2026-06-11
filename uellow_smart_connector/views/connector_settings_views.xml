@@ -38,6 +38,7 @@
                    invisible="image_search_provider == 'none'"/>
             <field name="import_images_per_product"/>
             <field name="publish_set_published"/>
+            <field name="autotranslate_names"/>
           </group>
           <group string="AI Settings">
             <field name="anthropic_api_key" password="True"

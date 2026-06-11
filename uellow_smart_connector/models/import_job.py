@@ -1028,6 +1028,78 @@ class ImportJob(models.Model):
                     time.sleep(2 * (attempt + 1))
         return None
 
+    # ── safety net: never let a published product sit without an Arabic name ──
+    @api.model
+    def _cron_backfill_arabic_names(self, limit=150, batch=25):
+        """Daily guard. Find PUBLISHED products whose Arabic (ar_001) name is
+        missing or still equal to the English source, and translate them with
+        Claude. This catches products created by ANY path — manual entry, Beena,
+        Publish Studio, or an import that ran with translation disabled — so the
+        'product not translated to Arabic' problem cannot quietly come back.
+
+        Gated by the `uellow.sc.autotranslate_names` setting (default on).
+        Processes at most `limit` products per run; per-batch commit keeps the
+        lock short and makes a timeout lose only the un-translated tail.
+        """
+        ICP = self.env['ir.config_parameter'].sudo()
+        if ICP.get_param('uellow.sc.autotranslate_names', '1') not in ('1', 'True', 'true'):
+            return
+        api_key, model = resolve_ai_config(self.env)
+        if not api_key:
+            _logger.warning('Arabic-name backfill: no Anthropic API key, skipping')
+            return
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key, timeout=_AI_TIMEOUT_S)
+        except ImportError:
+            return
+
+        prods = self.env['product.template'].search(
+            [('active', '=', True), ('is_published', '=', True)])
+        todo = prods.filtered(
+            lambda p: not (p.with_context(lang='ar_001').name or '').strip()
+            or p.with_context(lang='ar_001').name == p.with_context(lang='en_US').name)[:limit]
+        if not todo:
+            return
+        _logger.info('Arabic-name backfill: %d products to translate', len(todo))
+
+        ar_re = re.compile(u'[؀-ۿ]')
+        recs = list(todo)
+        done = 0
+        for s in range(0, len(recs), batch):
+            chunk = recs[s:s + batch]
+            listing = "\n".join(
+                "%d. %s" % (i, (chunk[i].with_context(lang='en_US').name or ''))
+                for i in range(len(chunk)))
+            sysmsg = (
+                "You are a senior Arabic e-commerce copywriter for a Gulf (Kuwait) "
+                "electronics store. Translate each product name into clear, natural "
+                "Gulf/MSA Arabic a Kuwaiti shopper understands. Keep brand names, model "
+                "numbers and units in Latin (RAVPower, RP-SH1003, USB-C, 100W); translate "
+                "the descriptive words. Natural, not literal. Return ONLY a JSON object "
+                "mapping the given number (as a string) to the Arabic name — no prose, no "
+                "code fences.")
+            try:
+                msg = client.messages.create(
+                    model=model, max_tokens=4000, system=sysmsg,
+                    messages=[{'role': 'user',
+                               'content': 'Translate these product names:\n' + listing}])
+                text = msg.content[0].text if msg.content else '{}'
+                text = re.sub(r'^```(?:json)?\s*', '', text.strip())
+                text = re.sub(r'\s*```$', '', text)
+                out = json.loads(text)
+            except Exception as e:
+                _logger.warning('Arabic-name backfill batch %d failed: %s', s, e)
+                continue
+            for i, p in enumerate(chunk):
+                ar = str(out.get(str(i)) or out.get(i) or '').strip()
+                en = (p.with_context(lang='en_US').name or '').strip()
+                if ar and ar_re.search(ar) and ar != en:
+                    p.with_context(lang='ar_001').write({'name': ar[:300]})
+                    done += 1
+            self.env.cr.commit()
+        _logger.info('Arabic-name backfill: translated %d products', done)
+
     def action_open_review(self):
         """Open this job's form (review happens inline on the Product Lines tab)."""
         self.ensure_one()
