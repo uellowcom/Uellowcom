@@ -230,9 +230,23 @@ class ImportJobLine(models.Model):
         # CREATE path — for rollback we just remember the new product id so
         # `action_rollback` can archive it (delete is unsafe if movements exist).
         new_prod = self.env['product.template'].create(vals)
+        self._set_arabic_name(new_prod)
         self._track_created_for_rollback(job, new_prod)
         self._apply_gallery(new_prod)
         return new_prod
+
+    def _set_arabic_name(self, product):
+        """Write the Arabic product name into the ar_001 translation, keeping the
+        English source intact. Only writes when we actually have an Arabic name
+        that differs from the English source."""
+        self.ensure_one()
+        ar = (self.name_ar or '').strip()
+        if not ar or ar == (self.name_en or '').strip():
+            return
+        try:
+            product.with_context(lang='ar_001').write({'name': ar})
+        except Exception:
+            _logger.exception('Smart Connector: failed to set Arabic name for %s', product.id)
 
     def _product_vals_for_write(self):
         """Build the vals dict for product.template.create/write.
@@ -278,8 +292,12 @@ class ImportJobLine(models.Model):
             return v
 
         # ── CREATE: full product ──
+        # The product `name` is a translatable field whose SOURCE value is the
+        # English (en_US) term. Always seed it with the English name; the Arabic
+        # translation is written separately in `_apply_to_catalog` so en_US never
+        # ends up holding Arabic text.
         v = {
-            'name': self.name_ar or self.name_en,
+            'name': self.name_en or self.name_ar,
             'list_price': self.new_price or 0.0,
             'type': 'consu',
         }
