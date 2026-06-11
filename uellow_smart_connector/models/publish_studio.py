@@ -340,6 +340,10 @@ class ImportJobLinePublish(models.Model):
                 withimg = l.candidate_ids.filtered('image')
                 if withimg:
                     withimg[0].is_main = True
+            # Commit per line: image-search downloads several remote images per
+            # line. Releasing the row lock between lines keeps the table free
+            # instead of holding locks through the whole multi-line fetch.
+            self.env.cr.commit()
         if len(self) == 1:
             return self._reopen_form()
         return True
@@ -381,6 +385,10 @@ class ImportJobLinePublish(models.Model):
                 l.job_id.message_post(body=_(
                     'AI content generation failed for "%s": %s'
                 ) % (l.name_en or l.id, e))
+            # Commit per line: each Claude call runs for tens of seconds. Without
+            # this, earlier lines' row locks stay held through later lines' AI
+            # calls → the transaction sits idle-in-transaction and blocks others.
+            self.env.cr.commit()
         if len(self) == 1:
             return self._reopen_form()
         return True
