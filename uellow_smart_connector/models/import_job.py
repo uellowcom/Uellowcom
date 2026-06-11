@@ -435,8 +435,12 @@ class ImportJob(models.Model):
         images_by_row = self._extract_xlsx_images(ws, img_cap)
         # hyperlink target behind an "Image" cell (often a Google Drive folder
         # link shown as the text "link") → fetched later for rows with no
-        # embedded photo.
-        image_links = self._extract_xlsx_image_links(ws)
+        # embedded photo. Never let this optional step break the import.
+        try:
+            image_links = self._extract_xlsx_image_links(ws)
+        except Exception:
+            _logger.exception('Smart Connector: image-link extraction failed')
+            image_links = {}
 
         all_rows = list(ws.iter_rows(values_only=True))
         if not all_rows:
@@ -600,11 +604,14 @@ class ImportJob(models.Model):
                     if any(k in str(c.value or '').lower()
                            for k in ('image', 'img', 'photo', 'picture'))]
         for col in img_cols:
-            for (cell,) in ws.iter_cols(min_col=col, max_col=col, min_row=2):
-                tgt = cell.hyperlink.target if cell.hyperlink else None
-                if tgt:
-                    # cell.row is 1-indexed (header = row 1) → all_rows idx = row-1
-                    links.setdefault(cell.row - 1, tgt)
+            # iter_cols yields one tuple PER column (all its cells) — iterate
+            # the cells inside, don't unpack the column tuple itself.
+            for column in ws.iter_cols(min_col=col, max_col=col, min_row=2):
+                for cell in column:
+                    tgt = cell.hyperlink.target if cell.hyperlink else None
+                    if tgt:
+                        # cell.row is 1-indexed (header=1) → all_rows idx = row-1
+                        links.setdefault(cell.row - 1, tgt)
         return links
 
     def _attach_drive_candidates(self, lines):
