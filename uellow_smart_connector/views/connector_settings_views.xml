@@ -36,6 +36,7 @@
                    placeholder="Google CSE engine id"/>
             <field name="image_search_count"
                    invisible="image_search_provider == 'none'"/>
+            <field name="import_images_per_product"/>
             <field name="publish_set_published"/>
           </group>
           <group string="AI Settings">

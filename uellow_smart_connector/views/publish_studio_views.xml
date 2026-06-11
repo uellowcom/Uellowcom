@@ -29,8 +29,9 @@
                 invisible="line_state == 'applied'"/>
         <button name="action_pub_publish" type="object"
                 string="Publish" icon="fa-rocket" class="text-success"
-                title="Publish live"
-                invisible="line_state == 'applied' or not pub_ready"/>
+                title="Publish live (always available — confirms if not 100% ready)"
+                confirm="Publish this product live now?"
+                invisible="line_state == 'applied'"/>
       </list>
     </field>
   </record>

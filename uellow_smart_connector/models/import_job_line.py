@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import re
 
 import requests
 
@@ -221,6 +222,7 @@ class ImportJobLine(models.Model):
             ep = self.existing_product_id
             self._snapshot_for_rollback(job, ep)
             ep.write(vals)
+            self._apply_gallery(ep)
             # Optionally adjust stock if qty is positive — left as a TODO
             # because it needs a stock.change.product.qty wizard call.
             return ep
@@ -229,6 +231,7 @@ class ImportJobLine(models.Model):
         # `action_rollback` can archive it (delete is unsafe if movements exist).
         new_prod = self.env['product.template'].create(vals)
         self._track_created_for_rollback(job, new_prod)
+        self._apply_gallery(new_prod)
         return new_prod
 
     def _product_vals_for_write(self):
@@ -260,6 +263,18 @@ class ImportJobLine(models.Model):
             # translation only enriches the AR description, never clobbers name
             if self.ai_enriched and self.description_ar:
                 v['description_sale'] = self.description_ar
+            # fill the website body only when the catalog product has none yet,
+            # so we never clobber copy a human already wrote.
+            ep = self.existing_product_id
+            if not (ep.website_description or '').strip():
+                body = self._website_body_html()
+                if body:
+                    v['website_description'] = body
+            # set a main image only when the product is missing one
+            if not ep.image_1920:
+                img_bin = self._main_image_b64()
+                if img_bin:
+                    v['image_1920'] = img_bin
             return v
 
         # ── CREATE: full product ──
@@ -280,7 +295,12 @@ class ImportJobLine(models.Model):
             v['description_sale'] = self.description_ar
         elif self.description_en:
             v['description_sale'] = self.description_en
-        img_bin = self._fetch_image_binary()
+        # eCommerce/website body — what shows on the product page. Prefer the
+        # Arabic marketing description; fall back to English.
+        body = self._website_body_html()
+        if body:
+            v['website_description'] = body
+        img_bin = self._main_image_b64()
         if img_bin:
             v['image_1920'] = img_bin
         return v
@@ -306,6 +326,49 @@ class ImportJobLine(models.Model):
         except Exception as e:
             _logger.info('Smart Connector: image fetch failed for %s: %s', url, e)
             return None
+
+    def _main_image_b64(self):
+        """Main product image: the chosen candidate (e.g. a photo embedded in
+        the supplier sheet), else the first candidate, else the URL fetch."""
+        self.ensure_one()
+        cands = self.candidate_ids
+        main = cands.filtered(lambda c: c.is_main and c.image) \
+            or cands.filtered('image')[:1]
+        if main and main[0].image:
+            return main[0].image
+        return self._fetch_image_binary()
+
+    def _website_body_html(self):
+        """Build the eCommerce body HTML from the (AI) description."""
+        self.ensure_one()
+        text = self.description_ar or self.description_en or ''
+        text = text.strip()
+        if not text:
+            return False
+        # already HTML? keep as-is; otherwise wrap paragraphs.
+        if '<' in text and '>' in text:
+            return text
+        paras = [p.strip() for p in re.split(r'\n{2,}|\r\n\r\n', text) if p.strip()]
+        return ''.join('<p>%s</p>' % p.replace('\n', '<br/>') for p in paras) \
+            or '<p>%s</p>' % text
+
+    def _apply_gallery(self, product):
+        """Attach the non-main image candidates as the product's gallery —
+        only when the product has no gallery yet (never clobber existing)."""
+        self.ensure_one()
+        if 'product.image' not in self.env:
+            return
+        if product.product_template_image_ids:
+            return
+        extras = self.candidate_ids.filtered(
+            lambda c: c.image and c.include and not c.is_main)
+        if not extras:
+            return
+        self.env['product.image'].create([{
+            'product_tmpl_id': product.id,
+            'name': (self.name_ar or self.name_en or _('Image'))[:60],
+            'image_1920': c.image,
+        } for c in extras])
 
     @staticmethod
     def _snapshot_for_rollback(job, product):

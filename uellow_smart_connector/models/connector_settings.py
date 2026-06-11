@@ -52,6 +52,8 @@ _PARAMS = [
     ('image_search_cx',       'uellow.sc.img_cx',              '',                                       str),
     ('image_search_count',    'uellow.sc.img_count',           8,                                        int),
     ('publish_set_published', 'uellow.sc.publish_set_published',True,                                    bool),
+    # Max images attached per product on import (1 main + the rest as gallery)
+    ('import_images_per_product','uellow.sc.import_img_per_product',5,                                   int),
 ]
 
 
@@ -178,6 +180,11 @@ class ConnectorSettings(models.TransientModel):
         'Google CSE Engine ID (cx)',
         help='Required only for the Google Programmable Search provider.')
     image_search_count = fields.Integer('Images per Search', default=8)
+    import_images_per_product = fields.Integer(
+        'Max Images per Product (Import)', default=5,
+        help='When importing, attach at most this many images per product — '
+             'the largest becomes the main image, the rest go to the gallery. '
+             'الحد الأقصى لعدد الصور لكل منتج عند الاستيراد (الأكبر تكون الرئيسية والباقي معرض الصور).')
     publish_set_published = fields.Boolean(
         'Publish products live by default', default=True,
         help='When publishing from the Studio, set the product website-published.')
