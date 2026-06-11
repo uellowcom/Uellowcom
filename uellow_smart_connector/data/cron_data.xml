@@ -10,10 +10,11 @@
         <field name="active">True</field>
     </record>
     <record id="cron_backfill_ar_names" model="ir.cron">
-        <field name="name">Smart Connector: ترجمة أسماء المنتجات للعربية</field>
+        <field name="name">Smart Connector: ترجمة أسماء وأوصاف المنتجات للعربية</field>
         <field name="model_id" ref="model_uellow_import_job"/>
         <field name="state">code</field>
-        <field name="code">model._cron_backfill_arabic_names()</field>
+        <field name="code">model._cron_backfill_arabic_names()
+model._cron_backfill_descriptions()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
         <field name="active">True</field>

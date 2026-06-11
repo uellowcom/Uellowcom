@@ -192,10 +192,10 @@ class ConnectorSettings(models.TransientModel):
         'Publish products live by default', default=True,
         help='When publishing from the Studio, set the product website-published.')
     autotranslate_names = fields.Boolean(
-        'Auto-translate product names to Arabic (daily)', default=True,
-        help='A daily job translates any published product that still has no '
-             'Arabic name, so nothing stays English-only on the /ar storefront. '
-             'مهمة يومية تترجم أسماء المنتجات المنشورة التي بلا اسم عربي.')
+        'Auto-translate product names & descriptions to Arabic (daily)', default=True,
+        help='A daily job fills any published product that still has no Arabic '
+             'name or description, so nothing stays English-only on the /ar '
+             'storefront. مهمة يومية تترجم أسماء وأوصاف المنتجات المنشورة التي بلا عربي.')
 
     @api.constrains('anthropic_api_key')
     def _check_api_key(self):

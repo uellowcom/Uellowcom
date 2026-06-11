@@ -999,6 +999,10 @@ class ImportJob(models.Model):
             "sensibly from the product type without inventing fake specs.\n"
             "3. description_en_seo: An English SEO description (50-80 words, "
             "keyword-rich).\n"
+            "IMPORTANT: in BOTH descriptions never mention price, cost, currency "
+            "(KWD/KD/دينار/د.ك/فلس/USD/$), discounts, percentages off or savings — "
+            "the price is dynamic and shown elsewhere. Sell on value and benefits, "
+            "not on money.\n"
             f"4. Append this warranty line to both descriptions if non-empty: "
             f"\"{safe_warranty}\"\n\n"
             'Respond in pure JSON only, all strings non-empty:\n'
@@ -1099,6 +1103,92 @@ class ImportJob(models.Model):
                     done += 1
             self.env.cr.commit()
         _logger.info('Arabic-name backfill: translated %d products', done)
+
+    @staticmethod
+    def _clean_html_text(html):
+        """Strip tags/entities/whitespace — used to decide if a body is 'empty'."""
+        return re.sub(r'<[^>]*>|&nbsp;|\s', '', html or '')
+
+    @staticmethod
+    def _body_to_html(body):
+        parts = [p.strip() for p in re.split(r'\n+', (body or '').strip()) if p.strip()]
+        return "".join("<p>%s</p>" % p for p in parts)
+
+    # ── safety net: never let a published product sit without an Arabic body ──
+    @api.model
+    def _cron_backfill_descriptions(self, limit=120, batch=6):
+        """Daily guard for the customer-facing product body (`website_description`).
+        Finds PUBLISHED products with no Arabic body and writes a bilingual
+        marketing description with Claude (English seeded too when missing).
+        Same gate/semantics as `_cron_backfill_arabic_names`.
+        """
+        ICP = self.env['ir.config_parameter'].sudo()
+        if ICP.get_param('uellow.sc.autotranslate_names', '1') not in ('1', 'True', 'true'):
+            return
+        api_key, model = resolve_ai_config(self.env)
+        if not api_key:
+            return
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key, timeout=_AI_TIMEOUT_S)
+        except ImportError:
+            return
+
+        prods = self.env['product.template'].search(
+            [('active', '=', True), ('is_published', '=', True)])
+        todo = prods.filtered(
+            lambda p: not self._clean_html_text(
+                p.with_context(lang='ar_001').website_description))[:limit]
+        if not todo:
+            return
+        _logger.info('Description backfill: %d products', len(todo))
+
+        ar_re = re.compile(u'[؀-ۿ]')
+        sysmsg = (
+            "You are a senior bilingual (English + Gulf Arabic) e-commerce copywriter for "
+            "Uellow, a Kuwait electronics & lifestyle store. For each product NAME, write a "
+            "short persuasive description. English body 45-80 words, clean. Arabic body "
+            "natural Gulf/MSA Arabic (NOT literal), 45-80 words. Keep brands, model numbers "
+            "and units in Latin. Never invent fake specs. "
+            "NEVER mention price, cost, currency (KWD/KD/دينار/د.ك/فلس/USD/$), discounts, "
+            "percentages off, savings, or words like 'only', 'بسعر', 'خصم', 'وفّر' — the "
+            "price is dynamic and lives elsewhere on the page. Describe value and benefits, "
+            "not money. Return ONLY a JSON object mapping the number (as a string) to "
+            "{\"en\":\"...\",\"ar\":\"...\"} — no code fences.")
+        recs = list(todo)
+        done = 0
+        for s in range(0, len(recs), batch):
+            chunk = recs[s:s + batch]
+            listing = "\n".join(
+                "%d. %s" % (i, (chunk[i].with_context(lang='en_US').name or ''))
+                for i in range(len(chunk)))
+            try:
+                msg = client.messages.create(
+                    model=model, max_tokens=4000, system=sysmsg,
+                    messages=[{'role': 'user', 'content': 'Products:\n' + listing}])
+                text = msg.content[0].text if msg.content else '{}'
+                text = re.sub(r'^```(?:json)?\s*', '', text.strip())
+                text = re.sub(r'\s*```$', '', text)
+                out = json.loads(text)
+            except Exception as e:
+                _logger.warning('Description backfill batch %d failed: %s', s, e)
+                continue
+            for i, p in enumerate(chunk):
+                d = out.get(str(i)) or out.get(i) or {}
+                en = (d.get('en') or '').strip()
+                ar = (d.get('ar') or '').strip()
+                if not (en and ar and ar_re.search(ar)):
+                    continue
+                if not self._clean_html_text(p.with_context(lang='en_US').website_description):
+                    p.with_context(lang='en_US').write(
+                        {'website_description': self._body_to_html(en)})
+                p.with_context(lang='ar_001').write(
+                    {'website_description': self._body_to_html(ar)})
+                if not (p.with_context(lang='ar_001').description_sale or '').strip():
+                    p.with_context(lang='ar_001').write({'description_sale': ar[:300]})
+                done += 1
+            self.env.cr.commit()
+        _logger.info('Description backfill: wrote %d products', done)
 
     def action_open_review(self):
         """Open this job's form (review happens inline on the Product Lines tab)."""
