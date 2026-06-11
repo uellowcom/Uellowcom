@@ -222,6 +222,11 @@ class ImportJobLine(models.Model):
             ep = self.existing_product_id
             self._snapshot_for_rollback(job, ep)
             ep.write(vals)
+            # Fill the Arabic name when the catalog product still has none — we
+            # never clobber an existing translation, only add a missing one.
+            if not (ep.with_context(lang='ar_001').name or '').strip() or \
+               (ep.with_context(lang='ar_001').name == ep.with_context(lang='en_US').name):
+                self._set_arabic_name(ep)
             self._apply_gallery(ep)
             # Optionally adjust stock if qty is positive — left as a TODO
             # because it needs a stock.change.product.qty wizard call.
