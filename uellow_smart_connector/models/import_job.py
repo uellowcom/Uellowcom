@@ -379,7 +379,12 @@ class ImportJob(models.Model):
         except ImportError:
             raise UserError(_('openpyxl is not installed. Run: pip install openpyxl'))
 
-        wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True)
+        # data_only=True returns the cached COMPUTED value of formula cells
+        # (e.g. a Cost column defined as "=RRP*0.9"). Without it openpyxl hands
+        # back the raw formula string "=I2*0.9", float() fails, and the cost
+        # silently lands as 0 even though the sheet clearly shows a number.
+        wb = openpyxl.load_workbook(io.BytesIO(content), read_only=True,
+                                    data_only=True)
         ws = wb.active
 
         rows_iter = ws.iter_rows(values_only=True)
