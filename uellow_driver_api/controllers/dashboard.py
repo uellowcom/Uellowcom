@@ -25,10 +25,16 @@ class DriverDashboardAPI(http.Controller):
             ('driver_id', '=', driver.id),
             ('create_date', '>=', today_start),
         ])
+        # v2.2.32 — count by the REAL carrier-portal status vocabulary
+        # ('assigned'/'arrived_sorting'/'out_for_delivery' are the live
+        # values), not the stale 'pending/received/in_transit' set, so
+        # assigned tasks actually show in the driver's stats.
+        _TERMINAL = ('delivered', 'failed', 'failed_returned', 'returned', 'cancelled')
         done = today_lines.filtered(lambda l: l.delivery_status == 'delivered')
         pending = today_lines.filtered(
-            lambda l: l.delivery_status in ('pending', 'received', 'in_transit'))
-        failed = today_lines.filtered(lambda l: l.delivery_status == 'failed')
+            lambda l: l.delivery_status not in _TERMINAL)
+        failed = today_lines.filtered(
+            lambda l: l.delivery_status in ('failed', 'failed_returned'))
 
         total = max(1, len(done) + len(failed))
         success_rate = round(len(done) * 100 / total) if total else 0

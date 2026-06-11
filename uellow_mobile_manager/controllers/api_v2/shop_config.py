@@ -60,6 +60,13 @@ class MobileShopConfigAPI(http.Controller):
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
     def shop_config(self, **kw):
+        # v2.1.95 — serve brand/category names in the app's language (the
+        # featured-brands block was always English).
+        from ._common import get_lang
+        try:
+            request.update_context(lang=get_lang())
+        except Exception:
+            pass
         s = _get_setting()
         Tmpl = request.env['product.template'].sudo()
         base_dom = [('is_published', '=', True)]
@@ -104,7 +111,13 @@ class MobileShopConfigAPI(http.Controller):
         """Top brand attribute values by product count.
         v2.1.59 — optional ?category_id= filter + bigger limit for the
         dedicated Brands screen."""
-        from ._common import get_payload
+        from ._common import get_payload, get_lang
+        # v2.1.87 — apply the app's language so brand value names come back
+        # translated (was defaulting to English).
+        try:
+            request.update_context(lang=get_lang())
+        except Exception:
+            pass
         p = get_payload()
         cat_id = 0
         try:

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- v2.2.20 — 🎁 Product Bundles management. -->
+
+    <record id="view_uellow_bundle_list" model="ir.ui.view">
+        <field name="name">uellow.bundle.list</field>
+        <field name="model">uellow.bundle</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'published'"
+                  decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="component_count" string="Items"/>
+                <field name="components_total" string="Worth"/>
+                <field name="final_price" string="Bundle price"/>
+                <field name="savings_pct" string="Save %"/>
+                <field name="available" string="✔ Stock" widget="boolean_toggle" readonly="1"/>
+                <field name="state"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_uellow_bundle_form" model="ir.ui.view">
+        <field name="name">uellow.bundle.form</field>
+        <field name="model">uellow.bundle</field>
+        <field name="arch" type="xml">
+            <form string="Bundle">
+                <header>
+                    <button name="action_publish" type="object" string="🚀 Publish"
+                            class="btn-primary" invisible="state == 'published'"/>
+                    <button name="action_unpublish" type="object" string="Unpublish"
+                            invisible="state != 'published'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <field name="image_1920" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Smart Watch Starter Kit"/></h1>
+                        <h3><field name="name_ar" placeholder="الاسم بالعربية"/></h3>
+                    </div>
+                    <group>
+                        <group string="💰 Pricing">
+                            <field name="pricing_mode" widget="radio"/>
+                            <field name="bundle_price" invisible="pricing_mode != 'fixed'"
+                                   required="pricing_mode == 'fixed'"/>
+                            <field name="discount_pct" invisible="pricing_mode != 'percent'"/>
+                            <field name="components_total" readonly="1"/>
+                            <field name="final_price" readonly="1"/>
+                            <field name="savings" readonly="1"/>
+                            <field name="savings_pct" readonly="1"/>
+                        </group>
+                        <group string="🎛 Options">
+                            <field name="active"/>
+                            <field name="available" readonly="1"/>
+                            <field name="gallery_mode"/>
+                            <field name="show_components_price"/>
+                            <field name="max_per_order"/>
+                            <field name="product_tmpl_id" readonly="1"/>
+                        </group>
+                        <group string="📦 Out of stock">
+                            <field name="oos_behavior" widget="radio"/>
+                            <field name="unavailable_en"
+                                   invisible="oos_behavior != 'badge'"/>
+                            <field name="unavailable_ar"
+                                   invisible="oos_behavior != 'badge'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="📦 Components">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_tmpl_id"/>
+                                    <field name="qty"/>
+                                    <field name="unit_price" readonly="1"/>
+                                    <field name="line_total" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="🪧 Badge &amp; story">
+                            <group>
+                                <group>
+                                    <field name="badge_en"/>
+                                    <field name="badge_ar"/>
+                                    <field name="badge_color" widget="color"/>
+                                </group>
+                            </group>
+                            <group>
+                                <field name="description_en" placeholder="Why this bundle is a great deal…"/>
+                                <field name="description_ar" placeholder="الوصف بالعربية"/>
+                            </group>
+                        </page>
+                        <page string="🌍 Targeting &amp; schedule">
+                            <group>
+                                <field name="website_ids" widget="many2many_tags"/>
+                                <field name="date_from"/>
+                                <field name="date_to"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_uellow_bundle_search" model="ir.ui.view">
+        <field name="name">uellow.bundle.search</field>
+        <field name="model">uellow.bundle</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter name="published" string="🟢 Published" domain="[('state', '=', 'published')]"/>
+                <filter name="draft" string="📝 Draft" domain="[('state', '=', 'draft')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_uellow_bundles" model="ir.actions.act_window">
+        <field name="name">🎁 Bundles</field>
+        <field name="res_model">uellow.bundle</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_uellow_bundle_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first bundle</p>
+            <p>Pick several products, give them ONE price — customers buy the
+               bundle as a single product (one cart line, one card), and its
+               product page shows everything inside with the savings.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_uellow_bundles"
+              name="🎁 Bundles"
+              parent="sale.product_menu_catalog"
+              action="action_uellow_bundles" sequence="6"/>
+</odoo>

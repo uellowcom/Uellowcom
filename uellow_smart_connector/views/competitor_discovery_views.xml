@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ── Competitor sources ── -->
+  <record id="view_comp_source_list" model="ir.ui.view">
+    <field name="name">uellow.sc.competitor.source.list</field>
+    <field name="model">uellow.sc.competitor.source</field>
+    <field name="arch" type="xml">
+      <list string="Competitor Sources"
+            decoration-muted="not active">
+        <field name="name"/>
+        <field name="url" widget="url"/>
+        <field name="discovery_count" string="Found"/>
+        <field name="new_count" string="New"/>
+        <field name="last_run"/>
+        <field name="last_error" optional="hide"/>
+        <field name="active" widget="boolean_toggle"/>
+        <button name="action_scan_now" type="object" string="Scan Now" icon="fa-search"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_comp_source_form" model="ir.ui.view">
+    <field name="name">uellow.sc.competitor.source.form</field>
+    <field name="model">uellow.sc.competitor.source</field>
+    <field name="arch" type="xml">
+      <form string="Competitor Source">
+        <header>
+          <button name="action_scan_now" type="object" string="Scan Now"
+                  class="oe_highlight" icon="fa-search"/>
+        </header>
+        <sheet>
+          <group>
+            <group>
+              <field name="name"/>
+              <field name="url" widget="url" placeholder="https://competitor.com/category/..."/>
+              <field name="active"/>
+            </group>
+            <group>
+              <field name="last_run" readonly="1"/>
+              <field name="last_found" readonly="1"/>
+              <field name="last_new" readonly="1"/>
+              <field name="last_error" readonly="1"/>
+            </group>
+          </group>
+          <field name="discovery_ids">
+            <list>
+              <field name="title"/>
+              <field name="price"/>
+              <field name="match_score" string="Match %"/>
+              <field name="our_product_id"/>
+              <field name="state" widget="badge"
+                     decoration-success="state=='new'"
+                     decoration-muted="state in ('have','ignored')"/>
+            </list>
+          </field>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_comp_source" model="ir.actions.act_window">
+    <field name="name">Competitor Sources</field>
+    <field name="res_model">uellow.sc.competitor.source</field>
+    <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">Add a competitor listing URL · أضف رابط قائمة منافس</p>
+      <p>The crawler reads the products that page exposes and flags ones you don't sell.<br/>
+         يقرأ الزاحف منتجات الصفحة ويبرز ما لا تبيعه أنت.</p>
+    </field>
+  </record>
+
+  <!-- ── Discoveries ── -->
+  <record id="view_discovery_list" model="ir.ui.view">
+    <field name="name">uellow.sc.discovery.list</field>
+    <field name="model">uellow.sc.discovery</field>
+    <field name="arch" type="xml">
+      <list string="Discoveries"
+            decoration-success="state=='new'"
+            decoration-muted="state in ('have','ignored')">
+        <field name="source_id"/>
+        <field name="title"/>
+        <field name="price"/>
+        <field name="match_score" string="Match %"/>
+        <field name="our_product_id" string="Closest Match"/>
+        <field name="url" widget="url" optional="hide"/>
+        <field name="state" widget="badge"
+               decoration-success="state=='new'"
+               decoration-muted="state in ('have','ignored')"/>
+        <button name="action_ignore" type="object" string="Ignore"
+                icon="fa-ban" invisible="state=='ignored'"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_discovery_search" model="ir.ui.view">
+    <field name="name">uellow.sc.discovery.search</field>
+    <field name="model">uellow.sc.discovery</field>
+    <field name="arch" type="xml">
+      <search string="Search Discoveries">
+        <field name="title"/>
+        <field name="source_id"/>
+        <filter string="New Opportunities" name="new" domain="[('state','=','new')]"/>
+        <filter string="Already Sell" name="have" domain="[('state','=','have')]"/>
+        <group expand="0" string="Group By">
+          <filter string="Competitor" name="g_src" context="{'group_by': 'source_id'}"/>
+          <filter string="Status" name="g_state" context="{'group_by': 'state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_discovery" model="ir.actions.act_window">
+    <field name="name">Discoveries</field>
+    <field name="res_model">uellow.sc.discovery</field>
+    <field name="view_mode">list</field>
+    <field name="search_view_id" ref="view_discovery_search"/>
+    <field name="context">{'search_default_new': 1}</field>
+  </record>
+
+  <record id="cron_crawl_competitors" model="ir.cron" forcecreate="True">
+    <field name="name">Uellow SC: competitor discovery crawl</field>
+    <field name="model_id" ref="model_uellow_sc_competitor_source"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_crawl_competitors()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active" eval="True"/>
+  </record>
+
+  <menuitem id="menu_sc_discovery" name="Competitor Discovery"
+            parent="menu_sc_root" action="action_discovery" sequence="24"/>
+  <menuitem id="menu_sc_comp_source" name="Competitor Sources"
+            parent="menu_sc_settings" action="action_comp_source" sequence="40"/>
+
+</odoo>

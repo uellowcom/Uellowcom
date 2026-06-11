@@ -38,6 +38,7 @@ access_mobile_flash_sale_usr,mobile.flash.sale user,model_mobile_flash_sale,base
 access_uellow_delivery_zone_mgr,uellow.delivery.zone manager,model_uellow_delivery_zone,base.group_system,1,1,1,1
 access_uellow_delivery_zone_usr,uellow.delivery.zone user,model_uellow_delivery_zone,base.group_user,1,0,0,0
 access_product_brand_public_read,product.brand public read,dev_facebook_shop_integration.model_product_brand,base.group_public,1,0,0,0
+access_product_brand_portal_read,product.brand portal read,dev_facebook_shop_integration.model_product_brand,base.group_portal,1,0,0,0
 access_mobile_notification_pref_mgr,mobile.notification.preference manager,model_mobile_notification_preference,base.group_system,1,1,1,1
 access_mobile_notification_pref_user,mobile.notification.preference user,model_mobile_notification_preference,base.group_user,1,1,1,1
 access_mobile_notification_pref_portal,mobile.notification.preference portal,model_mobile_notification_preference,base.group_portal,1,1,1,1
@@ -66,3 +67,5 @@ access_uellow_governorate_mgr,uellow.governorate manager,model_uellow_governorat
 access_uellow_governorate_usr,uellow.governorate user,model_uellow_governorate,base.group_user,1,0,0,0
 access_uellow_city_mgr,uellow.city manager,model_uellow_city,base.group_system,1,1,1,1
 access_uellow_city_usr,uellow.city user,model_uellow_city,base.group_user,1,0,0,0
+access_mobile_newcustomer_mgr,mobile.newcustomer.offer manager,model_mobile_newcustomer_offer,base.group_system,1,1,1,1
+access_mobile_newcustomer_usr,mobile.newcustomer.offer user,model_mobile_newcustomer_offer,base.group_user,1,0,0,0

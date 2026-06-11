@@ -29,6 +29,14 @@
   <menuitem id="menu_uellow_seo_gsc_sync" sequence="52"
             parent="menu_uellow_seo_gsc_section" action="action_uellow_seo_gsc_sync"/>
 
+  <!-- Phase 8 — indexing coverage: read errors + auto-fix -->
+  <menuitem id="menu_uellow_seo_indexing" sequence="53" name="Indexing coverage"
+            parent="menu_uellow_seo_gsc_section" action="action_uellow_seo_indexing"/>
+  <menuitem id="menu_uellow_seo_indexing_inspect" sequence="54" name="Inspect indexing now"
+            parent="menu_uellow_seo_gsc_section" action="action_uellow_seo_indexing_inspect"/>
+  <menuitem id="menu_uellow_seo_indexing_autofix" sequence="55" name="Auto-fix + re-submit sitemap"
+            parent="menu_uellow_seo_gsc_section" action="action_uellow_seo_indexing_autofix"/>
+
   <!-- Phase 5 — OG images -->
   <menuitem id="menu_uellow_seo_og" name="Generate OG images (bulk)" sequence="60"
             parent="menu_uellow_seo_ai_section" action="action_uellow_seo_og_generate"/>

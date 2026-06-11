@@ -57,6 +57,7 @@ class MobileAddressesAPI(http.Controller):
             _attach_landmark_photo(addr, p)
             _save_lat_lng(addr, p)
             _save_address_label(addr, p)
+            _save_structured(addr, p)
             order.sudo().write({
                 'partner_id': addr.id,
                 'partner_invoice_id': addr.id,
@@ -72,6 +73,7 @@ class MobileAddressesAPI(http.Controller):
         _attach_landmark_photo(addr, p)
         _save_lat_lng(addr, p)
         _save_address_label(addr, p)
+        _save_structured(addr, p)
         return ok({'address': _addr_dict(addr)})
 
     @http.route('/api/mobile/v2/addresses/<int:addr_id>/set-default',
@@ -120,6 +122,7 @@ class MobileAddressesAPI(http.Controller):
         _attach_landmark_photo(addr, p)
         _save_lat_lng(addr, p)
         _save_address_label(addr, p)
+        _save_structured(addr, p)
         return ok({'address': _addr_dict(addr)})
 
     @http.route('/api/mobile/v2/addresses/<int:addr_id>/delete', type='http',
@@ -157,12 +160,77 @@ def _validate_addr(p, partial=False):
         if country_id: domain.append(('country_id', '=', country_id))
         st = request.env['res.country.state'].sudo().search(domain, limit=1)
         if st: out['state_id'] = st.id
+    # v2.1.99 — readable backend records: a digits-only street becomes
+    # "Street 4 / شارع 4". (v2.2.00 — the governorate is no longer mashed
+    # into city; it lives in the structured uellow_governorate_id field,
+    # keeping `city` clean for the delivery-zone matcher.)
+    st = (out.get('street') or '').strip()
+    if st.isdigit():
+        out['street'] = 'Street %s / شارع %s' % (st, st)
+    # v2.2.00 — the COUNTRY was often left unset (orders showed no
+    # country): default it from the current website's country mapping.
+    if not out.get('country_id') and not partial:
+        try:
+            from ._common import get_website
+            m = request.env['mobile.country.website'].sudo().search(
+                [('website_id', '=', get_website().id),
+                 ('active', '=', True)], limit=1)
+            if m:
+                out['country_id'] = m.country_id.id
+        except Exception:
+            pass
     if not partial:
         if not out.get('name'): return 'name required'
         if not (out.get('phone') or out.get('mobile')): return 'phone required'
         if not out.get('street'): return 'street required'
         if not out.get('city'): return 'city required'
     return out
+
+
+def _norm_ar(s):
+    """Light Arabic/text normalisation for name matching."""
+    s = (s or '').strip().lower()
+    s = s.replace('محافظة', '').replace('ال', '').replace('al ', '') \
+         .replace('al-', '').replace('-', ' ').replace('  ', ' ').strip()
+    return s
+
+
+def _save_structured(addr, p):
+    """v2.2.00 — mirror the app's detailed form into the structured
+    backend fields (governorate/area M2O resolved by name incl. Arabic
+    aliases, block/building/floor/apartment, label) so the partner form
+    shows EXACTLY what the customer entered."""
+    env = addr.env
+    vals = {}
+    try:
+        for src, dst in (('block', 'uellow_block'),
+                         ('building', 'uellow_building'),
+                         ('floor', 'uellow_floor'),
+                         ('apartment', 'uellow_apartment'),
+                         ('address_label', 'uellow_address_label')):
+            if (p.get(src) or '').strip():
+                vals[dst] = p[src].strip()
+        gov_txt = _norm_ar(p.get('state') or p.get('governorate') or '')
+        if gov_txt and 'uellow_governorate_id' in addr._fields:
+            for g in env['uellow.governorate'].sudo().search([]):
+                if gov_txt in (_norm_ar(g.name), _norm_ar(g.name_ar)):
+                    vals['uellow_governorate_id'] = g.id
+                    break
+        area_txt = _norm_ar(p.get('area') or p.get('city') or '')
+        if area_txt and 'uellow_city_id' in addr._fields:
+            dom = []
+            if vals.get('uellow_governorate_id'):
+                dom = [('governorate_id', '=', vals['uellow_governorate_id'])]
+            for c in env['uellow.city'].sudo().search(dom):
+                tokens = {_norm_ar(c.name), _norm_ar(c.name_ar)}
+                tokens |= {_norm_ar(a) for a in (c.aliases or '').split(',')}
+                if area_txt in tokens:
+                    vals['uellow_city_id'] = c.id
+                    break
+        if vals:
+            addr.sudo().write(vals)
+    except Exception:
+        pass
 
 
 def _save_lat_lng(addr, p):

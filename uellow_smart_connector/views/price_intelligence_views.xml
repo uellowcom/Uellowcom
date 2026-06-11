@@ -14,11 +14,19 @@
         <field name="our_price" string="Our Price (KD)"/>
         <field name="competitor_price" string="Competitor Price (KD)"/>
         <field name="price_diff_pct" string="Difference (%)"/>
+        <field name="competitor_in_stock" widget="boolean_toggle" string="Rival Stock" readonly="1" optional="show"/>
+        <field name="opportunity" widget="boolean_toggle" string="Opportunity" readonly="1" optional="show"/>
+        <field name="suggested_price" string="Suggested (KD)" optional="show"/>
+        <field name="reprice_gain_pct" string="Change %" optional="show"/>
+        <field name="reprice_note" string="Note" optional="hide"/>
         <field name="last_checked" string="Last Checked"/>
         <field name="state" widget="badge"
                decoration-danger="state=='pricier'"
                decoration-success="state=='cheaper'"
                decoration-warning="state=='error'"/>
+        <button name="action_apply_reprice" type="object" string="Apply Price"
+                icon="fa-check-circle" invisible="suggested_price &lt;= 0"
+                confirm="Apply the suggested price to this product?"/>
       </list>
     </field>
   </record>
@@ -39,7 +47,18 @@
               <field name="source_url" string="Competitor URL" widget="url"/>
               <field name="competitor_price" readonly="1" string="Competitor Price (KD)"/>
               <field name="price_diff_pct" readonly="1" string="Price Difference (%)"/>
+              <field name="competitor_in_stock" readonly="1" string="In Stock at Competitor"/>
+              <field name="competitor_availability" readonly="1" string="Availability"/>
+              <field name="opportunity" readonly="1" string="Opportunity (rival out of stock)"/>
             </group>
+          </group>
+          <group string="Dynamic Repricing">
+            <field name="suggested_price" readonly="1" string="Suggested Price (KD)"/>
+            <field name="reprice_gain_pct" readonly="1" string="Potential Change (%)"/>
+            <field name="reprice_note" readonly="1" string="Note"/>
+            <button name="action_apply_reprice" type="object" string="Apply Suggested Price"
+                    class="oe_highlight" invisible="suggested_price &lt;= 0"
+                    confirm="Apply the suggested price to this product?"/>
           </group>
           <group>
             <field name="last_checked" readonly="1" string="Last Checked"/>
@@ -64,6 +83,9 @@
                 domain="[('state','=','cheaper')]"/>
         <filter string="Errors" name="error"
                 domain="[('state','=','error')]"/>
+        <separator/>
+        <filter string="Opportunities (rival out of stock)" name="opportunity"
+                domain="[('opportunity','=',True)]"/>
       </search>
     </field>
   </record>

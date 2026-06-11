@@ -634,18 +634,25 @@ class DeliveryPortalController(http.Controller):
             return {'success': False, 'error': 'Driver not in your company'}
         if order.delivery_status == 'delivered':
             return {'success': False, 'error': 'Order already delivered'}
+        # v2.2.33 — a driver can ONLY be assigned AFTER the order has been
+        # received at the sorting center. 'pending' = not received yet.
+        if order.delivery_status == 'pending':
+            return {'success': False,
+                    'error': 'Receive the order at the sorting center first'}
 
-        order.write({'delivery_driver_id': driver.id, 'delivery_status': 'out_for_delivery'})
+        # Status → 'assigned' (NOT out_for_delivery): the driver must ACCEPT
+        # the assignment in his app before it becomes out-for-delivery.
+        order.write({'delivery_driver_id': driver.id, 'delivery_status': 'assigned'})
         line = request.env['delivery.trip.line'].sudo().search(
             [('sale_order_id', '=', order.id)], limit=1
         )
         if line:
-            line.write({'driver_id': driver.id, 'delivery_status': 'out_for_delivery'})
+            line.write({'driver_id': driver.id, 'delivery_status': 'assigned'})
         else:
             request.env['delivery.trip.line'].sudo().create({
                 'sale_order_id': order.id,
                 'driver_id': driver.id,
-                'delivery_status': 'out_for_delivery',
+                'delivery_status': 'assigned',
             })
         return {'success': True, 'driver_name': driver.name}
 

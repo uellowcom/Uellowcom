@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="action_profit_manager" model="ir.actions.client">
+    <field name="name">Profit Margins</field>
+    <field name="tag">sc_profit_action</field>
+  </record>
+</odoo>

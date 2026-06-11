@@ -5,6 +5,7 @@ from . import dashboard
 from . import orders
 from . import paylink
 from . import trips
+from . import pickups
 from . import cash
 from . import notifications
 from . import help_chat

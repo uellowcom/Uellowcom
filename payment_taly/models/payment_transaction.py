@@ -91,6 +91,8 @@ class PaymentTransaction(models.Model):
         raw_status = (
             notification_data.get('orderStatus')
             or notification_data.get('status')
+            or notification_data.get('paymentStatus')
+            or notification_data.get('finalStatus')
             or ''
         ).upper()
 
@@ -114,17 +116,29 @@ class PaymentTransaction(models.Model):
                 raw_status, self.reference,
             )
 
+    # ── Authoritative status pull (anti-forgery) ──────────────────────────────
+
+    def _taly_pull_status(self):
+        """Fetch the order status straight from Taly (server-to-server) and
+        process it. This is the TRUSTED path: the webhook + the customer
+        redirect both call this instead of believing the posted status, so a
+        forged 'success' webhook can never mark an order paid."""
+        self.ensure_one()
+        data = self.provider_id._taly_get_order(self.reference)
+        self._process_notification_data(data)
+        return data
+
     # ── Manual sync from backend ──────────────────────────────────────────────
 
     def action_taly_sync_status(self):
         self.ensure_one()
         if self.provider_code != 'taly':
             raise ValidationError(_("This action is only for Taly transactions."))
-        if not self.taly_order_token:
-            raise ValidationError(_("لا يوجد Order Token لهذه المعاملة."))
+        if not self.reference:
+            raise ValidationError(_("لا يوجد مرجع لهذه المعاملة."))
         try:
-            data = self.provider_id._taly_get_order(self.taly_order_token)
-            self._process_notification_data(data)
+            # get-order is keyed by the MERCHANT order id (our reference).
+            self._taly_pull_status()
             return {
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',

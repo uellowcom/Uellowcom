@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Singleton settings row (safe defaults: engine OFF). -->
+    <record id="brain_config_singleton" model="uellow.brain.config">
+        <field name="name">Uellow Brain Settings</field>
+        <field name="enabled" eval="False"/>
+        <field name="personalization_mode">off</field>
+    </record>
+</odoo>

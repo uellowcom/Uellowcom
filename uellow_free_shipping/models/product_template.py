@@ -29,4 +29,14 @@ class ProductTemplate(models.Model):
             for tag in self.product_tag_ids:
                 if getattr(tag, 'free_shipping', False):
                     return True
+        # v2.2.20 — conditional RULES: only badge-safe ones (no personal
+        # conditions) whose context matches light the badge — rules with
+        # amount/age/customer conditions apply at checkout only, so the
+        # card never promises a free shipping the customer might not get.
+        try:
+            Rule = self.env.get('uellow.freeship.rule')
+            if Rule is not None and Rule.sudo().badge_covers(self):
+                return True
+        except Exception:
+            pass
         return False

@@ -13,6 +13,19 @@ class DeliveryCarrierCompany(models.Model):
     phone = fields.Char(string='Phone')
     email = fields.Char(string='Email')
     active = fields.Boolean(default=True, tracking=True)
+    # v2.2.33 — when set, confirmed orders with no explicit carrier are
+    # auto-attached to THIS company's open pickup request. Only one default.
+    is_default = fields.Boolean(
+        string='Default Carrier', default=False, tracking=True,
+        help='Confirmed orders that have no carrier yet are automatically '
+             'routed to this company\'s open pickup request.')
+
+    @api.constrains('is_default')
+    def _check_single_default(self):
+        for rec in self.filtered('is_default'):
+            others = self.search([('is_default', '=', True), ('id', '!=', rec.id)])
+            if others:
+                others.write({'is_default': False})
 
     cash_settlement_mode = fields.Selection([
         ('per_order', 'Per Order'),
@@ -34,6 +47,19 @@ class DeliveryCarrierCompany(models.Model):
         string='Free Over (KD)', digits=(10, 3), default=0.0, tracking=True,
         help='Order subtotal (excl. delivery) at/above which normal delivery '
              'is free. 0 = always free for normal delivery.')
+
+    # ── Payment basis (v2.1.77) ──────────────────────────────────────
+    # The carrier company is THE base that payment options derive from:
+    # if this courier does not collect cash, Cash-on-Delivery is hidden at
+    # checkout for EVERY delivery method this company fulfils.
+    cod_enabled = fields.Boolean(
+        string='Accepts Cash on Delivery', default=True, tracking=True,
+        help='When OFF, Cash on Delivery is not offered for any delivery '
+             'method fulfilled by this courier company.')
+    cod_surcharge = fields.Float(
+        string='COD Surcharge (KD)', digits=(10, 3), default=0.0, tracking=True,
+        help='Base cash-on-delivery surcharge for orders this company '
+             'fulfils. 0 = none. Per-zone surcharges may override.')
 
     portal_user_ids = fields.Many2many(
         'res.users', 'carrier_company_portal_users_rel',

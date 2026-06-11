@@ -23,6 +23,11 @@ from odoo import api, fields, models
 
 _logger = logging.getLogger(__name__)
 
+# v2.1 — single source of truth for the up/down/stable threshold (was 0.01%
+# at capture time but 0.05% in the indicator, so the same change could read
+# 'down' on the card yet 'stable' in history).
+_TREND_EPS_PCT = 0.05
+
 
 class UellowPriceHistory(models.Model):
     _name = 'uellow.price.history'
@@ -63,8 +68,8 @@ class UellowPriceHistory(models.Model):
                 return self.browse()
             prev = last.price if last else price
             change = ((price - prev) / prev * 100.0) if prev else 0.0
-            direction = ('up' if change > 0.01 else
-                         'down' if change < -0.01 else 'stable')
+            direction = ('up' if change > _TREND_EPS_PCT else
+                         'down' if change < -_TREND_EPS_PCT else 'stable')
             return self.sudo().create({
                 'product_tmpl_id': product.id,
                 'price': price,
@@ -112,8 +117,8 @@ class UellowPriceHistory(models.Model):
         change = ((current - prev) / prev * 100.0) if prev else 0.0
         prices = [r.price for r in rows]
         is_lowest = current <= min(prices) + 0.0005 and max(prices) > current
-        direction = ('down' if change < -0.05 else
-                     'up' if change > 0.05 else 'stable')
+        direction = ('down' if change < -_TREND_EPS_PCT else
+                     'up' if change > _TREND_EPS_PCT else 'stable')
         # v2.1.28 — stable is a signal too (shown with its own icon).
         return {
             'direction': direction,

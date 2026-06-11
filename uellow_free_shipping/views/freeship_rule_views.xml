@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- v2.2.20 — Conditional free-shipping RULES (per country / language
+         / amount / age / customer type / tier / dates / cities). -->
+
+    <record id="view_freeship_rule_list" model="ir.ui.view">
+        <field name="name">uellow.freeship.rule.list</field>
+        <field name="model">uellow.freeship.rule</field>
+        <field name="arch" type="xml">
+            <list decoration-success="badge_safe" decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="scope"/>
+                <field name="summary"/>
+                <field name="badge_safe" widget="boolean_toggle" readonly="1"
+                       string="🪧 Badge"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_freeship_rule_form" model="ir.ui.view">
+        <field name="name">uellow.freeship.rule.form</field>
+        <field name="model">uellow.freeship.rule</field>
+        <field name="arch" type="xml">
+            <form string="Free-Shipping Rule">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <group>
+                        <group string="Rule">
+                            <field name="name" placeholder="e.g. Kuwait — free over 15 KD"/>
+                            <field name="active"/>
+                            <field name="sequence"/>
+                            <field name="badge_safe" readonly="1"
+                                   help="ON = no personal conditions, the product badge can show it. OFF = applies at checkout only."/>
+                        </group>
+                        <group string="Customer-facing label">
+                            <field name="public_label_en"/>
+                            <field name="public_label_ar"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="🚚 What ships free">
+                            <group>
+                                <field name="scope" widget="radio"/>
+                                <field name="cart_match" invisible="scope == 'cart'"/>
+                                <field name="product_ids" widget="many2many_tags"
+                                       invisible="scope != 'products'"
+                                       required="scope == 'products'"/>
+                                <field name="categ_ids" widget="many2many_tags"
+                                       invisible="scope != 'categories'"
+                                       required="scope == 'categories'"/>
+                                <field name="vendor_ids" widget="many2many_tags"
+                                       invisible="scope != 'vendors'"
+                                       required="scope == 'vendors'"/>
+                                <field name="promotion_id"
+                                       invisible="scope != 'campaign'"
+                                       required="scope == 'campaign'"/>
+                            </group>
+                        </page>
+                        <page string="⚖️ Conditions">
+                            <p class="text-muted">
+                                Every filled condition must pass (AND). Leave a field
+                                empty / 0 / "Any" to ignore it. Rules using amount, items,
+                                age, city, customer type or tier apply at CHECKOUT only —
+                                they never light the product badge, so customers are never
+                                promised a free shipping they might not get.
+                            </p>
+                            <group>
+                                <group string="🛒 Cart">
+                                    <field name="min_amount"/>
+                                    <field name="max_amount"/>
+                                    <field name="min_qty"/>
+                                </group>
+                                <group string="🌍 Where / language">
+                                    <field name="country_ids" widget="many2many_tags"/>
+                                    <field name="website_ids" widget="many2many_tags"/>
+                                    <field name="lang"/>
+                                    <field name="city_names"/>
+                                </group>
+                                <group string="👤 Customer">
+                                    <field name="customer_kind"/>
+                                    <field name="loyalty_tier"/>
+                                    <field name="min_age"/>
+                                    <field name="max_age"/>
+                                </group>
+                                <group string="📅 When">
+                                    <field name="date_from"/>
+                                    <field name="date_to"/>
+                                    <field name="weekdays"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="📝 Notes">
+                            <field name="note" placeholder="Why this rule exists, who asked for it…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_freeship_rule_search" model="ir.ui.view">
+        <field name="name">uellow.freeship.rule.search</field>
+        <field name="model">uellow.freeship.rule</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="country_ids"/>
+                <filter name="active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter name="badge" string="🪧 Shows badge" domain="[('badge_safe', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="by_scope" string="Scope" context="{'group_by': 'scope'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_freeship_rules" model="ir.actions.act_window">
+        <field name="name">Conditional Rules</field>
+        <field name="res_model">uellow.freeship.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_freeship_rule_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No conditional rules yet</p>
+            <p>Create rules like "free delivery in Kuwait over 15 KD",
+               "Electronics ship free on weekends", "Gold customers always
+               ship free" or "campaign X products ship free in Egypt".
+               The first matching rule (by sequence) wins at checkout.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_freeship_rules"
+              name="⚖️ Conditional Rules"
+              parent="menu_free_shipping_root"
+              action="action_freeship_rules" sequence="5"/>
+</odoo>

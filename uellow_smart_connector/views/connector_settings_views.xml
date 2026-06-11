@@ -9,6 +9,35 @@
           <div class="alert alert-info" role="alert">
             <i class="fa fa-info-circle"/> Settings are saved globally and persist between sessions.
           </div>
+          <group string="🎛️ Feature Switches · مفاتيح تشغيل الميزات">
+            <group>
+              <field name="feat_translation"/>
+              <field name="feat_dead_stock"/>
+              <field name="feat_seasonality"/>
+              <field name="feat_reorder"/>
+              <field name="feat_visual_intake"/>
+            </group>
+            <group>
+              <field name="feat_repricing"/>
+              <field name="feat_radar"/>
+              <field name="feat_scorecard"/>
+              <field name="feat_copilot"/>
+              <field name="feat_multimarket"/>
+              <field name="feat_publish_studio"/>
+            </group>
+          </group>
+          <group string="🎨 Publish Studio · استوديو النشر">
+            <field name="image_search_provider"/>
+            <field name="image_search_api_key" password="True"
+                   placeholder="provider API key"
+                   invisible="image_search_provider == 'none'"/>
+            <field name="image_search_cx"
+                   invisible="image_search_provider != 'google_cse'"
+                   placeholder="Google CSE engine id"/>
+            <field name="image_search_count"
+                   invisible="image_search_provider == 'none'"/>
+            <field name="publish_set_published"/>
+          </group>
           <group string="AI Settings">
             <field name="anthropic_api_key" password="True"
                    placeholder="sk-ant-..."
@@ -18,6 +47,8 @@
           </group>
           <group string="Import Settings">
             <field name="default_price_variance" string="Max Price Change (%)"/>
+            <field name="import_default_markup_pct"
+                   string="Default Markup % (no price column)"/>
             <field name="max_products_default" string="Max Products per Job"/>
           </group>
           <group string="Price Intelligence">
@@ -30,6 +61,20 @@
           <group string="Dead Stock">
             <field name="dead_stock_days" string="Idle Days Threshold"/>
             <field name="dead_stock_alert_email" string="Send Email Alerts"/>
+          </group>
+          <group string="Dynamic Repricing">
+            <field name="reprice_undercut_pct" string="Undercut Competitor By (%)"/>
+            <field name="reprice_min_margin_pct" string="Minimum Margin (%)"/>
+            <field name="reprice_max_change_pct" string="Max Single Change (%)"/>
+          </group>
+          <group string="Reorder Forecast">
+            <field name="reorder_velocity_days" string="Sales Velocity Window (days)"/>
+            <field name="reorder_lead_days" string="Supplier Lead Time (days)"/>
+            <field name="reorder_safety_days" string="Safety Stock (days)"/>
+          </group>
+          <group string="Seasonality &amp; Supplier Scorecard">
+            <field name="season_lookahead_months" string="Seasonality Look-ahead (months)"/>
+            <field name="scorecard_window_days" string="Scorecard Sales Window (days)"/>
           </group>
         </sheet>
         <footer>

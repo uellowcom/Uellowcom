@@ -32,15 +32,60 @@ class ImportJobLine(models.Model):
     description_en = fields.Text('Description (EN)')
     description_ar = fields.Text('Description (AR)')
 
-    # Pricing
-    new_price = fields.Float('New Price')
-    old_price = fields.Float('Current Price', readonly=True)
+    # Pricing — sale
+    new_price = fields.Float('New Sale Price')
+    old_price = fields.Float('Current Sale Price', readonly=True)
     price_diff_pct = fields.Float(
-        compute='_compute_price_diff', string='Price Diff (%)', store=True,
+        compute='_compute_price_diff', string='Sale Δ (%)', store=True,
     )
+    update_price = fields.Boolean('Update Sale Price', default=True)
+
+    # Pricing — cost
+    new_cost = fields.Float('New Cost')
+    old_cost = fields.Float('Current Cost', readonly=True)
+    cost_diff_pct = fields.Float(
+        compute='_compute_price_diff', string='Cost Δ (%)', store=True,
+    )
+    update_cost = fields.Boolean('Update Cost', default=True)
+    margin_pct = fields.Float(
+        compute='_compute_price_diff', string='Margin (%)', store=True,
+        help='(Sale − Cost) / Sale, using the new values.')
 
     # Stock
     new_qty = fields.Integer('New Quantity')
+
+    # Identifiers — barcode & internal reference
+    new_barcode = fields.Char('New Barcode')
+    old_barcode = fields.Char('Current Barcode', readonly=True)
+    update_barcode = fields.Boolean('Update Barcode', default=True)
+    new_reference = fields.Char('New Reference')
+    old_reference = fields.Char('Current Reference', readonly=True)
+    update_reference = fields.Boolean('Update Reference', default=True)
+    missing_info = fields.Char(
+        compute='_compute_missing', string='Missing on Catalog', store=True,
+        help='Fields empty on the matched product that this row can fill.')
+
+    # eCommerce categorisation (website categories, used on create/re-classify)
+    ecommerce_categ_ids = fields.Many2many(
+        'product.public.category', string='eCommerce Categories')
+
+    # Out-of-stock handling
+    is_out_of_stock = fields.Boolean('Out of Stock (sheet)', readonly=True,
+        help='The source row says the product is out of stock / qty 0 / unavailable.')
+    existing_continue_selling = fields.Boolean(
+        'Currently Continues Selling', readonly=True,
+        help="The matched product's 'Continue selling when out of stock' flag.")
+    disable_continue_selling = fields.Boolean(
+        'Stop Selling When Out',
+        help='On apply, turn OFF "Continue selling when Out-of-Stock" for this product.')
+    show_continue_warn = fields.Boolean(compute='_compute_continue_warn')
+
+    match_method = fields.Selection([
+        ('barcode',  'Barcode match'),
+        ('reference', 'Reference match'),
+        ('name',     'Name (fuzzy)'),
+        ('none',     'No match'),
+    ], string='Matched by', default='none', readonly=True)
 
     # Source info
     source_sku = fields.Char('Source SKU')
@@ -88,13 +133,47 @@ class ImportJobLine(models.Model):
         'product.template', string='Applied Product', readonly=True,
     )
 
-    @api.depends('new_price', 'old_price')
+    @api.depends('new_price', 'old_price', 'new_cost', 'old_cost')
     def _compute_price_diff(self):
         for l in self:
-            if l.old_price and l.old_price > 0:
-                l.price_diff_pct = (l.new_price - l.old_price) / l.old_price * 100
-            else:
-                l.price_diff_pct = 0.0
+            l.price_diff_pct = ((l.new_price - l.old_price) / l.old_price * 100
+                                if l.old_price and l.old_price > 0 else 0.0)
+            l.cost_diff_pct = ((l.new_cost - l.old_cost) / l.old_cost * 100
+                               if l.old_cost and l.old_cost > 0 else 0.0)
+            l.margin_pct = ((l.new_price - l.new_cost) / l.new_price * 100
+                            if l.new_price and l.new_price > 0 else 0.0)
+
+    @api.depends('is_out_of_stock', 'existing_continue_selling', 'product_action',
+                 'existing_product_id')
+    def _compute_continue_warn(self):
+        for l in self:
+            l.show_continue_warn = bool(
+                l.product_action == 'update' and l.existing_product_id
+                and l.is_out_of_stock and l.existing_continue_selling)
+
+    def action_disable_continue_now(self):
+        """Immediately turn OFF 'continue selling when out of stock' on the
+        matched product (so it stops being sellable while out of stock)."""
+        for line in self:
+            if line.existing_product_id:
+                line.existing_product_id.allow_out_of_stock_order = False
+                line.existing_continue_selling = False
+                line.disable_continue_selling = True
+                line.job_id.message_post(body=_(
+                    'Disabled continue-selling for "%s" (out of stock).'
+                ) % (line.existing_product_id.name or line.name_en))
+
+    @api.depends('product_action', 'old_barcode', 'old_reference',
+                 'new_barcode', 'new_reference')
+    def _compute_missing(self):
+        for l in self:
+            miss = []
+            if l.product_action == 'update':
+                if l.new_barcode and not l.old_barcode:
+                    miss.append('Barcode')
+                if l.new_reference and not l.old_reference:
+                    miss.append('Reference')
+            l.missing_info = ', '.join(miss)
 
     @api.constrains('new_price', 'new_qty')
     def _check_non_negative(self):
@@ -155,25 +234,52 @@ class ImportJobLine(models.Model):
     def _product_vals_for_write(self):
         """Build the vals dict for product.template.create/write.
 
-        EN and AR descriptions are written to separate fields so neither is
-        silently overwritten by the other.
+        UPDATE: write ONLY the fields the reviewer toggled on (sale price, cost,
+        barcode, reference) — never silently overwrite catalog name/identifiers.
+        CREATE: write the full product (name, prices, identifiers, category,
+        description, image).
         """
         self.ensure_one()
+        is_new = not (self.product_action == 'update' and self.existing_product_id)
+
+        if not is_new:
+            # ── UPDATE: selective writes ──
+            v = {}
+            if self.update_price and self.new_price:
+                v['list_price'] = self.new_price
+            if self.update_cost and self.new_cost:
+                v['standard_price'] = self.new_cost
+            if self.update_barcode and self.new_barcode:
+                v['barcode'] = self.new_barcode
+            if self.update_reference and self.new_reference:
+                v['default_code'] = self.new_reference
+            if self.ecommerce_categ_ids:
+                v['public_categ_ids'] = [(6, 0, self.ecommerce_categ_ids.ids)]
+            if self.disable_continue_selling:
+                v['allow_out_of_stock_order'] = False
+            # translation only enriches the AR description, never clobbers name
+            if self.ai_enriched and self.description_ar:
+                v['description_sale'] = self.description_ar
+            return v
+
+        # ── CREATE: full product ──
         v = {
             'name': self.name_ar or self.name_en,
             'list_price': self.new_price or 0.0,
             'type': 'consu',
         }
-        # Descriptions: AR goes to description_sale (customer-facing in AR site),
-        # EN goes to website_description_en if present, else falls back to description_sale.
+        if self.new_cost:
+            v['standard_price'] = self.new_cost
+        if self.new_barcode:
+            v['barcode'] = self.new_barcode
+        if self.new_reference or self.source_sku:
+            v['default_code'] = self.new_reference or self.source_sku
+        if self.ecommerce_categ_ids:
+            v['public_categ_ids'] = [(6, 0, self.ecommerce_categ_ids.ids)]
         if self.description_ar:
             v['description_sale'] = self.description_ar
         elif self.description_en:
             v['description_sale'] = self.description_en
-        # SKU / barcode — only set if non-empty so we don't blank existing ones
-        if self.source_sku:
-            v['default_code'] = self.source_sku
-        # Image — fetch the URL into image_1920 if accessible
         img_bin = self._fetch_image_binary()
         if img_bin:
             v['image_1920'] = img_bin
@@ -217,7 +323,10 @@ class ImportJobLine(models.Model):
                 'name':             product.name,
                 'description_sale': product.description_sale or '',
                 'list_price':       product.list_price,
+                'standard_price':   product.standard_price,
                 'default_code':     product.default_code or False,
+                'barcode':          product.barcode or False,
+                'allow_out_of_stock_order': product.allow_out_of_stock_order,
                 'active':           product.active,
             }
         job.rollback_data = json.dumps(rb)

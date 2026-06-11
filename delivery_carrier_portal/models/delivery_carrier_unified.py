@@ -144,8 +144,12 @@ class DeliveryCarrier(models.Model):
         return any(a.weekday == wd and a.hour_from <= hour < a.hour_to
                    for a in self.availability_ids)
 
-    def available_for(self, website=None, country_code=None, channel='app'):
-        """Full eligibility check used by checkout / the mobile API."""
+    def available_for(self, website=None, country_code=None, channel='app',
+                      check_time=True):
+        """Full eligibility check used by checkout / the mobile API.
+        v2.1.98 — `check_time=False` skips the time-of-day window so the
+        picker can SHOW an after-hours method dimmed ("unavailable now")
+        instead of hiding it entirely."""
         self.ensure_one()
         if self.uellow_channel not in ('both', channel):
             return False
@@ -161,16 +165,16 @@ class DeliveryCarrier(models.Model):
                 'uellow_delivery.vendor_carriers_enabled', '')
             if enabled not in ('1', 'True', 'true'):
                 return False
-        return self.is_available_now()
+        return self.is_available_now() if check_time else True
 
     def available_for_order(self, order, website=None, country_code=None,
-                            channel='app'):
+                            channel='app', check_time=True):
         # available_for + the vendor-cart rule: a vendor-owned method is
         # only offered when EVERY product in the cart belongs to that
         # vendor (mixed carts can't be delivered by one vendor).
         self.ensure_one()
         if not self.available_for(website=website, country_code=country_code,
-                                  channel=channel):
+                                  channel=channel, check_time=check_time):
             return False
         if self.vendor_id and order:
             lines = order.order_line.filtered(

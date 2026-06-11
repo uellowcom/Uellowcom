@@ -289,6 +289,39 @@ class MobileAuthAPI(http.Controller):
             email = (info.get('email') or '').strip().lower()
             name = name or (info.get('name') or '')
             uid = info.get('sub') or uid
+        elif provider == 'apple':
+            # v2.1.89 — verify the Apple identity token (JWT) against Apple's
+            # public keys + audience = our client id (apple_login.client_id).
+            id_token = (p.get('id_token') or p.get('identity_token') or '').strip()
+            if not id_token:
+                return fail('MISSING_TOKEN', 'Apple identity token required', 400)
+            try:
+                import jwt
+                from jwt import PyJWKClient
+                ICP = request.env['ir.config_parameter'].sudo()
+                client_id = (ICP.get_param('apple_login.client_id')
+                             or 'com.uellow.app').strip()
+                # v2.1.95 — Android signs in through the web flow whose
+                # audience is the SERVICES id; iOS native uses the bundle
+                # id. Accept every configured Apple client id.
+                Cfg = request.env.get('apple.login.config')
+                audiences = {client_id, 'com.uellow.app', 'com.uellow.signin'}
+                if Cfg is not None:
+                    audiences |= set(Cfg.sudo().search([]).mapped('client_id'))
+                jwks = PyJWKClient('https://appleid.apple.com/auth/keys')
+                key = jwks.get_signing_key_from_jwt(id_token).key
+                info = jwt.decode(id_token, key, algorithms=['RS256'],
+                                  audience=list(a for a in audiences if a),
+                                  issuer='https://appleid.apple.com')
+            except Exception as e:
+                return fail('INVALID_TOKEN', 'Apple token rejected: %s' % e, 401)
+            uid = info.get('sub') or uid
+            # Apple only returns the email on the FIRST sign-in; afterwards use
+            # the app-provided email, else a stable per-user synthetic login.
+            email = (info.get('email') or p.get('email') or '').strip().lower()
+            if not email and uid:
+                email = 'apple-%s@privaterelay.uellow.app' % uid
+            name = name or (p.get('name') or '')
         else:
             return fail('PROVIDER_NOT_READY',
                         f'{provider} sign-in is not configured yet', 400)
@@ -307,6 +340,116 @@ class MobileAuthAPI(http.Controller):
                 'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])],
             })
             user = new_user
+            # v2.2.03 — partner country follows the WEBSITE the customer
+            # signed up from (geo-IP used to tag e.g. Egypt, dragging an
+            # EGP pricelist onto Kuwait carts + a wrong account flag).
+            try:
+                m = request.env['mobile.country.website'].sudo().search(
+                    [('website_id', '=', get_website().id),
+                     ('active', '=', True)], limit=1)
+                if m:
+                    user.partner_id.sudo().country_id = m.country_id.id
+            except Exception:
+                pass
+        token = issue_token(
+            partner_id=user.partner_id.id,
+            device_id=p.get('device_id'),
+            device_name=p.get('device_name'),
+            push_token=p.get('push_token'),
+            app_version=p.get('app_version'),
+        )
+        return ok({'token': token, 'user': _serialize_user(user.partner_id)})
+
+    # ─── Firebase Phone Auth (OTP via Firebase — no SMS gateway needed) ──
+    @http.route('/api/mobile/v2/auth/firebase', type='http', auth='public',
+                methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def auth_firebase(self, **kw):
+        """Verify a Firebase ID token (the device did the phone/SMS or social
+        sign-in via Firebase Auth) and log the customer in / create them.
+        Firebase delivers the OTP SMS itself, so no SMS provider is required.
+
+        Body: id_token (required), optional phone, name, device_*.
+        """
+        import jwt
+        import requests as _rq
+        from cryptography.x509 import load_pem_x509_certificate
+        p = get_payload()
+        id_token = (p.get('id_token') or p.get('token') or '').strip()
+        if not id_token:
+            return fail('MISSING_TOKEN', 'Firebase token required', 400)
+        ICP = request.env['ir.config_parameter'].sudo()
+        project = (ICP.get_param('mail_mobile_firebase_project_id')
+                   or 'uellow-app').strip()
+        try:
+            kid = jwt.get_unverified_header(id_token).get('kid')
+            certs = _rq.get(
+                'https://www.googleapis.com/robot/v1/metadata/x509/'
+                'securetoken@system.gserviceaccount.com', timeout=10).json()
+            pem = certs.get(kid)
+            if not pem:
+                raise Exception('unknown signing key')
+            pub = load_pem_x509_certificate(pem.encode()).public_key()
+            info = jwt.decode(
+                id_token, pub, algorithms=['RS256'], audience=project,
+                issuer='https://securetoken.google.com/%s' % project)
+        except Exception as e:
+            return fail('INVALID_TOKEN', 'Firebase token rejected: %s' % e, 401)
+
+        phone = (info.get('phone_number') or p.get('phone') or '').strip()
+        email = (info.get('email') or '').strip().lower()
+        name = (p.get('name') or info.get('name') or '').strip()
+        digits = ''.join(ch for ch in phone if ch.isdigit())
+        fb_uid = info.get('user_id') or info.get('sub') or ''
+
+        Partner = request.env['res.partner'].sudo()
+        Users = request.env['res.users'].sudo()
+        user = None
+
+        # 1) match an EXISTING customer by phone (keep their orders + loyalty)
+        if len(digits) >= 8:
+            pr = Partner.search(['|', ('phone', 'like', digits[-8:]),
+                                 ('mobile', 'like', digits[-8:])], limit=1)
+            if pr:
+                user = pr.user_ids[:1]
+                if not user:
+                    login = (pr.email or '').strip().lower() \
+                        or ('phone-%s@uellow.app' % digits)
+                    existing = Users.search([('login', '=', login)], limit=1)
+                    user = existing or Users.with_context(
+                        no_reset_password=True).create({
+                            'name': pr.name or name or login,
+                            'login': login,
+                            'partner_id': pr.id,
+                            'password': 'fb-%s' % (fb_uid or digits),
+                            'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])],
+                        })
+        # 2) else match by email
+        if not user and email:
+            user = Users.search([('login', '=', email)], limit=1)
+        # 3) else create a fresh customer
+        if not user:
+            login = email or ('phone-%s@uellow.app' % (digits or fb_uid or 'x'))
+            user = Users.with_context(no_reset_password=True).create({
+                'name': name or phone or login,
+                'login': login,
+                'email': email or False,
+                'password': 'fb-%s' % (fb_uid or digits or login),
+                'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])],
+            })
+            try:
+                m = request.env['mobile.country.website'].sudo().search(
+                    [('website_id', '=', get_website().id), ('active', '=', True)],
+                    limit=1)
+                if m:
+                    user.partner_id.sudo().country_id = m.country_id.id
+            except Exception:
+                pass
+
+        # store the phone on the partner if it's missing
+        if phone and user and not (user.partner_id.phone or user.partner_id.mobile):
+            user.partner_id.sudo().mobile = phone
+
         token = issue_token(
             partner_id=user.partner_id.id,
             device_id=p.get('device_id'),

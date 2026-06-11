@@ -232,11 +232,24 @@ class MobileReviewsAPI(http.Controller):
         from datetime import datetime, timedelta
         partner = current_partner()
         Order = request.env['sale.order'].sudo()
-        orders = Order.search([
-            ('partner_id', '=', partner.id),
-            ('state', 'in', ('sale', 'done')),
-            ('date_order', '>=', datetime.now() - timedelta(days=21)),
-        ], order='date_order desc', limit=10)
+        # v2.1.94 — explicit ?order_id= (the account-card "Rate" button):
+        # prompt for THAT order, no 21-day window.
+        try:
+            req_oid = int(kw.get('order_id') or 0)
+        except Exception:
+            req_oid = 0
+        if req_oid:
+            orders = Order.search([
+                ('id', '=', req_oid),
+                ('partner_id', '=', partner.id),
+                ('state', 'in', ('sale', 'done')),
+            ])
+        else:
+            orders = Order.search([
+                ('partner_id', '=', partner.id),
+                ('state', 'in', ('sale', 'done')),
+                ('date_order', '>=', datetime.now() - timedelta(days=21)),
+            ], order='date_order desc', limit=10)
         delivered = orders.filtered(
             lambda o: getattr(o, 'delivery_status', '') == 'delivered')
         if not delivered:
@@ -261,7 +274,12 @@ class MobileReviewsAPI(http.Controller):
                 if l.display_type or getattr(l, 'is_reward_line', False):
                     continue
                 tmpl = l.product_id.product_tmpl_id
-                if not tmpl or tmpl.id in reviewed_ids:
+                if not tmpl:
+                    continue
+                # v2.1.95 — explicit "Rate" tap: show ALL the order's
+                # products (re-review allowed); the auto-prompt still
+                # skips already-reviewed ones.
+                if tmpl.id in reviewed_ids and not req_oid:
                     continue
                 if any(it['product_id'] == tmpl.id for it in items):
                     continue

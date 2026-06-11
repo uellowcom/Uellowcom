@@ -119,6 +119,17 @@ class MobileGeoAPI(http.Controller):
         p = get_payload()
         code = (p.get('country') or '').upper().strip()
         lang = (p.get('lang') or '').strip()
+        # v2.2.00 — server-side availability gate: a gated country can't
+        # be selected even if an old client tries.
+        if code:
+            m0 = request.env['mobile.country.website'].sudo() \
+                .find_for_country_code(code)
+            if m0 and not getattr(m0, 'app_available', True):
+                d = m0.to_dict()
+                return fail('COUNTRY_UNAVAILABLE',
+                            (d['unavailable_message'].get('ar')
+                             or d['unavailable_message'].get('en')
+                             or 'Coming soon'), 400)
         sess = current_session()
         if not sess:
             # Guest with no session yet — bootstrap one from device_id

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>موكاب كارت الطلب C+ (الدسم) — كانبان Sales</title>
+<style>
+  :root{--y:#F5C320;--d:#412402;--bg:#eef0f3;
+        --green:#10b981;--greenbg:#e7f8f0;--gdk:#067a55;
+        --amber:#f59e0b;--amberbg:#fff5e5;--adk:#a86a00;
+        --red:#ef4444;--redbg:#fdeaea;--rdk:#c62828;
+        --blue:#3b82f6;--bluebg:#e8f1fe;--bdk:#1d4ed8;
+        --purple:#8b5cf6;--purplebg:#f1ebff;--pdk:#6d28d9;
+        --ink:#2a2118;--muted:#8a7f6c}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Tajawal',-apple-system,Segoe UI,Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:linear-gradient(135deg,var(--d),#5a3410);color:#fff;padding:24px 18px;text-align:center}
+  header h1{margin:0;color:var(--y);font-size:21px}
+  header p{margin:6px 0 0;opacity:.85;font-size:13px}
+  .wrap{max-width:1040px;margin:0 auto;padding:24px 16px 70px}
+  .row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+  .card{width:320px;background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(65,36,2,.12);overflow:hidden;font-size:13px}
+  /* ribbon */
+  .ribbon{color:#fff;font-weight:900;font-size:12.5px;padding:7px 14px;display:flex;justify-content:space-between;align-items:center}
+  .age{background:rgba(255,255,255,.22);border-radius:999px;padding:1px 8px;font-size:10.5px}
+  .pad{padding:12px 14px}
+  .muted{color:var(--muted)}
+  .row2{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .amt{font-weight:900;color:var(--d);font-size:17px}
+  /* customer */
+  .cust{display:flex;align-items:center;gap:9px}
+  .ava{width:34px;height:34px;border-radius:50%;background:var(--y);color:var(--d);font-weight:900;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+  .web{display:inline-flex;align-items:center;gap:5px;background:#fff7e0;color:#9a7400;border:1px solid #f3e3a8;border-radius:8px;padding:2px 8px;font-size:10.5px;font-weight:800}
+  .flag{display:inline-flex;align-items:center;gap:3px;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:800;margin-inline-start:4px}
+  .f-new{background:var(--bluebg);color:var(--bdk)} .f-warn{background:var(--redbg);color:var(--rdk)}
+  .f-gift{background:var(--purplebg);color:var(--pdk)} .f-cash{background:var(--greenbg);color:var(--gdk)}
+  .sep{height:1px;background:#eee5d3;margin:9px 0}
+  /* progress stepper */
+  .steps{display:flex;align-items:center;margin:8px 0 2px}
+  .step{flex:1;display:flex;flex-direction:column;align-items:center;position:relative}
+  .sdot{width:14px;height:14px;border-radius:50%;background:#dfe3e8;z-index:1;border:2px solid #fff}
+  .sdot.on{background:var(--green)} .sdot.cur{background:var(--amber);box-shadow:0 0 0 3px var(--amberbg)}
+  .sline{position:absolute;top:6px;right:50%;width:100%;height:3px;background:#dfe3e8;z-index:0}
+  .sline.on{background:var(--green)}
+  .slbl{font-size:8.5px;color:var(--muted);margin-top:3px}
+  /* status lines */
+  .stat{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px}
+  .ic{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto}
+  .i-green{background:var(--greenbg)} .i-amber{background:var(--amberbg)} .i-blue{background:var(--bluebg)} .i-red{background:var(--redbg)} .i-grey{background:#eef0f3}
+  .vg{color:var(--gdk);font-weight:800} .va{color:var(--adk);font-weight:800} .vr{color:var(--rdk);font-weight:800} .vgr{color:#5b6470;font-weight:800}
+  /* COD box */
+  .cod{background:linear-gradient(90deg,#fff5e5,#fffaf0);border:1px dashed var(--amber);border-radius:10px;padding:7px 10px;margin:8px 0;display:flex;justify-content:space-between;align-items:center}
+  .cod b{color:var(--adk);font-size:15px}
+  /* thumbs */
+  .thumbs{display:flex;gap:5px;margin:7px 0 2px}
+  .th{width:38px;height:38px;border-radius:8px;background:#f3ece0;display:flex;align-items:center;justify-content:center;font-size:17px}
+  .more{width:38px;height:38px;border-radius:8px;background:#eef0f3;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:var(--muted)}
+  /* actions */
+  .acts{display:flex;gap:6px;margin-top:9px}
+  .btn{flex:1;text-align:center;border-radius:9px;padding:7px;font-size:11.5px;font-weight:800;cursor:pointer}
+  .b-y{background:var(--y);color:var(--d)} .b-o{background:#fff;border:1px solid var(--d);color:var(--d)}
+  .foot{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);margin-top:8px}
+  .ideas{background:#fff;border-radius:14px;padding:16px 18px;margin-top:26px;box-shadow:0 2px 10px rgba(65,36,2,.08)}
+  .ideas h3{color:var(--d);margin:0 0 8px}
+  .ideas li{margin:5px 0;font-size:13.5px}
+  .tag{display:inline-block;background:var(--y);color:var(--d);font-weight:800;border-radius:6px;padding:0 7px;font-size:11px;margin-inline-end:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗂️ كارت الطلب C+ — النسخة الدسمة</h1>
+  <p>كل المعلومات + أفكار احترافية · قوللي اللي تشيله/تزيده</p>
+</header>
+<div class="wrap">
+  <div class="row">
+
+    <!-- Card 1: confirmed COD, out for delivery -->
+    <div class="card">
+      <div class="ribbon" style="background:var(--green)">
+        <span>✔ مؤكد · 🚚 خرج للتوصيل</span><span class="age">⏱ منذ 3 س</span>
+      </div>
+      <div class="pad">
+        <div class="row2">
+          <div class="cust">
+            <span class="ava">أ</span>
+            <div><b>أحمد علي</b> <span class="flag f-new">🆕 عميل جديد</span><br>
+              <span class="muted">📞 +965 5xxxxxxx</span></div>
+          </div>
+          <span class="amt">12.500<br><span style="font-size:10px" class="muted">KD</span></span>
+        </div>
+        <div style="margin-top:6px"><span class="web">📱 Kuwait Mobile App</span> <span class="muted">· #S00123</span></div>
+
+        <!-- progress stepper -->
+        <div class="steps">
+          <div class="step"><span class="sdot on"></span><span class="slbl">مؤكد</span></div>
+          <div class="step"><span class="sline on"></span><span class="sdot on"></span><span class="slbl">تجهيز</span></div>
+          <div class="step"><span class="sline on"></span><span class="sdot cur"></span><span class="slbl">شحن</span></div>
+          <div class="step"><span class="sline"></span><span class="sdot"></span><span class="slbl">تسليم</span></div>
+        </div>
+
+        <div class="sep"></div>
+        <div class="stat"><span class="ic i-green">💳</span><div><b>الدفع</b> · <span class="vg">مدفوع</span> <span class="muted">— كاش عند الاستلام · KNET</span></div></div>
+        <div class="stat"><span class="ic i-amber">🚚</span><div><b>التوصيل</b> · <span class="va">خرج للتوصيل</span> <span class="muted">— أرامكس · السائق: خالد · ⏰ خلال ساعة</span></div></div>
+        <div class="stat"><span class="ic i-green">🧾</span><div><b>الفاتورة</b> · <span class="vg">مفوترة</span> <span class="muted">— INV/2026/0456</span></div></div>
+
+        <div class="cod"><span>💵 مطلوب تحصيل (كاش)</span><b>12.500 KD</b></div>
+
+        <div class="thumbs">
+          <span class="th">⌚</span><span class="th">🎧</span><span class="th">🔌</span><span class="more">+1</span>
+        </div>
+
+        <div style="margin-top:6px">
+          <span class="flag f-gift">🎁 كوبون −2.0</span>
+          <span class="flag f-cash">💰 كاش-باك 0.300</span>
+        </div>
+
+        <div class="foot"><span>🛒 4 أصناف · 📍 حولي</span><span>📅 10 يونيو · 2:30م</span></div>
+
+        <div class="acts">
+          <span class="btn b-y">✅ اعتماد</span>
+          <span class="btn b-o">🚚 تعيين توصيل</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: unpaid online, needs attention -->
+    <div class="card">
+      <div class="ribbon" style="background:var(--amber)">
+        <span>⏳ قيد التجهيز</span><span class="age" style="background:rgba(0,0,0,.18)">⏱ منذ 26 س ⚠️</span>
+      </div>
+      <div class="pad">
+        <div class="row2">
+          <div class="cust">
+            <span class="ava" style="background:#cfe3ff;color:#1d4ed8">م</span>
+            <div><b>منى سالم</b> <span class="flag f-warn">⚠️ طلب إلغاء</span><br>
+              <span class="muted">📞 +966 5xxxxxxx</span></div>
+          </div>
+          <span class="amt">7.250<br><span style="font-size:10px" class="muted">SAR</span></span>
+        </div>
+        <div style="margin-top:6px"><span class="web">📱 Saudia Mobile App</span> <span class="muted">· #S00141</span></div>
+
+        <div class="steps">
+          <div class="step"><span class="sdot on"></span><span class="slbl">مؤكد</span></div>
+          <div class="step"><span class="sline on"></span><span class="sdot cur"></span><span class="slbl">تجهيز</span></div>
+          <div class="step"><span class="sline"></span><span class="sdot"></span><span class="slbl">شحن</span></div>
+          <div class="step"><span class="sline"></span><span class="sdot"></span><span class="slbl">تسليم</span></div>
+        </div>
+
+        <div class="sep"></div>
+        <div class="stat"><span class="ic i-red">💳</span><div><b>الدفع</b> · <span class="vr">غير مدفوع</span> <span class="muted">— أونلاين · فشل/معلّق</span></div></div>
+        <div class="stat"><span class="ic i-grey">🚚</span><div><b>التوصيل</b> · <span class="vgr">لم يُسند</span> <span class="muted">— لا سائق</span></div></div>
+        <div class="stat"><span class="ic i-amber">🧾</span><div><b>الفاتورة</b> · <span class="va">بانتظار الفوترة</span></div></div>
+
+        <div class="thumbs"><span class="th">👟</span></div>
+
+        <div class="foot"><span>🛒 1 صنف · 📍 الرياض</span><span>📅 أمس · 11:05ص</span></div>
+        <div class="acts">
+          <span class="btn b-y">✅ اعتماد</span>
+          <span class="btn b-o">✖ إلغاء</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ideas list -->
+  <div class="ideas">
+    <h3>💡 كل الأفكار/البيانات في الكارت — قوللي تشيل/تسيب إيه</h3>
+    <ul>
+      <li><span class="tag">رأس</span> حالة الطلب + حالة التوصيل في الشريط الملوّن + <b>عُمر الطلب</b> (⏱ منذ كذا) ويتحوّل أحمر/⚠️ لو الطلب واقف من غير حركة فترة طويلة.</li>
+      <li><span class="tag">العميل</span> صورة/حرف + الاسم + الهاتف + <b>أعلام</b>: 🆕 عميل جديد · ⚠️ طلب إلغاء · 👑 عميل VIP/ولاء.</li>
+      <li><span class="tag">شريط تقدّم</span> مراحل الطلب (مؤكد→تجهيز→شحن→تسليم) مع تمييز المرحلة الحالية.</li>
+      <li><span class="tag">الدفع</span> الحالة + الطريقة (كاش/أونلاين) + المزوّد (KNET/Apple Pay…) + «مدفوع X من Y» لو جزئي.</li>
+      <li><span class="tag">التوصيل</span> الحالة + شركة الشحن + اسم السائق + <b>وقت متوقّع</b> + رقم تتبّع (قابل للنسخ).</li>
+      <li><span class="tag">الفاتورة</span> الحالة + رقم الفاتورة.</li>
+      <li><span class="tag">كاش COD</span> صندوق بارز <b>«مطلوب تحصيل»</b> بمبلغ الكاش للطلبات عند الاستلام.</li>
+      <li><span class="tag">صور</span> صور مصغّرة لأول منتجات الطلب + «+N».</li>
+      <li><span class="tag">عروض</span> 🎁 كوبون/خصم · 💰 كاش-باك · 🔁 مرتجع.</li>
+      <li><span class="tag">تذييل</span> عدد الأصناف · المنطقة/المحافظة · التاريخ/الوقت.</li>
+      <li><span class="tag">أزرار سريعة</span> ✅ اعتماد · 🚚 تعيين توصيل · ✖ إلغاء · 🧾 فوترة (إجراء مباشر من الكارت).</li>
+      <li><span class="tag">للأدمن فقط</span> <b>هامش الربح %</b> (ملوّن) · التكلفة — أخفيها عن غير الأدمن لو تحب.</li>
+      <li><span class="tag">مندوب</span> البائع/فريق المبيعات + شارة مصدر (تطبيق/ويب).</li>
+    </ul>
+    <p class="muted" style="margin-top:10px">👈 قوللي: (1) أنهي أفكار أسيبها/أشيلها · (2) الأعمدة تتجمّع على إيه (حالة الطلب / الدفع / الويبسايت) · (3) الأزرار السريعة عايزها ولا لأ — وأبنيه في Odoo.</p>
+  </div>
+
+</div>
+</body>
+</html>

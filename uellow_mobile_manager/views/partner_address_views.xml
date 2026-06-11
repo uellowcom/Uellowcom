@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- v2.2.00 — Uellow Address tab on the partner form: mirrors the app's
+       detailed address form 1:1 (governorate/area/block/…/GPS + map). -->
+  <record id="view_partner_form_uellow_address" model="ir.ui.view">
+    <field name="name">res.partner.form.uellow.address</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//notebook" position="inside">
+        <page string="📍 Uellow Address" name="uellow_address">
+          <group>
+            <group string="Structured address (as entered in the app)">
+              <field name="uellow_address_label"/>
+              <field name="uellow_governorate_id"/>
+              <field name="uellow_city_id"/>
+              <field name="uellow_block"/>
+              <field name="street" string="Street / الشارع"/>
+              <field name="uellow_building"/>
+              <field name="uellow_floor"/>
+              <field name="uellow_apartment"/>
+            </group>
+            <group string="GPS pin">
+              <field name="partner_latitude" string="Latitude / خط العرض"/>
+              <field name="partner_longitude" string="Longitude / خط الطول"/>
+              <button name="action_open_in_gmaps" type="object"
+                      string="🗺 Open in Google Maps" class="btn-secondary"
+                      invisible="not partner_latitude and not partner_longitude"/>
+            </group>
+          </group>
+          <field name="uellow_map_html" nolabel="1"/>
+        </page>
+      </xpath>
+    </field>
+  </record>
+</odoo>

@@ -50,6 +50,47 @@ def _full_lang(env, short):
     return rec.code if rec else 'en_US'
 
 
+def _site_dom(env):
+    """v2.1.92 — per-website product visibility for home blocks (same rule
+    as the app feeds): truly agnostic (no primary AND no extras) OR primary
+    = this site OR this site in the extras M2M. Blocks used to skip the
+    website filter entirely, so Egypt-only products leaked into every
+    country's home page."""
+    try:
+        from odoo.addons.uellow_mobile_manager.controllers.api_v2._common \
+            import get_website
+        w = get_website()
+        if not w:
+            return []
+        if 'uellow_extra_website_ids' in env['product.template']._fields:
+            return ['|', '|',
+                    '&', ('website_id', '=', False),
+                         ('uellow_extra_website_ids', '=', False),
+                    ('website_id', '=', w.id),
+                    ('uellow_extra_website_ids', 'in', w.id)]
+        return ['|', ('website_id', '=', False), ('website_id', '=', w.id)]
+    except Exception:
+        return []
+
+
+def _site_visible(env, p):
+    """Record-level version of _site_dom for paths that .filtered() instead
+    of search() (bestsellers rank table, promotion lines)."""
+    try:
+        from odoo.addons.uellow_mobile_manager.controllers.api_v2._common \
+            import get_website
+        w = get_website()
+        if not w:
+            return True
+        extras = getattr(p, 'uellow_extra_website_ids', None)
+        extra_ids = extras.ids if extras else []
+        if not p.website_id and not extra_ids:
+            return True
+        return p.website_id.id == w.id or w.id in extra_ids
+    except Exception:
+        return True
+
+
 # ─── Categories ────────────────────────────────────────────────────────────
 
 def resolve_categories(env, props, lang, block=None):
@@ -80,6 +121,21 @@ def resolve_categories(env, props, lang, block=None):
 
 # ─── Products ──────────────────────────────────────────────────────────────
 
+def _int_list(v):
+    """Coerce a value (list / csv string / single) into a list[int]."""
+    if not v:
+        return []
+    if isinstance(v, str):
+        v = v.split(',')
+    out = []
+    for x in (v if isinstance(v, (list, tuple)) else [v]):
+        try:
+            out.append(int(x))
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 def resolve_products(env, props, lang, block=None):
     """Returns {items: [{id, name, slug, price, image, ...}, ...]}.
 
@@ -101,11 +157,40 @@ def resolve_products(env, props, lang, block=None):
         elif kind == 'new-user':   source = 'discounted'
         else:                      source = 'newest'
 
-    limit = int(props.get('limit') or 12)
+    want_limit = int(props.get('limit') or 12)
+    # v2.2.23 — when post-filter REFINEMENTS are active (price/discount/
+    # rating), over-fetch so the row still fills after filtering. The final
+    # trim back to want_limit happens at the end.
+    _has_refine = any(props.get(k) for k in
+                      ('min_discount_pct', 'min_price', 'max_price',
+                       'min_rating'))
+    # v2.2.26 — also widen when page diversity is active so each block has
+    # fresh (unseen) products to pick after excluding earlier blocks.
+    _has_div = bool((props.get('_brain_ctx') or {}).get('cfg')) and \
+        bool((props.get('_brain_ctx') or {}).get('cfg').div_no_repeat) \
+        if props.get('_brain_ctx') else False
+    _has_pers = bool((props.get('personalize') or 'none') not in ('', 'none'))
+    limit = (min(want_limit * 6, 240) if (_has_refine or _has_div or _has_pers)
+             else want_limit)
     Tmpl = env['product.template'].sudo()
     base_dom = [('is_published', '=', True),
                 ('sale_ok', '=', True),
-                ('website_published', '=', True)]
+                ('website_published', '=', True)] + _site_dom(env)
+    # v2.2.25 — optional: hide bundle products (the bundle itself AND the
+    # component items inside published bundles) from THIS block, so bundles
+    # live only in dedicated bundle blocks and don't clutter normal feeds.
+    if props.get('exclude_bundles') and 'is_bundle' in Tmpl._fields:
+        base_dom.append(('is_bundle', '=', False))
+        try:
+            Line = env.get('uellow.bundle.line')
+            if Line is not None:
+                comp_ids = Line.sudo().search([
+                    ('bundle_id.state', '=', 'published')
+                ]).mapped('product_tmpl_id').ids
+                if comp_ids:
+                    base_dom.append(('id', 'not in', comp_ids))
+        except Exception:
+            pass
     recs = Tmpl
 
     if source == 'manual' and props.get('product_ids'):
@@ -128,6 +213,51 @@ def resolve_products(env, props, lang, block=None):
             recs = Tmpl.search(dom, limit=limit)
         else:
             recs = Tmpl.search(base_dom, limit=limit)
+
+    elif source == 'brand' and props.get('brand_id') \
+            and 'brand_id' in Tmpl._fields:
+        # v2.2.27 — products of one brand (product.brand m2o). Guarded so
+        # it's a no-op if the brand module isn't installed.
+        try:
+            bid = int(props['brand_id'])
+        except Exception:
+            bid = 0
+        recs = (Tmpl.search(base_dom + [('brand_id', '=', bid)], limit=limit)
+                if bid else Tmpl.browse([]))
+
+    elif source == 'tag' and 'product_tag_ids' in Tmpl._fields \
+            and (props.get('tag_ids') or props.get('tag_id')):
+        # v2.2.27 — products carrying any of the chosen product tags.
+        tids = _int_list(props.get('tag_ids')) \
+            or _int_list([props.get('tag_id')])
+        recs = (Tmpl.search(base_dom + [('product_tag_ids', 'in', tids)],
+                            order='create_date desc', limit=limit)
+                if tids else Tmpl.browse([]))
+
+    elif source == 'filter':
+        # v2.2.27 — composable CUSTOM filter: any mix of category + brand +
+        # tag. The generic price / discount / rating refinements + sort are
+        # applied further below (they run for every source), so this becomes
+        # a full ad-hoc product finder. Each clause is guarded + optional.
+        dom = list(base_dom)
+        if props.get('category_id'):
+            try:
+                dom.append(('public_categ_ids', 'in',
+                            [int(props['category_id'])]))
+            except Exception:
+                pass
+        if props.get('brand_id') and 'brand_id' in Tmpl._fields:
+            try:
+                dom.append(('brand_id', '=', int(props['brand_id'])))
+            except Exception:
+                pass
+        if 'product_tag_ids' in Tmpl._fields \
+                and (props.get('tag_ids') or props.get('tag_id')):
+            tids = _int_list(props.get('tag_ids')) \
+                or _int_list([props.get('tag_id')])
+            if tids:
+                dom.append(('product_tag_ids', 'in', tids))
+        recs = Tmpl.search(dom, order='create_date desc', limit=limit)
 
     elif source == 'discounted':
         # v2.1.76 — when a "Minimum discount %" filter is set, the small
@@ -212,7 +342,8 @@ def resolve_products(env, props, lang, block=None):
                 recs = Rank.sudo().top_products(
                     category_id=int(cat_id) if cat_id else None,
                     website_id=None, limit=limit)
-                recs = recs.filtered(lambda p: p.is_published)
+                recs = recs.filtered(
+                    lambda p: p.is_published and _site_visible(env, p))
         except Exception:
             recs = Tmpl.browse([])
         if not recs:
@@ -239,7 +370,8 @@ def resolve_products(env, props, lang, block=None):
                     ('promotion_id', 'in', pids),
                     ('state', '=', 'approved')], limit=limit * 2)
                 recs = lines.mapped('product_tmpl_id').filtered(
-                    lambda p: p.active and p.is_published)[:limit]
+                    lambda p: p.active and p.is_published
+                    and _site_visible(env, p))[:limit]
                 if Promo is not None:
                     promos = Promo.sudo().browse(pids).exists()
         except Exception:
@@ -293,6 +425,15 @@ def resolve_products(env, props, lang, block=None):
                 if free_cats:
                     ors.append(
                         ('public_categ_ids', 'child_of', free_cats.ids))
+                # v2.2.20 — badge-safe conditional RULES contribute too
+                # (same engine as the card badge → list never disagrees
+                # with the badge).
+                try:
+                    Rule = env.get('uellow.freeship.rule')
+                    if Rule is not None:
+                        ors += Rule.sudo().badge_domain_or()
+                except Exception:
+                    pass
                 dom_free = ['|'] * (len(ors) - 1) + ors
                 recs = Tmpl.search(base_dom + dom_free,
                                    order='create_date desc', limit=limit)
@@ -311,10 +452,47 @@ def resolve_products(env, props, lang, block=None):
                         break
             recs = Tmpl.browse(filtered)
 
+    elif source == 'bundles':
+        # v2.2.20 — published, in-window, available bundles' sellable
+        # products. Each brief is enriched with the bundle payload so a
+        # card can show the savings + component count.
+        Bundle = env.get('uellow.bundle')
+        ids = []
+        cur_wid = None
+        try:
+            from odoo.addons.uellow_mobile_manager.controllers.api_v2 \
+                ._common import get_website
+            w = get_website()
+            cur_wid = w.id if w else None
+        except Exception:
+            cur_wid = None
+        if Bundle is not None:
+            for b in Bundle.sudo().search(
+                    [('state', '=', 'published'),
+                     ('product_tmpl_id', '!=', False)],
+                    order='sequence, id desc'):
+                # v2.2.21 — 'hide' bundles drop when unavailable; 'badge'/
+                # 'sell' stay listed (the card flags them).
+                if b._listing_state() == 'hidden':
+                    continue
+                if b.website_ids and cur_wid \
+                        and cur_wid not in b.website_ids.ids:
+                    continue
+                ids.append(b.product_tmpl_id.id)
+                if len(ids) >= limit:
+                    break
+        recs = Tmpl.browse(ids)
+
     elif source == 'recent':
         # Personal — can't resolve at page-fetch time; let the app fall
         # back to its own /recently-viewed endpoint.
         return {'items': [], 'fetch_endpoint': 'recently-viewed'}
+
+    elif source == 'random':
+        # v2.2.14 — surprise mix: fetch a pool then shuffle.
+        import random as _rnd
+        pool = Tmpl.search(base_dom, limit=min(max(limit * 8, 80), 400))
+        recs = pool.sorted(key=lambda r: _rnd.random())[:limit]
 
     else:
         recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
@@ -327,17 +505,152 @@ def resolve_products(env, props, lang, block=None):
         min_disc = 0
     if min_disc > 0:
         items = [x for x in items if (x.get('discount_pct') or 0) >= min_disc]
-        # we widened the fetch pool above; trim back to the block's limit.
-        items = items[:limit]
+    # v2.2.23 — generic REFINEMENTS (any source): price range + min rating.
+    def _amt(x):
+        return (x.get('price') or {}).get('amount') or 0
+    def _rating(x):
+        return (x.get('rating') or {}).get('avg') or 0
+    try:
+        mn = float(props.get('min_price') or 0)
+        if mn > 0:
+            items = [x for x in items if _amt(x) >= mn]
+    except Exception:
+        pass
+    try:
+        mx = float(props.get('max_price') or 0)
+        if mx > 0:
+            items = [x for x in items if _amt(x) <= mx]
+    except Exception:
+        pass
+    try:
+        mr = float(props.get('min_rating') or 0)
+        if mr > 0:
+            items = [x for x in items if _rating(x) >= mr]
+    except Exception:
+        pass
     sort_by = (props.get('sort') or '').strip()
-    if sort_by == 'discount_desc':
+    if sort_by in ('discount_desc', 'discount'):
         items.sort(key=lambda x: -(x.get('discount_pct') or 0))
     elif sort_by == 'price_asc':
-        items.sort(key=lambda x: (x.get('price') or {}).get('amount') or 0)
+        items.sort(key=lambda x: _amt(x))
     elif sort_by == 'price_desc':
-        items.sort(key=lambda x: -((x.get('price') or {}).get('amount') or 0))
+        items.sort(key=lambda x: -_amt(x))
+    elif sort_by in ('top_rated', 'rating'):
+        items.sort(key=lambda x: -_rating(x))
+    elif sort_by in ('best_match', 'brain'):
+        # v2.2.25 — Uellow Brain ranking (cost/margin-driven brain_score).
+        items.sort(key=lambda x: -(x.get('brain_score') or 0))
+    # v2.2.27 — Brain Phase 2 (builder): per-block PERSONALIZE option.
+    # When a block is set to "recommended / interests", re-rank its items
+    # by brain_score × the viewer's taste affinity (member profile or guest
+    # X-Taste header). Fully guarded; no-op when engine/personalization off.
+    items = _brain_personalize(env, items, props)
     # 'newest' is already the default order from search
+    # v2.2.26 — Brain Phase 3: page-level DIVERSITY (no repeats across the
+    # page + per-brand/category caps). Applied only when a page ctx is
+    # present and the engine's diversity service is on. Fully guarded.
+    items = _brain_diversify(env, items, props, want_limit)
+    # trim back to the block's requested limit (pools widened upstream).
+    items = items[:want_limit]
     return {'items': items}
+
+
+def _brain_personalize(env, items, props):
+    """Re-rank a block's items by brain_score × viewer affinity when the
+    block opted into personalization. Request-aware (member profile or
+    guest X-Taste). Guarded — returns items unchanged on anything off."""
+    mode = (props.get('personalize') or '').strip()
+    if not mode or mode == 'none':
+        return items
+    try:
+        Cfg = env.get('uellow.brain.config')
+        Taste = env.get('uellow.taste.profile')
+        if Cfg is None or Taste is None or not Cfg.sudo().is_on():
+            return items
+        cfg = Cfg.sudo().get_config()
+        pmode = cfg.personalization_mode
+        if pmode == 'off':
+            return items
+        prof = {}
+        try:
+            from odoo.http import request as _rq
+            from odoo.addons.uellow_mobile_manager.controllers.api_v2 \
+                ._common import current_partner
+            if _rq:
+                if pmode in ('members', 'opt_in', 'full'):
+                    pp = current_partner()
+                    if pp:
+                        prof = Taste.sudo().get_dict(pp.id)
+                if not prof and pmode == 'full':
+                    prof = Taste.sudo().parse_header(
+                        _rq.httprequest.headers.get('X-Taste'))
+        except Exception:
+            prof = {}
+        if not prof:
+            # no taste signal → fall back to pure brain_score (smart default)
+            items.sort(key=lambda x: -(x.get('brain_score') or 0))
+            return items
+        Tmpl = env['product.template'].sudo()
+        def score(it):
+            base = it.get('brain_score') or 0.0
+            try:
+                p = Tmpl.browse(it.get('id'))
+                return base * Taste.sudo().affinity(prof, p)
+            except Exception:
+                return base
+        items.sort(key=lambda x: -score(x))
+    except Exception:
+        pass
+    return items
+
+
+def _brain_diversify(env, items, props, want_limit):
+    """Drop products already shown earlier on the page + enforce per-brand /
+    per-category caps, using the shared ctx in props['_brain_ctx']. Returns
+    the filtered list and records what it keeps. No-op without ctx/engine."""
+    ctx = props.get('_brain_ctx')
+    if not ctx:
+        return items
+    try:
+        cfg = ctx.get('cfg')
+        if not cfg or not cfg.div_no_repeat:
+            return items
+        seen = ctx.setdefault('seen', set())
+        brand_n = ctx.setdefault('brand_n', {})
+        cat_n = ctx.setdefault('cat_n', {})
+        max_brand = cfg.div_max_per_brand or 0
+        max_cat = cfg.div_max_per_category or 0
+        out = []
+        for it in items:
+            pid = it.get('id')
+            if pid in seen:
+                continue
+            # brand cap (vendor ref on the card, optional)
+            br = (it.get('vendor') or {}).get('id') if isinstance(
+                it.get('vendor'), dict) else None
+            if max_brand and br and brand_n.get(br, 0) >= max_brand:
+                continue
+            # category cap (first ecommerce category if exposed)
+            cats = it.get('category_ids') or []
+            capped = False
+            if max_cat and cats:
+                for c in cats:
+                    if cat_n.get(c, 0) >= max_cat:
+                        capped = True
+                        break
+            if capped:
+                continue
+            out.append(it)
+            seen.add(pid)
+            if br:
+                brand_n[br] = brand_n.get(br, 0) + 1
+            for c in cats:
+                cat_n[c] = cat_n.get(c, 0) + 1
+            if len(out) >= want_limit:
+                break
+        return out or items   # never return empty just because of caps
+    except Exception:
+        return items
 
 
 def _product_brief(env, p, lang):
@@ -352,10 +665,33 @@ def _product_brief(env, p, lang):
                 .products import serialize_product_card
             card = serialize_product_card(p, lang)
             if card:
-                return card
+                return _attach_bundle_meta(p, card, lang)
     except Exception:
         pass
-    return _product_brief_fallback(env, p, lang)
+    return _attach_bundle_meta(p, _product_brief_fallback(env, p, lang), lang)
+
+
+def _attach_bundle_meta(p, brief, lang):
+    """v2.2.20 — compact bundle meta so cards/blocks can show
+    'N items · save X%' without a second call. Works in both the rich and
+    fallback brief paths."""
+    try:
+        if brief and getattr(p, 'is_bundle', False) and p.uellow_bundle_id:
+            brief['bundle_meta'] = p.uellow_bundle_id.sudo() \
+                .to_mobile_dict(lang, with_components=False)
+    except Exception:
+        pass
+    # v2.2.25 — expose the precomputed Brain score so blocks can sort by
+    # Best Match without an extra query (field is stored/indexed).
+    try:
+        if brief is not None and 'brain_score' in p._fields:
+            brief['brain_score'] = p.brain_score or 0.0
+            # compact ecommerce category ids for diversity caps (small)
+            if 'category_ids' not in brief:
+                brief['category_ids'] = p.public_categ_ids.ids
+    except Exception:
+        pass
+    return brief
 
 
 def _product_brief_fallback(env, p, lang):
@@ -491,7 +827,7 @@ def resolve_welcome_deal(env, props, lang, block=None):
     Tmpl = env['product.template'].sudo()
     base_dom = [('is_published', '=', True),
                 ('sale_ok', '=', True),
-                ('website_published', '=', True)]
+                ('website_published', '=', True)] + _site_dom(env)
     if props.get('product_ids'):
         try:
             ids = [int(x) for x in props['product_ids']][:limit]
@@ -619,7 +955,14 @@ def resolve_explore_more(env, props, lang, block=None):
     Tmpl = env['product.template'].sudo()
     base_dom = [('is_published', '=', True),
                 ('sale_ok', '=', True),
-                ('website_published', '=', True)]
+                ('website_published', '=', True)] + _site_dom(env)
+    # v2.1.94 — hide sold-out items UNLESS "continue selling"
+    # (allow_out_of_stock_order) is ticked — same rule as the app feeds.
+    base_dom += [
+        '|', ('is_storable', '=', False),
+             '|', ('allow_out_of_stock_order', '=', True),
+                  ('qty_available', '>', 0),
+    ]
     # Active chip beats designer's source category
     if chip_cat:
         try:
@@ -633,6 +976,23 @@ def resolve_explore_more(env, props, lang, block=None):
             pass
     elif source == 'discounted':
         base_dom.append(('compare_list_price', '>', 0))
+    elif source == 'promotion':
+        # v2.2.08 — explore-more scoped to a promotion campaign's products
+        # (for the designed promotion landing pages).
+        try:
+            pids = [int(x) for x in (props.get('promotion_ids') or [])]
+            if not pids and props.get('promotion_id'):
+                pids = [int(props['promotion_id'])]
+            Line = env.get('mobile.promotion.line')
+            tmpl_ids = []
+            if pids and Line is not None:
+                tmpl_ids = Line.sudo().search([
+                    ('promotion_id', 'in', pids),
+                    ('state', '=', 'approved'),
+                ]).mapped('product_tmpl_id').ids
+            base_dom.append(('id', 'in', tmpl_ids or [0]))
+        except Exception:
+            base_dom.append(('id', 'in', [0]))
 
     # Choose the order based on sort (overrides source's natural order)
     if sort == 'newest' or source == 'newest':
@@ -678,13 +1038,27 @@ def resolve_explore_more(env, props, lang, block=None):
             sb['badges'] = [{'kind':'sponsored','label_en':'✨ Sponsored','label_ar':'✨ ممول','color':'#6E4AB0'}]
             sponsored_briefs.append(sb)
 
-    # Category chips — top 5 categories present in this result set
+    # Category chips — top 5 categories present in this result set.
+    # v2.2.21 — BILINGUAL names ({en, ar}); the chip used to carry only the
+    # request-language string, so the strip never translated when the app
+    # switched language.
     cat_counts = {}
     for p in recs:
         for c in p.public_categ_ids[:3]:
-            cat_counts[(c.id, c.name)] = cat_counts.get((c.id, c.name), 0) + 1
+            cat_counts[c.id] = cat_counts.get(c.id, 0) + 1
     chips = sorted(cat_counts.items(), key=lambda kv: -kv[1])[:6]
-    category_chips = [{'id': k[0], 'name': k[1], 'count': v} for (k, v) in chips]
+    Cat = env['product.public.category'].sudo()
+    ar_lang = _full_lang(env, 'ar')
+    category_chips = []
+    for (cid, v) in chips:
+        c = Cat.browse(cid)
+        nm_en = c.with_context(lang='en_US').name or c.name or ''
+        try:
+            nm_ar = c.with_context(lang=ar_lang).name or nm_en
+        except Exception:
+            nm_ar = nm_en
+        category_chips.append({
+            'id': cid, 'name': {'en': nm_en, 'ar': nm_ar}, 'count': v})
 
     # "Why you see this" copy — varies by source mode
     why_map = {
@@ -730,19 +1104,122 @@ def resolve_passthrough(env, props, lang, block=None):
     return {}
 
 
+def resolve_promo_coupons(env, props, lang, block=None):
+    """v2.2.11 — the coupon block can now surface REAL coupons from the
+    loyalty engine (picked ids or auto conditions) instead of one manual
+    code. Manual codes keep working as a fallback."""
+    out = {'coupons': []}
+    mode = (props.get('coupon_mode') or 'manual').strip()
+    if mode == 'manual':
+        return out          # manual codes render straight from props
+    try:
+        from datetime import date, timedelta
+        Prog = env['loyalty.program'].sudo()
+        dom = [('active', '=', True),
+               ('program_type', 'in',
+                ('promotion', 'promo_code', 'coupons', 'buy_x_get_y',
+                 'next_order_coupons'))]
+        if mode == 'picked':
+            ids = [int(x) for x in (props.get('coupon_ids') or []) if x]
+            dom.append(('id', 'in', ids or [0]))
+        elif mode == 'expiring':
+            dom += [('date_to', '!=', False),
+                    ('date_to', '>=', date.today()),
+                    ('date_to', '<=', date.today() + timedelta(days=14))]
+        # 'all_active' adds nothing extra
+        progs = Prog.search(dom, limit=int(props.get('limit') or 8))
+        for pr in progs:
+            rule = pr.rule_ids[:1]
+            reward = pr.reward_ids[:1]
+            code = (rule.mode == 'with_code' and rule.code) and rule.code \
+                or ''
+            disc = ''
+            if reward:
+                if reward.reward_type == 'discount':
+                    if reward.discount_mode == 'percent':
+                        disc = '%d%%' % int(reward.discount or 0)
+                    else:
+                        disc = '%g' % (reward.discount or 0)
+                elif reward.reward_type == 'product':
+                    disc = '🎁'
+            min_amt = float(rule.minimum_amount or 0) if rule else 0.0
+            out['coupons'].append({
+                'id': pr.id,
+                'name': {'en': pr.name or '', 'ar': pr.name or ''},
+                'code': code,
+                'discount_text': disc,
+                'min_amount': min_amt,
+                'expiry': pr.date_to.isoformat() if pr.date_to else None,
+            })
+    except Exception:
+        _logger.warning('promo coupon resolve failed', exc_info=True)
+    return out
+
+
+def resolve_newcustomer(env, props, lang, block=None):
+    """v2.2.11 — 🌟 New-Customer Zone teaser block: pulls the live offer
+    config + a small product preview so the home block renders real
+    content and deep-links into the dedicated page."""
+    out = {'offer': None, 'items': []}
+    Offer = env.get('mobile.newcustomer.offer')
+    if Offer is None:
+        return out
+    try:
+        from odoo.addons.uellow_mobile_manager.controllers.api_v2._common \
+            import get_website
+        website = get_website()
+        offer = Offer.get_offer(website.id if website else None)
+    except Exception:
+        offer = Offer.sudo().search([('enabled', '=', True)], limit=1)
+    if not offer:
+        return out
+    out['offer'] = {
+        'title': {'en': offer.title_en or '', 'ar': offer.title_ar or ''},
+        'subtitle': {'en': offer.subtitle_en or '',
+                     'ar': offer.subtitle_ar or ''},
+        'emoji': offer.emoji or '🎁',
+        'c1': offer.color_1 or '#7C3AED',
+        'c2': offer.color_2 or '#2563EB',
+        'text_color': offer.text_color or '#FFFFFF',
+        'discount_pct': offer.discount_pct or 0,
+        'ends_at': offer.ends_at.isoformat() if offer.ends_at else None,
+    }
+    # small preview rail (capped 8) using the same domain as the page
+    try:
+        from odoo.addons.uellow_mobile_manager.controllers.api_v2 \
+            .newcustomer import _offer_domain
+        from odoo.addons.uellow_mobile_manager.controllers.api_v2 \
+            .products import serialize_product_card
+        dom = _offer_domain(offer, env) + _site_dom(env)
+        recs = env['product.template'].sudo().search(
+            dom, order='compare_list_price desc', limit=8)
+        llang = 'ar_001' if (lang or '').startswith('ar') else 'en_US'
+        out['items'] = [c for c in
+                        (serialize_product_card(t, llang) for t in recs)
+                        if c]
+    except Exception:
+        _logger.debug('newcustomer preview failed', exc_info=True)
+    return out
+
+
 def resolve_reels_strip(env, props, lang, block=None):
     """v2.0.90 — collect trending products that have a video so the home
     `reels-strip` block can render circular thumbnails the user taps to
     jump into the full Reels feed."""
     Tmpl = env['product.template'].sudo()
     limit = int(props.get('limit') or 8)
-    base_dom = [('is_published', '=', True), ('active', '=', True)]
+    base_dom = [('is_published', '=', True), ('active', '=', True)] + _site_dom(env)
     # Cheap pre-filter when the cached flag exists
     if 'has_product_video' in Tmpl._fields:
         base_dom.append(('has_product_video', '=', True))
-    order = 'sales_count desc, write_date desc' \
-        if 'sales_count' in Tmpl._fields else 'write_date desc'
-    candidates = Tmpl.search(base_dom, order=order, limit=limit * 4)
+    # v2.2.18 — sales_count is a NON-STORED compute: ordering by it in SQL
+    # raises ValueError, which killed this resolver and left the block
+    # EMPTY since day one. Fetch by recency, then rank by sales in Python.
+    candidates = Tmpl.search(base_dom, order='write_date desc', limit=limit * 4)
+    try:
+        candidates = candidates.sorted(key=lambda r: -(r.sales_count or 0))
+    except Exception:
+        pass
     items = []
     for p in candidates:
         # Skip products that are out of stock and not "continue selling".
@@ -779,14 +1256,121 @@ def resolve_reels_strip(env, props, lang, block=None):
                          f'?unique={p.write_date}')
         except Exception:
             pass
-        items.append({
+        item = {
             'product_id': p.id,
             'product_name': p.name,
             'thumbnail': thumb,
-        })
+        }
+        # v2.2.19 — attach the FULL Reels-feed payload (player URL, product
+        # card, stats) so the app can open the video in a dialog with the
+        # same slide UI as the Reels screen — no extra round-trip.
+        try:
+            from odoo.addons.uellow_mobile_manager.controllers.api_v2.videos \
+                import _build_video_item
+            full = _build_video_item(p, lang, None)
+            if full:
+                item['reel'] = full
+        except Exception:
+            pass
+        items.append(item)
         if len(items) >= limit:
             break
     return {'items': items}
+
+
+def resolve_promo_header(env, props, lang, block=None):
+    """v2.2.06 — Promotion-page header/countdown blocks: pull the linked
+    campaign's identity (name, logo, colors, dates) so the designed page
+    always mirrors the live promotion record."""
+    pid = props.get('promotion_id')
+    if not pid and props.get('promotion_ids'):
+        try:
+            pid = int(props['promotion_ids'][0])
+        except Exception:
+            pid = None
+    out = {'promo': None}
+    Promo = env.get('mobile.app.promotion')
+    if not pid or Promo is None:
+        return out
+    p = Promo.sudo().browse(int(pid))
+    if not p.exists():
+        return out
+    logo = None
+    if p.banner_icon:
+        logo = _img(env, 'mobile.app.promotion', p.id, 'banner_icon',
+                    unique=p.write_date)
+    out['promo'] = {
+        'id': p.id,
+        'name': {'en': p.banner_title_en or p.label_en or p.name,
+                 'ar': p.banner_title_ar or p.label_ar
+                       or p.banner_title_en or p.name},
+        'subtitle': {'en': p.banner_subtitle_en or '',
+                     'ar': p.banner_subtitle_ar or p.banner_subtitle_en or ''},
+        'emoji': p.emoji or '🎉',
+        'logo': logo,
+        'c1': p.banner_color_1 or '#F5C320',
+        'c2': p.banner_color_2 or '#C99000',
+        # v2.2.08 — campaign's banner pattern (same artwork set as the
+        # product-page banner) as the hero's default overlay.
+        'pattern': (p.banner_pattern_style or 'stripes')
+                   if getattr(p, 'banner_pattern', True) else 'none',
+        'starts_at': p.date_from.isoformat() if p.date_from else None,
+        'ends_at': p.date_to.isoformat() if p.date_to else None,
+    }
+    return out
+
+
+def resolve_promo_showcase(env, props, lang, block=None):
+    """v2.2.14 — versatile campaign showcase: a themed hero that holds EITHER
+    coupons OR a product feed (any source/filter/category/random/promotion),
+    plus the linked promotion's countdown end-time."""
+    out = {}
+    try:
+        hdr = resolve_promo_header(env, props, lang, block=block)
+        out['promo'] = hdr.get('promo')
+    except Exception:
+        out['promo'] = None
+    ctype = (props.get('content_type') or 'coupons').strip()
+    try:
+        if ctype == 'coupons':
+            out.update(resolve_promo_coupons(env, props, lang, block=block))
+        else:
+            out.update(resolve_products(env, props, lang, block=block))
+    except Exception:
+        _logger.warning('promo showcase content resolve failed', exc_info=True)
+    return out
+
+
+def resolve_promo_tiers(env, props, lang, block=None):
+    """v2.2.14 — Buy-more-save-more block: products + their real bulk-pricing
+    ladder so each card shows single-unit AND bulk (e.g. ×10) pricing. Source
+    defaults to a linked promotion campaign (props.promotion_id/ids)."""
+    base = resolve_products(env, props, lang, block=block)
+    items = base.get('items') or []
+    if not items:
+        return base
+    try:
+        from odoo.addons.uellow_mobile_manager.controllers.api_v2.products \
+            import _bulk_pricing_tiers
+    except Exception:
+        return base
+    Tmpl = env['product.template'].sudo()
+    for it in items:
+        try:
+            rec = Tmpl.browse(int(it.get('id')))
+            it['bulk_pricing'] = _bulk_pricing_tiers(rec) or []
+        except Exception:
+            it['bulk_pricing'] = []
+    return base
+
+
+def resolve_bundle_showcase(env, props, lang, block=None):
+    """v2.2.20 — themed strip of published bundles. Forces the `bundles`
+    source so the block always shows bundle cards regardless of what the
+    admin left in props."""
+    p = dict(props or {})
+    p['source'] = 'bundles'
+    return resolve_products(env, p, lang, block=block)
 
 
 RESOLVERS = {
@@ -832,17 +1416,36 @@ RESOLVERS = {
     'promo-rank':      resolve_products,
     'promo-arrivals':  resolve_products,
     'promo-mega':      resolve_products,
+    # v2.2.06 — PROMOTION PAGE blocks (designed landing pages per campaign)
+    'promo-hero':       resolve_promo_header,
+    'promo-countdown':  resolve_promo_header,
+    'promo-carousel':   resolve_products,
+    'promo-mega2':      resolve_products,
+    'promo-flash-rail': resolve_products,
+    'promo-masonry':    resolve_products,
+    'promo-coupon':     resolve_promo_coupons,
+    'promo-banner-cta': resolve_promo_header,
+    'promo-tiers':      resolve_promo_tiers,
+    'promo-marquee':    resolve_passthrough,
+    'new-customer-zone': resolve_newcustomer,
+    'promo-showcase':   resolve_promo_showcase,
+    'bundle-showcase':  resolve_bundle_showcase,
 }
 
 
-def resolve_block(env, block, lang):
-    """Return a copy of `block` with a `data` key embedded, if applicable."""
+def resolve_block(env, block, lang, ctx=None):
+    """Return a copy of `block` with a `data` key embedded, if applicable.
+    `ctx` (optional) carries page-level state — notably the Brain diversity
+    'seen' set so the same product never repeats across blocks on a page."""
     kind = block.get('kind')
     fn = RESOLVERS.get(kind)
     if not fn:
         return block
     try:
-        data = fn(env, block.get('props') or {}, lang, block=block) or {}
+        props = dict(block.get('props') or {})
+        if ctx is not None:
+            props['_brain_ctx'] = ctx     # consumed by resolve_products
+        data = fn(env, props, lang, block=block) or {}
     except Exception as e:
         _logger.warning('Block resolver %s failed: %s', kind, e)
         data = {}

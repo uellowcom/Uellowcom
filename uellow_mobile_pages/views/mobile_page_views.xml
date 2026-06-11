@@ -113,9 +113,57 @@
       </list>
     </field>
   </record>
+  <!-- v2.2.29 — clean, organised theme form (was an auto-generated flat
+       form that looked messy). Colour groups + live preview swatches. -->
+  <record id="view_mobile_theme_preset_form" model="ir.ui.view">
+    <field name="name">mobile.theme.preset.form</field>
+    <field name="model">mobile.theme.preset</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <div class="oe_title">
+            <label for="name"/>
+            <h1>
+              <field name="icon" placeholder="🎨" style="max-width:46px;display:inline-block"/>
+              <field name="name" placeholder="Theme name" style="display:inline-block"/>
+            </h1>
+            <field name="code" placeholder="unique-code"/>
+          </div>
+          <group>
+            <group string="🎨 Brand colours">
+              <field name="primary" placeholder="#F5C320"/>
+              <field name="dark" placeholder="#412402"/>
+              <field name="accent" placeholder="#1F8A40"/>
+            </group>
+            <group string="🖼 Backgrounds">
+              <field name="page_bg" placeholder="#FAF6EB"/>
+              <field name="hero_bg" placeholder="linear-gradient(...)"/>
+            </group>
+            <group string="🔤 Text">
+              <field name="text_color" placeholder="#1F1206"/>
+              <field name="muted_color" placeholder="#7A6850"/>
+            </group>
+            <group string="⚙️ Ordering">
+              <field name="sequence"/>
+            </group>
+          </group>
+          <notebook>
+            <page string="Advanced (JSON tokens)">
+              <field name="extras_json" widget="ace" options="{'mode': 'json'}"/>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
   <record id="action_mobile_theme_preset" model="ir.actions.act_window">
-    <field name="name">Theme presets</field>
+    <field name="name">Themes &amp; Colors</field>
     <field name="res_model">mobile.theme.preset</field>
     <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">Create your first theme</p>
+      <p>Define brand colours, backgrounds and text tokens applied across the app pages.</p>
+    </field>
   </record>
 </odoo>

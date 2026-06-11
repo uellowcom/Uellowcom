@@ -47,6 +47,11 @@
                             <field name="notify_carrier_new_order"/>
                             <field name="notify_affiliate_news"/>
                         </group>
+                        <group string="Admin Console (🛡️ in-app)">
+                            <field name="notify_admin_new_order"/>
+                            <field name="notify_admin_pos_order"/>
+                            <field name="notify_admin_pos_session"/>
+                        </group>
                     </group>
                 </sheet>
             </form>

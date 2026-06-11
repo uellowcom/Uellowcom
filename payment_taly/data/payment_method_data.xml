@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- v2.2.27 — the payment.method record was MISSING, so Taly never
+         appeared as a selectable option at checkout. Odoo 18 requires a
+         payment.method linked to the provider. -->
+    <record id="payment_method_taly" model="payment.method">
+        <field name="name">Taly — اشتري الآن وادفع لاحقاً</field>
+        <field name="code">taly</field>
+        <field name="sequence">5</field>
+        <field name="image" type="base64" file="payment_taly/static/src/img/taly_logo.png"/>
+        <field name="support_tokenization">False</field>
+        <field name="support_express_checkout">False</field>
+        <field name="support_refund">partial</field>
+    </record>
+</odoo>

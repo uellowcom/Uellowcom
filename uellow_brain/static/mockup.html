@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<title>🧠 Uellow Brain — الموكاب</title>
+<style>
+  :root{--y:#F5C320;--d:#412402;--ink:#2b2b2b;--mut:#8a8a8a;--bg:#f6f4ef;
+        --card:#fff;--line:#ece6d8;--ok:#16a34a;--purple:#7C3AED;--red:#E63946;}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:-apple-system,'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.7}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px 80px}
+  header{background:linear-gradient(135deg,#412402,#6b3d12);color:#fff;padding:44px 16px 56px;text-align:center}
+  header .logo{font-size:46px}
+  header h1{font-size:30px;margin:8px 0 6px;font-weight:900}
+  header h1 b{color:var(--y)}
+  header p{opacity:.85;font-size:15px;max-width:660px;margin:0 auto}
+  .tag{display:inline-block;background:rgba(245,195,32,.18);color:var(--y);border:1px solid rgba(245,195,32,.4);
+       padding:5px 14px;border-radius:999px;font-size:12.5px;font-weight:800;margin-top:14px}
+  section{margin-top:34px}
+  .stitle{display:flex;align-items:center;gap:10px;margin:0 0 14px}
+  .stitle .n{width:30px;height:30px;border-radius:9px;background:var(--y);color:var(--d);display:grid;place-items:center;font-weight:900;font-size:15px;flex:0 0 auto}
+  .stitle h2{font-size:20px;font-weight:900;color:var(--d)}
+  .stitle small{display:block;color:var(--mut);font-weight:600;font-size:12.5px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 22px rgba(65,36,2,.06);padding:18px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
+  .hint{background:#fbf6e6;border-right:4px solid var(--y);border-radius:10px;padding:11px 14px;font-size:13.5px;color:#5b4a1e;margin-top:12px}
+  .danger{background:#fdecec;border:1px solid #f5c6c6;border-right:4px solid var(--red);border-radius:12px;padding:14px;color:#8b2d2d}
+  .phone{width:300px;max-width:100%;margin:0 auto;background:#111;border-radius:34px;padding:11px;box-shadow:0 18px 44px rgba(0,0,0,.22)}
+  .phone .screen{background:var(--bg);border-radius:24px;overflow:hidden;height:560px;display:flex;flex-direction:column}
+  .pbar{background:#fff;padding:11px 14px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line);font-weight:800;font-size:14px;color:var(--d)}
+  .pbody{flex:1;overflow:hidden;padding:12px}
+  .chips{display:flex;gap:7px;overflow:hidden;margin-bottom:12px}
+  .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:800;color:var(--d);white-space:nowrap}
+  .chip.on{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .chip.sortb{background:var(--d);color:var(--y)}
+  .pg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pc{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .pc .img{height:84px;background:linear-gradient(135deg,#f1ecfb,#e9e2d2);display:grid;place-items:center;font-size:30px;position:relative}
+  .pc .meta{padding:7px 8px}
+  .pc .nm{font-size:11px;font-weight:700;color:var(--ink);line-height:1.3}
+  .pc .pr{font-size:13px;font-weight:900;color:var(--d);margin-top:3px}
+  .badge{position:absolute;top:5px;font-size:8.5px;font-weight:900;color:#fff;padding:2px 6px;border-radius:5px}
+  .b-rank{inset-inline-start:5px;background:var(--y);color:var(--d)}
+  .b-save{inset-inline-end:5px;background:var(--ok)}
+  .b-hot{inset-inline-end:5px;background:var(--red)}
+  .flow{display:flex;flex-direction:column;gap:0;align-items:center;text-align:center}
+  .fbox{width:100%;max-width:660px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff}
+  .fbox.slow{background:#fdf6e3;border-color:#f0e2b6}
+  .fbox.fast{background:#eef7f0;border-color:#cfe9d6}
+  .fbox.guard{background:#fdecec;border-color:#f5c6c6}
+  .fbox h4{font-size:14px;color:var(--d);margin-bottom:6px}
+  .fbox code{background:#f3efe6;border-radius:6px;padding:2px 6px;font-size:12px;color:#6b3d12;direction:ltr;display:inline-block}
+  .farrow{font-size:22px;color:var(--mut);margin:6px 0}
+  .formula{direction:ltr;text-align:center;font-family:monospace;background:#2b2118;color:#ffd86b;border-radius:12px;padding:16px;font-size:13px;line-height:2;overflow-x:auto}
+  .opt{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink);margin:6px 0}
+  .dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--purple);flex:0 0 auto}
+  .dot.sel{background:var(--purple);box-shadow:inset 0 0 0 3px #fff}
+  .srow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px dashed var(--line)}
+  .srow:last-child{border-bottom:0}
+  .wbar{height:9px;border-radius:6px;background:#eee;overflow:hidden;flex:1;margin:0 10px}
+  .wbar i{display:block;height:100%;background:linear-gradient(90deg,var(--y),#e0a800)}
+  .wbar i.r{background:linear-gradient(90deg,#ef9a9a,var(--red))}
+  .switch{width:42px;height:24px;border-radius:999px;background:var(--ok);position:relative;flex:0 0 auto}
+  .switch::after{content:"";position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:3px;inset-inline-start:21px}
+  .switch.off{background:#ccc}.switch.off::after{inset-inline-start:3px}
+  .num{background:#fff;border:1px solid var(--line);border-radius:8px;padding:5px 10px;font-weight:900;color:var(--d);direction:ltr}
+  .rule{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px}
+  .rule:last-child{border:0}
+  .rdot{width:9px;height:9px;border-radius:50%;background:var(--ok);flex:0 0 auto}
+  .pill{margin-inline-start:auto;background:#eef7f0;color:var(--ok);border-radius:999px;padding:3px 9px;font-size:11px;font-weight:800}
+  .pill.soon{background:#fbf3d6;color:#8a6d12}
+  .two-people{display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px}
+  .tp{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}
+  .tp b{color:var(--purple)}
+  .ideas{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:760px){.ideas{grid-template-columns:1fr 1fr}}
+  .idea{background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px}
+  .idea .em{font-size:24px}
+  .idea h4{font-size:13.5px;color:var(--d);margin:6px 0 3px}
+  .idea p{font-size:11.5px;color:#666;line-height:1.6}
+  .idea .c{display:inline-block;margin-top:7px;font-size:10px;font-weight:800;border-radius:999px;padding:2px 8px;background:#eef7f0;color:var(--ok)}
+  .idea .c.m{background:#fff3e0;color:#bf6b00}
+  .costbar{direction:ltr;display:flex;height:34px;border-radius:9px;overflow:hidden;font-size:11px;font-weight:900;color:#fff;margin-top:6px}
+  .costbar .cc{background:#9e9e9e;display:grid;place-items:center}
+  .costbar .mm{background:var(--ok);display:grid;place-items:center}
+  .costbar .rl{background:var(--red);display:grid;place-items:center}
+  footer{text-align:center;color:var(--mut);font-size:12.5px;margin-top:46px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🧠</div>
+  <h1>Uellow <b>Brain</b></h1>
+  <p>محرك التخصيص والميرشندايزينج — يقرّر ماذا يُعرض، لمن، بأي ترتيب، وبأي عرض/سعر. <b style="color:var(--y)">تكلفة المنتج هي المحرّك، والربح خط أحمر لا يُتجاوز.</b></p>
+  <span class="tag">موكاب مُحدّث — تكلفة + حارس ربح + أفكار إبداعية</span>
+</header>
+
+<div class="wrap">
+
+  <!-- 0. COST IS KING -->
+  <section>
+    <div class="stitle"><div class="n">★</div><div><h2>المبدأ الأول: التكلفة تقود، والربح خط أحمر</h2><small>كل قرار عرض/ترتيب/خصم يبدأ من تكلفة المنتج (standard_price)</small></div></div>
+    <div class="card">
+      <p style="font-size:14px;color:#444">المحرك لا يرفع منتجًا أو يخصمه «أعمى». يقرأ <b>تكلفة المنتج</b> ويحسب الهامش، ويرتّب لصالح المنتجات الأعلى ربحية المناسبة للعميل — وأي خصم تلقائي <b>يتوقف عند الخط الأحمر للربح</b>.</p>
+      <div class="costbar">
+        <div class="cc" style="width:55%">التكلفة (standard_price)</div>
+        <div class="mm" style="width:30%">هامش آمن</div>
+        <div class="rl" style="width:15%">🚫 خط أحمر</div>
+      </div>
+      <div class="legend" style="font-size:11.5px;color:var(--mut);margin-top:6px;direction:rtl">الخصم يأكل من «الهامش الآمن» فقط — وعند بلوغ «الخط الأحمر» يتوقف نهائيًا.</div>
+      <div class="danger" style="margin-top:14px">🛡️ <b>حارس الربح (Profit Guardrails):</b> لا فلاش، لا كوبون، لا خصم ديناميكي، لا تسعير تلقائي يخفض السعر تحت <b>أدنى هامش ربح</b> المحدّد في الإعدادات — ولا تحت التكلفة أبدًا.</div>
+    </div>
+  </section>
+
+  <!-- 1. Settings + guardrails -->
+  <section>
+    <div class="stitle"><div class="n">1</div><div><h2>لوحة الإعدادات (Admin)</h2><small>كل الخيارات هنا، تختار لاحقًا · الافتراضي Off</small></div></div>
+    <div class="grid2">
+      <div class="card">
+        <div class="srow"><b>🧠 تفعيل المحرك</b><span class="switch off"></span></div>
+        <div style="font-weight:800;margin:12px 0 4px;color:var(--d)">طريقة التخصيص</div>
+        <div class="opt"><span class="dot sel"></span> Off — متجر عادي، صفر تتبّع <span style="color:var(--mut)">(افتراضي)</span></div>
+        <div class="opt"><span class="dot"></span> Members only</div>
+        <div class="opt"><span class="dot"></span> Opt-in (موافقة العميل)</div>
+        <div class="opt"><span class="dot"></span> Full (أعضاء + ضيوف بالكوكيز)</div>
+        <div style="font-weight:800;margin:14px 0 4px;color:var(--d)">الفرز الافتراضي</div>
+        <div class="opt"><span class="switch"></span> «Best Match» افتراضيًا في الأقسام والبحث</div>
+        <div style="font-weight:800;margin:14px 0 6px;color:var(--d)">⚖️ أوزان Best Match</div>
+        <div class="opt">الربحية (هامش بعد التكلفة)<span class="wbar"><i style="width:85%"></i></span>85%</div>
+        <div class="opt">الرواج الحقيقي<span class="wbar"><i style="width:70%"></i></span>70%</div>
+        <div class="opt">الجودة (تقييم)<span class="wbar"><i style="width:50%"></i></span>50%</div>
+        <div class="opt">التوفّر<span class="wbar"><i style="width:80%"></i></span>80%</div>
+        <div class="opt">الحداثة<span class="wbar"><i style="width:30%"></i></span>30%</div>
+        <div class="opt">اهتمام العميل (Affinity)<span class="wbar"><i style="width:60%"></i></span>60%</div>
+      </div>
+      <div class="card" style="border:2px solid #f5c6c6">
+        <div style="font-weight:900;color:var(--red);font-size:15px">🛡️ الخطوط الحمراء للربح (Profit Guardrails)</div>
+        <div class="srow" style="margin-top:8px">مصدر التكلفة <span class="num">standard_price (تكلفة المنتج)</span></div>
+        <div class="srow">أدنى هامش ربح مسموح <span class="num">15 %</span></div>
+        <div class="srow">أقصى خصم تلقائي <span class="num">40 %</span></div>
+        <div class="srow">منع البيع تحت التكلفة <span class="switch"></span></div>
+        <div class="srow">حد ربح خاص لكل قسم <span class="num">إلكترونيات 8% · عطور 25%…</span></div>
+        <div class="srow">حد ربح خاص لكل تاجر <span class="num">مفعّل</span></div>
+        <div class="opt" style="margin-top:8px">الربحية في Best Match<span class="wbar"><i class="r" style="width:85%"></i></span>85%</div>
+        <div class="hint" style="margin-top:10px;background:#fdecec;border-color:#f5c6c6;color:#8b2d2d">أي إجراء تلقائي يحسب: <b>السعر بعد الخصم ≥ التكلفة × (1 + أدنى هامش)</b> — وإلا يُرفض الخصم أو يُقلَّص للحد الآمن.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Mechanism (cost-centered) -->
+  <section>
+    <div class="stitle"><div class="n">2</div><div><h2>الميكانيزم — التكلفة في القلب</h2><small>Cron يحسب مسبقًا · الطلب سريع · حارس الربح يفحص كل خصم</small></div></div>
+    <div class="card">
+      <div class="flow">
+        <div class="fbox slow"><h4>🌙 Cron ليلي (خارج مسار الطلب)</h4>يحسب <code>brain_score</code> لكل منتج ويخزّنه في عمود مفهرس.</div>
+        <div class="farrow">▼</div>
+        <div class="formula">margin = (price − <b style="color:#ff8a8a">cost</b>) / price<br>brain_score = 0.85·margin + 0.70·sales + 0.80·stock<br>+ 0.50·rating + 0.30·fresh − penalties</div>
+        <div class="farrow">▼</div>
+        <div class="fbox fast"><h4>⚡ طلب العميل — سريع جدًا</h4><code>ORDER BY brain_score</code> ثم <code>× Affinity(ذوق العميل)</code> ← «Best Match»</div>
+        <div class="farrow">▼ أي خصم تلقائي يمرّ هنا</div>
+        <div class="fbox guard"><h4>🛡️ حارس الربح (Profit Guard)</h4>يرفض/يقلّص أي خصم يكسر <code>price ≥ cost × (1 + minMargin)</code></div>
+      </div>
+      <div class="hint">الحساب الثقيل في Cron؛ الطلب = فرز على عمود مفهرس + إعادة ترتيب 120 عنصرًا. حارس الربح فحص حسابي بسيط — صفر ضغط.</div>
+    </div>
+  </section>
+
+  <!-- 3. Personalized category -->
+  <section>
+    <div class="stitle"><div class="n">3</div><div><h2>صفحة قسم مخصّصة</h2><small>الترتيب يوازن: ذوق العميل × ربحية المنتج</small></div></div>
+    <div class="grid2" style="align-items:start">
+      <div class="phone"><div class="screen">
+        <div class="pbar">← الساعات الذكية</div>
+        <div class="pbody">
+          <div class="chips"><span class="chip sortb">Best Match ▾</span><span class="chip">الكل</span><span class="chip">Anker</span></div>
+          <div class="pg">
+            <div class="pc"><div class="img">⌚<span class="badge b-rank">#1 لك</span></div><div class="meta"><div class="nm">Anker سوداء (ربح جيد)</div><div class="pr">12.500 د.ك</div></div></div>
+            <div class="pc"><div class="img">⌚<span class="badge b-save">-25%</span></div><div class="meta"><div class="nm">ساعة أسود</div><div class="pr">9.900 د.ك</div></div></div>
+            <div class="pc"><div class="img">⌚</div><div class="meta"><div class="nm">ساعة رياضية</div><div class="pr">14.000 د.ك</div></div></div>
+            <div class="pc"><div class="img">⌚</div><div class="meta"><div class="nm">ساعة كلاسيك</div><div class="pr">18.000 د.ك</div></div></div>
+          </div>
+        </div>
+      </div></div>
+      <div>
+        <div class="card"><b style="color:var(--d)">نفس القسم — اختلاف ذكي:</b>
+          <div class="two-people" style="margin-top:10px">
+            <div class="tp"><b>عميل A</b><br>يحب Anker → تظهر أولًا (وهامشها جيد)</div>
+            <div class="tp"><b>عميل B</b><br>يحب الرخيص → الأرخص الأعلى تقييمًا</div>
+            <div class="tp"><b>الضيف</b><br>Best Seller ذكي عام</div>
+            <div class="tp"><b>دائمًا</b><br>المنتج الخاسر/منخفض الهامش لا يُدفَع للأعلى</div>
+          </div>
+        </div>
+        <div class="hint">عند تعادل الذوق، المنتج <b>الأعلى ربحية</b> يفوز بالترتيب — التكلفة تحسم.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Creative ideas -->
+  <section>
+    <div class="stitle"><div class="n">4</div><div><h2>الأفكار الإبداعية</h2><small>كلها تحترم حارس الربح · 🟢 خفيف · 🟡 متوسط</small></div></div>
+    <div class="ideas">
+      <div class="idea"><div class="em">🧩</div><h4>يكمل طقمك</h4><p>يقترح ما يُشترى مع المنتج فعلًا → بندل بضغطة.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🔁</div><h4>اشترِ مجددًا</h4><p>يذكّر بالمنتجات الاستهلاكية في وقت إعادة شرائها.</p><span class="c m">🟡</span></div>
+      <div class="idea"><div class="em">🕌</div><h4>محرك الوقت/المناسبة</h4><p>رمضان/عيد/جمعة/صباح-مساء → الواجهة تتبدّل تلقائيًا.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">👀</div><h4>دليل اجتماعي حقيقي</h4><p>«5 يشاهدونه الآن / بيع منذ دقائق» من بيانات حقيقية.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">⏳</div><h4>ندرة ذكية</h4><p>«باقي 4 قطع» تظهر فقط عند انخفاض المخزون فعلًا.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🎯</div><h4>فلاش شخصي</h4><p>تردّد على منتج بلا شراء → خصم خاص 24 ساعة <b>(ضمن الهامش)</b>.</p><span class="c m">🟡</span></div>
+      <div class="idea"><div class="em">🚚</div><h4>شحن مجاني محفّز</h4><p>«أضف بـ3 د.ك» + يقترح المنتج المناسب لإكمال العتبة.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🔎</div><h4>اكتشاف الفجوات</h4><p>بحث بلا نتائج → «العملاء يطلبون X وغير متوفر».</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">📉</div><h4>تنبيه المنتج البطيء</h4><p>مشاهدات↑ مبيعات↓ → اقتراح خصم <b>محسوب على الهامش</b>.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">💬</div><h4>Beena مساعد تسوّق</h4><p>«هدية لأمي بـ20 د.ك» → منتجات حقيقية بنفس المحرك.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🎁</div><h4>صندوق غامض</h4><p>بندل مفاجأة يصفّي المخزون بربح آمن.</p><span class="c m">🟡</span></div>
+      <div class="idea"><div class="em">💔</div><h4>كوبون استرجاع</h4><p>عميل غاب 30 يومًا → «اشتقنا لك» + إشعار.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🎞️</div><h4>ريلز مخصّصة</h4><p>ترتيب فيديوهات الريلز حسب اهتمام العميل.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🏅</div><h4>شارات الذوق</h4><p>«خبير تقنية / عاشق موضة» → هوية ممتعة + تخصيص.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">❓</div><h4>لماذا أرى هذا؟</h4><p>يشرح سبب الاقتراح → ثقة وامتثال خصوصية.</p><span class="c">🟢</span></div>
+    </div>
+  </section>
+
+  <!-- 5. Automation guarded -->
+  <section>
+    <div class="stitle"><div class="n">5</div><div><h2>محرك العروض التلقائي — تحت حراسة الربح</h2><small>Trigger → Condition → Action · لا يكسر الخط الأحمر</small></div></div>
+    <div class="card">
+      <div class="rule"><span class="rdot"></span> سلة متروكة &gt; 10 د.ك → كوبون <b>ضمن الهامش</b> + إشعار <span class="pill">نشط</span></div>
+      <div class="rule"><span class="rdot"></span> منتج بطيء → فلاش تصفية <b>لا يقل عن التكلفة+الهامش</b> <span class="pill">نشط</span></div>
+      <div class="rule"><span class="rdot"></span> عميل جديد → كوبون ترحيب (سقف الخصم من الإعدادات) <span class="pill">نشط</span></div>
+      <div class="rule"><span class="rdot"></span> مخزون راكد → خصم تدريجي يتوقف عند الخط الأحمر <span class="pill">نشط</span></div>
+      <div class="rule"><span class="rdot"></span> Platinum → وصول مبكر + خصم حصري محسوب <span class="pill">نشط</span></div>
+      <div class="danger" style="margin-top:12px">كل إجراء يمرّ على <b>حارس الربح</b> قبل التنفيذ: إن كسر الحد الأدنى للهامش → يُقلَّص تلقائيًا أو يُلغى.</div>
+    </div>
+  </section>
+
+  <!-- 6. Privacy + perf -->
+  <section>
+    <div class="stitle"><div class="n">6</div><div><h2>الخصوصية والأداء</h2><small>مضمونان بالتصميم</small></div></div>
+    <div class="grid3">
+      <div class="card"><b style="color:var(--d)">🔒 موافقة العميل</b><div style="font-size:13px;margin-top:8px;color:#555">شاشة «خصّص تجربتك» + إيقاف من الإعدادات (Opt-in/Full).</div></div>
+      <div class="card"><b style="color:var(--d)">⚡ صفر ضغط</b><div style="font-size:13px;margin-top:8px;color:#555">Cron للحساب الثقيل؛ الطلب = فرز مفهرس + إعادة ترتيب 120 عنصرًا.</div></div>
+      <div class="card"><b style="color:var(--d)">📱 الضيوف على أجهزتهم</b><div style="font-size:13px;margin-top:8px;color:#555">ملف الذوق في كوكيز الجهاز؛ السيرفر لا يخزّن شيئًا.</div></div>
+    </div>
+  </section>
+
+  <!-- 7. Roadmap -->
+  <section>
+    <div class="stitle"><div class="n">7</div><div><h2>خارطة الطريق</h2><small>كل مرحلة تُشحن وحدها</small></div></div>
+    <div class="card">
+      <div class="rule"><span class="rdot"></span> <b>المرحلة 1</b> — الأساس: brain_score (تكلفة+ربحية) + حارس الربح + Best Match + الإعدادات <span class="pill soon">التالية</span></div>
+      <div class="rule"><span class="rdot" style="background:#ccc"></span> <b>المرحلة 2</b> — Taste Profile + كوكيز الضيوف + «اخترنا لك» + يكمل طقمك</div>
+      <div class="rule"><span class="rdot" style="background:#ccc"></span> <b>المرحلة 3</b> — Best Match للأقسام + محرك الوقت/المناسبة + ندرة ودليل اجتماعي</div>
+      <div class="rule"><span class="rdot" style="background:#ccc"></span> <b>المرحلة 4</b> — محرك القواعد التلقائي (كوبونات/فلاش/خصومات) تحت حارس الربح</div>
+      <div class="rule"><span class="rdot" style="background:#ccc"></span> <b>المرحلة 5</b> — اكتشاف الفجوات + شارات + «لماذا رأيت هذا» + A/B</div>
+    </div>
+  </section>
+
+  <!-- 8. Diversity / no-repeat engine -->
+  <section>
+    <div class="stitle"><div class="n">8</div><div><h2>🚫 محرك التنويع — لا تكرار للمنتجات</h2><small>صفحة واحدة، عشرات البلوكات، صفر تكرار</small></div></div>
+    <div class="grid2" style="align-items:start">
+      <div class="card">
+        <div class="flow">
+          <div class="fbox"><h4>📄 الصفحة تُبنى من أعلى لأسفل</h4>تُجمع «مجموعة المعروض» (Seen-set) أثناء بناء كل بلوك.</div>
+          <div class="farrow">▼</div>
+          <div class="fbox fast"><h4>كل بلوك يستثني ما سبق عرضه</h4><code>exclude = seen_ids</code> + يجلب أوسع ثم يقصّ → لا فراغ ولا تكرار.</div>
+          <div class="farrow">▼</div>
+          <div class="fbox slow"><h4>حصص التنويع</h4>سقف لكل ماركة/قسم في الصفحة + حقن 10–15% منتجات جديدة (استكشاف).</div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-weight:900;color:var(--d);margin-bottom:6px">الإعدادات</div>
+        <div class="srow">منع تكرار المنتجات في الصفحة <span class="switch"></span></div>
+        <div class="srow">أقصى تكرار لكل ماركة/صفحة <span class="num">3</span></div>
+        <div class="srow">أقصى تكرار لكل قسم/صفحة <span class="num">6</span></div>
+        <div class="srow">نسبة الاستكشاف (منتجات جديدة) <span class="num">12 %</span></div>
+        <div class="srow">إخفاء ما اشتراه العميل مؤخرًا <span class="switch"></span></div>
+        <div class="srow">سقف تكرار نفس العرض على العميل <span class="num">1 / يوم</span></div>
+        <div class="srow">السماح بالتكرار في هذا البلوك (تجاوز) <span class="switch off"></span></div>
+        <div class="hint" style="margin-top:10px">لكل بلوك زر «اسمح بالتكرار» للحالات الخاصة (مثلًا بلوك «شاهدت مؤخرًا»).</div>
+      </div>
+    </div>
+    <div class="hint">يعمل خادميًا أثناء بناء الصفحة — يعيد استخدام نفس الكاش، فلا ضغط إضافي. النتيجة: صفحة غنية متنوّعة تبدو «حيّة» لكل عميل.</div>
+  </section>
+
+  <!-- 9. Full ideas library -->
+  <section>
+    <div class="stitle"><div class="n">9</div><div><h2>📚 مكتبة الأفكار الكاملة (~80 فكرة)</h2><small>كلها تحترم حارس الربح · النواة بعلامة ⭐</small></div></div>
+
+    <div class="card"><b style="color:var(--d)">💰 ذكاء التكلفة والربح</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>⭐ ترويج عالي الهامش</h4><p>دفع الأعلى ربحية المناسب للعميل لأماكن الذهب.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>خصم يموّل نفسه</h4><p>خصم أكبر فقط مع كمية أكبر (الربح ثابت/أعلى).</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>توجيه للبديل الأربح</h4><p>إبراز الأعلى هامشًا بين متشابهين.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>حماية الهامش وقت المنافسة</h4><p>لا نزول تحت حد الربح حتى لو نافس السوق.</p><span class="c">🔴</span></div>
+        <div class="idea"><h4>مؤشر صحة الربح</h4><p>لوحة: كم كلّفك/ربّحك كل عرض.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>هامش حسب الدفع</h4><p>تعويض رسوم الكاش/البطاقة في الخط الأحمر.</p><span class="c m">🟡</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">🤖 Beena AI</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>⭐ صف لي ما تريد</h4><p>وصف بالعامية → ترشيح من الكتالوج.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>مساعد الهدايا</h4><p>أسئلة → باقة هدية مقترحة.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>شرح بالعامية</h4><p>تبسيط المواصفات المعقّدة.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>مقارنة ذكية</h4><p>جدول فروقات + توصية.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>منسّق الإطلالة</h4><p>صورة → أكمل الستايل من المتجر.</p><span class="c">🔴</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">🎯 تخصيص فائق + علم نفس شرائي</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>تابع تصفّحك</h4><p>يكمل من حيث توقّف.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>الساعة الذهبية</h4><p>عرض في وقت شراء العميل المعتاد.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>ليس لي / أعجبني</h4><p>تغذية راجعة تضبط الذوق فورًا.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>⭐ دليل اجتماعي حقيقي</h4><p>«يشاهده الآن / بيع منذ دقائق».</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>⭐ ندرة صادقة</h4><p>«باقي 4» عند انخفاض المخزون فعلًا.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>أدنى سعر 90 يوم</h4><p>من سجل الأسعار.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>السعر يرتفع قريبًا</h4><p>عند نهاية حملة فعلية.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>شريط تقدّم لهدية</h4><p>«أنفقت 27 من 30».</p><span class="c">🟢</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">👥 مجتمع · 🎮 تلعيب · 🕌 سياق</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>اشتراه مثلك</h4><p>اجتماعي حسب شريحة الذوق.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>قوائم رغبات تُشارَك</h4><p>wishlist كرابط/هدية.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>سؤال وجواب</h4><p>أسئلة العملاء + رد Beena.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>سلسلة يومية</h4><p>زيارة يومية = مكافأة متصاعدة.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>عجلة منضبطة</h4><p>جوائزها فوق الخط الأحمر.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>تحدّيات موسمية</h4><p>«اكتشف 5 أقسام رمضان».</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>⭐ محرك المناسبة</h4><p>رمضان/عيد/جمعة → واجهة تلقائية.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>مواقيت الصلاة</h4><p>إيقاف الإشعار وقت الصلاة.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>رواج محلي</h4><p>«الأكثر مبيعًا في منطقتك».</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>طقس → ترشيح</h4><p>حار/مغبر → منتجات مناسبة.</p><span class="c m">🟡</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">🏪 السوق · 🔄 دورة الحياة · 🔎 البحث</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>ترتيب يكافئ الجودة</h4><p>أسرع شحنًا/أعلى تقييمًا أعلى.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>اقتراحات للتاجر</h4><p>«نزّل 5% ليبيع» محسوبة على هامشه.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>تحذير المخزون الميت</h4><p>قبل ركود رأس المال.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>منع الانسحاب</h4><p>يتنبّأ بمن سيغيب ويعرض قبلها.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>ذكرى أول طلب / ميلاد</h4><p>كوبون شكر/ميلاد تلقائي.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>⭐ اكتشاف الفجوات</h4><p>بحث بلا نتائج → اجلب الطلب.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>بحث بالصوت</h4><p>Beena تحوّل الصوت لبحث.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>لا نتائج → بديل</h4><p>الأقرب بدل صفحة فارغة.</p><span class="c">🟢</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">🧠 ثقة · 🚀 خيالي</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>⭐ خصم حقيقي</h4><p>السعر المقارن لا بد سعرًا فعليًا سابقًا (لا تضخيم).</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>لماذا أرى هذا؟</h4><p>يشرح سبب الاقتراح/السعر.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>مركز خصوصية</h4><p>العميل يرى/يمسح ملف ذوقه.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>الصفحة تركّب نفسها</h4><p>Brain يقرّر البلوكات وترتيبها لكل عميل.</p><span class="c">🔴</span></div>
+        <div class="idea"><h4>توقّع الطلب التالي</h4><p>«ستحتاج X الأسبوع القادم».</p><span class="c">🔴</span></div>
+        <div class="idea"><h4>تسعير ديناميكي محمي</h4><p>يرفع/يخفض ضمن حدود الربح.</p><span class="c">🔴</span></div>
+        <div class="idea"><h4>A/B دائم</h4><p>المتجر يحسّن نفسه يوميًا.</p><span class="c">🔴</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. Interest lifecycle -->
+  <section>
+    <div class="stitle"><div class="n">10</div><div><h2>🔁 محرك دورة الاهتمام</h2><small>يحل مشكلة «اشترى سماعة فامتلأ الموقع سماعات» — الاهتمام يخفت، والقسم يعرف هل يتكرر</small></div></div>
+    <div class="grid3">
+      <div class="card"><b style="color:var(--d)">🟥 one-off (مُعمّر)</b><p style="font-size:12.5px;color:#555;margin-top:6px">ساعة/لابتوب/جوال — نادر التكرار. <b>بعد الشراء يُطفأ الاهتمام</b> ولا يُغرق الموقع بمثله، وننتقل للمكمّلات.</p></div>
+      <div class="card"><b style="color:var(--d)">🟢 repeat (استهلاكي)</b><p style="font-size:12.5px;color:#555;margin-top:6px">قهوة/عناية/أطفال — يتكرر. <b>يُجدول تذكير إعادة شراء</b> في موعده المتوقّع.</p></div>
+      <div class="card"><b style="color:var(--d)">🟡 browse (موضة)</b><p style="font-size:12.5px;color:#555;margin-top:6px">ملابس/عطور — اهتمام موسمي معتدل، يتجدّد دون إغراق.</p></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="formula">interest = recent_signal × decay(time) × repeatability(category)<br>اشترى one-off ⇒ interest ← 0 (pivot للمكمّلات) &nbsp;|&nbsp; اشترى repeat ⇒ جدول تذكير</div>
+      <div class="grid2" style="margin-top:14px">
+        <div class="card" style="box-shadow:none"><b style="color:var(--d)">⚙️ الإعدادات</b>
+          <div class="srow" style="margin-top:6px">تصنيف القسم <span class="num">one-off / repeat / browse</span></div>
+          <div class="srow">نصف-عمر الاهتمام (decay) <span class="num">3 أيام</span></div>
+          <div class="srow">سقف هيمنة قسم على الصفحة <span class="num">25 %</span></div>
+          <div class="srow">عدد الاهتمامات المُوازَنة <span class="num">أعلى 4</span></div>
+          <div class="srow">تحوّل ما بعد الشراء (Pivot) <span class="switch"></span></div>
+        </div>
+        <div class="hint" style="margin:0;align-self:center">شاهدت 20 سماعة = بحث، ليس هوسًا. الموقع يعكس اهتمامك <b>بلمسة</b> ويمزج أعلى اهتماماتك — تحسّ أنه «مليان منتجات تحبها» بتنوّع، لا نسخة واحدة مكررة.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. 1:1 notifications -->
+  <section>
+    <div class="stitle"><div class="n">11</div><div><h2>🔔 إشعارات مخصّصة 1:1</h2><small>موجّهة للعميل وحده · عبر محرك الإشعارات الحالي · تحترم مواقيت الصلاة وسقف التكرار</small></div></div>
+    <div class="ideas">
+      <div class="idea"><div class="em">📉</div><h4>نزل سعر تابعته</h4><p>منتج في مفضلتك/شاهدته انخفض سعره.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">📦</div><h4>عاد للمخزون</h4><p>المنتج الذي أردته متوفّر الآن.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🔁</div><h4>وقت إعادة الشراء</h4><p>الاستهلاكي قارب على الانتهاء.</p><span class="c m">🟡</span></div>
+      <div class="idea"><div class="em">🛒</div><h4>سلتك تنتظر</h4><p>كوبون شخصي ضمن الهامش.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">⭐</div><h4>جديد من ماركتك</h4><p>وصل جديد من ماركة/تاجر تحبه.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🧩</div><h4>مكمّل لمشترياتك</h4><p>اشتريت سماعة → جراب مناسب.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">💔</div><h4>اشتقنا لك</h4><p>استرجاع بعد غياب + عرض.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🎂</div><h4>ميلاد/ذكرى</h4><p>كوبون مناسبة شخصية.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🕌</div><h4>توقيت محترم</h4><p>لا إشعار وقت الصلاة + الساعة الذهبية.</p><span class="c">🟢</span></div>
+    </div>
+  </section>
+
+  <!-- 12. Browsing delight -->
+  <section>
+    <div class="stitle"><div class="n">12</div><div><h2>😊 لمسات تُسعد العميل</h2><small>«الموقع مليان منتجات أحبها» — بتنوّع لا تكرار</small></div></div>
+    <div class="ideas">
+      <div class="idea"><div class="em">✨</div><h4>جديد لك اليوم</h4><p>يتجدّد يوميًا فيبدو الموقع حيًّا.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">↩️</div><h4>تابع تصفّحك</h4><p>يكمل من حيث توقّف.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">👁️</div><h4>شاهدت مؤخرًا</h4><p>رفّ سريع للرجوع.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🔖</div><h4>احفظ لوقت لاحق</h4><p>دون شراء فوري.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🚫</div><h4>لا صفحة فارغة</h4><p>دائمًا بديل ذكي.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">⚡</div><h4>تحميل فوري سلس</h4><p>هيكل عظمي + كاش.</p><span class="c">🟢</span></div>
+      <div class="idea"><div class="em">🎁</div><h4>مفاجآت صغيرة</h4><p>شارة/نقاط أثناء التصفّح.</p><span class="c m">🟡</span></div>
+      <div class="idea"><div class="em">🎯</div><h4>هبوط ذكي</h4><p>أول ما يفتح يرى ما يحب.</p><span class="c">🟢</span></div>
+    </div>
+  </section>
+
+  <!-- 13. Integration -->
+  <section>
+    <div class="stitle"><div class="n">13</div><div><h2>🔌 التكامل مع كل موديولات أودو</h2><small>طبقة عقل رفيعة تقرأ من الكل وتشغّل أنظمتك القائمة — ربط آمن uninstall-safe</small></div></div>
+    <div class="card">
+      <div class="flow">
+        <div class="fbox slow" style="max-width:720px"><h4>📥 يقرأ الإشارات من</h4>
+          <span class="chip">product/stock — تكلفة+مخزون</span> <span class="chip">account — الهامش</span>
+          <span class="chip">sale — الشراء</span> <span class="chip">website.track — مشاهدات</span>
+          <span class="chip">search.analytic</span> <span class="chip">loyalty</span> <span class="chip">reviews</span>
+          <span class="chip">price-history</span> <span class="chip">product-rank</span> <span class="chip">multivendor</span></div>
+        <div class="farrow">▼ يحسب الترتيب والإجراء</div>
+        <div class="fbox fast" style="max-width:720px"><h4>📤 يشغّل أنظمتك القائمة</h4>
+          <span class="chip">promotions</span> <span class="chip">flash</span> <span class="chip">freeship</span>
+          <span class="chip">bundles</span> <span class="chip">coupons/loyalty</span>
+          <span class="chip">notifications (push_event)</span> <span class="chip">mail</span></div>
+      </div>
+      <div class="hint">لا يكرّر شيئًا — يربط بـ <code>env.get</code> فإن غاب موديول لا ينكسر. يبقى «العقل» المنسّق فوق كل ما بنيناه.</div>
+    </div>
+  </section>
+
+  <!-- 14. Considered purchase -->
+  <section>
+    <div class="stitle"><div class="n">14</div><div><h2>🛒 محرك الشراء المؤجّل + مساعد القرار</h2><small>المتسوّق المتأنّي: يجمّع طلبه على أيام، أو ينتظر رأي العائلة في اللون — أقوى إشارة شراء، نخدمها بلطف لا بإلحاح</small></div></div>
+    <div class="card">
+      <div class="hint" style="margin-top:0">المبدأ: السلة = نيّة قوية <b>لا يخفت اهتمامها</b> (عكس التصفّح العابر) — تبقى حيّة حتى الشراء، فالموقع يستمر في إظهار ما يفكّر فيه فعلًا.</div>
+      <div class="grid2" style="margin-top:14px;align-items:start">
+        <div class="phone" style="width:290px"><div class="screen" style="height:500px">
+          <div class="pbar">🛒 سلتي</div>
+          <div class="pbody">
+            <div class="chips"><span class="chip on">أشتري الآن (2)</span><span class="chip">أفكّر فيه (3)</span></div>
+            <div class="pc" style="margin-bottom:10px"><div class="img" style="height:70px">⌚<span class="badge b-save">نزل السعر</span></div>
+              <div class="meta"><div class="nm">ساعة — تنتظر قرارك</div>
+                <div class="pr">12.500 د.ك</div>
+                <div style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">
+                  <span class="chip" style="padding:3px 8px">⚫ الأكثر اختيارًا</span>
+                  <span class="chip" style="padding:3px 8px">🗳️ شارك القرار</span>
+                </div>
+              </div></div>
+            <div style="background:#eef7f0;border-radius:10px;padding:8px 10px;font-size:11.5px;color:#1d6b3a;font-weight:700">🚚 أضف بـ3 د.ك لشحن مجاني</div>
+          </div>
+        </div></div>
+        <div>
+          <div class="card" style="box-shadow:none"><b style="color:var(--d)">الأفكار + التنفيذ</b>
+            <div class="rule"><span class="rdot"></span> سلتان: «أشتري الآن / أفكّر فيه» <span class="pill">حقل saved_for_later</span></div>
+            <div class="rule"><span class="rdot"></span> مساعد اللون: «الأكثر اختيارًا: الأسود» <span class="pill">دليل متغيّر</span></div>
+            <div class="rule"><span class="rdot"></span> 🗳️ شارك القرار مع العائلة → إشعار بالتصويت <span class="pill">deep link</span></div>
+            <div class="rule"><span class="rdot"></span> نزل سعر/قارب نفاد عنصر السلة → إشعار <span class="pill">price-history</span></div>
+            <div class="rule"><span class="rdot"></span> تذكير متدرّج محترم (يوم1 صامت→يوم3 كوبون) <span class="pill">ضمن الهامش</span></div>
+            <div class="rule"><span class="rdot"></span> «أكمل طلبك»: مكمّلات + إجمالي + شحن مجاني <span class="pill">assembly</span></div>
+            <div class="rule"><span class="rdot"></span> استمرارية عبر الأجهزة + سلة تُشارَك <span class="pill">sync</span></div>
+            <div class="rule"><span class="rdot"></span> رفّ «تابع قرارك» أعلى الصفحة <span class="pill">resurface</span></div>
+          </div>
+          <div class="danger" style="margin-top:12px;background:#eef7f0;border-color:#cfe9d6;border-right-color:var(--ok);color:#1d6b3a">يساعد على <b>القرار</b> (تقييمات · لماذا أفضل · وقت توصيل عنوانه · إرجاع) لا يضغط للدفع — وكل كوبون ضمن حارس الربح.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15. Discount discipline / anti-gaming -->
+  <section>
+    <div class="stitle"><div class="n">15</div><div><h2>🛡️ انضباط الخصم — منع تعوّد العميل</h2><small>حتى لا يتعلّم العميل أن «أنتظِر ليرسلوا كوبونًا» — الحافز مكافأة نادرة لا قاعدة متوقّعة</small></div></div>
+    <div class="card">
+      <div class="danger" style="margin-top:0">الخطر: لو صار الخصم ردًّا مضمونًا على ترك السلة، يتدرّب العملاء على الانتظار → خسارة هامش وتآكل ثقة السعر. الحل: نُعطي لمن يستحق، بلا نمط، وبثبات سعر قانوني.</div>
+      <div class="grid2" style="margin-top:14px;align-items:start">
+        <div class="card" style="box-shadow:none"><b style="color:var(--d)">القواعد المضادة للتلاعب</b>
+          <div class="rule"><span class="rdot"></span> لا نمط متوقّع — نسبة صغيرة عشوائية فقط <span class="pill">no-pattern</span></div>
+          <div class="rule"><span class="rdot"></span> كشف «المنتظِر المحترف» → إيقاف الكوبونات عنه <span class="pill">flag</span></div>
+          <div class="rule"><span class="rdot"></span> مؤشّر اعتماد الخصم: المعتمد عليه = أقل خصومات <span class="pill">score</span></div>
+          <div class="rule"><span class="rdot"></span> سقف N كوبون/ربع + فترة تهدئة طويلة <span class="pill">cap</span></div>
+          <div class="rule"><span class="rdot"></span> حوافز بلا سعر أولًا (نقاط/شحن/قيمة) <span class="pill">non-price</span></div>
+          <div class="rule"><span class="rdot"></span> كافئ بعد الشراء لا قبله <span class="pill">reinforce</span></div>
+          <div class="rule"><span class="rdot"></span> نظام يصحّح نفسه لو ارتفع الترك <span class="pill">self-tune</span></div>
+        </div>
+        <div>
+          <div class="card" style="box-shadow:none;border:2px solid #cfe9d6"><b style="color:#1d6b3a">⚖️ ثبات السعر + الامتثال</b>
+            <p style="font-size:12.5px;color:#2b5; margin-top:6px;color:#39603f">السعر <b>المعروض ثابت للجميع</b>؛ المحرك لا يخفض السعر الظاهر لفرد. الخصم إمّا:</p>
+            <div class="opt"><span class="dot sel" style="border-color:#1d6b3a;background:#1d6b3a"></span> حملة شفّافة محدّدة المدة يراها الكل</div>
+            <div class="opt"><span class="dot sel" style="border-color:#1d6b3a;background:#1d6b3a"></span> كوبون شخصي مرتبط بالحساب (ميزة لا تغيير سعر)</div>
+            <p style="font-size:12px;color:#39603f;margin-top:8px">«خصم حقيقي»: السعر المقارن لا بد سعرًا فعليًا سابقًا (price-history) → لا تضخيم.</p>
+          </div>
+          <div class="card" style="box-shadow:none;margin-top:12px"><b style="color:var(--d)">الإعدادات</b>
+            <div class="srow" style="margin-top:6px">سقف كوبونات الاسترجاع/عميل/ربع <span class="num">2</span></div>
+            <div class="srow">فترة التهدئة بين الكوبونات <span class="num">30 يوم</span></div>
+            <div class="srow">الأهلية <span class="num">جدد + استثناء المنتظِرين</span></div>
+            <div class="srow">عتبة «اعتماد الخصم» للإيقاف <span class="num">60 %</span></div>
+            <div class="srow">فضّل الحوافز غير السعرية <span class="switch"></span></div>
+            <div class="srow">فرض «الخصم الحقيقي» <span class="switch"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16. Advanced ideas batch -->
+  <section>
+    <div class="stitle"><div class="n">16</div><div><h2>🚀 أفكار متقدمة (دفعة إضافية)</h2><small>~40 فكرة جديدة · 💥 أثر عالٍ مميّز · كلها تحترم حارس الربح</small></div></div>
+
+    <div class="card"><b style="color:var(--d)">🚚 واعٍ بالتوصيل · 💳 تمويل · 🤝 اجتماعي</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>💥 يصلك غدًا</h4><p>سريع التوصيل لعنوانه أولًا.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>واعٍ بكلفة التوصيل</h4><p>الأرخص شحنًا لمنطقته يرتفع (يحمي الهامش).</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>اجمع من نفس التاجر</h4><p>شحنة واحدة = توفير.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>استلام سريع قريبك</h4><p>المتاح للاستلام بجواره.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>💥 تقسيط / ادفع لاحقًا</h4><p>على السلال عالية القيمة عند التردّد.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>رصيد محفظتك يغطيه</h4><p>تحفيز بالمحفظة الحالية.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>💥 يوم الراتب</h4><p>ميرشندايزينج نهاية الشهر الخليجي.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>💥 شراء جماعي</h4><p>السعر ينزل بانضمام أكثر (بحدّ الهامش).</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>شارك واكسب للمنتج</h4><p>رابط إحالة خاص (أفلييت).</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>بث تسوّق مباشر</h4><p>ريلز + فلاش لحظي.</p><span class="c">🔴</span></div>
+        <div class="idea"><h4>أهدِ لصديق</h4><p>اشترِ وأرسل لشخص آخر.</p><span class="c m">🟡</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">⚡ تحويل · 🛡️ مخاطر · 📦 مخزون</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>💥 إعادة طلب بضغطة</h4><p>من طلباته السابقة (الاستهلاكي).</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>يُشترى معًا عند السلة</h4><p>باقة تلقائية لحظة الدفع.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>مساعد المقاس/الملاءمة</h4><p>يربط smart_fit → إرجاع أقل.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>إنقاذ نية المغادرة</h4><p>لمسة أخيرة محترمة.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>💥 واعٍ بمعدّل الإرجاع</h4><p>كثير الإرجاع يُخفَّض ترتيبه (يحمي الربح).</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>تقييم موثّق فقط</h4><p>شارة ثقة.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>جودة التاجر مرئية</h4><p>مؤشّر شفّاف.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>💥 طلب مسبق + انتظار</h4><p>احجز القادم؛ يُطلب عند التوفّر.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>استشعار الطلب</h4><p>تنبيه التاجر للتخزين.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>تصفية الفائض تلقائيًا</h4><p>مسار تخفيض متدرّج (بحدّ الهامش).</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>ميرشندايزينج ABC</h4><p>دفع الفئة A الأعلى دورانًا.</p><span class="c">🟢</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">🎨 بصري/صوت · 🏷️ تسعير · 📊 ذكاء إداري</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>صور قابلة للتسوّق</h4><p>انقر العنصر في الصورة لشرائه.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>مقارنة جانبية</h4><p>Compare drawer.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>عرض AR / 360</h4><p>للمنتجات المناسبة.</p><span class="c">🔴</span></div>
+        <div class="idea"><h4>تسوّق صوتي كامل</h4><p>عبر Beena.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>فهم اللهجة الكويتية</h4><p>Beena تفهم العامية.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>💥 باقتك أنت</h4><p>باقات شخصية من مشترياته (بحدّ الهامش).</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>قيمة أفضل للوحدة</h4><p>الحجم الأكبر أرخص (bulk).</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>شفافية مطابقة السعر</h4><p>ثقة.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>💥 كاشف التهام المبيعات</h4><p>ينبّه إن خصمٌ يسرق بيعًا بسعر كامل.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>كاشف تسرّب الهامش</h4><p>منتجات ربحها ضعيف دائمًا.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>ماذا أخزّن تاليًا</h4><p>توقّع الطلب.</p><span class="c">🔴</span></div>
+        <div class="idea"><h4>لوحة LTV/الأفواج</h4><p>قيمة العميل مدى الحياة.</p><span class="c m">🟡</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">🌱 قيم وولاء · 🎯 سياق خليجي</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>شارات استدامة/محلي</h4><p>صنع محلي / صديق للبيئة.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>تقريب للتبرّع</h4><p>Round-up خيري.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>احتفالات المراحل</h4><p>«طلبك المئة!» مفاجأة.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>ترقية مفاجئة</h4><p>هدية للوفيّ (تكافئ الشراء لا الانتظار).</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>وضع سهرة رمضان</h4><p>واجهة/عروض ليلية.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>مواسم محلية</h4><p>عودة المدارس · أعياد وطنية · أمطار.</p><span class="c">🟢</span></div>
+      </div>
+    </div>
+    <div class="hint">📊 الإجمالي الآن ~120 فكرة موزّعة على المراحل — تصوّر أضخم من معظم المتاجر العالمية، مع بقاء التكلفة/الربح في القلب.</div>
+  </section>
+
+  <!-- 17. Margin-aware BNPL -->
+  <section>
+    <div class="stitle"><div class="n">17</div><div><h2>💳 محرك الأقساط الذكي (Tabby/Tamara)</h2><small>حافز بلا سعر — يُعرض فقط إذا تحمّل ربح المنتج رسوم الأقساط وبقي فوق الخط الأحمر</small></div></div>
+    <div class="card">
+      <div class="hint" style="margin-top:0">التاجر يدفع العمولة (≈6.5% + 0.25 د.ك)، فلا نعرض الأقساط إلا حين يحتملها الهامش — لا خسارة أبدًا. وهو <b>حافز بلا سعر</b> لا يُدمن الخصم ولا يمسّ السعر المعروض.</div>
+      <div class="formula" style="margin-top:14px">رسوم BNPL = price × fee% + fixed<br>net = price − <b style="color:#ff8a8a">cost</b> − BNPL_fee<br>يُعرض فقط إذا: net/price ≥ minMargin &nbsp;&&nbsp; price ≥ minPrice &nbsp;&&nbsp; القسم مؤهّل</div>
+      <div class="grid2" style="margin-top:14px;align-items:start">
+        <div class="phone" style="width:280px"><div class="screen" style="height:360px">
+          <div class="pbar">← تفاصيل المنتج</div>
+          <div class="pbody">
+            <div class="pc" style="margin-bottom:10px"><div class="img" style="height:90px">📱</div>
+              <div class="meta"><div class="nm">جهاز عالي القيمة</div><div class="pr">120.000 د.ك</div></div></div>
+            <div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:12px;padding:11px 13px">
+              <div style="font-weight:900;color:#3730a3;font-size:13px">💳 قسّمها بدون فوائد</div>
+              <div style="font-size:12px;color:#4338ca;margin-top:3px">4 دفعات × 30.000 د.ك — عبر Tabby/Tamara</div>
+              <div style="font-size:10.5px;color:#6b7280;margin-top:4px">يظهر لأن هامش المنتج يتحمّل الرسوم ✓</div>
+            </div>
+          </div>
+        </div></div>
+        <div>
+          <div class="card" style="box-shadow:none"><b style="color:var(--d)">المنطق + الربط</b>
+            <div class="rule"><span class="rdot"></span> يظهر للمتردّد على منتج عالي القيمة <span class="pill">يربط #14</span></div>
+            <div class="rule"><span class="rdot"></span> تأهّل تلقائي: الربح يتحمّل الرسوم <span class="pill">profit guard</span></div>
+            <div class="rule"><span class="rdot"></span> حافز بلا سعر — لا يُدمن الخصم <span class="pill">anti-gaming</span></div>
+            <div class="rule"><span class="rdot"></span> على المنتج + السلة + إشعار 1:1 <span class="pill">multi-touch</span></div>
+          </div>
+          <div class="card" style="box-shadow:none;margin-top:12px"><b style="color:var(--d)">الإعدادات</b>
+            <div class="srow" style="margin-top:6px">المزوّد <span class="num">Tabby / Tamara</span></div>
+            <div class="srow">نسبة العمولة <span class="num">6.5 %</span></div>
+            <div class="srow">مبلغ ثابت <span class="num">0.250 د.ك</span></div>
+            <div class="srow">من يدفع الرسوم <span class="num">التاجر</span></div>
+            <div class="srow">عدد الأقساط <span class="num">4</span></div>
+            <div class="srow">أدنى سعر للأقساط <span class="num">15 د.ك</span></div>
+            <div class="srow">الأقسام المؤهّلة <span class="num">إلكترونيات · أجهزة…</span></div>
+            <div class="srow">احترام حارس الربح <span class="switch"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 18. Revenue & LTV ideas -->
+  <section>
+    <div class="stitle"><div class="n">18</div><div><h2>💰 أفكار الإيراد والقيمة (LTV)</h2><small>ترفع الإيراد المتكرّر ومتوسط الطلب والربح · 💥 ثقيلة الأثر</small></div></div>
+
+    <div class="card"><b style="color:var(--d)">💰 إيراد متكرّر + زيادة قيمة الطلب</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>💥 اشتراك تلقائي</h4><p>الاستهلاكي يصلك شهريًا — إيراد متكرّر + LTV.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>💥 ضمان ممتد/حماية</h4><p>Upsell عند الدفع — ربح صافٍ تقريبًا.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>💥 خدمات إضافية</h4><p>تركيب · تغليف هدايا · ضمان → هامش إضافي.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>هدية مع الشراء</h4><p>«أنفق 30 واحصل X» — يرفع الطلب (بالهامش).</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>سلّم الإنفاق</h4><p>«5→شحن · 12→هدية · 20→خصم».</p><span class="c">🟢</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">🔁 لا تخسر البيعة</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>💥 بديل عند النفاد</h4><p>«نفد؟ إليك الأقرب» بدل خسارة العميل.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>إرجاع → استبدال/رصيد</h4><p>يحفظ الإيراد بدل ردّه نقدًا.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>استبدال القديم (Trade-in)</h4><p>خصم مقابل جهاز قديم.</p><span class="c">🔴</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">🧠 ذكاء العميل · ⚡ لحظات ذهبية</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>💥 ملف موحّد عبر الـ6 تطبيقات</h4><p>اهتمام العميل يتبعه في كل تطبيقاتكم.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>وضع مشتري الجملة B2B</h4><p>يكشف التاجر → شرائح جملة/عرض سعر.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>أكمل مجموعتك</h4><p>«تملك 3 من 5 — أكمل الطقم».</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>حرق نقاط الولاء</h4><p>«نقاطك تكفي خصم X» — بلا تكلفة هامش.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>💥 نافذة ما بعد الشراء</h4><p>«أضِف لطلبك قبل الشحن» — أعلى تحويل.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>اطلب من Beena/واتساب</h4><p>طلب محادثاتي كامل.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>تنبيه CS استباقي</h4><p>«قد يتأخر طلبك» قبل الشكوى.</p><span class="c">🟢</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px"><b style="color:var(--d)">🔎 بحث متقدم · 🎁 هدايا · 🛡️ حماية</b>
+      <div class="ideas" style="margin-top:10px">
+        <div class="idea"><h4>تثبيت/تعزيز البحث</h4><p>الأدمن يثبّت منتجًا + مرادفات.</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>إنقاذ «لا نتائج»</h4><p>يفهم الخطأ الإملائي/المرادف (Beena).</p><span class="c">🟢</span></div>
+        <div class="idea"><h4>قائمة هدايا/مناسبة</h4><p>أعراس/مواليد يشاركها الآخرون.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>بطاقات هدايا رقمية</h4><p>إيراد فوري + مستلمون جدد.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>كشف الإساءة/الاحتيال</h4><p>إرجاع مفرط → يحمي الهامش.</p><span class="c m">🟡</span></div>
+        <div class="idea"><h4>تسعير نفسي أخلاقي</h4><p>9.900 + مرجع صادق (لا تضخيم).</p><span class="c">🟢</span></div>
+      </div>
+    </div>
+    <div class="hint">💡 النواة الإيرادية الموصى بها: الاشتراك التلقائي · الضمان الممتد · الخدمات الإضافية · بديل عند النفاد · نافذة ما بعد الشراء · الملف الموحّد للأسطول — ربح/إيراد مباشر بتكلفة بناء منخفضة.</div>
+  </section>
+
+  <footer>🧠 Uellow Brain — التكلفة تقود، الربح خط أحمر، والإيراد ينمو بذكاء · بعد موافقتك أبدأ المرحلة 1</footer>
+</div>
+</body>
+</html>

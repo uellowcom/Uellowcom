@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Uellow POS Receipt',
-    'version': '18.0.1.0.6',
+    'version': '18.0.1.1.0',
     'category': 'Point of Sale',
-    'summary': 'Custom bilingual AR/EN POS receipt for Uellow',
+    'summary': 'Custom bilingual AR/EN POS receipt + payment-type & close-day report for Uellow',
     'author': 'Uellow W.L.L',
     'license': 'LGPL-3',
     'depends': ['point_of_sale'],
+    'data': [
+        'views/pos_reports_views.xml',
+    ],
     'assets': {
         'point_of_sale._assets_pos': [
             'uellow_pos_receipt/static/src/css/receipt.css',

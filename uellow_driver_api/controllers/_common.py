@@ -143,9 +143,14 @@ def short_addr(partner):
 
 
 def order_payment_method(order):
-    """Best-effort 'cod' / 'knet' / 'paid' string for an order."""
-    if (order.payment_term_id and 'cash' in (order.payment_term_id.name or '').lower()):
+    """'cod' / 'knet' / 'paid' for an order. v2.2.33 — the CANONICAL flag is
+    sale.order.payment_method_type (set at confirmation / dispatch). Honour it
+    FIRST so a cash-on-delivery order never shows as paid just because a stale
+    'done' transaction exists from an abandoned card attempt."""
+    pmt = getattr(order, 'payment_method_type', None)
+    if pmt == 'cash':
         return 'cod'
+    # online / free / unset → look at the real captured transaction (if any)
     last_tx = order.transaction_ids.filtered(
         lambda t: t.state in ('done', 'authorized'))[-1:] if order.transaction_ids else None
     if last_tx:
@@ -153,6 +158,10 @@ def order_payment_method(order):
         if 'knet' in code or 'upayments' in code:
             return 'knet'
         return 'paid'
+    if pmt == 'online':
+        return 'paid'
+    if (order.payment_term_id and 'cash' in (order.payment_term_id.name or '').lower()):
+        return 'cod'
     return 'cod'
 
 
@@ -161,13 +170,24 @@ def order_status_code(line):
     if not line:
         return 'unknown'
     return {
-        'pending':     'awaiting_pickup',
-        'received':    'picked',
-        'in_transit':  'out',
-        'delivered':   'delivered',
-        'failed':      'failed',
-        'returned':    'returned',
-        'cancelled':   'cancelled',
+        # legacy driver-app vocabulary
+        'pending':          'awaiting_pickup',
+        'received':         'picked',
+        'in_transit':       'out',
+        'delivered':        'delivered',
+        'failed':           'failed',
+        'returned':         'returned',
+        'cancelled':        'cancelled',
+        # v2.2.33 — full carrier-portal flow with a driver ACCEPT step:
+        #   assigned        → 'offered'  (driver sees Accept / Reject)
+        #   accepted        → 'accepted' (driver sees "Start delivery")
+        #   out_for_delivery→ 'out'      (driver sees Confirm / Fail + live)
+        'picked_up':        'picked_up',
+        'arrived_sorting':  'awaiting_pickup',
+        'assigned':         'offered',
+        'accepted':         'accepted',
+        'out_for_delivery': 'out',
+        'failed_returned':  'returned',
     }.get(line.delivery_status, line.delivery_status or 'unknown')
 
 
@@ -175,7 +195,10 @@ def status_label(code):
     """Bilingual status label for driver UI."""
     return {
         'awaiting_pickup': {'en': 'Awaiting pickup', 'ar': 'بانتظار الاستلام'},
+        'offered':         {'en': 'New assignment',  'ar': 'طلب جديد — بانتظار قبولك'},
+        'accepted':        {'en': 'Accepted',        'ar': 'تم القبول'},
         'picked':          {'en': 'Picked up',       'ar': 'تم الاستلام'},
+        'picked_up':       {'en': 'Collected from Uellow', 'ar': 'تم استلامه من يلو'},
         'out':             {'en': 'Out for delivery','ar': 'في الطريق'},
         'delivered':       {'en': 'Delivered',       'ar': 'تم التسليم'},
         'failed':          {'en': 'Failed',          'ar': 'فشل'},

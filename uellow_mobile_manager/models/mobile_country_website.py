@@ -46,6 +46,30 @@ class MobileCountryWebsite(models.Model):
         help='Pre-select this language in the country picker. The user '
              'can still change it. If empty, app uses the phone locale.',
     )
+    # ── v2.2.00 — per-country availability gate ──────────────────────
+    # OFF → the country still shows in the picker (dimmed, "Coming soon"
+    # ribbon) but cannot be selected; the customer sees the professional
+    # message below instead. Server-side enforced too.
+    app_available = fields.Boolean(
+        'Available on the app', default=True,
+        help='Untick to gate this country: visible in the picker but not '
+             'selectable, with the Coming-Soon message shown on tap.')
+    coming_soon_title_en = fields.Char(
+        'Coming-soon title (EN)', default='Coming soon! 🚀')
+    coming_soon_title_ar = fields.Char(
+        'Coming-soon title (AR)', default='قريباً! 🚀')
+    coming_soon_message_en = fields.Text(
+        'Coming-soon message (EN)',
+        default='We\'re working hard to bring Uellow to your country. '
+                'Stay tuned — it won\'t be long!')
+    coming_soon_message_ar = fields.Text(
+        'Coming-soon message (AR)',
+        default='نعمل بجد لإطلاق Uellow في بلدك. ترقّبونا — لن يطول '
+                'الانتظار!')
+    launch_eta = fields.Char(
+        'Launch ETA (optional)',
+        help='Free text appended to the message, e.g. "Q3 2026" / '
+             '"الربع الثالث 2026".')
     currency_id = fields.Many2one(
         'res.currency', string='Display Currency',
         help='Informational — used by the country picker. The website\'s '
@@ -116,6 +140,20 @@ class MobileCountryWebsite(models.Model):
             'default_language': self.default_language.code if self.default_language else None,
             'currency': self.currency_id.name if self.currency_id else self.website_id.currency_id.name,
             'currency_symbol': self.currency_id.symbol if self.currency_id else self.website_id.currency_id.symbol,
+            # v2.2.00 — availability gate for the picker.
+            'available': bool(self.app_available),
+            'unavailable_title': {
+                'en': self.coming_soon_title_en or 'Coming soon! 🚀',
+                'ar': self.coming_soon_title_ar or 'قريباً! 🚀',
+            },
+            'unavailable_message': {
+                'en': ((self.coming_soon_message_en or '')
+                       + ((' (%s)' % self.launch_eta)
+                          if self.launch_eta else '')).strip(),
+                'ar': ((self.coming_soon_message_ar or '')
+                       + ((' (%s)' % self.launch_eta)
+                          if self.launch_eta else '')).strip(),
+            },
         }
 
     def _api_base(self):

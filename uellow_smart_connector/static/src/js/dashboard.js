@@ -47,6 +47,36 @@ class SmartConnectorDashboard extends Component {
     openDeadStock() {
         this.action.doAction("uellow_smart_connector.action_dead_stock");
     }
+    openTranslation() {
+        this.action.doAction("uellow_smart_connector.action_translate_job");
+    }
+    openPublishStudio() {
+        this.action.doAction("uellow_smart_connector.action_publish_studio");
+    }
+    openProfit() {
+        this.action.doAction("uellow_smart_connector.action_profit_manager");
+    }
+    openReorder() {
+        this.action.doAction("uellow_smart_connector.action_reorder_forecast");
+    }
+    openScorecard() {
+        this.action.doAction("uellow_smart_connector.action_supplier_scorecard");
+    }
+    openDiscovery() {
+        this.action.doAction("uellow_smart_connector.action_discovery");
+    }
+    openMarket() {
+        this.action.doAction("uellow_smart_connector.action_market_pricer");
+    }
+    openGlossary() {
+        this.action.doAction("uellow_smart_connector.action_glossary");
+    }
+    openCopilot() {
+        this.action.doAction("uellow_smart_connector.action_copilot");
+    }
+    openSettings() {
+        this.action.doAction("uellow_smart_connector.action_connector_settings");
+    }
     openJob(id) {
         this.action.doAction({
             type: "ir.actions.act_window",
@@ -113,7 +143,7 @@ class SmartConnectorDashboard extends Component {
                     Smart <span>Connector</span>
                 </div>
                 <div class="sc-header-sub">
-                    Product Import · AI Enrichment · Price Intelligence · Dead Stock
+                    Import · Publish Studio · Pricing · Reorder · Suppliers · Discovery · Dead Stock
                 </div>
             </div>
             <div class="sc-header-actions">
@@ -142,6 +172,33 @@ class SmartConnectorDashboard extends Component {
                 <strong t-out="state.data.dead_stock.critical"/> products with critical dead stock.
                 <button class="sc-card-action" style="margin-left:auto" t-on-click="openDeadStock">
                     View →
+                </button>
+            </div>
+        </t>
+        <t t-if="state.data.studio.ready > 0">
+            <div class="sc-alert sc-alert-warn">
+                <i class="fa fa-paint-brush"></i>
+                <strong t-out="state.data.studio.ready"/> new product(s) ready to publish.
+                <button class="sc-card-action" style="margin-left:auto" t-on-click="openPublishStudio">
+                    Open Publish Studio →
+                </button>
+            </div>
+        </t>
+        <t t-if="state.data.reorder.urgent > 0">
+            <div class="sc-alert sc-alert-danger">
+                <i class="fa fa-refresh"></i>
+                <strong t-out="state.data.reorder.urgent"/> product(s) need urgent restock.
+                <button class="sc-card-action" style="margin-left:auto" t-on-click="openReorder">
+                    View →
+                </button>
+            </div>
+        </t>
+        <t t-if="state.data.profit.negative > 0">
+            <div class="sc-alert sc-alert-danger">
+                <i class="fa fa-percent"></i>
+                <strong t-out="state.data.profit.negative"/> product(s) sold below cost (losing money).
+                <button class="sc-card-action" style="margin-left:auto" t-on-click="openProfit">
+                    Fix prices →
                 </button>
             </div>
         </t>
@@ -193,14 +250,120 @@ class SmartConnectorDashboard extends Component {
             <div class="sc-kpi-card red" t-on-click="openDeadStock">
                 <div class="sc-kpi-icon red"><i class="fa fa-archive"></i></div>
                 <div class="sc-kpi-value" t-out="state.data.dead_stock.total"></div>
-                <div class="sc-kpi-label">Dead Stock Items</div>
+                <div class="sc-kpi-label">Dead Stock · مخزون راكد</div>
                 <div class="sc-kpi-sub">
                     <t t-if="state.data.dead_stock.critical > 0">
                         <span class="sc-kpi-badge danger"><t t-out="state.data.dead_stock.critical"/> critical</span>
                     </t>
-                    <t t-else="">
-                        No critical items
+                    <t t-else="">No critical items</t>
+                    <t t-if="state.data.dead_stock.seasonal > 0">
+                        · <t t-out="state.data.dead_stock.seasonal"/> seasonal
                     </t>
+                </div>
+            </div>
+
+            <!-- Idle Capital (dead-stock value) -->
+            <div class="sc-kpi-card red" t-on-click="openDeadStock">
+                <div class="sc-kpi-icon red"><i class="fa fa-money"></i></div>
+                <div class="sc-kpi-value"><t t-out="state.data.dead_stock.value_kd"/> <span style="font-size:14px">KD</span></div>
+                <div class="sc-kpi-label">Idle Capital · رأس مال مجمّد</div>
+                <div class="sc-kpi-sub">
+                    <t t-if="state.data.dead_stock.promote > 0">
+                        <span class="sc-kpi-badge warn"><t t-out="state.data.dead_stock.promote"/> via Beena</span>
+                    </t>
+                    <t t-else="">tied up in stale stock</t>
+                </div>
+            </div>
+
+            <!-- Translation Coverage -->
+            <div class="sc-kpi-card blue" t-on-click="openTranslation">
+                <div class="sc-kpi-icon blue"><i class="fa fa-language"></i></div>
+                <div class="sc-kpi-value"><t t-out="state.data.translation.coverage"/>%</div>
+                <div class="sc-kpi-label">Arabic Coverage · تغطية الترجمة</div>
+                <div class="sc-kpi-sub">
+                    <t t-if="state.data.translation.pending > 0">
+                        <span class="sc-kpi-badge warn"><t t-out="state.data.translation.pending"/> pending</span>
+                    </t>
+                    <t t-else="">catalog translated</t>
+                </div>
+            </div>
+
+            <!-- Publish Studio -->
+            <div class="sc-kpi-card green" t-on-click="openPublishStudio">
+                <div class="sc-kpi-icon green"><i class="fa fa-paint-brush"></i></div>
+                <div class="sc-kpi-value" t-out="state.data.studio.pending"></div>
+                <div class="sc-kpi-label">Publish Studio · استوديو النشر</div>
+                <div class="sc-kpi-sub">
+                    <t t-out="state.data.studio.published"/> published ·
+                    <t t-if="state.data.studio.ready > 0">
+                        <span class="sc-kpi-badge ok"><t t-out="state.data.studio.ready"/> ready</span>
+                    </t>
+                    <t t-else="">new products to prepare</t>
+                </div>
+            </div>
+
+            <!-- Reorder Forecast -->
+            <div class="sc-kpi-card amber" t-on-click="openReorder">
+                <div class="sc-kpi-icon amber"><i class="fa fa-refresh"></i></div>
+                <div class="sc-kpi-value" t-out="state.data.reorder.total"></div>
+                <div class="sc-kpi-label">Reorder Needed · إعادة طلب</div>
+                <div class="sc-kpi-sub">
+                    <t t-if="state.data.reorder.urgent > 0">
+                        <span class="sc-kpi-badge danger"><t t-out="state.data.reorder.urgent"/> urgent</span>
+                    </t>
+                    <t t-else="">stock levels healthy</t>
+                    · <t t-out="state.data.reorder.reorder"/> soon
+                </div>
+            </div>
+
+            <!-- Supplier Scorecard -->
+            <div class="sc-kpi-card blue" t-on-click="openScorecard">
+                <div class="sc-kpi-icon blue"><i class="fa fa-star"></i></div>
+                <div class="sc-kpi-value" t-out="state.data.scorecard.vendors"></div>
+                <div class="sc-kpi-label">Suppliers Scored · تقييم الموردين</div>
+                <div class="sc-kpi-sub">
+                    <span class="sc-kpi-badge ok"><t t-out="state.data.scorecard.grade_a"/> grade A</span>
+                    <t t-if="state.data.scorecard.poor > 0">
+                        · <span class="sc-kpi-badge warn"><t t-out="state.data.scorecard.poor"/> weak</span>
+                    </t>
+                </div>
+            </div>
+
+            <!-- Competitor Discovery -->
+            <div class="sc-kpi-card green" t-on-click="openDiscovery">
+                <div class="sc-kpi-icon green"><i class="fa fa-binoculars"></i></div>
+                <div class="sc-kpi-value" t-out="state.data.discovery.opportunities"></div>
+                <div class="sc-kpi-label">Opportunities · فرص منتجات</div>
+                <div class="sc-kpi-sub">
+                    <t t-out="state.data.discovery.sources"/> competitor sources
+                    <t t-if="state.data.discovery.opportunities > 0">
+                        <span class="sc-kpi-badge ok">new to sell</span>
+                    </t>
+                </div>
+            </div>
+
+            <!-- Profit Margins -->
+            <div class="sc-kpi-card green" t-on-click="openProfit">
+                <div class="sc-kpi-icon green"><i class="fa fa-percent"></i></div>
+                <div class="sc-kpi-value"><t t-out="state.data.profit.avg_margin"/>%</div>
+                <div class="sc-kpi-label">Avg Profit Margin · متوسط الربح</div>
+                <div class="sc-kpi-sub">
+                    <t t-out="state.data.profit.count"/> products ·
+                    <t t-if="state.data.profit.negative > 0">
+                        <span class="sc-kpi-badge danger"><t t-out="state.data.profit.negative"/> losing</span>
+                    </t>
+                    <t t-else="">all profitable</t>
+                </div>
+            </div>
+
+            <!-- Market Pricing + Glossary -->
+            <div class="sc-kpi-card amber" t-on-click="openMarket">
+                <div class="sc-kpi-icon amber"><i class="fa fa-globe"></i></div>
+                <div class="sc-kpi-value" t-out="state.data.market.factors"></div>
+                <div class="sc-kpi-label">Market Factors · التسعير حسب السوق</div>
+                <div class="sc-kpi-sub">
+                    <t t-out="state.data.market.runs"/> pricing runs ·
+                    <t t-out="state.data.glossary"/> glossary terms
                 </div>
             </div>
         </div>
@@ -302,26 +465,129 @@ class SmartConnectorDashboard extends Component {
 
         </div>
 
+        <!-- Section Grid 2 -->
+        <div class="sc-section-grid">
+
+            <!-- Urgent Reorders -->
+            <div class="sc-card">
+                <div class="sc-card-header">
+                    <span class="sc-card-title">
+                        <i class="fa fa-refresh" style="margin-right:6px;color:#f59e0b"></i>
+                        Urgent Reorders · إعادة طلب عاجلة
+                    </span>
+                    <button class="sc-card-action" t-on-click="openReorder">View all →</button>
+                </div>
+                <table class="sc-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Days Left</th>
+                            <th>Suggested Qty</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-if="state.data.urgent_reorders.length === 0">
+                            <tr><td colspan="3">
+                                <div class="sc-empty"><i class="fa fa-check-circle"></i> Stock levels healthy</div>
+                            </td></tr>
+                        </t>
+                        <t t-foreach="state.data.urgent_reorders" t-as="r" t-key="r.id">
+                            <tr>
+                                <td style="font-weight:600" t-out="r.product"></td>
+                                <td>
+                                    <span t-att-class="'sc-badge ' + (r.state === 'urgent' ? 'sc-badge-err' : 'sc-badge-warn')"
+                                          t-out="r.days + ' d'"></span>
+                                </td>
+                                <td t-out="r.qty"></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- New Competitor Opportunities -->
+            <div class="sc-card">
+                <div class="sc-card-header">
+                    <span class="sc-card-title">
+                        <i class="fa fa-binoculars" style="margin-right:6px;color:#1A7A6E"></i>
+                        New Opportunities · فرص جديدة
+                    </span>
+                    <button class="sc-card-action" t-on-click="openDiscovery">View all →</button>
+                </div>
+                <table class="sc-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Source</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-if="state.data.opportunities.length === 0">
+                            <tr><td colspan="3">
+                                <div class="sc-empty"><i class="fa fa-binoculars"></i> No new opportunities</div>
+                            </td></tr>
+                        </t>
+                        <t t-foreach="state.data.opportunities" t-as="o" t-key="o.id">
+                            <tr>
+                                <td style="font-weight:600" t-out="o.title"></td>
+                                <td t-out="o.source"></td>
+                                <td t-out="(o.price ?? 0).toFixed(3) + ' KD'"></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
         <!-- Quick Actions -->
         <div class="sc-card">
             <div class="sc-card-header">
                 <span class="sc-card-title">
                     <i class="fa fa-bolt" style="margin-right:6px;color:#1A7A6E"></i>
-                    Quick Actions
+                    Quick Actions · إجراءات سريعة
                 </span>
             </div>
             <div style="padding:16px;display:flex;gap:10px;flex-wrap:wrap">
                 <button class="sc-btn-primary" t-on-click="openNewJob">
-                    <i class="fa fa-upload"></i> Import from URL
+                    <i class="fa fa-upload"></i> New Import
                 </button>
-                <button class="sc-btn-outline" t-on-click="openNewJob">
-                    <i class="fa fa-file-excel-o"></i> Import from Excel
+                <button class="sc-btn-outline" t-on-click="openPublishStudio">
+                    <i class="fa fa-paint-brush"></i> Publish Studio
+                </button>
+                <button class="sc-btn-outline" t-on-click="openProfit">
+                    <i class="fa fa-percent"></i> Profit Margins
                 </button>
                 <button class="sc-btn-outline" t-on-click="openPriceIntel">
-                    <i class="fa fa-plus"></i> Monitor New Price
+                    <i class="fa fa-line-chart"></i> Price Intelligence
+                </button>
+                <button class="sc-btn-outline" t-on-click="openReorder">
+                    <i class="fa fa-refresh"></i> Reorder Forecast
+                </button>
+                <button class="sc-btn-outline" t-on-click="openScorecard">
+                    <i class="fa fa-star"></i> Supplier Scorecard
+                </button>
+                <button class="sc-btn-outline" t-on-click="openDiscovery">
+                    <i class="fa fa-binoculars"></i> Competitor Radar
+                </button>
+                <button class="sc-btn-outline" t-on-click="openMarket">
+                    <i class="fa fa-globe"></i> Market Pricing
+                </button>
+                <button class="sc-btn-outline" t-on-click="openTranslation">
+                    <i class="fa fa-language"></i> Translation
+                </button>
+                <button class="sc-btn-outline" t-on-click="openCopilot">
+                    <i class="fa fa-comments"></i> Ops Copilot
+                </button>
+                <button class="sc-btn-outline" t-on-click="openGlossary">
+                    <i class="fa fa-book"></i> Glossary
                 </button>
                 <button class="sc-btn-outline" t-on-click="openDeadStock">
-                    <i class="fa fa-refresh"></i> Refresh Dead Stock
+                    <i class="fa fa-archive"></i> Dead Stock
+                </button>
+                <button class="sc-btn-outline" t-on-click="openSettings">
+                    <i class="fa fa-cog"></i> Settings
                 </button>
             </div>
         </div>

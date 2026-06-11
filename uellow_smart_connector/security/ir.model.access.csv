@@ -14,3 +14,27 @@ access_review_wizard_admin,review.wizard.admin,model_uellow_import_review_wizard
 access_dashboard_mgr,sc.dashboard.mgr,model_uellow_sc_dashboard,uellow_smart_connector.group_sc_manager,1,1,1,0
 access_uellow_price_history_mgr,uellow.price.history manager,model_uellow_price_history,base.group_system,1,1,1,1
 access_uellow_price_history_usr,uellow.price.history user,model_uellow_price_history,base.group_user,1,0,0,0
+access_glossary_mgr,sc.glossary.mgr,model_uellow_sc_glossary,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_glossary_admin,sc.glossary.admin,model_uellow_sc_glossary,base.group_system,1,1,1,1
+access_translate_job_mgr,sc.translate.job.mgr,model_uellow_sc_translate_job,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_translate_job_admin,sc.translate.job.admin,model_uellow_sc_translate_job,base.group_system,1,1,1,1
+access_reorder_mgr,sc.reorder.mgr,model_uellow_sc_reorder_forecast,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_reorder_admin,sc.reorder.admin,model_uellow_sc_reorder_forecast,base.group_system,1,1,1,1
+access_scorecard_mgr,sc.scorecard.mgr,model_uellow_sc_supplier_scorecard,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_scorecard_admin,sc.scorecard.admin,model_uellow_sc_supplier_scorecard,base.group_system,1,1,1,1
+access_copilot_mgr,sc.copilot.mgr,model_uellow_sc_copilot,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_copilot_admin,sc.copilot.admin,model_uellow_sc_copilot,base.group_system,1,1,1,1
+access_market_factor_mgr,sc.market.factor.mgr,model_uellow_sc_market_factor,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_market_factor_admin,sc.market.factor.admin,model_uellow_sc_market_factor,base.group_system,1,1,1,1
+access_market_pricer_mgr,sc.market.pricer.mgr,model_uellow_sc_market_pricer,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_market_pricer_admin,sc.market.pricer.admin,model_uellow_sc_market_pricer,base.group_system,1,1,1,1
+access_market_pricer_line_mgr,sc.market.pricer.line.mgr,model_uellow_sc_market_pricer_line,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_market_pricer_line_admin,sc.market.pricer.line.admin,model_uellow_sc_market_pricer_line,base.group_system,1,1,1,1
+access_comp_source_mgr,sc.comp.source.mgr,model_uellow_sc_competitor_source,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_comp_source_admin,sc.comp.source.admin,model_uellow_sc_competitor_source,base.group_system,1,1,1,1
+access_discovery_mgr,sc.discovery.mgr,model_uellow_sc_discovery,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_discovery_admin,sc.discovery.admin,model_uellow_sc_discovery,base.group_system,1,1,1,1
+access_img_candidate_mgr,sc.img.candidate.mgr,model_uellow_import_image_candidate,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_img_candidate_admin,sc.img.candidate.admin,model_uellow_import_image_candidate,base.group_system,1,1,1,1
+access_profit_mgr,sc.profit.mgr,model_uellow_sc_profit,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_profit_admin,sc.profit.admin,model_uellow_sc_profit,base.group_system,1,1,1,1

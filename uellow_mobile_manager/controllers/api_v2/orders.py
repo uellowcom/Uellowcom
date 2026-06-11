@@ -128,10 +128,7 @@ def serialize_order(order, detail=False):
             'name': invoice.name,
             'phone': invoice.phone or '',
         } if invoice else None,
-        'payment': {
-            'state': order.invoice_status,
-            'method': order.payment_term_id.name if order.payment_term_id else '',
-        },
+        'payment': _payment_info(order),
         'tracking_number': getattr(order, 'tracking_number', '') or '',
         'carrier': order.carrier_id.name if order.carrier_id else '',
         # Driver / tracking — live from delivery_carrier_portal when set
@@ -162,9 +159,11 @@ def _state_label(state):
 #
 # Each entry returns {code, label{en,ar}, badge_color, step_index} so
 # the app can render chips, timelines and filter buttons consistently.
-def _carrier_now_availability(c):
+def _carrier_now_availability(c, zone=None):
     """v2.1.55 — (available_now, note{en,ar}|None) from the weekly
-    schedule windows + the zone cutoff. Mirrors delivery-eta."""
+    schedule windows + the zone cutoff. Mirrors delivery-eta.
+    v2.2.06 — also honours the MATCHED zone's own working-hours window
+    (work_hour_from/to) so each zone can have its own service hours."""
     from datetime import datetime
     import pytz
     try:
@@ -172,16 +171,33 @@ def _carrier_now_availability(c):
         now = datetime.now(tz)
         is_now = True
         opens_note = None
+        hour = now.hour + now.minute / 60.0
         avail = getattr(c, 'availability_ids', None)
         if avail:
-            hour = now.hour + now.minute / 60.0
             wins = [a for a in avail if int(a.weekday) == now.weekday()]
             is_now = any(a.hour_from <= hour < a.hour_to for a in wins)
+        # per-zone working hours (0–24 = unrestricted)
+        if is_now and zone is not None:
+            try:
+                zf = float(getattr(zone, 'work_hour_from', 0) or 0)
+                zt = float(getattr(zone, 'work_hour_to', 24) or 24)
+                if (zf, zt) != (0.0, 24.0) and not (zf <= hour < zt):
+                    is_now = False
+                    def _fmt(h):
+                        return '%02d:%02d' % (int(h), int(round((h % 1) * 60)))
+                    opens_note = {
+                        'en': 'Unavailable now — this area is served '
+                              '%s–%s' % (_fmt(zf), _fmt(zt)),
+                        'ar': 'غير متاح الآن — التوصيل لمنطقتك من '
+                              '%s إلى %s' % (_fmt(zf), _fmt(zt)),
+                    }
+            except Exception:
+                pass
         if is_now:
             cutoff = ''
             try:
-                z = c.uellow_zone_ids[:1] if getattr(
-                    c, 'uellow_zone_ids', False) else None
+                z = zone or (c.uellow_zone_ids[:1] if getattr(
+                    c, 'uellow_zone_ids', False) else None)
                 cutoff = (z.cutoff_time or '') if z else ''
             except Exception:
                 pass
@@ -206,6 +222,43 @@ def _carrier_now_availability(c):
         return is_now, (None if is_now else opens_note)
     except Exception:
         return True, None
+
+
+def _payment_info(order):
+    """v2.2.33 — clear payment block for the app: a bilingual method label,
+    the COD/online type, and a paid flag (drives the green 'paid' badge).
+    A COD order that has been paid before delivery reads as online + paid."""
+    pmt = getattr(order, 'payment_method_type', None)
+    # v2.2.34 — payment_method_type is the SOURCE OF TRUTH. A cash-on-delivery
+    # order must read as COD (and NOT paid) even if a stale 'done' transaction
+    # exists from an abandoned card attempt. When the customer actually pays a
+    # COD order before delivery, the backend hook flips payment_method_type to
+    # 'online', so 'cash' here always means "still collect cash".
+    if pmt == 'cash':
+        label = {'en': 'Cash on delivery', 'ar': 'الدفع عند الاستلام'}
+        method_type = 'cod'
+        paid = False
+        is_online = False
+    elif pmt == 'free':
+        label = {'en': 'Free', 'ar': 'مجاني'}
+        method_type = 'free'
+        paid = False
+        is_online = False
+    else:
+        label = {'en': 'Online payment', 'ar': 'دفع إلكتروني'}
+        method_type = 'online'
+        paid = _order_is_paid(order) or (
+            getattr(order, 'pay_link_status', '') == 'paid')
+        is_online = True
+    return {
+        'state': order.invoice_status,
+        'method': order.payment_term_id.name if order.payment_term_id else '',
+        'method_type': method_type,
+        'label': label,
+        'paid': bool(paid),
+        'paid_badge': {'en': 'Paid', 'ar': 'مدفوع'} if paid else None,
+        'is_online': bool(is_online),
+    }
 
 
 def _order_is_paid(order):
@@ -319,7 +372,12 @@ def _delivery_tracking(order):
     # Driver pin (only while broadcasting / out for delivery)
     driver = None
     drv = order.delivery_driver_id
-    if drv:
+    # Courier contact details are revealed once the driver ACCEPTS the
+    # assignment (status 'accepted' = with the courier) so the customer can
+    # reach him. The LIVE map pin, however, only turns on after "Start
+    # delivery" (out_for_delivery + broadcasting) — handled by is_live below.
+    _started = getattr(order, 'delivery_status', None) in ('accepted', 'out_for_delivery')
+    if drv and _started:
         is_live = bool(drv.is_broadcasting and drv.current_lat and drv.current_lng
                         and stage in ('in_transit', 'arriving'))
         driver = {
@@ -352,12 +410,12 @@ def _delivery_tracking(order):
         'driver': driver,
         'distance_km': round(distance_km, 2) if distance_km is not None else None,
         'eta_text': _eta_text(order),
-        # Back-compat aliases (older app builds)
-        'driver_name':  drv.name if drv else '',
-        'driver_phone': (drv.phone or '') if drv else '',
+        # Back-compat aliases (older app builds) — gated on Start Delivery
+        'driver_name':  (drv.name if drv and _started else ''),
+        'driver_phone': ((drv.phone or '') if drv and _started else ''),
         'driver_photo': (img_url('delivery.driver', drv.id, 'photo',
                                   unique=drv.write_date)
-                          if drv and getattr(drv, 'photo', False) else None),
+                          if drv and _started and getattr(drv, 'photo', False) else None),
         'lat': driver['lat'] if driver else None,
         'lng': driver['lng'] if driver else None,
         'address_text': customer['address'] if customer else '',
@@ -370,6 +428,7 @@ def _stage_label(stage):
         'at_warehouse': {'en': 'Preparing at warehouse', 'ar': 'قيد التحضير بالمخزن'},
         # v2.1.72 — "assigned to a courier" wording (مندوب), not "driver".
         'at_carrier':   {'en': 'Assigned to a courier',  'ar': 'تم إسناد طلبك إلى أحد المناديب'},
+        'with_courier': {'en': 'With the courier',       'ar': 'طلبك مع المندوب'},
         'in_transit':   {'en': 'Courier on the way',     'ar': 'المندوب في الطريق إليك'},
         'arriving':     {'en': 'Arriving — be ready',    'ar': 'يقترب — كن جاهزاً'},
         'delivered':    {'en': 'Delivered',              'ar': 'تم التسليم'},
@@ -384,6 +443,9 @@ def _eta_text(order):
     if ds == 'out_for_delivery':
         return {'en': 'Out for delivery · arriving soon',
                 'ar': 'في الطريق إليك · يصل قريباً'}
+    if ds == 'accepted':
+        return {'en': 'With the courier · starting soon',
+                'ar': 'طلبك مع المندوب · سيبدأ التوصيل قريباً'}
     if ds == 'assigned':
         return {'en': 'Assigned to a courier · preparing pickup',
                 'ar': 'تم إسناد طلبك إلى أحد المناديب · جارٍ التحضير للاستلام'}
@@ -588,6 +650,23 @@ class MobileOrdersAPI(http.Controller):
         order = _get_or_create_order(create=False)
         if not order:
             return ok([_cod_carrier_dict()])
+        # v2.2.04 — live re-rate on address switch: the app passes the
+        # picked address_id so zone prices follow it instantly (rates
+        # used to stick to the cart's old shipping address).
+        try:
+            aid = int(kw.get('address_id') or 0)
+            if aid > 0:
+                addr = request.env['res.partner'].sudo().browse(aid)
+                partner = current_partner()
+                owned = addr.exists() and (
+                    (partner and (addr.id == partner.id
+                                  or addr.parent_id.id == partner.id))
+                    or addr.id in (order.partner_id.id,
+                                   order.partner_shipping_id.id))
+                if owned and order.partner_shipping_id.id != addr.id:
+                    order.sudo().write({'partner_shipping_id': addr.id})
+        except Exception:
+            pass
         # Selective checkout: rate against ONLY the selected lines so the
         # picker shows exactly what will be charged (free-shipping
         # thresholds re-judged on the paid subset).
@@ -627,10 +706,14 @@ class MobileOrdersAPI(http.Controller):
             ship_to = order.partner_shipping_id or order.partner_id
             if ship_to and ship_to.country_id:
                 _cc = ship_to.country_id.code or ''
+            # v2.1.98 — check_time=False: an after-hours method (e.g.
+            # express past its window) stays IN the list, dimmed with
+            # "unavailable now", instead of vanishing.
             carriers = carriers.filtered(
                 lambda c: not hasattr(c, 'available_for_order')
                 or c.available_for_order(order, website=website,
-                                         country_code=_cc, channel='app'))
+                                         country_code=_cc, channel='app',
+                                         check_time=False))
         except Exception:
             pass
 
@@ -639,13 +722,41 @@ class MobileOrdersAPI(http.Controller):
         for c in carriers:
             price = None
             zone = None
+            zrec = None     # v2.2.06 — matched zone record (working hours)
             if 'uellow_zone_ids' in c._fields and c.uellow_zone_ids:
                 try:
                     z = request.env['uellow.delivery.zone'].sudo().quote_for(
                         c, order.partner_shipping_id or order.partner_id)
                     if z:
+                        zrec = z
                         price = z.price
-                        zone = {'name': z.name, 'cutoff_time': z.cutoff_time or ''}
+                        _w_en = getattr(z, 'delivery_window', '') or ''
+                        _w_ar = getattr(z, 'delivery_window_ar', '') or _w_en
+                        zone = {
+                            'name': z.name,
+                            'cutoff_time': z.cutoff_time or '',
+                            'delivery_window': {'en': _w_en, 'ar': _w_ar},
+                            # COD surcharge added on top for cash orders.
+                            'cash_surcharge': getattr(z, 'cash_surcharge', 0.0) or 0.0,
+                            # v2.1.96/2.2.00 — drives ONLY the checkout
+                            # teaser line: zone switch AND global refund
+                            # switch AND the per-website "show teaser"
+                            # display setting (hidden by default).
+                            'cod_refund_enabled': bool(
+                                getattr(z, 'cod_refund_enabled', True)
+                                and getattr(app_setting() or z,
+                                            'cod_refund_enabled', True)
+                                and getattr(app_setting() or z,
+                                            'show_cod_refund_teaser', False)),
+                            # v2.2.00 — display switch for the grey
+                            # "incl. cash fee" line (per website).
+                            'cod_fee_note_enabled': bool(
+                                getattr(app_setting() or z,
+                                        'show_cod_fee_note', False)),
+                            'governorate': getattr(
+                                (order.partner_shipping_id or order.partner_id),
+                                'city', '') or '',
+                        }
                 except Exception:
                     pass
             if price is None:
@@ -690,14 +801,45 @@ class MobileOrdersAPI(http.Controller):
             # v2.1.51 — unified free-shipping engine (product flags /
             # threshold / coupon / carrier free-over; express excluded).
             price, free_label = effective_shipping_price(order, c, price)
+            # v2.1.96/98 — cash-first pricing: the DEFAULT displayed amount
+            # is zone price + COD surcharge (zone value, else the carrier
+            # COMPANY's). Online payers get it refunded on capture.
+            # Genuinely free shipping stays free.
+            _comp0 = getattr(c, 'carrier_company_id', False)
+            _zsur = float((zone or {}).get('cash_surcharge') or 0) \
+                or float((getattr(_comp0, 'cod_surcharge', 0.0) or 0.0)
+                         if _comp0 else 0.0)
+            if _zsur > 0 and free_label is None:
+                price = float(price or 0) + _zsur
+                if zone is not None:
+                    zone['cash_surcharge'] = _zsur   # effective value for the app
             # v2.1.55 — schedule/cutoff awareness for the picker (the
             # express row shows a clear "unavailable now" marker).
-            now_ok, now_note = _carrier_now_availability(c)
+            now_ok, now_note = _carrier_now_availability(c, zrec)
+            # v2.1.77 — payment basis derives from the carrier COMPANY: when
+            # the company doesn't collect cash, the app hides COD for this
+            # method. carrier_company is the base record the app keys off.
+            comp = getattr(c, 'carrier_company_id', False)
+            cod_enabled = bool(getattr(comp, 'cod_enabled', True)) if comp else True
+            cod_surcharge = (getattr(comp, 'cod_surcharge', 0.0) or 0.0) if comp else 0.0
+            # v2.1.88 — skip misconfigured carriers that compute to 0 with NO
+            # genuine free-shipping reason (these produced the bogus
+            # "Standard delivery — 0 / Free" line). A real free carrier has a
+            # free_label; a real paid carrier has price > 0.
+            try:
+                _amt = float(price or 0)
+            except Exception:
+                _amt = 0.0
+            if _amt <= 0 and free_label is None:
+                continue
             out.append({
                 'id': c.id,
                 'name': name_dict,
                 'description': desc_dict,
-                'price': fmt_price(price, order.currency_id),
+                # v2.1.97 — zone/carrier prices are in the COMPANY currency
+                # (KWD); passing the order currency mis-declared the source
+                # on cross-country carts (2.25 showed as "0.012").
+                'price': fmt_price(price),
                 'is_free': free_label is not None,
                 'free_label': free_label,
                 'available_now': now_ok,
@@ -706,6 +848,10 @@ class MobileOrdersAPI(http.Controller):
                 'is_default': c.is_default if 'is_default' in c._fields else False,
                 'zone': zone,
                 'logo': logo,
+                'carrier_company': ({'id': comp.id, 'name': comp.name}
+                                    if comp else None),
+                'cod_enabled': cod_enabled,
+                'cod_surcharge': cod_surcharge,
             })
         # v2.1.21 — the synthetic "Standard Delivery" (id=-1, price 0) is
         # ONLY a fallback for when no real carrier matched; with real
@@ -990,6 +1136,44 @@ class MobileOrdersAPI(http.Controller):
                     'name': nm, 'image': upay_logo, 'is_default': idx == 0,
                     'via_upayments': True,
                 })
+        # ── v2.2.27 — Taly installments (real redirect provider). Taly is a
+        # Kuwait (KWD) service, so only offer it for KW / KWD storefronts. ──
+        try:
+            taly_prov = Provider.search(
+                [('code', '=', 'taly'), ('state', 'in', ('enabled', 'test'))],
+                limit=1)
+            wcur = None
+            try:
+                wcur = (website.company_id.currency_id.name
+                        if website and website.company_id else None) \
+                    or request.env.company.currency_id.name
+            except Exception:
+                wcur = None
+            taly_ok = bool(taly_prov) and (
+                (country_code in ('', 'KW')) or wcur == 'KWD')
+            if taly_ok:
+                taly_logo = (img_url('payment.provider', taly_prov.id,
+                                     'image_128', unique=taly_prov.write_date)
+                             if taly_prov.image_128 else
+                             '/payment_taly/static/src/img/taly_logo.svg')
+                _tmin = taly_prov.taly_min_order_amount or 0.0
+                _tcur = (taly_prov.company_id.currency_id.name
+                         or 'KWD') if taly_prov.company_id else 'KWD'
+                curated.append({
+                    'id': taly_prov.id, 'code': 'taly', 'provider_code': 'taly',
+                    'name': {'en': 'Installments — 4 payments',
+                             'ar': 'أقساط على ٤ دفعات'},
+                    'note': {
+                        'en': 'Minimum %.0f %s' % (_tmin, _tcur),
+                        'ar': 'أقل مبلغ %.0f %s' % (
+                            _tmin, 'د.ك' if _tcur == 'KWD' else _tcur),
+                    } if _tmin else None,
+                    'min_amount': _tmin,
+                    'image': taly_logo, 'is_default': False,
+                })
+        except Exception:
+            pass
+
         if curated:
             # COD always last so an online method is the default selection.
             curated.sort(key=lambda m: m['code'] == 'cod')
@@ -1164,6 +1348,7 @@ class MobileOrdersAPI(http.Controller):
         # placed (COD now, or online after payment capture).
         carrier = None
         ship_rate = 0.0
+        cod_surcharge_amt = 0.0   # v2.1.96 — zone cash surcharge (cash-first)
         try:
             cid = int(p.get('carrier_id') or 0)
             if cid > 0:
@@ -1195,12 +1380,13 @@ class MobileOrdersAPI(http.Controller):
             # success=False/price=0 for out-of-zone addresses even though the
             # picker displayed a real price.
             price = None
+            _zone = None
             if 'uellow_zone_ids' in carrier._fields and carrier.uellow_zone_ids:
                 try:
-                    z = request.env['uellow.delivery.zone'].sudo().quote_for(
+                    _zone = request.env['uellow.delivery.zone'].sudo().quote_for(
                         carrier, order.partner_shipping_id or order.partner_id)
-                    if z:
-                        price = z.price
+                    if _zone:
+                        price = _zone.price
                 except Exception:
                     pass
             if price is None:
@@ -1215,7 +1401,34 @@ class MobileOrdersAPI(http.Controller):
             # v2.1.51 — the engine decides the FINAL charged rate so the
             # invoice always matches the picker (free stays free).
             price, _free_lbl = effective_shipping_price(order, carrier, price)
-            ship_rate = float(price or 0.0)
+            # v2.1.96 — cash-first pricing: the zone COD surcharge is part
+            # of the charged delivery amount for EVERY payment method; an
+            # online payer gets it refunded into the wallet on capture.
+            try:
+                cod_surcharge_amt = float(getattr(_zone, 'cash_surcharge', 0)
+                                          or 0) if _zone else 0.0
+                if not cod_surcharge_amt:
+                    _c2 = getattr(carrier, 'carrier_company_id', False)
+                    cod_surcharge_amt = float(
+                        getattr(_c2, 'cod_surcharge', 0.0) or 0.0) \
+                        if _c2 else 0.0
+            except Exception:
+                cod_surcharge_amt = 0.0
+            if _free_lbl is not None:
+                cod_surcharge_amt = 0.0    # genuinely free stays free
+            ship_rate = float(price or 0.0) + cod_surcharge_amt
+            # Refund eligibility (online payers): BOTH the zone switch and
+            # the global Mobile-App-Settings switch must be on.
+            try:
+                if _zone is not None and not getattr(
+                        _zone, 'cod_refund_enabled', True):
+                    cod_surcharge_amt = 0.0
+                _set = app_setting()
+                if _set and 'cod_refund_enabled' in _set._fields \
+                        and not _set.cod_refund_enabled:
+                    cod_surcharge_amt = 0.0
+            except Exception:
+                pass
             try:
                 order.carrier_id = carrier.id   # remember the choice
             except Exception:
@@ -1224,21 +1437,44 @@ class MobileOrdersAPI(http.Controller):
         # Guests must have provided a delivery address (the guest address
         # flow attaches an ad-hoc partner to the order).
         if not partner:
-            public_partners = request.env['website'].sudo().search([]) \
-                .mapped('user_id.partner_id').ids
+            public_partners = set(request.env['website'].sudo().search([])
+                                  .mapped('user_id.partner_id').ids)
+            try:
+                public_partners.add(request.env.ref('base.public_user')
+                                    .sudo().partner_id.id)
+            except Exception:
+                pass
             ship = order.partner_shipping_id
             if not ship or ship.id in public_partners:
                 return fail('ADDRESS_REQUIRED',
                             'Add a delivery address first / أضف عنوان التوصيل '
                             'أولاً', 400)
+            # v2.1.96 — a guest order must NEVER confirm under "Public
+            # user": adopt the ad-hoc shipping partner (real name/phone/
+            # address) as the order customer. This was the hole: passing
+            # delivery_address_id set ONLY partner_shipping_id, leaving
+            # partner_id on the public user with no customer data.
+            if order.partner_id.id in public_partners:
+                order.sudo().write({'partner_id': ship.id,
+                                    'partner_invoice_id': ship.id})
 
         pm = (p.get('payment_method') or '').lower()
         cod = pm == 'cod'
 
         if cod:
-            # Place now: add the delivery line (preserving reward lines) + confirm.
+            # Place now: add the delivery line (preserving reward lines) +
+            # confirm. v2.1.96 — ship_rate already INCLUDES the zone cash
+            # surcharge (cash-first pricing), so no extra fee line.
             if carrier is not None:
                 _apply_delivery_preserving_rewards(order, carrier, ship_rate)
+            # v2.2.40 — mark this as a cash order (the field defaults to
+            # 'online'); the tracking page + carrier portal read this as the
+            # source of truth, so without it COD showed as "Online payment".
+            try:
+                if 'payment_method_type' in order._fields:
+                    order.payment_method_type = 'cash'
+            except Exception:
+                pass
             try:
                 order.action_confirm()
             except Exception as e:
@@ -1264,6 +1500,32 @@ class MobileOrdersAPI(http.Controller):
                     }
             except Exception:
                 pass
+        # ── v2.2.27 — Taly installments: add delivery line (like COD) then
+        # create a Taly transaction and return its secure-checkout URL. The
+        # order stays a draft until the Taly webhook drives the tx to done,
+        # which confirms it via Odoo's standard payment→sale flow. ──────────
+        if not cod and pm == 'taly':
+            # v2.2.27 — enforce Taly's minimum amount with a clear message.
+            taly_prov = request.env['payment.provider'].sudo().search(
+                [('code', '=', 'taly'), ('state', 'in', ('enabled', 'test'))],
+                limit=1)
+            min_amt = (taly_prov.taly_min_order_amount or 0.0) if taly_prov else 0.0
+            charge_amount = round((order.amount_total or 0.0) + (ship_rate or 0.0), 3)
+            if min_amt and charge_amount < min_amt:
+                cur = order.currency_id.name or 'KWD'
+                return fail(
+                    'TALY_MIN_AMOUNT',
+                    'أقل مبلغ للدفع بالأقساط عبر تالي هو %.3f %s. '
+                    'Taly installments require a minimum of %.3f %s.'
+                    % (min_amt, cur, min_amt, cur), 400)
+            if carrier is not None:
+                _apply_delivery_preserving_rewards(order, carrier, ship_rate)
+            try:
+                result['payment_url'] = order._taly_mobile_charge(get_lang())
+            except Exception as e:
+                return fail('PAYMENT_INIT_FAILED', str(e), 400)
+            return ok(result)
+
         if not cod:
             base = base_url().rstrip('/')
             gateway = {'knet': 'knet', 'card': 'cc', 'apple_pay': 'apple-pay',
@@ -1273,7 +1535,13 @@ class MobileOrdersAPI(http.Controller):
             # can add the delivery line when it confirms on capture.
             charge_amount = round((order.amount_total or 0.0) + (ship_rate or 0.0), 3)
             try:
-                order.sudo().write({'upayments_ship_rate': ship_rate})
+                vals = {'upayments_ship_rate': ship_rate}
+                # v2.1.96 — remember the surcharge included in ship_rate so
+                # the capture webhook can refund it to the wallet (online
+                # payers don't owe the cash-handling fee).
+                if 'upayments_cod_surcharge' in order._fields:
+                    vals['upayments_cod_surcharge'] = cod_surcharge_amt
+                order.sudo().write(vals)
             except Exception:
                 pass
             if hasattr(order, '_upayments_create_charge'):
@@ -1420,19 +1688,37 @@ class MobileOrdersAPI(http.Controller):
 def _cod_carrier_dict(order=None):
     cur = (order.currency_id if order else request.env.company.currency_id)
     # Plain "Standard Delivery" (no COD-available suffix); when the cart
-    # already qualifies for free shipping, label it "Free delivery" instead.
+    # already qualifies for free shipping, surface the SAME green FREE
+    # badge the real carriers get (v2.1.96 — it used to show a bare 0).
     name = {'en': 'Standard Delivery', 'ar': 'توصيل قياسي'}
+    free_label = None
     try:
         from .cart import _free_shipping_threshold
         threshold = _free_shipping_threshold(order) if order else None
         if threshold and order and order.amount_untaxed >= threshold:
             name = {'en': 'Free delivery', 'ar': 'توصيل مجاني'}
+            free_label = {'en': 'Free over %.3f' % threshold,
+                          'ar': 'مجاني فوق %.3f' % threshold}
     except Exception:
         pass
+    # v2.1.98 — price the last-resort row from the cheapest configured
+    # FALLBACK zone (match_mode='all') instead of a misleading 0.
+    price_val = 0.0
+    if free_label is None:
+        try:
+            zs = request.env['uellow.delivery.zone'].sudo().search([
+                ('match_mode', '=', 'all'), ('active', '=', True)])
+            prices = [z.price for z in zs if z.price and z.price > 0]
+            if prices:
+                price_val = min(prices)
+        except Exception:
+            pass
     return {
         'id': -1,
         'name': name,
-        'price': fmt_price(0, cur),
+        'price': fmt_price(price_val),
+        'is_free': free_label is not None,
+        'free_label': free_label,
         'is_default': False,
         'zone': None,
         'logo': None,

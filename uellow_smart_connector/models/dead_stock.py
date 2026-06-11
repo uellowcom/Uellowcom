@@ -35,13 +35,27 @@ class DeadStockMonitor(models.Model):
     # which would silently leave the stored value stale (audit B5).
     vendor_partner_id = fields.Many2one(
         'res.partner',
-        compute='_compute_product_info',
+        compute='_compute_vendor',
         string='Vendor',
     )
 
     qty_on_hand = fields.Float('Qty On Hand', readonly=True)
     last_sale_date = fields.Date('Last Sale', readonly=True)
     days_since_last_sale = fields.Integer('Days Since Last Sale', readonly=True)
+    # v2.1 — "never sold" is now measured from the product's CREATE date, and
+    # brand-new products inside the grace window are not flagged at all (was:
+    # a hard 9999 that put fresh products at the top of the dead list).
+    never_sold = fields.Boolean('Never Sold', readonly=True, default=False)
+    product_age_days = fields.Integer('Product Age (days)', readonly=True)
+    # v3 — seasonality + liquidation staging (ideas #26 / #27)
+    is_seasonal = fields.Boolean(
+        'Seasonal', readonly=True, default=False,
+        help='Historically sells in the current/upcoming months — protected '
+             'from liquidation so we do not dump stock right before its season.')
+    target_discount_pct = fields.Float('Suggested Discount %', default=0.0)
+    beena_promote = fields.Boolean(
+        'Promote via Beena', default=False,
+        help='Flag so Beena can surface this idle item to relevant customers.')
 
     suggested_action = fields.Selection([
         ('discount',      'Flash Sale Discount'),
@@ -65,15 +79,18 @@ class DeadStockMonitor(models.Model):
         ('uniq_product', 'unique(product_id)', 'A dead-stock row already exists for this product.'),
     ]
 
-    @api.depends('product_id', 'product_id.product_tmpl_id', 'product_id.vendor_partner_id')
+    # Split compute methods: product_tmpl_id is STORED, vendor_partner_id is
+    # NOT — Odoo warns when stored & non-stored share one compute method.
+    @api.depends('product_id', 'product_id.product_tmpl_id')
     def _compute_product_info(self):
         for rec in self:
-            if rec.product_id:
-                rec.product_tmpl_id = rec.product_id.product_tmpl_id
-                rec.vendor_partner_id = getattr(rec.product_id, 'vendor_partner_id', False) or False
-            else:
-                rec.product_tmpl_id = False
-                rec.vendor_partner_id = False
+            rec.product_tmpl_id = rec.product_id.product_tmpl_id or False
+
+    @api.depends('product_id', 'product_id.vendor_partner_id')
+    def _compute_vendor(self):
+        for rec in self:
+            rec.vendor_partner_id = (
+                getattr(rec.product_id, 'vendor_partner_id', False) or False)
 
     @api.model
     def cron_scan_dead_stock(self):
@@ -85,6 +102,8 @@ class DeadStockMonitor(models.Model):
           - Commit every `_DEAD_STOCK_BATCH` to release locks.
         """
         settings = self.env['uellow.connector.settings'].get_settings()
+        if not settings.get('feat_dead_stock'):
+            return
         days_threshold = int(settings.get('dead_stock_days') or 30)
         today = fields.Date.today()
         cutoff = today - timedelta(days=days_threshold)
@@ -120,19 +139,74 @@ class DeadStockMonitor(models.Model):
                     d.date() if hasattr(d, 'date') else d
                 )
 
+        # 2b) creation date per product (one read) — lets us age "never sold"
+        #     products from when they were ADDED, not from epoch 9999.
+        create_by_product = {}
+        for p in self.env['product.product'].browse(list(qty_by_product.keys())):
+            cd = p.create_date
+            create_by_product[p.id] = (cd.date() if cd else today)
+
+        # season window = current month + next N-1 (a product whose season is
+        # approaching must NOT be liquidated now). Wrap around December.
+        # Disabled / 0 look-ahead → no seasonal protection (empty set).
+        if settings.get('feat_seasonality'):
+            look = max(1, int(settings.get('season_lookahead_months') or 3))
+            season_months = {((today.month - 1 + k) % 12) + 1 for k in range(look)}
+        else:
+            season_months = set()
+
         # 3) Walk products in batches, commit between chunks
         product_ids = list(qty_by_product.keys())
         processed = 0
         for i in range(0, len(product_ids), _DEAD_STOCK_BATCH):
             chunk = product_ids[i:i + _DEAD_STOCK_BATCH]
             self._process_dead_stock_chunk(
-                chunk, qty_by_product, last_sale_by_product, cutoff, today)
+                chunk, qty_by_product, last_sale_by_product,
+                create_by_product, cutoff, today, season_months)
             self.env.cr.commit()  # release locks every batch
             processed += len(chunk)
             _logger.info('Smart Connector dead-stock cron: %d/%d products scanned',
                          processed, len(product_ids))
 
-    def _process_dead_stock_chunk(self, product_ids, qty_map, last_sale_map, cutoff, today):
+    def _seasonal_months_map(self, product_ids):
+        """Return {product_id: set(month_int)} of months each product ever sold in.
+
+        One read_group over the chunk — used to spare seasonal stock from
+        being flagged dead just because it's off-season right now (idea #27).
+        """
+        out = {}
+        if not product_ids:
+            return out
+        groups = self.env['stock.move'].read_group(
+            domain=[
+                ('product_id', 'in', product_ids),
+                ('location_dest_id.usage', '=', 'customer'),
+                ('state', '=', 'done'),
+            ],
+            fields=['product_id'],
+            groupby=['product_id', 'date:month'],
+            lazy=False,
+        )
+        for row in groups:
+            if not row.get('product_id') or not row.get('date:month'):
+                continue
+            pid = row['product_id'][0]
+            # 'date:month' looks like "March 2024" → map via the raw range start
+            rng = row.get('__range', {}).get('date:month', {})
+            start = rng.get('from')
+            if not start:
+                continue
+            try:
+                month = fields.Date.to_date(start).month
+            except Exception:                       # noqa: BLE001
+                continue
+            out.setdefault(pid, set()).add(month)
+        return out
+
+    def _process_dead_stock_chunk(self, product_ids, qty_map, last_sale_map,
+                                  create_map, cutoff, today, season_months=None):
+        season_months = season_months or set()
+        sale_months = self._seasonal_months_map(product_ids)
         existing = {
             r.product_id.id: r
             for r in self.search([('product_id', 'in', product_ids)])
@@ -141,6 +215,8 @@ class DeadStockMonitor(models.Model):
         for pid in product_ids:
             qty = qty_map.get(pid, 0)
             last_date = last_sale_map.get(pid)
+            created = create_map.get(pid, today)
+            age = (today - created).days if created else 0
             # Skip products that DID sell recently
             if last_date and last_date >= cutoff:
                 if pid in existing and existing[pid].state == 'active':
@@ -148,14 +224,35 @@ class DeadStockMonitor(models.Model):
                     existing[pid].state = 'resolved'
                 continue
 
-            # Genuinely dead
-            days = (today - last_date).days if last_date else None
+            never_sold = not last_date
+            if never_sold:
+                # Never sold — age it from when it was ADDED. A brand-new
+                # product still inside the grace window is NOT dead yet.
+                if created >= cutoff:
+                    # too new to judge; if a stale row exists, clear it
+                    if pid in existing and existing[pid].state == 'active':
+                        existing[pid].state = 'resolved'
+                    continue
+                days = age
+            else:
+                days = (today - last_date).days
+
+            # Seasonality guard: a product that historically sells in the
+            # current/upcoming months is entering its season — don't liquidate.
+            months = sale_months.get(pid)
+            seasonal = bool(months and (months & season_months))
+            if seasonal:
+                if pid in existing and existing[pid].state == 'active':
+                    existing[pid].write({'is_seasonal': True, 'state': 'resolved'})
+                continue
+
             vals = {
                 'qty_on_hand': qty,
                 'last_sale_date': last_date or False,
-                # When `last_date` is None (never sold), `days` is None too —
-                # represented as 9999 so it sorts to the top of the "most dead" list.
-                'days_since_last_sale': days if days is not None else 9999,
+                'days_since_last_sale': days,
+                'never_sold': never_sold,
+                'product_age_days': age,
+                'is_seasonal': False,
             }
             row = existing.get(pid)
             if row:
@@ -175,3 +272,43 @@ class DeadStockMonitor(models.Model):
     def action_ignore(self):
         for r in self:
             r.state = 'ignored'
+
+    # ── liquidation staging (idea #26) ─────────────────────────────────────
+    def action_flag_discount(self):
+        """Stage a flash-sale discount decision (default 15% if unset)."""
+        for r in self:
+            r.write({
+                'suggested_action': 'discount',
+                'target_discount_pct': r.target_discount_pct or 15.0,
+            })
+
+    def action_promote_beena(self):
+        """Mark this idle item so Beena can surface it to relevant customers."""
+        for r in self:
+            r.write({'beena_promote': True})
+
+    def action_stop_promote(self):
+        for r in self:
+            r.write({'beena_promote': False})
+
+    @api.model
+    def beena_promotable_products(self, limit=10):
+        """Return idle products flagged for Beena promotion (hook for Beena AI).
+
+        Used by the AI assistant to weave 'clearance' suggestions into chat.
+        Returns plain dicts so the controller layer needs no ORM knowledge.
+        """
+        rows = self.search(
+            [('beena_promote', '=', True), ('state', '=', 'active')],
+            order='days_since_last_sale desc', limit=limit)
+        out = []
+        for r in rows:
+            tmpl = r.product_tmpl_id
+            out.append({
+                'product_tmpl_id': tmpl.id if tmpl else False,
+                'name': tmpl.name if tmpl else (r.product_id.name or ''),
+                'discount_pct': r.target_discount_pct,
+                'qty_on_hand': r.qty_on_hand,
+                'days_idle': r.days_since_last_sale,
+            })
+        return out

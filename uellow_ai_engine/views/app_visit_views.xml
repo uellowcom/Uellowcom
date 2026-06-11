@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_app_visit_search" model="ir.ui.view">
+        <field name="name">uellow.app.visit.search</field>
+        <field name="model">uellow.app.visit</field>
+        <field name="arch" type="xml">
+            <search string="App Analytics">
+                <field name="country_name"/>
+                <field name="country_code"/>
+                <field name="platform"/>
+                <filter name="f_visits" string="Visits" domain="[('action','=','visit')]"/>
+                <filter name="f_conversions" string="Conversions" domain="[('action','=','conversion')]"/>
+                <separator/>
+                <filter name="f_7d" string="Last 7 days" domain="[('create_date','&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter name="f_30d" string="Last 30 days" domain="[('create_date','&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter name="g_action" string="Type" context="{'group_by':'action'}"/>
+                    <filter name="g_platform" string="Platform" context="{'group_by':'platform'}"/>
+                    <filter name="g_store" string="Store" context="{'group_by':'store'}"/>
+                    <filter name="g_country" string="Country" context="{'group_by':'country_name'}"/>
+                    <filter name="g_day" string="Day" context="{'group_by':'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_app_visit_list" model="ir.ui.view">
+        <field name="name">uellow.app.visit.list</field>
+        <field name="model">uellow.app.visit</field>
+        <field name="arch" type="xml">
+            <list string="Events">
+                <field name="create_date" string="Time"/>
+                <field name="action" string="Type"/>
+                <field name="platform" string="Platform"/>
+                <field name="store" string="Store"/>
+                <field name="country_name" string="Country"/>
+                <field name="country_code" string="Code"/>
+                <field name="referrer" string="Referrer" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_app_visit_pivot" model="ir.ui.view">
+        <field name="name">uellow.app.visit.pivot</field>
+        <field name="model">uellow.app.visit</field>
+        <field name="arch" type="xml">
+            <pivot string="Analysis" sample="1">
+                <field name="country_name" type="row"/>
+                <field name="platform" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_app_visit_graph" model="ir.ui.view">
+        <field name="name">uellow.app.visit.graph</field>
+        <field name="model">uellow.app.visit</field>
+        <field name="arch" type="xml">
+            <graph string="Chart" type="bar" sample="1">
+                <field name="create_date" interval="day"/>
+                <field name="action"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Raw events (drill-down) -->
+    <record id="action_app_visit" model="ir.actions.act_window">
+        <field name="name">Events</field>
+        <field name="res_model">uellow.app.visit</field>
+        <field name="view_mode">list,graph,pivot</field>
+        <field name="context">{'search_default_g_country': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No visits yet</p>
+            <p>Visits and conversions on the <code>/app</code> page will appear here by device and country.</p>
+        </field>
+    </record>
+
+    <!-- Professional KPI dashboard (opens /app/dashboard) -->
+    <record id="action_app_dashboard" model="ir.actions.act_url">
+        <field name="name">Dashboard</field>
+        <field name="url">/app/dashboard</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_app_analytics_root" name="App Analytics" sequence="92"/>
+    <menuitem id="menu_app_dashboard" name="Dashboard" parent="menu_app_analytics_root" action="action_app_dashboard" sequence="5"/>
+    <menuitem id="menu_app_visit" name="Events" parent="menu_app_analytics_root" action="action_app_visit" sequence="10"/>
+
+</odoo>

@@ -4,6 +4,7 @@ Hits the Flutter search bar. Uses the same fuzzy logic that Beena's
 search uses (with EN/AR translation table) so results match the AI
 chat's behaviour.
 """
+import re
 from datetime import datetime, timedelta
 
 from odoo import http
@@ -16,6 +17,31 @@ from ._common import (
 from .products import serialize_product_card, _domain_published_for_app
 
 
+def _norm_lang(lang):
+    """Normalize any locale code to 'ar' or 'en' for language-scoped feeds."""
+    return 'ar' if str(lang or '').lower().startswith('ar') else 'en'
+
+
+# Arabic letter range U+0621–U+064A — a keyword containing any of these reads
+# as an Arabic-script search; otherwise it's treated as Latin/English.
+_AR_CHAR_RE = re.compile('[ء-ي]')
+
+
+def _lang_script_clause():
+    """SQL fragment (server-controlled, injection-safe) scoping keyword feeds
+    to the current UI language by SCRIPT: Arabic-script terms only on the
+    Arabic UI, non-Arabic terms only on the English UI."""
+    if _norm_lang(get_lang()) == 'ar':
+        return "AND keyword ~ '[ء-ي]'"
+    return "AND keyword !~ '[ء-ي]'"
+
+
+def _matches_ui_lang(keyword):
+    """Python mirror of _lang_script_clause for in-memory (recent) filtering."""
+    has_ar = bool(_AR_CHAR_RE.search(keyword or ''))
+    return has_ar if _norm_lang(get_lang()) == 'ar' else not has_ar
+
+
 def _log_search(q, results_count):
     """Best-effort analytic row (recent + trending feeds)."""
     try:
@@ -25,9 +51,62 @@ def _log_search(q, results_count):
             'results_count': results_count,
             'session_id': sess.id if sess else False,
             'platform': (sess.platform if sess else 'android'),
+            'lang': _norm_lang(get_lang()),
         })
     except Exception:
         pass
+
+
+# v2.2.16 — trending/popular hygiene -------------------------------------
+_LETTER_RE = re.compile(r'[A-Za-z؀-ۿ]')
+
+
+def _is_clear_keyword(k):
+    """Only clear human words make the public trends. Rejects barcodes,
+    product IDs, pure numbers and letterless garbage."""
+    k = (k or '').strip()
+    if len(k) < 3 or k.lower().startswith('[barcode]'):
+        return False
+    letters = len(_LETTER_RE.findall(k))
+    if letters < 3:                       # "12", "a1", "....."
+        return False
+    if re.search(r'\d{5,}', k):           # embedded barcode / phone / ID
+        return False
+    if sum(c.isdigit() for c in k) > letters:   # mostly numeric
+        return False
+    return True
+
+
+def _fold_incomplete(rows, limit):
+    """rows = [(keyword, count)] sorted by count desc. Merges half-typed
+    prefixes ("iphon", "سماع") into their most popular completed keyword
+    ("iphone 15", "سماعة") so abandoned keystrokes never trend on their
+    own, then returns the top `limit` clear keywords."""
+    rows = [(k.strip(), int(c)) for k, c in rows if _is_clear_keyword(k)]
+    # Each keyword's host = its most popular strictly-longer completion.
+    hosts = []
+    for i, (k, c) in enumerate(rows):
+        kl = k.lower()
+        best = None
+        for j, (k2, c2) in enumerate(rows):
+            if i != j and len(k2) > len(k) and k2.lower().startswith(kl):
+                if best is None or c2 > rows[best][1]:
+                    best = j
+        hosts.append(best)
+    folded = {}
+    for i, (k, c) in enumerate(rows):
+        # Follow the chain transitively (shi → shir → shirt) so every
+        # half-typed prefix lands in the FINAL completed keyword. Chains
+        # always terminate: each hop is strictly longer.
+        j = i
+        while hosts[j] is not None:
+            j = hosts[j]
+        key = rows[j][0].lower()
+        if key not in folded:
+            folded[key] = [rows[j][0], 0]
+        folded[key][1] += c
+    out = sorted(folded.values(), key=lambda t: -t[1])
+    return [{'query': k, 'count': c} for k, c in out[:limit]]
 
 
 def _search_brands(q, limit=6):
@@ -127,12 +206,17 @@ class MobileSearchAPI(http.Controller):
         # Search surfaces out-of-stock items so the user can still find
         # a specific product they're looking for, even when it's not
         # listed elsewhere in the app.
-        domain = _domain_published_for_app(include_oos=True) + [
-            '|', '|',
+        ors = [
             ('name', 'ilike', q),
             ('default_code', 'ilike', q),
             ('description_sale', 'ilike', q),
         ]
+        # v2.2.16 — digit-only query also matches the product ID and the
+        # exact barcode (admins/support paste IDs straight into search).
+        if q.isdigit():
+            ors = [('id', '=', int(q)), ('barcode', '=', q)] + ors
+        domain = _domain_published_for_app(include_oos=True) + \
+            ['|'] * (len(ors) - 1) + ors
         records = Tmpl.search(domain, order='create_date desc', limit=100)
 
         # v2.1.56 — the app passes log=0 for as-you-type suggestion calls
@@ -191,16 +275,23 @@ class MobileSearchAPI(http.Controller):
     def popular_queries(self, **kw):
         # Odoo 18: read_group no longer exposes __count by default. Use
         # raw SQL — also faster for a top-N aggregation.
+        # v2.2.16 — over-fetch then clean: only clear words (no barcodes /
+        # numbers / half-typed prefixes) and only searches that found
+        # something at least once.
+        # v2.2.40 — language-scoped by SCRIPT: Arabic-script terms only on the
+        # Arabic UI, Latin terms only on the English UI (covers legacy rows too).
         request.env.cr.execute("""
             SELECT keyword, COUNT(*) AS cnt
             FROM mobile_search_analytic
             WHERE keyword IS NOT NULL AND keyword NOT LIKE '[barcode]%%'
+            """ + _lang_script_clause() + """
             GROUP BY keyword
+            HAVING MAX(results_count) > 0
             ORDER BY cnt DESC
-            LIMIT 12
+            LIMIT 80
         """)
         rows = request.env.cr.fetchall()
-        return ok([{'query': r[0], 'count': int(r[1])} for r in rows])
+        return ok(_fold_incomplete(rows, 12))
 
     @http.route('/api/mobile/v2/search/trending', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
@@ -210,18 +301,23 @@ class MobileSearchAPI(http.Controller):
         7d / 30d if today is empty."""
         for days in (1, 7, 30):
             since = datetime.utcnow() - timedelta(days=days)
+            # v2.2.16 — over-fetch then clean: only clear words (no
+            # barcodes / numbers / half-typed prefixes) and only searches
+            # that found something at least once.
             request.env.cr.execute("""
                 SELECT keyword, COUNT(*) AS cnt
                 FROM mobile_search_analytic
                 WHERE create_date >= %s
                   AND keyword IS NOT NULL
                   AND keyword NOT LIKE '[barcode]%%'
+                  """ + _lang_script_clause() + """
                 GROUP BY keyword
+                HAVING MAX(results_count) > 0
                 ORDER BY cnt DESC
-                LIMIT 10
+                LIMIT 80
             """, (since,))
             rows = request.env.cr.fetchall()
-            cleaned = [{'query': r[0], 'count': int(r[1])} for r in rows]
+            cleaned = _fold_incomplete(rows, 10)
             if cleaned:
                 return ok({'trending': cleaned, 'window_days': days})
         return ok({'trending': [], 'window_days': 0})
@@ -243,6 +339,9 @@ class MobileSearchAPI(http.Controller):
         for r in rows:
             kw = (r.keyword or '').strip()
             if not kw or kw.startswith('[barcode]') or kw.lower() in seen:
+                continue
+            # v2.2.40 — recent feed is language-scoped by script too.
+            if not _matches_ui_lang(kw):
                 continue
             seen.add(kw.lower())
             recent.append({

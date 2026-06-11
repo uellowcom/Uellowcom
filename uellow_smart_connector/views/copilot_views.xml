@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="view_copilot_form" model="ir.ui.view">
+    <field name="name">uellow.sc.copilot.form</field>
+    <field name="model">uellow.sc.copilot</field>
+    <field name="arch" type="xml">
+      <form string="Ops Copilot">
+        <sheet>
+          <div class="oe_title">
+            <h2>🤖 المساعد الإداري · Ops Copilot</h2>
+            <p>اسأل عن مخزونك وأسعارك ومورّديك بالعربي — يجيب من بياناتك الحيّة.</p>
+          </div>
+          <group>
+            <field name="question" nolabel="1"
+                   placeholder="مثال: أي منتجات على وشك النفاد؟ · مين أفضل مورّد؟ · أين فرص رفع السعر؟"/>
+          </group>
+          <footer>
+            <button name="action_ask" string="اسأل · Ask" type="object" class="oe_highlight"/>
+          </footer>
+          <group string="الإجابة · Answer" invisible="not answer">
+            <field name="answer" nolabel="1" readonly="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_copilot" model="ir.actions.act_window">
+    <field name="name">Ops Copilot</field>
+    <field name="res_model">uellow.sc.copilot</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+  <menuitem id="menu_sc_copilot" name="Ops Copilot"
+            parent="menu_sc_root" action="action_copilot" sequence="5"/>
+
+</odoo>

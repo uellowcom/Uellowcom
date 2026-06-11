@@ -45,7 +45,11 @@
                         </group>
                         <group string="Order Amount Limits">
                             <field name="taly_min_order_amount"
-                                   help="0 = no minimum limit"/>
+                                   help="Taly's minimum order (default 10 KWD). Orders below this can't use Taly."/>
+                            <div class="text-muted" colspan="2">
+                                ⓘ الحد الأدنى لطلب تالي هو ١٠ دينار كويتي — لا يمكن إتمام الدفع بأقل من ذلك.
+                                <br/>Minimum Taly order is 10 KWD — checkout is blocked below this amount.
+                            </div>
                             <field name="taly_max_order_amount"
                                    help="0 = no maximum limit"/>
                         </group>

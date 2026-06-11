@@ -64,9 +64,10 @@ class AssignDeliveryWizard(models.TransientModel):
         ('out_for_delivery', 'Out for delivery (already with courier)'),
     ], string='Set Status To', default='assigned', required=True)
     create_trip = fields.Boolean(
-        string='Group into a Trip', default=False,
-        help='Create one delivery.trip grouping all selected orders for '
-             'this courier (handy for batch dispatch).')
+        string='Group into a Pickup Request', default=True,
+        help="Add the selected orders to the carrier's OPEN pickup request "
+             "(delivery.trip) — or open a new one automatically when none is "
+             "open. Uncheck to dispatch without grouping.")
     note = fields.Char(string='Note to courier')
 
     # ── live cost preview ────────────────────────────────────────────
@@ -159,10 +160,19 @@ class AssignDeliveryWizard(models.TransientModel):
             raise UserError('No orders selected.')
         trip = False
         if self.create_trip:
-            trip = self.env['delivery.trip'].create({
-                'carrier_company_id': self.carrier_company_id.id,
-                'notes': self.note or '',
-            })
+            # v2.2.29 — reuse the carrier's OPEN pickup request if one exists,
+            # otherwise open a new one. (Was: always created a new trip.)
+            trip = self.env['delivery.trip'].search([
+                ('carrier_company_id', '=', self.carrier_company_id.id),
+                ('state', 'in', ('draft', 'assigned', 'in_progress')),
+            ], order='date_trip desc, id desc', limit=1)
+            if not trip:
+                trip = self.env['delivery.trip'].create({
+                    'carrier_company_id': self.carrier_company_id.id,
+                    'notes': self.note or '',
+                })
+            elif self.note:
+                trip.message_post(body='🚚 %s' % self.note)
         for order in self.order_ids:
             vals = {
                 'delivery_carrier_company_id': self.carrier_company_id.id,

@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_uellow_bundle_user,uellow.bundle user,model_uellow_bundle,base.group_user,1,0,0,0
+access_uellow_bundle_admin,uellow.bundle admin,model_uellow_bundle,sales_team.group_sale_manager,1,1,1,1
+access_uellow_bundle_line_user,uellow.bundle.line user,model_uellow_bundle_line,base.group_user,1,0,0,0
+access_uellow_bundle_line_admin,uellow.bundle.line admin,model_uellow_bundle_line,sales_team.group_sale_manager,1,1,1,1

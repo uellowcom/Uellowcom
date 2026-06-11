@@ -394,3 +394,108 @@ class MobileFitAPI(http.Controller):
             })
         except Exception as e:
             return fail('FIT_ERROR', str(e), 500)
+
+    @http.route('/api/mobile/v2/fit/check', type='http', auth='public',
+                methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def check(self, **kw):
+        """v2.1.77 — rich per-area fit for the in-app body figure.
+        Returns: profile (gender/body_type), and when a product is given,
+        per-area fit (chest/waist/shoulder/hip/length/sleeve/inseam →
+        tight | comfortable | loose), overall %, recommended size, and the
+        full size ladder. Drives the painted body figure + bars + chips."""
+        p = get_payload()
+        partner = current_partner()
+        prof = _get_or_create_profile(partner)
+        prof_d = _to_dict(prof)
+        complete = bool(prof and getattr(prof, 'profile_complete', False))
+        base = {
+            'has_profile': complete,
+            'gender': prof_d.get('gender') or 'male',
+            'body_type': prof_d.get('body_type') or 'regular',
+            'preferred_fit': prof_d.get('preferred_fit') or 'regular',
+            'completion_pct': prof_d.get('completion_pct') or 0,
+            'profile': prof_d,
+        }
+        try:
+            product_id = int(p.get('product_id') or 0)
+        except (TypeError, ValueError):
+            product_id = 0
+        if not product_id or not complete:
+            return ok({**base, 'state':
+                       'ready' if complete else 'no_profile'})
+
+        try:
+            from odoo.addons.uellow_smart_fit.controllers.fit_controller import \
+                SmartFitController
+            ctrl = SmartFitController()
+            product = request.env['product.template'].sudo().browse(product_id)
+            if not product.exists():
+                return fail('PRODUCT_NOT_FOUND', 'No such product', 404)
+            cat = ctrl._detect_category(product)
+            sizes = ctrl._get_product_sizes(product)
+            profile_data = _to_dict(prof)
+            # _analyze_fit returns a ranked LIST of size dicts (size, score,
+            # details{area:{status,diff}}, recommended, fit_label, fit_color).
+            res = ctrl._analyze_fit(profile_data, sizes, cat) or []
+            results = res if isinstance(res, list) else (res.get('results') or [])
+            rec = next((r for r in results if r.get('recommended')),
+                       results[0] if results else {})
+            recommended = rec.get('size')
+            details = rec.get('details') or {}
+            # map raw status (perfect/ok/tight/loose/check/close/far) → buckets
+            def bucket(st):
+                st = (st or '').lower()
+                if st in ('tight', 'small', 'too_small'): return 'tight'
+                if st in ('loose', 'large', 'too_large'): return 'loose'
+                if st in ('perfect', 'ok', 'comfortable', 'close'): return 'comfortable'
+                return 'unknown'
+            # per-area % for the figure bars (details carry no pct, derive it)
+            def area_pct(info):
+                if info.get('pct'):
+                    return int(info['pct'])
+                b = bucket(info.get('status'))
+                return {'comfortable': 90, 'tight': 50, 'loose': 50}.get(b, 0)
+            AR_LABELS = {
+                'chest': 'الصدر', 'waist': 'الخصر', 'hip': 'الورك',
+                'shoulder': 'الكتف', 'length': 'الطول', 'sleeve': 'الكم',
+                'inseam': 'الساق', 'thigh': 'الفخذ', 'foot_length': 'القدم',
+            }
+            EN_LABELS = {
+                'chest': 'Chest', 'waist': 'Waist', 'hip': 'Hip',
+                'shoulder': 'Shoulder', 'length': 'Length', 'sleeve': 'Sleeve',
+                'inseam': 'Inseam', 'thigh': 'Thigh', 'foot_length': 'Foot',
+            }
+            areas = []
+            for key, info in details.items():
+                if not isinstance(info, dict):
+                    continue
+                areas.append({
+                    'key': key,
+                    'label': {'en': EN_LABELS.get(key, key.title()),
+                              'ar': AR_LABELS.get(key, key)},
+                    'fit': bucket(info.get('status')),
+                    'diff_cm': round(float(info.get('diff') or 0), 1),
+                    'pct': area_pct(info),
+                })
+            ladder = [{
+                'size': r.get('size'),
+                'pct': int(r.get('score') or 0),
+                'fit_label': r.get('fit_label') or '',
+                'fit_color': r.get('fit_color') or 'yellow',
+                'recommended': bool(r.get('recommended')),
+            } for r in results]
+            return ok({
+                **base,
+                'state': 'ready',
+                'category': cat,
+                'product': {'id': product.id,
+                            'name': product.name or ''},
+                'recommended_size': recommended,
+                'overall_pct': int(rec.get('score') or 0),
+                'areas': areas,
+                'sizes': ladder,
+            })
+        except Exception as e:
+            return fail('FIT_ERROR', str(e), 500)

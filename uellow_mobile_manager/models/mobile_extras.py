@@ -97,6 +97,10 @@ class MobileSearchAnalytic(models.Model):
     results_count = fields.Integer(string='Results Found', default=0)
     session_id = fields.Many2one('mobile.session', string='Session', ondelete='set null')
     platform = fields.Selection([('android', 'Android'), ('ios', 'iOS')], string='Platform')
+    # v2.2.40 — interface language the search was typed in ('ar'/'en'); trending,
+    # popular and recent feeds are filtered by it so Arabic terms only surface on
+    # the Arabic UI and English terms only on the English UI.
+    lang = fields.Char(string='Search Language', index=True)
     clicked_product_id = fields.Many2one('product.template', string='Clicked Product')
     led_to_order = fields.Boolean(string='Led to Order', default=False)
     website_id = fields.Many2one('website', string='Website',

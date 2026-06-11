@@ -29,8 +29,10 @@ class DriverCashAPI(http.Controller):
         # OR the remittance is still in draft.
         Rem = request.env['delivery.cash.remittance'].sudo()
         used_order_ids = set()
-        for r in Rem.search([('state', 'in', ('submitted', 'approved', 'settled'))]):
+        # Any non-draft remittance already claims its orders.
+        for r in Rem.search([('state', 'in', ('pending', 'partial', 'remitted'))]):
             used_order_ids.update(r.order_ids.ids)
+            used_order_ids.update(r.line_ids.mapped('order_id').ids)
         out = []
         total = 0.0
         for l in lines:
@@ -82,11 +84,19 @@ class DriverCashAPI(http.Controller):
         Rem = request.env['delivery.cash.remittance'].sudo()
         rem = Rem.create({
             'carrier_company_id': driver.carrier_company_id.id,
+            'settlement_mode': 'per_order',
             'order_ids':  [(6, 0, orders.ids)],
-            'state':      'submitted',
+            # 'pending' = awaiting Uellow approval (model vocabulary; the old
+            # 'submitted' value is not a valid state and raised a ValueError).
+            'state':      'pending',
+            'line_ids':   [(0, 0, {
+                'order_id': o.id,
+                'amount': o.amount_total
+                          if getattr(o, 'payment_method_type', '') == 'cash' else 0.0,
+            }) for o in orders],
         })
-        if 'carrier_reference' in rem._fields and carrier_ref:
-            rem.write({'carrier_reference': carrier_ref})
+        if 'carrier_ref' in rem._fields and carrier_ref:
+            rem.write({'carrier_ref': carrier_ref})
         if 'submitted_by_driver_id' in rem._fields:
             rem.write({'submitted_by_driver_id': driver.id})
         rem._compute_totals() if hasattr(rem, '_compute_totals') else None
@@ -115,9 +125,11 @@ class DriverCashAPI(http.Controller):
             'name':   r.name,
             'state':  r.state,
             'state_label': {
-                'submitted': {'en':'Submitted','ar':'مرسلة'},
-                'approved':  {'en':'Approved', 'ar':'موافق عليها'},
-                'settled':   {'en':'Settled',  'ar':'مسوّاة'},
+                'draft':    {'en':'Draft',            'ar':'مسودة'},
+                'pending':  {'en':'Submitted',         'ar':'مرسلة — بانتظار الاعتماد'},
+                'partial':  {'en':'Partially settled', 'ar':'تسوية جزئية'},
+                'remitted': {'en':'Settled',           'ar':'مسوّاة'},
+                'rejected': {'en':'Rejected',          'ar':'مرفوضة'},
             }.get(r.state, {'en': r.state, 'ar': r.state}),
             'order_count': len(r.order_ids),
             'total':  fmt_price(r.total_amount or 0),

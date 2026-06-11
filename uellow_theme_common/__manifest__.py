@@ -53,6 +53,7 @@
         'views/snippets/s_mega_menu.xml',
 
         # Uellow additions
+        'views/backend/uellow_theme_settings.xml',
         'views/backend/styling_menu.xml',
     ],
     'assets': {

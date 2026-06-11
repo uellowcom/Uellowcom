@@ -374,6 +374,39 @@ class AiConfig(models.TransientModel):
         string='Realtime max call duration (sec)', default=300,
         help='Hard cap per call. After this the WebSocket is closed.')
 
+    # ── App landing page (/app) ───────────────────────────
+    ai_app_landing_enabled = fields.Boolean(string='Enable /app page', default=True)
+    ai_app_auto_redirect = fields.Boolean(
+        string='Auto-redirect by device', default=True,
+        help='Mobile visitors are sent straight to their store; desktop sees the page.')
+    ai_app_appstore_enabled = fields.Boolean(string='Show App Store', default=True)
+    ai_app_play_enabled = fields.Boolean(string='Show Google Play', default=True)
+    ai_app_huawei_enabled = fields.Boolean(string='Show AppGallery (Huawei)', default=True)
+    ai_app_url_appstore = fields.Char(
+        string='App Store URL', default='https://apps.apple.com/app/id6769010765')
+    ai_app_url_play = fields.Char(
+        string='Google Play URL',
+        default='https://play.google.com/store/apps/details?id=com.uellow.app')
+    ai_app_url_huawei = fields.Char(
+        string='AppGallery / Huawei URL',
+        default='https://github.com/uellowcom/uellow-app/releases/download/v2.2.39/uellow-2.2.39-arm64-v8a.apk')
+    ai_app_icon_url = fields.Char(
+        string='App icon URL',
+        default='https://www.uellow.com/uellow_smart_connector/static/mockup/uellow-ios-icon-1024.png')
+    ai_app_screenshot_url = fields.Char(
+        string='Phone mockup screenshot URL',
+        default='https://www.uellow.com/uellow_smart_connector/static/mockup/appstore/iphone_4.png')
+    # Deep link: open the installed app first, fall back to the store
+    ai_app_open_in_app = fields.Boolean(
+        string='Open app if installed (deep link)', default=True,
+        help='Mobile visitors who already have the app open it directly; '
+             'others fall back to the store.')
+    ai_app_deeplink = fields.Char(
+        string='App deep link', default='uellow://home',
+        help='Custom-scheme URL that opens the app (e.g. uellow://home).')
+    ai_app_android_package = fields.Char(
+        string='Android package', default='com.uellow.app')
+
     # ── Helpers ───────────────────────────────────────────
     @api.model
     def _get_param(self, key, default=''):
@@ -450,6 +483,21 @@ class AiConfig(models.TransientModel):
             'ai_tryon_feat_background_swap':  ('tryon_feat_background_swap',  False),
             'ai_tryon_feat_outfit_composer':  ('tryon_feat_outfit_composer',  False),
             'ai_tryon_feat_compare_models':   ('tryon_feat_compare_models',   False),
+            # ── Voice stack ───────────────────────────────────────────────
+            # ── App landing ──
+            'ai_app_landing_enabled':  ('app_landing_enabled',  True),
+            'ai_app_auto_redirect':    ('app_auto_redirect',    True),
+            'ai_app_appstore_enabled': ('app_appstore_enabled', True),
+            'ai_app_play_enabled':     ('app_play_enabled',     True),
+            'ai_app_huawei_enabled':   ('app_huawei_enabled',   True),
+            'ai_app_url_appstore':     ('app_url_appstore',     'https://apps.apple.com/app/id6769010765'),
+            'ai_app_url_play':         ('app_url_play',         'https://play.google.com/store/apps/details?id=com.uellow.app'),
+            'ai_app_url_huawei':       ('app_url_huawei',       'https://github.com/uellowcom/uellow-app/releases/download/v2.2.39/uellow-2.2.39-arm64-v8a.apk'),
+            'ai_app_icon_url':         ('app_icon_url',         'https://www.uellow.com/uellow_smart_connector/static/mockup/uellow-ios-icon-1024.png'),
+            'ai_app_screenshot_url':   ('app_screenshot_url',   'https://www.uellow.com/uellow_smart_connector/static/mockup/appstore/iphone_4.png'),
+            'ai_app_open_in_app':      ('app_open_in_app',      True),
+            'ai_app_deeplink':         ('app_deeplink',         'uellow://home'),
+            'ai_app_android_package':  ('app_android_package',  'com.uellow.app'),
             # ── Voice stack ───────────────────────────────────────────────
             'ai_voice_enabled':                ('voice_enabled',                False),
             'ai_voice_phase_a_enabled':        ('voice_phase_a_enabled',        True),
@@ -588,6 +636,20 @@ class AiConfig(models.TransientModel):
         self._set_param('tryon_feat_background_swap',  str(self.ai_tryon_feat_background_swap))
         self._set_param('tryon_feat_outfit_composer',  str(self.ai_tryon_feat_outfit_composer))
         self._set_param('tryon_feat_compare_models',   str(self.ai_tryon_feat_compare_models))
+        # App landing
+        self._set_param('app_landing_enabled',  str(self.ai_app_landing_enabled))
+        self._set_param('app_auto_redirect',    str(self.ai_app_auto_redirect))
+        self._set_param('app_appstore_enabled', str(self.ai_app_appstore_enabled))
+        self._set_param('app_play_enabled',     str(self.ai_app_play_enabled))
+        self._set_param('app_huawei_enabled',   str(self.ai_app_huawei_enabled))
+        self._set_param('app_url_appstore',     self.ai_app_url_appstore or '')
+        self._set_param('app_url_play',         self.ai_app_url_play or '')
+        self._set_param('app_url_huawei',       self.ai_app_url_huawei or '')
+        self._set_param('app_icon_url',         self.ai_app_icon_url or '')
+        self._set_param('app_screenshot_url',   self.ai_app_screenshot_url or '')
+        self._set_param('app_open_in_app',       str(self.ai_app_open_in_app))
+        self._set_param('app_deeplink',          self.ai_app_deeplink or 'uellow://home')
+        self._set_param('app_android_package',   self.ai_app_android_package or 'com.uellow.app')
         # Voice stack
         self._set_param('voice_enabled',                str(self.ai_voice_enabled))
         self._set_param('voice_phase_a_enabled',        str(self.ai_voice_phase_a_enabled))

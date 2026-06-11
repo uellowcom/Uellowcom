@@ -22,6 +22,10 @@ class SaleOrder(models.Model):
     # Shipping rate captured at checkout (the draft order has no delivery line
     # until payment succeeds; the webhook uses this to add it on confirm).
     upayments_ship_rate = fields.Float('Pending shipping rate', readonly=True, copy=False)
+    # v2.1.96 — cash-first pricing: the zone COD surcharge included inside
+    # ship_rate. Online payers get THIS amount back in their wallet on capture.
+    upayments_cod_surcharge = fields.Float(
+        'COD surcharge (refund if online)', readonly=True, copy=False)
 
     def _upayments_config(self):
         ICP = self.env['ir.config_parameter'].sudo()
@@ -136,6 +140,24 @@ class SaleOrder(models.Model):
                 % (track_id or '-', payment_id or '-'))
         except Exception:
             pass
+        # v2.1.96 — cash-first pricing: the delivery amount charged included
+        # the zone COD surcharge; an ONLINE payer doesn't owe it — refund it
+        # straight into the wallet (idempotent).
+        try:
+            sur = float(self.upayments_cod_surcharge or 0.0)
+            Tx = self.env.get('uellow.customer.wallet.tx')
+            ref = 'CODSUR-REFUND-%s' % self.id
+            if (sur > 0 and Tx is not None and self.partner_id
+                    and not Tx.sudo().search([('reference', '=', ref)], limit=1)):
+                Tx.sudo().credit(
+                    self.partner_id, sur, tx_type='refund',
+                    description='Cash-fee refund (paid online) — %s / '
+                                'استرداد رسوم الدفع نقداً' % self.name,
+                    reference=ref, order_id=self.id)
+                self.sudo().message_post(body=_(
+                    'COD surcharge %s refunded to wallet (paid online).') % sur)
+        except Exception:
+            _logger.exception('COD-surcharge refund failed for order %s', self.id)
         # v2.1.21 — online-payment cashback: credit the customer's wallet
         # on capture (idempotent — webhooks can fire more than once).
         try:

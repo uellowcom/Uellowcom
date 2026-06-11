@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Show the source Website on the Sales ORDERS list (so app websites like
+         "Kuwait Mobile App" are visible) -->
+    <record id="view_order_tree_uellow_website" model="ir.ui.view">
+        <field name="name">sale.order.list.uellow.website</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="website_id" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Same on the QUOTATIONS list -->
+    <record id="view_quotation_tree_uellow_website" model="ir.ui.view">
+        <field name="name">sale.quotation.list.uellow.website</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_quotation_tree"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="website_id" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Add a Website filter + Group By to the Sales search -->
+    <record id="view_sales_order_filter_uellow_website" model="ir.ui.view">
+        <field name="name">sale.order.search.uellow.website</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="website_id"/>
+                <group expand="0" string="Website">
+                    <filter name="group_by_website_uellow" string="Website"
+                            context="{'group_by': 'website_id'}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

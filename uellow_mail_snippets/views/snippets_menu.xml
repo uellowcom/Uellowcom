@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Register the Uellow Products block in the email designer side panel,
+         in the "Marketing Content" group next to the stock Items block. -->
+    <template id="email_designer_snippets_uellow"
+              inherit_id="mass_mailing.email_designer_snippets">
+        <xpath expr="//snippets[@id='email_designer_marketing_elements']" position="inside">
+            <t t-snippet="uellow_mail_snippets.s_uellow_products"
+               string="Uellow Products"
+               t-thumbnail="/mass_mailing/static/src/img/snippets_thumbs/s_product_list.svg"/>
+        </xpath>
+    </template>
+</odoo>

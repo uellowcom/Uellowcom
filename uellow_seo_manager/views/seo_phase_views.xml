@@ -32,8 +32,116 @@
     <field name="name">Sync Search Console now</field>
     <field name="model_id" ref="model_uellow_seo_gsc_row"/>
     <field name="state">code</field>
-    <field name="code">n = env['uellow.seo.gsc.row'].action_sync_recent(days=7)
-action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'GSC sync','message':'Imported %s rows'%n,'type':'success','sticky':False}}</field>
+    <field name="code">cfg = env['uellow.seo.config'].sudo().get_config()
+if not (cfg.gsc_service_account_json and cfg.gsc_property_url):
+    action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'Search Console not connected yet','message':'Paste the Google service-account JSON + property URL in Settings → Search Console first, then try again.','type':'warning','sticky':True}}
+else:
+    n = env['uellow.seo.gsc.row'].action_sync_recent(days=7)
+    action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'GSC sync','message':'Imported %s rows'%n,'type':'success','sticky':False}}</field>
+  </record>
+
+  <!-- ═══ Phase 8 — Indexing coverage (read errors + auto-fix) ═══ -->
+  <record id="view_uellow_seo_indexing_list" model="ir.ui.view">
+    <field name="name">uellow.seo.indexing.issue.list</field>
+    <field name="model">uellow.seo.indexing.issue</field>
+    <field name="arch" type="xml">
+      <list string="Indexing coverage"
+            decoration-danger="severity == '3'"
+            decoration-warning="severity == '2'"
+            decoration-success="severity == '0'">
+        <field name="severity" widget="badge"/>
+        <field name="url"/>
+        <field name="verdict"/>
+        <field name="coverage_state"/>
+        <field name="issue_text"/>
+        <field name="suggested_fix"/>
+        <field name="auto_fixed" widget="boolean_toggle"/>
+        <field name="last_checked"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_uellow_seo_indexing_form" model="ir.ui.view">
+    <field name="name">uellow.seo.indexing.issue.form</field>
+    <field name="model">uellow.seo.indexing.issue</field>
+    <field name="arch" type="xml">
+      <form string="Indexing coverage">
+        <sheet>
+          <group>
+            <group>
+              <field name="url" widget="url"/>
+              <field name="verdict"/>
+              <field name="coverage_state"/>
+              <field name="severity"/>
+              <field name="issue_text"/>
+              <field name="suggested_fix"/>
+            </group>
+            <group>
+              <field name="indexing_state"/>
+              <field name="robots_state"/>
+              <field name="fetch_state"/>
+              <field name="google_canonical"/>
+              <field name="user_canonical"/>
+              <field name="last_crawl"/>
+              <field name="auto_fixed"/>
+              <field name="fix_note"/>
+              <field name="last_checked"/>
+            </group>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_uellow_seo_indexing" model="ir.actions.act_window">
+    <field name="name">Indexing coverage</field>
+    <field name="res_model">uellow.seo.indexing.issue</field>
+    <field name="view_mode">list,form</field>
+    <field name="context">{'search_default_problems': 1}</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">No indexing issues yet</p>
+      <p>Run "Inspect indexing now" to pull coverage from Google Search Console.</p>
+    </field>
+  </record>
+
+  <record id="view_uellow_seo_indexing_search" model="ir.ui.view">
+    <field name="name">uellow.seo.indexing.issue.search</field>
+    <field name="model">uellow.seo.indexing.issue</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="url"/>
+        <filter name="problems" string="Problems only"
+                domain="[('severity','in',('2','3'))]"/>
+        <filter name="not_fixed" string="Not auto-fixed"
+                domain="[('auto_fixed','=',False)]"/>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_uellow_seo_indexing_inspect" model="ir.actions.server">
+    <field name="name">Inspect indexing now</field>
+    <field name="model_id" ref="model_uellow_seo_indexing_issue"/>
+    <field name="state">code</field>
+    <field name="code">cfg = env['uellow.seo.config'].sudo().get_config()
+if not (cfg.gsc_service_account_json and cfg.gsc_property_url):
+    action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'Search Console not connected yet','message':'Paste the Google service-account JSON + property URL in Settings → Search Console first, then run this.','type':'warning','sticky':True}}
+else:
+    n = env['uellow.seo.indexing.issue'].action_inspect_urls(limit=120)
+    action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'Indexing','message':'Found %s issue(s) — check the list'%n,'type':'success','sticky':False}}</field>
+  </record>
+
+  <record id="action_uellow_seo_indexing_autofix" model="ir.actions.server">
+    <field name="name">Auto-fix + re-submit sitemap</field>
+    <field name="model_id" ref="model_uellow_seo_indexing_issue"/>
+    <field name="state">code</field>
+    <field name="code">cfg = env['uellow.seo.config'].sudo().get_config()
+if not (cfg.gsc_service_account_json and cfg.gsc_property_url):
+    action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'Search Console not connected yet','message':'Connect Google Search Console in Settings first.','type':'warning','sticky':True}}
+else:
+    probs = env['uellow.seo.indexing.issue'].search([('severity','in',('2','3')),('auto_fixed','=',False)])
+    n = probs.action_autofix() if probs else 0
+    env['uellow.seo.indexing.issue'].action_resubmit_sitemap()
+    action = {'type':'ir.actions.client','tag':'display_notification','params':{'title':'Indexing auto-fix','message':'Fixed %s + re-submitted sitemap'%n,'type':'success','sticky':False}}</field>
   </record>
 
   <!-- ═══ Link Issues ═══════════════════════════════════════════ -->

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ══════════ Glossary ══════════ -->
+  <record id="view_glossary_list" model="ir.ui.view">
+    <field name="name">uellow.sc.glossary.list</field>
+    <field name="model">uellow.sc.glossary</field>
+    <field name="arch" type="xml">
+      <list string="Translation Glossary" editable="bottom">
+        <field name="term_en"/>
+        <field name="term_ar"/>
+        <field name="note" optional="show"/>
+        <field name="active" widget="boolean_toggle" optional="show"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_glossary_search" model="ir.ui.view">
+    <field name="name">uellow.sc.glossary.search</field>
+    <field name="model">uellow.sc.glossary</field>
+    <field name="arch" type="xml">
+      <search string="Search Glossary">
+        <field name="term_en"/>
+        <field name="term_ar"/>
+        <filter string="Active" name="active" domain="[('active','=',True)]"/>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_glossary" model="ir.actions.act_window">
+    <field name="name">Translation Glossary</field>
+    <field name="res_model">uellow.sc.glossary</field>
+    <field name="view_mode">list</field>
+    <field name="search_view_id" ref="view_glossary_search"/>
+    <field name="context">{'search_default_active': 1}</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">No glossary terms yet · لا توجد مصطلحات بعد</p>
+      <p>Add EN→AR terms so every translation uses the same wording.<br/>
+         أضف مصطلحات EN→AR لتوحيد الترجمة عبر كل المنتجات.</p>
+    </field>
+  </record>
+
+  <!-- ══════════ Catalog Translation Job ══════════ -->
+  <record id="view_translate_job_form" model="ir.ui.view">
+    <field name="name">uellow.sc.translate.job.form</field>
+    <field name="model">uellow.sc.translate.job</field>
+    <field name="arch" type="xml">
+      <form string="Catalog Translation">
+        <header>
+          <button name="action_scan" string="Scan Catalog" type="object"
+                  class="oe_highlight" invisible="state not in ('draft','done','error')"/>
+          <button name="action_view_candidates" string="عرض المنتجات · Show Products"
+                  type="object" icon="fa-list"/>
+          <button name="action_run" string="Translate Batch ▶" type="object"
+                  class="oe_highlight" invisible="state == 'done'"/>
+          <button name="action_translate_attributes" string="ترجمة المتغيّرات · Translate Attributes"
+                  type="object" icon="fa-tags"/>
+          <button name="action_reset" string="Reset" type="object"
+                  invisible="state == 'draft'" confirm="Reset counters and start over?"/>
+          <field name="state" widget="statusbar" statusbar_visible="draft,running,done"/>
+        </header>
+        <sheet>
+          <div class="oe_title">
+            <h1><field name="name"/></h1>
+          </div>
+          <group>
+            <group string="Settings">
+              <field name="scope"/>
+              <field name="translate_description"/>
+              <field name="translate_seo"/>
+              <field name="batch_size"/>
+              <field name="auto_continue"/>
+            </group>
+            <group string="Progress">
+              <field name="coverage_pct" widget="percentpie"/>
+              <field name="total_count"/>
+              <field name="done_count"/>
+              <field name="failed_count"/>
+              <field name="progress_pct" widget="progressbar"/>
+              <field name="last_run"/>
+            </group>
+          </group>
+          <group string="Log">
+            <field name="log_text" nolabel="1" readonly="1" widget="text"/>
+          </group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="view_translate_job_list" model="ir.ui.view">
+    <field name="name">uellow.sc.translate.job.list</field>
+    <field name="model">uellow.sc.translate.job</field>
+    <field name="arch" type="xml">
+      <list string="Catalog Translation"
+            decoration-success="state=='done'"
+            decoration-info="state=='running'"
+            decoration-danger="state=='error'">
+        <field name="name"/>
+        <field name="scope"/>
+        <field name="total_count" string="Candidates"/>
+        <field name="done_count" string="Translated"/>
+        <field name="failed_count" string="Failed"/>
+        <field name="progress_pct" widget="progressbar"/>
+        <field name="state" widget="badge"
+               decoration-success="state=='done'"
+               decoration-info="state=='running'"
+               decoration-danger="state=='error'"/>
+        <field name="last_run"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="action_translate_job" model="ir.actions.act_window">
+    <field name="name">Catalog Translation</field>
+    <field name="res_model">uellow.sc.translate.job</field>
+    <field name="view_mode">list,form</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">Translate your catalog · ترجمة الكتالوج</p>
+      <p>Scan for products missing Arabic, then translate them in safe batches.<br/>
+         افحص المنتجات التي تنقصها الترجمة العربية ثم ترجمها على دفعات آمنة.</p>
+    </field>
+  </record>
+
+  <!-- ══════════ Cron ══════════ -->
+  <record id="cron_translate_catalog" model="ir.cron" forcecreate="True">
+    <field name="name">Uellow SC: continue catalog translation</field>
+    <field name="model_id" ref="model_uellow_sc_translate_job"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_translate_catalog()</field>
+    <field name="interval_number">10</field>
+    <field name="interval_type">minutes</field>
+    <field name="active" eval="True"/>
+  </record>
+
+  <!-- ══════════ Menus ══════════ -->
+  <menuitem id="menu_sc_translate" name="Catalog Translation"
+            parent="menu_sc_root" action="action_translate_job" sequence="15"/>
+  <menuitem id="menu_sc_glossary" name="Glossary"
+            parent="menu_sc_settings" action="action_glossary" sequence="20"/>
+
+</odoo>

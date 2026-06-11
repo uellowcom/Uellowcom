@@ -8,7 +8,8 @@
     <field name="arch" type="xml">
       <list string="Carrier Pricing Rules" editable="bottom">
         <field name="carrier_company_id"/>
-        <field name="zone_name"/>
+        <field name="zone_id" string="Zone" options="{'no_create': True}"/>
+        <field name="zone_name" optional="hide"/>
         <field name="governorate"/>
         <field name="delivery_fee"          string="Del. Fee KD"/>
         <field name="cash_commission_type"  string="Comm. Type"/>
@@ -31,6 +32,7 @@
           <group>
             <group string="Zone">
               <field name="carrier_company_id"/>
+              <field name="zone_id" options="{'no_create': True}"/>
               <field name="zone_name"/>
               <field name="governorate"/>
             </group>
@@ -66,7 +68,8 @@
     <field name="model">carrier.pricing.rule</field>
     <field name="arch" type="xml">
       <list string="Pricing Rules" editable="bottom">
-        <field name="zone_name"/>
+        <field name="zone_id" string="Zone" options="{'no_create': True}"/>
+        <field name="zone_name" optional="hide"/>
         <field name="governorate"/>
         <field name="delivery_fee"          string="Del. Fee"/>
         <field name="cash_commission_type"  string="Comm. Type"/>

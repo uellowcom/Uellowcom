@@ -41,14 +41,14 @@
               sequence="10"
               action="website.website_preview"/>
 
-    <!-- ── Theme Settings — opens the standard Website Settings page,
-            which now embeds the "Uellow Theme" block (logo, colours,
-            preheader, search). All controls are regular Odoo settings. -->
+    <!-- ── v2.2.29 — focused "Uellow Theme" page (logo, header colours,
+            pre-header, search, deals, app links, PWA) per website, instead
+            of dumping the user in the full Website Settings page. -->
     <menuitem id="menu_styling_theme_settings"
-              name="Theme Settings"
+              name="🎨 Uellow Theme"
               parent="menu_styling_root"
               sequence="15"
-              action="website.action_website_configuration"/>
+              action="action_uellow_theme_settings"/>
 
     <!-- ── Sub-roots ──────────────────────────────────────────────── -->
     <menuitem id="menu_styling_branding"

@@ -208,6 +208,19 @@ class MobilePage(models.Model):
         from .block_resolver import resolve_block
         blocks = self._safe_json(self.blocks_json) or []
         short_lang = (lang or 'en').split('_')[0]
+        # v2.2.26 — Brain Phase 3: one shared diversity context per page so
+        # the same product never repeats across blocks. Guarded: only when
+        # the engine + diversity service are on.
+        ctx = None
+        try:
+            Cfg = self.env.get('uellow.brain.config')
+            if Cfg is not None:
+                cfg = Cfg.get_config()
+                if cfg.enabled and cfg.div_no_repeat:
+                    ctx = {'cfg': cfg, 'seen': set(),
+                           'brand_n': {}, 'cat_n': {}}
+        except Exception:
+            ctx = None
         out = []
         for b in blocks:
             if b.get('hidden'):
@@ -216,7 +229,7 @@ class MobilePage(models.Model):
             langs = cond.get('languages') or []
             if langs and lang and short_lang.upper() not in [l.upper() for l in langs]:
                 continue
-            out.append(resolve_block(self.env, b, short_lang))
+            out.append(resolve_block(self.env, b, short_lang, ctx=ctx))
         return out
 
     def _tr(self, lang, field_name):

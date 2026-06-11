@@ -27,6 +27,7 @@ _EXPLORE_IDS_CACHE = {}
 from ._common import (
     safe_endpoint, get_payload, ok, fail, current_partner,
     img_url, base_url, get_lang, fmt_price, paginate, bilingual, get_website,
+    brand_value_logo, is_brand_attribute,
 )
 
 _logger = logging.getLogger(__name__)
@@ -51,6 +52,8 @@ def serialize_product_card(product, lang='en_US'):
         'id': product.id,
         'name': bilingual(product, 'name'),
         'slug': product.website_url.rsplit('/', 1)[-1] if product.website_url else f'p-{product.id}',
+        # v2.2.33 — card grids use image_512 (256 looked soft/low-quality on
+        # 2x/3x phone screens). The product page still uses image_1024/1920.
         'image': img_url('product.template', product.id, 'image_512',
                          unique=product.write_date),
         'price': fmt_price(list_price, cur),
@@ -265,6 +268,17 @@ def _product_badges(product):
     # module. `_is_free_shipping` checks product → category → tag in order.
     if hasattr(product, '_is_free_shipping') and product._is_free_shipping():
         badges.append('free_shipping')
+    # v2.2.20 — bundle badge so cards can flag "Bundle / باقة".
+    if getattr(product, 'is_bundle', False):
+        badges.append('bundle')
+        # v2.2.21 — unavailable badge when a component is out of stock and
+        # the bundle isn't set to keep selling.
+        try:
+            b = product.uellow_bundle_id
+            if b and b.sudo()._listing_state() == 'badge':
+                badges.append('bundle_unavailable')
+        except Exception:
+            pass
     return badges
 
 
@@ -323,12 +337,25 @@ def serialize_product_full(product, lang='en_US'):
             'values': values,
         })
 
-    # Gallery
-    images = [img_url('product.template', product.id, 'image_1024',
+    # Gallery — v2.2.26: full-res image_1920 on the product page (the detail
+    # gallery was image_1024 and looked soft on big phones / zoom).
+    images = [img_url('product.template', product.id, 'image_1920',
                       unique=product.write_date)]
     for img in product.product_template_image_ids[:20]:
-        images.append(img_url('product.image', img.id, 'image_1024',
+        images.append(img_url('product.image', img.id, 'image_1920',
                               unique=img.write_date))
+    # v2.2.21 — a bundle (merge mode) aggregates every component's photos +
+    # videos so the gallery shows everything inside.
+    _bundle_gallery = None
+    try:
+        if getattr(product, 'is_bundle', False) and product.uellow_bundle_id \
+                and product.uellow_bundle_id.gallery_mode == 'merge':
+            _bundle_gallery = product.uellow_bundle_id.sudo()._gallery(lang)
+            for u in _bundle_gallery.get('images', []):
+                if u not in images:
+                    images.append(u)
+    except Exception:
+        _bundle_gallery = None
 
     # Categories + brand
     public_categs = [{
@@ -436,6 +463,12 @@ def serialize_product_full(product, lang='en_US'):
 
     # Product videos — from uellow_tiktok_video product.video records.
     videos = _serialize_product_videos(product)
+    # v2.2.21 — append the bundle's component videos (merge mode).
+    if _bundle_gallery and _bundle_gallery.get('videos'):
+        have = {v.get('id') for v in videos}
+        for v in _bundle_gallery['videos']:
+            if v.get('id') not in have:
+                videos.append(v)
     return {
         **card,
         'flash_sale': flash_sale,
@@ -469,7 +502,61 @@ def serialize_product_full(product, lang='en_US'):
             'en': 'Standard delivery 1-3 days',
             'ar': 'توصيل قياسي 1-3 أيام',
         },
+        # v2.2.20 — when this product IS a bundle, expose its components +
+        # savings so the product page lists everything inside.
+        'bundle': _bundle_detail(product, lang),
+        # v2.2.26 — Brain BNPL: installments nudge ONLY when the engine is
+        # on, the product clears the min price, and (if guard on) the
+        # margin absorbs the provider fee. None otherwise.
+        'installments': _bnpl_offer(product, lang),
     }
+
+
+def _bnpl_offer(product, lang='en_US'):
+    """Margin-aware installments offer dict, or None. Guarded."""
+    try:
+        Brain = request.env.get('uellow.brain.config')
+        if Brain is None or not Brain.sudo().is_on('bnpl_enabled'):
+            return None
+        cfg = Brain.sudo().get_config()
+        price = float(product.list_price or 0)
+        if price < (cfg.bnpl_min_price or 0) or price <= 0:
+            return None
+        fee = price * (cfg.bnpl_fee_pct or 0) / 100.0 + (cfg.bnpl_fee_fixed or 0)
+        if cfg.bnpl_respect_guard and cfg.bnpl_fee_payer == 'merchant':
+            if not cfg.margin_ok(product, price, extra_fee=fee):
+                return None
+        n = max(int(cfg.bnpl_installments or 4), 2)
+        per = round(price / n, 3)
+        # v2.2.27 — Uellow's installments partner is Taly (Deema soon).
+        prov = cfg.bnpl_provider or 'taly'
+        prov_label = {'taly': 'Taly', 'deema': 'Deema'}.get(prov, 'Installments')
+        return {
+            'available': True,
+            'provider': prov,
+            'provider_label': prov_label,
+            'count': n,
+            'per_installment': per,
+            'label': {
+                'en': 'Split in %d interest-free payments of %.3f' % (n, per),
+                'ar': 'قسّمها على %d دفعات بدون فوائد، %.3f لكل دفعة' % (n, per),
+            },
+        }
+    except Exception:
+        return None
+
+
+def _bundle_detail(product, lang='en_US'):
+    """Full bundle payload for a bundle product's detail page, else None."""
+    try:
+        if not getattr(product, 'is_bundle', False):
+            return None
+        b = product.uellow_bundle_id
+        if not b:
+            return None
+        return b.sudo().to_mobile_dict(lang, with_components=True)
+    except Exception:
+        return None
 
 
 def _serialize_product_videos(product):
@@ -537,7 +624,15 @@ def _domain_published_for_app(include_oos=False):
     base = [
         ('is_published', '=', True),
         ('active', '=', True),
-        '|', ('website_id', '=', False), ('website_id', '=', website.id),
+        # visible on: truly website-agnostic (NO primary AND NO extras —
+        # v2.1.92 fix: an empty primary with extras set used to leak the
+        # product onto every site) OR the primary website OR any of the
+        # product's extra (multi-website) sites.
+        '|', '|',
+            '&', ('website_id', '=', False),
+                 ('uellow_extra_website_ids', '=', False),
+            ('website_id', '=', website.id),
+            ('uellow_extra_website_ids', 'in', website.id),
     ]
     if not include_oos:
         # Show storable items that have qty > 0 OR allow backorder,
@@ -573,8 +668,13 @@ class MobileProductsAPI(http.Controller):
         # Search query — search across name + description
         search = (p.get('search') or p.get('q') or '').strip()
         if search:
-            domain += ['|', ('name', 'ilike', search),
-                            ('description_sale', 'ilike', search)]
+            sors = [('name', 'ilike', search),
+                    ('description_sale', 'ilike', search)]
+            # v2.2.16 — digit-only query also matches ID / exact barcode.
+            if search.isdigit():
+                sors = [('id', '=', int(search)),
+                        ('barcode', '=', search)] + sors
+            domain += ['|'] * (len(sors) - 1) + sors
 
         # Brand filter
         if p.get('brand_id'):
@@ -644,6 +744,14 @@ class MobileProductsAPI(http.Controller):
                 or_parts.append([('free_shipping', '=', True)])
             if cat_dom:
                 or_parts.append(cat_dom)
+            # v2.2.20 — badge-safe conditional rules contribute too.
+            try:
+                Rule = request.env.get('uellow.freeship.rule')
+                if Rule is not None:
+                    for leaf in Rule.sudo().badge_domain_or():
+                        or_parts.append([leaf])
+            except Exception:
+                pass
             if tag_dom:
                 or_parts.append(tag_dom)
             if or_parts:
@@ -662,6 +770,11 @@ class MobileProductsAPI(http.Controller):
         except Exception:
             pass
 
+        # v2.1.92 — 'discount' feed (promo "mega" block "All" button):
+        # only products on sale, biggest markdown first.
+        if p.get('sort') == 'discount':
+            domain = domain + [('compare_list_price', '>', 0)]
+
         # Sort
         sort_map = {
             'newest':       'create_date desc',
@@ -672,15 +785,91 @@ class MobileProductsAPI(http.Controller):
             # v2.1.66 — 'popular' handled below (sales_count is a
             # non-stored compute and cannot be a search order).
             'popular':      'create_date desc',
+            'discount':     'compare_list_price desc',
             'top_rated':    'rating_avg desc' if 'rating_avg' in request.env['product.template']._fields else 'create_date desc',
         }
-        order = sort_map.get(p.get('sort', 'newest'), 'create_date desc')
+        # v2.2.25 — Uellow Brain: "best_match" sorts by the precomputed,
+        # indexed brain_score (cost/margin-driven). Guarded: only when the
+        # field exists AND the engine is enabled; else falls back safely.
+        req_sort = p.get('sort')
+        Brain = request.env.get('uellow.brain.config')
+        brain_on = False
+        try:
+            brain_on = (Brain is not None
+                        and 'brain_score' in request.env['product.template']._fields
+                        and Brain.sudo().is_on())
+        except Exception:
+            brain_on = False
+        if brain_on:
+            sort_map['best_match'] = 'brain_score desc, create_date desc'
+            # optional: make best_match the default when configured.
+            # v2.2.26 — A/B: when enabled, only a deterministic % of users
+            # get Best Match as default; the rest get Newest (to measure).
+            if not req_sort:
+                try:
+                    cfgb = Brain.sudo().get_config()
+                    if cfgb.default_sort_best_match:
+                        key = None
+                        try:
+                            pp = current_partner()
+                            key = pp.id if pp else (
+                                request.httprequest.headers.get('X-Device-Id')
+                                or request.httprequest.headers.get('X-Cart-Token'))
+                        except Exception:
+                            key = None
+                        req_sort = ('best_match'
+                                    if cfgb.ab_use_best_match(key) else 'newest')
+                except Exception:
+                    pass
+        order = sort_map.get(req_sort or p.get('sort', 'newest'),
+                             'create_date desc')
 
         Tmpl = request.env['product.template'].sudo()
         if p.get('sort') == 'popular':
             all_recs = Tmpl.browse(_top_selling_ids(domain, limit=1000))
         else:
             all_recs = Tmpl.search(domain, order=order)
+        # v2.2.25 — Brain Phase 2: personalized re-rank for Best Match.
+        # Light: re-orders only the top brain candidates by
+        # brain_score × affinity(taste). Members → profile row; guests →
+        # X-Taste header (no DB). Fully guarded.
+        if brain_on and (req_sort or p.get('sort')) == 'best_match':
+            try:
+                Taste = request.env.get('uellow.taste.profile')
+                prof = {}
+                if Taste is not None:
+                    cfg2 = Brain.sudo().get_config()
+                    mode = cfg2.personalization_mode
+                    if mode in ('members', 'opt_in', 'full'):
+                        partner = current_partner()
+                        if partner:
+                            prof = Taste.sudo().get_dict(partner.id)
+                    if not prof and mode == 'full':
+                        prof = Taste.sudo().parse_header(
+                            request.httprequest.headers.get('X-Taste'))
+                if prof:
+                    cand = all_recs[:300]
+                    ranked = sorted(
+                        cand,
+                        key=lambda r: -((r.brain_score or 0)
+                                        * Taste.sudo().affinity(prof, r)))
+                    rest = all_recs[300:]
+                    all_recs = Tmpl.browse([r.id for r in ranked]) | rest
+            except Exception:
+                pass
+        # v2.2.21 — minimum DISCOUNT % filter (discount_pct is a computed,
+        # non-stored value → post-filter in Python). Used by the
+        # filtered-link "min discount" control.
+        try:
+            min_disc = int(p.get('min_discount') or 0)
+        except Exception:
+            min_disc = 0
+        if min_disc > 0:
+            def _disc(r):
+                cmp = r.compare_list_price or 0
+                lp = r.list_price or 0
+                return int(round((1 - lp / cmp) * 100)) if cmp > lp > 0 else 0
+            all_recs = all_recs.filtered(lambda r: _disc(r) >= min_disc)
         items, meta = paginate(
             all_recs,
             page=p.get('page', 1),
@@ -725,6 +914,69 @@ class MobileProductsAPI(http.Controller):
             'products': items,
         }, meta)
 
+    # ─── Global filter spec (any non-category product page) ───────────
+    @http.route('/api/mobile/v2/products/filters', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def products_filters(self, **kw):
+        """v2.2.24 — price range + attribute facets for ANY product feed
+        that isn't a single category (newest / discounted / filtered-set
+        links…). Optional `category_id` narrows it; otherwise it spans the
+        published catalogue (sampled)."""
+        p = get_payload()
+        domain = _domain_published_for_app()
+        cat_id = p.get('category_id')
+        if cat_id:
+            try:
+                domain += [('public_categ_ids', 'child_of', int(cat_id))]
+            except Exception:
+                pass
+        if p.get('on_sale') in ('1', 'true', True):
+            domain += [('compare_list_price', '>', 0)]
+        Tmpl = request.env['product.template'].sudo()
+        recs = Tmpl.search(domain, order='create_date desc', limit=2000)
+        prices = [r.list_price for r in recs if r.list_price]
+        ICP = request.env['ir.config_parameter'].sudo()
+        hidden = {int(t) for t in
+                  (ICP.get_param('uellow_mobile.hidden_filter_attrs', '') or '')
+                  .split(',') if t.strip().isdigit()}
+        Line = request.env['product.template.attribute.line'].sudo()
+        lines = Line.search([('product_tmpl_id', 'in', recs.ids)])
+        buckets = {}
+        for line in lines:
+            attr = line.attribute_id
+            if attr.id in hidden:
+                continue
+            is_brand = is_brand_attribute(attr)
+            b = buckets.setdefault(attr.id, {
+                'id': attr.id, 'name': bilingual(attr, 'name'),
+                'display_type': attr.display_type or 'radio',
+                'is_brand': is_brand, 'values': {}})
+            for v in line.value_ids:
+                # v2.2.40 — brand chips show the real brand logo.
+                vimg = brand_value_logo(v) if is_brand else (
+                    img_url('product.attribute.value', v.id, 'image',
+                            unique=v.write_date) if v.image else None)
+                vb = b['values'].setdefault(v.id, {
+                    'id': v.id, 'name': bilingual(v, 'name'),
+                    'html_color': v.html_color or '',
+                    'image': vimg,
+                    'count': 0})
+                vb['count'] += 1
+        filters = []
+        for b in buckets.values():
+            b['values'] = sorted(b['values'].values(), key=lambda x: -x['count'])
+            filters.append(b)
+        filters.sort(key=lambda b: -sum(v['count'] for v in b['values']))
+        return ok({
+            'price': {
+                'min': round(min(prices), 3) if prices else 0.0,
+                'max': round(max(prices), 3) if prices else 0.0,
+                'currency': request.env.company.currency_id.symbol or 'KD',
+            },
+            'attributes': filters[:12],
+        })
+
     # ─── Explore (random infinite) ────────────────────────────────────
     @http.route('/api/mobile/v2/products/explore', type='http',
                 auth='public', methods=['GET', 'OPTIONS'], csrf=False)
@@ -753,6 +1005,19 @@ class MobileProductsAPI(http.Controller):
                 domain = domain + [('public_categ_ids', 'in', [int(cat_id)])]
             except Exception:
                 pass
+        # v2.2.08 — ?promotion_id= narrowing (explore-more on promotion
+        # landing pages keeps the campaign filter through load-more).
+        promo_id = p.get('promotion_id')
+        if promo_id:
+            try:
+                Line = request.env.get('mobile.promotion.line')
+                tmpl_ids = Line.sudo().search([
+                    ('promotion_id', '=', int(promo_id)),
+                    ('state', '=', 'approved'),
+                ]).mapped('product_tmpl_id').ids if Line is not None else []
+                domain = domain + [('id', 'in', tmpl_ids or [0])]
+            except Exception:
+                domain = domain + [('id', 'in', [0])]
         sort = (p.get('sort') or 'best_match').strip()
 
         Tmpl = request.env['product.template'].sudo()
@@ -952,6 +1217,35 @@ class MobileProductsAPI(http.Controller):
         })
 
     # ─── Related ──────────────────────────────────────────────────────
+    @http.route('/api/mobile/v2/products/<int:product_id>/why', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def why_recommended(self, product_id, **kw):
+        """v2.2.26 — Brain "why you saw this": transparency + privacy.
+        Returns bilingual reasons. Empty list when the engine is off."""
+        product = request.env['product.template'].sudo().browse(product_id)
+        if not product.exists():
+            return fail('NOT_FOUND', 'Product not found', 404)
+        Brain = request.env.get('uellow.brain.config')
+        reasons = []
+        try:
+            if Brain is not None and Brain.sudo().is_on():
+                cfg = Brain.sudo().get_config()
+                prof = {}
+                Taste = request.env.get('uellow.taste.profile')
+                if Taste is not None and cfg.personalization_mode in (
+                        'members', 'opt_in', 'full'):
+                    pp = current_partner()
+                    if pp:
+                        prof = Taste.sudo().get_dict(pp.id)
+                    if not prof and cfg.personalization_mode == 'full':
+                        prof = Taste.sudo().parse_header(
+                            request.httprequest.headers.get('X-Taste'))
+                reasons = cfg.why_reasons(product, prof)
+        except Exception:
+            reasons = []
+        return ok({'reasons': reasons})
+
     @http.route('/api/mobile/v2/products/<int:product_id>/related', type='http',
                 auth='public', methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
@@ -1013,14 +1307,20 @@ class MobileProductsAPI(http.Controller):
         except Exception:
             per = 20
         lang = get_lang()
+        try:
+            cat_id = int(p.get('category_id') or 0)
+        except Exception:
+            cat_id = 0
         Tmpl = request.env['product.template'].sudo()
         domain = _domain_published_for_app()
+        if cat_id:
+            domain.append(('public_categ_ids', 'child_of', cat_id))
         ranked = Tmpl.browse([])
         try:
             Rank = request.env.get('uellow.product.rank')
             if Rank is not None:
                 ranked = Rank.sudo().top_products(
-                    category_id=None, website_id=None, limit=120)
+                    category_id=(cat_id or None), website_id=None, limit=120)
                 ranked = ranked.filtered(lambda t: t.is_published)
         except Exception:
             ranked = Tmpl.browse([])

@@ -256,6 +256,15 @@ class UellowCheckout(_WSBase):
         if not order or not order.order_line:
             return {'success': False, 'error': 'empty_cart'}
 
+        # v2.1.78 — double-charge guard. If this exact cart was already
+        # submitted (the result was stashed in the session before redirect),
+        # return that prior result instead of creating a second order /
+        # payment transaction. Protects against a double-tapped pay button.
+        _sess_key = 'uc_pending_tx_for_order_%d' % order.id
+        _prev = request.session.get(_sess_key)
+        if _prev and isinstance(_prev, dict):
+            return _prev
+
         payment_method = (post.get('payment_method') or 'cod').strip()
         is_cod = payment_method.lower() in {'cod', 'cash', 'cash_on_delivery', 'custom'}
 
@@ -299,13 +308,17 @@ class UellowCheckout(_WSBase):
             except Exception:
                 cur = ''
             _save_uc_order(order, payment_method, request.env)
-            request.website.sale_reset()
-            return {
+            _cod_result = {
                 'success': True, 'order_id': order.id,
                 'order_name': d['name'], 'amount_total': '%.3f' % d['total'],
                 'currency': cur,
                 'redirect': '/shop/order/success?order_id=%d' % order.id,
             }
+            # v2.1.78 — stash before reset so a duplicate submit doesn't create
+            # a second confirmed order.
+            request.session[_sess_key] = _cod_result
+            request.website.sale_reset()
+            return _cod_result
         # Online payment via UPayments:
         # 1. Confirm sale order
         # 2. Create payment.transaction
@@ -359,7 +372,16 @@ class UellowCheckout(_WSBase):
             except Exception:
                 pass
 
-            tx = request.env['payment.transaction'].sudo().create(tx_vals)
+            # v2.1.78 — double-charge guard (core): if a transaction for this
+            # order is already in flight (draft/pending) with this provider,
+            # REUSE it instead of creating a second charge.
+            tx = request.env['payment.transaction'].sudo().search([
+                ('sale_order_ids', 'in', order.id),
+                ('provider_id', '=', provider.id),
+                ('state', 'in', ('draft', 'pending')),
+            ], order='id desc', limit=1)
+            if not tx:
+                tx = request.env['payment.transaction'].sudo().create(tx_vals)
 
             # Use Odoo standard flow: _get_processing_values -> _get_specific_rendering_values
             # This is exactly what website_sale does
@@ -380,7 +402,7 @@ class UellowCheckout(_WSBase):
             except Exception:
                 pass
 
-            return {
+            _result = {
                 'success':      True,
                 'order_id':     order.id,
                 'order_name':   d['name'],
@@ -388,6 +410,10 @@ class UellowCheckout(_WSBase):
                 'currency':     cur_name,
                 'redirect':     redirect_url,
             }
+            # v2.1.78 — stash so a duplicate submit returns this same redirect
+            # rather than starting a new transaction.
+            request.session[_sess_key] = _result
+            return _result
         except Exception as e:
             import traceback
             _logger.error('UELLOW UPAYMENTS ERROR: %s\n%s', e, traceback.format_exc())
@@ -438,6 +464,17 @@ class UellowCheckout(_WSBase):
         cod_added = False
         _SKIP_SET = {'paypal', 'wire_transfer'}
         _COD_SET  = {'cod', 'COD', 'custom', 'cash_on_delivery'}
+        # v2.1.77 — payment derives from the carrier COMPANY (the base): when
+        # the order's selected courier doesn't collect cash, hide COD here too
+        # (same rule as the app). Default ON when no carrier/company is set.
+        cod_allowed = True
+        try:
+            _o = request.website.sale_get_order()
+            _comp = _o.carrier_id.carrier_company_id if _o and _o.carrier_id else False
+            if _comp:
+                cod_allowed = bool(getattr(_comp, 'cod_enabled', True))
+        except Exception as e:
+            _logger.warning('cod gate: %s', e)
         # Build provider image map
         provider_img = {}
         try:
@@ -457,7 +494,7 @@ class UellowCheckout(_WSBase):
                 if code.lower() in _SKIP_SET: continue
                 img = provider_img.get(m.id, '')
                 if code in _COD_SET or code.lower() in _COD_SET:
-                    if not cod_added:
+                    if not cod_added and cod_allowed:
                         cod_added = True
                         result.insert(0, {
                             'id': m.id, 'name': m.name, 'code': 'cod',

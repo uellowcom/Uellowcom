@@ -24,7 +24,7 @@ from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, current_partner,
-    img_url, base_url, fmt_price, bilingual, get_website,
+    img_url, base_url, fmt_price, bilingual, get_website, app_setting,
 )
 
 _logger = logging.getLogger(__name__)
@@ -37,6 +37,40 @@ def _cart_token():
     return (tok or '').strip()
 
 
+def _pricelist_for_currency(cur):
+    """First pricelist in the website's display currency (prefer one
+    scoped to the current website)."""
+    Pl = request.env['product.pricelist'].sudo()
+    w = get_website()
+    return (Pl.search([('currency_id', '=', cur.id),
+                       ('website_id', '=', w.id)], limit=1)
+            or Pl.search([('currency_id', '=', cur.id)], limit=1))
+
+
+def _ensure_order_currency(order):
+    """v2.2.02 — a cart MUST be priced in its website's display currency.
+    A partner whose country maps to another country-group pricelist (e.g.
+    a Google signup geo-defaulted to Egypt) used to drag an EGP pricelist
+    onto Kuwait carts → wrong totals, carrier mismatch and the
+    'order currency is invalid' confirm failure."""
+    try:
+        if not order or order.state != 'draft':
+            return order
+        from ._common import web_currency
+        cur = web_currency()
+        if cur and order.currency_id.id != cur.id:
+            pl = _pricelist_for_currency(cur)
+            if pl:
+                order.sudo().write({'pricelist_id': pl.id})
+                try:
+                    order.sudo()._recompute_prices()
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    return order
+
+
 def _get_or_create_order(create=True):
     """Return the draft cart for this request (or empty recordset).
     Mobile clients identify their guest cart via X-Cart-Token. Logged
@@ -44,10 +78,14 @@ def _get_or_create_order(create=True):
     Order = request.env['sale.order'].sudo()
     partner = current_partner()
     if partner:
+        # v2.1.97 — carts are PER WEBSITE: after a country switch the old
+        # cart (different currency/pricelist) must not be reused — it made
+        # a 5 KD cart look like an 800 EGP one (bogus free shipping +
+        # mis-converted carrier prices like "0.012").
         order = Order.search([
             ('partner_id', '=', partner.id),
             ('state', '=', 'draft'),
-            ('website_id', '!=', False),
+            ('website_id', '=', get_website().id),
         ], limit=1, order='id desc')
         # Claim the guest cart: items added before signing in live on a
         # cart-token order owned by the public user. Without this, checkout
@@ -60,6 +98,7 @@ def _get_or_create_order(create=True):
                 ('state', '=', 'draft'),
             ], limit=1)
             if (guest and guest.exists() and guest.partner_id.id != partner.id
+                    and guest.website_id.id == get_website().id
                     and guest.order_line.filtered(lambda l: not l.display_type)):
                 # The GUEST cart wins. The user signed in mid-purchase (on the
                 # way to buy what's in this cart) — merging the partner's old
@@ -76,15 +115,25 @@ def _get_or_create_order(create=True):
                     })
                 except Exception:
                     guest.sudo().write({'partner_id': partner.id})
-                return guest
+                return _ensure_order_currency(guest)
         if not order and create:
             website = get_website()
-            order = Order.create({
+            vals = {
                 'partner_id': partner.id,
                 'website_id': website.id,
                 'team_id': website.salesteam_id.id if website.salesteam_id else False,
-            })
-        return order
+            }
+            # v2.2.02 — force the WEBSITE's pricelist (never the partner's
+            # country-group default, which can be another currency).
+            try:
+                from ._common import web_currency
+                pl = _pricelist_for_currency(web_currency())
+                if pl:
+                    vals['pricelist_id'] = pl.id
+            except Exception:
+                pass
+            order = Order.create(vals)
+        return _ensure_order_currency(order)
 
     # Guest path
     tok = _cart_token()
@@ -93,19 +142,30 @@ def _get_or_create_order(create=True):
             ('mobile_cart_token', '=', tok),
             ('state', '=', 'draft'),
         ], limit=1)
-        if order:
-            return order
+        # v2.1.97 — same per-website rule for guest carts: a token cart
+        # from another country website is ignored (a fresh one is created
+        # for the current site).
+        if order and order.website_id.id == get_website().id:
+            return _ensure_order_currency(order)
     if not create:
         return Order.browse([])
     website = get_website()
     public_user = website.user_id or request.env.ref('base.public_user')
     import secrets
     new_token = secrets.token_urlsafe(24)
-    order = Order.create({
+    vals = {
         'partner_id': public_user.partner_id.id,
         'website_id': website.id,
         'mobile_cart_token': new_token,
-    })
+    }
+    try:
+        from ._common import web_currency
+        pl = _pricelist_for_currency(web_currency())
+        if pl:
+            vals['pricelist_id'] = pl.id
+    except Exception:
+        pass
+    order = Order.create(vals)
     return order
 
 
@@ -290,6 +350,16 @@ def _free_shipping_threshold(order):
        Returns the amount or None if no free-shipping promo is set up."""
     try:
         ICP = request.env['ir.config_parameter'].sudo()
+        # v2.2.20 — amount-only CART rules feed the progress bar too, so
+        # a per-country rule ("Egypt ≥ 30") drives "add X more" exactly
+        # like the global threshold. Lowest applicable value wins.
+        rule_thr = None
+        try:
+            Rule = request.env.get('uellow.freeship.rule')
+            if Rule is not None:
+                rule_thr = Rule.sudo().bar_threshold()
+        except Exception:
+            pass
         # v2.1.23 — the Settings field (uellow_free_shipping.threshold_kwd)
         # now feeds the cart progress bar too; legacy param kept as backup.
         raw = (ICP.get_param('uellow_free_shipping.threshold_kwd', '')
@@ -298,7 +368,7 @@ def _free_shipping_threshold(order):
             try:
                 v = float(raw)
                 if v > 0:
-                    return v
+                    return min(v, rule_thr) if rule_thr else v
             except Exception:
                 pass
         Carrier = request.env['delivery.carrier'].sudo()
@@ -320,9 +390,11 @@ def _free_shipping_threshold(order):
         if excl:
             carriers = carriers.filtered(lambda c: not carrier_is_express(c))
         if not carriers:
-            return None
+            return rule_thr
         amounts = [c.amount for c in carriers if c.amount]
-        return min(amounts) if amounts else None
+        if rule_thr:
+            amounts.append(rule_thr)
+        return min(amounts) if amounts else rule_thr
     except Exception:
         return None
 
@@ -370,6 +442,20 @@ def order_free_shipping_reason(order):
             pass
     except Exception:
         pass
+    # 1b) v2.2.20 — conditional rules engine (uellow.freeship.rule):
+    # country/website/lang/amount/age/customer-type/tier/dates/cities.
+    # First matching rule (by sequence) grants the free delivery.
+    try:
+        Rule = request.env.get('uellow.freeship.rule')
+        if Rule is not None:
+            r = Rule.sudo().order_grant(
+                order, amount_company=_amount_company_ccy(order))
+            if r:
+                return {'reason': 'rule',
+                        'label': {'en': r.public_label_en or 'Free delivery',
+                                  'ar': r.public_label_ar or 'توصيل مجاني'}}
+    except Exception:
+        pass
     # 2) product flags per rule
     try:
         rule = (ICP.get_param('uellow_free_shipping.product_rule', 'any')
@@ -393,13 +479,29 @@ def order_free_shipping_reason(order):
     # 3) global threshold
     try:
         thr = _free_shipping_threshold(order)
-        if thr and order.amount_untaxed >= thr:
+        if thr and _amount_company_ccy(order) >= thr:
             return {'reason': 'threshold',
                     'label': {'en': 'Order above %s' % thr,
                               'ar': 'طلب فوق %s' % thr}}
     except Exception:
         pass
     return None
+
+
+def _amount_company_ccy(order):
+    """v2.1.97 — the order subtotal expressed in the COMPANY currency so
+    free-shipping thresholds (configured in KWD) compare correctly on
+    non-KWD country carts (an 800-EGP cart is ~5 KD, not '800')."""
+    amt = order.amount_untaxed or 0.0
+    try:
+        comp_cur = order.company_id.currency_id
+        if order.currency_id and comp_cur and order.currency_id != comp_cur:
+            from odoo import fields as _f
+            amt = order.currency_id._convert(
+                amt, comp_cur, order.company_id, _f.Date.today())
+    except Exception:
+        pass
+    return amt
 
 
 def effective_shipping_price(order, carrier, base_price):
@@ -420,14 +522,14 @@ def effective_shipping_price(order, carrier, base_price):
             cc = getattr(carrier, 'carrier_company_id', False)
             if cc and getattr(cc, 'free_shipping_enabled', False):
                 thr = cc.free_shipping_threshold or 0.0
-                if order.amount_untaxed >= thr:
+                if _amount_company_ccy(order) >= thr:
                     lbl = ({'en': 'Free delivery', 'ar': 'توصيل مجاني'}
                            if thr <= 0 else
                            {'en': 'Free over %.3f' % thr,
                             'ar': 'مجاني فوق %.3f' % thr})
                     return 0.0, lbl
         # carrier's own free-over
-        if getattr(carrier, 'free_over', False) and                 order.amount_untaxed >= (getattr(carrier, 'amount', 0) or 0):
+        if getattr(carrier, 'free_over', False) and                 _amount_company_ccy(order) >= (getattr(carrier, 'amount', 0) or 0):
             return 0.0, {'en': 'Free over %s' % (carrier.amount or 0),
                          'ar': 'مجاني فوق %s' % (carrier.amount or 0)}
         r = order_free_shipping_reason(order)
@@ -482,9 +584,18 @@ def _available_shipping_methods(order):
                         'id': z.id, 'name': z.name,
                         'cutoff_time': z.cutoff_time or '',
                         'delivery_window': {'en': _win_en, 'ar': _win_ar},
-                        # v2.1.2 — COD surcharge (config only; not yet folded
-                        # into the total — awaiting activation decision).
+                        # v2.1.96 — LIVE: surcharge folded into the price
+                        # (cash-first); refunded to wallet on online payment
+                        # when both switches allow.
                         'cash_surcharge': getattr(z, 'cash_surcharge', 0.0) or 0.0,
+                        # v2.2.00 — teaser display flag (see orders.py).
+                        'cod_refund_enabled': bool(
+                            getattr(z, 'cod_refund_enabled', True)
+                            and getattr(app_setting() or z,
+                                        'show_cod_refund_teaser', False)),
+                        'cod_fee_note_enabled': bool(
+                            getattr(app_setting() or z,
+                                    'show_cod_fee_note', False)),
                     }
             if rate is None:
                 try:
@@ -496,8 +607,26 @@ def _available_shipping_methods(order):
             # v2.1.51 — unified free-shipping engine (flags / threshold /
             # coupon / carrier free-over; express excluded per Settings).
             rate, free_label = effective_shipping_price(order, c, rate)
+            # v2.1.96/98 — cash-first pricing: default = price + COD
+            # surcharge (zone value, else the carrier company's). Refunded
+            # to the wallet on online payment. Free stays free.
+            _comp0 = getattr(c, 'carrier_company_id', False)
+            _zsur = float((zone_match or {}).get('cash_surcharge') or 0) \
+                or float((getattr(_comp0, 'cod_surcharge', 0.0) or 0.0)
+                         if _comp0 else 0.0)
+            if _zsur > 0 and free_label is None:
+                rate = float(rate or 0) + _zsur
+                if zone_match is not None:
+                    zone_match['cash_surcharge'] = _zsur
             is_free = free_label is not None
-            _rate_money = fmt_price(rate or 0, cur) if rate is not None else None
+            # v2.1.97 — zone/carrier prices are company-currency (KWD);
+            # don't declare the order currency as their source.
+            _rate_money = fmt_price(rate or 0) if rate is not None else None
+            # v2.1.77 — payment basis derives from the carrier COMPANY: when
+            # the company doesn't collect cash, COD is hidden for this method.
+            comp = getattr(c, 'carrier_company_id', False)
+            cod_enabled = bool(getattr(comp, 'cod_enabled', True)) if comp else True
+            cod_surcharge = (getattr(comp, 'cod_surcharge', 0.0) or 0.0) if comp else 0.0
             out.append({
                 'id': c.id,
                 'name': bilingual(c, 'name'),
@@ -509,6 +638,11 @@ def _available_shipping_methods(order):
                 'free_label': free_label,
                 'is_express': carrier_is_express(c),
                 'zone': zone_match,
+                # v2.1.77 — carrier company (the payment base) + COD policy.
+                'carrier_company': ({'id': comp.id, 'name': comp.name}
+                                    if comp else None),
+                'cod_enabled': cod_enabled,
+                'cod_surcharge': cod_surcharge,
             })
         return out
     except Exception:
@@ -559,7 +693,13 @@ def serialize_cart(order):
     discount = line_discount + reward_discount
     coupon_codes = []
     try:
-        coupon_codes = [c.code for c in order.applied_coupon_ids]
+        # v2.1.78 — only REAL promo coupons are removable in the cart. The
+        # customer's loyalty card / gift card / e-wallet are account balances
+        # (auto-linked, re-link on recompute) — listing their codes here made
+        # them appear as undeletable "coupons". Exclude those program types.
+        _acct_types = ('loyalty', 'gift_card', 'ewallet')
+        coupon_codes = [c.code for c in order.applied_coupon_ids
+                        if (c.program_id.program_type not in _acct_types)]
     except Exception:
         pass
     # v2.1.56 — promo-code PROGRAMS (rule codes) don't live in
@@ -578,19 +718,21 @@ def serialize_cart(order):
     _reason = order_free_shipping_reason(order)
     if _reason and _reason.get('reason') in ('product', 'coupon'):
         free_ship = {
-            'threshold': fmt_price(threshold or 0, cur),
-            'remaining': fmt_price(0, cur),
+            'threshold': fmt_price(threshold or 0),
+            'remaining': fmt_price(0),
             'progress': 1.0,
             'qualified': True,
             'reason': _reason['reason'],
             'label': _reason.get('label'),
         }
     elif threshold:
-        gap = max(0.0, threshold - order.amount_untaxed)
-        pct = min(1.0, (order.amount_untaxed / threshold) if threshold else 0)
+        # v2.1.97 — compare in COMPANY currency (threshold is KWD-based).
+        _amt_kwd = _amount_company_ccy(order)
+        gap = max(0.0, threshold - _amt_kwd)
+        pct = min(1.0, (_amt_kwd / threshold) if threshold else 0)
         free_ship = {
-            'threshold': fmt_price(threshold, cur),
-            'remaining': fmt_price(gap, cur),
+            'threshold': fmt_price(threshold),
+            'remaining': fmt_price(gap),
             'progress': round(pct, 4),
             'qualified': gap <= 0,
             'reason': 'threshold',
@@ -675,6 +817,28 @@ class MobileCartAPI(http.Controller):
         if not product:
             return fail('NOT_FOUND', 'Product not found', 404)
 
+        # v2.2.20 — bundle availability gate: a bundle is buyable only
+        # while EVERY component is buyable. Re-checked here (not just on
+        # the card) so a card cached seconds ago can't oversell, and the
+        # per-order cap is enforced.
+        tmpl = product.product_tmpl_id
+        if getattr(tmpl, 'is_bundle', False) and tmpl.uellow_bundle_id:
+            b = tmpl.uellow_bundle_id.sudo()
+            # v2.2.21 — respects oos_behavior: 'sell' bundles backorder, the
+            # others block when any component is out of stock.
+            if not b._buyable():
+                msg = (b.unavailable_en or 'This bundle is currently '
+                       'unavailable — an item is out of stock.')
+                return fail('UNAVAILABLE', msg, 409)
+            if b.max_per_order:
+                order_chk = _get_or_create_order(create=False)
+                have = sum(l.product_uom_qty for l in order_chk.order_line
+                           if l.product_id == product) if order_chk else 0
+                if have + qty > b.max_per_order:
+                    return fail('LIMIT',
+                                'Max %d of this bundle per order.'
+                                % b.max_per_order, 409)
+
         order = _get_or_create_order(create=True)
         existing = order.order_line.filtered(lambda l: l.product_id == product and not l.is_reward_line)
         if existing:
@@ -688,6 +852,29 @@ class MobileCartAPI(http.Controller):
         _consolidate_lines(order)
         order = request.env['sale.order'].sudo().browse(order.id)
         return ok({'cart': serialize_cart(order)})
+
+    @http.route('/api/mobile/v2/cart/save_for_later', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def save_for_later(self, **kw):
+        """v2.2.26 — Brain considered-purchase: park / unpark a cart line.
+        Guarded: no-op (BAD_REQUEST) when the Brain field isn't present."""
+        p = get_payload()
+        try:
+            line_id = int(p.get('line_id') or 0)
+        except Exception:
+            return fail('BAD_REQUEST', 'line_id required')
+        line = request.env['sale.order.line'].sudo().browse(line_id)
+        if not line.exists():
+            return fail('NOT_FOUND', 'Line not found', 404)
+        if 'brain_saved_for_later' not in line._fields:
+            return fail('UNAVAILABLE', 'Save-for-later not enabled', 409)
+        want = p.get('saved')
+        new_val = (not line.brain_saved_for_later) if want is None \
+            else str(want).lower() in ('1', 'true', 'yes')
+        line.brain_saved_for_later = new_val
+        return ok({'cart': serialize_cart(line.order_id),
+                   'line_id': line_id, 'saved_for_later': new_val})
 
     @http.route('/api/mobile/v2/cart/update', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)
@@ -722,7 +909,12 @@ class MobileCartAPI(http.Controller):
         line = request.env['sale.order.line'].sudo().browse(line_id)
         order_id = line.order_id.id if line.exists() else None
         if line.exists():
-            line.unlink()
+            try:
+                line.unlink()
+            except Exception:
+                # v2.1.92 — a non-draft order refuses unlink; zero the qty
+                # so the item still disappears instead of a silent failure.
+                line.product_uom_qty = 0
         order = request.env['sale.order'].sudo().browse(order_id) if order_id else None
         return ok({'cart': serialize_cart(order)})
 

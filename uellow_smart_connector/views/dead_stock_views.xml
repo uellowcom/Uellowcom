@@ -7,13 +7,32 @@
     <field name="arch" type="xml">
       <list string="Dead Stock Monitor"
             decoration-danger="days_since_last_sale &gt; 60"
-            decoration-warning="days_since_last_sale &gt; 30">
+            decoration-warning="days_since_last_sale &gt; 30 and days_since_last_sale &lt;= 60"
+            decoration-muted="state != 'active'">
         <field name="product_id" string="Product (Variant)"/>
         <field name="product_tmpl_id" string="Product"/>
         <field name="qty_on_hand" string="Stock Qty"/>
         <field name="last_sale_date" string="Last Sale"/>
         <field name="days_since_last_sale" string="Days Idle"/>
+        <field name="never_sold" widget="boolean_toggle" string="Never Sold" readonly="1"/>
+        <field name="is_seasonal" widget="boolean_toggle" string="Seasonal" readonly="1" optional="show"/>
+        <field name="product_age_days" string="Age (days)" optional="show"/>
         <field name="suggested_action" widget="badge" string="Suggested Action"/>
+        <field name="target_discount_pct" string="Disc %" optional="show"/>
+        <field name="beena_promote" widget="boolean_toggle" string="Beena" optional="show"/>
+        <field name="state" widget="badge"
+               decoration-success="state == 'resolved'"
+               decoration-muted="state == 'ignored'"/>
+        <button name="action_flag_discount" type="object" string="Discount"
+                icon="fa-tag" invisible="state != 'active'"/>
+        <button name="action_promote_beena" type="object" string="Promote via Beena"
+                icon="fa-bullhorn" invisible="beena_promote or state != 'active'"/>
+        <button name="action_stop_promote" type="object" string="Stop Promo"
+                icon="fa-bell-slash" invisible="not beena_promote"/>
+        <button name="action_resolve" type="object" string="Resolve"
+                icon="fa-check" invisible="state == 'resolved'"/>
+        <button name="action_ignore" type="object" string="Ignore"
+                icon="fa-ban" invisible="state == 'ignored'"/>
       </list>
     </field>
   </record>
@@ -24,13 +43,23 @@
     <field name="arch" type="xml">
       <search string="Search Dead Stock">
         <field name="product_id" string="Product"/>
+        <filter string="Active" name="active" domain="[('state','=','active')]"/>
+        <separator/>
         <filter string="Critical (60+ days)" name="critical"
                 domain="[('days_since_last_sale','&gt;=',60)]"/>
         <filter string="Warning (30+ days)" name="warning"
                 domain="[('days_since_last_sale','&gt;=',30)]"/>
+        <filter string="Never Sold" name="never_sold"
+                domain="[('never_sold','=',True)]"/>
+        <filter string="Seasonal (protected)" name="seasonal"
+                domain="[('is_seasonal','=',True)]"/>
+        <filter string="Beena Promo" name="beena_promote"
+                domain="[('beena_promote','=',True)]"/>
         <group expand="0" string="Group By">
           <filter string="Suggested Action" name="group_action"
                   context="{'group_by': 'suggested_action'}"/>
+          <filter string="Status" name="group_state"
+                  context="{'group_by': 'state'}"/>
         </group>
       </search>
     </field>
@@ -41,9 +70,11 @@
     <field name="res_model">uellow.dead.stock</field>
     <field name="view_mode">list</field>
     <field name="search_view_id" ref="view_dead_stock_search"/>
+    <field name="context">{'search_default_active': 1}</field>
     <field name="help" type="html">
-      <p class="o_view_nocontent_smiling_face">No dead stock detected</p>
-      <p>The system monitors products with stock but no sales activity.</p>
+      <p class="o_view_nocontent_smiling_face">No dead stock detected · لا يوجد مخزون راكد</p>
+      <p>The system monitors products with stock but no recent sales.<br/>
+         يراقب النظام المنتجات التي بها مخزون دون مبيعات حديثة.</p>
     </field>
   </record>
 

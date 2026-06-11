@@ -48,6 +48,9 @@
                                     <field name="online_cashback_pct" invisible="not online_cashback_enabled"/>
                                     <field name="online_cashback_cap" invisible="not online_cashback_enabled"/>
                                     <field name="online_cashback_min_order" invisible="not online_cashback_enabled"/>
+                                    <field name="cod_refund_enabled"/>
+                                    <field name="show_cod_refund_teaser"/>
+                                    <field name="show_cod_fee_note"/>
                                 </group>
                             </group>
                         </page>

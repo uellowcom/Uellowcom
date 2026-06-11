@@ -23,6 +23,20 @@
             action="action_import_job"
             sequence="10"/>
 
+  <!-- Publish Studio -->
+  <menuitem id="menu_sc_publish_studio"
+            name="Publish Studio"
+            parent="menu_sc_root"
+            action="action_publish_studio"
+            sequence="15"/>
+
+  <!-- Profit Margins -->
+  <menuitem id="menu_sc_profit"
+            name="Profit Margins"
+            parent="menu_sc_root"
+            action="action_profit_manager"
+            sequence="18"/>
+
   <!-- Price Intelligence -->
   <menuitem id="menu_sc_price"
             name="Price Intelligence"

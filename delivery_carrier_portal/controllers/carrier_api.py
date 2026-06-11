@@ -22,6 +22,7 @@ from odoo.addons.uellow_mobile_manager.controllers.api_v2._common import (
 
 STATUS_LABELS = {
     'pending': {'en': 'Pending', 'ar': 'جديد'},
+    'picked_up': {'en': 'Picked up (in transit)', 'ar': 'تم الاستلام — في الطريق'},
     'arrived_sorting': {'en': 'At sorting center', 'ar': 'في مركز الفرز'},
     'assigned': {'en': 'Assigned', 'ar': 'مُسند لسائق'},
     'out_for_delivery': {'en': 'Out for delivery', 'ar': 'خرج للتوصيل'},
@@ -305,15 +306,18 @@ class UellowCarrierAPI(http.Controller):
                 return fail('NOT_FOUND', 'Driver not found', 404)
             if o.delivery_status == 'delivered':
                 return fail('BAD_STATE', 'Already delivered', 400)
+            # Assigning a driver sets 'assigned' (NOT out_for_delivery) so the
+            # driver gets the ACCEPT step in their app; the driver's "Start
+            # delivery" is what moves it to out_for_delivery + live tracking.
             o.write({'delivery_driver_id': d.id,
-                     'delivery_status': 'out_for_delivery'})
+                     'delivery_status': 'assigned'})
             l = line_for()
             if l:
                 l.write({'driver_id': d.id,
-                         'delivery_status': 'out_for_delivery'})
+                         'delivery_status': 'assigned'})
             else:
                 Line.create({'sale_order_id': o.id, 'driver_id': d.id,
-                             'delivery_status': 'out_for_delivery'})
+                             'delivery_status': 'assigned'})
 
         elif act == 'unassign':
             if role != 'manager':
@@ -387,6 +391,165 @@ class UellowCarrierAPI(http.Controller):
         except Exception:
             pass
         return ok(_ser_order(o, role))
+
+    # ── TRIPS: receive incoming orders at the sorting centre ──────────
+    #   The carrier sees the trips Uellow dispatched to it, opens one, and
+    #   receives each package — manually per row OR by scanning its barcode
+    #   (the app matches the scanned code locally). "Receive all" can take in
+    #   everything still pending or just the scanned ones; Uellow is notified.
+    @http.route('/api/mobile/v2/carrier/trips', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def trips(self, **kw):
+        user, role, company, driver = _ctx()
+        if role != 'manager':
+            return fail('FORBIDDEN', 'Manager only', 403)
+        Trip = request.env['delivery.trip'].sudo()
+        trips = Trip.search([
+            ('carrier_company_id', '=', company.id),
+            ('state', 'in', ('draft', 'assigned', 'in_progress')),
+        ], order='date_trip desc, id desc', limit=100)
+        out = [self._ser_trip(t) for t in trips]
+        out = [t for t in out if t['total'] > 0]
+        # trips with packages still to receive come first
+        out.sort(key=lambda t: (t['pending'] == 0, ))
+        return ok({'trips': out})
+
+    @http.route('/api/mobile/v2/carrier/trips/<int:tid>', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def trip_detail(self, tid, **kw):
+        user, role, company, driver = _ctx()
+        if role != 'manager':
+            return fail('FORBIDDEN', 'Manager only', 403)
+        trip = request.env['delivery.trip'].sudo().browse(tid)
+        if not trip.exists() or trip.carrier_company_id.id != company.id:
+            return fail('NOT_FOUND', 'Trip not found', 404)
+        orders = []
+        for line in trip.line_ids.sorted('sequence'):
+            o = line.sale_order_id
+            if not o:
+                continue
+            row = _ser_order(o, role)
+            row['line_id'] = line.id
+            # received AT SORTING = past the in-transit stages
+            row['received'] = o.delivery_status not in (
+                'pending', 'picked_up', False)
+            # the scannable code on the package label
+            row['code'] = (o.carrier_order_ref or o.name or '').strip()
+            orders.append(row)
+        return ok({'trip': self._ser_trip(trip), 'orders': orders})
+
+    @http.route('/api/mobile/v2/carrier/trips/<int:tid>/receive',
+                type='http', auth='public', methods=['POST', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    @require_auth
+    def trip_receive(self, tid, **kw):
+        user, role, company, driver = _ctx()
+        if role != 'manager':
+            return fail('FORBIDDEN', 'Manager only', 403)
+        trip = request.env['delivery.trip'].sudo().browse(tid)
+        if not trip.exists() or trip.carrier_company_id.id != company.id:
+            return fail('NOT_FOUND', 'Trip not found', 404)
+        p = get_payload()
+        order_ids = {int(x) for x in (p.get('order_ids') or []) if x}
+        receive_missing = bool(p.get('receive_missing'))
+
+        # Receivable at the sorting centre = still at Uellow ('pending', e.g.
+        # the carrier picks up directly) OR brought in by the pickup courier
+        # ('picked_up'). Either way they become 'arrived_sorting'.
+        pending = trip.line_ids.mapped('sale_order_id').filtered(
+            lambda o: o.delivery_status in ('pending', 'picked_up'))
+        if receive_missing:
+            to_receive = pending
+        else:
+            to_receive = pending.filtered(lambda o: o.id in order_ids)
+        skipped = pending - to_receive
+
+        # Receiving = order → 'arrived_sorting' (source of truth; the trip
+        # line's stored-related status follows by recompute).
+        for o in to_receive:
+            o.with_context(skip_push=True).write(
+                {'delivery_status': 'arrived_sorting'})
+            o.message_post(body='📦 Received at sorting center by %s'
+                           % (company.name or 'carrier'))
+        # Notify Uellow about what was received (and what is still missing).
+        if to_receive or skipped:
+            body = ('🚚 %s received %d/%d package(s) of trip %s.'
+                    % (company.name or 'Carrier', len(to_receive),
+                       len(pending), trip.name))
+            if skipped and not receive_missing:
+                body += ' ⚠️ Not received: %s' % ', '.join(skipped.mapped('name'))
+            self._notify_uellow(body, to_receive | skipped)
+        try:
+            request.env.cr.commit()
+        except Exception:
+            pass
+        return ok({
+            'received': len(to_receive),
+            'remaining': len(pending - to_receive),
+            'missing': [{'id': o.id, 'name': o.name} for o in skipped]
+                       if not receive_missing else [],
+            'trip': self._ser_trip(trip),
+        })
+
+    @http.route('/api/mobile/v2/carrier/trips/<int:tid>/assign-pickup',
+                type='http', auth='public', methods=['POST', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    @require_auth
+    def trip_assign_pickup(self, tid, **kw):
+        """Carrier assigns one of its drivers to COLLECT this trip from the
+        Uellow warehouse (the pickup leg)."""
+        user, role, company, driver = _ctx()
+        if role != 'manager':
+            return fail('FORBIDDEN', 'Manager only', 403)
+        trip = request.env['delivery.trip'].sudo().browse(tid)
+        if not trip.exists() or trip.carrier_company_id.id != company.id:
+            return fail('NOT_FOUND', 'Trip not found', 404)
+        p = get_payload()
+        d = request.env['delivery.driver'].sudo().browse(int(p.get('driver_id') or 0))
+        if not d.exists() or d.carrier_company_id.id != company.id:
+            return fail('NOT_FOUND', 'Driver not found', 404)
+        trip.action_assign_pickup(d, by='carrier')
+        try:
+            request.env.cr.commit()
+        except Exception:
+            pass
+        return ok(self._ser_trip(trip))
+
+    def _ser_trip(self, trip):
+        orders = trip.line_ids.mapped('sale_order_id')
+        # receivable at the sorting centre = pending (direct) or picked_up
+        # (brought in by the pickup courier)
+        receivable = orders.filtered(
+            lambda o: o.delivery_status in ('pending', 'picked_up'))
+        return {
+            'id': trip.id,
+            'name': trip.name,
+            'date': trip.date_trip.isoformat() if trip.date_trip else None,
+            'state': trip.state,
+            'total': len(orders),
+            'pending': len(receivable),
+            'received': len(orders) - len(receivable),
+            'pickup_state': trip.pickup_state,
+            'pickup_driver': {'id': trip.pickup_driver_id.id,
+                              'name': trip.pickup_driver_id.name}
+                             if trip.pickup_driver_id else None,
+        }
+
+    def _notify_uellow(self, body, orders):
+        """Best-effort note to Uellow ops (chatter on the orders' partner +
+        the orders themselves already carry the receipt messages)."""
+        try:
+            for o in orders[:1]:
+                # one summary line on the first order keeps an audit trail
+                o.message_post(body=body)
+        except Exception:
+            pass
 
     # ── drivers (manager) ────────────────────────────────────────────
     @http.route('/api/mobile/v2/carrier/drivers', type='http',

@@ -17,13 +17,21 @@ TALY_PROD_URL     = 'https://api.taly.io'        # Production
 TALY_BASIC_AUTH   = 'Basic bWVyY2hhbnQ6c2VjcmV0'
 
 TALY_ORDER_STATUSES = {
+    # success
     'CONFIRMED':  'done',
     'PAID':       'done',
     'APPROVED':   'done',
+    'SUCCESS':    'done',      # value sent on the merchant redirect URL
+    'COMPLETED':  'done',
+    # pending / in-flight
     'PENDING':    'pending',
     'PROCESSING': 'pending',
+    'INITIATED':  'pending',
+    # failure / cancellation
     'FAILED':     'cancel',
+    'FAILURE':    'cancel',    # value sent on the merchant redirect URL
     'REJECTED':   'cancel',
+    'CANCEL':     'cancel',    # value sent on the merchant redirect URL
     'CANCELLED':  'cancel',
     'EXPIRED':    'cancel',
     'REFUNDED':   'cancel',
@@ -73,8 +81,23 @@ class PaymentProvider(models.Model):
         string='Show Widget on Cart Page',
         default=True,
     )
-    taly_min_order_amount = fields.Float(string='Minimum Order Amount', default=0.0)
+    taly_min_order_amount = fields.Float(
+        string='Minimum Order Amount', default=10.0,
+        help='Taly only allows orders at or above this amount. Default 10 KWD '
+             '— الحد الأدنى لطلب تالي (افتراضياً ١٠ د.ك). Customers below this '
+             'cannot complete the payment with Taly.')
     taly_max_order_amount = fields.Float(string='Maximum Order Amount', default=0.0)
+
+    def _taly_check_amount(self, amount):
+        """Raise a clear bilingual error when below the configured minimum."""
+        self.ensure_one()
+        min_amt = self.taly_min_order_amount or 0.0
+        if min_amt and float(amount or 0.0) < min_amt:
+            cur = self.company_id.currency_id.name or 'KWD'
+            raise UserError(_(
+                "Taly requires a minimum order of %(m).3f %(c)s. "
+                "أقل مبلغ للدفع بالأقساط عبر تالي هو %(m).3f %(c)s.",
+                m=min_amt, c=cur))
 
     # ── Token cache ───────────────────────────────────────────────────────────
     taly_token_cache        = fields.Char(string='Cached Access Token',  groups='base.group_system')
@@ -167,7 +190,20 @@ class PaymentProvider(models.Model):
                 timeout=15,
             )
             _logger.info("Taly OAuth %s → %s", grant_type, resp.status_code)
-            resp.raise_for_status()
+            if not resp.ok:
+                # v2.2.27 — surface the REAL Taly error (was swallowed as a
+                # generic "connection failed", which hid e.g. wrong env:
+                # production keys fail on the sandbox base with
+                # invalid_grant/Bad credentials).
+                self._taly_log('auth/login', 'error',
+                               '%s %s' % (resp.status_code, resp.text[:500]))
+                raise UserError(_(
+                    "Taly authentication failed (%s).\n%s\n\n"
+                    "Tip: a 'Bad credentials' error usually means the keys "
+                    "belong to a different environment — production keys do "
+                    "not work while the provider is in Test mode, and vice "
+                    "versa."
+                ) % (resp.status_code, resp.text[:300]))
             return resp.json()
         except requests.RequestException as e:
             self._taly_log('auth/login', 'error', str(e))
@@ -201,46 +237,211 @@ class PaymentProvider(models.Model):
             _logger.info("Taly API %s %s → %s", method, endpoint, resp.status_code)
             self._taly_log(endpoint, 'success' if resp.ok else 'error',
                            resp.text[:1000], payload=json.dumps(payload or {}))
-            resp.raise_for_status()
+            if not resp.ok:
+                # v2.2.27 — include the real Taly error body in the message.
+                raise UserError(_("Taly API Error (%s %s): %s")
+                                % (method, endpoint, resp.text[:400]))
             return resp.json()
         except requests.RequestException as e:
             self._taly_log(endpoint, 'error', str(e), payload=json.dumps(payload or {}))
             raise UserError(_("Taly API Error: %s") % str(e))
 
+    @staticmethod
+    def _taly_split_phone(phone):
+        """Return (countryCode, nationalNumber). Taly wants them separate."""
+        p = ''.join(ch for ch in (phone or '') if ch.isdigit() or ch == '+')
+        digits = p.lstrip('+').lstrip('0')
+        # Common GCC country codes (longest first to avoid mis-splits).
+        for cc in ('965', '966', '971', '973', '974', '968', '970', '20'):
+            if digits.startswith(cc) and len(digits) > len(cc):
+                return cc, digits[len(cc):]
+        return '965', (digits or '00000000')
+
+    def _taly_order_items(self, transaction):
+        """Build the orderItems array from the linked sale order(s). Each
+        item needs name + nameArabic + quantity + itemPrice (Taly-required).
+        Falls back to a single synthetic line if no SO is linked."""
+        items = []
+        try:
+            ar = self.env['res.lang'].sudo().search(
+                [('code', '=like', 'ar%'), ('active', '=', True)], limit=1).code
+            for so in transaction.sale_order_ids:
+                for ln in so.order_line:
+                    if ln.display_type or not ln.product_id:
+                        continue
+                    prod = ln.product_id
+                    name = (prod.name or 'Item')[:255]
+                    name_ar = name
+                    if ar:
+                        try:
+                            name_ar = (prod.with_context(lang=ar).name
+                                       or name)[:255]
+                        except Exception:
+                            name_ar = name
+                    items.append({
+                        'name': name,
+                        'nameArabic': name_ar,
+                        'quantity': int(ln.product_uom_qty or 1),
+                        'itemPrice': round(ln.price_unit or 0.0, 3),
+                        'sku': (prod.default_code or '')[:128],
+                        'type': 'physical',
+                    })
+        except Exception:
+            _logger.debug('taly order items build failed', exc_info=True)
+        if not items:
+            items = [{
+                'name': transaction.reference or 'Order',
+                'nameArabic': transaction.reference or 'طلب',
+                'quantity': 1,
+                'itemPrice': round(transaction.amount, 3),
+                'type': 'physical',
+            }]
+        return items
+
     def _taly_create_order(self, transaction):
         """
-        POST /accounts/payment/v2/initiate
-        Returns (checkout_url, taly_order_id, order_token)
+        POST /accounts/payment/v2/initiate  (schema per docs.taly.io)
+        Returns (checkout_url, taly_order_id, order_token).
         """
         self.ensure_one()
+        self._taly_check_amount(transaction.amount)
         base_url = self.get_base_url()
+        cc, pnum = self._taly_split_phone(transaction.partner_phone)
+        full = (transaction.partner_name or transaction.partner_id.name or '').strip()
+        parts = full.split()
+        first = parts[0] if parts else 'Customer'
+        last = ' '.join(parts[1:]) if len(parts) > 1 else '.'
+        lang = (transaction.partner_id.lang or 'ar')[:2].lower()
+        amount = round(transaction.amount, 3)
         payload = {
             'merchantOrderId': transaction.reference,
-            'amount':          round(transaction.amount, 3),
             'currency':        transaction.currency_id.name,
-            'customer': {
-                'firstName': (transaction.partner_name or '').split()[0] or '',
-                'lastName':  ' '.join((transaction.partner_name or '').split()[1:]) or '',
-                'email':     transaction.partner_email or '',
-                'phone':     transaction.partner_phone or '',
+            'language':        'ar' if lang == 'ar' else 'en',
+            'subTotal':        amount,
+            'taxAmount':       0.0,
+            'discountAmount':  0.0,
+            'deliveryAmount':  0.0,
+            'totalAmount':     amount,
+            'deliveryMethod':  'Delivery',
+            'merchantRedirectUrl': f"{base_url}/payment/taly/return",
+            'postBackUrl':         f"{base_url}/payment/taly/webhook",
+            'platform':        'website',
+            'customerDetails': {
+                'firstName':     first or 'Customer',
+                'lastName':      last or '.',
+                'countryCode':   cc,
+                'phoneNumber':   pnum,
+                'customerEmail': transaction.partner_email or 'noemail@uellow.com',
             },
-            'redirectUrl': f"{base_url}/payment/taly/return",
-            'postBackUrl': f"{base_url}/payment/taly/webhook",
+            'orderItems':      self._taly_order_items(transaction),
         }
         data = self._taly_api_call('POST', '/accounts/payment/v2/initiate', payload=payload)
-        checkout_url = data.get('checkoutUrl') or data.get('checkout_url')
-        order_id     = data.get('orderId')     or data.get('id')
-        order_token  = data.get('orderToken')
-        return checkout_url, order_id, order_token
+        # Real response keys: secureCheckoutUrl / talyOrderId / orderToken.
+        checkout_url = (data.get('secureCheckoutUrl') or data.get('checkoutUrl')
+                        or data.get('checkout_url'))
+        order_id = (data.get('talyOrderId') or data.get('orderId')
+                    or data.get('id'))
+        order_token = data.get('orderToken')
+        return checkout_url, (str(order_id) if order_id else False), order_token
 
     def _taly_get_order(self, merchant_order_id):
-        """GET /accounts/merchant/orders?merchantOrderId=..."""
+        """GET /accounts/merchant/orders?merchantOrderId=...
+        NOTE: keyed by the MERCHANT order id (our tx.reference), not the
+        Taly order token."""
         self.ensure_one()
         data = self._taly_api_call(
             'GET',
             f'/accounts/merchant/orders?merchantOrderId={merchant_order_id}',
         )
         return data.get('data') or data
+
+    @api.model
+    def _taly_open_dashboard(self):
+        """v2.2.27 — open the single Taly provider's dashboard form directly
+        (the menu action used to open a blank create-form → /new)."""
+        prov = self.sudo().search([('code', '=', 'taly')], limit=1)
+        if not prov:
+            return {'type': 'ir.actions.act_window',
+                    'res_model': 'payment.provider', 'view_mode': 'list',
+                    'domain': [('code', '=', 'taly')], 'target': 'current'}
+        return {
+            'type': 'ir.actions.act_window', 'res_model': 'payment.provider',
+            'res_id': prov.id, 'view_mode': 'form',
+            'views': [(self.env.ref(
+                'payment_taly.view_taly_dashboard_form').id, 'form')],
+            'target': 'current', 'name': 'Taly Dashboard',
+        }
+
+    @api.model
+    def _taly_open_settings(self):
+        """Open the single Taly provider's configuration form directly."""
+        prov = self.sudo().search([('code', '=', 'taly')], limit=1)
+        if not prov:
+            return {'type': 'ir.actions.act_window',
+                    'res_model': 'payment.provider', 'view_mode': 'list',
+                    'domain': [('code', '=', 'taly')], 'target': 'current'}
+        return {
+            'type': 'ir.actions.act_window', 'res_model': 'payment.provider',
+            'res_id': prov.id, 'view_mode': 'form',
+            'target': 'current', 'name': 'Taly Settings',
+        }
+
+    def _taly_order_status(self, merchant_order_id):
+        """Return the normalized Odoo state ('done'/'pending'/'cancel'/'') for
+        a merchant order id — used by the POS to poll an in-store session."""
+        self.ensure_one()
+        data = self._taly_get_order(merchant_order_id) or {}
+        raw = (data.get('status') or data.get('orderStatus')
+               or data.get('paymentStatus') or '').upper()
+        return TALY_ORDER_STATUSES.get(raw, ''), raw
+
+    def _taly_create_instore_session(self, vals):
+        """
+        POST /accounts/payment/in-store/checkout-session  (POS).
+        Creates an in-store order; Taly auto-sends the customer an SMS
+        payment link (valid 15 min). Returns the parsed response:
+        {orderToken, securePaymentLink, merchantOrderId, expiryTime, totalAmount}.
+
+        `vals` must carry: merchant_order_id, amount, currency, language,
+        first_name, last_name, email, country_code, phone, redirect_url,
+        post_back_url, items(optional), store(optional).
+        """
+        self.ensure_one()
+        amount = round(float(vals.get('amount') or 0.0), 3)
+        self._taly_check_amount(amount)
+        cc, pnum = self._taly_split_phone(vals.get('phone'))
+        payload = {
+            'merchantOrderId': vals['merchant_order_id'],
+            'language':        'AR' if (vals.get('language') or 'ar')[:2].lower() == 'ar' else 'EN',
+            'otherFee':        0,
+            'subTotal':        amount,
+            'taxAmount':       0.0,
+            'totalAmount':     amount,
+            'currency':        vals.get('currency') or 'KWD',
+            'customerDetails': {
+                'customerEmail': vals.get('email') or 'noemail@uellow.com',
+                'firstName':     vals.get('first_name') or 'Customer',
+                'lastName':      vals.get('last_name') or '.',
+                'gender':        vals.get('gender') or 'M',
+                'phoneNumber':   pnum,
+                'countryCode':   '+' + cc,
+            },
+            'merchantRedirectUrl': vals.get('redirect_url') or self.get_base_url(),
+            'orderItems':      vals.get('items') or None,
+            'storeNameOrCode': vals.get('store') or None,
+            'postBackUrl':     vals.get('post_back_url')
+                               or (self.get_base_url() + '/payment/taly/webhook'),
+        }
+        data = self._taly_api_call(
+            'POST', '/accounts/payment/in-store/checkout-session', payload=payload)
+        return {
+            'orderToken':       data.get('orderToken'),
+            'securePaymentLink': (data.get('securePaymentLink')
+                                  or data.get('secureCheckoutUrl')),
+            'merchantOrderId':  data.get('merchantOrderId') or vals['merchant_order_id'],
+            'expiryTime':       data.get('expiryTime'),
+            'totalAmount':      data.get('totalAmount') or amount,
+        }
 
     def _taly_refund_order(self, order_token, amount=None, reason='Refund from Odoo'):
         """PUT /accounts/merchant/orders/refund"""

@@ -20,6 +20,7 @@ access_flash_sale_admin,flash.admin,model_uellow_flash_sale,base.group_system,1,
 access_vendor_settings_user,vs.user,model_uellow_vendor_settings,base.group_user,1,0,0,0
 access_vendor_settings_admin,vs.admin,model_uellow_vendor_settings,base.group_system,1,1,1,1
 access_follower_public,follower.public,model_uellow_vendor_follower,base.group_public,1,0,0,0
+access_follower_portal,follower.portal,model_uellow_vendor_follower,base.group_portal,1,1,1,1
 access_follower_user,follower.user,model_uellow_vendor_follower,base.group_user,1,1,1,1
 access_approve_wizard,approve.wizard,model_uellow_vendor_approve_wizard,base.group_system,1,1,1,1
 access_reject_wizard,reject.wizard,model_uellow_vendor_reject_wizard,base.group_system,1,1,1,1

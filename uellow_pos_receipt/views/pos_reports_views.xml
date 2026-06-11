@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- POS order list: surface the payment type used -->
+    <record id="view_pos_order_tree_uellow_payment" model="ir.ui.view">
+        <field name="name">pos.order.list.uellow.payment</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
+        <field name="arch" type="xml">
+            <field name="amount_total" position="before">
+                <field name="uellow_payment_type" string="Payment Type"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- POS order form: show the payment type next to the totals -->
+    <record id="view_pos_pos_form_uellow_payment" model="ir.ui.view">
+        <field name="name">pos.order.form.uellow.payment</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <field name="amount_total" position="after">
+                <field name="uellow_payment_type" string="Payment Type"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- POS session form: close-day summary at the very top of the record -->
+    <record id="view_pos_session_form_uellow_summary" model="ir.ui.view">
+        <field name="name">pos.session.form.uellow.summary</field>
+        <field name="model">pos.session</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_session_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <div class="alert alert-info m-0" role="status"
+                     style="border-radius:0">
+                    <div class="row text-center">
+                        <div class="col">
+                            <strong>Orders</strong><br/>
+                            <field name="uellow_order_count" nolabel="1"/>
+                        </div>
+                        <div class="col">
+                            <strong>Total Sales</strong><br/>
+                            <field name="uellow_total_sales" nolabel="1"
+                                   widget="monetary"/>
+                        </div>
+                        <div class="col">
+                            <strong>💵 Cash</strong><br/>
+                            <field name="uellow_total_cash" nolabel="1"
+                                   widget="monetary"/>
+                        </div>
+                        <div class="col">
+                            <strong>💳 Card / Online</strong><br/>
+                            <field name="uellow_total_card" nolabel="1"
+                                   widget="monetary"/>
+                        </div>
+                        <div class="col">
+                            <strong>Avg. Basket</strong><br/>
+                            <field name="uellow_avg_basket" nolabel="1"
+                                   widget="monetary"/>
+                        </div>
+                        <div class="col">
+                            <strong>Refunds</strong><br/>
+                            <field name="uellow_refund_total" nolabel="1"
+                                   widget="monetary"/>
+                        </div>
+                    </div>
+                    <field name="uellow_payment_breakdown" nolabel="1"
+                           readonly="1"
+                           style="white-space:pre-line; margin-top:6px;"/>
+                    <field name="currency_id" invisible="1"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

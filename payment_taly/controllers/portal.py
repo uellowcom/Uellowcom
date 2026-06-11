@@ -37,6 +37,7 @@ class TalyController(http.Controller):
         status = kwargs.get('orderStatus') or kwargs.get('status') or 'PENDING'
         order_token = kwargs.get('orderToken') or kwargs.get('order_token')
 
+        final_state = ''
         if reference:
             try:
                 tx = request.env['payment.transaction'].sudo().search([
@@ -44,15 +45,27 @@ class TalyController(http.Controller):
                     ('provider_code', '=', 'taly'),
                 ], limit=1)
                 if tx:
-                    tx._process_notification_data({
-                        'orderStatus': status.upper(),
-                        'merchantOrderId': reference,
-                        'orderToken': order_token,
-                        **kwargs,
-                    })
+                    # v2.2.27 — never trust the redirect's status param;
+                    # pull the authoritative status from Taly's API.
+                    try:
+                        tx._taly_pull_status()
+                    except Exception:
+                        tx._process_notification_data({
+                            'orderStatus': status.upper(),
+                            'merchantOrderId': reference,
+                            'orderToken': order_token,
+                            **kwargs,
+                        })
+                    final_state = tx.state or ''
             except Exception as e:
                 _logger.error("Taly return: error processing tx %s: %s", reference, e)
 
+        # v2.2.27 — tag the redirect so the mobile payment sheet (which keys on
+        # FAILED/CANCELLED in the URL) shows the right result. Success → no tag.
+        if final_state == 'done':
+            return request.redirect('/payment/status?status=SUCCESS')
+        if final_state in ('cancel', 'error'):
+            return request.redirect('/payment/status?status=CANCELLED')
         return request.redirect('/payment/status')
 
     # ── Webhook (Async Server Notification) ──────────────────────────────────
@@ -113,8 +126,13 @@ class TalyController(http.Controller):
             tx = request.env['payment.transaction'].sudo()._get_tx_from_notification_data(
                 'taly', data
             )
-            tx._process_notification_data(data)
-            _logger.info("Taly webhook: processed tx %s → %s", tx.reference, data.get('orderStatus'))
+            # v2.2.27 — re-fetch the authoritative status from Taly instead of
+            # trusting the posted body (defends against forged webhooks).
+            try:
+                tx._taly_pull_status()
+            except Exception:
+                tx._process_notification_data(data)
+            _logger.info("Taly webhook: processed tx %s → %s", tx.reference, tx.taly_order_status)
             return request.make_response(
                 json.dumps({'status': 'ok', 'reference': tx.reference}),
                 headers={'Content-Type': 'application/json'},

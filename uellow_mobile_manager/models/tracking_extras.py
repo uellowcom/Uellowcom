@@ -130,6 +130,11 @@ class SaleOrderTracking(models.Model):
         help='Set after a stage-change push is sent so we do not spam on re-saves.')
 
     def write(self, vals):
+        # v2.2.33 — driver-API writes set skip_push and fire their own
+        # event-based customer notifications (push_event), so suppress the
+        # legacy stage-push here to avoid double notifications.
+        if self.env.context.get('skip_push'):
+            return super().write(vals)
         # Detect transitions in delivery_status / state and fire pushes.
         before = {o.id: (o.state, getattr(o, 'delivery_status', ''),
                           o.delivery_driver_id.id if o.delivery_driver_id else 0)
@@ -164,6 +169,7 @@ class SaleOrderTracking(models.Model):
         titles = {
             'at_warehouse': ('Order confirmed', 'تأكد طلبك'),
             'at_carrier':   ('Heading out', 'في طريقه إليك'),
+            'with_courier': ('With the courier', 'طلبك مع المندوب'),
             'in_transit':   ('Driver on the way', 'السائق في الطريق'),
             'arriving':     ('Arriving soon', 'يصل قريباً'),
             'delivered':    ('Order delivered', 'تم التسليم'),
@@ -175,6 +181,8 @@ class SaleOrderTracking(models.Model):
                               f'الطلب {self.name} قيد التحضير في المخزن.'),
             'at_carrier':   (f'Order {self.name} has reached the delivery hub.',
                               f'الطلب {self.name} وصل لمركز التوصيل.'),
+            'with_courier': (f'Order {self.name} is now with the courier.',
+                              f'الطلب {self.name} أصبح مع المندوب.'),
             'in_transit':   (f'Driver picked up {self.name} and is on the way.',
                               f'استلم السائق {self.name} وهو في الطريق إليك.'),
             'arriving':     (f'Driver is minutes away from your address.',
@@ -234,6 +242,10 @@ class SaleOrderTracking(models.Model):
                 if dist is not None and dist <= 1.0:
                     return 'arriving'
             return 'in_transit'
+        if ds == 'accepted':
+            # Driver accepted — order is WITH the courier, but he hasn't
+            # pressed "Start delivery" yet, so no live pin.
+            return 'with_courier'
         if ds == 'assigned':
             return 'at_carrier'
         if ds == 'arrived_sorting':

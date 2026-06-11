@@ -220,6 +220,32 @@ def img_url(model, rec_id, field='image_1024', unique=None):
     return u
 
 
+# v2.2.40 — brand attribute values store their logo on product.brand (matched
+# by normalized name), NOT on product.attribute.value.image. This resolves the
+# logo the same way the shop brands row / product page do, so filter chips can
+# show the real brand image. Returns an absolute URL or None.
+def brand_value_logo(value):
+    for fld in ('dr_image', 'image'):
+        if fld in value._fields and value[fld]:
+            return img_url('product.attribute.value', value.id, fld,
+                           unique=value.write_date)
+    if 'product.brand' in request.env:
+        cmp = (value.name or '').lower().replace(' ', '').replace('-', '')
+        if cmp:
+            for b in request.env['product.brand'].sudo().search([]):
+                pn = (b.name or '').lower().replace(' ', '').replace('-', '')
+                if pn == cmp and getattr(b, 'image_1024', False):
+                    return img_url('product.brand', b.id, 'image_1024',
+                                   unique=b.write_date)
+    return None
+
+
+def is_brand_attribute(attr):
+    """True when an attribute is the brand/maker facet (bilingual names)."""
+    nm = (attr.name or '').lower()
+    return any(k in nm for k in ('brand', 'ماركة', 'علامة', 'براند'))
+
+
 # ─── Bilingual helpers ────────────────────────────────────────────────
 
 def bilingual(record, field, ar_field=None):
@@ -370,20 +396,59 @@ def paginate(records, page, per_page, serializer):
 
 # ─── Money / formatting ───────────────────────────────────────────────
 
-def fmt_price(amount, currency=None):
-    """Return both raw + display variants — the app formats locally."""
-    cur = currency or get_website().currency_id
+# v2.1.86 — per-country display currency. The country app-websites share a
+# KWD company, so the display currency is mapped by website id and prices are
+# CONVERTED from the base (KWD) using res.currency rates. One central change →
+# every price (cards, cart, detail, shipping, loyalty) shows the right currency.
+_WEBSITE_CCY = {
+    13: 'SAR', 3: 'SAR',          # Saudi (app / web)
+    14: 'QAR',                    # Qatar
+    15: 'AED', 7: 'AED',         # UAE
+    16: 'EGP', 4: 'EGP',         # Egypt
+    17: 'OMR', 9: 'OMR',         # Oman
+    18: 'USD', 2: 'USD',         # USA
+    # everything else → KWD (Kuwait / default)
+}
+
+
+def web_currency():
+    """The display currency for the active website (per country)."""
     try:
-        digits = cur.decimal_places if cur else 3
+        w = get_website()
+        code = _WEBSITE_CCY.get(w.id)
+        if code:
+            c = request.env['res.currency'].sudo().with_context(
+                active_test=False).search([('name', '=', code)], limit=1)
+            if c:
+                return c
+        return w.currency_id or request.env.company.currency_id
     except Exception:
-        digits = 3
+        return request.env.company.currency_id
+
+
+def fmt_price(amount, currency=None):
+    """Return both raw + display variants in the WEBSITE currency. `currency`
+    is the SOURCE currency of `amount` (defaults to the company/KWD); the value
+    is converted to the per-country display currency."""
+    src = currency or request.env.company.currency_id
+    dst = web_currency()
     try:
         amt = float(amount or 0)
     except Exception:
         amt = 0.0
+    try:
+        if src and dst and src.id != dst.id:
+            from odoo import fields as _f
+            amt = src._convert(amt, dst, request.env.company, _f.Date.today())
+    except Exception:
+        pass
+    try:
+        digits = dst.decimal_places if dst else 3
+    except Exception:
+        digits = 3
     return {
         'amount': round(amt, digits),
-        'currency': cur.name if cur else 'KWD',
-        'symbol': cur.symbol if cur else 'KD',
+        'currency': dst.name if dst else 'KWD',
+        'symbol': dst.symbol if dst else 'KD',
         'digits': digits,
     }

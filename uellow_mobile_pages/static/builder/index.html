@@ -1189,7 +1189,7 @@ const SNIPPETS = [
   // v2.0.74: image-only banner grid (1 / 2 / 3 columns) with per-language image
   { cat:'🖼 v2.0.74 Image blocks', items:[
     { kind:'image-banner',    icon:'🖼', label:'Image Banner (full / 2-col / 3-col)' },
-    { kind:'reels-strip',     icon:'🎥', label:'Reels Strip (circular video thumbs → opens /reels)' },
+    { kind:'reels-strip',     icon:'🎥', label:'Reels — videos strip (5 styles, opens in dialog)' },
   ]},
   // v2.0.96: themed occasion headers (Eid / Ramadan / Black Friday / …)
   { cat:'🎉 Occasion headers', items:[
@@ -1204,6 +1204,22 @@ const SNIPPETS = [
     { kind:'mini-cats',      icon:'🖼', label:'Mini Category Cards' },
     { kind:'welcome-deal',   icon:'🎉', label:'Welcome Deal (2×2)' },
     { kind:'discount-strip', icon:'🏷', label:'Discount Strip' },
+  ]},
+  // v2.2.06 — PROMOTION landing-page blocks (link a campaign, design freely)
+  { cat:'🎪 Promotion Pages', items:[
+    { kind:'promo-hero',       icon:'🎪', label:'Promo Hero — animated full-width header (logo + countdown)' },
+    { kind:'promo-countdown',  icon:'⏰', label:'Countdown Strip' },
+    { kind:'promo-carousel',   icon:'🎠', label:'Auto-play Product Carousel' },
+    { kind:'promo-mega2',      icon:'💥', label:'Mega Grid (-% ribbons)' },
+    { kind:'promo-flash-rail', icon:'⚡', label:'Flash Rail (per-card timer)' },
+    { kind:'promo-masonry',    icon:'🧱', label:'Masonry Product Wall' },
+    { kind:'promo-coupon',     icon:'🎟', label:'Coupon Card (copy code)' },
+    { kind:'promo-banner-cta', icon:'🖼', label:'Banner + CTA Button' },
+    { kind:'promo-tiers',      icon:'🥇', label:'Buy-More-Save-More Tiers' },
+    { kind:'promo-marquee',    icon:'📣', label:'Animated Marquee Strip' },
+    { kind:'promo-showcase',   icon:'🎁', label:'Campaign Showcase (coupons / products)' },
+    { kind:'bundle-showcase',  icon:'📦', label:'Bundles Showcase (save-as-a-set)' },
+    { kind:'new-customer-zone', icon:'🌟', label:'New-Customer Zone (first-order)' },
   ]},
 ];
 
@@ -1241,9 +1257,13 @@ const KIND_DEFAULTS = {
     titleEn:'Quick links', titleAr:'روابط سريعة',
     show_title:false, title_gap:6, pad_y:6,
     items:[
-      {icon:'🏷', labelEn:'Clearance',   labelAr:'تصفية',   color:'#FFE5E5', link:{type:'screen',value:'shop'}},
-      {icon:'💸', labelEn:'Price Drop',  labelAr:'تخفيضات', color:'#FFEFC2', link:{type:'screen',value:'shop'}},
-      {icon:'🎁', labelEn:'Share&Earn',  labelAr:'شارك واربح', color:'#FFD9E8', link:{type:'screen',value:'loyalty'}},
+      // v2.2.23 — sensible default destinations (editable per-pill):
+      // Clearance → deep-discount filtered set; Price Drop → all on-sale
+      // products (biggest drop first); Share&Earn → affiliate sign-up;
+      // Coupons → coupons screen.
+      {icon:'🏷', labelEn:'Clearance',   labelAr:'تصفية',   color:'#FFE5E5', link:{type:'filters',value:0,label:'Clearance',filters:{on_sale:true,min_discount:50,sort:'discount'}}},
+      {icon:'💸', labelEn:'Price Drop',  labelAr:'تخفيضات', color:'#FFEFC2', link:{type:'filters',value:0,label:'Price drops',filters:{on_sale:true,sort:'discount'}}},
+      {icon:'🎁', labelEn:'Share&Earn',  labelAr:'شارك واربح', color:'#FFD9E8', link:{type:'screen',value:'affiliate'}},
       {icon:'🎟', labelEn:'Coupons',     labelAr:'كوبونات', color:'#E5F0FF', link:{type:'screen',value:'coupons'}},
       {icon:'👥', labelEn:'Group Buy',   labelAr:'شراء جماعي', color:'#F5E7FF', link:{type:'screen',value:'shop'}},
     ]
@@ -1395,11 +1415,47 @@ const KIND_DEFAULTS = {
     audience:'all',            // all | guests | new
     badgeEn:'New User Bonus', badgeAr:'مكافأة العميل الجديد',
   }),
-  'promo-spotlight': () => ({ titleEn:'Spotlight Offer', titleAr:'عرض مميّز', subEn:'Hand-picked deals you will love', subAr:'صفقات مختارة بعناية', logo:'✨', c1:'#7B2FF7', c2:'#B86CFF', ctaEn:'See all', ctaAr:'الكل', badgeEn:'Featured', badgeAr:'مميّز', source:'discounted', limit:10, layout:'rail' }),
-  'promo-category': () => ({ titleEn:'Shop the Category', titleAr:'تسوّق القسم', subEn:'Top picks from this section', subAr:'أفضل المنتجات من هذا القسم', logo:'🛍', c1:'#2F6E62', c2:'#3E9C88', ctaEn:'Browse', ctaAr:'تصفّح', badgeEn:'Shop', badgeAr:'تسوّق', source:'collection', category_id:0, limit:8, layout:'grid' }),
-  'promo-rank': () => ({ titleEn:'Best Sellers', titleAr:'الأكثر مبيعاً', subEn:'What everyone is buying now', subAr:'الأكثر طلباً الآن', logo:'🏆', c1:'#C19A2E', c2:'#E8C45A', ctaEn:'See ranking', ctaAr:'الترتيب', badgeEn:'Best Seller', badgeAr:'الأكثر مبيعاً', source:'bestsellers', limit:10, layout:'rail' }),
-  'promo-arrivals': () => ({ titleEn:'New Arrivals', titleAr:'وصل حديثاً', subEn:'Fresh in store', subAr:'أحدث ما وصل', logo:'🆕', c1:'#1E88A8', c2:'#43C0D6', ctaEn:'See all', ctaAr:'الكل', badgeEn:'New', badgeAr:'جديد', source:'newest', limit:10, layout:'rail' }),
-  'promo-mega': () => ({ titleEn:'Mega Sale', titleAr:'تخفيضات كبرى', subEn:'Limited-time offers — grab them fast', subAr:'عروض لوقت محدود', logo:'🔥', c1:'#E63946', c2:'#FF7A85', ctaEn:'Shop sale', ctaAr:'تسوّق العروض', badgeEn:'SALE', badgeAr:'تخفيض', source:'discounted', limit:10, layout:'rail' }),
+  'promo-spotlight': () => ({ titleEn:'Spotlight Offer', titleAr:'عرض مميّز', subEn:'Hand-picked deals you will love', subAr:'صفقات مختارة بعناية', logo:'✨', c1:'#7B2FF7', c2:'#B86CFF', cta_color:'#F5C320', header_style:'gradient', shape:'hero', ctaEn:'See all', ctaAr:'الكل', badgeEn:'Featured', badgeAr:'مميّز', source:'discounted', limit:10, layout:'rail' }),
+  'promo-category': () => ({ titleEn:'Shop the Category', titleAr:'تسوّق القسم', subEn:'Top picks from this section', subAr:'أفضل المنتجات من هذا القسم', logo:'🛍', c1:'#2F6E62', c2:'#3E9C88', cta_color:'#F5C320', header_style:'gradient', shape:'grid', ctaEn:'Browse', ctaAr:'تصفّح', badgeEn:'Shop', badgeAr:'تسوّق', source:'collection', category_id:0, limit:8, layout:'grid' }),
+  'promo-rank': () => ({ titleEn:'Best Sellers', titleAr:'الأكثر مبيعاً', subEn:'What everyone is buying now', subAr:'الأكثر طلباً الآن', logo:'🏆', c1:'#C19A2E', c2:'#E8C45A', cta_color:'#F5C320', header_style:'gradient', shape:'leaderboard', ctaEn:'See ranking', ctaAr:'الترتيب', badgeEn:'Best Seller', badgeAr:'الأكثر مبيعاً', source:'bestsellers', limit:10, layout:'rail' }),
+  'promo-arrivals': () => ({ titleEn:'New Arrivals', titleAr:'وصل حديثاً', subEn:'Fresh in store', subAr:'أحدث ما وصل', logo:'🆕', c1:'#1E88A8', c2:'#43C0D6', cta_color:'#F5C320', header_style:'gradient', shape:'arrivals', ctaEn:'See all', ctaAr:'الكل', badgeEn:'New', badgeAr:'جديد', source:'newest', limit:10, layout:'rail' }),
+  'promo-mega': () => ({ titleEn:'Mega Sale', titleAr:'تخفيضات كبرى', subEn:'Limited-time offers — grab them fast', subAr:'عروض لوقت محدود', logo:'🔥', c1:'#E63946', c2:'#FF7A85', cta_color:'#F5C320', header_style:'gradient', shape:'mega', ctaEn:'Shop sale', ctaAr:'تسوّق العروض', badgeEn:'SALE', badgeAr:'تخفيض', source:'discounted', limit:10, layout:'rail' }),
+  // v2.2.06 — promotion landing-page blocks
+  'promo-hero': () => ({ titleEn:'', titleAr:'', subEn:'', subAr:'', emoji:'🎉', logo_image:'', c1:'#F5C320', c2:'#C99000', c3:'#FFFFFF', text_color:'#FFFFFF', animation:'aurora', height:210, pattern:'', show_countdown:true, kickerEn:'', kickerAr:'', discount_text:'', ctaEn:'', ctaAr:'', bottom_curve:true, link:{type:'none'}, promotion_id:null, promotion_ids:[], pad_x:0, pad_y:0,
+    bg_images:[], slide_interval:4, countdown_position:'bottom-center', countdown_size:'sm', countdown_box_color:'#000000', countdown_text_color:'#FFFFFF', countdown_label_color:'#FFFFFF' }),
+  'promo-countdown': () => ({ titleEn:'Offer ends in', titleAr:'ينتهي العرض خلال', c1:'#E63946', text_color:'#FFFFFF', ends_at:'', promotion_id:null, promotion_ids:[] }),
+  'promo-carousel': () => ({ titleEn:'', titleAr:'', subEn:'', subAr:'', ctaEn:'', ctaAr:'', font_color:'#412402', link:null, source:'promotion', promotion_id:null, promotion_ids:[], limit:8, interval:3, c1:'#F5C320' }),
+  'promo-mega2': () => ({ source:'promotion', promotion_id:null, promotion_ids:[], limit:10, c1:'#E63946', titleEn:'', titleAr:'', subEn:'', subAr:'', columns:2, card_style:'light', show_save:true }),
+  'promo-flash-rail': () => ({ source:'promotion', promotion_id:null, promotion_ids:[], limit:10, c1:'#E63946', ends_at:'' }),
+  'promo-masonry': () => ({ source:'promotion', promotion_id:null, promotion_ids:[], limit:12, c1:'#F5C320' }),
+  'promo-showcase': () => ({
+    titleEn:'Special offers', titleAr:'عروض خاصة', subEn:'', subAr:'', emoji:'🎁',
+    c1:'#2563EB', c2:'#1E3A8A', text_color:'#FFFFFF', sub_color:'#DBEAFE',
+    content_type:'coupons',
+    coupon_mode:'all_active', coupon_ids:[], coupon_labels:[], limit:8,
+    card_color:'#FFFFFF', font_color:'#412402', code_color:'#412402',
+    claim_color:'#2563EB', claim_text_color:'#FFFFFF', claimEn:'Claim', claimAr:'احصل عليه',
+    source:'discounted', promotion_id:null, promotion_ids:[], category_id:0, product_ids:[], card:{},
+    show_countdown:false, countdown_position:'top-right', countdown_size:'sm',
+    cd_box_color:'#1E3A8A', cd_text_color:'#FFFFFF', cd_label_color:'#DBEAFE',
+    layout:'rail' }),
+  'bundle-showcase': () => ({
+    titleEn:'Save as a set', titleAr:'وفّر كباقة', subEn:'Buy together and save', subAr:'اشترِ معاً ووفّر', emoji:'📦',
+    c1:'#7C3AED', c2:'#4C1D95', text_color:'#FFFFFF', sub_color:'#EDE9FE',
+    limit:8, layout:'rail', card:{},
+    show_savings:true, savings_color:'#16A34A' }),
+  'new-customer-zone': () => ({ card:{} }),
+  'promo-coupon': () => ({ titleEn:'Discount coupons', titleAr:'كوبونات خصم', subEn:'', subAr:'', code:'', c1:'#F5C320', code_color:'#412402',
+    coupon_mode:'manual', coupon_ids:[], coupon_labels:[], limit:8, layout:'grid',
+    card_color:'#FFFFFF', font_color:'#412402', claim_color:'#412402', claim_text_color:'#FFFFFF',
+    claimEn:'Claim', claimAr:'احصل عليه' }),
+  'promo-banner-cta': () => ({ titleEn:'', titleAr:'', ctaEn:'Shop now', ctaAr:'تسوق الآن', c1:'#412402', c2:'#1F1100', text_color:'#FFFFFF', image_url:'', height:130, link:{type:'none'},
+    promotion_id:null, promotion_ids:[], show_countdown:false, fullscreen:false,
+    cd_box_color:'#000000', cd_text_color:'#FFFFFF', cd_label_color:'#FFFFFF' }),
+  'promo-tiers': () => ({ titleEn:'Buy more, save more', titleAr:'اشترِ أكثر، وفّر أكثر', c1:'#F5C320',
+    source:'promotion', promotion_id:null, promotion_ids:[], limit:8, bulk_qty:10,
+    card_color:'#FFFFFF', font_color:'#412402', layout:'list', card:{} }),
+  'promo-marquee': () => ({ textsEn:'Free shipping over 10 KD | 100% authentic | Fast delivery', textsAr:'شحن مجاني فوق 10 د.ك | منتجات أصلية 100% | توصيل سريع', c1:'#412402', text_color:'#FFFFFF', speed:14, pad_x:0 }),
   'products': () => ({ pad_top:2 }),
   'trust-strip': () => ({
     show_title:false, pad_y:0,
@@ -1441,6 +1497,8 @@ const KIND_DEFAULTS = {
     show_title:true, title_gap:6, pad_y:8,
     titleEn:'🔥 Trending videos', titleAr:'🔥 الفيديوهات الرائجة',
     limit:8,
+    style:'bubbles',        // bubbles | squares | cards | grid | carousel
+    open:'dialog',          // dialog (play in-place) | screen (/reels)
     bubble_size:62,         // px diameter
     ring_color:'#F5C320',
   }),
@@ -1505,6 +1563,10 @@ let selectedBlockId = null;
 let propsTab = 'content';
 let navbarSelected = null;
 let linkPicker = { onApply:null, current:null, mode:'page' };
+// v2.2.21 — filtered-link builder state + caches.
+let _lpFilters = null;          // working filter object while editing
+let _lpAttrsCache = null;       // /lookups/attributes result
+let _lpFilterCountTimer = null;
 
 // `id` may be a number (server payload) OR a string (when sourced from a
 // DOM `data-*` attribute) — coerce so the comparison always works.
@@ -1643,6 +1705,23 @@ function renderLeftBlocks(host){
       e.dataTransfer.effectAllowed = 'copy';
     });
   });
+  // v2.2.09 — the palette search box finally works: live-filters block
+  // names/kinds, auto-expands matching categories, hides empty ones.
+  const q = host.querySelector('.blocks-search input');
+  if (q) q.addEventListener('input', () => {
+    const t = q.value.trim().toLowerCase();
+    host.querySelectorAll('.cat').forEach(cat => {
+      let any = false;
+      cat.querySelectorAll('.snip').forEach(sn => {
+        const hit = !t || sn.textContent.toLowerCase().indexOf(t) !== -1
+            || (sn.dataset.kind || '').indexOf(t) !== -1;
+        sn.style.display = hit ? '' : 'none';
+        if (hit) any = true;
+      });
+      cat.style.display = any ? '' : 'none';
+      if (t) cat.classList.remove('collapsed');
+    });
+  });
 }
 
 function renderLeftNavbar(host){
@@ -1713,6 +1792,7 @@ function describeTarget(t){
   if (t.type === 'url')    return '🔗 ' + t.value;
   if (t.type === 'product')return '🛍 Product';
   if (t.type === 'category')return '📁 Category';
+  if (t.type === 'filters') return '🎚 ' + (t.label || 'Filtered set');
   return '—';
 }
 
@@ -1768,6 +1848,11 @@ function renderLeftTheme(host){
         <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
           ${_bgOpts.filter(o=>o.val).map(o=>`<div title="${o.label}" style="width:20px;height:20px;border-radius:4px;background:${o.val};border:1px solid #d0d0d0;cursor:pointer" data-bg-quick="${o.val}"></div>`).join('')}
           <small style="color:#888;align-self:center">↑ click a swatch to apply quickly</small>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px dashed #e2e2e2">
+          <input type="color" id="bgFreeColor" value="${/^#[0-9A-Fa-f]{6}$/.test(ov.page_bg||'')?ov.page_bg:'#FAF6EB'}" style="width:42px;height:30px;border:1px solid #d0d0d0;border-radius:6px;cursor:pointer;padding:0;background:none"/>
+          <input type="text" id="bgFreeHex" value="${(ov.page_bg||'').toUpperCase()}" placeholder="#RRGGBB" maxlength="7" style="flex:1;font-family:monospace;text-transform:uppercase"/>
+          <small style="color:#888">🎨 any color</small>
         </div>
       </div>
       <div class="field"><label>Header style</label>
@@ -1840,7 +1925,28 @@ function renderLeftTheme(host){
       _persistOverride('page_bg', val);
       const sel = host.querySelector('select[data-ov-key="page_bg"]');
       if (sel) sel.value = val;
+      const hex = host.querySelector('#bgFreeHex'); if (hex) hex.value = val.toUpperCase();
+      const cp = host.querySelector('#bgFreeColor'); if (cp && /^#[0-9A-Fa-f]{6}$/.test(val)) cp.value = val;
     });
+  });
+  // v2.2.11 — FREE background color: native color picker + hex input.
+  // Both persist page_bg as a real hex so Flutter renders any custom color.
+  const _bgFreeColor = host.querySelector('#bgFreeColor');
+  const _bgFreeHex = host.querySelector('#bgFreeHex');
+  const _applyFreeBg = (val) => {
+    if (!/^#[0-9A-Fa-f]{6}$/.test(val)) return;
+    val = val.toUpperCase();
+    _persistOverride('page_bg', val);
+    if (_bgFreeColor) _bgFreeColor.value = val;
+    if (_bgFreeHex) _bgFreeHex.value = val;
+    const sel = host.querySelector('select[data-ov-key="page_bg"]');
+    if (sel) sel.value = sel.querySelector(`option[value="${val}"]`) ? val : '';
+  };
+  if (_bgFreeColor) _bgFreeColor.addEventListener('input', () => _applyFreeBg(_bgFreeColor.value));
+  if (_bgFreeHex) _bgFreeHex.addEventListener('change', () => {
+    let v = (_bgFreeHex.value || '').trim();
+    if (v && v[0] !== '#') v = '#' + v;
+    _applyFreeBg(v);
   });
   // Animation toggles
   host.querySelectorAll('.toggle[data-ov-key]').forEach(el => {
@@ -1935,9 +2041,9 @@ function renderLeftSettings(host){
       <div class="field"><label>Page name</label>
         <div class="ml">
           <div class="ml-tabs">
-            ${LANGS.map((l,i)=>`<button class="${i===0?'on':''} ${!p.langs.includes(l.code)?'warn':''}">${l.flag} ${l.code.toUpperCase()}</button>`).join('')}
+            ${LANGS.map((l,i)=>`<button type="button" class="${i===0?'on':''} ${!p.langs.includes(l.code)?'warn':''}" data-ml-tab="${l.code}">${l.flag} ${l.code.toUpperCase()}</button>`).join('')}
           </div>
-          <input value="${p.name.en}" />
+          ${LANGS.map((l,i)=>`<input class="ml-input ${i===0?'on':''}" data-ml-lang="${l.code}" data-page-name="${l.code}" value="${((p.name&&p.name[l.code])||'').replace(/"/g,'&quot;')}" placeholder="Page name${l.code!=='en'?' ('+l.code.toUpperCase()+')':''}"/>`).join('')}
         </div>
       </div>
       <div class="field"><label>URL slug</label><input value="${p.slug}" /></div>
@@ -1992,6 +2098,25 @@ function renderLeftSettings(host){
       const i = p.langs.indexOf(code);
       if (i>=0) p.langs.splice(i,1); else p.langs.push(code);
       render();
+    });
+  });
+  // v2.2.11 — bilingual page name: wire each language input + the EN/AR
+  // tabs locally (the global ml-tabs handler only runs for the right panel).
+  host.querySelectorAll('[data-page-name]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      if (!p.name || typeof p.name !== 'object') p.name = {en:'', ar:''};
+      p.name[inp.dataset.pageName] = inp.value;
+      scheduleSave();
+    });
+  });
+  host.querySelectorAll('.ml-tabs').forEach(grp => {
+    grp.querySelectorAll('[data-ml-tab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.dataset.mlTab;
+        grp.querySelectorAll('[data-ml-tab]').forEach(b => b.classList.toggle('on', b.dataset.mlTab === lang));
+        const wrap = grp.parentElement;
+        if (wrap) wrap.querySelectorAll('.ml-input').forEach(i => i.classList.toggle('on', i.dataset.mlLang === lang));
+      });
     });
   });
 }
@@ -2422,16 +2547,31 @@ function renderBlockContent(b){
     case 'reels-strip': {
       const sz = p.bubble_size || 62;
       const ring = p.ring_color || '#F5C320';
+      const st = p.style || 'bubbles';
+      const tileBg = 'linear-gradient(135deg,#f5e8dd,#e8d5b8)';
+      let strip;
+      if (st === 'grid') {
+        strip = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">${[0,1,2,3,4,5].map(()=>`
+          <div style="aspect-ratio:.68;border-radius:12px;background:${tileBg};display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px">▶</div>`).join('')}</div>`;
+      } else if (st === 'carousel') {
+        strip = `<div style="display:flex;gap:8px;overflow:hidden">${[0,1,2].map(()=>`
+          <div style="min-width:150px;height:200px;border-radius:18px;background:${tileBg};display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px">▶</div>`).join('')}</div>`;
+      } else if (st === 'cards') {
+        strip = `<div style="display:flex;gap:8px;overflow:hidden">${[0,1,2,3].map(()=>`
+          <div style="min-width:110px;height:170px;border-radius:14px;background:${tileBg};display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px">▶</div>`).join('')}</div>`;
+      } else if (st === 'squares') {
+        strip = `<div style="display:flex;gap:8px;overflow:hidden">${[0,1,2,3,4,5].map(()=>`
+          <div style="min-width:${sz+16}px;height:${sz+16}px;border-radius:16px;background:${tileBg};display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px">▶</div>`).join('')}</div>`;
+      } else {
+        strip = `<div style="display:flex;gap:8px;overflow:hidden">${[0,1,2,3,4,5].map(i=>`
+          <div style="display:flex;flex-direction:column;align-items:center;width:${sz+4}px">
+            <div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${tileBg};border:2.5px solid ${ring};display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px">▶</div>
+            <div style="font-size:9px;color:#999;margin-top:3px">Reel ${i+1}</div>
+          </div>`).join('')}</div>`;
+      }
       return `<div style="padding:6px 10px">
         ${p.titleEn?`<div style="font-size:12px;font-weight:900;color:var(--dark);padding:0 4px 6px">${p.titleEn}</div>`:''}
-        <div style="display:flex;gap:8px;overflow:hidden">
-          ${[0,1,2,3,4,5].map(i=>`
-            <div style="display:flex;flex-direction:column;align-items:center;width:${sz+4}px">
-              <div style="width:${sz}px;height:${sz}px;border-radius:50%;background:linear-gradient(135deg,#f5e8dd,#e8d5b8);border:2.5px solid ${ring};display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px">▶</div>
-              <div style="font-size:9px;color:#999;margin-top:3px">Reel ${i+1}</div>
-            </div>
-          `).join('')}
-        </div>
+        ${strip}
       </div>`;
     }
     case 'explore-more': {
@@ -2487,8 +2627,77 @@ function renderBlockContent(b){
       <div style="display:flex;gap:10px;justify-content:space-around;background:#fff;border-radius:8px;padding:7px 4px;font-size:9px;color:#333">
         ${(p.items||[]).slice(0,4).map(it=>`<span>${it.icon||'🛡️'} ${it.labelEn||''}</span>`).join('') || '🛡️ After-sales · 💳 Secure · 🚚 Logistics'}
       </div>`;
-    default: return `<div class="b-text">[${b.kind}]</div>`;
+    default: return genericBlockPreview(b);
   }
+}
+
+/* v2.2.21 — smart fallback preview so NEW blocks render a real shape in
+   the canvas instead of a bare "[kind]" code tag. Builds from the common
+   themed-block props (emoji/logo, title, c1/c2 gradient) + representative
+   tiles, with per-kind hints (coupons vs products vs marquee…). */
+function genericBlockPreview(b){
+  const p = b.props || {};
+  const esc = s => String(s||'').replace(/</g,'&lt;');
+  const emoji = p.emoji || p.logo || ({
+    'promo-tiers':'🥇','promo-showcase':'🎁','bundle-showcase':'📦',
+    'promo-coupon':'🎟','promo-banner-cta':'🖼','promo-hero':'⭐',
+    'promo-mega2':'💥','promo-flash-rail':'⚡','promo-masonry':'🧱',
+    'promo-countdown':'⏰','promo-carousel':'🎠','promo-marquee':'📣',
+    'new-customer-zone':'🌟',
+  }[b.kind] || '🧩');
+  const title = esc(p.titleEn || p.title || prettyKind(b.kind));
+  const sub = esc(p.subEn || p.sub || '');
+  const c1 = p.c1 || '#412402';
+  const c2 = p.c2 || '#7C3AED';
+  const tc = p.text_color || '#fff';
+  const showsCoupons = b.kind === 'promo-coupon' ||
+      (b.kind === 'promo-showcase' && (p.content_type||'coupons') === 'coupons');
+  // marquee: a single scrolling strip
+  if (b.kind === 'promo-marquee') {
+    const txt = esc(p.textsEn || p.texts || 'Free returns • New drops daily • Fast delivery');
+    return `<div style="background:linear-gradient(135deg,${c1},${c2});color:${tc};
+        border-radius:10px;padding:9px 12px;font-size:11px;font-weight:800;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📣 ${txt}</div>`;
+  }
+  // countdown: gradient with timer chips
+  if (b.kind === 'promo-countdown') {
+    return `<div style="background:linear-gradient(135deg,${c1},${c2});color:${tc};
+        border-radius:12px;padding:12px;text-align:center">
+      <div style="font-size:12px;font-weight:800;margin-bottom:6px">⏰ ${title}</div>
+      <div style="display:flex;gap:6px;justify-content:center">
+        ${['12','08','45'].map(n=>`<span style="background:rgba(255,255,255,.2);
+            border-radius:6px;padding:5px 8px;font-weight:900;font-size:13px">${n}</span>`).join('<b>:</b>')}
+      </div></div>`;
+  }
+  // tile body: coupons vs product cards
+  const tiles = showsCoupons
+    ? `<div style="display:flex;gap:6px;padding:8px;background:#fff">
+         ${[1,2].map(()=>`<div style="flex:1;border:1px dashed #d8c089;border-radius:8px;
+            height:46px;display:flex;align-items:center;gap:6px;padding:6px">
+            <div style="width:34px;height:34px;border-radius:7px;background:${c1}22"></div>
+            <div style="flex:1"><div style="height:7px;background:#eee;border-radius:3px;margin-bottom:4px"></div>
+            <div style="height:7px;width:60%;background:#eee;border-radius:3px"></div></div></div>`).join('')}
+       </div>`
+    : `<div style="display:flex;gap:6px;padding:8px;background:#fff">
+         ${[1,2,3].map(()=>`<div style="border:1px solid #eee;border-radius:8px;
+            width:54px;height:74px;overflow:hidden">
+            <div style="height:46px;background:#f3f0fb"></div>
+            <div style="padding:4px"><div style="height:6px;background:#eee;border-radius:3px;margin-bottom:3px"></div>
+            <div style="height:6px;width:55%;background:#eee;border-radius:3px"></div></div></div>`).join('')}
+       </div>`;
+  return `<div style="border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)">
+      <div style="background:linear-gradient(135deg,${c1},${c2});padding:10px;color:${tc};
+          display:flex;align-items:center;gap:8px">
+        <span style="background:rgba(255,255,255,.22);border-radius:8px;padding:3px 7px;font-size:14px">${emoji}</span>
+        <div style="flex:1;min-width:0"><b style="font-size:12px;display:block;white-space:nowrap;
+            overflow:hidden;text-overflow:ellipsis">${title}</b>
+          ${sub?`<span style="font-size:9px;opacity:.85">${sub}</span>`:''}</div>
+      </div>${tiles}</div>`;
+}
+
+function prettyKind(k){
+  return String(k||'').replace(/^promo-/,'').replace(/-/g,' ')
+    .replace(/\b\w/g, c => c.toUpperCase());
 }
 
 /* ============================================================
@@ -2767,10 +2976,10 @@ function itemBilingualImage(arrayKey, idx, field, item, label){
       <div class="hint">Leave empty to reuse the English image when the app is in Arabic mode.</div>
     </div>`;
 }
-function itemLink(arrayKey, idx, field, item){
+function itemLink(arrayKey, idx, field, item, label){
   const lk = item[field];
-  const ic = {page:'📄', product:'🛍', category:'📁', url:'🔗', collection:'📦', screen:'📱'}[(lk||{}).type] || '🔗';
-  return `<div class="field"><label>Link target</label>
+  const ic = {page:'📄', product:'🛍', category:'📁', url:'🔗', collection:'📦', screen:'📱', filters:'🎚'}[(lk||{}).type] || '🔗';
+  return `<div class="field"><label>${label||'Link target'}</label>
     <button class="link-field" data-i-link="${arrayKey}|${idx}|${field}">
       <div class="lk-ic">${ic}</div>
       <div class="lk-info">
@@ -2993,17 +3202,18 @@ function renderContent(b){
 
         <div class="sub-h">Source & filtering</div>
         <div class="field"><label>Source</label>
-          ${sourceSelect(b, 'source', [
+          ${sourceSelect(b, 'source', withPromoSource([
             ['discounted','⚡ Active discount'],
             ['bestsellers','🏆 Bestsellers'],
             ['newest','✨ Newest'],
             ['free_shipping','🚚 Free shipping only'],
             ['collection','📦 From a category…'],
             ['manual','🎯 Hand-picked products…'],
-          ], 'discounted')}
+          ]), 'discounted')}
         </div>
         ${(p.source==='manual') ? productsPickerBtn(b) : ''}
         ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
+        ${promoSourcePicker(b)}
         <div class="field"><label>Maximum items</label>
           <input type="number" data-prop="limit" value="${p.limit||10}"/></div>
         <div class="field"><label>Minimum discount % (filter)</label>
@@ -3035,11 +3245,8 @@ function renderContent(b){
               <div class="sw ${p.bg_strip===c?'on':''}" style="background:${c==='transparent'?'#fff':c};${c==='transparent'?'background-image:repeating-linear-gradient(45deg,#eee,#eee 4px,#fff 4px,#fff 8px);':''}" data-color-prop="${c}" data-color-target="bg_strip"></div>`).join('')}
           </div></div>
 
-        <div class="sub-h">What to show</div>
-        <div class="field"><label><input type="checkbox" data-toggle-prop="show_discount_badge" ${p.show_discount_badge!==false?'checked':''}/> Show -X% badge</label></div>
-        <div class="field"><label><input type="checkbox" data-toggle-prop="show_save_amount" ${p.show_save_amount!==false?'checked':''}/> Show "Save X KD" pill</label></div>
-        <div class="field"><label><input type="checkbox" data-toggle-prop="show_compare_price" ${p.show_compare_price!==false?'checked':''}/> Show old (strikethrough) price</label></div>
-        <div class="field"><label><input type="checkbox" data-toggle-prop="show_brand" ${p.show_brand?'checked':''}/> Show brand name</label></div>
+        ${cardDisplayToggles(b)}
+        <div class="sub-h">Urgency</div>
         <div class="field"><label><input type="checkbox" data-toggle-prop="show_urgency" ${p.show_urgency?'checked':''}/> Show "Selling fast" tag on big discounts</label></div>
         ${p.show_urgency?`<div class="field"><label>"Selling fast" threshold (% off)</label>
           <input type="number" data-prop="urgency_threshold" value="${p.urgency_threshold||30}" min="0" max="99"/></div>`:''}
@@ -3165,9 +3372,9 @@ function renderContent(b){
                 <option value="ghost"     ${it.cta_shape==='ghost'?'selected':''}>◌ Ghost (outline)</option>
                 <option value="underline" ${it.cta_shape==='underline'?'selected':''}>‗ Underline only</option>
               </select></div>
-            ${itemLink('slides', i, 'link', it)}
+            ${itemLink('slides', i, 'link', it, '🔗 Primary CTA link')}
             ${itemMl('slides', i, 'cta2En', 'cta2Ar', 'Secondary CTA text (optional)', it)}
-            ${itemLink('slides', i, 'cta2_link', it)}
+            ${itemLink('slides', i, 'cta2_link', it, '🔗 Secondary CTA link')}
 
             <div class="sub-h" style="margin-top:8px">Position &amp; styling</div>
             <div class="field"><label>Text anchor (9-position grid)</label>
@@ -3250,13 +3457,14 @@ function renderContent(b){
         </div>
         <div class="sub-h">Products</div>
         <div class="field"><label>Source</label>
-          ${sourceSelect(b, 'source', [
+          ${sourceSelect(b, 'source', withPromoSource([
             ['discounted','Biggest discounts (auto)'],
             ['newest','Newest products'],
             ['manual','Hand-picked…'],
-          ], 'discounted')}
+          ]), 'discounted')}
         </div>
         ${(p.source==='manual') ? productsPickerBtn(b) : ''}
+        ${promoSourcePicker(b)}
         <div class="field"><label>Maximum products</label>
           <input type="number" min="2" max="20" data-prop-num="limit" value="${p.limit||8}"/></div>`;
     }
@@ -3269,14 +3477,312 @@ function renderContent(b){
         ${mlField(b,'badge','Card badge text')}
         <div class="field"><label>Logo (emoji)</label><input data-prop="logo" value="${p.logo||'✨'}" style="max-width:80px"/></div>
         <div class="field"><label>Logo image URL (optional)</label><input data-prop="logo_image" value="${p.logo_image||''}" placeholder="https://…"/></div>
-        <div class="field"><label>Gradient start</label><input type="color" value="${p.c1||'#7B2FF7'}" data-prop="c1" style="height:32px;padding:2px"/></div>
-        <div class="field"><label>Gradient end</label><input type="color" value="${p.c2||'#B86CFF'}" data-prop="c2" style="height:32px;padding:2px"/></div>
-        <div class="field"><label>Layout</label>${sourceSelect(b,'layout',[['rail','Horizontal rail'],['grid','2-column grid']],'rail')}</div>
+        <div class="field"><label>Block colour (start)</label><input type="color" value="${p.c1||'#7B2FF7'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Block colour (end)</label><input type="color" value="${p.c2||'#B86CFF'}" data-prop="c2" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>"All" button colour</label><input type="color" value="${p.cta_color||'#F5C320'}" data-prop="cta_color" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Shape (6 layouts)</label>${sourceSelect(b,'shape',[['rail','▭ Horizontal rail'],['grid','▦ 2-column grid'],['hero','★ Hero + rail'],['leaderboard','🏅 Leaderboard (ranked rows)'],['mega','🔥 Sale grid (% ribbons)'],['arrivals','🆕 Rail + NEW ribbon']], p.shape||'rail')}</div>
+        <div class="field"><label>Header background</label>${sourceSelect(b,'header_style',[['gradient','Coloured gradient'],['flat','Soft tint'],['none','None (clean)']], p.header_style||'gradient')}</div>
         <div class="sub-h">Products</div>
-        <div class="field"><label>Source</label>${sourceSelect(b,'source',[['discounted','On offer — biggest discounts'],['bestsellers','Best sellers'],['newest','New arrivals'],['collection','A specific category…'],['manual','Hand-picked…']],p.source||'discounted')}</div>
+        <div class="field"><label>Source</label>${sourceSelect(b,'source',withBrandTagFilter(withPromoSource([['discounted','On offer — biggest discounts'],['bestsellers','Best sellers'],['newest','New arrivals'],['collection','A specific category…'],['manual','Hand-picked…']])),p.source||'discounted')}</div>
         ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
         ${(p.source==='manual') ? productsPickerBtn(b) : ''}
-        <div class="field"><label>Maximum products</label><input type="number" min="2" max="20" data-prop-num="limit" value="${p.limit||10}"/></div>`;
+        ${(p.source==='brand') ? brandPickerBtn(b) : ''}
+        ${(p.source==='tag') ? tagPickerBtn(b) : ''}
+        ${(p.source==='filter') ? filterSourcePanel(b) : ''}
+        ${promoSourcePicker(b)}
+        <div class="field"><label>Maximum products</label><input type="number" min="2" max="20" data-prop-num="limit" value="${p.limit||10}"/></div>
+        ${cardDisplayToggles(b)}`;
+    }
+    // v2.2.06 — PROMOTION landing-page blocks
+    case 'promo-hero': {
+      return `<p class="hint">Full-width animated campaign header. Link the promotion — name, logo, colours and the countdown end-time come straight from the campaign record (everything overridable below).</p>
+        ${promotionPickerBtn(b)}
+        <div class="sub-h">🖼 Background image slider</div>
+        ${imageListEditor(b, 'bg_images', 'Background images')}
+        <div class="field"><label>Auto-slide interval (seconds)</label>
+          <input type="number" min="2" max="12" data-prop-num="slide_interval" value="${p.slide_interval||4}"/>
+          <div class="hint">Images cover the gradient. Leave empty to keep the animated gradient only.</div></div>
+        ${mlField(b,'title','Title (blank = promotion name)')}
+        ${mlField(b,'sub','Subtitle (blank = promotion subtitle)')}
+        ${mlField(b,'kicker','Kicker chip (small caps label, e.g. MEGA SALE)')}
+        <div class="field"><label>💥 Heroic discount (e.g. 70% — rendered HUGE)</label><input data-prop="discount_text" value="${p.discount_text||''}" placeholder="70%"/></div>
+        ${mlField(b,'cta','CTA button text (blank = no button)')}
+        <div class="field"><label>CTA destination</label>${linkFieldBtn(p.link)}</div>
+        <div class="toggle"><div class="nm">🌊 Curved bottom edge</div>
+          <div class="switch ${(p.bottom_curve!==false)?'on':''}" data-toggle-prop="bottom_curve"></div></div>
+        <div class="field"><label>Logo emoji</label><input data-prop="emoji" value="${p.emoji||'🎉'}" style="max-width:80px"/></div>
+        <div class="field"><label>Logo image URL (overrides campaign icon)</label><input data-prop="logo_image" value="${p.logo_image||''}" placeholder="https://…"/></div>
+        <div class="field"><label>🎨 Pattern overlay (same set as the product-page banner)</label>${sourceSelect(b,'pattern',[['','— From the campaign record'],['none','None'],['stripes','Diagonal stripes'],['stripes_bold','Bold stripes'],['crosshatch','Crosshatch'],['mesh','Fine mesh'],['grid','Grid'],['dots','Micro dots'],['polka','Polka dots'],['bubbles','Bubbles'],['circles','Circles'],['rings','Rings'],['scales','Scales'],['waves','Waves'],['zigzag','Zigzag'],['chevrons','Chevrons'],['diamonds','Diamonds'],['triangles','Triangles'],['hexagons','Hexagons'],['plus','Plus signs'],['sparkles','Sparkles'],['stars','Stars'],['confetti','Confetti'],['moons','Moons']], p.pattern||'')}</div>
+        <div class="field"><label>✨ Animation</label>${sourceSelect(b,'animation',[['aurora','🌈 Aurora (flowing gradient)'],['wave','🌊 Waves'],['shimmer','✨ Shimmer sweep'],['pulse','💗 Pulse glow'],['particles','🫧 Floating particles'],['confetti','🎊 Confetti'],['none','— Static gradient']], p.animation||'aurora')}</div>
+        <div class="field"><label>Colour 1</label><input type="color" value="${p.c1||'#F5C320'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Colour 2</label><input type="color" value="${p.c2||'#C99000'}" data-prop="c2" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Accent (waves/particles)</label><input type="color" value="${p.c3||'#FFFFFF'}" data-prop="c3" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Text colour</label><input type="color" value="${p.text_color||'#FFFFFF'}" data-prop="text_color" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Height (px)</label><input type="number" min="150" max="420" data-prop-num="height" value="${p.height||230}"/></div>
+        <div class="sub-h">⏰ Countdown</div>
+        <div class="toggle"><div class="nm">Show countdown (to campaign end)</div>
+          <div class="switch ${(p.show_countdown!==false)?'on':''}" data-toggle-prop="show_countdown"></div></div>
+        ${(p.show_countdown!==false) ? `
+        <div class="field"><label>Position <small style="text-transform:none;color:var(--muted)">· rises automatically when you shrink the height</small></label>
+          ${sourceSelect(b,'countdown_position',[
+            ['top-left','↖ Top left'],['top-center','↑ Top center'],['top-right','↗ Top right'],
+            ['center','· Center'],
+            ['bottom-left','↙ Bottom left'],['bottom-center','↓ Bottom center'],['bottom-right','↘ Bottom right'],
+          ], p.countdown_position||'bottom-center')}</div>
+        <div class="field"><label>Size</label>
+          ${sourceSelect(b,'countdown_size',[['sm','Small'],['md','Medium'],['lg','Large']], p.countdown_size||'sm')}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="field"><label>Box colour</label><input type="color" value="${p.countdown_box_color||'#000000'}" data-prop="countdown_box_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Digits colour</label><input type="color" value="${p.countdown_text_color||'#FFFFFF'}" data-prop="countdown_text_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Labels colour</label><input type="color" value="${p.countdown_label_color||'#FFFFFF'}" data-prop="countdown_label_color" style="height:32px;padding:2px"/></div>
+        </div>` : ''}`;
+    }
+    case 'promo-countdown': {
+      return `<p class="hint">Slim countdown bar. Link a promotion (uses its end time) or set a manual end below.</p>
+        ${promotionPickerBtn(b)}
+        ${mlField(b,'title','Label')}
+        <div class="field"><label>Manual end (optional)</label><input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/></div>
+        <div class="field"><label>Bar colour</label><input type="color" value="${p.c1||'#E63946'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Text colour</label><input type="color" value="${p.text_color||'#FFFFFF'}" data-prop="text_color" style="height:32px;padding:2px"/></div>`;
+    }
+    case 'promo-carousel': case 'promo-mega2': case 'promo-flash-rail': case 'promo-masonry': {
+      const names={'promo-carousel':'Auto-play carousel','promo-mega2':'Mega grid with -% ribbons','promo-flash-rail':'Flash rail with a live timer','promo-masonry':'Staggered masonry wall'};
+      // v2.2.23/24 — carousel, mega-grid AND masonry get a FULL product
+      // source selector + refinements + optional header & "View more"
+      // button. flash-rail stays promotion-only (its timer needs one).
+      const fullSrc = ['promo-carousel','promo-mega2','promo-masonry'].includes(b.kind);
+      const sourceUI = fullSrc ? `
+        <div class="field"><label>Show which products?</label>
+          ${sourceSelect(b,'source',[
+            ['discounted','⚡ On discount'],
+            ['price_drops','📉 Price drops (recently cheaper)'],
+            ['bestsellers','🏆 Bestsellers'],
+            ['newest','✨ Newest arrivals'],
+            ['flash_sale','⏰ In a flash sale'],
+            ['free_shipping','🚚 Free shipping'],
+            ['bundles','🎁 Bundles'],
+            ['random','🎲 Random mix'],
+            ['collection','📦 From a category…'],
+            ['vendor','🏪 From a seller…'],
+            ['manual','🎯 Hand-picked…'],
+            ['promotion','🎉 From a promotion campaign…'],
+          ], p.source||'newest')}</div>
+        ${(p.source==='manual') ? productsPickerBtn(b) : ''}
+        ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
+        ${(p.source==='vendor') ? vendorPickerBtn(b) : ''}
+        ${(p.source==='promotion') ? promotionPickerBtn(b) : ''}
+        <div class="sub-h">Refine (optional)</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field"><label>Min price</label><input type="number" data-prop-num-opt="min_price" placeholder="any" value="${p.min_price??''}"/></div>
+          <div class="field"><label>Max price</label><input type="number" data-prop-num-opt="max_price" placeholder="any" value="${p.max_price??''}"/></div>
+          <div class="field"><label>Min discount %</label><input type="number" min="0" max="95" data-prop-num-opt="min_discount_pct" placeholder="any" value="${p.min_discount_pct??''}"/></div>
+          <div class="field"><label>Min rating ★</label>
+            <select data-prop="min_rating">
+              ${[0,3,4,4.5].map(r=>`<option value="${r}" ${(+p.min_rating||0)==r?'selected':''}>${r?('★ '+r+'+'):'any'}</option>`).join('')}
+            </select></div>
+        </div>
+        <div class="field"><label>Sort</label>
+          ${sourceSelect(b,'sort',[['','— source default —'],['discount','Biggest discount'],['price_asc','Price ↑'],['price_desc','Price ↓'],['top_rated','Top rated']], p.sort||'')}</div>` : promotionPickerBtn(b);
+      return `<p class="hint">${fullSrc ? (names[b.kind]+' — choose exactly which products appear.') : (names[b.kind]+' — products come from the linked promotion campaign(s).')}</p>
+        ${sourceUI}
+        <div class="field"><label>Accent colour</label><input type="color" value="${p.c1||'#F5C320'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Maximum products</label><input type="number" min="2" max="24" data-prop-num="limit" value="${p.limit||10}"/></div>
+        ${b.kind==='promo-carousel' ? `<div class="field"><label>Auto-play interval (seconds)</label><input type="number" min="2" max="10" data-prop-num="interval" value="${p.interval||3}"/></div>` : ''}
+        ${b.kind==='promo-mega2' ? `<div class="field"><label>Columns</label>${sourceSelect(b,'columns',[['2','2 columns — big cards'],['3','3 columns — dense']], String(p.columns||2))}</div><div class="field"><label>Card style</label>${sourceSelect(b,'card_style',[['light','⬜ Clean white'],['tinted','🟥 Tinted (accent wash)']], p.card_style||'light')}</div><div class="toggle"><div class="nm">💰 Show "You save X" chip</div><div class="switch ${(p.show_save!==false)?'on':''}" data-toggle-prop="show_save"></div></div>` : ''}
+        ${b.kind==='promo-flash-rail' ? `<div class="field"><label>Timer end (blank = promotion end)</label><input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/></div>` : ''}
+        ${fullSrc ? `<div class="sub-h">Header & button (optional)</div>
+          ${mlField(b,'title','Title')}
+          ${mlField(b,'sub','Subtitle')}
+          ${mlField(b,'cta','Button / link label')}
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="field"><label>Text colour</label><input type="color" value="${p.font_color||'#412402'}" data-prop="font_color" style="height:32px;padding:2px"/></div>
+            <div class="field"><label>Button colour</label><input type="color" value="${p.btn_color||p.c1||'#F5C320'}" data-prop="btn_color" style="height:32px;padding:2px"/></div>
+            <div class="field"><label>Button text</label><input type="color" value="${p.btn_text_color||'#412402'}" data-prop="btn_text_color" style="height:32px;padding:2px"/></div>
+          </div>
+          <div class="field"><label>"View more" destination</label>${linkFieldBtn(p.link)}</div>` : ''}
+        ${cardDisplayToggles(b)}`;
+    }
+    case 'promo-showcase': {
+      const ct = p.content_type || 'coupons';
+      return `<p class="hint">🎁 A themed campaign hero (coloured background) holding coupons OR a product feed — with an optional promotion countdown. Every part's colour is editable.</p>
+        ${mlField(b,'title','Title')}
+        ${mlField(b,'sub','Subtitle')}
+        <div class="field"><label>Emoji</label><input data-prop="emoji" value="${(p.emoji||'🎁').replace(/"/g,'&quot;')}" style="max-width:80px"/></div>
+        <div class="sub-h">Background & text colours</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field"><label>Background 1</label><input type="color" value="${p.c1||'#2563EB'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Background 2</label><input type="color" value="${p.c2||'#1E3A8A'}" data-prop="c2" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Title colour</label><input type="color" value="${p.text_color||'#FFFFFF'}" data-prop="text_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Subtitle colour</label><input type="color" value="${p.sub_color||'#DBEAFE'}" data-prop="sub_color" style="height:32px;padding:2px"/></div>
+        </div>
+        <div class="sub-h">What to show</div>
+        <div class="field"><label>Content</label>
+          ${sourceSelect(b,'content_type',[['coupons','🎟 Coupons'],['products','🛍 Products']], ct)}</div>
+        ${ct==='coupons' ? `
+          <div class="field"><label>Coupons source</label>
+            ${sourceSelect(b,'coupon_mode',[['all_active','🎟 All active'],['expiring','⏰ Expiring (14d)'],['picked','🎯 Hand-pick…'],['manual','✍️ One manual code']], p.coupon_mode||'all_active')}</div>
+          ${(p.coupon_mode==='picked') ? couponPickerBtn(b) : ''}
+          ${(p.coupon_mode==='manual') ? `<div class="field"><label>Coupon code</label><input data-prop="code" value="${p.code||''}" placeholder="SALE20"/></div>` : ''}
+          <div class="sub-h">Coupon card colours</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="field"><label>Card</label><input type="color" value="${p.card_color||'#FFFFFF'}" data-prop="card_color" style="height:32px;padding:2px"/></div>
+            <div class="field"><label>Accent</label><input type="color" value="${p.c1||'#2563EB'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+            <div class="field"><label>Text</label><input type="color" value="${p.font_color||'#412402'}" data-prop="font_color" style="height:32px;padding:2px"/></div>
+            <div class="field"><label>Code</label><input type="color" value="${p.code_color||'#412402'}" data-prop="code_color" style="height:32px;padding:2px"/></div>
+            <div class="field"><label>Button</label><input type="color" value="${p.claim_color||'#2563EB'}" data-prop="claim_color" style="height:32px;padding:2px"/></div>
+            <div class="field"><label>Button text</label><input type="color" value="${p.claim_text_color||'#FFFFFF'}" data-prop="claim_text_color" style="height:32px;padding:2px"/></div>
+          </div>
+          ${mlField(b,'claim','Claim button label')}
+        ` : `
+          <div class="field"><label>Products source</label>
+            ${sourceSelect(b,'source',withPromoSource([['discounted','⚡ On offer'],['bestsellers','🏆 Bestsellers'],['newest','✨ Newest'],['free_shipping','🚚 Free shipping'],['collection','📦 A category…'],['random','🎲 Random mix'],['manual','🎯 Hand-picked…']]), p.source||'discounted')}</div>
+          ${(p.source==='manual') ? productsPickerBtn(b) : ''}
+          ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
+          ${promoSourcePicker(b)}
+          ${cardDisplayToggles(b)}
+        `}
+        <div class="field"><label>Max items</label><input type="number" min="2" max="24" data-prop-num="limit" value="${p.limit||8}"/></div>
+        <div class="field"><label>Layout</label>
+          ${sourceSelect(b,'layout',[['rail','◀▶ Horizontal rail'],['grid','▦ Grid (2 columns)']], p.layout||'rail')}</div>
+        <div class="sub-h">⏰ Countdown</div>
+        ${promotionPickerBtn(b)}
+        <div class="toggle"><div class="nm">Show countdown<small>Timer = linked promotion's end</small></div>
+          <div class="switch ${(p.show_countdown)?'on':''}" data-toggle-prop="show_countdown"></div></div>
+        ${p.show_countdown ? `
+        <div class="field"><label>Position</label>
+          ${sourceSelect(b,'countdown_position',[['top-right','↗ Top right'],['top-left','↖ Top left'],['top-center','↑ Top center'],['below-title','▼ Below title']], p.countdown_position||'top-right')}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="field"><label>Box</label><input type="color" value="${p.cd_box_color||'#1E3A8A'}" data-prop="cd_box_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Digits</label><input type="color" value="${p.cd_text_color||'#FFFFFF'}" data-prop="cd_text_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Labels</label><input type="color" value="${p.cd_label_color||'#DBEAFE'}" data-prop="cd_label_color" style="height:32px;padding:2px"/></div>
+        </div>` : ''}`;
+    }
+    case 'bundle-showcase': {
+      return `<p class="hint">📦 A themed strip of your published BUNDLES — each bundle is one card (cover, bundle price, struck total, "N items · save X%"). Tapping opens the bundle product page that lists everything inside. Create bundles under <b>Sales → Products → 🎁 Bundles</b>.</p>
+        ${mlField(b,'title','Title')}
+        ${mlField(b,'sub','Subtitle')}
+        <div class="field"><label>Emoji</label><input data-prop="emoji" value="${(p.emoji||'📦').replace(/"/g,'&quot;')}" style="max-width:80px"/></div>
+        <div class="sub-h">Background & text colours</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field"><label>Background 1</label><input type="color" value="${p.c1||'#7C3AED'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Background 2</label><input type="color" value="${p.c2||'#4C1D95'}" data-prop="c2" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Title colour</label><input type="color" value="${p.text_color||'#FFFFFF'}" data-prop="text_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Subtitle colour</label><input type="color" value="${p.sub_color||'#EDE9FE'}" data-prop="sub_color" style="height:32px;padding:2px"/></div>
+        </div>
+        <div class="sub-h">Cards</div>
+        <div class="toggle"><div class="nm">Show savings badge<small>"save X%" on each bundle card</small></div>
+          <div class="switch ${(p.show_savings!==false)?'on':''}" data-toggle-prop="show_savings"></div></div>
+        <div class="field"><label>Savings colour</label><input type="color" value="${p.savings_color||'#16A34A'}" data-prop="savings_color" style="height:32px;padding:2px"/></div>
+        ${cardDisplayToggles(b)}
+        <div class="field"><label>Max bundles</label><input type="number" min="2" max="24" data-prop-num="limit" value="${p.limit||8}"/></div>
+        <div class="field"><label>Layout</label>
+          ${sourceSelect(b,'layout',[['rail','◀▶ Horizontal rail'],['grid','▦ Grid (2 columns)']], p.layout||'rail')}</div>`;
+    }
+    case 'new-customer-zone': {
+      return `<p class="hint">🌟 The first-order zone. The hero, welcome coupon,
+        deadline and product source are all configured in the backend under
+        <b>Mobile App → 🌟 New Customers</b>. This block shows a teaser that
+        deep-links into the full exclusive page. Eligibility (guest / new /
+        existing) is decided automatically per customer.</p>
+        ${cardDisplayToggles(b)}`;
+    }
+    case 'promo-coupon': {
+      const cmode = p.coupon_mode || 'manual';
+      return `<p class="hint">Professional coupon wall — one manual code, or pull REAL coupons from the loyalty engine. Pick a layout, colours and a claim button.</p>
+        ${mlField(b,'title','Title')}
+        ${mlField(b,'sub','Small description')}
+        <div class="sub-h">Coupons</div>
+        <div class="field"><label>What to show</label>
+          ${sourceSelect(b, 'coupon_mode', [
+            ['manual','✍️ One manual code (below)'],
+            ['picked','🎯 Hand-pick coupons…'],
+            ['expiring','⏰ Expiring within 14 days'],
+            ['all_active','🎟 All active coupons'],
+          ], 'manual')}
+        </div>
+        ${cmode==='manual' ? `<div class="field"><label>Coupon code</label><input data-prop="code" value="${p.code||''}" placeholder="SALE20"/></div>` : ''}
+        ${cmode==='picked' ? couponPickerBtn(b) : ''}
+        ${cmode!=='manual' ? `<div class="field"><label>Maximum coupons</label><input type="number" min="1" max="24" data-prop-num="limit" value="${p.limit||8}"/></div>` : ''}
+        <div class="sub-h">Layout</div>
+        <div class="field"><label>Arrange as</label>
+          ${sourceSelect(b, 'layout', [
+            ['grid','▦ Grid (2 columns)'],
+            ['slider','◀▶ Horizontal slider'],
+            ['carousel','🎠 Carousel (one big card)'],
+            ['list','☰ Vertical list'],
+          ], 'grid')}
+        </div>
+        <div class="sub-h">Colours</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field"><label>Card colour</label><input type="color" value="${p.card_color||'#FFFFFF'}" data-prop="card_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Accent colour</label><input type="color" value="${p.c1||'#F5C320'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Text / font colour</label><input type="color" value="${p.font_color||'#412402'}" data-prop="font_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Code text colour</label><input type="color" value="${p.code_color||'#412402'}" data-prop="code_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Claim button colour</label><input type="color" value="${p.claim_color||'#412402'}" data-prop="claim_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Claim text colour</label><input type="color" value="${p.claim_text_color||'#FFFFFF'}" data-prop="claim_text_color" style="height:32px;padding:2px"/></div>
+        </div>
+        <div class="sub-h">Claim button</div>
+        ${mlField(b,'claim','Button label')}`;
+    }
+    case 'promo-banner-cta': {
+      return `<p class="hint">Wide banner with a CTA button — gradient or your own image. Link a promotion to show its live countdown.</p>
+        ${mlField(b,'title','Headline')}
+        ${mlField(b,'cta','Button text')}
+        <!-- v2.2.17 — proper image PICKER (upload / gallery), was URL-only. -->
+        ${imageFieldBtn(b, 'image_id', 'image_url', 'Background image (optional)')}
+        <div class="field"><label>Colour 1</label><input type="color" value="${p.c1||'#412402'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Colour 2</label><input type="color" value="${p.c2||'#1F1100'}" data-prop="c2" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Text colour</label><input type="color" value="${p.text_color||'#FFFFFF'}" data-prop="text_color" style="height:32px;padding:2px"/></div>
+        <div class="toggle"><div class="nm">🖥 Full-screen banner<small>Fills the whole screen height</small></div>
+          <div class="switch ${(p.fullscreen)?'on':''}" data-toggle-prop="fullscreen"></div></div>
+        ${!p.fullscreen ? `<div class="field"><label>Height (px)</label><input type="number" min="90" max="320" data-prop-num="height" value="${p.height||130}"/></div>` : ''}
+        <div class="field"><label>Button destination</label>${linkFieldBtn(p.link)}</div>
+        <div class="sub-h">⏰ Countdown</div>
+        ${promotionPickerBtn(b)}
+        <div class="toggle"><div class="nm">Show countdown (small, bottom-center)<small>Timer = linked promotion's end time</small></div>
+          <div class="switch ${(p.show_countdown)?'on':''}" data-toggle-prop="show_countdown"></div></div>
+        ${p.show_countdown ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="field"><label>Box colour</label><input type="color" value="${p.cd_box_color||'#000000'}" data-prop="cd_box_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Digits colour</label><input type="color" value="${p.cd_text_color||'#FFFFFF'}" data-prop="cd_text_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Labels colour</label><input type="color" value="${p.cd_label_color||'#FFFFFF'}" data-prop="cd_label_color" style="height:32px;padding:2px"/></div>
+        </div>` : ''}`;
+    }
+    case 'promo-tiers': {
+      return `<p class="hint">Professional "buy more, save more" wall — products with their single-unit price AND a bulk price (e.g. ×10). Tiers come from each product's real bulk-pricing ladder.</p>
+        ${mlField(b,'title','Title')}
+        ${mlField(b,'sub','Subtitle')}
+        <div class="sub-h">Products</div>
+        <div class="field"><label>Source</label>
+          ${sourceSelect(b, 'source', withPromoSource([
+            ['discounted','⚡ Active discount'],
+            ['bestsellers','🏆 Bestsellers'],
+            ['newest','✨ Newest'],
+            ['collection','📦 From a category…'],
+            ['manual','🎯 Hand-picked…'],
+          ]), 'promotion')}
+        </div>
+        ${(p.source==='manual') ? productsPickerBtn(b) : ''}
+        ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
+        ${promoSourcePicker(b)}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field"><label>Max products</label><input type="number" min="2" max="24" data-prop-num="limit" value="${p.limit||8}"/></div>
+          <div class="field"><label>Bulk quantity (e.g. 10)</label><input type="number" min="2" max="100" data-prop-num="bulk_qty" value="${p.bulk_qty||10}"/></div>
+        </div>
+        <div class="field"><label>Layout</label>
+          ${sourceSelect(b,'layout',[['list','☰ Vertical list (detailed)'],['grid','▦ Grid (2 columns)']], p.layout||'list')}</div>
+        <div class="sub-h">Colours</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div class="field"><label>Card colour</label><input type="color" value="${p.card_color||'#FFFFFF'}" data-prop="card_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Accent</label><input type="color" value="${p.c1||'#F5C320'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Text</label><input type="color" value="${p.font_color||'#412402'}" data-prop="font_color" style="height:32px;padding:2px"/></div>
+        </div>`;
+    }
+    case 'promo-marquee': {
+      return `<p class="hint">Endless scrolling strip. Separate phrases with a | pipe.</p>
+        ${mlField(b,'texts','Phrases (separate with |)')}
+        <div class="field"><label>Strip colour</label><input type="color" value="${p.c1||'#412402'}" data-prop="c1" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Text colour</label><input type="color" value="${p.text_color||'#FFFFFF'}" data-prop="text_color" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>Loop duration (seconds — smaller = faster)</label><input type="number" min="6" max="40" data-prop-num="speed" value="${p.speed||14}"/></div>`;
     }
     case 'trust-strip': {
       const items = p.items || [];
@@ -3438,17 +3944,37 @@ function renderContent(b){
         ${addItemBtn('banners', 'Add banner')}`;
     }
     case 'reels-strip':
-      return `<p class="hint">Circular video thumbs sourced from your trending products with videos. Tap any bubble to jump straight into the full Reels feed (/reels).</p>
+      return `<p class="hint">Video thumbs from your trending products with videos. v2.2.19 — 5 display styles, and each video can open in a fullscreen DIALOG with the full Reels experience (player + product + like/share).</p>
         ${mlField(b,'title','Section title')}
-        <div class="field"><label>Number of bubbles</label>
+        <div class="field"><label>Display style</label>
+          ${sourceSelect(b,'style',[
+            ['bubbles','⭕ Circles (story bubbles)'],
+            ['squares','⬜ Rounded squares (rail)'],
+            ['cards','🎴 Tall cards 9:16 (rail)'],
+            ['grid','▦ Grid — 3 columns'],
+            ['carousel','🎠 Large carousel'],
+          ], p.style||'bubbles')}</div>
+        <div class="field"><label>Tap behaviour</label>
+          ${sourceSelect(b,'open',[
+            ['dialog','▶ Play in a dialog (full reel UI)'],
+            ['screen','↗ Open the Reels screen (/reels)'],
+          ], p.open||'dialog')}</div>
+        <div class="field"><label>Number of videos</label>
           <input type="number" data-prop-num="limit" min="3" max="20" value="${p.limit||8}"/></div>
-        <div class="field"><label>Bubble size (px)</label>
-          <input type="number" data-prop-num="bubble_size" min="40" max="120" value="${p.bubble_size||62}"/></div>
+        ${(p.style||'bubbles')==='bubbles'||p.style==='squares' ? `<div class="field"><label>Thumb size (px)</label>
+          <input type="number" data-prop-num="bubble_size" min="40" max="120" value="${p.bubble_size||62}"/></div>` : ''}
         <div class="field"><label>Ring color</label>
           <div class="swatch-row">
             ${['#F5C320','#E63946','#1F8A40','#1D6FB7','#6E4AB0','#FF4500','#412402','#FFD340'].map(c=>`
               <div class="sw ${p.ring_color===c?'on':''}" style="background:${c}" data-color-prop="${c}" data-color-target="ring_color"></div>`).join('')}
-          </div></div>`;
+          </div></div>
+        <div class="sub-h">"View more" button</div>
+        <div class="toggle"><div class="nm">Show "View more" → Reels<small>A button under the strip that opens the full Reels screen</small></div>
+          <div class="switch ${(p.show_more!==false)?'on':''}" data-toggle-prop="show_more"></div></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="field"><label>Button colour</label><input type="color" value="${p.btn_color||'#F5C320'}" data-prop="btn_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>Button text</label><input type="color" value="${p.btn_text_color||'#412402'}" data-prop="btn_text_color" style="height:32px;padding:2px"/></div>
+        </div>`;
     case 'occasion-header': {
       const OCC_PRESETS = [
         ['eid_fitr',      '🌙', 'Eid al-Fitr',   '#1F8A40'],
@@ -3541,9 +4067,11 @@ function renderContent(b){
             ['bestsellers','🏆 Bestsellers'],
             ['for_me','🎯 Personalized for me'],
             ['category','📦 From a category…'],
+            ['promotion','🎉 From a promotion campaign…'],
           ], 'random')}
         </div>
         ${(p.source==='category') ? categoryPickerBtn(b) : ''}
+        ${(p.source==='promotion') ? promotionPickerBtn(b) : ''}
         <div class="field"><label>Default sort</label>
           ${sourceSelect(b, 'sort', [
             ['best_match','✨ Best match'],
@@ -3573,6 +4101,11 @@ function renderContent(b){
         <div class="sub-h">🎨 Discovery features</div>
         <div class="toggle"><div class="nm">📑 Category chips bar<small>Filter the feed by tapping chips</small></div>
           <div class="switch ${(p.show_chips!==false)?'on':''}" data-toggle-prop="show_chips"></div></div>
+        ${(p.show_chips!==false) ? `
+        <div class="field"><label>Chips style</label>
+          ${sourceSelect(b,'chip_style',[['pill','⬭ Pills (filled)'],['outline','◯ Outline'],['underline','— Underline tabs'],['segmented','▭ Segmented track'],['card','▢ Cards (elevated)']], p.chip_style||'pill')}</div>
+        <div class="toggle"><div class="nm">📌 Keep chips fixed on scroll<small>Pins the category bar while the feed scrolls (best when this is the main block)</small></div>
+          <div class="switch ${(p.sticky_chips)?'on':''}" data-toggle-prop="sticky_chips"></div></div>` : ''}
         <div class="toggle"><div class="nm">⇅ Sort bar<small>Best match / Newest / Price / Rated</small></div>
           <div class="switch ${(p.show_sort_bar!==false)?'on':''}" data-toggle-prop="show_sort_bar"></div></div>
         <div class="toggle"><div class="nm">🏷 Smart badges on cards<small>🔥 Hot · ✨ New · 🚚 Free ship · 💯 Best deal</small></div>
@@ -3607,7 +4140,8 @@ function renderContent(b){
         <div class="toggle"><div class="nm">🎲 Shuffle button</div>
           <div class="switch ${(p.show_shuffle!==false)?'on':''}" data-toggle-prop="show_shuffle"></div></div>
         <div class="toggle"><div class="nm">— end of feed — marker</div>
-          <div class="switch ${(p.show_end_marker!==false)?'on':''}" data-toggle-prop="show_end_marker"></div></div>`;
+          <div class="switch ${(p.show_end_marker!==false)?'on':''}" data-toggle-prop="show_end_marker"></div></div>
+        ${cardDisplayToggles(b)}`;
     case 'hero':
       return `
         ${mlField(b,'title','Title')}
@@ -3746,7 +4280,7 @@ function renderContent(b){
 
         <div class="sub-h">Source</div>
         <div class="field"><label>Where products come from</label>
-          ${sourceSelect(b, 'source', [
+          ${sourceSelect(b, 'source', withPromoSource([
             ...(isFlash ? [
               ['flash_sale','🔥 Linked vendor flash sale (auto-timer)'],
               ['promotion','🎉 Linked promotion campaign (auto-timer)'],
@@ -3760,13 +4294,13 @@ function renderContent(b){
             ['collection','📦 From a category…'],
             ['manual','🎯 Hand-picked products…'],
             ['vendor','🏪 From a vendor…'],
-          ])}
+          ]))}
         </div>
         ${(p.source==='manual') ? productsPickerBtn(b) : ''}
         ${(p.source==='collection') ? categoryPickerBtn(b) : ''}
         ${(p.source==='vendor') ? vendorPickerBtn(b) : ''}
         ${(isFlash && p.source==='flash_sale') ? flashSalePickerBtn(b) : ''}
-        ${(isFlash && p.source==='promotion') ? promotionPickerBtn(b) : ''}
+        ${(p.source==='promotion') ? promotionPickerBtn(b) : ''}
         <div class="field"><label>Maximum items</label>
           <input type="number" data-prop="limit" value="${p.limit||12}"/></div>
         ${(isFlash && p.source!=='flash_sale' && p.source!=='promotion') ? `<div class="field"><label>Countdown ends at</label><input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/></div>` : ''}
@@ -3804,12 +4338,7 @@ function renderContent(b){
             <option value="large" ${p.price_emphasis==='large'?'selected':''}>Large (bold price-led)</option>
           </select></div>
 
-        <div class="sub-h">What to show on each card</div>
-        <div class="field"><label><input type="checkbox" data-toggle-prop="show_compare_price" ${p.show_compare_price!==false?'checked':''}/> Strikethrough old price</label></div>
-        <div class="field"><label><input type="checkbox" data-toggle-prop="show_save_badge" ${p.show_save_badge!==false?'checked':''}/> "Save X KD" pill</label></div>
-        <div class="field"><label><input type="checkbox" data-toggle-prop="show_rating" ${p.show_rating!==false?'checked':''}/> Star rating &amp; reviews count</label></div>
-        <div class="field"><label><input type="checkbox" data-toggle-prop="show_wishlist" ${p.show_wishlist!==false?'checked':''}/> Wishlist heart button</label></div>
-        <div class="field"><label><input type="checkbox" data-toggle-prop="show_brand" ${p.show_brand?'checked':''}/> Vendor / brand name</label></div>
+        ${cardDisplayToggles(b)}
         <div class="field"><label><input type="checkbox" data-toggle-prop="quick_add" ${p.quick_add?'checked':''}/> Quick-add (+) button</label></div>` : ''}`;
     }
     case 'banner-1':case 'banner-2':case 'banner-3':
@@ -3857,7 +4386,7 @@ function linkFieldBtn(link){
   if (!link) {
     return `<button class="link-field" onclick="openLinkPicker()"><div class="lk-ic">🔗</div><div class="lk-info"><div class="lk-t">Set link target…</div><div class="lk-s">Page · product · category · external</div></div><div class="lk-chev">›</div></button>`;
   }
-  const ic = {page:'📄', product:'🛍', category:'📁', url:'🔗', collection:'📦', screen:'📱'}[link.type] || '🔗';
+  const ic = {page:'📄', product:'🛍', category:'📁', url:'🔗', collection:'📦', screen:'📱', filters:'🎚'}[link.type] || '🔗';
   return `<button class="link-field" onclick="openLinkPicker()"><div class="lk-ic">${ic}</div><div class="lk-info"><div class="lk-t">${link.label||'—'}</div><div class="lk-s">${link.type}</div></div><div class="lk-chev">✏</div></button>`;
 }
 
@@ -3867,6 +4396,86 @@ function sourceSelect(b, prop, options, defaultVal){
   return `<select data-prop="${prop}">
     ${options.map(([v,l]) => `<option value="${v}" ${cur===v?'selected':''}>${l}</option>`).join('')}
   </select>`;
+}
+
+/* ─── v2.2.11 — PROMOTION as a universal product source ──────────────
+   Every product block can now pull from a promotion campaign. We append
+   the option to the block's own source list and, when selected, show the
+   promotion picker. resolve_products() already handles source=='promotion'
+   via props.promotion_id / promotion_ids. */
+function withPromoSource(options){
+  // v2.2.20 — every promo-source-aware block also offers BUNDLES.
+  let out = options.slice();
+  if (!out.some(o => o[0] === 'promotion'))
+    out = out.concat([['promotion','🎉 From a promotion campaign…']]);
+  if (!out.some(o => o[0] === 'bundles'))
+    out = out.concat([['bundles','🎁 Bundles (published)']]);
+  return out;
+}
+function promoSourcePicker(b){
+  return (b.props.source === 'promotion') ? promotionPickerBtn(b) : '';
+}
+
+/* ─── v2.2.11 — Per-element product-card display toggles ─────────────
+   Stored under b.props.card as a {key:bool} map (default = visible) and
+   read by the Flutter ProductCard. Works for EVERY block that renders
+   product cards, so designers can hide any element per block. */
+const CARD_ELEMENTS = [
+  ['name',        'Product name'],
+  ['brand',       'Brand / vendor name'],
+  ['price',       'Price'],
+  ['compare',     'Struck-through old price'],
+  ['discount',    'Discount % badge'],
+  ['save',        '“You save” pill'],
+  ['rating',      'Star rating & reviews'],
+  ['wishlist',    'Wishlist ♡ button'],
+  ['promo',       'Promo campaign badge'],
+  ['rank',        'Best-seller rank badge'],
+  ['video',       'Video badge'],
+  ['price_watch', 'Price-watch / trend icon'],
+  ['badges',      'Other badges (New, Hot, Free-ship…)'],
+];
+function cardToggle(b, key, label){
+  const map = b.props.card || {};
+  const on = (key in map) ? !!map[key] : true;
+  return `<div class="toggle"><div class="nm">${label}</div>
+    <div class="switch ${on?'on':''}" data-card-toggle="${key}"></div></div>`;
+}
+function cardDisplayToggles(b){
+  // v2.2.25 — universal "exclude bundle products" toggle on every product
+  // block: hides bundle products AND the items inside published bundles
+  // from this block's feed (bundles then live only in bundle blocks).
+  const exB = `<div class="sub-h">📦 Bundles</div>
+    <div class="toggle"><div class="nm">Exclude bundle products<small>Hide bundles and the items inside them from this block</small></div>
+      <div class="switch ${b.props.exclude_bundles?'on':''}" data-toggle-prop="exclude_bundles"></div></div>
+    <div class="sub-h">🧠 Personalize (Uellow Brain)</div>
+    <p class="hint">Re-order this block by each customer's taste (needs Brain engine ON). "None" = normal order.</p>
+    <div class="field"><label>Personalization</label>
+      ${sourceSelect(b,'personalize',[
+        ['none','— None —'],
+        ['recommended','🎯 Recommended for you'],
+        ['interests','🔥 Trending in your interests'],
+      ], b.props.personalize||'none')}</div>`;
+  // v2.2.16 — bottom-area controls: hiding rows used to leave a blank
+  // white strip under the card; height (px) + colour now configurable.
+  const map = b.props.card || {};
+  const ih = map._info_h || '';
+  const ibg = map._info_bg || '';
+  return `<div class="sub-h">🪧 Product card — show / hide</div>
+    <p class="hint">Turn any element of the product cards in this block on or off.</p>
+    ${CARD_ELEMENTS.map(([k,l]) => cardToggle(b,k,l)).join('')}
+    <div class="sub-h">⬛ Card bottom area</div>
+    <p class="hint">Control the info area under the photo: fixed height (px, empty = auto) and background colour — no more empty white strips when rows are hidden.</p>
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:8px">
+      <div class="field"><label>Height (px)</label>
+        <input type="number" min="0" max="220" value="${ih}" data-card-info="_info_h" placeholder="auto"/></div>
+      <div class="field"><label>Colour</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="color" value="${ibg || '#FFFFFF'}" data-card-info="_info_bg" style="width:40px;height:30px;padding:1px;border:1px solid var(--border-2);border-radius:6px;cursor:pointer"/>
+          <input type="text" value="${ibg}" data-card-info="_info_bg" placeholder="default (white)" style="flex:1"/>
+        </div></div>
+    </div>
+    ${exB}`;
 }
 
 /* ─── Picker buttons — open the right modal ────────────────────── */
@@ -3967,6 +4576,135 @@ function vendorPickerBtn(b){
       <div class="lk-info"><div class="lk-t">${label || 'Click to pick'}</div><div class="lk-s">${id?('id #'+id):'single'}</div></div>
       <div class="lk-chev">✏</div>
     </button></div>`;
+}
+
+/* ─── v2.2.27 — Brand / Tag / Filter sources ──────────────────────────
+   The Category Showcase (and every promo product block) can now pull its
+   products from a brand (product.brand), one-or-more tags (product.tag),
+   or a composable custom filter (category + brand + tag + price). Mirrors
+   the vendor/category pickers; resolve_products() handles the sources. */
+function withBrandTagFilter(options){
+  let out = options.slice();
+  if (!out.some(o => o[0] === 'brand'))
+    out = out.concat([['brand','🏷 A specific brand…']]);
+  if (!out.some(o => o[0] === 'tag'))
+    out = out.concat([['tag','🔖 By product tag…']]);
+  if (!out.some(o => o[0] === 'filter'))
+    out = out.concat([['filter','🧪 Custom filter (category + brand + tag + price)…']]);
+  return out;
+}
+function brandPickerBtn(b){
+  const id = b.props.brand_id;
+  const label = b.props.brand_label || '';
+  return `<div class="field"><label>Brand</label>
+    <button class="link-field" onclick="openBrandsPicker()">
+      <div class="lk-ic">🏷</div>
+      <div class="lk-info"><div class="lk-t">${label || 'Click to pick a brand'}</div><div class="lk-s">${id?('id #'+id):'single'}</div></div>
+      <div class="lk-chev">✏</div>
+    </button></div>`;
+}
+function tagPickerBtn(b){
+  const ids = b.props.tag_ids || (b.props.tag_id ? [b.props.tag_id] : []);
+  const labels = b.props.tag_labels || [];
+  return `<div class="field"><label>Product tags (${ids.length} selected)</label>
+    <button class="link-field" onclick="openTagsPicker()">
+      <div class="lk-ic">🔖</div>
+      <div class="lk-info">
+        <div class="lk-t">${labels.length ? labels.slice(0,3).join(' · ') + (labels.length>3?' …':'') : 'Click to pick tags'}</div>
+        <div class="lk-s">${ids.length ? ids.length+' tags (any match)' : 'none selected'}</div>
+      </div>
+      <div class="lk-chev">✏</div>
+    </button></div>`;
+}
+function filterSourcePanel(b){
+  const p = b.props;
+  return `<p class="hint">Compose a custom product filter — leave any part empty to ignore it. Products must match ALL the parts you set.</p>
+    ${categoryPickerBtn(b)}
+    ${brandPickerBtn(b)}
+    ${tagPickerBtn(b)}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Min price</label>
+        <input type="number" min="0" step="0.5" data-prop-num="min_price" value="${p.min_price||''}" placeholder="any"/></div>
+      <div class="field"><label>Max price</label>
+        <input type="number" min="0" step="0.5" data-prop-num="max_price" value="${p.max_price||''}" placeholder="any"/></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Min discount %</label>
+        <input type="number" min="0" max="95" data-prop-num="min_discount_pct" value="${p.min_discount_pct||''}" placeholder="any"/></div>
+      <div class="field"><label>Min rating ★</label>
+        <input type="number" min="0" max="5" step="0.5" data-prop-num="min_rating" value="${p.min_rating||''}" placeholder="any"/></div>
+    </div>
+    <div class="field"><label>Sort</label>${sourceSelect(b,'sort',[['','— newest —'],['discount','Biggest discount'],['price_asc','Price ↑'],['price_desc','Price ↓'],['top_rated','Top rated'],['best_match','🧠 Best match (Brain)']], p.sort||'')}</div>`;
+}
+async function openBrandsPicker(){
+  try {
+    const d = await api('GET', '/api/admin/v2/lookups/brands');
+    const brands = d.brands || [];
+    const block = cur() && selectedBlockId ? cur().blocks.find(x=>x.id===selectedBlockId) : null;
+    if (!block) return;
+    const row = (br) => `<label style="display:flex;gap:8px;align-items:center;padding:8px;border:1px solid #eee;border-radius:8px;cursor:pointer;background:${block.props.brand_id===br.id?'#fff8d6':'#fff'}">
+        <input type="radio" name="brandPick" data-br-id="${br.id}" data-br-name="${(br.name||'').replace(/"/g,'&quot;')}" ${block.props.brand_id===br.id?'checked':''}/>
+        ${br.logo?`<img src="${br.logo}" style="width:28px;height:28px;border-radius:6px;object-fit:cover"/>`:'<span style="font-size:18px">🏷</span>'}
+        <div style="font-weight:700;color:#412402">${br.name||'(no name)'}</div>
+      </label>`;
+    const html = `<div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center" id="brPickerModal">
+        <div style="background:#fff;border-radius:12px;padding:20px;width:480px;max-height:80vh;overflow:auto">
+          <h3 style="margin:0 0 12px">🏷 Pick a brand</h3>
+          <div style="display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow:auto">
+            ${brands.length ? brands.map(row).join('') : '<p style="color:#999">No brands found.</p>'}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="document.getElementById('brPickerModal').remove()">Cancel</button>
+            <button class="btn btn-primary" id="brPickApply">Apply</button>
+          </div>
+        </div></div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('brPickApply').addEventListener('click', () => {
+      const sel = document.querySelector('#brPickerModal input[name=brandPick]:checked');
+      if (sel) {
+        block.props.brand_id = parseInt(sel.dataset.brId);
+        block.props.brand_label = sel.dataset.brName;
+        renderRight(); renderCanvas(); scheduleSave();
+      }
+      document.getElementById('brPickerModal').remove();
+    });
+  } catch(e){ toast('Failed to load brands — ' + (e.message||e)); }
+}
+async function openTagsPicker(){
+  try {
+    const d = await api('GET', '/api/admin/v2/lookups/tags');
+    const tags = d.tags || [];
+    const block = cur() && selectedBlockId ? cur().blocks.find(x=>x.id===selectedBlockId) : null;
+    if (!block) return;
+    const curIds = block.props.tag_ids || (block.props.tag_id ? [block.props.tag_id] : []);
+    const sel = new Set(curIds);
+    const row = (t) => `<label style="display:flex;gap:8px;align-items:center;padding:8px;border:1px solid #eee;border-radius:8px;cursor:pointer;background:${sel.has(t.id)?'#fff8d6':'#fff'}">
+        <input type="checkbox" data-tg-id="${t.id}" data-tg-name="${(t.name||'').replace(/"/g,'&quot;')}" ${sel.has(t.id)?'checked':''}/>
+        <span style="font-size:16px">🔖</span>
+        <div style="font-weight:700;color:#412402">${t.name||'(no name)'}</div>
+      </label>`;
+    const html = `<div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center" id="tgPickerModal">
+        <div style="background:#fff;border-radius:12px;padding:20px;width:480px;max-height:80vh;overflow:auto">
+          <h3 style="margin:0 0 12px">🔖 Pick product tags</h3>
+          <p style="color:#666;font-size:12px;margin:0 0 12px">Products matching ANY selected tag are shown.</p>
+          <div style="display:flex;flex-direction:column;gap:6px;max-height:55vh;overflow:auto" id="tgList">
+            ${tags.length ? tags.map(row).join('') : '<p style="color:#999">No tags found.</p>'}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="document.getElementById('tgPickerModal').remove()">Cancel</button>
+            <button class="btn btn-primary" id="tgPickApply">Apply</button>
+          </div>
+        </div></div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('tgPickApply').addEventListener('click', () => {
+      const checked = Array.from(document.querySelectorAll('#tgList input[type=checkbox]:checked'));
+      block.props.tag_ids = checked.map(c => parseInt(c.dataset.tgId));
+      block.props.tag_labels = checked.map(c => c.dataset.tgName);
+      delete block.props.tag_id;
+      renderRight(); renderCanvas(); scheduleSave();
+      document.getElementById('tgPickerModal').remove();
+    });
+  } catch(e){ toast('Failed to load tags — ' + (e.message||e)); }
 }
 
 /* ─── v2.0.62: Flash-sale picker — pulls live records from
@@ -4116,6 +4854,70 @@ async function openPromotionsPicker(){
     });
   } catch(e){
     toast('Failed to load promotions — ' + (e.message||e));
+  }
+}
+/* ─── v2.2.11 — Coupon picker (loyalty.program) ────────────────── */
+function couponPickerBtn(b){
+  const ids = b.props.coupon_ids || [];
+  const labels = b.props.coupon_labels || [];
+  return `<div class="field"><label>Picked coupons (${ids.length} selected)</label>
+    <button class="link-field" onclick="openCouponsPicker()">
+      <div class="lk-ic">🎟</div>
+      <div class="lk-info">
+        <div class="lk-t">${labels.length ? labels.slice(0,2).join(' · ') + (labels.length>2?' …':'') : 'Click to pick — real coupons from the loyalty engine'}</div>
+        <div class="lk-s">${ids.length ? ids.length+' selected' : 'none — pick at least one'}</div>
+      </div>
+      <div class="lk-chev">✏</div>
+    </button></div>`;
+}
+async function openCouponsPicker(){
+  try {
+    const r = await api('GET', '/api/admin/v2/lookups/coupons');
+    const coupons = r.coupons || [];
+    const p0 = cur();
+    const block = p0 && selectedBlockId
+        ? p0.blocks.find(x => x.id === selectedBlockId) : null;
+    const sel = new Set((block && block.props.coupon_ids) || []);
+    const fmt = (s) => `<label style="display:flex;gap:8px;padding:8px;border:1px solid #eee;border-radius:8px;cursor:pointer;background:${sel.has(s.id)?'#fff8d6':'#fff'}">
+        <input type="checkbox" data-cp-id="${s.id}" ${sel.has(s.id)?'checked':''}/>
+        <div style="flex:1">
+          <div style="font-weight:800;color:#412402">🎟 ${s.name||'(no name)'} ${s.code?`<span style="font-family:monospace;color:#1565C0">· ${s.code}</span>`:''}</div>
+          <div style="font-size:11px;color:#666">${s.discount_text||''} · ${s.program_type||''}</div>
+        </div>
+      </label>`;
+    const html = `
+      <div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;display:flex;align-items:center;justify-content:center" id="cpPickerModal">
+        <div style="background:#fff;border-radius:12px;padding:20px;width:560px;max-height:80vh;overflow:auto">
+          <h3 style="margin:0 0 12px">🎟 Pick coupons to display</h3>
+          <p style="color:#666;font-size:12px;margin:0 0 14px">Live coupons from the loyalty engine (Sales → Loyalty / Coupons).</p>
+          <div style="display:flex;flex-direction:column;gap:6px;max-height:50vh;overflow:auto" id="cpList">
+            ${coupons.length ? coupons.map(fmt).join('') : '<p style="color:#999">No active coupons found.</p>'}
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;justify-content:flex-end">
+            <button class="btn btn-secondary" onclick="document.getElementById('cpPickerModal').remove()">Cancel</button>
+            <button class="btn btn-primary" id="cpPickApply">Apply</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('cpPickApply').addEventListener('click', () => {
+      const checked = Array.from(document.querySelectorAll('#cpList input[type=checkbox]:checked'));
+      const ids = checked.map(c => parseInt(c.dataset.cpId));
+      const labels = checked.map(c => {
+        const s = coupons.find(x => x.id === parseInt(c.dataset.cpId));
+        return s ? (s.name || s.code || '') : '';
+      });
+      const blk = cur() && selectedBlockId
+        ? cur().blocks.find(x => x.id === selectedBlockId) : null;
+      if (blk) {
+        blk.props.coupon_ids = ids;
+        blk.props.coupon_labels = labels;
+        renderRight(); renderCanvas(); scheduleSave();
+      }
+      document.getElementById('cpPickerModal').remove();
+    });
+  } catch(e){
+    toast('Failed to load coupons — ' + (e.message||e));
   }
 }
 /* ─── Variant picker — visual thumbnails for design variants ──── */
@@ -4309,6 +5111,9 @@ function renderStyle(b){
     ` : ''}
 
     <div class="sub-h">Spacing between blocks</div>
+    <!-- v2.2.16 — edge-to-edge: zero padding/margin on ALL sides. -->
+    <div class="toggle"><div class="nm">⬛ Full bleed — edge to edge<small>Block touches the screen edges on all sides: no padding or margin at all</small></div>
+      <div class="switch ${p.full_bleed?'on':''}" data-toggle-prop="full_bleed"></div></div>
     <div class="field"><label>Block vertical padding (px) — base</label>
       <input type="number" min="0" max="40" value="${padY}" data-prop-num="pad_y"/></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -4340,6 +5145,17 @@ function renderStyle(b){
         ${PATTERNS.map(pp => `<div class="chip ${bgPattern===pp.id?'on':''}"
             data-bg-pattern="${pp.id}" style="font-size:11px;padding:5px 9px">${pp.label}</div>`).join('')}
       </div>
+    </div>
+
+    <!-- v2.2.17 — the dark veil over background images is configurable. -->
+    <div class="sub-h">Image overlay (scrim)</div>
+    <p class="hint">The veil drawn over a background image so text stays readable. Set its colour and strength — <strong>0 = no overlay at all</strong>. Leave opacity empty to keep the block's default look.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Overlay colour</label>
+        <input type="color" value="${/^#[0-9A-Fa-f]{6}$/.test(p.overlay_color||'')?p.overlay_color:'#000000'}" data-prop="overlay_color"
+               style="width:100%;height:32px;padding:2px;border:1px solid var(--border-2);border-radius:8px;cursor:pointer"/></div>
+      <div class="field"><label>Opacity (%) — 0 = none</label>
+        <input type="number" min="0" max="100" placeholder="default" value="${p.overlay_opacity??''}" data-prop-num-opt="overlay_opacity"/></div>
     </div>
     <div class="field"><label>Background image (URL or upload)</label>
       <!-- v2.1.37 — live preview tile (same UX as the header image). -->
@@ -4442,6 +5258,38 @@ function wirePropsBody(b){
       const wasOn = sw.classList.contains('on');
       b.props[key] = !wasOn;
       sw.classList.toggle('on', !wasOn);
+      // v2.2.11 — re-render the panel so the switch's visual state and any
+      // dependent controls (e.g. the title gap fields under "Show title")
+      // always reflect the new value, not just the canvas.
+      renderRight(); renderCanvas(); scheduleSave();
+    });
+  });
+  // v2.2.11 — per-element product-card display toggles (b.props.card map).
+  document.querySelectorAll('[data-card-toggle]').forEach(sw => {
+    sw.addEventListener('click', () => {
+      const key = sw.dataset.cardToggle;
+      b.props.card = b.props.card || {};
+      const wasOn = (key in b.props.card) ? !!b.props.card[key] : true;
+      b.props.card[key] = !wasOn;
+      sw.classList.toggle('on', !wasOn);
+      renderCanvas(); scheduleSave();
+    });
+  });
+  // v2.2.16 — card bottom-area height/colour (stored in the same card map).
+  document.querySelectorAll('[data-card-info]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      const key = inp.dataset.cardInfo;
+      b.props.card = b.props.card || {};
+      if (key === '_info_h') {
+        const n = Number(inp.value) || 0;
+        if (n > 0) b.props.card[key] = n; else delete b.props.card[key];
+      } else {
+        if (inp.value) b.props.card[key] = inp.value; else delete b.props.card[key];
+        // keep the swatch and the hex text in sync
+        document.querySelectorAll('[data-card-info="_info_bg"]').forEach(o => {
+          if (o !== inp) o.value = inp.value || (o.type === 'color' ? '#FFFFFF' : '');
+        });
+      }
       renderCanvas(); scheduleSave();
     });
   });
@@ -4974,6 +5822,10 @@ function openLinkPicker(forNav){
   }
   linkPicker.choice = pre;
   linkPicker.mode = (pre && pre.type) || 'page';
+  // v2.2.21 — seed the filter editor from an existing filtered-link.
+  _lpFilters = (pre && pre.type === 'filters' && pre.filters)
+    ? JSON.parse(JSON.stringify(pre.filters))
+    : { value_ids: [], sort: 'newest' };
   renderLinkPicker();
   // Auto-highlight the previously-chosen row so Apply is immediately valid
   if (pre){
@@ -5000,6 +5852,7 @@ function renderLinkPicker(){
       <button class="${linkPicker.mode==='screen'?'on':''}"   data-lp="screen">📱 Built-in screen</button>
       <button class="${linkPicker.mode==='product'?'on':''}"  data-lp="product">🛍 Product</button>
       <button class="${linkPicker.mode==='category'?'on':''}" data-lp="category">📁 Category</button>
+      <button class="${linkPicker.mode==='filters'?'on':''}"  data-lp="filters">🎚 Filtered set</button>
       <button class="${linkPicker.mode==='url'?'on':''}"      data-lp="url">🔗 External URL</button>
     </div>
     ${renderLinkPickerMode()}
@@ -5107,6 +5960,8 @@ function renderLinkPickerMode(){
       // handles these): Reels feed, Free-shipping grid, Delivery coverage.
       ['reels','🎥 Reels'], ['free-shipping','🚚 Free shipping'],
       ['delivery-coverage','📍 Delivery coverage'],
+      // v2.2.23 — affiliate sign-up + bundles screens.
+      ['affiliate','🤝 Share & Earn (affiliate)'], ['bundles','🎁 Bundles'],
     ];
     return `<p style="font-size:11.5px;color:var(--muted);margin-bottom:10px">Built-in app screens that exist in the Flutter codebase.</p>
       <div class="lp-list">${screens.map(([v,l])=>{
@@ -5127,14 +5982,193 @@ function renderLinkPickerMode(){
         <input id="lpCategoryQ" placeholder="🔍 Type category name" autocomplete="off"/></div>
       <div id="lpCategoryList" class="lp-list"><div style="padding:14px;color:var(--muted);font-size:11.5px;text-align:center">Loading…</div></div>`;
   }
+  if (linkPicker.mode === 'filters'){
+    setTimeout(() => _wireFilterLink(), 0);
+    return renderFilterLinkMode();
+  }
   return `<div class="field"><label>External URL</label><input id="lpUrl" placeholder="https://example.com/landing"/></div>
     <div class="toggle"><div class="nm">Open in in-app browser<small>Vs. system browser</small></div><div class="switch on"></div></div>`;
+}
+
+/* v2.2.21 — FILTERED-SET link: pick colours/specs/brand + price/discount/
+   rating/sort; the app opens the shop filtered exactly like this. A live
+   counter shows how many products match so the admin sees the result. */
+function renderFilterLinkMode(){
+  const f = _lpFilters || (_lpFilters = { value_ids: [], sort:'newest' });
+  return `
+    <p style="font-size:11.5px;color:var(--muted);margin-bottom:8px">Build a filtered product set — the customer lands on the shop with exactly these filters applied. The counter shows live how many products match.</p>
+    <div id="lpFilterCount" style="background:var(--yellow-soft);border:1px solid var(--warn-bg,#f0e2b6);border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800;color:var(--dark);margin-bottom:10px">Counting…</div>
+    <div id="lpFilterSample" style="display:flex;gap:6px;margin-bottom:12px;min-height:2px"></div>
+
+    <div class="field"><label>Category (optional)</label>
+      <input id="lpfCatQ" placeholder="🔍 type to pick a category" autocomplete="off"
+             value="${(f.category_label||'').replace(/"/g,'&quot;')}"/>
+      <div id="lpfCatList" class="lp-list" style="max-height:120px;margin-top:4px;${f.category_id?'':'display:none'}"></div>
+      ${f.category_id?`<div class="hint">Selected: ${f.category_label||('#'+f.category_id)} · <span style="color:var(--danger);cursor:pointer" onclick="_lpFilters.category_id=null;_lpFilters.category_label='';renderLinkPicker()">clear</span></div>`:''}
+    </div>
+
+    <div class="field"><label>Price range</label>
+      <div style="display:flex;gap:8px">
+        <input type="number" id="lpfMin" placeholder="min" value="${f.min_price??''}" style="flex:1"/>
+        <input type="number" id="lpfMax" placeholder="max" value="${f.max_price??''}" style="flex:1"/>
+      </div></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div class="field"><label>Min discount %</label>
+        <input type="number" id="lpfDisc" min="0" max="95" placeholder="any" value="${f.min_discount??''}"/></div>
+      <div class="field"><label>Min rating ★</label>
+        <select id="lpfRating">
+          ${[0,3,4,4.5].map(r=>`<option value="${r}" ${(+f.min_rating||0)==r?'selected':''}>${r?('★ '+r+'+'):'any'}</option>`).join('')}
+        </select></div>
+    </div>
+
+    <div class="toggle"><div class="nm">On sale only</div>
+      <div class="switch ${f.on_sale?'on':''}" id="lpfOnSale"></div></div>
+    <div class="toggle"><div class="nm">Free shipping only</div>
+      <div class="switch ${f.free_shipping?'on':''}" id="lpfFreeShip"></div></div>
+
+    <div class="field"><label>Sort</label>
+      <select id="lpfSort">
+        ${[['newest','Newest'],['discount','Biggest discount'],['price_asc','Price ↑'],['price_desc','Price ↓'],['top_rated','Top rated'],['popular','Most popular']]
+          .map(([v,l])=>`<option value="${v}" ${ (f.sort||'newest')===v?'selected':''}>${l}</option>`).join('')}
+      </select></div>
+
+    <div class="sub-h">Colours · specs · brand</div>
+    <div id="lpfAttrs"><div style="padding:10px;color:var(--muted);font-size:11.5px">Loading attributes…</div></div>
+  `;
+}
+
+async function _wireFilterLink(){
+  const f = _lpFilters;
+  const bind = (id, key, num) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      const v = el.value.trim();
+      if (v === '') delete f[key];
+      else f[key] = num ? (parseFloat(v)||0) : v;
+      _refreshFilterCount();
+    });
+  };
+  bind('lpfMin','min_price',true); bind('lpfMax','max_price',true);
+  bind('lpfDisc','min_discount',true);
+  const rt = document.getElementById('lpfRating');
+  if (rt) rt.addEventListener('change', ()=>{ f.min_rating=parseFloat(rt.value)||0; _refreshFilterCount(); });
+  const st = document.getElementById('lpfSort');
+  if (st) st.addEventListener('change', ()=>{ f.sort=st.value; _refreshFilterCount(); });
+  const sw = (id,key)=>{ const el=document.getElementById(id); if(el) el.addEventListener('click',()=>{ f[key]=!f[key]; el.classList.toggle('on',!!f[key]); _refreshFilterCount(); }); };
+  sw('lpfOnSale','on_sale'); sw('lpfFreeShip','free_shipping');
+  // category search
+  const cq = document.getElementById('lpfCatQ');
+  if (cq) cq.addEventListener('input', () => {
+    clearTimeout(_lpFilterCountTimer);
+    _lpFilterCountTimer = setTimeout(async () => {
+      const list = document.getElementById('lpfCatList');
+      if (!cq.value.trim()){ list.style.display='none'; return; }
+      try {
+        const data = await api('GET','/api/admin/v2/lookups/categories?q='+encodeURIComponent(cq.value.trim()));
+        const cats=(data.categories||[]).slice(0,8);
+        list.style.display = cats.length?'block':'none';
+        list.innerHTML = cats.map(c=>`<div class="lp-item" onclick='_pickFilterCat(${c.id},${JSON.stringify(c.name)})'>
+          <div class="ic">📁</div><div class="info"><div class="nm">${(c.name||'').replace(/</g,'&lt;')}</div></div></div>`).join('');
+      } catch(e){}
+    }, 250);
+  });
+  // attributes (colours / specs / brand)
+  try {
+    if (!_lpAttrsCache) _lpAttrsCache = (await api('GET','/api/admin/v2/lookups/attributes')).attributes||[];
+    _renderFilterAttrs();
+  } catch(e){
+    const box=document.getElementById('lpfAttrs'); if(box) box.innerHTML='<div class="hint" style="color:var(--danger)">Could not load attributes</div>';
+  }
+  _refreshFilterCount();
+}
+
+function _pickFilterCat(id, name){
+  _lpFilters.category_id = id; _lpFilters.category_label = name;
+  renderLinkPicker();
+}
+
+function _renderFilterAttrs(){
+  const box = document.getElementById('lpfAttrs');
+  if (!box) return;
+  const f = _lpFilters; const sel = new Set(f.value_ids||[]);
+  box.innerHTML = (_lpAttrsCache||[]).map(a => {
+    const chips = a.values.map(v => {
+      const on = sel.has(v.id);
+      const sw = (a.kind==='color' && v.html_color)
+        ? `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${v.html_color};margin-right:4px;border:1px solid #0002;vertical-align:middle"></span>` : '';
+      return `<div class="chip ${on?'on':''}" style="font-size:11px;padding:4px 9px" onclick="_toggleFilterVal(${v.id})">${sw}${(v.name||'').replace(/</g,'&lt;')}</div>`;
+    }).join('');
+    const icon = a.kind==='color'?'🎨':a.kind==='brand'?'🏷':'⚙️';
+    return `<div style="margin-bottom:8px"><div style="font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:4px">${icon} ${a.name}</div>
+      <div class="chips" style="flex-wrap:wrap;gap:6px">${chips}</div></div>`;
+  }).join('') || '<div class="hint">No attributes defined.</div>';
+}
+
+function _toggleFilterVal(id){
+  const f = _lpFilters; f.value_ids = f.value_ids||[];
+  const i = f.value_ids.indexOf(id);
+  if (i>=0) f.value_ids.splice(i,1); else f.value_ids.push(id);
+  _renderFilterAttrs(); _refreshFilterCount();
+}
+
+function _filterQuery(){
+  const f = _lpFilters || {};
+  const q = new URLSearchParams();
+  if (f.category_id) q.set('category_id', f.category_id);
+  if (f.value_ids && f.value_ids.length) q.set('value_ids', f.value_ids.join(','));
+  if (f.min_price!=null && f.min_price!=='') q.set('min_price', f.min_price);
+  if (f.max_price!=null && f.max_price!=='') q.set('max_price', f.max_price);
+  if (f.min_discount) q.set('min_discount', f.min_discount);
+  if (f.min_rating) q.set('min_rating', f.min_rating);
+  if (f.on_sale) q.set('on_sale', '1');
+  if (f.free_shipping) q.set('free_shipping', '1');
+  if (f.sort) q.set('sort', f.sort);
+  return q;
+}
+
+async function _refreshFilterCount(){
+  clearTimeout(_lpFilterCountTimer);
+  _lpFilterCountTimer = setTimeout(async () => {
+    const box = document.getElementById('lpFilterCount');
+    const sample = document.getElementById('lpFilterSample');
+    if (!box) return;
+    box.textContent = 'Counting…';
+    try {
+      const q = _filterQuery(); q.set('per_page','6'); q.set('page','1');
+      const res = await fetch('/api/mobile/v2/products?'+q.toString(), {headers:{'Accept':'application/json'}});
+      const body = await res.json();
+      const total = (body.meta && (body.meta.total ?? body.meta.total_count)) ?? (body.data||[]).length;
+      box.textContent = '🎯 ' + total + ' product' + (total===1?'':'s') + ' match these filters';
+      if (sample) sample.innerHTML = (body.data||[]).slice(0,6).map(p=>{
+        const im = p.image ? (p.image.startsWith('http')?p.image:p.image) : '';
+        return `<div style="width:42px;height:42px;border-radius:7px;border:1px solid #eee;background:${im?`center/cover no-repeat url('${im}')`:'#f3f0fb'}"></div>`;
+      }).join('');
+    } catch(e){ box.textContent = 'Could not count'; }
+  }, 300);
 }
 async function applyLinkPick(){
   let choice = linkPicker.choice;
   if (linkPicker.mode === 'url'){
     const v = document.getElementById('lpUrl')?.value || '';
     choice = {type:'url', value:v, label:v};
+  }
+  if (linkPicker.mode === 'filters'){
+    const f = _lpFilters || {};
+    // human-readable summary for the chip
+    const bits = [];
+    if (f.category_label) bits.push(f.category_label);
+    if (f.value_ids && f.value_ids.length) bits.push(f.value_ids.length + ' specs');
+    if (f.min_discount) bits.push('≥' + f.min_discount + '% off');
+    else if (f.on_sale) bits.push('on sale');
+    if (f.min_price!=null && f.min_price!=='') bits.push('≥' + f.min_price);
+    if (f.max_price!=null && f.max_price!=='') bits.push('≤' + f.max_price);
+    if (f.free_shipping) bits.push('free ship');
+    if (f.min_rating) bits.push('★' + f.min_rating + '+');
+    choice = {type:'filters', value:0,
+              label: bits.length ? ('Filtered: ' + bits.join(' · ')) : 'Filtered set',
+              filters: JSON.parse(JSON.stringify(f))};
   }
   if (!choice){ toast('Pick a target first'); return; }
   if (linkPickerForNav){
@@ -5205,6 +6239,40 @@ function openItemImagePicker(arrayKey, idx, fieldKey){
   document.getElementById('imgPickerBd').classList.add('on');
   document.getElementById('imgUploadStatus').textContent = 'PNG / JPG / WebP up to 8 MB';
   loadImagePickerList();
+}
+// v2.2.11 — append an image URL to a string-array prop (promo-hero slider).
+function openImageListPicker(arrayKey){
+  _imgPickerTarget = { kind:'arrayPush', arrayKey };
+  document.getElementById('imgPickerBd').classList.add('on');
+  document.getElementById('imgUploadStatus').textContent = 'PNG / JPG / WebP up to 8 MB';
+  loadImagePickerList();
+}
+function removeImageFromList(arrayKey, idx){
+  const b = cur() && selectedBlockId
+    ? cur().blocks.find(x => x.id === selectedBlockId) : null;
+  if (!b || !Array.isArray(b.props[arrayKey])) return;
+  b.props[arrayKey].splice(idx, 1);
+  renderRight(); renderCanvas(); scheduleSave();
+}
+/* Thumbnail strip + add button for a URL-array prop. */
+function imageListEditor(b, arrayKey, label){
+  const list = b.props[arrayKey] || [];
+  return `<div class="field"><label>${label} (${list.length})</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+      ${list.map((u,i)=>`<div style="position:relative;width:60px;height:60px;border-radius:8px;
+           background:center/cover no-repeat url('${encodeURI(u||'')}');border:1px solid var(--border-2)">
+        <div onclick="removeImageFromList('${arrayKey}',${i})"
+             style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;
+                    background:#fff;border:1px solid var(--border);color:var(--danger);
+                    font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer">✕</div>
+      </div>`).join('')}
+      <div onclick="openImageListPicker('${arrayKey}')"
+           style="width:60px;height:60px;border-radius:8px;border:1px dashed var(--border-2);
+                  display:flex;align-items:center;justify-content:center;cursor:pointer;
+                  color:var(--muted);font-size:22px">＋</div>
+    </div>
+    <div class="hint">First image shows first. Add 2+ for an auto-slider.</div>
+  </div>`;
 }
 function openItemLinkPicker(block, arrayKey, idx, fieldKey){
   // Reuse the existing modal but record an "item" target. applyLinkPick
@@ -5279,7 +6347,11 @@ async function loadImagePickerList(){
 }
 function _applyPickedImage(b, attId, url){
   const t = _imgPickerTarget;
-  if (t.kind === 'item'){
+  if (t.kind === 'arrayPush'){
+    // v2.2.11 — push a URL into a string-array prop (e.g. promo-hero bg_images).
+    const list = (b.props[t.arrayKey] = b.props[t.arrayKey] || []);
+    list.push(url);
+  } else if (t.kind === 'item'){
     const list = (b.props[t.arrayKey] = b.props[t.arrayKey] || []);
     const it = list[t.idx];
     if (it) it[t.fieldKey] = url;
@@ -5907,6 +6979,7 @@ async function flushSave(){
   if (!p || !p._serverId) return;
   try {
     const updated = await api('PUT', `/api/admin/v2/pages/${p._serverId}`, {
+      name: p.name,
       blocks: p.blocks,
       theme_code: p.theme,
       website_ids: p.websiteIds,
@@ -5941,6 +7014,7 @@ async function confirmPublish(){
     // with the previous snapshot. This is what made the theme appear to
     // "revert after publish".
     await flushSave();
+    if (typeof flushNavSave === 'function') await flushNavSave();
     const res = await fetch(`/api/admin/v2/pages/${p._serverId}/publish`, {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
@@ -6052,32 +7126,12 @@ async function boot(){
   render();
 }
 
-// Wire publish button confirmation
-document.getElementById('publishBd').addEventListener('click', async (e) => {
-  const btn = e.target;
-  if (!btn.classList.contains('btn-primary')) return;
-  const pageId = document.getElementById('publishBd').dataset.pageId;
-  const p = pages.find(x => String(x.id) === String(pageId));
-  if (!p) { closeModal('publishBd'); return; }
-  closeModal('publishBd');
-  toast('Publishing…');
-  try {
-    // 1. Flush any pending edits FIRST so what we publish is what's on
-    //    screen (otherwise the 600ms debounce can lose the last keystroke).
-    await flushSave();
-    await flushNavSave();
-    // 2. Then flip status to published
-    const updated = await api('POST', `/api/admin/v2/pages/${p._serverId}/publish`);
-    const i = pages.findIndex(x => x.id === p.id);
-    if (i >= 0) pages[i] = Object.assign({}, mapAdminPage(updated), {
-      blocks: p.blocks, theme: p.theme,
-    });
-    toast('🚀 Published — live now');
-    render();
-  } catch (err) {
-    toast('Publish failed — ' + err.message);
-  }
-});
+// v2.2.16 — REMOVED the duplicate publish click-listener that used to live
+// here. The confirm button already calls confirmPublish() via onclick, so
+// this listener made every publish fire TWICE in parallel (2× PUT + 2×
+// POST on the same record → intermittent serialization-conflict 500s,
+// surfaced as "Publish failed" right after editing targeting/countries).
+// confirmPublish() now also flushes nav edits before publishing.
 
 boot();
 </script>

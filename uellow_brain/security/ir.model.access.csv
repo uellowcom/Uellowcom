@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_brain_config_user,brain.config user,model_uellow_brain_config,base.group_user,1,0,0,0
+access_brain_config_admin,brain.config admin,model_uellow_brain_config,base.group_system,1,1,1,1
+access_brain_margin_user,brain.margin user,model_uellow_brain_margin_rule,base.group_user,1,0,0,0
+access_brain_margin_admin,brain.margin admin,model_uellow_brain_margin_rule,base.group_system,1,1,1,1
+access_brain_dash_user,brain.dashboard user,model_uellow_brain_dashboard,base.group_user,1,1,1,1
+access_brain_dash_admin,brain.dashboard admin,model_uellow_brain_dashboard,base.group_system,1,1,1,1
+access_brain_taste_user,brain.taste user,model_uellow_taste_profile,base.group_user,1,0,0,0
+access_brain_taste_admin,brain.taste admin,model_uellow_taste_profile,base.group_system,1,1,1,1
+access_brain_merch_user,brain.merch user,model_uellow_merch_rule,base.group_user,1,0,0,0
+access_brain_merch_admin,brain.merch admin,model_uellow_merch_rule,sales_team.group_sale_manager,1,1,1,1
+access_brain_merch_log_user,brain.merch.log user,model_uellow_merch_rule_log,base.group_user,1,0,0,0
+access_brain_merch_log_admin,brain.merch.log admin,model_uellow_merch_rule_log,sales_team.group_sale_manager,1,1,1,1
+access_uellow_brain_campaign,uellow.brain.campaign,model_uellow_brain_campaign,base.group_system,1,1,1,1

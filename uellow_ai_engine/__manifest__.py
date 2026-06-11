@@ -12,6 +12,8 @@
         'views/ai_settings_views.xml',
         'views/beena_archive_views.xml',
         'views/beena_order_views.xml',
+        'views/beena_coach_views.xml',
+        'views/app_visit_views.xml',
         'views/portal_templates.xml',
     ],
     'assets': {

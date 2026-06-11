@@ -82,7 +82,8 @@ class PagesAdmin(http.Controller):
         if guard:
             return guard
         p = _payload()
-        name = (p.get('name') or '').strip()
+        name_in = p.get('name')
+        name = _name_en(name_in)
         if not name:
             return _fail('BAD_REQUEST', 'name required')
         slug = p.get('slug') or _slugify(name)
@@ -102,7 +103,11 @@ class PagesAdmin(http.Controller):
             'lang_ids': [(6, 0, _lang_ids_from_codes(p.get('lang_codes') or ['en', 'ar']))],
             'website_ids': [(6, 0, p.get('website_ids') or [])],
         }
-        rec = request.env['mobile.page'].sudo().create(vals)
+        en_code = _full_lang_code('en') or 'en_US'
+        rec = request.env['mobile.page'].sudo().with_context(lang=en_code).create(vals)
+        # Persist any non-English name translations supplied as a dict.
+        if isinstance(name_in, dict):
+            _apply_translations(rec, 'name', name_in)
         return _ok(rec.to_admin_dict())
 
     @http.route('/api/admin/v2/pages/<int:pid>', type='http', auth='user',
@@ -127,7 +132,15 @@ class PagesAdmin(http.Controller):
             return _fail('NOT_FOUND', 'Page missing', 404)
         p = _payload()
         vals = {}
-        if 'name' in p: vals['name'] = (p['name'] or '').strip() or rec.name
+        if 'name' in p:
+            # Accept str (EN only) or {lang: text}. Write translations directly
+            # so each language tab in the builder persists independently.
+            if isinstance(p['name'], dict):
+                _apply_translations(rec, 'name', {k: v for k, v in p['name'].items() if v})
+            else:
+                clean = (p['name'] or '').strip()
+                if clean:
+                    vals['name'] = clean
         if 'slug' in p and p['slug']: vals['slug'] = _slugify(p['slug'])
         if 'kind' in p: vals['kind'] = p['kind']
         if 'blocks' in p:
@@ -322,6 +335,40 @@ class AdminLookups(http.Controller):
                              unique=c.write_date) if c.image_128 else None,
         } for c in recs]})
 
+    @http.route('/api/admin/v2/lookups/attributes', type='http', auth='user',
+                methods=['GET'], csrf=False)
+    def attributes(self, **kw):
+        """v2.2.21 — product attributes + their values (colour swatches,
+        sizes, specs, brand) for the filtered-link builder. Each value's
+        `id` is the product.attribute.value id the storefront filters by
+        (value_ids / brand_id)."""
+        guard = _require_internal()
+        if guard:
+            return guard
+        Attr = request.env['product.attribute'].sudo()
+        recs = Attr.search([], order='sequence, name')
+        out = []
+        for a in recs:
+            nm = (a.name or '').lower()
+            kind = ('color' if ('color' in nm or 'لون' in nm)
+                    else 'brand' if ('brand' in nm or 'ماركة' in nm
+                                     or 'علامة' in nm)
+                    else 'other')
+            vals = []
+            for v in a.value_ids[:200]:
+                vals.append({
+                    'id': v.id,
+                    'name': v.name or '',
+                    'html_color': v.html_color or '',
+                })
+            if vals:
+                out.append({
+                    'id': a.id, 'name': a.name or '',
+                    'kind': kind, 'display_type': a.display_type,
+                    'values': vals,
+                })
+        return _ok({'attributes': out})
+
     @http.route('/api/admin/v2/lookups/products', type='http', auth='user',
                 methods=['GET'], csrf=False)
     def products(self, **kw):
@@ -375,6 +422,54 @@ class AdminLookups(http.Controller):
                 'tier': getattr(v, 'tier', '') or '',
             })
         return _ok({'vendors': out})
+
+    @http.route('/api/admin/v2/lookups/brands', type='http', auth='user',
+                methods=['GET'], csrf=False)
+    def brands(self, **kw):
+        """v2.2.27 — product brands (product.brand) for the Category
+        Showcase 'brand' source. Guarded → empty list if the brand module
+        isn't installed."""
+        guard = _require_internal()
+        if guard:
+            return guard
+        q = (kw.get('q') or '').strip()
+        Brand = request.env.get('product.brand')
+        if Brand is None:
+            return _ok({'brands': []})
+        Brand = Brand.sudo()
+        dom = [('name', 'ilike', q)] if q else []
+        recs = Brand.search(dom, limit=80, order='name')
+        from odoo.addons.uellow_mobile_manager.controllers.api_v2._common \
+            import img_url
+        out = []
+        for b in recs:
+            logo = None
+            for field in ('logo', 'image_128', 'image_1920'):
+                if field in b._fields and b[field]:
+                    logo = img_url('product.brand', b.id, field,
+                                   unique=b.write_date)
+                    break
+            out.append({'id': b.id, 'name': b.name or '', 'logo': logo})
+        return _ok({'brands': out})
+
+    @http.route('/api/admin/v2/lookups/tags', type='http', auth='user',
+                methods=['GET'], csrf=False)
+    def product_tags(self, **kw):
+        """v2.2.27 — product tags (product.tag) for the Category Showcase
+        'tag' source. Guarded → empty list if unavailable."""
+        guard = _require_internal()
+        if guard:
+            return guard
+        q = (kw.get('q') or '').strip()
+        Tag = request.env.get('product.tag')
+        if Tag is None:
+            return _ok({'tags': []})
+        Tag = Tag.sudo()
+        dom = [('name', 'ilike', q)] if q else []
+        recs = Tag.search(dom, limit=120, order='name')
+        out = [{'id': t.id, 'name': t.name or '',
+                'color': getattr(t, 'color', 0) or 0} for t in recs]
+        return _ok({'tags': out})
 
     @http.route('/api/admin/v2/lookups/flash-sales', type='http',
                 auth='user', methods=['GET'], csrf=False)
@@ -473,6 +568,43 @@ class AdminLookups(http.Controller):
             })
         return _ok({'promotions': out})
 
+    @http.route('/api/admin/v2/lookups/coupons', type='http',
+                auth='user', methods=['GET'], csrf=False)
+    def coupons(self, **kw):
+        """v2.2.11 — loyalty coupon/promo programs for the coupon block
+        picker (multi-select)."""
+        guard = _require_internal()
+        if guard:
+            return guard
+        Prog = request.env.get('loyalty.program')
+        if Prog is None:
+            return _ok({'coupons': []})
+        recs = Prog.sudo().search([
+            ('active', '=', True),
+            ('program_type', 'in',
+             ('promotion', 'promo_code', 'coupons', 'buy_x_get_y',
+              'next_order_coupons')),
+        ], limit=200)
+        out = []
+        for pr in recs:
+            rule = pr.rule_ids[:1]
+            reward = pr.reward_ids[:1]
+            disc = ''
+            if reward and reward.reward_type == 'discount':
+                disc = ('%d%%' % int(reward.discount or 0)) \
+                    if reward.discount_mode == 'percent' \
+                    else ('%g' % (reward.discount or 0))
+            out.append({
+                'id': pr.id,
+                'name': pr.name or '',
+                'code': (rule and rule.mode == 'with_code'
+                         and rule.code) or '',
+                'discount_text': disc,
+                'program_type': pr.program_type,
+                'date_to': pr.date_to.isoformat() if pr.date_to else '',
+            })
+        return _ok({'coupons': out})
+
     @http.route('/api/admin/v2/lookups/sliders', type='http', auth='user',
                 methods=['GET'], csrf=False)
     def sliders(self, **kw):
@@ -525,6 +657,40 @@ class AdminUploads(http.Controller):
         url = f'{base_url()}/web/image/{att.id}'
         return _ok({'attachment_id': att.id, 'url': url,
                     'name': att.name, 'size': len(raw)})
+
+
+def _full_lang_code(short):
+    """'en' -> 'en_US', 'ar' -> 'ar_001'. Returns an active res.lang code."""
+    Lang = request.env['res.lang'].sudo()
+    rec = Lang.search([('code', '=', short)], limit=1)
+    if not rec:
+        rec = Lang.search([('code', '=like', short + '%')], limit=1)
+    return rec.code if rec else None
+
+
+def _apply_translations(rec, field, value):
+    """Write a translatable Char/Text in every supplied language.
+    `value` may be a plain string (EN only) or a {lang: text} dict.
+    Empty values are skipped so a blank AR tab never wipes an existing one."""
+    if isinstance(value, dict):
+        # Write English first so it becomes the source term, then the rest.
+        items = sorted(value.items(), key=lambda kv: 0 if kv[0] == 'en' else 1)
+        for short, txt in items:
+            if not txt:
+                continue
+            code = _full_lang_code(short)
+            if code:
+                rec.with_context(lang=code).write({field: txt})
+    elif value is not None:
+        rec.write({field: value})
+
+
+def _name_en(value):
+    """Extract the English/primary string from a str or {lang: text} dict."""
+    if isinstance(value, dict):
+        return (value.get('en') or value.get('ar') or
+                next((v for v in value.values() if v), '') or '').strip()
+    return (value or '').strip()
 
 
 def _lang_ids_from_codes(codes):

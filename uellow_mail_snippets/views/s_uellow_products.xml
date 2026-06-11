@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Uellow Products — an email-safe, brand-styled 2-up product card grid
+        for the Mass Mailing editor. Drop it in, then edit each card (image,
+        name, price, button) or duplicate a card for more products. Built with
+        tables + inline styles so it renders in every email client.
+    -->
+    <template id="s_uellow_products" name="Uellow Products">
+        <div class="s_uellow_products o_mail_snippet_general" data-snippet="s_uellow_products">
+            <div class="container">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                    <tr>
+                        <!-- card 1 -->
+                        <td width="50%" valign="top" style="padding:8px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #eee;border-radius:12px;background:#ffffff;">
+                                <tr><td style="padding:0;">
+                                    <a href="https://www.uellow.com/shop">
+                                        <img src="/web/image/product.template" alt="Product" class="img img-fluid" style="display:block;width:100%;height:auto;border-radius:12px 12px 0 0;background:#faf6eb;"/>
+                                    </a>
+                                </td></tr>
+                                <tr><td style="padding:10px 12px 12px;">
+                                    <p style="margin:0;font-weight:700;font-size:14px;color:#1f1206;line-height:1.3;">Product name</p>
+                                    <p style="margin:6px 0 0;font-weight:800;font-size:16px;color:#412402;">0.000 KD</p>
+                                    <p style="margin:10px 0 0;text-align:center;">
+                                        <a class="btn btn-primary" href="https://www.uellow.com/shop" style="background:#F5C320;color:#412402;border:none;border-radius:8px;padding:9px 18px;font-weight:800;text-decoration:none;display:inline-block;">Shop now</a>
+                                    </p>
+                                </td></tr>
+                            </table>
+                        </td>
+                        <!-- card 2 -->
+                        <td width="50%" valign="top" style="padding:8px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="border:1px solid #eee;border-radius:12px;background:#ffffff;">
+                                <tr><td style="padding:0;">
+                                    <a href="https://www.uellow.com/shop">
+                                        <img src="/web/image/product.template" alt="Product" class="img img-fluid" style="display:block;width:100%;height:auto;border-radius:12px 12px 0 0;background:#faf6eb;"/>
+                                    </a>
+                                </td></tr>
+                                <tr><td style="padding:10px 12px 12px;">
+                                    <p style="margin:0;font-weight:700;font-size:14px;color:#1f1206;line-height:1.3;">Product name</p>
+                                    <p style="margin:6px 0 0;font-weight:800;font-size:16px;color:#412402;">0.000 KD</p>
+                                    <p style="margin:10px 0 0;text-align:center;">
+                                        <a class="btn btn-primary" href="https://www.uellow.com/shop" style="background:#F5C320;color:#412402;border:none;border-radius:8px;padding:9px 18px;font-weight:800;text-decoration:none;display:inline-block;">Shop now</a>
+                                    </p>
+                                </td></tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </template>
+</odoo>

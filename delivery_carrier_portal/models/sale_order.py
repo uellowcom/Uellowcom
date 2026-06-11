@@ -14,8 +14,15 @@ class SaleOrder(models.Model):
     delivery_status = fields.Selection(
         selection=[
             ('pending',          'Pending'),
+            # NEW — collected from the Uellow warehouse by the carrier's
+            # pickup courier and in transit to the carrier sorting centre.
+            ('picked_up',        'Picked Up (in transit to carrier)'),
             ('arrived_sorting',  'Arrived at Sorting Center'),
             ('assigned',         'Assigned to Driver'),
+            # v2.2.33 — driver ACCEPTED the assignment (order is with the
+            # courier) but has NOT pressed "Start delivery" yet, so no live
+            # tracking. 'out_for_delivery' = courier is actually on the way.
+            ('accepted',         'Accepted by Driver'),
             ('out_for_delivery', 'Out for Delivery'),
             ('delivered',        'Delivered'),
             ('failed',           'Failed'),
@@ -176,22 +183,98 @@ class SaleOrder(models.Model):
         drv = self.delivery_driver_id
         if not drv:
             return
+        # v2.2.32 — every assigned order must belong to a TRIP so it shows in
+        # the driver app's Trips tab too (not just the orders list). Reuse the
+        # order's trip, else the driver/carrier's OPEN trip, else open a new
+        # one. (Directly-assigned orders used to get a trip-less line, so the
+        # Trips tab + trip-based stats stayed empty.)
+        Trip = self.env['delivery.trip'].sudo()
+        trip = self.delivery_trip_id
+        carrier = self.delivery_carrier_company_id or drv.carrier_company_id
+        if not trip and carrier:
+            trip = Trip.search([
+                ('carrier_company_id', '=', carrier.id),
+                ('state', 'in', ('draft', 'assigned', 'in_progress')),
+            ], order='date_trip desc, id desc', limit=1)
+            if not trip:
+                trip = Trip.create({
+                    'carrier_company_id': carrier.id,
+                    'driver_id': drv.id,
+                })
+            self.delivery_trip_id = trip.id
         Line = self.env['delivery.trip.line'].sudo()
         line = Line.search([('sale_order_id', '=', self.id)], limit=1)
         if line:
+            vals = {}
             if line.driver_id.id != drv.id:
-                line.driver_id = drv.id
+                vals['driver_id'] = drv.id
+            if trip and line.trip_id.id != trip.id:
+                vals['trip_id'] = trip.id
+            if vals:
+                line.write(vals)
         else:
             Line.create({
                 'sale_order_id': self.id,
                 'driver_id': drv.id,
-                'trip_id': self.delivery_trip_id.id
-                           if self.delivery_trip_id else False,
+                'trip_id': trip.id if trip else False,
             })
         # Move to 'assigned' so the driver sees it as a new active task
         # (don't downgrade an already-progressed status).
         if self.delivery_status in ('pending', 'arrived_sorting', False):
             self.delivery_status = 'assigned'
+
+    # ── v2.2.33 — auto pickup-request on order confirmation ──────────────
+    def _resolve_carrier_company(self):
+        """Best-effort carrier for an order at confirmation time:
+        explicit carrier on the order → company flagged is_default → first
+        active company. Returns a delivery.carrier.company or empty rs."""
+        self.ensure_one()
+        if self.delivery_carrier_company_id:
+            return self.delivery_carrier_company_id
+        Cc = self.env['delivery.carrier.company'].sudo()
+        default = Cc.search([('is_default', '=', True), ('active', '=', True)], limit=1)
+        return default or Cc.search([('active', '=', True)], limit=1)
+
+    def _ensure_pickup_request(self):
+        """Attach this order to its carrier's OPEN pickup request (delivery.trip),
+        creating one if none is open. The line is created WITHOUT a driver and
+        the order stays 'pending' until the carrier RECEIVES it at the sorting
+        center. Idempotent — safe to call again."""
+        self.ensure_one()
+        if self.state != 'sale' or self.delivery_status in (
+                'delivered', 'failed', 'failed_returned'):
+            return
+        carrier = self._resolve_carrier_company()
+        if not carrier:
+            return
+        if not self.delivery_carrier_company_id:
+            self.delivery_carrier_company_id = carrier.id
+        Trip = self.env['delivery.trip'].sudo()
+        trip = self.delivery_trip_id
+        if not trip:
+            trip = Trip.search([
+                ('carrier_company_id', '=', carrier.id),
+                ('state', 'in', ('draft', 'assigned', 'in_progress')),
+            ], order='date_trip desc, id desc', limit=1)
+            if not trip:
+                trip = Trip.create({'carrier_company_id': carrier.id})
+            self.delivery_trip_id = trip.id
+        Line = self.env['delivery.trip.line'].sudo()
+        line = Line.search([('sale_order_id', '=', self.id)], limit=1)
+        if not line:
+            Line.create({'sale_order_id': self.id, 'trip_id': trip.id})
+        elif not line.trip_id:
+            line.trip_id = trip.id
+
+    def action_confirm(self):
+        res = super().action_confirm()
+        for order in self:
+            try:
+                order._ensure_pickup_request()
+            except Exception:
+                # never block a sale confirmation on the dispatch side-write
+                pass
+        return res
 
     def action_confirm_return_received(self):
         """Opens wizard-like dialog via return URL - handled via portal controller."""

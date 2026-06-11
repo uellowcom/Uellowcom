@@ -312,6 +312,42 @@
                             </group>
                         </page>
 
+                        <page string="📱 App page" name="app_landing">
+                            <group string="App download page (uellow.com/app)">
+                                <field name="ai_app_landing_enabled" widget="boolean_toggle"
+                                       string="Enable page"/>
+                                <field name="ai_app_auto_redirect" widget="boolean_toggle"
+                                       string="Auto-redirect by device"/>
+                                <field name="ai_app_icon_url" string="App icon URL"/>
+                                <field name="ai_app_screenshot_url" string="Phone mockup screenshot URL"/>
+                            </group>
+                            <group string="Deep link — open the installed app">
+                                <field name="ai_app_open_in_app" widget="boolean_toggle"
+                                       string="Open app if installed (then fall back to store)"/>
+                                <field name="ai_app_deeplink" string="App deep link (scheme)"
+                                       placeholder="uellow://home"/>
+                                <field name="ai_app_android_package" string="Android package"
+                                       placeholder="com.uellow.app"/>
+                            </group>
+                            <group string="Stores — visibility &amp; links">
+                                <field name="ai_app_appstore_enabled" widget="boolean_toggle"
+                                       string="App Store (Apple)"/>
+                                <field name="ai_app_url_appstore" string="App Store URL"
+                                       placeholder="https://apps.apple.com/app/id..."/>
+                                <field name="ai_app_play_enabled" widget="boolean_toggle"
+                                       string="Google Play (Android)"/>
+                                <field name="ai_app_url_play" string="Google Play URL"
+                                       placeholder="https://play.google.com/store/apps/details?id=..."/>
+                                <field name="ai_app_huawei_enabled" widget="boolean_toggle"
+                                       string="AppGallery (Huawei)"/>
+                                <field name="ai_app_url_huawei" string="AppGallery / Huawei URL"/>
+                            </group>
+                            <div class="text-muted" style="padding:6px 2px">
+                                Analytics (visits/conversions by country &amp; device) live in the
+                                <b>App Analytics</b> menu.
+                            </div>
+                        </page>
+
                     </notebook>
                 </sheet>
             </form>

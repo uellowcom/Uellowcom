@@ -287,3 +287,12 @@
     .sc-kpi-grid { grid-template-columns: 1fr; }
     .sc-section-grid { grid-template-columns: 1fr; }
 }
+
+/* Profit Margin Manager — chips & inline controls */
+.sc-chip:hover{background:#f3f7f6 !important}
+.sc-chip-on{background:#1A7A6E !important;color:#fff !important;border-color:#1A7A6E !important}
+.sc-icon-btn{background:transparent;border:1px solid #e3e8e6;border-radius:6px;
+  padding:3px 7px;cursor:pointer}
+.sc-icon-btn:hover{background:#f3f7f6}
+.sc-search:focus{outline:none;border-color:#1A7A6E}
+.sc-table th{cursor:default}

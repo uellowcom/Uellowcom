@@ -82,16 +82,39 @@ class MobileAccountAPI(http.Controller):
             ('partner_id', '=', partner.id),
             ('state', 'in', ['sale']),
         ])
+        # v2.1.88 — per-status counts for the account "My Orders" grid badges.
+        status_counts = {'draft': 0, 'confirmed': 0, 'preparing': 0,
+                         'shipping': 0, 'delivered': 0}
+        try:
+            from .orders import _uellow_status
+            for o in Order.search([('partner_id', '=', partner.id),
+                                   ('state', '!=', 'cancel')], limit=200):
+                # _uellow_status returns a dict — key on its 'code' (v2.1.92 fix:
+                # was comparing the whole dict, so all counts stayed 0).
+                st = _uellow_status(o)['code']
+                if st in status_counts:
+                    status_counts[st] += 1
+        except Exception:
+            pass
         recent_order = Order.search([
             ('partner_id', '=', partner.id),
             ('state', 'in', ['sale', 'done']),
         ], order='date_order desc', limit=1)
         recent_order_dict = None
         if recent_order:
+            # v2.1.94 — the REAL unified status: the card used to get only
+            # the raw sale state ('sale'), so its progress sat at
+            # "confirmed" (blue) forever, even after delivery.
+            try:
+                from .orders import _uellow_status
+                u_code = _uellow_status(recent_order)['code']
+            except Exception:
+                u_code = 'confirmed'
             recent_order_dict = {
                 'id': recent_order.id,
                 'name': recent_order.name,
                 'state': recent_order.state,
+                'uellow_status': u_code,
                 'total': fmt_price(recent_order.amount_total, recent_order.currency_id),
                 'date': recent_order.date_order.isoformat() if recent_order.date_order else None,
             }
@@ -157,13 +180,22 @@ class MobileAccountAPI(http.Controller):
             _tile('settings',      'Settings',       'الإعدادات'),
         ]
 
+        # v2.2.10 — admin console gate (small shield icon in حسابي)
+        try:
+            from .admin_app import is_admin_partner
+            is_admin = is_admin_partner(partner)
+        except Exception:
+            is_admin = False
+
         return ok({
             'user': _serialize_user(partner),
+            'is_admin': is_admin,
             'banners': banners,
             'tiles': tiles,
             'stats': {
                 'orders_total': order_count,
                 'orders_in_progress': in_progress,
+                'status_counts': status_counts,
                 'addresses_count': addr_count,
                 'notifications_unread': unread,
                 'points': points,

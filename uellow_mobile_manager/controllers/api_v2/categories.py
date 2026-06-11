@@ -84,12 +84,26 @@ class MobileCategoriesAPI(http.Controller):
         domain = _domain_published_for_app() + [
             ('public_categ_ids', 'child_of', cat.id),
         ]
-        order = {
+        sort_map = {
             'newest': 'create_date desc',
             'price_asc': 'list_price asc',
             'price_desc': 'list_price desc',
             'name': 'name asc',
-        }.get(p.get('sort', 'newest'), 'create_date desc')
+        }
+        # v2.2.26 — Brain: Best Match on category pages (cost/margin-driven
+        # brain_score), guarded + optional default. Falls back safely.
+        req_sort = p.get('sort')
+        Brain = request.env.get('uellow.brain.config')
+        try:
+            if (Brain is not None
+                    and 'brain_score' in request.env['product.template']._fields
+                    and Brain.sudo().is_on()):
+                sort_map['best_match'] = 'brain_score desc, create_date desc'
+                if not req_sort and Brain.sudo().get_config().default_sort_best_match:
+                    req_sort = 'best_match'
+        except Exception:
+            pass
+        order = sort_map.get(req_sort or 'newest', 'create_date desc')
         recs = request.env['product.template'].sudo().search(domain, order=order)
         items, meta = paginate(
             recs, page=p.get('page', 1), per_page=p.get('per_page', 20),
@@ -106,7 +120,8 @@ class MobileCategoriesAPI(http.Controller):
         category's products. Admin can disable specific attributes via
         the `uellow_mobile.hidden_filter_attrs` setting (comma list of
         attribute IDs)."""
-        from ._common import bilingual, img_url
+        from ._common import (bilingual, img_url, brand_value_logo,
+                              is_brand_attribute)
         cat = request.env['product.public.category'].sudo().browse(category_id)
         if not cat.exists():
             return fail('NOT_FOUND', 'Category not found', 404)
@@ -138,19 +153,25 @@ class MobileCategoriesAPI(http.Controller):
             attr = line.attribute_id
             if attr.id in hidden_ids:
                 continue
+            is_brand = is_brand_attribute(attr)
             buck = attr_buckets.setdefault(attr.id, {
                 'id': attr.id,
                 'name': bilingual(attr, 'name'),
                 'display_type': attr.display_type or 'radio',
+                'is_brand': is_brand,
                 'values': {},
             })
             for v in line.value_ids:
+                # v2.2.40 — brand chips show the real brand logo (resolved from
+                # product.brand by name), like the shop page.
+                vimg = brand_value_logo(v) if is_brand else (
+                    img_url('product.attribute.value', v.id, 'image',
+                            unique=v.write_date) if v.image else None)
                 vb = buck['values'].setdefault(v.id, {
                     'id': v.id,
                     'name': bilingual(v, 'name'),
                     'html_color': v.html_color or '',
-                    'image': img_url('product.attribute.value', v.id, 'image',
-                                     unique=v.write_date) if v.image else None,
+                    'image': vimg,
                     'count': 0,
                 })
                 vb['count'] += 1

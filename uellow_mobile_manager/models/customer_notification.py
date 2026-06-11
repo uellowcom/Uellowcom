@@ -86,6 +86,14 @@ class MobileNotificationSetting(models.Model):
     notify_affiliate_news = fields.Boolean(
         string='Partners app: news & campaigns', default=True)
 
+    # ── admin console pushes (v2.2.10) ──
+    notify_admin_new_order = fields.Boolean(
+        string='Admin: new online order', default=True)
+    notify_admin_pos_order = fields.Boolean(
+        string='Admin: new POS sale', default=True)
+    notify_admin_pos_session = fields.Boolean(
+        string='Admin: POS session open / close', default=True)
+
     # future push transport — engine stores rows either way
     fcm_server_key = fields.Char(
         string='FCM server key (legacy, unused)',
@@ -251,6 +259,79 @@ class MobileCustomerNotification(models.Model):
                 continue
         return sent
 
+    # ── admin console pushes (v2.2.10) ──────────────────────────────
+    @api.model
+    def _admin_partners(self):
+        """Recipients of admin pushes: partners allow-listed in
+        ``uellow_mobile.admin_partner_ids`` + partners of internal users
+        with Settings-admin or Sales-manager rights. Never raises."""
+        Partner = self.env['res.partner'].sudo()
+        out = Partner.browse()
+        try:
+            ids = self.env['ir.config_parameter'].sudo().get_param(
+                'uellow_mobile.admin_partner_ids', '') or ''
+            allow = [int(x) for x in ids.replace(' ', '').split(',')
+                     if x.isdigit()]
+            out |= Partner.browse(allow).exists()
+        except Exception:
+            pass
+        try:
+            groups = (self.env.ref('base.group_system',
+                                   raise_if_not_found=False)
+                      | self.env.ref('sales_team.group_sale_manager',
+                                     raise_if_not_found=False))
+            users = self.env['res.users'].sudo().search(
+                [('active', '=', True), ('share', '=', False)])
+            out |= users.filtered(
+                lambda u: u.groups_id & groups).mapped('partner_id')
+        except Exception:
+            _logger.debug('admin partner resolve failed', exc_info=True)
+        return out
+
+    @api.model
+    def push_admins(self, toggle_field, title_en, title_ar,
+                    body_en='', body_ar='', data=None):
+        """Push an ADMIN event (new order / POS sale / session open-close)
+        to every admin device + drop a row in each admin's app inbox.
+        Gated by master switch + the given toggle. Never raises."""
+        try:
+            conf = self.env['mobile.notification.setting'].get_conf()
+            if not conf.master_enabled or not getattr(conf, toggle_field,
+                                                      True):
+                return 0
+            sent = 0
+            for partner in self._admin_partners()[:20]:
+                try:
+                    self.sudo().create({
+                        'partner_id': partner.id,
+                        'event_code': 'admin',
+                        'category': 'system',
+                        'title': title_en or title_ar or '',
+                        'title_ar': title_ar or '',
+                        'body': body_en or '',
+                        'body_ar': body_ar or '',
+                        'payload': json.dumps(data or {}),
+                    })
+                    token = getattr(partner, 'fcm_token', '') or ''
+                    if not token:
+                        continue
+                    en = (getattr(partner, 'push_lang', '') or 'ar') \
+                        .lower().startswith('en')
+                    if self.send_fcm(
+                            conf, token,
+                            (title_en or title_ar) if en
+                            else (title_ar or title_en),
+                            (body_en or body_ar) if en
+                            else (body_ar or body_en),
+                            data or {}):
+                        sent += 1
+                except Exception:
+                    continue
+            return sent
+        except Exception:
+            _logger.debug('push_admins failed', exc_info=True)
+            return 0
+
     def _try_fcm(self, conf, partner, rec):
         """Best-effort push to the customer's device(s). Localized to
         the customer's LIVE app language: register-device mirrors the
@@ -294,6 +375,24 @@ class SaleOrderNotify(models.Model):
                 _logger.debug('order_confirmed notify failed',
                               exc_info=True)
         self._notify_vendors_new_order()
+        # v2.2.10 — admin console: ping the boss on every new order
+        for so in self:
+            try:
+                cur = so.currency_id
+                amt = '%s %s' % (
+                    ('%.{0}f'.format(cur.decimal_places or 3)
+                     % so.amount_total), cur.symbol or '')
+                self.env['mobile.customer.notification'].push_admins(
+                    'notify_admin_new_order',
+                    '🛒 New order %s — %s' % (so.name, amt),
+                    '🛒 طلب جديد %s — %s' % (so.name, amt),
+                    '%s · %s' % (so.partner_id.name or '',
+                                 so.website_id.name or 'Backend'),
+                    '%s · %s' % (so.partner_id.name or '',
+                                 so.website_id.name or 'من النظام'),
+                    {'type': 'admin_order', 'id': str(so.id)})
+            except Exception:
+                _logger.debug('admin order notify failed', exc_info=True)
         return res
 
     def _notify_vendors_new_order(self):

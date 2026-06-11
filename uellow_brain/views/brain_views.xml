@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ═══════════════ ACTIONS FIRST (referenced by views) ══════════ -->
+    <record id="action_brain_config" model="ir.actions.act_window">
+        <field name="name">Uellow Brain Settings</field>
+        <field name="res_model">uellow.brain.config</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" ref="brain_config_singleton"/>
+        <field name="target">current</field>
+    </record>
+
+    <record id="action_brain_dashboard" model="ir.actions.server">
+        <field name="name">🧠 Uellow Brain — Dashboard</field>
+        <field name="model_id" ref="model_uellow_brain_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open()</field>
+    </record>
+
+    <!-- Big visual OWL dashboard (charts + KPIs) -->
+    <record id="action_brain_dashboard_client" model="ir.actions.client">
+        <field name="name">🧠 Uellow Brain — Dashboard</field>
+        <field name="tag">uellow_brain_dashboard</field>
+    </record>
+
+    <record id="action_brain_top_products" model="ir.actions.act_window">
+        <field name="name">🏆 Top by Brain score</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">list,graph</field>
+        <field name="domain">[('is_published','=',True)]</field>
+    </record>
+
+    <!-- ═══════════════ SETTINGS FORM (everything lives here) ═════════ -->
+    <record id="view_brain_config_form" model="ir.ui.view">
+        <field name="name">uellow.brain.config.form</field>
+        <field name="model">uellow.brain.config</field>
+        <field name="arch" type="xml">
+            <form string="Uellow Brain Settings">
+                <header>
+                    <button name="%(action_brain_dashboard)d" type="action"
+                            string="📊 Open Dashboard" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>🧠 Uellow Brain</h1>
+                        <p>محرك التخصيص والميرشندايزينج — التكلفة تقود، والربح خط أحمر. كل خدمة قابلة للإيقاف وحدها دون كسر غيرها.</p>
+                    </div>
+                    <group>
+                        <group string="🔌 General">
+                            <field name="enabled"/>
+                            <field name="personalization_mode"/>
+                            <field name="default_sort_best_match"/>
+                        </group>
+                        <group string="🔄 Scoring">
+                            <field name="score_window_days"/>
+                            <field name="last_scored" readonly="1"/>
+                            <field name="scored_count" readonly="1"/>
+                        </group>
+                        <group string="🧪 A/B test">
+                            <field name="ab_enabled"/>
+                            <field name="ab_split_pct"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="⚖️ Best Match weights">
+                            <group>
+                                <field name="w_margin"/>
+                                <field name="w_sales"/>
+                                <field name="w_stock"/>
+                                <field name="w_rating"/>
+                                <field name="w_fresh"/>
+                                <field name="w_affinity"/>
+                            </group>
+                        </page>
+                        <page string="🛡️ Profit guardrails">
+                            <group>
+                                <group>
+                                    <field name="cost_field"/>
+                                    <field name="min_margin_pct"/>
+                                    <field name="max_auto_discount_pct"/>
+                                </group>
+                                <group>
+                                    <field name="block_below_cost"/>
+                                    <field name="guard_when_cost_unknown"/>
+                                </group>
+                            </group>
+                            <separator string="Per-category / per-vendor overrides"/>
+                            <field name="margin_rule_ids">
+                                <list editable="bottom">
+                                    <field name="category_id"/>
+                                    <field name="vendor_ref"/>
+                                    <field name="min_margin_pct"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="💳 Installments (Taly · Deema soon)">
+                            <group>
+                                <group>
+                                    <field name="bnpl_enabled"/>
+                                    <field name="bnpl_provider"/>
+                                    <field name="bnpl_fee_pct"/>
+                                    <field name="bnpl_fee_fixed"/>
+                                </group>
+                                <group>
+                                    <field name="bnpl_fee_payer"/>
+                                    <field name="bnpl_min_price"/>
+                                    <field name="bnpl_installments"/>
+                                    <field name="bnpl_respect_guard"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="🚫 Discount discipline">
+                            <group>
+                                <group>
+                                    <field name="dd_enabled"/>
+                                    <field name="dd_max_coupons_per_quarter"/>
+                                    <field name="dd_cooldown_days"/>
+                                    <field name="dd_eligibility"/>
+                                </group>
+                                <group>
+                                    <field name="dd_dependency_threshold"/>
+                                    <field name="dd_prefer_non_price"/>
+                                    <field name="dd_enforce_genuine_discount"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="🔀 Diversity">
+                            <group>
+                                <group>
+                                    <field name="div_no_repeat"/>
+                                    <field name="div_max_per_brand"/>
+                                    <field name="div_max_per_category"/>
+                                </group>
+                                <group>
+                                    <field name="div_exploration_pct"/>
+                                    <field name="div_hide_purchased"/>
+                                    <field name="div_offer_freq_cap"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="🔁 Interest lifecycle">
+                            <group>
+                                <field name="il_decay_halflife_days"/>
+                                <field name="il_category_dominance_pct"/>
+                                <field name="il_balanced_interests"/>
+                                <field name="il_post_purchase_pivot"/>
+                            </group>
+                        </page>
+                        <page string="🛒 Considered purchase">
+                            <group>
+                                <field name="cp_save_for_later"/>
+                                <field name="cp_color_helper"/>
+                                <field name="cp_share_to_decide"/>
+                                <field name="cp_cart_price_watch"/>
+                                <field name="cp_reminders"/>
+                            </group>
+                        </page>
+                        <page string="🔔 Notifications">
+                            <group>
+                                <field name="ntf_enabled"/>
+                                <field name="ntf_respect_prayer"/>
+                                <field name="ntf_golden_hour"/>
+                                <field name="ntf_freq_cap_per_day"/>
+                            </group>
+                        </page>
+                        <page string="💰 Revenue / LTV">
+                            <group>
+                                <group>
+                                    <field name="rev_subscriptions"/>
+                                    <field name="rev_warranty_upsell"/>
+                                    <field name="rev_addon_services"/>
+                                    <field name="rev_gwp"/>
+                                </group>
+                                <group>
+                                    <field name="rev_oos_substitute"/>
+                                    <field name="rev_post_purchase_xsell"/>
+                                    <field name="rev_fleet_profile"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════════════ DASHBOARD ════════════════════════════ -->
+    <record id="view_brain_dashboard_form" model="ir.ui.view">
+        <field name="name">uellow.brain.dashboard.form</field>
+        <field name="model">uellow.brain.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Uellow Brain Dashboard" create="false" edit="false">
+                <header>
+                    <button name="action_recompute_scores" type="object"
+                            string="♻️ Recompute scores" class="btn-primary"/>
+                    <button name="%(action_brain_config)d" type="action"
+                            string="⚙️ Settings"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1>🧠 Brain Dashboard</h1></div>
+                    <group>
+                        <group string="🔌 Engine">
+                            <field name="engine_on"/>
+                            <field name="mode"/>
+                            <field name="services_on"/>
+                            <field name="last_scored"/>
+                            <field name="scored_count"/>
+                        </group>
+                        <group string="📦 Catalogue">
+                            <field name="published_products"/>
+                            <field name="avg_brain_score"/>
+                            <field name="no_image_products"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="🛡️ Margin health">
+                            <field name="low_margin_products"/>
+                            <field name="below_cost_products"/>
+                        </group>
+                        <group string="🛒 Carts / intent">
+                            <field name="open_carts"/>
+                            <field name="open_cart_value"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="💰 Commerce (30d)">
+                            <field name="revenue_30d"/>
+                            <field name="orders_30d"/>
+                            <field name="aov_30d"/>
+                            <field name="units_30d"/>
+                        </group>
+                        <group string="🔎 Discovery (30d)">
+                            <field name="searches_30d"/>
+                            <field name="zero_result_searches"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ═══════════════ GRAPH/LIST over real data (charts) ═══════════ -->
+    <record id="view_brain_top_list" model="ir.ui.view">
+        <field name="name">brain.top.list</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <list string="Top by Brain score" default_order="brain_score desc" create="false">
+                <field name="name"/>
+                <field name="public_categ_ids" widget="many2many_tags" optional="show"/>
+                <field name="list_price"/>
+                <field name="brain_score"/>
+                <field name="brain_score_at" optional="hide"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_brain_score_graph" model="ir.ui.view">
+        <field name="name">brain.score.graph</field>
+        <field name="model">product.template</field>
+        <field name="arch" type="xml">
+            <graph string="Brain scores" type="bar" sample="1">
+                <field name="public_categ_ids"/>
+                <field name="brain_score" type="measure"/>
+            </graph>
+        </field>
+    </record>
+    <record id="action_brain_top_products_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_brain_top_list"/>
+        <field name="act_window_id" ref="action_brain_top_products"/>
+    </record>
+    <record id="action_brain_top_products_graph" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">graph</field>
+        <field name="view_id" ref="view_brain_score_graph"/>
+        <field name="act_window_id" ref="action_brain_top_products"/>
+    </record>
+
+    <!-- ═══════════════ MERCH RULES (Phase 4) ════════════════════════ -->
+    <record id="view_merch_rule_list" model="ir.ui.view">
+        <field name="name">uellow.merch.rule.list</field>
+        <field name="model">uellow.merch.rule</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active" decoration-warning="mode=='execute'">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="trigger"/>
+                <field name="action"/>
+                <field name="action_pct"/>
+                <field name="mode"/>
+                <field name="run_count"/>
+                <field name="last_run"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_merch_rule_form" model="ir.ui.view">
+        <field name="name">uellow.merch.rule.form</field>
+        <field name="model">uellow.merch.rule</field>
+        <field name="arch" type="xml">
+            <form string="Merchandising Rule">
+                <sheet>
+                    <widget name="web_ribbon" title="Execute"
+                            bg_color="text-bg-warning" invisible="mode != 'execute'"/>
+                    <div class="oe_title"><h1><field name="name" placeholder="e.g. Slow movers → suggest 10% off"/></h1></div>
+                    <group>
+                        <group string="When (trigger)">
+                            <field name="trigger"/>
+                            <field name="days"/>
+                            <field name="min_cart_value"
+                                   invisible="trigger != 'abandoned_cart'"/>
+                            <field name="min_qty_stock"
+                                   invisible="trigger != 'dead_stock'"/>
+                            <field name="category_id"/>
+                        </group>
+                        <group string="Then (action)">
+                            <field name="action"/>
+                            <field name="action_pct"
+                                   invisible="action not in ('suggest_discount','issue_coupon','add_to_flash')"/>
+                            <field name="action_points"
+                                   invisible="action != 'give_points'"/>
+                            <field name="notify_title"
+                                   invisible="action != 'notify'"/>
+                            <field name="notify_body"
+                                   invisible="action != 'notify'"/>
+                            <field name="mode"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="run_count" readonly="1"/>
+                        <field name="last_run" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Execution log">
+                            <field name="log_ids" readonly="1">
+                                <list create="false">
+                                    <field name="create_date"/>
+                                    <field name="action"/>
+                                    <field name="product_tmpl_id"/>
+                                    <field name="partner_id"/>
+                                    <field name="amount"/>
+                                    <field name="result"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="action_merch_rules" model="ir.actions.act_window">
+        <field name="name">⚡ Automation Rules</field>
+        <field name="res_model">uellow.merch.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No automation rules yet</p>
+            <p>Trigger → Condition → Action. Every money action passes the
+               profit guard + discount discipline. Rules start in
+               "Suggest" mode (log only) — flip to "Execute" when ready.</p>
+        </field>
+    </record>
+    <record id="action_merch_log" model="ir.actions.act_window">
+        <field name="name">📜 Automation Log</field>
+        <field name="res_model">uellow.merch.rule.log</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <!-- ═══════════ AI Email Campaign generator ══════════════════════ -->
+    <record id="view_brain_campaign_form" model="ir.ui.view">
+        <field name="name">uellow.brain.campaign.form</field>
+        <field name="model">uellow.brain.campaign</field>
+        <field name="arch" type="xml">
+            <form string="AI Email Campaign">
+                <sheet>
+                    <div class="oe_title">
+                        <h2>📧 Generate a campaign with Uellow Brain</h2>
+                        <p class="text-muted">Brain picks the products (profit-guarded), designs a branded email, and creates a draft mailing for you to review &amp; send.</p>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="subject"/>
+                            <field name="headline"/>
+                            <field name="subheadline"/>
+                        </group>
+                        <group>
+                            <field name="strategy"/>
+                            <field name="category_id" invisible="strategy != 'category'"
+                                   required="strategy == 'category'"/>
+                            <field name="product_count"/>
+                            <field name="columns"/>
+                            <field name="mailing_list_id"/>
+                            <field name="cta_label"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_generate" type="object" string="✨ Generate campaign" class="btn-primary"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_brain_campaign" model="ir.actions.act_window">
+        <field name="name">📧 AI Email Campaign</field>
+        <field name="res_model">uellow.brain.campaign</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ═══════════════════════ MENUS ════════════════════════════════ -->
+    <menuitem id="menu_brain_root" name="🧠 Uellow Brain" sequence="4"/>
+    <menuitem id="menu_brain_dashboard" name="📊 Dashboard"
+              parent="menu_brain_root" action="action_brain_dashboard_client"
+              sequence="10"/>
+    <menuitem id="menu_brain_settings" name="⚙️ Settings"
+              parent="menu_brain_root" action="action_brain_config"
+              sequence="20"/>
+    <menuitem id="menu_brain_top" name="🏆 Top products"
+              parent="menu_brain_root" action="action_brain_top_products"
+              sequence="30"/>
+    <menuitem id="menu_brain_rules" name="⚡ Automation Rules"
+              parent="menu_brain_root" action="action_merch_rules"
+              sequence="40"/>
+    <menuitem id="menu_brain_log" name="📜 Automation Log"
+              parent="menu_brain_root" action="action_merch_log"
+              sequence="50"/>
+    <menuitem id="menu_brain_campaign" name="📧 AI Email Campaign"
+              parent="menu_brain_root" action="action_brain_campaign"
+              sequence="35"/>
+</odoo>

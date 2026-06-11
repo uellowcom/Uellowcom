@@ -52,6 +52,27 @@ class MobileAppSetting(models.Model):
     online_cashback_min_order = fields.Float(
         string='Min Order for Cashback', default=0.0,
         help='Orders below this total earn nothing (0 = no minimum).')
+    # v2.1.96 — GLOBAL switch for the cash-fee wallet refund (cash-first
+    # pricing). Per-zone switches refine it; this one kills it everywhere.
+    cod_refund_enabled = fields.Boolean(
+        string='Refund COD Fee When Paid Online', default=True,
+        help='Cash-first pricing: every delivery price includes the zone '
+             'COD surcharge. When this is ON, customers who pay with any '
+             'non-cash method get that surcharge refunded to their wallet '
+             'on capture. Each zone also has its own switch.')
+    # v2.2.00 — the checkout "🎁 cash fee refunded to your wallet" line is
+    # HIDDEN by default; enable per website where you want the nudge shown.
+    # (Display only — the actual wallet refund follows the switches above.)
+    show_cod_refund_teaser = fields.Boolean(
+        string='Show Refund Teaser Line In Checkout', default=False,
+        help='Shows the green "cash fee refunded to your wallet after '
+             'payment" line in the order summary on THIS website. The '
+             'refund itself still happens per the refund switches.')
+    show_cod_fee_note = fields.Boolean(
+        string='Show "Incl. Cash Fee" Line In Checkout', default=False,
+        help='Shows the grey "incl. cash handling fee" line in the order '
+             'summary when COD is selected, on THIS website. Display '
+             'only — the fee is included in the delivery price anyway.')
 
     def cashback_for(self, total):
         """Resolve the cashback amount for an order total (0 if off)."""

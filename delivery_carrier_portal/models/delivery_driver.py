@@ -26,10 +26,14 @@ class DeliveryDriver(models.Model):
         domain="[('share', '=', True)]",
     )
     active = fields.Boolean(default=True)
+    # Real-time DUTY status the driver toggles from the app. (Was a stale
+    # active/inactive vocabulary that the driver API never matched, so the
+    # toggle raised a ValueError and the status never worked.)
     status = fields.Selection([
-        ('active', 'Active'),
-        ('inactive', 'Inactive'),
-    ], default='active', tracking=True)
+        ('available', 'Available'),
+        ('busy',      'Busy'),
+        ('offline',   'Offline'),
+    ], default='available', tracking=True)
 
     trip_line_ids = fields.One2many('delivery.trip.line', 'driver_id', string='Deliveries')
     delivery_count = fields.Integer(compute='_compute_delivery_count')

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- v2.2.03 — Country Routing finally gets a proper menu: per-country
+       website mapping + the availability gate (coming-soon message). -->
+  <record id="view_mobile_country_website_list" model="ir.ui.view">
+    <field name="name">mobile.country.website.list</field>
+    <field name="model">mobile.country.website</field>
+    <field name="arch" type="xml">
+      <list string="Country Routing" decoration-muted="not app_available">
+        <field name="sequence" widget="handle"/>
+        <field name="flag_emoji" string=" "/>
+        <field name="country_id"/>
+        <field name="website_id"/>
+        <field name="currency_id"/>
+        <field name="default_language"/>
+        <field name="app_available" widget="boolean_toggle"/>
+        <field name="launch_eta" optional="show"/>
+        <field name="active" optional="hide"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_mobile_country_website_form" model="ir.ui.view">
+    <field name="name">mobile.country.website.form</field>
+    <field name="model">mobile.country.website</field>
+    <field name="arch" type="xml">
+      <form string="Country Routing">
+        <sheet>
+          <group>
+            <group string="Routing">
+              <field name="country_id"/>
+              <field name="website_id"/>
+              <field name="currency_id"/>
+              <field name="default_language"/>
+              <field name="flag_emoji"/>
+              <field name="sequence"/>
+              <field name="active"/>
+            </group>
+            <group string="🚀 Availability on the app">
+              <field name="app_available"/>
+              <field name="launch_eta"
+                     invisible="app_available"/>
+            </group>
+          </group>
+          <group string="Coming-soon message (shown when unavailable)"
+                 invisible="app_available">
+            <field name="coming_soon_title_en"/>
+            <field name="coming_soon_title_ar"/>
+            <field name="coming_soon_message_en"/>
+            <field name="coming_soon_message_ar"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_mobile_country_website" model="ir.actions.act_window">
+    <field name="name">Country Routing</field>
+    <field name="res_model">mobile.country.website</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <menuitem id="menu_mobile_country_website"
+            name="🌍 Country Routing"
+            parent="uellow_mobile_manager.menu_mobile_root"
+            action="action_mobile_country_website"
+            sequence="35"/>
+</odoo>

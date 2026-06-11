@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ════════════════ Publish Studio — LIST ════════════════ -->
+  <record id="view_publish_studio_list" model="ir.ui.view">
+    <field name="name">uellow.publish.studio.list</field>
+    <field name="model">uellow.import.job.line</field>
+    <field name="arch" type="xml">
+      <list string="Publish Studio"
+            decoration-success="line_state=='applied'"
+            decoration-muted="line_state=='rejected'"
+            create="false">
+        <field name="pub_ready" column_invisible="1"/>
+        <field name="job_id" optional="show"/>
+        <field name="name_en" string="Product (EN)"/>
+        <field name="name_ar" string="Product (AR)" optional="show"/>
+        <field name="new_price" string="Price"/>
+        <field name="new_cost" string="Cost"/>
+        <field name="margin_pct" string="Margin %" optional="show"/>
+        <field name="candidate_count" string="Images" optional="show"/>
+        <field name="ai_enriched" string="AI" widget="boolean" optional="show"/>
+        <field name="pub_score" string="Ready %" widget="progressbar"/>
+        <field name="line_state" widget="badge"
+               decoration-success="line_state=='applied'"
+               decoration-warning="line_state=='pending'"/>
+        <button name="action_pub_prepare_all" type="object"
+                string="Prepare" icon="fa-magic"
+                title="Search images + write AI content/SEO"
+                invisible="line_state == 'applied'"/>
+        <button name="action_pub_publish" type="object"
+                string="Publish" icon="fa-rocket" class="text-success"
+                title="Publish live"
+                invisible="line_state == 'applied' or not pub_ready"/>
+      </list>
+    </field>
+  </record>
+
+  <!-- ════════════════ Publish Studio — FORM ════════════════ -->
+  <record id="view_publish_studio_form" model="ir.ui.view">
+    <field name="name">uellow.publish.studio.form</field>
+    <field name="model">uellow.import.job.line</field>
+    <field name="arch" type="xml">
+      <form string="Publish Studio">
+        <header>
+          <button name="action_pub_search_images" type="object"
+                  string="🔎 Search Images"
+                  invisible="line_state == 'applied'"/>
+          <button name="action_pub_generate_ai" type="object"
+                  string="✍️ Write Content &amp; SEO (AI)"
+                  invisible="line_state == 'applied'"
+                  help="Generate bilingual body, meta tags, keywords and alt text."/>
+          <button name="action_pub_prepare_all" type="object"
+                  string="✨ Prepare Everything" class="oe_highlight"
+                  invisible="line_state == 'applied'"
+                  confirm="Search images + write AI content/SEO for this product?"/>
+          <button name="action_pub_publish" type="object"
+                  string="🚀 Publish" class="btn-success"
+                  invisible="line_state == 'applied'"
+                  confirm="Publish this product live to the website?"/>
+          <field name="line_state" widget="statusbar"
+                 statusbar_visible="pending,approved,applied"/>
+        </header>
+        <sheet>
+          <widget name="web_ribbon" title="Published" bg_color="bg-success"
+                  invisible="line_state != 'applied'"/>
+          <field name="pub_ready" invisible="1"/>
+          <div class="oe_title">
+            <label for="name_en" string="Product Name"/>
+            <h1><field name="name_en" placeholder="Product name (EN)"/></h1>
+            <h3><field name="name_ar" placeholder="اسم المنتج (AR)"/></h3>
+          </div>
+          <group>
+            <group string="💰 Pricing">
+              <field name="new_price" string="Sale Price (KWD)"/>
+              <field name="new_cost" string="Cost (KWD)"/>
+              <field name="margin_pct" string="Margin %"
+                     decoration-danger="margin_pct &lt; 0"
+                     decoration-warning="margin_pct &gt;= 0 and margin_pct &lt; 10"/>
+            </group>
+            <group string="🗂️ Classification &amp; Publish">
+              <field name="ecommerce_categ_ids" widget="many2many_tags"
+                     string="eCommerce Category"/>
+              <field name="new_reference" string="Internal Reference"/>
+              <field name="new_barcode" string="Barcode"/>
+              <field name="pub_set_published" string="Set live on Publish"/>
+            </group>
+          </group>
+          <group string="✅ Readiness Checklist · قائمة الجاهزية">
+            <field name="pub_checklist" nolabel="1" readonly="1"/>
+          </group>
+          <notebook>
+            <!-- ─── IMAGES ─── -->
+            <page string="🖼️ Images · الصور" name="images">
+              <div class="alert alert-info" role="alert">
+                Click <b>Search Images</b> to fetch product photos, then pick a
+                <b>Main</b> image and tick extras to <b>Include</b> in the gallery.
+                Set the provider in Smart Connector Settings.
+              </div>
+              <button name="action_pub_search_images" type="object"
+                      string="🔎 Search Images on the Web" class="btn-primary"
+                      invisible="line_state == 'applied'"/>
+              <field name="candidate_ids" mode="kanban" nolabel="1">
+                <kanban>
+                  <field name="is_main"/>
+                  <field name="include"/>
+                  <field name="source"/>
+                  <field name="title"/>
+                  <templates>
+                    <t t-name="card">
+                      <div class="oe_kanban_global_click"
+                           style="padding:6px;border:1px solid #eee;border-radius:8px">
+                        <div t-if="record.is_main.raw_value"
+                             style="background:#10b981;color:#fff;font-size:11px;
+                                    font-weight:700;border-radius:6px;padding:2px 6px;
+                                    display:inline-block;margin-bottom:4px">★ MAIN</div>
+                        <div t-if="record.include.raw_value and !record.is_main.raw_value"
+                             style="background:#3b82f6;color:#fff;font-size:11px;
+                                    border-radius:6px;padding:2px 6px;
+                                    display:inline-block;margin-bottom:4px">＋ Gallery</div>
+                        <img t-att-src="'/web/image/uellow.import.image.candidate/' + record.id.raw_value + '/image'"
+                             style="width:100%;height:140px;object-fit:cover;border-radius:6px"
+                             alt="candidate"/>
+                        <div class="text-muted" style="font-size:11px;margin-top:4px">
+                          <field name="source"/>
+                        </div>
+                        <div style="display:flex;gap:4px;margin-top:6px">
+                          <button name="action_set_main" type="object"
+                                  class="btn btn-sm btn-primary" style="flex:1">
+                            Set Main
+                          </button>
+                          <button name="action_toggle_include" type="object"
+                                  class="btn btn-sm btn-secondary" style="flex:1">
+                            Gallery
+                          </button>
+                        </div>
+                      </div>
+                    </t>
+                  </templates>
+                </kanban>
+                <form>
+                  <group>
+                    <field name="image" widget="image"/>
+                    <field name="source"/>
+                    <field name="image_url"/>
+                    <field name="is_main"/>
+                    <field name="include"/>
+                    <field name="alt_en"/>
+                    <field name="alt_ar"/>
+                  </group>
+                </form>
+              </field>
+            </page>
+            <!-- ─── DESCRIPTION & SEO ─── -->
+            <page string="📝 Description &amp; SEO · الوصف والسيو" name="seo">
+              <group>
+                <group string="🔖 Meta (EN)">
+                  <field name="pub_meta_title_en" string="Title"
+                         placeholder="≤ 60 chars"/>
+                  <field name="pub_meta_desc_en" string="Description"
+                         placeholder="140–158 chars"/>
+                </group>
+                <group string="🔖 Meta (AR)">
+                  <field name="pub_meta_title_ar" string="العنوان"/>
+                  <field name="pub_meta_desc_ar" string="الوصف"/>
+                </group>
+              </group>
+              <group>
+                <field name="pub_keywords" string="Keywords"
+                       placeholder="long-tail keywords, EN + AR"/>
+              </group>
+              <group string="🔍 Google Preview · معاينة جوجل">
+                <field name="pub_serp" nolabel="1" readonly="1"/>
+              </group>
+              <group>
+                <group string="🖼️ Main Image Alt">
+                  <field name="pub_alt_en" string="Alt (EN)"/>
+                  <field name="pub_alt_ar" string="Alt (AR)"/>
+                </group>
+              </group>
+              <separator string="📄 Product Page Body (EN)"/>
+              <field name="pub_body_en" nolabel="1"/>
+              <separator string="📄 وصف صفحة المنتج (AR)"/>
+              <field name="pub_body_ar" nolabel="1"/>
+            </page>
+          </notebook>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- ════════════════ Global action + menu ════════════════ -->
+  <record id="view_publish_studio_search" model="ir.ui.view">
+    <field name="name">uellow.publish.studio.search</field>
+    <field name="model">uellow.import.job.line</field>
+    <field name="arch" type="xml">
+      <search string="Publish Studio">
+        <field name="name_en"/>
+        <field name="job_id"/>
+        <filter string="Not Published" name="not_applied"
+                domain="[('line_state','!=','applied')]"/>
+        <filter string="Ready to Publish" name="ready"
+                domain="[('pub_ready','=',True),('line_state','!=','applied')]"/>
+        <filter string="Published" name="applied"
+                domain="[('line_state','=','applied')]"/>
+        <group expand="0" string="Group By">
+          <filter string="Import Job" name="group_job"
+                  context="{'group_by': 'job_id'}"/>
+          <filter string="Status" name="group_state"
+                  context="{'group_by': 'line_state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_publish_studio" model="ir.actions.act_window">
+    <field name="name">Publish Studio</field>
+    <field name="res_model">uellow.import.job.line</field>
+    <field name="view_mode">list,form</field>
+    <field name="domain">[('product_action','=','new')]</field>
+    <field name="search_view_id" ref="view_publish_studio_search"/>
+    <field name="context">{'search_default_not_applied': 1}</field>
+    <field name="view_ids" eval="[(5,0,0),
+      (0,0,{'sequence':1,'view_mode':'list','view_id':ref('view_publish_studio_list')}),
+      (0,0,{'sequence':2,'view_mode':'form','view_id':ref('view_publish_studio_form')})]"/>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">
+        No new products awaiting publish · لا توجد منتجات جديدة بانتظار النشر
+      </p>
+      <p>New products from import jobs appear here. Prepare images, AI content and
+         SEO, then publish them live.<br/>
+         المنتجات الجديدة من عمليات الاستيراد تظهر هنا — جهّز الصور والمحتوى والسيو ثم انشرها.</p>
+    </field>
+  </record>
+
+</odoo>

@@ -69,10 +69,60 @@ class ThemePrimeWebsiteSale(WebsiteSale):
         )
         return result
 
+    def _uellow_sanitize_attribute_values(self):
+        """Rewrite request.httprequest.args so every `attribute_value` is a
+        well-formed `attributeId-valueId`. Bare value ids are recovered from
+        product.attribute.value; anything else is dropped. No-op when all
+        values are already valid. Never raises."""
+        try:
+            args = request.httprequest.args
+            raw = args.getlist('attribute_value')
+            if not raw:
+                return
+            fixed, changed = [], False
+            PAV = request.env['product.attribute.value'].sudo()
+            for v in raw:
+                v = (v or '').strip()
+                parts = v.split('-')
+                if len(parts) >= 2 and all(p.isdigit() for p in parts):
+                    fixed.append(v)                      # already valid
+                elif v.isdigit():
+                    changed = True                       # bare value id → recover
+                    val = PAV.browse(int(v)).exists()
+                    if val and val.attribute_id:
+                        fixed.append('%d-%d' % (val.attribute_id.id, val.id))
+                else:
+                    changed = True                       # garbage → drop
+            if not changed:
+                return
+            from werkzeug.datastructures import MultiDict, ImmutableMultiDict
+            new = MultiDict(args)
+            new.poplist('attribute_value')
+            for v in fixed:
+                new.add('attribute_value', v)
+            request.httprequest.args = ImmutableMultiDict(new)
+        except Exception:
+            # Last resort: strip the param entirely so the page still renders.
+            try:
+                from werkzeug.datastructures import MultiDict, ImmutableMultiDict
+                new = MultiDict(request.httprequest.args)
+                new.poplist('attribute_value')
+                request.httprequest.args = ImmutableMultiDict(new)
+            except Exception:
+                pass
+
     @http.route()
     def shop(self, page=0, category=None, search='', min_price=0.0, max_price=0.0, ppg=False, **post):
         if not request.website.has_ecommerce_access():
             return request.redirect('/web/login')
+        # ── v2.2.29 — harden malformed `attribute_value` params ──────────
+        # Odoo's stock shop() does `{v[1] for v in attrib_values}` after
+        # splitting each value on "-", so a bare value id (e.g.
+        # ?attribute_value=124 instead of 1-124) raises IndexError → a 500
+        # on EVERY such link (crawlers + old/external links hit these a lot,
+        # losing real visitors). We recover bare value ids into the proper
+        # "attributeId-valueId" form and drop anything still malformed.
+        self._uellow_sanitize_attribute_values()
         response = super().shop(page=page, category=category, search=search, min_price=min_price, max_price=max_price, ppg=ppg, **post)
         theme_id = request.website.sudo().theme_id
         if theme_id and theme_id.name.startswith('uellow_theme'):

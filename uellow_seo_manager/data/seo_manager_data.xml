@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
   <!-- Daily automated audit cron — runs at 04:00 server time -->
+  <!-- Phase 8 — daily: read indexing coverage from GSC + auto-fix + re-submit
+       sitemap. No-op until the GSC service account is configured. -->
+  <record id="ir_cron_uellow_seo_indexing_daily" model="ir.cron">
+    <field name="name">Uellow SEO — indexing coverage + auto-fix</field>
+    <field name="model_id" ref="model_uellow_seo_indexing_issue"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_inspect_and_fix()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active">True</field>
+  </record>
+
   <record id="ir_cron_uellow_seo_audit_daily" model="ir.cron">
     <field name="name">Uellow SEO — daily audit</field>
     <field name="model_id" ref="model_uellow_seo_audit"/>

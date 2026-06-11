@@ -17,10 +17,12 @@ Taly Payment Gateway Integration for Odoo 18
     """,
     'author': 'Uellow',
     'website': 'https://uellow.com',
-    'depends': ['payment', 'website_sale', 'account', 'sale_management'],
+    'depends': ['payment', 'website_sale', 'account', 'sale_management',
+                'point_of_sale'],
     'data': [
         'security/ir.model.access.csv',
         'security/payment_taly_security.xml',
+        'data/payment_method_data.xml',
         'data/payment_provider_data.xml',
         # ── Views (actions must be defined before menus that reference them) ──
         'views/payment_taly_provider_views.xml',
@@ -43,10 +45,14 @@ Taly Payment Gateway Integration for Odoo 18
             'payment_taly/static/src/css/taly_frontend.css',
             'payment_taly/static/src/js/taly_product_widget.js',
         ],
+        # v2.2.27 — Taly POS payment terminal (in-store SMS-link + polling).
+        'point_of_sale._assets_pos': [
+            'payment_taly/static/src/js/pos_taly_payment.js',
+        ],
     },
-    'images': ['static/src/img/taly_logo.png'],
+    'images': ['static/description/icon.png'],
     'license': 'LGPL-3',
     'installable': True,
-    'application': False,
+    'application': True,
     'auto_install': False,
 }

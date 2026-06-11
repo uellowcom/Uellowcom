@@ -12,6 +12,7 @@
         'views/res_config_settings_views.xml',
         'views/delivery_carrier_views.xml',
         'views/free_shipping_menu_views.xml',
+        'views/freeship_rule_views.xml',
     ],
     'installable': True,
     'application': False,

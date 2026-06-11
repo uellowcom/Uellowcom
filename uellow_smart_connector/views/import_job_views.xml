@@ -41,15 +41,42 @@
           <button name="action_run" string="Run Import"
                   type="object" class="oe_highlight"
                   invisible="state != 'draft'"/>
-          <button name="action_open_review" string="Review Results"
-                  type="object" class="oe_highlight"
+          <button name="action_approve_safe" string="✅ Approve Safe"
+                  type="object"
+                  invisible="state != 'review'"
+                  help="Approve all lines that have no warning."/>
+          <button name="action_approve_all" string="Approve All"
+                  type="object"
+                  confirm="Approve every pending line (including warnings)?"
                   invisible="state != 'review'"/>
+          <button name="action_disable_continue_oos" string="🚫 Stop OOS Selling"
+                  type="object"
+                  invisible="state != 'review'"
+                  help="Turn off continue-selling for all out-of-stock matched products."/>
+          <button name="action_apply_approved" string="🚀 Apply Approved"
+                  type="object" class="oe_highlight"
+                  confirm="Create/update the catalog for all approved lines?"
+                  invisible="state != 'review'"/>
+          <button name="action_open_publish_studio" string="🎨 Publish Studio"
+                  type="object"
+                  invisible="new_pending_count == 0"
+                  help="Prepare images, AI descriptions and SEO before publishing new products."/>
+          <button name="action_pub_prepare_new" string="✨ Prepare All New"
+                  type="object"
+                  invisible="state != 'review' or new_pending_count == 0"
+                  confirm="Search images + write AI descriptions/SEO for every new product? (uses AI credits)"/>
+          <button name="action_pub_publish_ready" string="🚀 Publish Ready"
+                  type="object" class="oe_highlight"
+                  invisible="pub_ready_count == 0"
+                  confirm="Publish all ready products live to the website?"/>
           <button name="action_rollback" string="Rollback"
                   type="object"
                   confirm="Are you sure you want to rollback this import?"
                   invisible="state != 'done'"/>
           <field name="state" widget="statusbar"
                  statusbar_visible="draft,processing,review,done"/>
+          <field name="new_pending_count" invisible="1"/>
+          <field name="pub_ready_count" invisible="1"/>
         </header>
         <sheet>
           <div class="oe_title">
@@ -61,9 +88,11 @@
               <field name="source_url"
                      invisible="job_type != 'url'"
                      placeholder="https://..."/>
-              <field name="attachment_id"
-                     invisible="job_type != 'file'"
-                     widget="many2one"/>
+              <field name="upload_filename" invisible="1"/>
+              <field name="upload_file" filename="upload_filename"
+                     widget="binary"
+                     string="Browse File (Excel / PDF / Image)"
+                     invisible="job_type not in ('file','image')"/>
               <field name="max_products_per_run"/>
               <field name="price_variance_limit" string="Max Price Change (%)"/>
             </group>
@@ -87,31 +116,68 @@
           <notebook>
             <page string="Product Lines" name="lines">
               <field name="line_ids" context="{'default_job_id': id}">
-                <list decoration-warning="has_warning"
+                <list editable="bottom"
+                      decoration-warning="has_warning"
                       decoration-danger="line_state=='rejected'"
-                      decoration-success="line_state in ('approved','applied')">
+                      decoration-success="line_state in ('approved','applied')"
+                      decoration-info="product_action=='new'">
                   <field name="name_en" string="Name (EN)"/>
-                  <field name="name_ar" string="Name (AR)"/>
+                  <field name="name_ar" string="Name (AR)" optional="show"/>
                   <field name="product_action" widget="badge"/>
-                  <field name="match_score" string="Match %"/>
-                  <field name="new_price" string="New Price"/>
-                  <field name="old_price" string="Current Price"/>
-                  <field name="price_diff_pct" string="Δ%"/>
-                  <field name="has_warning" widget="boolean" string="⚠"/>
-                  <field name="ai_enriched" widget="boolean" string="AI"/>
+                  <field name="match_method" optional="show" string="Matched by"/>
+                  <field name="match_score" string="Match %" optional="hide"/>
+                  <!-- Sale price -->
+                  <field name="old_price" string="Old Sale" readonly="1"/>
+                  <field name="new_price" string="New Sale"/>
+                  <field name="update_price" string="↻P" widget="boolean_toggle"/>
+                  <!-- Cost -->
+                  <field name="old_cost" string="Old Cost" readonly="1"/>
+                  <field name="new_cost" string="New Cost"/>
+                  <field name="update_cost" string="↻C" widget="boolean_toggle"/>
+                  <field name="margin_pct" string="Margin%" optional="show"/>
+                  <!-- Identifiers -->
+                  <field name="old_barcode" string="Old Barcode" optional="hide" readonly="1"/>
+                  <field name="new_barcode" string="Barcode" optional="show"/>
+                  <field name="update_barcode" string="↻B" widget="boolean_toggle" optional="show"/>
+                  <field name="old_reference" string="Old Ref" optional="hide" readonly="1"/>
+                  <field name="new_reference" string="Reference" optional="show"/>
+                  <field name="update_reference" string="↻R" widget="boolean_toggle" optional="show"/>
+                  <field name="missing_info" string="Missing" optional="show"/>
+                  <field name="ecommerce_categ_ids" string="eCommerce Category"
+                         widget="many2many_tags" optional="show"/>
+                  <!-- Out of stock / continue-selling -->
+                  <field name="is_out_of_stock" widget="boolean" string="OOS" optional="show"/>
+                  <field name="existing_continue_selling" column_invisible="1"/>
+                  <field name="show_continue_warn" column_invisible="1"/>
+                  <field name="disable_continue_selling" string="Stop Selling"
+                         widget="boolean_toggle" optional="show"/>
+                  <button name="action_disable_continue_now" type="object"
+                          string="Stop OOS Selling" icon="fa-ban"
+                          title="Turn off 'continue selling when out of stock'"
+                          invisible="not show_continue_warn"/>
+                  <field name="has_warning" widget="boolean" string="⚠" optional="hide"/>
+                  <field name="ai_enriched" widget="boolean" string="AI" optional="hide"/>
                   <field name="line_state" widget="badge"
                          decoration-warning="line_state=='pending'"
                          decoration-success="line_state in ('approved','applied')"
                          decoration-danger="line_state=='rejected'"/>
                   <button name="action_approve" string="Approve"
-                          type="object" icon="fa-check"
+                          type="object" icon="fa-check" title="Approve"
                           invisible="line_state != 'pending'"/>
                   <button name="action_reject" string="Reject"
-                          type="object" icon="fa-times"
+                          type="object" icon="fa-times" title="Reject"
                           invisible="line_state != 'pending'"/>
                   <button name="action_apply" string="Apply"
-                          type="object" icon="fa-save"
+                          type="object" icon="fa-save" title="Apply to catalog"
                           invisible="line_state != 'approved'"/>
+                  <field name="pub_ready" column_invisible="1"/>
+                  <field name="pub_score" string="Ready%" optional="show"
+                         invisible="product_action != 'new'"/>
+                  <button name="action_pub_publish" string="Publish"
+                          type="object" icon="fa-rocket"
+                          class="btn-link text-success"
+                          title="Open/Publish in Publish Studio"
+                          invisible="product_action != 'new' or line_state == 'applied'"/>
                 </list>
               </field>
             </page>
@@ -164,9 +230,10 @@
     <field name="context">{'search_default_review': 0}</field>
     <field name="help" type="html">
       <p class="o_view_nocontent_smiling_face">
-        No import jobs yet
+        No import jobs yet · لا توجد عمليات استيراد بعد
       </p>
-      <p>Create your first import job to start importing products from a URL or Excel file.</p>
+      <p>Create your first import job to import products from a URL or Excel/PDF file.<br/>
+         أنشئ أول عملية استيراد لجلب المنتجات من رابط أو ملف Excel/PDF.</p>
     </field>
   </record>
 

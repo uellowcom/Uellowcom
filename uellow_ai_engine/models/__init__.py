@@ -6,3 +6,6 @@ from . import beena_qa_cache
 from . import beena_order
 from . import voice_usage
 from . import voice_router
+from . import beena_coach
+from . import beena_coach_sim
+from . import app_visit

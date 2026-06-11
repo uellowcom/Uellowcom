@@ -77,6 +77,25 @@ class AppleLoginController(http.Controller):
         ICP = request.env['ir.config_parameter'].sudo()
         client_id = ICP.get_param('apple_login.client_id', '')
 
+        # v2.1.95 — the MOBILE APP (Android web-auth flow) reuses this
+        # registered redirect URI with state=uellow_app: bounce straight
+        # back into the app via the sign_in_with_apple intent scheme; the
+        # app then verifies the id_token against /auth/social.
+        if (kwargs.get('state') or '') == 'uellow_app':
+            q = urllib.parse.urlencode({k: v for k, v in kwargs.items()
+                                        if k in ('code', 'id_token', 'state',
+                                                 'user', 'error')})
+            # v2.2.01 — app package unified on com.uellow.app.
+            intent = ('intent://callback?%s#Intent;package=com.uellow.app;'
+                      'scheme=signinwithapple;end' % q)
+            return request.make_response(
+                '<html><head><meta http-equiv="refresh" content="0;url=%s"/>'
+                '<script>window.location.replace(%s);</script></head>'
+                '<body>Returning to the Uellow app…</body></html>'
+                % (intent, json.dumps(intent)),
+                headers=[('Content-Type', 'text/html; charset=utf-8'),
+                         ('Cache-Control', 'no-cache')])
+
         error = kwargs.get('error')
         if error:
             return request.redirect('/web/login?apple_error=' + error)

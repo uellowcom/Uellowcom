@@ -71,3 +71,6 @@ from . import promotions
 from . import category_slides
 from . import announcements
 from . import shop_config
+from . import admin_app
+from . import newcustomer
+from . import bundles

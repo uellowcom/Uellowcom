@@ -6,5 +6,8 @@
         <field name="state">disabled</field>
         <field name="is_published">False</field>
         <field name="sequence">50</field>
+        <!-- v2.2.27 — link the payment method so Taly shows at checkout. -->
+        <field name="payment_method_ids"
+               eval="[Command.link(ref('payment_taly.payment_method_taly'))]"/>
     </record>
 </odoo>

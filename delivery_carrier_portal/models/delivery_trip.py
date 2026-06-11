@@ -34,6 +34,71 @@ class DeliveryTrip(models.Model):
     line_count = fields.Integer(compute='_compute_line_count', string='Orders Count')
     notes = fields.Text(string='Notes')
 
+    # ── PICKUP leg (Uellow warehouse → carrier sorting centre) ──────────
+    # A "pickup courier" collects the whole trip from the Uellow warehouse
+    # and brings it to the carrier, where the orders are received and then
+    # distributed to per-region delivery drivers.
+    pickup_driver_id = fields.Many2one(
+        'delivery.driver', string='Pickup Courier', tracking=True,
+        domain="[('carrier_company_id', '=', carrier_company_id)]",
+        help='Courier who collects the orders from the Uellow warehouse and '
+             'brings them to the carrier sorting centre.')
+    pickup_assigned_by = fields.Selection([
+        ('uellow', 'Uellow'),
+        ('carrier', 'Carrier'),
+    ], string='Pickup Assigned By', tracking=True)
+    pickup_state = fields.Selection([
+        ('unassigned', 'Awaiting pickup courier'),
+        ('assigned',   'Pickup courier assigned'),
+        ('collecting', 'Collecting at Uellow'),
+        ('collected',  'Collected from Uellow'),
+    ], compute='_compute_pickup_state', store=True, string='Pickup Stage')
+
+    @api.depends('pickup_driver_id', 'line_ids.delivery_status')
+    def _compute_pickup_state(self):
+        for t in self:
+            orders = t.line_ids.mapped('sale_order_id')
+            pend = orders.filtered(lambda o: o.delivery_status == 'pending')
+            picked = orders.filtered(lambda o: o.delivery_status == 'picked_up')
+            if not t.pickup_driver_id:
+                t.pickup_state = 'unassigned'
+            elif not pend:
+                t.pickup_state = 'collected'
+            elif picked:
+                t.pickup_state = 'collecting'
+            else:
+                t.pickup_state = 'assigned'
+
+    def action_assign_pickup(self, driver, by='uellow'):
+        """Assign a pickup courier to this trip and notify them."""
+        self.ensure_one()
+        self.write({'pickup_driver_id': driver.id, 'pickup_assigned_by': by})
+        self.message_post(body='📦 Pickup courier <b>%s</b> assigned to collect '
+                          'from the Uellow warehouse (by %s).'
+                          % (driver.name, by))
+        self._notify_pickup_driver(driver)
+        return True
+
+    def _notify_pickup_driver(self, driver):
+        """Best-effort push to the courier's device (the trip also shows up
+        in their app's Pickups list on next open)."""
+        try:
+            user = driver.portal_user_id
+            if not user:
+                return
+            Push = self.env.get('mobile.customer.notification')
+            if Push and hasattr(Push, 'push_event'):
+                Push.sudo().push_event(
+                    partner=user.partner_id,
+                    event='pickup_assigned',
+                    title_en='New pickup assignment 📦',
+                    title_ar='مهمة استلام جديدة 📦',
+                    body_en='Collect trip %s from the Uellow warehouse.' % self.name,
+                    body_ar='استلم الرحلة %s من مخزن يلو.' % self.name,
+                )
+        except Exception:
+            pass
+
     @api.onchange('driver_id')
     def _onchange_driver_id(self):
         # cascade the trip driver to its order lines
@@ -42,10 +107,17 @@ class DeliveryTrip(models.Model):
                 ln.driver_id = self.driver_id
 
     def write(self, vals):
+        # Notify the courier when Uellow assigns a pickup driver from the form.
+        notify = ('pickup_driver_id' in vals and vals.get('pickup_driver_id'))
         res = super().write(vals)
         if vals.get('driver_id'):
             for trip in self:
                 trip.line_ids.write({'driver_id': trip.driver_id.id})
+        if notify:
+            for trip in self:
+                if not vals.get('pickup_assigned_by'):
+                    trip.pickup_assigned_by = 'uellow'
+                trip._notify_pickup_driver(trip.pickup_driver_id)
         return res
 
     @api.depends('line_ids')

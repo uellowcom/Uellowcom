@@ -4,8 +4,18 @@ from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, get_lang, paginate,
-    img_url, bilingual,
+    img_url, bilingual, require_auth, current_partner,
 )
+
+
+def _is_following(vendor_id, partner):
+    if not partner:
+        return False
+    Follower = request.env.get('uellow.vendor.follower')
+    if Follower is None:
+        return False
+    return bool(Follower.sudo().search_count([
+        ('vendor_id', '=', vendor_id), ('partner_id', '=', partner.id)]))
 from .products import serialize_product_card, _domain_published_for_app
 
 
@@ -114,7 +124,39 @@ class MobileVendorsAPI(http.Controller):
             'phone':       vendor.contact_phone or '',
             'business_name': vendor.business_name or '',
             'categories':  _vendor_category_breakdown(vendor),
+            'is_following': _is_following(vendor.id, current_partner()),
+            'follower_count': int(getattr(vendor, 'follower_count', 0) or 0),
         })
+
+    @http.route('/api/mobile/v2/vendors/<int:vendor_id>/follow',
+                type='http', auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def vendor_follow(self, vendor_id, **kw):
+        """v2.2.34 — toggle following a vendor for the logged-in customer.
+        Body {follow: true/false}; omitted → toggle. Persists server-side in
+        uellow.vendor.follower (the website store page reads the same model)."""
+        partner = current_partner()
+        Vendor = request.env.get('uellow.vendor')
+        Follower = request.env.get('uellow.vendor.follower')
+        if Vendor is None or Follower is None:
+            return fail('UNAVAILABLE', 'Vendor module not installed', 503)
+        vendor = Vendor.sudo().browse(vendor_id)
+        if not vendor.exists():
+            return fail('NOT_FOUND', 'Vendor not found', 404)
+        p = get_payload()
+        existing = Follower.sudo().search([
+            ('vendor_id', '=', vendor_id), ('partner_id', '=', partner.id)], limit=1)
+        want = p.get('follow')
+        if want is None:
+            want = not existing  # toggle
+        want = bool(want) if not isinstance(want, str) else want.lower() in ('1', 'true', 'yes')
+        if want and not existing:
+            Follower.sudo().create({'vendor_id': vendor_id, 'partner_id': partner.id})
+        elif not want and existing:
+            existing.unlink()
+        return ok({'following': want,
+                   'follower_count': int(getattr(vendor, 'follower_count', 0) or 0)})
 
     @http.route('/api/mobile/v2/vendors/<int:vendor_id>/storefront',
                 type='http', auth='public', methods=['GET', 'OPTIONS'],

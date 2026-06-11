@@ -22,6 +22,10 @@ from . import tracking_extras
 from . import cart_share
 from . import mobile_app_ad
 from . import mobile_promotion
+from . import mobile_newcustomer
 from . import mobile_category_slide
 from . import mobile_announcement
 from . import customer_notification
+from . import product_website_extra
+from . import partner_address_extra
+from . import sale_order_kanban

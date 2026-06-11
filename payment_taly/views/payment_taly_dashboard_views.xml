@@ -10,12 +10,12 @@
                 <sheet>
                     <!-- Header Banner -->
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 p-3 mb-4"
-                         style="background:linear-gradient(135deg,#7B2FF7 0%,#00C9A7 100%);border-radius:12px;color:white;">
+                         style="background:linear-gradient(135deg,#0E6FF7 0%,#1C2B40 100%);border-radius:14px;color:white;">
                         <div>
-                            <h2 class="mb-1" style="color:white;">
-                                <i class="fa fa-credit-card me-2"/>Taly Payment Dashboard
+                            <h2 class="mb-1" style="color:white;font-weight:800;">
+                                <i class="fa fa-credit-card me-2"/>Taly · أقساط على ٤ دفعات
                             </h2>
-                            <span style="opacity:.8;">لوحة تحكم بوابة الدفع بالأقساط</span>
+                            <span style="opacity:.85;">لوحة تحكم تالي — الدفع بالتقسيط · Installments dashboard</span>
                         </div>
                         <div class="d-flex gap-2">
                             <button name="action_test_connection"
@@ -96,12 +96,22 @@
         </field>
     </record>
 
-    <!-- Taly Dashboard Action -->
-    <record id="action_taly_dashboard" model="ir.actions.act_window">
+    <!-- Taly Dashboard Action — server action opens the EXISTING provider's
+         dashboard form (an act_window with view_mode=form + no res_id used to
+         open a blank create form → /new). -->
+    <record id="action_taly_dashboard" model="ir.actions.server">
         <field name="name">Taly Dashboard</field>
-        <field name="res_model">payment.provider</field>
-        <field name="view_mode">list,form</field>
-        <field name="domain">[('code', '=', 'taly')]</field>
+        <field name="model_id" ref="payment.model_payment_provider"/>
+        <field name="state">code</field>
+        <field name="code">action = env['payment.provider']._taly_open_dashboard()</field>
+    </record>
+
+    <!-- Taly Settings Action — opens the provider configuration form. -->
+    <record id="action_taly_settings" model="ir.actions.server">
+        <field name="name">Taly Settings</field>
+        <field name="model_id" ref="payment.model_payment_provider"/>
+        <field name="state">code</field>
+        <field name="code">action = env['payment.provider']._taly_open_settings()</field>
     </record>
 
 </odoo>

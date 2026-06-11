@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Rich Sales kanban card (design C+) — priority 1 so it's the default
+         kanban for the Orders page. -->
+    <record id="view_sale_order_kanban_uellow" model="ir.ui.view">
+        <field name="name">sale.order.kanban.uellow.rich</field>
+        <field name="model">sale.order</field>
+        <field name="priority">1</field>
+        <field name="arch" type="xml">
+            <kanban default_order="date_order desc"
+                    default_group_by="uellow_stage" limit="15" sample="1">
+                <field name="state"/>
+                <field name="uellow_stage"/>
+                <field name="uellow_t_new"/>
+                <field name="uellow_t_cod"/>
+                <field name="uellow_t_return"/>
+                <field name="uellow_t_confirm"/>
+                <field name="uellow_t_cancel"/>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total"/>
+                <field name="currency_id"/>
+                <field name="date_order"/>
+                <field name="uellow_source"/>
+                <field name="uellow_state_label"/>
+                <field name="uellow_state_class"/>
+                <field name="uellow_age_label"/>
+                <field name="uellow_stale"/>
+                <field name="uellow_pay_label"/>
+                <field name="uellow_pay_class"/>
+                <field name="uellow_pay_method"/>
+                <field name="uellow_deliv_label"/>
+                <field name="uellow_deliv_class"/>
+                <field name="uellow_deliv_extra"/>
+                <field name="uellow_inv_label"/>
+                <field name="uellow_inv_class"/>
+                <field name="uellow_cod_amount"/>
+                <field name="uellow_is_new_customer"/>
+                <field name="uellow_items_count"/>
+                <field name="uellow_city"/>
+                <field name="uellow_phone"/>
+                <field name="uellow_has_return"/>
+                <field name="uellow_can_confirm"/>
+                <field name="uellow_margin_pct" groups="sales_team.group_sale_manager"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click uo-card">
+                            <!-- colored ribbon: state + delivery + age -->
+                            <div t-attf-class="uo-rb #{record.uellow_state_class.raw_value}">
+                                <span><t t-esc="record.uellow_state_label.value"/> · 🚚 <t t-esc="record.uellow_deliv_label.value"/></span>
+                                <span class="uo-age">⏱ <t t-esc="record.uellow_age_label.value"/><t t-if="record.uellow_stale.raw_value"> ⚠️</t></span>
+                            </div>
+                            <!-- customer + total -->
+                            <div class="uo-head">
+                                <div>
+                                    <strong t-esc="record.partner_id.value"/>
+                                    <span t-if="record.uellow_is_new_customer.raw_value" class="uo-pill k-blue">🆕 <t t-esc="record.uellow_t_new.value"/></span>
+                                    <div class="text-muted uo-sm">📞 <t t-esc="record.uellow_phone.value"/></div>
+                                </div>
+                                <strong class="uo-amt"><field name="amount_total" widget="monetary"/></strong>
+                            </div>
+                            <!-- source + order number -->
+                            <div class="uo-sm" style="margin-top:3px">
+                                <span class="uo-pill k-grey" t-esc="record.uellow_source.value"/>
+                                <span class="text-muted"> · <t t-esc="record.name.value"/></span>
+                            </div>
+                            <hr class="uo-hr"/>
+                            <!-- status lines -->
+                            <div>💳 <span t-attf-class="uo-pill #{record.uellow_pay_class.raw_value}" t-esc="record.uellow_pay_label.value"/> <span class="text-muted uo-sm" t-esc="record.uellow_pay_method.value"/></div>
+                            <div>🚚 <span t-attf-class="uo-pill #{record.uellow_deliv_class.raw_value}" t-esc="record.uellow_deliv_label.value"/> <span class="text-muted uo-sm" t-esc="record.uellow_deliv_extra.value"/></div>
+                            <div>🧾 <span t-attf-class="uo-pill #{record.uellow_inv_class.raw_value}" t-esc="record.uellow_inv_label.value"/></div>
+                            <!-- COD highlight -->
+                            <div t-if="record.uellow_cod_amount.raw_value &gt; 0" class="uo-cod">
+                                <span>💵 <t t-esc="record.uellow_t_cod.value"/></span>
+                                <b><field name="uellow_cod_amount" widget="monetary"/></b>
+                            </div>
+                            <!-- flags -->
+                            <div t-if="record.uellow_has_return.raw_value" style="margin-top:5px">
+                                <span class="uo-pill k-red">🔁 <t t-esc="record.uellow_t_return.value"/></span>
+                            </div>
+                            <!-- footer -->
+                            <div class="uo-foot text-muted">
+                                <span>🛒 <t t-esc="record.uellow_items_count.value"/> · 📍 <t t-esc="record.uellow_city.value"/></span>
+                                <span t-esc="record.date_order.value"/>
+                            </div>
+                            <div class="text-muted uo-sm" groups="sales_team.group_sale_manager">📈 <t t-esc="record.uellow_margin_pct.value"/>%</div>
+                            <!-- quick actions -->
+                            <div class="uo-acts">
+                                <button t-if="record.uellow_can_confirm.raw_value" type="object" name="action_confirm" class="btn btn-sm btn-primary">✅ <t t-esc="record.uellow_t_confirm.value"/></button>
+                                <button type="object" name="action_cancel" class="btn btn-sm btn-secondary">✖ <t t-esc="record.uellow_t_cancel.value"/></button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Make KANBAN the default view on the Sales Orders page AND bind it to
+         OUR rich card (the action was bound to sale's upload kanban, so a low
+         priority alone wasn't enough). -->
+    <record id="sale.action_orders" model="ir.actions.act_window">
+        <field name="view_mode">kanban,list,form,calendar,pivot,graph,activity</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'sequence': 1, 'view_mode': 'kanban', 'view_id': ref('view_sale_order_kanban_uellow')}),
+            (0, 0, {'sequence': 2, 'view_mode': 'list',   'view_id': ref('sale.view_order_tree')}),
+            (0, 0, {'sequence': 3, 'view_mode': 'form',   'view_id': ref('sale.view_order_form')})]"/>
+    </record>
+
+    <!-- The Sales app DEFAULT landing is "Quotations" — bind our rich kanban
+         there too, otherwise the user never sees it. -->
+    <record id="sale.action_quotations_with_onboarding" model="ir.actions.act_window">
+        <field name="view_mode">kanban,list,form,calendar,pivot,graph,activity</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'sequence': 1, 'view_mode': 'kanban', 'view_id': ref('view_sale_order_kanban_uellow')}),
+            (0, 0, {'sequence': 2, 'view_mode': 'list',   'view_id': ref('sale.view_quotation_tree_with_onboarding')}),
+            (0, 0, {'sequence': 3, 'view_mode': 'form',   'view_id': ref('sale.view_order_form')})]"/>
+    </record>
+
+    <record id="sale.action_quotations" model="ir.actions.act_window">
+        <field name="view_mode">kanban,list,form,calendar,pivot,graph,activity</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'sequence': 1, 'view_mode': 'kanban', 'view_id': ref('view_sale_order_kanban_uellow')}),
+            (0, 0, {'sequence': 2, 'view_mode': 'list',   'view_id': ref('sale.view_quotation_tree')}),
+            (0, 0, {'sequence': 3, 'view_mode': 'form',   'view_id': ref('sale.view_order_form')})]"/>
+    </record>
+
+</odoo>

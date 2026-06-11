@@ -20,7 +20,21 @@ class CarrierPricingRule(models.Model):
         'delivery.carrier.company', string='Carrier Company',
         required=True, ondelete='cascade',
     )
+    # v2.1.96 — pick the zone from the defined delivery zones instead of
+    # retyping its name; zone_name stays as the stored label.
+    zone_id = fields.Many2one(
+        'uellow.delivery.zone', string='Zone',
+        help='Pick one of the configured delivery zones — the name and '
+             'default fee fill in automatically.')
     zone_name = fields.Char(string='Zone Name', required=True)
+
+    @api.onchange('zone_id')
+    def _onchange_zone_id(self):
+        for r in self:
+            if r.zone_id:
+                r.zone_name = r.zone_id.name
+                if not r.delivery_fee and r.zone_id.price:
+                    r.delivery_fee = r.zone_id.price
     governorate = fields.Selection([
         ('capital',    'Capital (العاصمة)'),
         ('hawalli',    'Hawalli (حولي)'),

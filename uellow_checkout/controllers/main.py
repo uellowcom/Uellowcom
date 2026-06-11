@@ -354,6 +354,13 @@ class UellowCheckout(_WSBase):
 
         if is_cod:
             # COD: confirm immediately
+            # v2.2.40 — flag as cash (field defaults to 'online') so the order
+            # tracking page + carrier portal read COD correctly.
+            try:
+                if 'payment_method_type' in order._fields:
+                    order.sudo().payment_method_type = 'cash'
+            except Exception:
+                pass
             order.action_confirm()
             d = _raw()
             try:
@@ -497,6 +504,17 @@ class UellowCheckout(_WSBase):
         cod_added = False
         _SKIP_SET = {'paypal', 'wire_transfer'}
         _COD_SET  = {'cod', 'COD', 'custom', 'cash_on_delivery'}
+        # v2.1.77 — payment derives from the carrier COMPANY (the base): when
+        # the order's selected courier doesn't collect cash, hide COD here too
+        # (same rule as the app). Default ON when no carrier/company is set.
+        cod_allowed = True
+        try:
+            order = request.website.sale_get_order()
+            comp = order.carrier_id.carrier_company_id if order and order.carrier_id else False
+            if comp:
+                cod_allowed = bool(getattr(comp, 'cod_enabled', True))
+        except Exception as e:
+            _logger.warning('cod gate: %s', e)
         # Build provider image map
         provider_img = {}
         try:
@@ -516,7 +534,7 @@ class UellowCheckout(_WSBase):
                 if code.lower() in _SKIP_SET: continue
                 img = provider_img.get(m.id, '')
                 if code in _COD_SET or code.lower() in _COD_SET:
-                    if not cod_added:
+                    if not cod_added and cod_allowed:
                         cod_added = True
                         result.insert(0, {
                             'id': m.id, 'name': m.name, 'code': 'cod',

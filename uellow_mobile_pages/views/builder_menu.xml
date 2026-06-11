@@ -24,8 +24,9 @@
             action="action_mobile_navbar"
             sequence="20"/>
 
+  <!-- v2.2.29 — dedicated, clearly-labelled Theme &amp; Colors menu. -->
   <menuitem id="menu_uellow_builder_themes"
-            name="Theme presets"
+            name="🎨 Themes &amp; Colors"
             parent="menu_uellow_builder_root"
             action="action_mobile_theme_preset"
             sequence="30"/>

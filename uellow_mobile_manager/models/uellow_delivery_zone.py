@@ -25,6 +25,29 @@ import pytz
 from odoo import api, fields, models
 
 
+def _norm_city(s):
+    """v2.2.04 — Arabic-aware city normalisation for zone matching:
+    unifies hamza/ta-marbuta/ya forms, drops ء, strips the definite
+    article and the words محافظة/مدينة, collapses separators."""
+    s = (s or '').strip().lower()
+    for a, b in (('أ', 'ا'), ('إ', 'ا'), ('آ', 'ا'), ('ة', 'ه'),
+                 ('ى', 'ي'), ('ئ', 'ي'), ('ؤ', 'و'), ('ء', '')):
+        s = s.replace(a, b)
+    for sep in ('-', '—', '–', ',', '،', '/', '·'):
+        s = s.replace(sep, ' ')
+    words = []
+    for w in s.split():
+        if w in ('محافظه', 'مدينه', 'منطقه', 'al', 'el'):
+            continue
+        if w.startswith('ال') and len(w) > 4:
+            w = w[2:]
+        if w.startswith('al-') or w.startswith('el-'):
+            w = w[3:]
+        if w:
+            words.append(w)
+    return ' '.join(words)
+
+
 class UellowGovernorate(models.Model):
     """v2.1.69 — governorate master data so zone rules are configured by
     PICKING areas instead of typing comma-separated tokens."""
@@ -106,6 +129,15 @@ class UellowDeliveryZone(models.Model):
         'delivery.carrier', string='Delivery Carrier',
         required=True, ondelete='cascade', index=True,
     )
+    # ── v2.1.77 — unify zones under the carrier COMPANY ──────────────
+    # The courier company is the single base where all its zone rules are
+    # managed. Auto-filled from the chosen method's company (kept in sync
+    # by onchange + create/write below) so the One2many on the company is
+    # a plain writable inverse — robust for inline editing.
+    carrier_company_id = fields.Many2one(
+        'delivery.carrier.company', string='Carrier Company', index=True,
+        help='The courier company that owns this zone rule. Auto-filled '
+             'from the delivery method.')
     # ── v2.1.69 — professional coverage picker ───────────────────────
     # Pick whole governorates and/or individual cities with checkboxes;
     # 'all' = the fallback rule. The legacy comma-line lives on only as
@@ -176,6 +208,16 @@ class UellowDeliveryZone(models.Model):
         help='HH:MM (24h). Orders placed after this time the same day are '
              'pushed to the next eligible day. Leave blank for no cutoff.',
     )
+    # v2.2.06 — per-zone WORKING HOURS: outside this window the method
+    # shows dimmed "unavailable now" for addresses in this zone. Defaults
+    # 0–24 = no restriction (the carrier-level windows still apply).
+    work_hour_from = fields.Float(
+        'Working hours from', default=0.0,
+        help='Start of this zone\'s service window, e.g. 9.0 = 09:00. '
+             '0 and 24 together = no per-zone restriction.')
+    work_hour_to = fields.Float(
+        'Working hours to', default=24.0,
+        help='End of this zone\'s service window, e.g. 21.5 = 21:30.')
     # v2.0.97 — purely informational delivery-window label shown to the
     # customer in checkout (no pricing/logic impact). Bilingual per the
     # EN-primary + AR rule; AR falls back to EN when left blank.
@@ -198,10 +240,20 @@ class UellowDeliveryZone(models.Model):
     # the moment it's activated.
     cash_surcharge = fields.Float(
         'COD surcharge', default=0.0, digits=(10, 3),
-        help='Cash-on-delivery surcharge (same currency as Price). When the '
-             'COD-surcharge feature is enabled it is added INTO the delivery '
-             'price for cash orders — not shown separately. 0 = no surcharge. '
-             'Currently configurable only; not yet applied to order totals.',
+        help='Cash-on-delivery surcharge (same currency as Price). '
+             'v2.1.96 LIVE (cash-first pricing): the surcharge is included '
+             'in the displayed/charged delivery price for every payment '
+             'method; customers who pay ONLINE get it refunded to their '
+             'wallet on capture. 0 = no surcharge.',
+    )
+    # v2.1.96 — per-zone refund switch: when off, online payers do NOT get
+    # the surcharge back (it stays part of the delivery price).
+    cod_refund_enabled = fields.Boolean(
+        'Refund cash fee when paid online', default=True,
+        help='When enabled, the COD surcharge included in the delivery '
+             'price is credited back to the customer wallet if they pay '
+             'with any non-cash method. Also gated by the global switch '
+             'in Mobile App Settings.',
     )
     weekday_mask = fields.Char(
         'Active weekdays (legacy)', default='1234567',
@@ -219,6 +271,41 @@ class UellowDeliveryZone(models.Model):
     _DAY_FIELDS = ['day_mon', 'day_tue', 'day_wed', 'day_thu',
                    'day_fri', 'day_sat', 'day_sun']
 
+    # ── v2.1.77 — keep carrier_company_id in sync with the method ────
+    @api.onchange('carrier_id')
+    def _onchange_carrier_company(self):
+        if self.carrier_id and self.carrier_id.carrier_company_id:
+            self.carrier_company_id = self.carrier_id.carrier_company_id
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        Carrier = self.env['delivery.carrier']
+        Company = self.env['delivery.carrier.company']
+        for vals in vals_list:
+            if vals.get('carrier_id') and not vals.get('carrier_company_id'):
+                comp = Carrier.browse(vals['carrier_id']).carrier_company_id
+                if comp:
+                    vals['carrier_company_id'] = comp.id
+            elif vals.get('carrier_company_id') and not vals.get('carrier_id'):
+                # Created inline from the company form: attach to that
+                # company's (first) delivery method.
+                carrier = Carrier.search(
+                    [('carrier_company_id', '=', vals['carrier_company_id'])],
+                    limit=1)
+                if carrier:
+                    vals['carrier_id'] = carrier.id
+        return super().create(vals_list)
+
+    def write(self, vals):
+        res = super().write(vals)
+        if 'carrier_id' in vals:
+            for z in self:
+                comp = z.carrier_id.carrier_company_id
+                if comp and z.carrier_company_id.id != comp.id:
+                    super(UellowDeliveryZone, z).write(
+                        {'carrier_company_id': comp.id})
+        return res
+
     @api.model
     def quote_for(self, carrier, partner):
         """Return the matching zone (or False) for a (carrier, partner)
@@ -227,6 +314,13 @@ class UellowDeliveryZone(models.Model):
         if not carrier or not partner:
             return False
         city = (partner.city or '').strip().lower()
+        # v2.2.04 — ARABIC-AWARE matching. Customers write «السالميه /
+        # سالمية / الجهرا / محافظة حولي»; the configured names are
+        # «السالمية / الجهراء / حولي». Normalise BOTH sides (ة=ه, أإآ=ا,
+        # ى=ي, drop ء, strip ال/محافظة/مدينة) and match whole WORDS — the
+        # old raw substring test even mis-routed «السالميه» to Tier 2.
+        ncity = _norm_city(city)
+        ncity_words = set(ncity.split())
         zones = self.sudo().search([
             ('carrier_id', '=', carrier.id),
             ('active', '=', True),
@@ -236,7 +330,14 @@ class UellowDeliveryZone(models.Model):
         for z in zones:
             if z._is_fallback():
                 continue
-            if city and city in z._match_tokens():
+            ntoks = {_norm_city(t) for t in z._match_tokens()}
+            ntoks.discard('')
+            hit = ncity and (
+                ncity in ntoks
+                or any(t in ncity_words                      # one-word token
+                       or (' ' in t and t in ncity)          # multi-word token
+                       for t in ntoks))
+            if hit:
                 if z._is_active_today():
                     return z
         for z in zones:
@@ -285,3 +386,23 @@ class DeliveryCarrierZoneHook(models.Model):
         if zone:
             return zone.price, self.product_id.currency_id or order.currency_id
         return getattr(self, 'fixed_price', 0.0), order.currency_id
+
+
+class CarrierCompanyZones(models.Model):
+    """v2.1.77 — surface every zone rule of a courier company in ONE place.
+    The company is the single management base for its delivery zones across
+    all of its delivery methods."""
+    _inherit = 'delivery.carrier.company'
+
+    zone_rule_ids = fields.One2many(
+        'uellow.delivery.zone', 'carrier_company_id',
+        string='Delivery Zones',
+        help='All zone-pricing rules across this company\'s delivery '
+             'methods. Manage them here — the company is the base.')
+    zone_rule_count = fields.Integer(
+        compute='_compute_zone_rule_count', string='Zones')
+
+    @api.depends('zone_rule_ids')
+    def _compute_zone_rule_count(self):
+        for c in self:
+            c.zone_rule_count = len(c.zone_rule_ids)

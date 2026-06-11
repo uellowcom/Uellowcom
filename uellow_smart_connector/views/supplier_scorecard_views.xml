@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="view_scorecard_list" model="ir.ui.view">
+    <field name="name">uellow.sc.supplier.scorecard.list</field>
+    <field name="model">uellow.sc.supplier.scorecard</field>
+    <field name="arch" type="xml">
+      <list string="Supplier Scorecard"
+            decoration-success="grade=='a'"
+            decoration-info="grade=='b'"
+            decoration-warning="grade=='c'"
+            decoration-danger="grade=='d'">
+        <field name="vendor_id" string="Vendor"/>
+        <field name="product_count" string="Products"/>
+        <field name="sold_count" string="Sold"/>
+        <field name="sold_ratio" string="Sell-through %"/>
+        <field name="avg_margin_pct" string="Avg Margin %"/>
+        <field name="dead_count" string="Dead"/>
+        <field name="dead_ratio" string="Dead %"/>
+        <field name="score" string="Score" widget="progressbar"/>
+        <field name="grade" widget="badge"
+               decoration-success="grade=='a'"
+               decoration-info="grade=='b'"
+               decoration-warning="grade=='c'"
+               decoration-danger="grade=='d'"/>
+        <field name="last_scan" string="Last Scan" optional="hide"/>
+        <button name="action_view_products" type="object" string="Products"
+                icon="fa-cubes"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_scorecard_search" model="ir.ui.view">
+    <field name="name">uellow.sc.supplier.scorecard.search</field>
+    <field name="model">uellow.sc.supplier.scorecard</field>
+    <field name="arch" type="xml">
+      <search string="Search Scorecard">
+        <field name="vendor_id" string="Vendor"/>
+        <filter string="Top (A)" name="a" domain="[('grade','=','a')]"/>
+        <filter string="Poor (D)" name="d" domain="[('grade','=','d')]"/>
+        <group expand="0" string="Group By">
+          <filter string="Grade" name="g_grade" context="{'group_by': 'grade'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_supplier_scorecard" model="ir.actions.act_window">
+    <field name="name">Supplier Scorecard</field>
+    <field name="res_model">uellow.sc.supplier.scorecard</field>
+    <field name="view_mode">list</field>
+    <field name="search_view_id" ref="view_scorecard_search"/>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">No supplier scores yet · لا توجد تقييمات بعد</p>
+      <p>The system rates vendors by sell-through, margin and dead-stock.<br/>
+         يقيّم النظام المورّدين حسب نسبة البيع والهامش والمخزون الراكد.</p>
+    </field>
+  </record>
+
+  <record id="cron_supplier_scorecard" model="ir.cron" forcecreate="True">
+    <field name="name">Uellow SC: supplier scorecard scan</field>
+    <field name="model_id" ref="model_uellow_sc_supplier_scorecard"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_scan_suppliers()</field>
+    <field name="interval_number">7</field>
+    <field name="interval_type">days</field>
+    <field name="active" eval="True"/>
+  </record>
+
+  <menuitem id="menu_sc_scorecard" name="Supplier Scorecard"
+            parent="menu_sc_root" action="action_supplier_scorecard" sequence="40"/>
+
+</odoo>

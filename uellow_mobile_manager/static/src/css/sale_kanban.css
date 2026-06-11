@@ -1,0 +1,39 @@
+/* Rich Sales kanban card (design C+) */
+.o_kanban_view .uo-card{padding:10px 12px;font-size:13px;text-align:start}
+.uo-rb{color:#fff;font-weight:800;border-radius:9px;padding:5px 10px;display:flex;
+       justify-content:space-between;align-items:center;font-size:11.5px}
+.uo-rb.k-green{background:#10b981} .uo-rb.k-amber{background:#f59e0b}
+.uo-rb.k-red{background:#ef4444}  .uo-rb.k-blue{background:#3b82f6}
+.uo-rb.k-grey{background:#6b7280}
+.uo-age{background:rgba(255,255,255,.22);border-radius:999px;padding:1px 8px;font-size:10.5px;white-space:nowrap}
+.uo-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-top:8px}
+.uo-amt{font-size:15px;color:#412402;white-space:nowrap}
+.uo-sm{font-size:11px}
+.uo-hr{margin:8px 0;border:0;border-top:1px solid #eee5d3}
+.uo-card > div{line-height:1.85}
+.uo-pill{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:800;margin-inline-start:2px}
+/* pill colours scoped to .uo-pill so they do NOT leak onto the ribbon
+   (which keeps white text on its solid colour) */
+.uo-pill.k-green{background:#e7f8f0;color:#067a55}
+.uo-pill.k-amber{background:#fff5e5;color:#a86a00}
+.uo-pill.k-red{background:#fdeaea;color:#c62828}
+.uo-pill.k-blue{background:#e8f1fe;color:#1d4ed8}
+.uo-pill.k-grey{background:#eef0f3;color:#5b6470}
+/* ribbon: always white text on its solid state colour */
+.uo-rb,.uo-rb *{color:#fff !important}
+.uo-cod{background:#fff7ec;border:1px dashed #f59e0b;border-radius:9px;padding:6px 10px;
+        margin-top:8px;display:flex;justify-content:space-between;align-items:center;color:#a86a00;font-weight:800}
+.uo-cod b{color:#a86a00;font-size:14px}
+.uo-foot{display:flex;justify-content:space-between;font-size:11px;margin-top:6px}
+.uo-acts{display:flex;gap:6px;margin-top:9px}
+.uo-acts .btn{flex:1}
+/* column (group) header — make the title readable (was same colour as bg) */
+.o_kanban_view .o_kanban_group .o_column_title,
+.o_kanban_view .o_kanban_group .o_kanban_header_title,
+.o_kanban_view .o_kanban_group .o_column_title *,
+.o_kanban_view .o_kanban_header_title{
+    color:#412402 !important;font-weight:800 !important;
+}
+.o_kanban_view .o_kanban_group .o_kanban_counter_side,
+.o_kanban_view .o_kanban_group .o_animated_number{color:#412402 !important}
+.o_kanban_view .o_kanban_group .o_kanban_header{background:#fff7e6}

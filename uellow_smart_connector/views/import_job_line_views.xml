@@ -16,23 +16,86 @@
                  statusbar_visible="pending,approved,applied"/>
         </header>
         <sheet>
+          <widget name="web_ribbon" title="New Product" bg_color="text-bg-info"
+                  invisible="product_action != 'new'"/>
+          <widget name="web_ribbon" title="Update" bg_color="text-bg-warning"
+                  invisible="product_action != 'update'"/>
           <group>
-            <group string="Product Names">
+            <group string="Product">
               <field name="name_en" string="Name (English)"/>
               <field name="name_ar" string="Name (Arabic)"/>
-              <field name="source_sku" string="Source SKU"/>
+              <field name="product_action" string="Action"/>
+              <field name="existing_product_id" string="Matched Product"
+                     invisible="product_action != 'update'"/>
+              <field name="match_method" readonly="1"
+                     invisible="product_action != 'update'"/>
+              <field name="match_score" string="Confidence (%)"
+                     invisible="product_action != 'update'"/>
               <field name="ai_enriched" readonly="1" string="AI Enriched"/>
             </group>
-            <group string="Pricing &amp; Stock">
-              <field name="product_action" string="Action"/>
-              <field name="existing_product_id" string="Existing Product"/>
-              <field name="match_score" string="Match Score (%)"/>
-              <field name="new_price" string="New Price"/>
-              <field name="old_price" readonly="1" string="Current Price"/>
-              <field name="price_diff_pct" readonly="1" string="Price Change (%)"/>
-              <field name="new_qty" string="New Quantity"/>
+            <group string="Category &amp; Stock">
+              <field name="ecommerce_categ_ids" string="eCommerce Categories"
+                     widget="many2many_tags"/>
+              <field name="new_qty" string="Quantity"/>
+              <field name="is_out_of_stock" readonly="1" string="Out of Stock (sheet)"/>
+              <field name="image_url" string="Image URL" widget="url"/>
             </group>
           </group>
+
+          <!-- Old vs New comparison -->
+          <group string="Pricing — Old vs New">
+            <group>
+              <label for="new_price" string="Sale Price"/>
+              <div class="o_row">
+                <field name="old_price" readonly="1" class="oe_inline"/>
+                <span class="oe_inline mx-2">→</span>
+                <field name="new_price" class="oe_inline"/>
+                <field name="update_price" widget="boolean_toggle" class="oe_inline ms-2"/>
+                <span class="text-muted oe_inline">update</span>
+              </div>
+              <field name="price_diff_pct" readonly="1" string="Sale Δ (%)"/>
+            </group>
+            <group>
+              <label for="new_cost" string="Cost"/>
+              <div class="o_row">
+                <field name="old_cost" readonly="1" class="oe_inline"/>
+                <span class="oe_inline mx-2">→</span>
+                <field name="new_cost" class="oe_inline"/>
+                <field name="update_cost" widget="boolean_toggle" class="oe_inline ms-2"/>
+                <span class="text-muted oe_inline">update</span>
+              </div>
+              <field name="cost_diff_pct" readonly="1" string="Cost Δ (%)"/>
+              <field name="margin_pct" readonly="1" string="Margin (%)"
+                     decoration-danger="margin_pct &lt; 0"
+                     decoration-warning="margin_pct &gt;= 0 and margin_pct &lt; 10"/>
+            </group>
+          </group>
+
+          <group string="Identifiers — Old vs New">
+            <group>
+              <label for="new_barcode" string="Barcode"/>
+              <div class="o_row">
+                <field name="old_barcode" readonly="1" class="oe_inline" placeholder="(none)"/>
+                <span class="oe_inline mx-2">→</span>
+                <field name="new_barcode" class="oe_inline"/>
+                <field name="update_barcode" widget="boolean_toggle" class="oe_inline ms-2"/>
+                <span class="text-muted oe_inline">update</span>
+              </div>
+            </group>
+            <group>
+              <label for="new_reference" string="Reference"/>
+              <div class="o_row">
+                <field name="old_reference" readonly="1" class="oe_inline" placeholder="(none)"/>
+                <span class="oe_inline mx-2">→</span>
+                <field name="new_reference" class="oe_inline"/>
+                <field name="update_reference" widget="boolean_toggle" class="oe_inline ms-2"/>
+                <span class="text-muted oe_inline">update</span>
+              </div>
+              <field name="missing_info" readonly="1" string="Missing on catalog"
+                     invisible="not missing_info"/>
+            </group>
+          </group>
+
           <group>
             <group string="Description (Arabic)">
               <field name="description_ar" nolabel="1"/>
@@ -41,12 +104,26 @@
               <field name="description_en" nolabel="1"/>
             </group>
           </group>
+          <field name="show_continue_warn" invisible="1"/>
+          <field name="existing_continue_selling" invisible="1"/>
+          <group string="🚫 Out of Stock — Continue Selling"
+                 invisible="not show_continue_warn">
+            <div colspan="2" class="alert alert-warning" role="alert">
+              This product is <b>out of stock</b> in the sheet but still has
+              <b>"Continue selling when Out-of-Stock"</b> enabled. You can stop it
+              from being sold while unavailable.
+            </div>
+            <field name="disable_continue_selling"
+                   string="Turn off continue-selling on apply"/>
+            <button name="action_disable_continue_now" type="object"
+                    string="Stop Selling Now" class="btn-warning" icon="fa-ban"/>
+          </group>
+          <group string="⚠ Warning" invisible="not has_warning">
+            <field name="warning_reason" readonly="1" nolabel="1"/>
+          </group>
           <group string="Rejection Details" invisible="line_state != 'rejected'">
             <field name="reject_reason" string="Reason"/>
             <field name="reject_note" string="Note"/>
-          </group>
-          <group string="Warning" invisible="not has_warning">
-            <field name="warning_reason" readonly="1" string="Warning Reason"/>
           </group>
         </sheet>
       </form>

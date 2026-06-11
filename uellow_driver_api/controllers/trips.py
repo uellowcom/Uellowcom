@@ -64,13 +64,16 @@ class DriverTripsAPI(http.Controller):
     @require_auth
     def list_trips(self, **kw):
         driver = current_driver()
-        if not driver.carrier_company_id:
-            return ok([])
         Trip = request.env['delivery.trip'].sudo()
-        # Trips that include at least one line for this driver
+        # v2.2.32 — derive trips from the driver's lines (don't hard-block on
+        # carrier_company_id, which left drivers with assigned trips seeing
+        # an empty Trips tab).
         line_trips = request.env['delivery.trip.line'].sudo().search([
             ('driver_id', '=', driver.id),
+            ('trip_id', '!=', False),
         ]).mapped('trip_id')
+        if not line_trips:
+            return ok([])
         trips = Trip.search([('id', 'in', line_trips.ids)],
                             order='date_trip desc, id desc', limit=50)
         return ok([_serialize_trip(t) for t in trips])

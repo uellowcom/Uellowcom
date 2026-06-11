@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="view_reorder_list" model="ir.ui.view">
+    <field name="name">uellow.sc.reorder.forecast.list</field>
+    <field name="model">uellow.sc.reorder.forecast</field>
+    <field name="arch" type="xml">
+      <list string="Reorder Forecast"
+            decoration-danger="state=='urgent'"
+            decoration-warning="state=='reorder'"
+            decoration-muted="state in ('resolved','ignored')">
+        <field name="product_id" string="Product (Variant)"/>
+        <field name="product_tmpl_id" string="Product"/>
+        <field name="qty_on_hand" string="In Stock"/>
+        <field name="avg_daily_sales" string="Sells/Day"/>
+        <field name="days_to_runout" string="Days Left"/>
+        <field name="runout_date" string="Run-out"/>
+        <field name="projected_demand_30d" string="30-Day Demand" optional="show"/>
+        <field name="suggested_qty" string="Reorder Qty"/>
+        <field name="state" widget="badge"
+               decoration-danger="state=='urgent'"
+               decoration-warning="state=='reorder'"
+               decoration-success="state=='ok'"
+               decoration-muted="state in ('resolved','ignored')"/>
+        <button name="action_resolve" type="object" string="Mark Handled"
+                icon="fa-check" invisible="state in ('resolved','ignored')"/>
+        <button name="action_ignore" type="object" string="Ignore"
+                icon="fa-ban" invisible="state == 'ignored'"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_reorder_search" model="ir.ui.view">
+    <field name="name">uellow.sc.reorder.forecast.search</field>
+    <field name="model">uellow.sc.reorder.forecast</field>
+    <field name="arch" type="xml">
+      <search string="Search Reorder Forecast">
+        <field name="product_id" string="Product"/>
+        <filter string="Urgent" name="urgent" domain="[('state','=','urgent')]"/>
+        <filter string="Reorder Soon" name="reorder" domain="[('state','=','reorder')]"/>
+        <separator/>
+        <filter string="Needs Action" name="needs"
+                domain="[('state','in',('urgent','reorder'))]"/>
+        <group expand="0" string="Group By">
+          <filter string="Status" name="g_state" context="{'group_by': 'state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_reorder_forecast" model="ir.actions.act_window">
+    <field name="name">Reorder Forecast</field>
+    <field name="res_model">uellow.sc.reorder.forecast</field>
+    <field name="view_mode">list</field>
+    <field name="search_view_id" ref="view_reorder_search"/>
+    <field name="context">{'search_default_needs': 1}</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">No reorder forecasts yet · لا توجد تنبؤات بعد</p>
+      <p>The system predicts when fast-selling products will run out and how much to reorder.<br/>
+         يتنبأ النظام بموعد نفاد الأصناف سريعة البيع والكمية المطلوب إعادة طلبها.</p>
+    </field>
+  </record>
+
+  <record id="cron_reorder_forecast" model="ir.cron" forcecreate="True">
+    <field name="name">Uellow SC: reorder forecast scan</field>
+    <field name="model_id" ref="model_uellow_sc_reorder_forecast"/>
+    <field name="state">code</field>
+    <field name="code">model.cron_scan_reorder()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active" eval="True"/>
+  </record>
+
+  <menuitem id="menu_sc_reorder" name="Reorder Forecast"
+            parent="menu_sc_root" action="action_reorder_forecast" sequence="35"/>
+
+</odoo>

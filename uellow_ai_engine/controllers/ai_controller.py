@@ -97,7 +97,7 @@ TOOLS = [
         'input_schema': {
             'type': 'object',
             'properties': {
-                'order_name': {'type': 'string', 'description': 'e.g. S00042'},
+                'order_name': {'type': 'string', 'description': 'The order reference the customer mentions (format like S#####). Do NOT invent one — only use a reference the customer actually provides or that get_customer_orders returns.'},
                 'order_id':   {'type': 'integer'},
             },
         },
@@ -113,6 +113,15 @@ TOOLS = [
             },
             'required': ['product_id'],
         },
+    },
+    {
+        'name': 'get_clearance_picks',
+        'description': 'Get current clearance / special-offer products Uellow is '
+                       'promoting (idle stock the store wants to move, each with a '
+                       'suggested discount). Use when the customer asks about offers, '
+                       'deals, discounts, clearance or "what is on sale".',
+        'input_schema': {'type': 'object', 'properties': {
+            'limit': {'type': 'integer', 'default': 5}}},
     },
     {
         'name': 'award_review_points',
@@ -279,6 +288,8 @@ CORE_TOOLS = {
 }
 TOOL_TRIGGERS = {
     'get_loyalty_points':      ['نقاط', 'نقطة', 'ولاء', 'loyalty', 'points'],
+    'get_clearance_picks':     ['تصفية', 'عروض', 'عرض', 'تنزيلات', 'تخفيضات', 'خصومات',
+                                'clearance', 'deals', 'offers', 'on sale', 'discounts'],
     'get_size_recommendation': ['مقاس', 'قياس', 'مقاسات', 'size', 'fit'],
     'get_payment_options':     ['دفع', 'تقسيط', 'اقساط', 'أقساط', 'payment', 'installment', 'knet', 'كنت'],
     'get_reviewers':           ['مختص', 'خبير', 'راي', 'رأي', 'مراجع', 'reviewer', 'expert', 'consult', 'استشار'],
@@ -293,8 +304,9 @@ TOOL_TRIGGERS = {
                                 'افحص', 'فحص المقاس', 'توافق', 'مطابق', 'مطابقة',
                                 'تحقق', 'check fit', 'does it fit', 'fit check',
                                 'will it fit', 'is it my size'],
-    'get_company_location':    ['وين موقعكم', 'موقعكم', 'فرعكم', 'فروعكم', 'المعرض',
-                                'العنوان', 'وين انتو', 'الموقع', 'الفرع', 'محلكم',
+    'get_company_location':    ['وين موقعكم', 'موقعكم', 'موقع', 'فرعكم', 'فروعكم', 'المعرض',
+                                'العنوان', 'عنوانكم', 'شركتكم', 'وين انتو', 'وين انتم',
+                                'الموقع', 'الفرع', 'محلكم', 'وين المحل', 'وينكم',
                                 'رقمكم', 'الواتس', 'تلفونكم', 'الفون',
                                 'where are you', 'your location', 'your address',
                                 'showroom', 'branch', 'phone number', 'contact'],
@@ -469,23 +481,32 @@ class UellowAIController(http.Controller):
                '24–48 hours for the rest of Kuwait. ' \
                'International orders: 5–7 business days via DHL.'
 
+        _dialect_guide = '''LANGUAGE & DIALECT — match the customer EXACTLY:
+Detect the customer's language/dialect from THEIR message and reply in the
+SAME one. Never switch unless they switch first. Be a fluent NATIVE speaker —
+not a textbook. Uellow is a KUWAITI store, so when the Arabic is neutral/MSA
+or the dialect is unclear, DEFAULT to natural KUWAITI.
+
+Arabic dialects — speak each authentically (use its real markers, not MSA):
+• 🇰🇼 KUWAITI (default): شلونك، شخبارك، وايد، شنو، عندج/عندك، حبيبي/حبيبتي،
+  زين، يبه/يبتي، الحين، چذي، شكثر، تبي/تبين، عيل، ماكو/اكو، بعطيك، خوش.
+  e.g. «هلا والله! شنو تبين بالضبط؟ عندنا وايد خيارات زينة 🐝»
+• 🇸🇦 SAUDI: وش، كيفك، ابغى، كذا، الحين، زين، يا غالي، ابشر، وش رايك.
+• 🇪🇬 EGYPTIAN: ازيك، عايز/عايزة، ايه، كده، خالص، حلو اوي، تمام، يا فندم،
+  ماشي، بص، عشان. e.g. «ازيك يا فندم! عايز ايه بالظبط؟ عندنا حاجات حلوة اوي»
+• Other Arabic dialects (Emirati, Qatari, Levantine…) → mirror them naturally.
+
+Non-Arabic: if the customer writes fully in English, reply 100%% in English —
+NO Arabic words at all, not even the greeting (no «هلا»). Urdu/Hindi/Tagalog/
+Bengali/any language → reply entirely in that same language.
+
+CRITICAL: do NOT answer a Kuwaiti customer in Saudi dialect or vice-versa —
+match THEIR specific markers. Keep the SAME dialect for the whole conversation.'''
         lang_instruction = {
-            'auto': '''Detect the customer language automatically and ALWAYS respond in the exact same language and dialect they use.
-Examples:
-- Customer writes in Kuwaiti Arabic → respond in Kuwaiti Arabic
-- Customer writes in Egyptian Arabic → respond in Egyptian Arabic  
-- Customer writes in Saudi Arabic → respond in Saudi Arabic
-- Customer writes in English → respond in English
-- Customer writes in Urdu → respond in Urdu
-- Customer writes in Hindi → respond in Hindi
-- Customer writes in Tagalog → respond in Tagalog
-- Customer writes in Bengali → respond in Bengali
-- Customer writes in any language → respond in that same language
-Never switch languages unless the customer switches first.
-Uellow serves Kuwait and GCC region with diverse nationalities.''',
-            'ar':   'Always respond in Arabic, matching the customer dialect (Kuwaiti, Egyptian, Saudi, etc).',
-            'en':   'Always respond in English.',
-        }.get(lang, 'Detect customer language and always respond in the same language they use.')
+            'auto': _dialect_guide,
+            'ar':   _dialect_guide,
+            'en':   'Always respond in clear, friendly English.',
+        }.get(lang, _dialect_guide)
 
         product_ctx = ''
         if product:
@@ -614,12 +635,35 @@ Payment options after order creation:
 2. Taly BNPL — split into 4 installments (0% interest)
 3. Cash on Delivery (COD) — pay when the order arrives
 
-STRICT FORMATTING RULES:
-- NO markdown: no **, no *, no #, no ---, no backticks
+COACH RULES (from live-conversation audits — follow STRICTLY):
+- NEVER invent or guess a price, stock level, or product detail. Every price/spec
+  you state MUST come from a tool result or the SEARCH RESULTS injected in this
+  conversation. If you don't have it — call the tool or say you'll check. Never estimate.
+- If the customer hasn't mentioned any product, do NOT assume one. Ask ONE short
+  discovery question instead.
+- Explicit commands execute IMMEDIATELY: when the customer says «أضيفي» / «ضيفه
+  للسلة» / "add it" and the product is known, CALL add_to_cart right away — do not
+  ask "do you want me to add it?". Ask ONCE only if product, variant or quantity is
+  genuinely ambiguous.
+- Use the conversation history: never re-greet or re-introduce yourself
+  mid-conversation; remember what is already in the cart and what was already said.
+  Greet by name ONLY in the first message of a conversation.
+- Lists: show at most 5 items then offer "more?" — never dump long tables.
+- If a tool fails, retry once; if it still fails apologize briefly and give a concrete
+  alternative (direct cart/checkout link) — never leave the customer stuck.
+- Customer asks about "my order" without a number → call get_customer_orders first;
+  do not ask them for the order number.
+- Always end with ONE clear next step or question. Match the customer's language
+  exactly throughout (no mixed-language labels).
+
+FORMATTING RULES (both website and app render light markdown):
+- Use **bold** for key terms, prices, and short section titles
+- Use "- " bullet lists when listing options, steps, or specs (one point per line)
+- Keep paragraphs short with blank lines between sections — clean and organized
+- Do NOT use: tables, code blocks/backticks, # headings, or horizontal rules (---)
 - NO "state:" or technical words in your response text
-- Plain text only, line breaks for separation
 - Short and conversational
-- When order is created, show order number and amount clearly
+- When order is created, show the order number and amount clearly in **bold**
 
 When customer asks about product specs not available in catalog:
 - Tell them you'll search the web for more info
@@ -661,8 +705,16 @@ When customer asks for a human opinion, reviewer, or second opinion:
 - Keywords: ريفيور، رأي بشري، رأي شخص، شخص يساعدني، اريد رأي، second opinion
 
 When customer sends an image (visual search):
-- Confirm what you see in the image
-- Search for similar products using extracted keywords
+- Confirm what you see in the image (the item type / category).
+- If Uellow carries that category, search and present GENUINELY matching products.
+- If we do NOT carry that item/category, OR nothing in our catalogue genuinely
+  matches what's in the image, say so clearly and warmly — e.g. "ما عندنا هذا النوع
+  من المنتجات حالياً" / "We don't currently carry this kind of product" — then
+  offer to show popular items or invite them to browse our categories.
+- NEVER present an unrelated category as if it matches the image (e.g. don't
+  recommend watches when the customer sent a photo of a t-shirt). A wrong-category
+  suggestion presented as a match is a serious error — prefer honesty + an offer
+  to browse.
 
 SIZE & FIT RULES (when customer asks about sizing):
 - ALWAYS call get_size_recommendation — never guess a size from your knowledge.
@@ -723,6 +775,7 @@ CART & ORDERING RULES:
                 'get_payment_link':    self._fn_get_payment_link,
                 'get_order_status':    self._fn_get_order_status,
                 'get_recommendations': self._fn_get_recommendations,
+                'get_clearance_picks': self._fn_get_clearance_picks,
                 'award_review_points': self._fn_award_review,
                 'apply_coupon':        self._fn_apply_coupon,
                 'get_customer_orders': self._fn_get_customer_orders,
@@ -987,10 +1040,18 @@ CART & ORDERING RULES:
         # Master switch
         enabled = self._get_param('tryon_enabled', 'False') in ('True', '1', 'true')
         if not enabled:
+            # v2.2.05 — honest "coming soon" + redirect to the size
+            # recommendation (Coach findings 627/615: Beena kept retrying
+            # a feature that isn't live yet).
             return {'available': False, 'state': 'disabled',
+                    'do_not_retry': True,
                     'message': self._t(
-                        "Virtual try-on is not available right now.",
-                        "التجربة الافتراضية مو متاحة حالياً.",
+                        "Virtual try-on is coming VERY soon 🚀 — meanwhile "
+                        "I can recommend your perfect size for this product. "
+                        "Want me to?",
+                        "التجربة الافتراضية جاية قريباً جداً 🚀 — وبالوقت "
+                        "الحالي أقدر أنصحك بمقاسك المثالي لهذا المنتج، "
+                        "تبي؟",
                     )}
 
         # Guest → must register
@@ -1409,7 +1470,8 @@ CART & ORDERING RULES:
                     'in_stock':      in_stock,
                     'qty_available': qty_on_hand,
                     'continue_sell': continue_sell,
-                    'image_url':     f'/web/image/product.template/{prod.id}/image_128',
+                    # v2.2.05 — 512px (was 128 → blurry chat cards).
+                    'image_url':     f'/web/image/product.template/{prod.id}/image_512',
                     'match_score':   score,
                     'colors':        colors,
                     'sizes':         sizes,
@@ -1462,13 +1524,25 @@ CART & ORDERING RULES:
             order = website.sale_get_order(force_create=True)
             if not order:
                 return {'success': False, 'error': 'no cart'}
-            order._cart_update(product_id=variant_id, add_qty=qty)
+            # Coach fix: a transient failure here used to abandon the whole
+            # checkout flow mid-transaction. Retry once before giving up, and
+            # on persistent failure return a concrete fallback the assistant
+            # can offer instead of dead-ending the customer.
+            try:
+                order._cart_update(product_id=variant_id, add_qty=qty)
+            except Exception:
+                request.env.cr.rollback()
+                order = website.sale_get_order(force_create=True)
+                order._cart_update(product_id=variant_id, add_qty=qty)
             return {'success': True, 'product': product.name, 'quantity': qty,
                     'cart_count': int(order.cart_quantity), 'cart_total': order.amount_total,
                     'cart_url': '/shop/cart', 'message': f'تمت إضافة {product.name} للسلة'}
         except Exception as e:
             import traceback
-            return {'success': False, 'error': str(e), 'traceback': traceback.format_exc()[-300:]}
+            return {'success': False, 'error': str(e),
+                    'fallback_url': '/shop/cart',
+                    'message': 'تعذرت الإضافة تلقائياً — اعرض على العميل رابط السلة المباشر',
+                    'traceback': traceback.format_exc()[-300:]}
 
 
     def _fn_create_order(self, args):
@@ -1565,7 +1639,7 @@ CART & ORDERING RULES:
                     'id':          ln.id,
                     'product_id':  ln.product_id.id,
                     'name':        ln.product_id.display_name or ln.name or '',
-                    'image_url':   '/web/image/product.product/%d/image_256' % ln.product_id.id,
+                    'image_url':   '/web/image/product.product/%d/image_512' % ln.product_id.id,
                     'qty':         float(ln.product_uom_qty or 0),
                     'unit_price':  float(ln.price_unit or 0),
                     'subtotal':    float(ln.price_subtotal or 0),
@@ -1851,9 +1925,10 @@ CART & ORDERING RULES:
                 'status': status,
             })
 
-        # Driver phone if available (for "in delivery" state)
+        # Driver phone only AFTER Start Delivery (out_for_delivery)
         driver_phone = ''
-        if hasattr(order, 'driver_id') and order.driver_id:
+        if (getattr(order, 'delivery_status', None) == 'out_for_delivery'
+                and getattr(order, 'driver_id', False)):
             driver_phone = getattr(order.driver_id, 'phone', '') or getattr(order.driver_id, 'mobile', '')
 
         tracking_number = getattr(order, 'carrier_tracking_ref', '') or ''
@@ -1879,6 +1954,20 @@ CART & ORDERING RULES:
             'is_failed':        current in ('failed', 'failed_returned'),
             'is_delivered':     current == 'delivered',
         }
+
+    def _fn_get_clearance_picks(self, args):
+        """Clearance / promote-able idle stock that Smart Connector flagged
+        for Beena to surface (idea #26 tie-in). Empty list if the Smart
+        Connector module isn't installed."""
+        limit = int(args.get('limit') or 5)
+        if 'uellow.dead.stock' not in request.env:
+            return {'items': [], 'count': 0}
+        try:
+            rows = request.env['uellow.dead.stock'].sudo().beena_promotable_products(
+                limit=limit)
+        except Exception:
+            rows = []
+        return {'items': rows, 'count': len(rows)}
 
     def _fn_get_recommendations(self, args):
         pid     = int(args.get('product_id', 0))
@@ -1944,11 +2033,28 @@ CART & ORDERING RULES:
             ('partner_id', '=', partner.id),
             ('state', 'in', ['sale', 'done', 'sent']),
         ], limit=limit, order='date_order desc')
-        return {'orders': [
-            {'name': o.name, 'amount': o.amount_total,
-             'state': o.state, 'date': str(o.date_order)[:10]}
-            for o in orders
-        ]}
+        # v2.1.81 — include id + delivery status so the app renders each order
+        # with its status and a per-order Track button.
+        _dlabels = {
+            'pending':          {'en': 'Pending',          'ar': 'قيد المعالجة'},
+            'arrived_sorting':  {'en': 'At sorting center', 'ar': 'في مركز الفرز'},
+            'assigned':         {'en': 'Assigned',         'ar': 'تم الإسناد'},
+            'out_for_delivery': {'en': 'Out for delivery', 'ar': 'في الطريق إليك'},
+            'delivered':        {'en': 'Delivered',        'ar': 'تم التوصيل'},
+            'failed':           {'en': 'Failed',           'ar': 'فشل التوصيل'},
+            'failed_returned':  {'en': 'Returned',         'ar': 'تم الإرجاع'},
+        }
+        _lang = (request.env.context.get('lang') or 'ar')[:2]
+        out = []
+        for o in orders:
+            dk = getattr(o, 'delivery_status', '') or ''
+            lbl = _dlabels.get(dk, {}).get('ar' if _lang == 'ar' else 'en', '')
+            out.append({
+                'id': o.id, 'name': o.name, 'amount': o.amount_total,
+                'state': o.state, 'date': str(o.date_order)[:10],
+                'delivery_key': dk, 'delivery_status': lbl,
+            })
+        return {'orders': out}
 
     # ── Claude API ────────────────────────────────────────────────────────────
 
@@ -2055,6 +2161,7 @@ CART & ORDERING RULES:
         message    = (kwargs.get('message') or '').strip()
         session_id = kwargs.get('session_id') or str(uuid.uuid4())
         product_id = kwargs.get('product_id')
+        category_id = kwargs.get('category_id')
 
         if not message:
             return {'error': 'Empty message', 'state': 'idle'}
@@ -2078,9 +2185,16 @@ CART & ORDERING RULES:
 
         # ── Answer Cache lookup (serve repeats without Claude) ──
         _cache_on = self._get_param('cache_enabled', 'False') in ('True', '1', 'true')
-        if _cache_on:
+        # v2.1.82 — context guard: short conversational turns («نعم», «طيب»,
+        # «ok»…) depend on the running conversation and must NEVER be cached
+        # or served from cache. Exception: short GENERIC questions («وين
+        # فرعكم») are store-wide and stay cacheable.
+        _Cache = request.env['beena.qa.cache'].sudo()
+        _ctx_dependent = (len((message or '').split()) < 3
+                          and not _Cache.is_generic(message))
+        if _cache_on and not _ctx_dependent:
             try:
-                _hit = request.env['beena.qa.cache'].sudo().lookup(message, product_id, None)
+                _hit = _Cache.lookup(message, product_id, None)
                 if _hit:
                     _avg_saved = 0.015  # approx cost of one Claude reply
                     _hit.register_hit(_avg_saved)
@@ -2105,12 +2219,26 @@ CART & ORDERING RULES:
         forced_results = None
         if not product:
             try:
+                _msg_l = message.lower()
+                # v2.1.78 — don't inject a product rail under clearly NON-product
+                # intents (loyalty, orders, location, reviewers, fit, try-on,
+                # cart, checkout). It looked unprofessional (a watch rail under
+                # "what's my loyalty balance"). Skip the forced search then.
+                _NONPROD_TOOLS = (
+                    'get_loyalty_points', 'get_order_status', 'get_customer_orders',
+                    'get_company_location', 'get_reviewers', 'check_fit',
+                    'get_size_recommendation', 'start_virtual_tryon', 'get_cart',
+                    'start_checkout', 'complete_checkout', 'update_address',
+                    'get_payment_options', 'get_payment_link')
+                _is_nonprod = any(
+                    any(kw.lower() in _msg_l for kw in TOOL_TRIGGERS.get(tn, []))
+                    for tn in _NONPROD_TOOLS)
                 _wc = len(message.split())
-                _looks_like_product = _wc >= 2 or any(
-                    kw in message.lower() for kw in self._search_translations().keys()
+                _looks_like_product = (not _is_nonprod) and (_wc >= 2 or any(
+                    kw in _msg_l for kw in self._search_translations().keys()
                 ) or any(
-                    kw in message.lower() for kw in self._search_translations().values()
-                )
+                    kw in _msg_l for kw in self._search_translations().values()
+                ))
                 if _looks_like_product and len(message) >= 3:
                     sr = self._fn_search_products({'query': message, 'limit': 5})
                     if sr.get('products'):
@@ -2119,6 +2247,40 @@ CART & ORDERING RULES:
                 _logger.warning('forced search failed (non-fatal): %s', _fe)
 
         system_prompt = self._build_system_prompt(product)
+        # ── Beena Coach learned lessons (admin-approved, one-click applied) ──
+        try:
+            _lessons = self._get_param('learned_lessons', '')
+            if _lessons.strip():
+                # v2.1.95 — hard token guard: lessons can accumulate via the
+                # one-click Coach approve; never inject more than ~8KB.
+                system_prompt += (
+                    "\n\n=== LEARNED LESSONS (approved by admin — follow strictly) ===\n"
+                    + _lessons.strip()[:8000])
+            # v2.2.05 — PLATFORM FACTS: admin-editable knowledge about how
+            # the store currently works (delivery pricing, features going
+            # live, policies). Param: uellow_ai.platform_facts.
+            _facts = self._get_param('platform_facts', '')
+            if _facts.strip():
+                system_prompt += (
+                    "\n\n=== PLATFORM FACTS (current, authoritative) ===\n"
+                    + _facts.strip()[:4000])
+        except Exception:
+            pass
+        # v2.1.79 — category context when Beena is opened from a category page
+        # (no specific product). Lets her tailor suggestions to that section.
+        if category_id and not product:
+            try:
+                _cat = request.env['product.public.category'].sudo().browse(int(category_id))
+                if not _cat.exists():
+                    _cat = request.env['product.category'].sudo().browse(int(category_id))
+                if _cat.exists():
+                    system_prompt += (
+                        "\n\n=== CURRENT SECTION ===\n"
+                        "The customer is browsing the category: %s. "
+                        "Prioritise products and help relevant to this section."
+                        % _cat.name)
+            except Exception as _ce:
+                _logger.warning('category ctx failed (non-fatal): %s', _ce)
         if forced_results:
             _names = '\n'.join(
                 '- %s (id=%s, %s KD)' % (
@@ -2127,9 +2289,15 @@ CART & ORDERING RULES:
                 for pp in forced_results
             )
             system_prompt += (
-                "\n\n=== SEARCH RESULTS (already fetched for the customer's message) ===\n"
-                "These products WERE FOUND in our store and match the query. "
-                "Present them to the customer. NEVER say 'not found':\n" + _names + "\n"
+                "\n\n=== SEARCH RESULTS (closest matches already fetched) ===\n"
+                "These products EXIST in our store. If they genuinely match what "
+                "the customer asked for (or sent as an image), present them "
+                "confidently and NEVER say 'not found'. BUT if they are clearly a "
+                "DIFFERENT category than what was requested/shown (e.g. the "
+                "customer wants clothing but these are watches), do NOT pretend "
+                "they match — tell the customer we don't currently carry that "
+                "item, then offer these only as alternatives or invite them to "
+                "browse:\n" + _names + "\n"
             )
         model         = self._get_param('claude_model', 'claude-sonnet-4-6')
         max_tokens    = int(self._get_param('max_tokens', '1024'))
@@ -2257,8 +2425,12 @@ CART & ORDERING RULES:
             # Never cache questions about variable info (price/stock/colors) —
             # their answers change, so they must always be answered live.
             _is_variable = any(kw in (message or '').lower() for kw in self._variable_keywords())
+            _Cache2 = request.env['beena.qa.cache'].sudo()
+            _ctx_dep2 = (len((message or '').split()) < 3
+                         and not _Cache2.is_generic(message))
             if (self._get_param('cache_enabled', 'False') in ('True', '1', 'true')
-                    and final_text and not _is_negative and not _is_variable):
+                    and final_text and not _is_negative and not _is_variable
+                    and not _ctx_dep2):
                 _saved = self._compute_cost(total_in_tokens, total_out_tokens,
                                             total_cache_write, total_cache_read)
                 request.env['beena.qa.cache'].sudo().store(
