@@ -52,6 +52,12 @@
                                     <field name="show_cod_refund_teaser"/>
                                     <field name="show_cod_fee_note"/>
                                 </group>
+                                <group string="🇰🇼 Country-gated payments · KNET / Taly">
+                                    <field name="pay_knet_enabled"/>
+                                    <field name="pay_knet_kw_only" invisible="not pay_knet_enabled"/>
+                                    <field name="pay_taly_enabled"/>
+                                    <field name="pay_taly_kw_only" invisible="not pay_taly_enabled"/>
+                                </group>
                             </group>
                         </page>
 

@@ -74,6 +74,24 @@ class MobileAppSetting(models.Model):
              'summary when COD is selected, on THIS website. Display '
              'only — the fee is included in the delivery price anyway.')
 
+    # ── v2.2.46 — Country-gated payment methods ──────────────────────
+    # KNET and Taly are Kuwait services. Admins control whether they show
+    # at all and whether they are restricted to Kuwait storefronts only.
+    pay_knet_enabled = fields.Boolean(
+        string='Show KNET', default=True,
+        help='Offer the KNET payment option (routes through UPayments).')
+    pay_knet_kw_only = fields.Boolean(
+        string='KNET — Kuwait only', default=True,
+        help='Show KNET only when the storefront/country is Kuwait '
+             '(country = KW or currency = KWD). Off = show everywhere.')
+    pay_taly_enabled = fields.Boolean(
+        string='Show Taly (installments)', default=True,
+        help='Offer Taly 4-payment installments.')
+    pay_taly_kw_only = fields.Boolean(
+        string='Taly — Kuwait only', default=True,
+        help='Show Taly only when the storefront/country is Kuwait '
+             '(country = KW or currency = KWD). Off = show everywhere.')
+
     def cashback_for(self, total):
         """Resolve the cashback amount for an order total (0 if off)."""
         self.ensure_one()

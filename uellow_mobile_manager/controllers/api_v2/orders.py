@@ -1090,6 +1090,30 @@ class MobileOrdersAPI(http.Controller):
             providers = Provider.search(domain + [('website_id', '=', False)])
         if not providers:
             providers = Provider.search(domain)
+        # ── Country/currency context + admin toggles for KW-gated methods.
+        # KNET and Taly are Kuwait services; admins control visibility and
+        # the Kuwait-only restriction from Mobile App ▸ Settings ▸ Checkout.
+        try:
+            wcur = (website.company_id.currency_id.name
+                    if website and website.company_id else None) \
+                or request.env.company.currency_id.name
+        except Exception:
+            wcur = None
+        # When the country is known, trust it exactly (an explicit AE/SA must
+        # NOT be treated as Kuwait even though the default storefront currency
+        # is KWD). Only when the country is unknown do we fall back to the
+        # storefront currency as the Kuwait signal.
+        is_kuwait = (country_code == 'KW') if country_code else (wcur == 'KWD')
+        try:
+            _setting = app_setting()
+        except Exception:
+            _setting = None
+
+        def _pay_on(field, default=True):
+            return bool(getattr(_setting, field)) if _setting else default
+
+        knet_show = _pay_on('pay_knet_enabled') and (
+            not _pay_on('pay_knet_kw_only') or is_kuwait)
         # ── Curated list: Cash on Delivery + UPayments methods ──────────
         # The DB has accumulated many duplicate manual providers; the app only
         # needs a clean set. Online card methods (KNET / Visa·Mastercard /
@@ -1121,8 +1145,10 @@ class MobileOrdersAPI(http.Controller):
         if upay_prov:
             upay_logo = (img_url('payment.provider', upay_prov.id, 'image_128',
                                  unique=upay_prov.write_date) if upay_prov.image_128 else None)
-            subs = [
-                ('knet',       {'en': 'KNET',               'ar': 'كي نت'}),
+            subs = []
+            if knet_show:
+                subs.append(('knet', {'en': 'KNET', 'ar': 'كي نت'}))
+            subs += [
                 ('card',       {'en': 'Visa / Mastercard',  'ar': 'فيزا / ماستركارد'}),
                 ('apple_pay',  {'en': 'Apple Pay',          'ar': 'Apple Pay'}),
                 ('google_pay', {'en': 'Google Pay',         'ar': 'Google Pay'}),
@@ -1142,15 +1168,8 @@ class MobileOrdersAPI(http.Controller):
             taly_prov = Provider.search(
                 [('code', '=', 'taly'), ('state', 'in', ('enabled', 'test'))],
                 limit=1)
-            wcur = None
-            try:
-                wcur = (website.company_id.currency_id.name
-                        if website and website.company_id else None) \
-                    or request.env.company.currency_id.name
-            except Exception:
-                wcur = None
-            taly_ok = bool(taly_prov) and (
-                (country_code in ('', 'KW')) or wcur == 'KWD')
+            taly_ok = bool(taly_prov) and _pay_on('pay_taly_enabled') and (
+                not _pay_on('pay_taly_kw_only') or is_kuwait)
             if taly_ok:
                 taly_logo = (img_url('payment.provider', taly_prov.id,
                                      'image_128', unique=taly_prov.write_date)
