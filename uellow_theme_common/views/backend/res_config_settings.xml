@@ -155,6 +155,19 @@
                                 <label for="uc_app_banner_devices" class="col-lg-4 o_light_label"/>
                                 <field name="uc_app_banner_devices"/>
                             </div>
+                            <div class="row mt-2">
+                                <label for="uc_app_banner_frequency" class="col-lg-4 o_light_label"/>
+                                <field name="uc_app_banner_frequency"/>
+                            </div>
+                            <div class="row mt-2">
+                                <label for="uc_app_banner_dismiss_days" class="col-lg-4 o_light_label"/>
+                                <field name="uc_app_banner_dismiss_days"/>
+                            </div>
+                            <div class="row mt-2">
+                                <field name="uc_app_banner_ios_smart"/>
+                                <label for="uc_app_banner_ios_smart" class="o_light_label"
+                                       string="Use iOS native Smart Banner (auto-hides if app installed)"/>
+                            </div>
                         </div>
                     </setting>
 

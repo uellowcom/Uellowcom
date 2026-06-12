@@ -2,10 +2,22 @@
 <odoo>
     <template id="uellow_app_banner" name="Uellow App Smart Banner"
               inherit_id="website.layout" priority="99">
+        <!-- iOS native Smart App Banner: Safari shows it only when the app is
+             NOT installed, and the app-argument deep-links the current page
+             into the app. -->
+        <xpath expr="//head" position="inside">
+            <t t-if="website.uc_app_banner_enabled and website.uc_app_banner_ios_smart">
+                <meta name="apple-itunes-app"
+                      t-att-content="'app-id=6769010765, app-argument=' + request.httprequest.url"/>
+            </t>
+        </xpath>
         <xpath expr="//header" position="before">
             <div id="uellow-app-banner" style="display:none"
                  t-if="website.uc_app_banner_enabled"
-                 t-att-data-devices="website.uc_app_banner_devices or 'both'">
+                 t-att-data-devices="website.uc_app_banner_devices or 'both'"
+                 t-att-data-frequency="website.uc_app_banner_frequency or 'daily'"
+                 t-att-data-dismiss-days="website.uc_app_banner_dismiss_days or 7"
+                 t-att-data-ios-smart="website.uc_app_banner_ios_smart and '1' or '0'">
                 <div class="uab-inner">
                     <div class="uab-logo">
                         <img src="/web/image/website/1/favicon" alt="Uellow"/>

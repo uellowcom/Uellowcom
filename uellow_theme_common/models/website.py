@@ -150,6 +150,21 @@ class Website(models.Model):
          ('desktop', 'Desktop only')],
         string="Banner shows on", default='both',
         help="Which devices see the smart banner.")
+    uc_app_banner_frequency = fields.Selection(
+        [('always', 'Every visit'),
+         ('daily', 'Once a day'),
+         ('weekly', 'Once a week'),
+         ('once', 'Once ever')],
+        string="Banner frequency", default='daily',
+        help="How often a returning visitor sees the banner again.")
+    uc_app_banner_dismiss_days = fields.Integer(
+        "Hide after dismiss (days)", default=7,
+        help="When a visitor closes the banner, hide it for this many days.")
+    uc_app_banner_ios_smart = fields.Boolean(
+        "Use iOS native Smart Banner", default=True,
+        help="On iOS Safari, show Apple's native Smart App Banner instead of "
+             "the custom bar. It auto-hides if the app is already installed "
+             "and deep-links the current page into the app.")
 
     uc_footer_about = fields.Text(
         "Footer About Text", translate=True,
