@@ -42,8 +42,12 @@ class ImageBackfill(models.TransientModel):
     images_to_add = fields.Integer('High-res images to add', default=4)
     set_main_if_empty = fields.Boolean(
         'Set main image if missing', default=True)
+    promote_best_main = fields.Boolean(
+        'Promote largest gallery image to main', default=True,
+        help="After enriching, make the main image the highest-resolution one "
+             "available (fixes tiny/low-res mains even when a gallery exists).")
     replace_lowres_main = fields.Boolean(
-        'Replace low-resolution main image', default=False,
+        'Replace low-resolution main image (web search)', default=False,
         help="Off by default. When on, replaces the main image ONLY if the "
              "current one is below the width threshold AND a larger one is "
              "found. (Web images are matched by name — review afterwards.)")
@@ -155,6 +159,22 @@ class ImageBackfill(models.TransientModel):
                     })
                     added_here += 1
                     n_gallery += 1
+                # promote the largest available image to MAIN (fixes tiny/low-res
+                # mains even when a gallery already exists) — uses the product's
+                # own images, so it's safe and always the right product.
+                if self.promote_best_main:
+                    cur_w = self._img_width(product.image_1920) if product.image_1920 else 0
+                    best = None
+                    best_w = cur_w
+                    for g in product.product_template_image_ids:
+                        gw = self._img_width(g.image_1920)
+                        if gw > best_w:
+                            best_w = gw
+                            best = g
+                    if best is not None and best_w > cur_w:
+                        product.image_1920 = best.image_1920
+                        best.unlink()
+                        n_main += 1
                 n_done += 1
                 self.env.cr.commit()      # keep the lock short; survive timeouts
             except Exception as e:        # noqa: BLE001

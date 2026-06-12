@@ -23,6 +23,7 @@
                     <group string="What to add">
                         <field name="images_to_add"/>
                         <field name="set_main_if_empty"/>
+                        <field name="promote_best_main"/>
                         <field name="replace_lowres_main"/>
                         <field name="lowres_threshold" invisible="not replace_lowres_main"/>
                         <field name="dry_run"/>
