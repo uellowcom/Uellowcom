@@ -306,6 +306,15 @@ class ImportJobLine(models.Model):
             'list_price': self.new_price or 0.0,
             'type': 'consu',
         }
+        # Publish to the storefront on apply (the reviewer already approved it),
+        # so "applied" products actually appear on the website/app. Gated by the
+        # Smart Connector setting so it can be turned off.
+        try:
+            if self.env['uellow.connector.settings'].sudo().get_settings().get(
+                    'publish_set_published', True):
+                v['is_published'] = True
+        except Exception:
+            v['is_published'] = True
         if self.new_cost:
             v['standard_price'] = self.new_cost
         if self.new_barcode:
