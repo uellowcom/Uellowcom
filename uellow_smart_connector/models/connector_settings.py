@@ -178,6 +178,7 @@ class ConnectorSettings(models.TransientModel):
     feat_publish_studio = fields.Boolean('Enable Publish Studio', default=True)
     image_search_provider = fields.Selection([
         ('none',       'Disabled (manual / import image only)'),
+        ('free',       'Free — DuckDuckGo Images (no API key)'),
         ('google_cse', 'Google Programmable Search (CSE)'),
         ('serpapi',    'SerpAPI (Google Images)'),
         ('bing',       'Bing Image Search'),

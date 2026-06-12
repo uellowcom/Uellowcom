@@ -324,10 +324,15 @@ class ImportJobLinePublish(models.Model):
         s = self._settings()
         provider = s.get('image_search_provider') or 'none'
         key = (s.get('image_search_api_key') or '').strip()
-        if provider == 'none' or not key:
+        if provider == 'none':
+            return []
+        # 'free' needs no API key (scrapes Bing Images); the others require one.
+        if provider != 'free' and not key:
             return []
         q = sanitize_ai_text(query, 120)
         try:
+            if provider == 'free':
+                return self._free_image_urls(q, count)
             if provider == 'google_cse':
                 cx = (s.get('image_search_cx') or '').strip()
                 if not cx:
@@ -364,6 +369,47 @@ class ImportJobLinePublish(models.Model):
             _logger.warning('Publish Studio: image search (%s) failed: %s',
                             provider, e)
         return []
+
+    def _free_image_urls(self, q, count):
+        """Free image search — DuckDuckGo Images (no API key). Two steps:
+        fetch a `vqd` token, then hit the JSON image endpoint. Returns clean,
+        relevant full-resolution URLs in result order. Best-effort → []."""
+        import urllib.parse
+        out, seen = [], set()
+        headers = {
+            'User-Agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                           'AppleWebKit/537.36 (KHTML, like Gecko) '
+                           'Chrome/120.0 Safari/537.36'),
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://duckduckgo.com/',
+        }
+        qq = urllib.parse.quote(q)
+        try:
+            # 1) token
+            tok = requests.get('https://duckduckgo.com/?q=%s&iax=images&ia=images' % qq,
+                               headers=headers, timeout=_IMG_TIMEOUT)
+            m = re.search(r'vqd=["\']?([\d-]+)', tok.text) \
+                or re.search(r'vqd=([\d-]+)\&', tok.text)
+            if not m:
+                return []
+            vqd = m.group(1)
+            # 2) image JSON
+            r = requests.get(
+                'https://duckduckgo.com/i.js',
+                params={'l': 'us-en', 'o': 'json', 'q': q, 'vqd': vqd,
+                        'f': ',,,', 'p': '1'},
+                headers=headers, timeout=_IMG_TIMEOUT)
+            r.raise_for_status()
+            for it in (r.json().get('results') or []):
+                link = it.get('image')
+                if link and link.startswith('http') and link not in seen:
+                    seen.add(link)
+                    out.append(link)
+                    if len(out) >= count:
+                        break
+        except Exception as e:
+            _logger.info('Free (DuckDuckGo) image search failed: %s', e)
+        return out
 
     def action_pub_search_images(self):
         """Seed the import image + fetch fresh web candidates for each line."""
