@@ -120,6 +120,7 @@ class ImportJob(models.Model):
         ('queued',    'Queued'),
         ('parsing',   'Parsing file'),
         ('enriching', 'Enriching products'),
+        ('applying',  'Publishing to catalog'),
         ('done',      'Done'),
     ], string='Background phase', readonly=True, copy=False, tracking=True)
     bg_total = fields.Integer('Items to process', readonly=True, copy=False)
@@ -225,6 +226,8 @@ class ImportJob(models.Model):
             return self.bg_phase == 'enriching'
         if self.bg_phase == 'enriching':
             return self._bg_enrich_chunk() > 0
+        if self.bg_phase == 'applying':
+            return self._bg_apply_chunk() > 0
         return False
 
     def _bg_parse(self):
@@ -305,12 +308,12 @@ class ImportJob(models.Model):
         Works within a soft time budget then re-triggers itself so each tick
         stays short and the server is never blocked for long."""
         import time as _time
-        jobs = self.search([('bg_phase', 'in', ('queued', 'parsing', 'enriching'))])
+        jobs = self.search([('bg_phase', 'in', ('queued', 'parsing', 'enriching', 'applying'))])
         if not jobs:
             return
         deadline = _time.time() + 90      # keep each cron tick short
         for job in jobs:
-            while job.exists() and job.bg_phase in ('queued', 'parsing', 'enriching'):
+            while job.exists() and job.bg_phase in ('queued', 'parsing', 'enriching', 'applying'):
                 try:
                     has_more = job._bg_step()
                 except Exception:
@@ -326,7 +329,7 @@ class ImportJob(models.Model):
             if _time.time() > deadline:
                 break
         # If anything still needs work, run again right away.
-        if self.search_count([('bg_phase', 'in', ('queued', 'parsing', 'enriching'))]):
+        if self.search_count([('bg_phase', 'in', ('queued', 'parsing', 'enriching', 'applying'))]):
             self._bg_trigger()
 
     def _attach_embedded_candidates(self, lines, embedded):
@@ -1344,30 +1347,56 @@ class ImportJob(models.Model):
         targets.action_disable_continue_now()
 
     def action_apply_approved(self):
-        """Create/update the catalog for every APPROVED line. Non-approved lines
-        (pending / rejected) are left untouched — nothing is cancelled. The job
-        stays OPEN (review) so you can keep approving & applying in batches; it
-        only closes (Done) once no line still needs work."""
+        """QUEUE publishing of every APPROVED line to the catalog, in the
+        background, `bg_chunk` products at a time. Publishing many products
+        inline used to tie up the request; now it runs in batches via the
+        cron. Non-approved lines are left untouched."""
         self.ensure_one()
         approved = self.line_ids.filtered(lambda l: l.line_state == 'approved')
         if not approved:
             raise UserError(_('No approved lines to apply. Approve some lines first.'))
-        applied = 0
-        for line in approved:
-            line.action_apply()
-            applied += 1
-        # Keep working: only finish the job when nothing is left to decide/apply.
-        remaining = self.line_ids.filtered(
-            lambda l: l.line_state in ('pending', 'approved'))
-        self.state = 'review' if remaining else 'done'
-        if remaining:
-            self.message_post(body=_(
-                'Applied %d product(s). %d line(s) still pending — '
-                'job stays open for review.') % (applied, len(remaining)))
-        else:
-            self.message_post(body=_(
-                'Applied %d product(s). All lines processed — job done.')
-                % applied)
+        self.write({'bg_phase': 'applying', 'bg_total': len(approved),
+                    'bg_done': 0, 'bg_heartbeat': False})
+        self.env.cr.commit()
+        self._bg_trigger()
+        return {
+            'type': 'ir.actions.client', 'tag': 'display_notification',
+            'params': {
+                'title': _('Publishing queued'),
+                'message': _('Publishing %d product(s) in the background, %d at '
+                             'a time. Use Refresh to watch progress.')
+                % (len(approved), self.bg_chunk or 10),
+                'type': 'success', 'sticky': False,
+                'next': {'type': 'ir.actions.act_window',
+                         'res_model': 'uellow.import.job', 'res_id': self.id,
+                         'view_mode': 'form', 'views': [[False, 'form']]},
+            },
+        }
+
+    def _bg_apply_chunk(self):
+        """Publish the next `bg_chunk` approved lines. Returns pending count."""
+        chunk_n = max(1, self.bg_chunk or 10)
+        pending = self.line_ids.filtered(lambda l: l.line_state == 'approved')
+        if not pending:
+            remaining = self.line_ids.filtered(
+                lambda l: l.line_state in ('pending', 'approved'))
+            self.write({'bg_phase': 'done',
+                        'state': 'review' if remaining else 'done'})
+            self.message_post(body=_('Publishing complete (%d product(s)).')
+                              % (self.bg_total or 0))
+            self.env.cr.commit()
+            return 0
+        for line in pending[:chunk_n]:
+            try:
+                line.action_apply()
+            except Exception:
+                _logger.exception('Apply failed for line %s', line.id)
+                # don't let one bad line wedge the batch; mark it rejected
+                line.line_state = 'rejected'
+        self.bg_done = (self.bg_total or 0) - len(
+            self.line_ids.filtered(lambda l: l.line_state == 'approved'))
+        self.env.cr.commit()
+        return len(self.line_ids.filtered(lambda l: l.line_state == 'approved'))
 
     def action_rollback(self):
         """Restore products to their pre-import state using rollback_data.

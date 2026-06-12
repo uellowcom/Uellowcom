@@ -43,7 +43,7 @@
                   invisible="state not in ('draft','error')"/>
           <button name="action_refresh" string="🔄 Refresh"
                   type="object"
-                  invisible="bg_phase not in ('queued','parsing','enriching')"
+                  invisible="bg_phase not in ('queued','parsing','enriching','applying')"
                   help="Reload to see the latest background progress."/>
           <button name="action_approve_safe" string="✅ Approve Safe"
                   type="object"
@@ -88,7 +88,7 @@
           </div>
           <field name="bg_phase" invisible="1"/>
           <div class="alert alert-info" role="alert"
-               invisible="bg_phase not in ('queued','parsing','enriching')">
+               invisible="bg_phase not in ('queued','parsing','enriching','applying')">
             <strong>Processing in the background</strong> —
             phase: <field name="bg_phase" readonly="1" nolabel="1" class="oe_inline"/>.
             <field name="bg_done" readonly="1" nolabel="1" class="oe_inline"/> /
