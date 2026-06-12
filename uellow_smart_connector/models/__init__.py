@@ -15,3 +15,5 @@ from . import supplier_scorecard
 from . import copilot
 from . import market_pricing
 from . import competitor_discovery
+
+from . import image_backfill

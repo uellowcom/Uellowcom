@@ -30,6 +30,7 @@
         'views/dead_stock_views.xml',
         'views/connector_settings_views.xml',
         'views/menus.xml',
+        'views/image_backfill_views.xml',
         'views/translation_views.xml',
         'views/reorder_views.xml',
         'views/supplier_scorecard_views.xml',

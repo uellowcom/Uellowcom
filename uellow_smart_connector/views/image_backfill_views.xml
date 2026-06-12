@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_image_backfill_form" model="ir.ui.view">
+        <field name="name">uellow.image.backfill.form</field>
+        <field name="model">uellow.image.backfill</field>
+        <field name="arch" type="xml">
+            <form string="Image Backfill">
+                <div class="alert alert-info" role="alert">
+                    Enrich already-imported products that have only one (or a
+                    low-res) image with extra high-resolution photos from your
+                    image-search provider. <b>Add-only</b> — it never deletes an
+                    existing image. Run a <b>Dry run</b> first to see the count.
+                </div>
+                <group>
+                    <group string="Which products">
+                        <field name="scope_categ_id" options="{'no_create': True}"/>
+                        <field name="scope_brand_id" options="{'no_create': True}"/>
+                        <field name="published_only"/>
+                        <field name="only_few_images"/>
+                        <field name="max_existing" invisible="not only_few_images"/>
+                        <field name="limit"/>
+                    </group>
+                    <group string="What to add">
+                        <field name="images_to_add"/>
+                        <field name="set_main_if_empty"/>
+                        <field name="replace_lowres_main"/>
+                        <field name="lowres_threshold" invisible="not replace_lowres_main"/>
+                        <field name="dry_run"/>
+                    </group>
+                </group>
+                <field name="result_html" readonly="1"/>
+                <footer>
+                    <button name="action_run" type="object" string="Run Backfill"
+                            class="btn-primary"
+                            confirm="This will fetch and attach images to live products. Continue?"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_image_backfill" model="ir.actions.act_window">
+        <field name="name">Image Backfill</field>
+        <field name="res_model">uellow.image.backfill</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_sc_image_backfill" name="Image Backfill"
+              parent="menu_sc_root"
+              action="action_image_backfill" sequence="55"/>
+</odoo>
