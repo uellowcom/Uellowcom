@@ -366,13 +366,19 @@ class TranslateJob(models.Model):
         return bool(en) and (not ar or ar == en)
 
     def _ai_client(self):
-        """Return (anthropic_client, model) or (None, None) when unavailable."""
+        """Return (anthropic_client, model) or (None, None) when unavailable.
+
+        EN→AR translation is a simple task, so default to the much cheaper
+        Haiku model (~10x cheaper than Sonnet) for a big token-cost saving;
+        an admin can override via `uellow.sc.translate_model`."""
         api_key, model = resolve_ai_config(self.env)
         if not api_key:
             return None, None
+        tmodel = (self.env['ir.config_parameter'].sudo()
+                  .get_param('uellow.sc.translate_model') or 'claude-haiku-4-5').strip()
         try:
             import anthropic
-            return anthropic.Anthropic(api_key=api_key, timeout=_AI_TIMEOUT_S), model
+            return anthropic.Anthropic(api_key=api_key, timeout=_AI_TIMEOUT_S), (tmodel or model)
         except ImportError:
             _logger.warning('anthropic package not installed — translation skipped')
             return None, None

@@ -2313,7 +2313,7 @@ CART & ORDERING RULES:
                 "browse:\n" + _names + "\n"
             )
         model         = self._get_param('claude_model', 'claude-sonnet-4-6')
-        max_tokens    = int(self._get_param('max_tokens', '1024'))
+        max_tokens    = int(self._get_param('max_tokens', '768'))
         messages      = session.get_messages()
         active_tools  = self._select_tools(message)
 

@@ -1049,6 +1049,9 @@ class ImportJob(models.Model):
         if ICP.get_param('uellow.sc.autotranslate_names', '1') not in ('1', 'True', 'true'):
             return
         api_key, model = resolve_ai_config(self.env)
+        # Name translation is simple — use the cheaper Haiku model (~10x cheaper)
+        # unless an admin overrides via uellow.sc.translate_model.
+        model = (ICP.get_param('uellow.sc.translate_model') or 'claude-haiku-4-5').strip() or model
         if not api_key:
             _logger.warning('Arabic-name backfill: no Anthropic API key, skipping')
             return
