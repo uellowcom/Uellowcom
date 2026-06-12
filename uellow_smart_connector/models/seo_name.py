@@ -123,9 +123,11 @@ class ProductTemplateSeoName(models.Model):
 
     _PRICE_RE = re.compile(
         r'([0-9][0-9.,]*\s*(KD|KWD|USD|\$|د\.ك|دينار|فلس))|(\b(KD|KWD)\s*[0-9][0-9.,]*)', re.I)
+    # Arabic alternatives need explicit non-letter boundaries — \b doesn't work
+    # for Arabic, so "عمان" would otherwise match inside "يدعمان".
     _COUNTRY_RE = re.compile(
         r'\b(Kuwait|Saudi(?: Arabia)?|UAE|Emirates|Qatar|Bahrain|Oman)\b|'
-        r'(الكويت|السعودية|الإمارات|قطر|البحرين|عُمان|عمان)')
+        r'(?<![؀-ۿ])(الكويت|السعودية|الإمارات|قطر|البحرين|عُمان|عمان)(?![؀-ۿ])')
 
     def _sc_desc_needs_clean(self):
         self.ensure_one()
