@@ -40,3 +40,5 @@ access_profit_mgr,sc.profit.mgr,model_uellow_sc_profit,uellow_smart_connector.gr
 access_profit_admin,sc.profit.admin,model_uellow_sc_profit,base.group_system,1,1,1,1
 access_image_backfill_mgr,image.backfill.mgr,model_uellow_image_backfill,uellow_smart_connector.group_sc_manager,1,1,1,1
 access_image_backfill_admin,image.backfill.admin,model_uellow_image_backfill,base.group_system,1,1,1,1
+access_seo_name_cleanup_mgr,seo.name.cleanup.mgr,model_uellow_seo_name_cleanup,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_seo_name_cleanup_admin,seo.name.cleanup.admin,model_uellow_seo_name_cleanup,base.group_system,1,1,1,1

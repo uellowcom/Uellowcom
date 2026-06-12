@@ -1149,14 +1149,17 @@ class ImportJob(models.Model):
         ar_re = re.compile(u'[؀-ۿ]')
         sysmsg = (
             "You are a senior bilingual (English + Gulf Arabic) e-commerce copywriter for "
-            "Uellow, a Kuwait electronics & lifestyle store. For each product NAME, write a "
-            "short persuasive description. English body 45-80 words, clean. Arabic body "
-            "natural Gulf/MSA Arabic (NOT literal), 45-80 words. Keep brands, model numbers "
-            "and units in Latin. Never invent fake specs. "
+            "Uellow, a multi-country online electronics & lifestyle store. For each product "
+            "NAME, write a short persuasive description. English body 45-80 words, clean. "
+            "Arabic body natural Gulf/MSA Arabic (NOT literal), 45-80 words. Keep brands, "
+            "model numbers and units in Latin. Never invent fake specs. "
             "NEVER mention price, cost, currency (KWD/KD/دينار/د.ك/فلس/USD/$), discounts, "
             "percentages off, savings, or words like 'only', 'بسعر', 'خصم', 'وفّر' — the "
-            "price is dynamic and lives elsewhere on the page. Describe value and benefits, "
-            "not money. Return ONLY a JSON object mapping the number (as a string) to "
+            "price is dynamic and lives elsewhere on the page. "
+            "NEVER name a specific country (Kuwait/الكويت, Saudi/السعودية, UAE/الإمارات, "
+            "Qatar, Bahrain, Oman …) — the store serves many countries; keep delivery/trust "
+            "lines generic. Describe value and benefits, not money or geography. Return ONLY "
+            "a JSON object mapping the number (as a string) to "
             "{\"en\":\"...\",\"ar\":\"...\"} — no code fences.")
         recs = list(todo)
         done = 0

@@ -57,6 +57,9 @@ _PARAMS = [
     # Daily safety-net cron: auto-translate any published product still missing
     # an Arabic name (catches manual/Beena/Publish-Studio products too).
     ('autotranslate_names',   'uellow.sc.autotranslate_names', True,                                     bool),
+    # Daily cron: rewrite over-long imported product names into concise,
+    # SEO-friendly titles (brand + model + type + key spec + colour).
+    ('seo_shorten_names',     'uellow.sc.seo_shorten_names',   True,                                     bool),
 ]
 
 
@@ -196,6 +199,11 @@ class ConnectorSettings(models.TransientModel):
         help='A daily job fills any published product that still has no Arabic '
              'name or description, so nothing stays English-only on the /ar '
              'storefront. مهمة يومية تترجم أسماء وأوصاف المنتجات المنشورة التي بلا عربي.')
+    seo_shorten_names = fields.Boolean(
+        'Auto-shorten long product names for SEO (daily)', default=True,
+        help='A daily job rewrites over-long imported names into concise '
+             'SEO-friendly titles (brand + model + type + key spec + colour). '
+             'مهمة يومية تختصر الأسماء الطويلة إلى عناوين منسّقة مناسبة للسيو.')
 
     @api.constrains('anthropic_api_key')
     def _check_api_key(self):

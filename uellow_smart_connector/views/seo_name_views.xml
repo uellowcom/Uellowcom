@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_seo_name_cleanup_form" model="ir.ui.view">
+        <field name="name">uellow.seo.name.cleanup.form</field>
+        <field name="model">uellow.seo.name.cleanup</field>
+        <field name="arch" type="xml">
+            <form string="SEO Name Cleanup">
+                <div class="alert alert-info" role="alert">
+                    Rewrite long imported product names into concise,
+                    SEO-friendly titles (brand + model + type + key spec + colour).
+                    Old URLs keep working (resolved by product ID). Always start
+                    with a <b>Dry run</b> to preview.
+                </div>
+                <group>
+                    <group string="Which products">
+                        <field name="scope_categ_id" options="{'no_create': True}"/>
+                        <field name="scope_brand_id" options="{'no_create': True}"/>
+                        <field name="published_only"/>
+                        <field name="long_only"/>
+                        <field name="min_words" invisible="not long_only"/>
+                        <field name="limit"/>
+                    </group>
+                    <group string="Mode">
+                        <field name="dry_run"/>
+                    </group>
+                </group>
+                <field name="result_html" readonly="1"/>
+                <footer>
+                    <button name="action_run" type="object" string="Run" class="btn-primary"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_seo_name_cleanup" model="ir.actions.act_window">
+        <field name="name">SEO Name Cleanup</field>
+        <field name="res_model">uellow.seo.name.cleanup</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_sc_seo_name_cleanup" name="SEO Name Cleanup"
+              parent="menu_sc_root"
+              action="action_seo_name_cleanup" sequence="56"/>
+
+    <record id="cron_sc_shorten_names" model="ir.cron">
+        <field name="name">Smart Connector: SEO-shorten long product names</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_sc_shorten_names()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

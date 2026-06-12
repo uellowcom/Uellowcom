@@ -17,3 +17,4 @@ from . import market_pricing
 from . import competitor_discovery
 
 from . import image_backfill
+from . import seo_name
