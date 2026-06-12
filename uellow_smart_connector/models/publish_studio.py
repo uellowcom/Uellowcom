@@ -43,6 +43,31 @@ _IMG_MAX_BYTES = 6 * 1024 * 1024
 _UA = 'Mozilla/5.0 (compatible; Uellow-SmartConnector/1.0)'
 
 
+def _hires_url(url):
+    """Rewrite common thumbnail/CDN URLs to their full-resolution variant.
+    Returns the upgraded URL, or '' if no known pattern applies. Best-effort:
+    the caller still falls back to the original on a failed fetch."""
+    if not url:
+        return ''
+    u = url
+    # Google user content / Google Images CDN: ...=s120 / =w200-h200 / =s64-c
+    if 'googleusercontent.com' in u or 'ggpht.com' in u:
+        u = re.sub(r'=[swh]\d+(-[a-z0-9-]+)?$', '=s0', u)
+    # Shopify CDN: name_small.jpg / _medium / _grande / _240x / _100x100
+    u = re.sub(r'_(?:pico|icon|thumb|small|compact|medium|large|grande|'
+               r'\d{1,4}x\d{0,4})(?=\.(?:jpe?g|png|webp|gif)(?:\?|$))', '_1024x1024', u)
+    # Amazon: ._SL160_. / ._AC_SX300_. / ._SY450_.  → strip the size modifier
+    u = re.sub(r'\._[A-Z]{2}[A-Z0-9_,]*_\.', '.', u)
+    # Generic query-string thumb sizing: ?w=200&h=200 / &width=150 / &size=small
+    u = re.sub(r'([?&])(?:w|h|width|height)=\d+', r'\1', u)
+    u = re.sub(r'([?&])(?:size|quality|q)=(?:small|thumb|low|\d{1,2})\b', r'\1', u)
+    # tidy leftover separators
+    u = re.sub(r'\?&+', '?', u)
+    u = re.sub(r'&{2,}', '&', u)
+    u = re.sub(r'[?&]+$', '', u)
+    return u if u != url else ''
+
+
 def _media_type(raw):
     """Best-effort image mime detection from magic bytes (for Claude vision)."""
     if not raw:
@@ -103,26 +128,39 @@ class ImportImageCandidate(models.Model):
         ok, _reason = is_safe_public_url(url)
         if not ok:
             return None
-        try:
-            r = requests.get(url, timeout=_IMG_TIMEOUT, stream=True,
-                             headers={'User-Agent': _UA})
-            r.raise_for_status()
-            ctype = (r.headers.get('Content-Type') or '').lower()
-            if ctype and 'image' not in ctype:
-                return None
-            chunks, total = [], 0
-            for chunk in r.iter_content(chunk_size=64 * 1024):
-                chunks.append(chunk)
-                total += len(chunk)
-                if total > _IMG_MAX_BYTES:
-                    return None
-            raw = b''.join(chunks)
-            if not _media_type(raw):
-                return None
-            return base64.b64encode(raw)
-        except Exception as e:
-            _logger.info('Publish Studio: image fetch failed for %s: %s', url, e)
-            return None
+        # Try a higher-resolution variant first (thumbnails → full size); fall
+        # back to the original URL if the upgraded one fails or isn't safe.
+        candidates = []
+        hi = _hires_url(url)
+        if hi and hi != url and is_safe_public_url(hi)[0]:
+            candidates.append(hi)
+        candidates.append(url)
+        for cand in candidates:
+            try:
+                r = requests.get(cand, timeout=_IMG_TIMEOUT, stream=True,
+                                 headers={'User-Agent': _UA})
+                r.raise_for_status()
+                ctype = (r.headers.get('Content-Type') or '').lower()
+                if ctype and 'image' not in ctype:
+                    continue
+                chunks, total = [], 0
+                too_big = False
+                for chunk in r.iter_content(chunk_size=64 * 1024):
+                    chunks.append(chunk)
+                    total += len(chunk)
+                    if total > _IMG_MAX_BYTES:
+                        too_big = True
+                        break
+                if too_big:
+                    continue
+                raw = b''.join(chunks)
+                if not _media_type(raw):
+                    continue
+                return base64.b64encode(raw)
+            except Exception as e:
+                _logger.info('Publish Studio: image fetch failed for %s: %s', cand, e)
+                continue
+        return None
 
 
 # ──────────────────────────────────────────────────────────────────────────
