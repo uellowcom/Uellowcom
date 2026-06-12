@@ -8,6 +8,12 @@
       <list decoration-danger="severity == 'critical'"
             decoration-warning="severity == 'high'"
             decoration-muted="state == 'dismissed'">
+        <!-- v2.2.46 — batch-approve the ticked rows in one click. -->
+        <header>
+          <button name="action_confirm_selected" type="object"
+                  string="✅ Approve selected" class="btn-success"
+                  confirm="Approve all selected findings? Lessons apply to Beena instantly; code/data findings go to the developer batch."/>
+        </header>
         <field name="severity"/>
         <field name="category"/>
         <field name="source" optional="show"/>

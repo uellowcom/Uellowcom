@@ -136,6 +136,24 @@ def _int_list(v):
     return out
 
 
+def installments_min_amount(env):
+    """The Taly installments minimum order amount (0 if Taly absent)."""
+    try:
+        taly = env['payment.provider'].sudo().search(
+            [('code', '=', 'taly'), ('state', 'in', ('enabled', 'test'))],
+            limit=1)
+        return (taly.taly_min_order_amount or 0.0) if taly else 0.0
+    except Exception:
+        return 0.0
+
+
+def _installments_domain(env):
+    """Domain fragment selecting products that on their own qualify for Taly
+    installments (price ≥ the Taly minimum). Empty when Taly is off."""
+    tmin = installments_min_amount(env)
+    return [('list_price', '>=', tmin)] if tmin else []
+
+
 def resolve_products(env, props, lang, block=None):
     """Returns {items: [{id, name, slug, price, image, ...}, ...]}.
 
@@ -258,6 +276,15 @@ def resolve_products(env, props, lang, block=None):
             if tids:
                 dom.append(('product_tag_ids', 'in', tids))
         recs = Tmpl.search(dom, order='create_date desc', limit=limit)
+
+    elif source == 'installments':
+        # v2.2.46 — products eligible for Taly installments. Taly's gate is
+        # order-level (a minimum amount), so we surface published products
+        # priced at/above that minimum: each one alone qualifies for "pay in
+        # 4". Newest-expensive first so the row feels premium.
+        recs = Tmpl.search(
+            base_dom + _installments_domain(env),
+            order='list_price desc', limit=limit)
 
     elif source == 'discounted':
         # v2.1.76 — when a "Minimum discount %" filter is set, the small

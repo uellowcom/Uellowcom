@@ -223,7 +223,18 @@ class MobileCustomerNotification(models.Model):
                     'notification': {'title': title or '',
                                      'body': body or ''},
                     'data': {k: str(v) for k, v in (data or {}).items()},
-                    'android': {'priority': 'HIGH'},
+                    'android': {'priority': 'HIGH',
+                                'notification': {'sound': 'default'}},
+                    # v2.2.46 — iOS needs an explicit apns block, otherwise
+                    # FCM delivers a silent payload and nothing shows on the
+                    # lock screen / banner. alert + sound + badge make it ring.
+                    'apns': {
+                        'headers': {'apns-priority': '10'},
+                        'payload': {'aps': {
+                            'alert': {'title': title or '', 'body': body or ''},
+                            'sound': 'default', 'badge': 1,
+                            'mutable-content': 1}},
+                    },
                 }}, timeout=6)
             return r.status_code == 200
         except Exception:

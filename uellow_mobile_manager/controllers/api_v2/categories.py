@@ -6,13 +6,37 @@ tree           GET                           → full hierarchy
 detail         GET   /<id>                   → one category + children
 products       GET   /<id>/products?...      → products of a category
 """
+import time as _time
+
 from odoo import http
 from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, img_url, get_lang, bilingual,
+    get_website,
 )
 from .products import serialize_product_card, _domain_published_for_app
+
+# v2.2.46 — serialize_category does a recursive search_count PER category, so
+# the shop tree (roots + every child) fired dozens of expensive counts on each
+# open. The catalogue changes rarely, so cache the built tree/list payloads
+# (plain JSON, language-independent) for a few minutes per website.
+_CAT_CACHE = {}
+_CAT_TTL = 180
+
+
+def _cat_cached(key, builder):
+    now = _time.time()
+    v = _CAT_CACHE.get(key)
+    if v and now - v[1] < _CAT_TTL:
+        return v[0]
+    payload = builder()
+    _CAT_CACHE[key] = (payload, now)
+    if len(_CAT_CACHE) > 120:
+        for k in [k for k, val in _CAT_CACHE.items()
+                  if now - val[1] > 2 * _CAT_TTL]:
+            _CAT_CACHE.pop(k, None)
+    return payload
 
 
 def serialize_category(cat, with_children=False):
@@ -24,7 +48,7 @@ def serialize_category(cat, with_children=False):
         'id': cat.id,
         'name': bilingual(cat, 'name'),
         'parent_id': cat.parent_id.id if cat.parent_id else None,
-        'image': img_url('product.public.category', cat.id, 'image_512',
+        'image': img_url('product.public.category', cat.id, 'image_256',
                          unique=cat.write_date) if cat.image_1024 else None,
         'product_count': request.env['product.template'].sudo().search_count(
             _domain_published_for_app() + [('public_categ_ids', 'child_of', cat.id)]
@@ -51,7 +75,13 @@ class MobileCategoriesAPI(http.Controller):
             domain.append(('parent_id', '=', False))
         cats = Cat.search(domain, order='sequence asc, name asc')
         with_children = str(p.get('with_children', 'false')).lower() in ('1', 'true', 'yes')
-        return ok([serialize_category(c, with_children=with_children) for c in cats])
+        try:
+            wid = get_website().id
+        except Exception:
+            wid = 0
+        key = ('list', wid, p.get('parent_id') or 0, with_children)
+        return ok(_cat_cached(key, lambda: [
+            serialize_category(c, with_children=with_children) for c in cats]))
 
     @http.route('/api/mobile/v2/categories/tree', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
@@ -60,7 +90,12 @@ class MobileCategoriesAPI(http.Controller):
         roots = request.env['product.public.category'].sudo().search(
             [('parent_id', '=', False)], order='sequence asc, name asc',
         )
-        return ok([serialize_category(c, with_children=True) for c in roots])
+        try:
+            wid = get_website().id
+        except Exception:
+            wid = 0
+        return ok(_cat_cached(('tree', wid), lambda: [
+            serialize_category(c, with_children=True) for c in roots]))
 
     @http.route('/api/mobile/v2/categories/<int:category_id>', type='http',
                 auth='public', methods=['GET', 'OPTIONS'], csrf=False)

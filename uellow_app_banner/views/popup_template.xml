@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- v2.2.46 — polished "Get the app" popup for ALL website visitors.
+         Gated + configured from Website ▸ Settings ▸ App-Download Popup. -->
+    <template id="uellow_app_popup" name="Uellow App Download Popup"
+              inherit_id="website.layout" priority="100">
+        <xpath expr="//footer" position="after">
+            <t t-if="website.uc_app_popup_enabled">
+                <div id="uellow-app-popup" class="uap-overlay" style="display:none"
+                     t-att-data-delay="(website.uc_app_popup_delay or 4) * 1000">
+                    <div class="uap-card">
+                        <button class="uap-close" aria-label="Close">×</button>
+                        <div class="uap-phone">📱</div>
+                        <div class="uap-icon">
+                            <img src="/web/image/website/1/favicon" alt="Uellow"/>
+                        </div>
+                        <h3 class="uap-title"
+                            t-esc="website.uc_app_popup_title or 'Get the Uellow app'"/>
+                        <p class="uap-text" t-esc="website.uc_app_popup_text or ''"/>
+                        <div class="uap-badges">
+                            <a class="uap-badge uap-ios" target="_blank" rel="noopener"
+                               t-att-href="website.uc_app_ios_url or '#'">
+                                <i class="fa fa-apple"/><span>App Store</span>
+                            </a>
+                            <a class="uap-badge uap-android" target="_blank" rel="noopener"
+                               t-att-href="website.uc_app_android_url or '#'">
+                                <i class="fa fa-google"/><span>Google Play</span>
+                            </a>
+                            <a t-if="website.uc_app_huawei_url"
+                               class="uap-badge uap-huawei" target="_blank" rel="noopener"
+                               t-att-href="website.uc_app_huawei_url">
+                                <i class="fa fa-mobile"/><span>AppGallery</span>
+                            </a>
+                        </div>
+                        <button class="uap-dismiss">
+                            <span class="en">Maybe later</span>
+                            <span class="ar">ربما لاحقاً</span>
+                        </button>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>

@@ -289,6 +289,33 @@ class UellowAdminAppController(http.Controller):
             }
         except Exception:
             data['pending'] = {'quotations': 0, 'to_deliver': 0}
+
+        # ── live / realtime snapshot (v2.2.46) ──
+        # Who is on the app right now + reach metrics the admin actually
+        # wants on the home screen.
+        live = {}
+        try:
+            MS = env['mobile.session'].sudo()
+            now = datetime.now()
+            t0s = today0.strftime('%Y-%m-%d %H:%M:%S')
+            live['online_now'] = MS.search_count([
+                ('last_activity', '>=', now - timedelta(minutes=5)),
+                ('is_revoked', '=', False)])
+            live['active_30m'] = MS.search_count([
+                ('last_activity', '>=', now - timedelta(minutes=30)),
+                ('is_revoked', '=', False)])
+            live['active_today'] = MS.search_count([
+                ('last_activity', '>=', t0s), ('is_revoked', '=', False)])
+            P = env['res.partner'].sudo()
+            live['push_reach'] = P.search_count([('fcm_token', '!=', False)])
+            live['new_customers_today'] = P.search_count([
+                ('create_date', '>=', t0s), ('customer_rank', '>', 0)])
+            live['carts_active'] = So.search_count([
+                ('state', '=', 'draft'), ('website_id', '!=', False),
+                ('write_date', '>=', now - timedelta(hours=2))])
+        except Exception:
+            _logger.debug('live snapshot failed', exc_info=True)
+        data['live'] = live
         return ok(data)
 
     # ─── orders list ──────────────────────────────────────────────────

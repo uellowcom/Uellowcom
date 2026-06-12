@@ -1,9 +1,35 @@
 """Flash sale — /api/mobile/v2/flash-sale/*"""
+import time as _time
+
 from odoo import fields, http
 from odoo.http import request
 
-from ._common import safe_endpoint, ok, fail, get_lang, bilingual, img_url  # noqa: F401, get_website
+from ._common import (  # noqa: F401
+    safe_endpoint, ok, fail, get_lang, bilingual, img_url, get_website,
+)
 from .products import serialize_product_card
+
+# v2.2.46 — the list endpoint serialized every product of every sale on each
+# open (heavy). Cache the fully-built payload per (website, lang, period) for
+# a short TTL so repeat opens / pull-to-refresh are instant.
+_FLASH_CACHE = {}          # key -> (payload, ts)
+_FLASH_TTL = 60
+
+
+def _flash_cache_get(key):
+    v = _FLASH_CACHE.get(key)
+    if v and _time.time() - v[1] < _FLASH_TTL:
+        return v[0]
+    return None
+
+
+def _flash_cache_set(key, payload):
+    now = _time.time()
+    _FLASH_CACHE[key] = (payload, now)
+    if len(_FLASH_CACHE) > 200:
+        for k in [k for k, val in _FLASH_CACHE.items()
+                  if now - val[1] > 2 * _FLASH_TTL]:
+            _FLASH_CACHE.pop(k, None)
 
 
 def _serialize_sale(sale, lang, with_products=True):
@@ -23,7 +49,7 @@ def _serialize_sale(sale, lang, with_products=True):
                     'id': c.id,
                     'name': bilingual(c, 'name'),
                     'image': img_url('product.public.category', c.id,
-                                     'image_512', unique=c.write_date)
+                                     'image_256', unique=c.write_date)
                             if c.image_512 else None,
                     'count': 1,
                 }
@@ -83,7 +109,13 @@ class MobileFlashSaleAPI(http.Controller):
             sales = sales.filtered(lambda s: s.end_date and s.end_date < now)
         # period == 'all' (and the default) returns everything so the UI
         # can render sane empty states + period chips without re-fetching.
-        return ok([_serialize_sale(s, lang) for s in sales])
+        ckey = (website.id, lang, period)
+        cached = _flash_cache_get(ckey)
+        if cached is not None:
+            return ok(cached)
+        payload = [_serialize_sale(s, lang) for s in sales]
+        _flash_cache_set(ckey, payload)
+        return ok(payload)
 
     @http.route('/api/mobile/v2/flash-sales/<int:sale_id>', type='http',
                 auth='public', methods=['GET', 'OPTIONS'], csrf=False)

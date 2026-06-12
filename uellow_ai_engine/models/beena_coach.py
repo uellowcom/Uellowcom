@@ -132,6 +132,24 @@ class BeenaCoachFinding(models.Model):
             lessons.action_apply_lesson()
         (self - lessons).write({'state': 'approved'})
 
+    def action_confirm_selected(self):
+        """v2.2.46 — list-header batch button: Approve every SELECTED row in
+        one click (only the ones still 'new'; others are silently skipped).
+        In Odoo list views a header object-button receives the ticked records
+        as `self`."""
+        targets = self.filtered(lambda r: r.state == 'new')
+        if targets:
+            targets.action_confirm()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Coach',
+                'message': '%d finding(s) approved.' % len(targets),
+                'type': 'success', 'sticky': False,
+            },
+        }
+
     def action_approve(self):
         self.write({'state': 'approved'})
 

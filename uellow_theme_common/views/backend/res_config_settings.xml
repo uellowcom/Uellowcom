@@ -126,6 +126,26 @@
                         <field name="uc_app_huawei_url" placeholder="https://appgallery.huawei.com/..."/>
                     </setting>
 
+                    <h3 class="mt-4 mb-2 fw-bold">App-Download Popup</h3>
+                    <setting id="uc_app_popup_set" string="Show App-Download Popup"
+                             help="A polished centred popup inviting visitors to install the app. Shown once per visit.">
+                        <field name="uc_app_popup_enabled"/>
+                        <div class="content-group mt-2" invisible="not uc_app_popup_enabled">
+                            <div class="row">
+                                <label for="uc_app_popup_delay" class="col-lg-4 o_light_label"/>
+                                <field name="uc_app_popup_delay"/>
+                            </div>
+                            <div class="row mt-2">
+                                <label for="uc_app_popup_title" class="col-lg-4 o_light_label"/>
+                                <field name="uc_app_popup_title" placeholder="Get the Uellow app"/>
+                            </div>
+                            <div class="row mt-2">
+                                <label for="uc_app_popup_text" class="col-lg-4 o_light_label"/>
+                                <field name="uc_app_popup_text" placeholder="Shop faster, track orders live…"/>
+                            </div>
+                        </div>
+                    </setting>
+
                     <h3 class="mt-4 mb-2 fw-bold">Beena AI Icon</h3>
                     <setting id="uc_beena_icon_set" string="Custom Beena Icon"
                              help="Optional custom image shown inside the mobile nav Beena disc. Leave empty to use the default magic-wand icon.">

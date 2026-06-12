@@ -716,6 +716,16 @@ class MobileProductsAPI(http.Controller):
         if p.get('on_sale') in ('1', 'true', True):
             domain.append(('compare_list_price', '>', 0))
 
+        # v2.2.46 — installments-eligible only (price ≥ Taly minimum). Powers
+        # the "See all" of the new Installments home block.
+        if p.get('installments') in ('1', 'true', True):
+            try:
+                from odoo.addons.uellow_mobile_pages.models.block_resolver \
+                    import _installments_domain
+                domain += _installments_domain(request.env)
+            except Exception:
+                pass
+
         # v2.0.89 — Free shipping filter. The DB-level filter only covers
         # products explicitly flagged; products inheriting via category /
         # tag get filtered Python-side below.
@@ -997,7 +1007,8 @@ class MobileProductsAPI(http.Controller):
             return fail('BAD_REQUEST', 'Invalid seed/page')
         per_page = max(1, min(per_page, 40))
 
-        domain = _domain_published_for_app()
+        base_domain = _domain_published_for_app()
+        domain = list(base_domain)
         # v2.0.37 — accept narrowing: ?category_id=…&sort=…
         cat_id = p.get('category_id')
         if cat_id:
@@ -1050,7 +1061,16 @@ class MobileProductsAPI(http.Controller):
                 all_ids = list(cached[0])
             else:
                 all_ids = Tmpl.search(domain).ids
-                _EXPLORE_IDS_CACHE[_cache_key] = (tuple(all_ids), now)
+                # v2.2.46 — a narrowing filter (category/promotion) can yield
+                # zero. NEVER leave "Explore more" empty: fall back to the
+                # base published feed so the block always shows products.
+                if not all_ids and domain != base_domain:
+                    all_ids = Tmpl.search(base_domain).ids
+                    _cache_key = _freeze(base_domain)
+                # Only cache a NON-empty result — a transient 0 would otherwise
+                # stick for 60s and the block would look broken to everyone.
+                if all_ids:
+                    _EXPLORE_IDS_CACHE[_cache_key] = (tuple(all_ids), now)
                 # Bound the cache — drop entries older than 5 minutes
                 stale = [k for k, v in _EXPLORE_IDS_CACHE.items() if now - v[1] > 300]
                 for k in stale: _EXPLORE_IDS_CACHE.pop(k, None)

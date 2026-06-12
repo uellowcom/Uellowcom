@@ -68,7 +68,7 @@ html:not([lang^="ar"]) #uellow-app-banner .ar { display: none; }
 /* RTL flip for Arabic */
 html[lang^="ar"] #uellow-app-banner .uab-inner { direction: rtl; }
 
-/* Hide on desktop */
+/* v2.2.46 — show on desktop too (was hidden); just widen the centred row. */
 @media (min-width: 769px) {
-    #uellow-app-banner { display: none !important; }
+    #uellow-app-banner .uab-inner { max-width: 960px; }
 }

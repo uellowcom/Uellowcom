@@ -1,0 +1,85 @@
+/* v2.2.46 — App-download popup. Brand gold/brown, centred, animated. */
+.uap-overlay {
+    position: fixed; inset: 0;
+    background: rgba(20, 10, 0, 0.55);
+    backdrop-filter: blur(3px);
+    z-index: 2000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 18px;
+    opacity: 0; transition: opacity .28s ease;
+}
+.uap-overlay.uap-show { opacity: 1; }
+
+.uap-card {
+    position: relative;
+    width: 100%; max-width: 380px;
+    background: #fff;
+    border-radius: 22px;
+    padding: 40px 26px 26px;
+    text-align: center;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .35);
+    transform: translateY(18px) scale(.96);
+    transition: transform .32s cubic-bezier(.2,.9,.3,1.2);
+}
+.uap-overlay.uap-show .uap-card { transform: translateY(0) scale(1); }
+
+.uap-phone {
+    font-size: 30px;
+    position: absolute; top: -2px; left: 50%; transform: translateX(-50%);
+    opacity: .12;
+}
+.uap-icon {
+    width: 74px; height: 74px; margin: 0 auto 14px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #412402, #5a330a);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 24px rgba(65, 36, 2, .35);
+}
+.uap-icon img {
+    width: 46px; height: 46px; object-fit: contain;
+    border-radius: 12px; background: #fff; padding: 5px;
+}
+.uap-title {
+    font-size: 21px; font-weight: 900; color: #412402;
+    margin: 0 0 8px;
+}
+.uap-text {
+    font-size: 13.5px; color: #6b5a44; line-height: 1.55;
+    margin: 0 0 20px;
+}
+.uap-badges {
+    display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;
+}
+.uap-badge {
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    padding: 12px 16px; border-radius: 14px;
+    font-weight: 800; font-size: 14px; text-decoration: none;
+    transition: transform .12s ease, filter .12s ease;
+}
+.uap-badge:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.uap-badge i { font-size: 18px; }
+.uap-ios { background: #111; color: #fff; }
+.uap-android { background: #F5C320; color: #412402; }
+.uap-huawei { background: #c8102e; color: #fff; }
+
+.uap-dismiss {
+    background: transparent; border: none;
+    color: #9a8a72; font-size: 12.5px; font-weight: 700;
+    cursor: pointer; padding: 6px;
+}
+.uap-dismiss:hover { color: #6b5a44; }
+
+.uap-close {
+    position: absolute; top: 12px; right: 14px;
+    background: transparent; border: none;
+    font-size: 24px; line-height: 1; color: #b7a98f;
+    cursor: pointer;
+}
+.uap-close:hover { color: #412402; }
+
+/* Bilingual switch */
+html[lang^="ar"] .uap-overlay .en,
+html:not([lang^="ar"]) .uap-overlay .ar { display: none; }
+html[lang^="ar"] .uap-card { direction: rtl; }
+.uap-close { /* keep the close on the visual right in RTL too */ }
+html[lang^="ar"] .uap-close { right: auto; left: 14px; }

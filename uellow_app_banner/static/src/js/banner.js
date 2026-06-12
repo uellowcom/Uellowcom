@@ -12,7 +12,9 @@
 
     var ua = navigator.userAgent || '';
     var isMobile = /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|webOS|BlackBerry/i.test(ua);
-    if (!isMobile) return;
+    // v2.2.46 — used to early-return on desktop, so the banner NEVER appeared
+    // for anyone on a computer. Now it shows everywhere; on desktop the CTA
+    // jumps straight to the store, on mobile it tries the deep link first.
 
     // Hide for a week after dismissal
     try {
@@ -46,15 +48,17 @@
             var schemeUrl = 'uellow://' + path.replace(/^\//, '');
             var storeUrl;
             if (isIos) {
-                storeUrl = 'https://apps.apple.com/app/uellow/id0000000000';
+                storeUrl = 'https://apps.apple.com/app/id6769010765';
             } else if (isAndroid) {
                 storeUrl = 'https://play.google.com/store/apps/details?id=com.uellow.app';
             } else {
-                storeUrl = 'https://github.com/uellowcom/uellow-app/releases/latest';
+                storeUrl = 'https://play.google.com/store/apps/details?id=com.uellow.app';
             }
 
             cta.addEventListener('click', function (ev) {
                 ev.preventDefault();
+                // Desktop: no app to deep-link into — go straight to the store.
+                if (!isMobile) { window.open(storeUrl, '_blank'); return; }
                 var resolved = false;
                 function flagResolved() { resolved = true; }
                 document.addEventListener('visibilitychange', flagResolved, { once: true });

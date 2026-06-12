@@ -122,6 +122,23 @@ class Website(models.Model):
         "AppGallery URL",
         help="Optional Huawei AppGallery link. Empty = badge hidden.")
 
+    # ─── App-download popup (v2.2.46) ──────────────────────────────────
+    uc_app_popup_enabled = fields.Boolean(
+        "Show App-Download Popup", default=True,
+        help="A polished centred popup inviting site visitors to install "
+             "the Uellow app. Shown once per visit (per session).")
+    uc_app_popup_delay = fields.Integer(
+        "Popup Delay (seconds)", default=4,
+        help="How long after the page loads before the popup appears.")
+    uc_app_popup_title = fields.Char(
+        "Popup Title", translate=True, default="Get the Uellow app",
+        help="Headline of the app-download popup.")
+    uc_app_popup_text = fields.Char(
+        "Popup Subtitle", translate=True,
+        default="Shop faster, track orders live and earn points — "
+                "all in one app.",
+        help="Supporting line under the popup headline.")
+
     uc_footer_about = fields.Text(
         "Footer About Text", translate=True,
         default="Curated marketplace for the Gulf — premium brands, "
