@@ -2251,14 +2251,15 @@ CART & ORDERING RULES:
         try:
             _lessons = self._get_param('learned_lessons', '')
             if _lessons.strip():
-                # v2.2.46 — the Coach APPENDS the newest lessons at the end, so
-                # the old [:8000] head-cut fed Beena the OLDEST lessons and
-                # dropped every recent one. Keep the MOST RECENT lessons instead
-                # (line-aligned), with a larger ~16KB cap — prompt caching makes
-                # the bigger-but-stable block cheap after the first call.
+                # v2.2.47 — feed Beena ALL of the Coach's approved lessons
+                # (admin asked for every change, not just the newest). With
+                # prompt caching the large-but-stable block is written once and
+                # then served cheaply from cache on every later message. The
+                # 60KB cap is only a runaway guard; if it ever trips we keep the
+                # MOST RECENT lessons (line-aligned) since the Coach appends.
                 _ls = _lessons.strip()
-                if len(_ls) > 16000:
-                    _ls = _ls[-16000:]
+                if len(_ls) > 60000:
+                    _ls = _ls[-60000:]
                     _nl = _ls.find('\n')
                     if _nl != -1:
                         _ls = _ls[_nl + 1:]      # drop the partial first line
