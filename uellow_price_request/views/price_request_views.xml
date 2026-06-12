@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_price_request_form" model="ir.ui.view">
+        <field name="name">uellow.price.request.form</field>
+        <field name="model">uellow.price.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_generate_lines" type="object"
+                            string="Generate / Refresh List" class="btn-primary"
+                            icon="fa-refresh"/>
+                    <button name="action_print_report" type="object"
+                            string="Print Report (PDF)" class="btn-secondary"
+                            icon="fa-print"/>
+                    <button name="action_mark_sent" type="object"
+                            string="Mark Sent" invisible="state != 'draft'"/>
+                    <button name="action_apply_new_prices" type="object"
+                            string="Apply New Prices" class="btn-primary"
+                            icon="fa-check"
+                            confirm="This writes the supplier's New Price onto the live catalogue. Continue?"
+                            invisible="filled_count == 0"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,sent,received,applied"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Target">
+                            <field name="source_type"/>
+                            <field name="brand_id"
+                                   invisible="source_type != 'brand'"
+                                   required="source_type == 'brand'"
+                                   options="{'no_create': True}"/>
+                            <field name="vendor_id"
+                                   invisible="source_type != 'vendor'"
+                                   required="source_type == 'vendor'"/>
+                            <field name="supplier_id"
+                                   invisible="source_type != 'supplier'"
+                                   required="source_type == 'supplier'"/>
+                            <field name="categ_id"
+                                   invisible="source_type != 'category'"
+                                   required="source_type == 'category'"/>
+                            <field name="only_published"/>
+                            <field name="limit"/>
+                        </group>
+                        <group string="Report">
+                            <field name="date"/>
+                            <field name="currency_id"
+                                   options="{'no_create': True}"/>
+                            <field name="supplier_label"/>
+                            <field name="product_count"/>
+                            <field name="filled_count"/>
+                        </group>
+                    </group>
+                    <field name="note" placeholder="Instructions printed on the report for the supplier…"/>
+                    <notebook>
+                        <page string="Products" name="lines">
+                            <field name="line_ids">
+                                <list editable="bottom" create="0">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_tmpl_id" readonly="1"
+                                           force_save="1"/>
+                                    <field name="default_code"/>
+                                    <field name="barcode" optional="hide"/>
+                                    <field name="cost" optional="hide"/>
+                                    <field name="current_price"/>
+                                    <field name="new_price"/>
+                                    <field name="availability"/>
+                                    <field name="moq" optional="hide"/>
+                                    <field name="line_note" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_price_request_list" model="ir.ui.view">
+        <field name="name">uellow.price.request.list</field>
+        <field name="model">uellow.price.request</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="date"/>
+                <field name="source_type"/>
+                <field name="supplier_label"/>
+                <field name="product_count"/>
+                <field name="filled_count"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'sent'"
+                       decoration-success="state == 'applied'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_price_request" model="ir.actions.act_window">
+        <field name="name">Price Update Requests</field>
+        <field name="res_model">uellow.price.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a price-update request</p>
+            <p>Pick a brand or merchant, generate the product list, and print a
+               clean sheet to send your supplier for price updates.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_price_request_root" name="Price Updates"
+              parent="purchase.menu_purchase_root" sequence="90"/>
+    <menuitem id="menu_price_request" name="Supplier Price Requests"
+              parent="menu_price_request_root"
+              action="action_price_request" sequence="10"/>
+
+</odoo>

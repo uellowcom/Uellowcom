@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_price_request" model="ir.ui.view">
+        <field name="name">res.config.settings.price.request</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="purchase.res_config_settings_view_form_purchase"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[1]" position="before">
+                <block title="Supplier Price Requests" id="prr_block">
+                    <setting id="prr_allow_apply_set"
+                             string="Allow applying supplier prices"
+                             help="The 'Apply New Prices' button writes returned prices onto the live catalogue.">
+                        <field name="prr_allow_apply"/>
+                    </setting>
+                    <setting id="prr_default_note_set"
+                             string="Default supplier instructions"
+                             help="Pre-filled note printed on every price-update request.">
+                        <field name="prr_default_note" placeholder="Please return within 7 days…"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

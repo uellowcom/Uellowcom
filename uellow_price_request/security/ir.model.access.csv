@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_price_request_user,price.request.user,model_uellow_price_request,base.group_user,1,1,1,0
+access_price_request_manager,price.request.manager,model_uellow_price_request,base.group_system,1,1,1,1
+access_price_request_line_user,price.request.line.user,model_uellow_price_request_line,base.group_user,1,1,1,1
+access_price_request_line_manager,price.request.line.manager,model_uellow_price_request_line,base.group_system,1,1,1,1
