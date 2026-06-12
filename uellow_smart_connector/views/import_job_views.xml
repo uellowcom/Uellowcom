@@ -40,7 +40,11 @@
         <header>
           <button name="action_run" string="Run Import"
                   type="object" class="oe_highlight"
-                  invisible="state != 'draft'"/>
+                  invisible="state not in ('draft','error')"/>
+          <button name="action_refresh" string="🔄 Refresh"
+                  type="object"
+                  invisible="bg_phase not in ('queued','parsing','enriching')"
+                  help="Reload to see the latest background progress."/>
           <button name="action_approve_safe" string="✅ Approve Safe"
                   type="object"
                   invisible="state != 'review'"
@@ -82,6 +86,18 @@
           <div class="oe_title">
             <h1><field name="name" readonly="1"/></h1>
           </div>
+          <field name="bg_phase" invisible="1"/>
+          <div class="alert alert-info" role="alert"
+               invisible="bg_phase not in ('queued','parsing','enriching')">
+            <strong>Processing in the background</strong> —
+            phase: <field name="bg_phase" readonly="1" nolabel="1" class="oe_inline"/>.
+            <field name="bg_done" readonly="1" nolabel="1" class="oe_inline"/> /
+            <field name="bg_total" readonly="1" nolabel="1" class="oe_inline"/> products enriched.
+            <field name="bg_progress" widget="progressbar"/>
+            <div class="text-muted">You can leave this page — it keeps running.
+              Press <b>🔄 Refresh</b> to update. Last tick:
+              <field name="bg_heartbeat" readonly="1" nolabel="1" class="oe_inline"/>.</div>
+          </div>
           <group>
             <group string="Import Settings">
               <field name="job_type"/>
@@ -94,6 +110,7 @@
                      string="Browse File (Excel / PDF / Image)"
                      invisible="job_type not in ('file','image')"/>
               <field name="max_products_per_run"/>
+              <field name="bg_chunk" string="Products per background batch"/>
               <field name="price_variance_limit" string="Max Price Change (%)"/>
             </group>
             <group string="AI Settings">

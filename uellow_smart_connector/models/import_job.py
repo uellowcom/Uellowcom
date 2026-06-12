@@ -90,6 +90,28 @@ class ImportJob(models.Model):
     rollback_data = fields.Text('Rollback Data (JSON)', readonly=True)
     error_message = fields.Text('Error Message', readonly=True)
 
+    # ── Background processing (large imports run in chunks via cron) ──────
+    bg_phase = fields.Selection([
+        ('queued',    'Queued'),
+        ('parsing',   'Parsing file'),
+        ('enriching', 'Enriching products'),
+        ('done',      'Done'),
+    ], string='Background phase', readonly=True, copy=False, tracking=True)
+    bg_total = fields.Integer('Items to process', readonly=True, copy=False)
+    bg_done = fields.Integer('Items processed', readonly=True, copy=False)
+    bg_progress = fields.Float(
+        'Progress %', compute='_compute_bg_progress')
+    bg_chunk = fields.Integer(
+        'Products per batch', default=10,
+        help='How many products each background batch processes before it '
+             'commits and yields. Smaller = lighter on the server.')
+    bg_heartbeat = fields.Datetime('Last background tick', readonly=True, copy=False)
+
+    @api.depends('bg_total', 'bg_done')
+    def _compute_bg_progress(self):
+        for j in self:
+            j.bg_progress = (100.0 * j.bg_done / j.bg_total) if j.bg_total else 0.0
+
     @api.depends('line_ids.line_state', 'line_ids.product_action', 'line_ids.has_warning')
     def _compute_stats(self):
         for job in self:
@@ -118,35 +140,72 @@ class ImportJob(models.Model):
     # ── Actions ─────────────────────────────────────────
 
     def action_run(self):
-        """Validate then queue the import job."""
+        """Validate then QUEUE the import to run in the background.
+
+        Large files used to parse + AI-enrich every product inside the single
+        HTTP request → the worker hit its time limit and the browser saw
+        "server disconnected". Now action_run only marks the job queued and
+        returns instantly; a cron parses the file then enriches the products in
+        small batches (`bg_chunk`, default 10) so the server is never tied up.
+        """
         self.ensure_one()
-        if self.state != 'draft':
+        if self.state not in ('draft', 'error'):
             raise UserError(_('Only drafts can be run.'))
         if self.job_type == 'url' and not self.source_url:
             raise UserError(_('Enter the source URL.'))
         if self.job_type in ('file', 'image') and not (self.upload_file or self.attachment_id):
             raise UserError(_('Browse and upload a file first.'))
-        # Clear stale error from previous failed run
-        self.write({'error_message': False, 'state': 'processing'})
-        # Release the import_job row lock BEFORE the long network work
-        # (URL scrape + per-product Claude enrichment can run for minutes).
-        # Otherwise this row stays write-locked for the whole request → the
-        # transaction sits "idle in transaction" during the AI calls and blocks
-        # every other query touching the table → the whole server appears frozen.
+        self.write({
+            'error_message': False, 'state': 'processing',
+            'bg_phase': 'queued', 'bg_total': 0, 'bg_done': 0,
+            'bg_heartbeat': False,
+        })
         self.env.cr.commit()
-        self._process_job()
+        self._bg_trigger()       # kick the background worker now (self-chains)
+        return {
+            'type': 'ir.actions.client', 'tag': 'display_notification',
+            'params': {
+                'title': _('Import queued'),
+                'message': _('Processing in the background, %d products at a '
+                             'time. Use the Refresh button to watch progress.')
+                % (self.bg_chunk or 10),
+                'type': 'success', 'sticky': False,
+                'next': {'type': 'ir.actions.act_window',
+                         'res_model': 'uellow.import.job', 'res_id': self.id,
+                         'view_mode': 'form', 'views': [[False, 'form']]},
+            },
+        }
 
-    def _process_job(self):
-        """Main processing: scrape/parse → fuzzy match → create lines → AI enrich.
+    def action_refresh(self):
+        """No-op button — returning nothing makes the form reload so the user
+        sees the live background progress."""
+        return True
 
-        Lines are created and committed FIRST, then state→review, BEFORE the
-        (slow) AI enrichment. Enrichment is a best-effort second pass that
-        updates the already-created lines, committing per line. This way the
-        products are always visible for review even if enrichment is slow or
-        the web request hits its time limit mid-enrichment — otherwise the
-        worker gets killed before the batch INSERT and the job is left stuck
-        in 'processing' with no lines (the exact bug seen on SC/2026/0010).
-        """
+    # ── background worker ────────────────────────────────────────────────
+    def _bg_trigger(self):
+        """Ask the background-import cron to run as soon as possible."""
+        try:
+            self.env.ref('uellow_smart_connector.cron_bg_import').sudo()._trigger()
+        except Exception:
+            _logger.exception('Could not trigger background import cron')
+
+    def _bg_step(self):
+        """One unit of background work. Returns True if more work remains."""
+        self.ensure_one()
+        self.bg_heartbeat = fields.Datetime.now()
+        if self.bg_phase == 'queued':
+            self.bg_phase = 'parsing'
+            self.env.cr.commit()
+            self._bg_parse()
+            return self.bg_phase == 'enriching'
+        if self.bg_phase == 'enriching':
+            return self._bg_enrich_chunk() > 0
+        return False
+
+    def _bg_parse(self):
+        """Phase 1: scrape/parse the source → fuzzy match → create lines.
+        Sets bg_total and moves to the 'enriching' phase. Never raises (it runs
+        inside the cron) — on failure it parks the job in 'error'."""
         try:
             with self.env.cr.savepoint():
                 if self.job_type == 'url':
@@ -156,73 +215,94 @@ class ImportJob(models.Model):
                 else:
                     raw_products = self._parse_file()
 
-                # Safety cap
                 if self.max_products_per_run > 0:
                     raw_products = raw_products[:self.max_products_per_run]
-
                 if not raw_products:
                     raise UserError(_('No products found in the source.'))
 
-                # Clear any lines from a previous run so re-running is clean.
                 self.line_ids.unlink()
-
-                # Fuzzy match against existing products
                 lines_data = self._fuzzy_match_products(raw_products)
-
-                # Pull the embedded photos out before INSERT (not a line field).
                 embedded = [ld.pop('_embedded_images', []) for ld in lines_data]
-
-                # Batched INSERT — one round-trip instead of N. Created BEFORE
-                # enrichment so the products survive a slow/timed-out AI pass.
                 lines = self.env['uellow.import.job.line'].create([
                     dict(ld, job_id=self.id) for ld in lines_data
                 ])
-
-                # Attach embedded product photos as image candidates (largest
-                # first → main), so they become the product's main image +
-                # gallery on apply.
                 self._attach_embedded_candidates(lines, embedded)
 
-                self.state = 'review'
+                self.write({
+                    'state': 'review', 'bg_phase': 'enriching',
+                    'bg_total': len(lines), 'bg_done': 0,
+                })
                 self.message_post(body=_(
-                    'Processed. %d products ready for review.') % len(lines_data))
-        except UserError as ue:
-            # User-facing message — re-raise so it shows in the UI.
-            # Commit the terminal state first: we already committed 'processing'
-            # above, so re-raising would otherwise roll back this 'error' write
-            # and leave the job stuck in 'processing'.
-            self.state = 'error'
-            self.error_message = str(ue)
-            self.message_post(body=_('Processing failed: %s') % ue.args[0])
+                    'Parsed. %d products queued for background enrichment '
+                    '(%d at a time).') % (len(lines), self.bg_chunk or 10))
             self.env.cr.commit()
-            raise
         except Exception as e:
-            self.state = 'error'
-            self.error_message = str(e)
-            _logger.exception('Smart Connector job %s failed', self.name)
-            self.message_post(body=_('Processing failed (technical error): %s') % str(e)[:200])
+            self.write({'state': 'error', 'bg_phase': False,
+                        'error_message': str(e)})
+            _logger.exception('Smart Connector parse failed for %s', self.name)
+            self.message_post(body=_('Processing failed: %s') % str(e)[:200])
             self.env.cr.commit()
-            raise UserError(_('Processing failed. Check the error log for details.'))
 
-        # ── Best-effort AI enrichment (second pass) ─────────────────────────
-        # Products are now persisted & visible. Enrich each line in place,
-        # committing per line, so a timeout only loses the un-enriched tail —
-        # never the products themselves.
-        if self.state == 'review':
+    def _bg_enrich_chunk(self):
+        """Phase 2: enrich the next `bg_chunk` un-enriched lines (Drive images +
+        AI translation/SEO), commit, advance progress. Returns the number of
+        lines still pending. Every line in a processed chunk is marked
+        ai_enriched so the loop always terminates."""
+        chunk_n = max(1, self.bg_chunk or 10)
+        pending = self.line_ids.filtered(lambda l: not l.ai_enriched)
+        if not pending:
+            self.write({'bg_phase': 'done', 'bg_done': self.bg_total or len(self.line_ids)})
+            if self.state == 'processing':
+                self.state = 'review'
+            self.message_post(body=_('Background enrichment complete.'))
             self.env.cr.commit()
-            # Fetch Drive-hosted photos for rows that had no embedded image.
+            return 0
+        chunk = pending[:chunk_n]
+        try:
+            self._attach_drive_candidates(chunk)
+        except Exception:
+            _logger.exception('Drive image pass failed (chunk) for %s', self.name)
+        if self.enable_translation or self.enable_seo:
             try:
-                self._attach_drive_candidates(self.line_ids)
+                self._ai_enrich_lines(chunk)
             except Exception:
-                _logger.exception(
-                    'Smart Connector Drive image pass failed for %s', self.name)
-            if self.enable_translation or self.enable_seo:
+                _logger.exception('AI enrichment failed (chunk) for %s', self.name)
+        # Guarantee forward progress: no line in this chunk is ever re-picked.
+        chunk.filtered(lambda l: not l.ai_enriched).write({'ai_enriched': True})
+        self.bg_done = len(self.line_ids.filtered(lambda l: l.ai_enriched))
+        self.env.cr.commit()
+        return len(self.line_ids.filtered(lambda l: not l.ai_enriched))
+
+    @api.model
+    def cron_bg_import(self):
+        """Drive all queued/running background imports. Odoo serialises this
+        cron (one instance at a time), so chunks process safely back-to-back.
+        Works within a soft time budget then re-triggers itself so each tick
+        stays short and the server is never blocked for long."""
+        import time as _time
+        jobs = self.search([('bg_phase', 'in', ('queued', 'parsing', 'enriching'))])
+        if not jobs:
+            return
+        deadline = _time.time() + 90      # keep each cron tick short
+        for job in jobs:
+            while job.exists() and job.bg_phase in ('queued', 'parsing', 'enriching'):
                 try:
-                    self._ai_enrich_lines(self.line_ids)
+                    has_more = job._bg_step()
                 except Exception:
-                    # Enrichment is optional polish; products are already saved.
-                    _logger.exception(
-                        'Smart Connector AI enrichment pass failed for %s', self.name)
+                    _logger.exception('Background import step failed for %s', job.name)
+                    job.write({'state': 'error', 'bg_phase': False,
+                               'error_message': 'Background step failed — see log'})
+                    job.env.cr.commit()
+                    break
+                if not has_more:
+                    break
+                if _time.time() > deadline:
+                    break
+            if _time.time() > deadline:
+                break
+        # If anything still needs work, run again right away.
+        if self.search_count([('bg_phase', 'in', ('queued', 'parsing', 'enriching'))]):
+            self._bg_trigger()
 
     def _attach_embedded_candidates(self, lines, embedded):
         """Create image candidates from the photos embedded in the sheet.

@@ -28,4 +28,16 @@ model._cron_backfill_descriptions()</field>
         <field name="interval_type">days</field>
         <field name="active">True</field>
     </record>
+    <!-- Drives background imports in small chunks. Fires on its own schedule
+         AND on-demand via _trigger() right after a job is queued, so it churns
+         batches back-to-back without waiting for the interval. -->
+    <record id="cron_bg_import" model="ir.cron">
+        <field name="name">Smart Connector: background import worker</field>
+        <field name="model_id" ref="model_uellow_import_job"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_bg_import()</field>
+        <field name="interval_number">2</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
 </odoo>
