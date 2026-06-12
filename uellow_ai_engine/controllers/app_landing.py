@@ -38,6 +38,14 @@ class AppLanding(http.Controller):
     def _store_url(self, store):
         return self._cfg('app_url_' + store, _DEFAULTS.get('app_url_' + store, '/app'))
 
+    def _is_bot(self):
+        ua = (request.httprequest.user_agent.string or '').lower()
+        return any(k in ua for k in (
+            'googlebot', 'bingbot', 'slurp', 'duckduckbot', 'baiduspider',
+            'yandex', 'facebookexternalhit', 'facebot', 'twitterbot',
+            'linkedinbot', 'whatsapp', 'telegrambot', 'applebot',
+            'petalbot', 'bot', 'crawler', 'spider'))
+
     def _platform(self):
         ua = (request.httprequest.user_agent.string or '').lower()
         if any(k in ua for k in ('iphone', 'ipad', 'ipod')):
@@ -113,7 +121,11 @@ class AppLanding(http.Controller):
             'icon': self._cfg('app_icon_url', _DEFAULTS['app_icon_url']),
             'shot': self._cfg('app_screenshot_url', _DEFAULTS['app_screenshot_url']),
             'badges': badges,
-            'auto': '1' if self._bool('app_auto_redirect', True) else '0',
+            # Never auto-redirect crawlers — let them index the page content
+            # so it ranks for "Uellow App / تطبيق يلو" instead of indexing a
+            # store redirect.
+            'auto': '1' if (self._bool('app_auto_redirect', True)
+                            and not self._is_bot()) else '0',
             'openapp': '1' if self._bool('app_open_in_app', False) else '0',
             'deeplink': self._cfg('app_deeplink', 'uellow://home'),
             'pkg': self._cfg('app_android_package', 'com.uellow.app'),

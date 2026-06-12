@@ -69,6 +69,16 @@ class Website(models.Model):
         them on `_get_alternate_languages` (Odoo 18 hook) below."""
         for url in super()._enumerate_pages(query_string=query_string, force=force):
             yield url
+        # The /app download landing page is a hand-built controller route
+        # (website=False, sitemap=False), so Odoo never lists it. Surface it
+        # in the sitemap so Google can index "Uellow App / تطبيق يلو".
+        app_loc = "/app"
+        if not query_string or query_string.lower() in app_loc.lower():
+            yield {
+                'loc': app_loc,
+                'priority': 0.9,
+                'changefreq': 'weekly',
+            }
         SP = self.env.get('uellow.seo.page')
         if SP is None:
             return
