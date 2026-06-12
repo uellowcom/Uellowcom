@@ -2251,11 +2251,20 @@ CART & ORDERING RULES:
         try:
             _lessons = self._get_param('learned_lessons', '')
             if _lessons.strip():
-                # v2.1.95 — hard token guard: lessons can accumulate via the
-                # one-click Coach approve; never inject more than ~8KB.
+                # v2.2.46 — the Coach APPENDS the newest lessons at the end, so
+                # the old [:8000] head-cut fed Beena the OLDEST lessons and
+                # dropped every recent one. Keep the MOST RECENT lessons instead
+                # (line-aligned), with a larger ~16KB cap — prompt caching makes
+                # the bigger-but-stable block cheap after the first call.
+                _ls = _lessons.strip()
+                if len(_ls) > 16000:
+                    _ls = _ls[-16000:]
+                    _nl = _ls.find('\n')
+                    if _nl != -1:
+                        _ls = _ls[_nl + 1:]      # drop the partial first line
                 system_prompt += (
                     "\n\n=== LEARNED LESSONS (approved by admin — follow strictly) ===\n"
-                    + _lessons.strip()[:8000])
+                    + _ls)
             # v2.2.05 — PLATFORM FACTS: admin-editable knowledge about how
             # the store currently works (delivery pricing, features going
             # live, policies). Param: uellow_ai.platform_facts.
