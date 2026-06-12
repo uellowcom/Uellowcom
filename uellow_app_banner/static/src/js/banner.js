@@ -25,6 +25,11 @@
     document.addEventListener('DOMContentLoaded', function () {
         var banner = document.getElementById('uellow-app-banner');
         if (!banner) return;
+        // Respect the admin device-scope setting (Mobile + Desktop / Mobile /
+        // Desktop). Default 'both' so the banner shows on phones AND computers.
+        var scope = banner.getAttribute('data-devices') || 'both';
+        if (scope === 'mobile' && !isMobile) return;
+        if (scope === 'desktop' && isMobile) return;
         banner.style.display = 'block';
 
         var cta = document.getElementById('uab-cta');

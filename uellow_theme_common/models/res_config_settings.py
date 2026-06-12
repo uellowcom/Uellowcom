@@ -52,6 +52,8 @@ class ResConfigSettings(models.TransientModel):
     uc_app_popup_delay   = fields.Integer(related='website_id.uc_app_popup_delay', readonly=False)
     uc_app_popup_title   = fields.Char(related='website_id.uc_app_popup_title', readonly=False)
     uc_app_popup_text    = fields.Char(related='website_id.uc_app_popup_text', readonly=False)
+    uc_app_banner_enabled = fields.Boolean(related='website_id.uc_app_banner_enabled', readonly=False)
+    uc_app_banner_devices = fields.Selection(related='website_id.uc_app_banner_devices', readonly=False)
     uc_footer_about    = fields.Text(related='website_id.uc_footer_about', readonly=False)
     uc_footer_credit   = fields.Char(related='website_id.uc_footer_credit', readonly=False)
     uc_footer_newsletter_intro = fields.Char(related='website_id.uc_footer_newsletter_intro', readonly=False)

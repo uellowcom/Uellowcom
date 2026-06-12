@@ -139,6 +139,18 @@ class Website(models.Model):
                 "all in one app.",
         help="Supporting line under the popup headline.")
 
+    # ─── App-download smart banner (sticky bar above the header) ───────
+    uc_app_banner_enabled = fields.Boolean(
+        "Show App-Download Banner", default=True,
+        help="A slim sticky bar above the header inviting visitors to "
+             "open/install the Uellow app. Dismissible for 7 days.")
+    uc_app_banner_devices = fields.Selection(
+        [('both', 'Mobile + Desktop'),
+         ('mobile', 'Mobile only'),
+         ('desktop', 'Desktop only')],
+        string="Banner shows on", default='both',
+        help="Which devices see the smart banner.")
+
     uc_footer_about = fields.Text(
         "Footer About Text", translate=True,
         default="Curated marketplace for the Gulf — premium brands, "

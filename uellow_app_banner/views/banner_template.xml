@@ -3,7 +3,9 @@
     <template id="uellow_app_banner" name="Uellow App Smart Banner"
               inherit_id="website.layout" priority="99">
         <xpath expr="//header" position="before">
-            <div id="uellow-app-banner" style="display:none">
+            <div id="uellow-app-banner" style="display:none"
+                 t-if="website.uc_app_banner_enabled"
+                 t-att-data-devices="website.uc_app_banner_devices or 'both'">
                 <div class="uab-inner">
                     <div class="uab-logo">
                         <img src="/web/image/website/1/favicon" alt="Uellow"/>

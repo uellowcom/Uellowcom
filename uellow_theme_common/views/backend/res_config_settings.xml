@@ -146,6 +146,18 @@
                         </div>
                     </setting>
 
+                    <h3 class="mt-4 mb-2 fw-bold">App-Download Banner</h3>
+                    <setting id="uc_app_banner_set" string="Show App-Download Banner"
+                             help="A slim sticky bar above the header inviting visitors to open/install the app. Dismissible for 7 days.">
+                        <field name="uc_app_banner_enabled"/>
+                        <div class="content-group mt-2" invisible="not uc_app_banner_enabled">
+                            <div class="row">
+                                <label for="uc_app_banner_devices" class="col-lg-4 o_light_label"/>
+                                <field name="uc_app_banner_devices"/>
+                            </div>
+                        </div>
+                    </setting>
+
                     <h3 class="mt-4 mb-2 fw-bold">Beena AI Icon</h3>
                     <setting id="uc_beena_icon_set" string="Custom Beena Icon"
                              help="Optional custom image shown inside the mobile nav Beena disc. Leave empty to use the default magic-wand icon.">
