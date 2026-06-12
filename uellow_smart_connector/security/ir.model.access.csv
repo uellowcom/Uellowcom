@@ -42,3 +42,5 @@ access_image_backfill_mgr,image.backfill.mgr,model_uellow_image_backfill,uellow_
 access_image_backfill_admin,image.backfill.admin,model_uellow_image_backfill,base.group_system,1,1,1,1
 access_seo_name_cleanup_mgr,seo.name.cleanup.mgr,model_uellow_seo_name_cleanup,uellow_smart_connector.group_sc_manager,1,1,1,1
 access_seo_name_cleanup_admin,seo.name.cleanup.admin,model_uellow_seo_name_cleanup,base.group_system,1,1,1,1
+access_category_assign_mgr,category.assign.mgr,model_uellow_category_assign,uellow_smart_connector.group_sc_manager,1,1,1,1
+access_category_assign_admin,category.assign.admin,model_uellow_category_assign,base.group_system,1,1,1,1

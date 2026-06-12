@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_category_assign_form" model="ir.ui.view">
+        <field name="name">uellow.category.assign.form</field>
+        <field name="model">uellow.category.assign</field>
+        <field name="arch" type="xml">
+            <form string="AI Category Assignment">
+                <div class="alert alert-info" role="alert">
+                    Let AI pick the best existing eCommerce category for products
+                    that have none (chosen from your real category tree — never
+                    invented). Old URLs are unaffected. Start with a Dry run.
+                </div>
+                <group>
+                    <group>
+                        <field name="scope_brand_id" options="{'no_create': True}"/>
+                        <field name="only_uncategorized"/>
+                        <field name="published_only"/>
+                        <field name="limit"/>
+                    </group>
+                    <group>
+                        <field name="dry_run"/>
+                    </group>
+                </group>
+                <field name="result_html" readonly="1"/>
+                <footer>
+                    <button name="action_run" type="object" string="Run" class="btn-primary"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_category_assign" model="ir.actions.act_window">
+        <field name="name">AI Category Assignment</field>
+        <field name="res_model">uellow.category.assign</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_sc_category_assign" name="AI Category Assignment"
+              parent="menu_sc_root"
+              action="action_category_assign" sequence="57"/>
+
+    <record id="cron_sc_autocategorize" model="ir.cron">
+        <field name="name">Smart Connector: AI auto-categorise uncategorised products</field>
+        <field name="model_id" ref="product.model_product_template"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_sc_autocategorize()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

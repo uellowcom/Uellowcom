@@ -11,6 +11,31 @@ from .utils import is_safe_public_url, sanitize_ai_text, resolve_ai_config
 
 _logger = logging.getLogger(__name__)
 
+
+def _normalize_image_b64(b64):
+    """Re-encode any image to a clean RGB JPEG that Odoo's image fields accept.
+
+    Supplier sheets carry images PIL can open but Odoo's image_process rejects
+    (CMYK, palette, odd modes) → "This file could not be decoded as an image
+    file" when they land on image_1920. Re-encoding to RGB JPEG normalises them.
+    Returns clean base64 bytes, or None if undecodable (caller skips it)."""
+    if not b64:
+        return None
+    try:
+        from PIL import Image
+        raw = base64.b64decode(b64)
+        im = Image.open(io.BytesIO(raw))
+        im.load()
+        if im.mode not in ('RGB', 'L'):
+            im = im.convert('RGB')
+        if max(im.size) > 2560:        # keep storage sane
+            im.thumbnail((2560, 2560), Image.LANCZOS)
+        out = io.BytesIO()
+        im.save(out, format='JPEG', quality=88)
+        return base64.b64encode(out.getvalue())
+    except Exception:
+        return None
+
 # Tunables — kept module-local so they're easy to spot, not in settings.
 _AI_TIMEOUT_S = 30           # per-line AI call ceiling
 _AI_MODEL = 'claude-sonnet-4-20250514'   # enrichment model
@@ -313,16 +338,21 @@ class ImportJob(models.Model):
         Cand = self.env['uellow.import.image.candidate']
         vals = []
         for line, imgs in zip(lines, embedded):
-            for seq, b64 in enumerate(imgs or []):
+            seq = 0
+            for b64 in (imgs or []):
+                clean = _normalize_image_b64(b64)   # drop anything Odoo can't store
+                if not clean:
+                    continue
                 vals.append({
                     'line_id': line.id,
                     'source': 'import',
                     'title': (line.name_en or '')[:60],
-                    'image': b64,
+                    'image': clean,
                     'is_main': seq == 0,
                     'include': True,
                     'sequence': 10 + seq,
                 })
+                seq += 1
         if vals:
             Cand.create(vals)
 

@@ -40,6 +40,7 @@
             <field name="publish_set_published"/>
             <field name="autotranslate_names"/>
             <field name="seo_shorten_names"/>
+            <field name="autocategorize"/>
           </group>
           <group string="AI Settings">
             <field name="anthropic_api_key" password="True"

@@ -32,6 +32,7 @@
         'views/menus.xml',
         'views/image_backfill_views.xml',
         'views/seo_name_views.xml',
+        'views/category_assign_views.xml',
         'views/translation_views.xml',
         'views/reorder_views.xml',
         'views/supplier_scorecard_views.xml',

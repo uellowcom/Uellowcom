@@ -20,6 +20,7 @@ It deliberately reuses the existing infrastructure:
   • the line's own _apply_to_catalog() create/rollback path.
 """
 import base64
+import io
 import json
 import logging
 import re
@@ -156,7 +157,21 @@ class ImportImageCandidate(models.Model):
                 raw = b''.join(chunks)
                 if not _media_type(raw):
                     continue
-                return base64.b64encode(raw)
+                # Re-encode to a clean RGB JPEG so Odoo's image fields never
+                # choke on CMYK/odd-mode source images.
+                try:
+                    from PIL import Image
+                    im = Image.open(io.BytesIO(raw))
+                    im.load()
+                    if im.mode not in ('RGB', 'L'):
+                        im = im.convert('RGB')
+                    if max(im.size) > 2560:
+                        im.thumbnail((2560, 2560), Image.LANCZOS)
+                    buf = io.BytesIO()
+                    im.save(buf, format='JPEG', quality=88)
+                    return base64.b64encode(buf.getvalue())
+                except Exception:
+                    return base64.b64encode(raw)
             except Exception as e:
                 _logger.info('Publish Studio: image fetch failed for %s: %s', cand, e)
                 continue

@@ -18,3 +18,4 @@ from . import competitor_discovery
 
 from . import image_backfill
 from . import seo_name
+from . import category_assign

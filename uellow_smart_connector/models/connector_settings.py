@@ -60,6 +60,8 @@ _PARAMS = [
     # Daily cron: rewrite over-long imported product names into concise,
     # SEO-friendly titles (brand + model + type + key spec + colour).
     ('seo_shorten_names',     'uellow.sc.seo_shorten_names',   True,                                     bool),
+    # Daily cron: AI-assign a category to any published product that has none.
+    ('autocategorize',        'uellow.sc.autocategorize',      True,                                     bool),
 ]
 
 
@@ -204,6 +206,11 @@ class ConnectorSettings(models.TransientModel):
         help='A daily job rewrites over-long imported names into concise '
              'SEO-friendly titles (brand + model + type + key spec + colour). '
              'مهمة يومية تختصر الأسماء الطويلة إلى عناوين منسّقة مناسبة للسيو.')
+    autocategorize = fields.Boolean(
+        'Auto-assign category to uncategorised products (daily)', default=True,
+        help='A daily AI job picks the best existing category for any published '
+             'product that has none (new/uncategorised only). '
+             'مهمة يومية تخمّن القسم المناسب للمنتجات بلا قسم.')
 
     @api.constrains('anthropic_api_key')
     def _check_api_key(self):
