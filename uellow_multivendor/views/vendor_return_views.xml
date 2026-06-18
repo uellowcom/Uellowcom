@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="seq_return_request" model="ir.sequence">
+    <field name="name">Vendor Return Request</field>
+    <field name="code">uellow.return.request</field>
+    <field name="prefix">RET-</field>
+    <field name="padding">5</field>
+  </record>
+
+  <record id="view_return_request_list" model="ir.ui.view">
+    <field name="name">uellow.return.request.list</field>
+    <field name="model">uellow.return.request</field>
+    <field name="arch" type="xml">
+      <list decoration-warning="state in ('submitted','approved')"
+            decoration-success="state=='settled'" decoration-danger="state=='rejected'">
+        <field name="name"/>
+        <field name="vendor_id"/>
+        <field name="pickup_mode"/>
+        <field name="total_qty"/>
+        <field name="total_cost"/>
+        <field name="state" widget="badge"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_return_request_form" model="ir.ui.view">
+    <field name="name">uellow.return.request.form</field>
+    <field name="model">uellow.return.request</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_approve" type="object" string="Approve"
+                  class="btn-primary" invisible="state != 'submitted'"/>
+          <button name="action_mark_delivered" type="object" string="Mark Delivered &amp; Signed"
+                  class="btn-primary" invisible="state != 'approved'"/>
+          <button name="action_settle" type="object" string="Settle Stock"
+                  class="btn-primary" invisible="state != 'delivered'"
+                  confirm="Decrement Uellow on-hand for these items?"/>
+          <button name="action_reject" type="object" string="Reject"
+                  invisible="state not in ('submitted','approved')"/>
+          <button name="%(action_report_return_request)d" type="action"
+                  string="🖨️ Print Return Note" class="btn-secondary"/>
+          <field name="state" widget="statusbar"
+                 statusbar_visible="submitted,approved,delivered,settled"/>
+        </header>
+        <sheet>
+          <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+          <group>
+            <group>
+              <field name="vendor_id"/>
+              <field name="pickup_mode"/>
+            </group>
+            <group>
+              <field name="submitted_date" readonly="1"/>
+              <field name="approved_date" readonly="1"/>
+              <field name="settled_date" readonly="1"/>
+            </group>
+          </group>
+          <field name="line_ids">
+            <list editable="bottom">
+              <field name="product_id"/>
+              <field name="available" readonly="1"/>
+              <field name="qty"/>
+              <field name="cost"/>
+            </list>
+          </field>
+          <group>
+            <field name="total_qty" readonly="1"/>
+            <field name="total_cost" readonly="1"/>
+            <field name="reason"/>
+            <field name="reject_reason" invisible="state != 'rejected'"/>
+          </group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_return_request" model="ir.actions.act_window">
+    <field name="name">Stock Returns</field>
+    <field name="res_model">uellow.return.request</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <menuitem id="menu_return_request" name="Stock Returns"
+            parent="menu_marketplace_main" action="action_return_request" sequence="40"/>
+
+</odoo>

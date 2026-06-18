@@ -64,11 +64,42 @@ class VendorDashboardAPI(http.Controller):
         except Exception:
             pass
 
+        # ── Expanded KPIs ───────────────────────────────────────────
+        month_orders = confirmed.filtered(
+            lambda o: (o.date_order or o.create_date) and (o.date_order or o.create_date) >= month_start)
+        month_gmv = sum(month_orders.mapped('amount_total'))
+        month_count = len(month_orders)
+        aov = (month_gmv / month_count) if month_count else 0.0
+        units_month = sum(month_orders.mapped('order_line')
+                          .filtered(lambda l: not l.display_type)
+                          .mapped('product_uom_qty'))
+        # repeat-customer rate (all-time confirmed)
+        counts = {}
+        for o in confirmed:
+            counts[o.partner_id.id] = counts.get(o.partner_id.id, 0) + 1
+        distinct = len(counts)
+        repeat = sum(1 for c in counts.values() if c > 1)
+        repeat_pct = round(repeat / distinct * 100, 1) if distinct else 0.0
+        try:
+            open_returns = request.env['uellow.return.request'].sudo().search_count(
+                [('vendor_id', '=', v.id), ('state', 'not in', ('settled', 'rejected'))])
+        except Exception:
+            open_returns = 0
+
         # Recent 5 orders
         recent = Order.search([('vendor_id', '=', v.id)],
                               order='id desc', limit=5)
 
         return ok({
+            'kpis': {
+                'aov':            fmt_price(aov, v.currency_id),
+                'units_month':    int(units_month),
+                'orders_month':   month_count,
+                'repeat_pct':     repeat_pct,
+                'distinct_customers': distinct,
+                'open_returns':   open_returns,
+                'low_stock':      low_stock,
+            },
             'revenue': {
                 'today': fmt_price(rev_in(today), v.currency_id),
                 'week':  fmt_price(rev_in(week_start), v.currency_id),
@@ -88,6 +119,8 @@ class VendorDashboardAPI(http.Controller):
                 'low_stock':        low_stock,
             },
             'wallet_balance': fmt_price(v.wallet_balance or 0, v.currency_id),
+            'score':          int(v.uc_score or 0),
+            'score_band':     v.uc_score_band or 'fair',
             'avg_rating':     round(float(v.avg_rating or 0), 2),
             'follower_count': int(v.follower_count or 0),
             'tier':           v.tier or 'bronze',

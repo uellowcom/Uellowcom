@@ -325,6 +325,50 @@ class FreeShippingRule(models.Model):
             return None, None, None
 
     @api.model
+    def _promo_freeship_tmpl_ids(self, badge_safe_only=True):
+        """Template ids covered by RUNNING mobile promotions whose
+        `🚚 Free shipping reward` is ON. Lets a promotion's free-shipping
+        reward light the SAME free-delivery badge / lists / treatment as a
+        conditional rule — automatically, with no rule record to create.
+
+        `badge_safe_only` (for card badges/lists): skip promos that carry
+        personal/cart conditions (min subtotal/qty/first-order) so the card
+        never promises a free shipping the customer might not actually get
+        — those still GRANT at checkout (cart_rewards) once the conditions
+        hold, mirroring the rule-engine anti-leak design."""
+        Promo = self.env.get('mobile.app.promotion')
+        Line = self.env.get('mobile.promotion.line')
+        if Promo is None or Line is None:
+            return []
+        now = fields.Datetime.now()
+        promos = Promo.sudo().search([
+            ('reward_free_ship', '=', True),
+            ('state', '=', 'running'),
+            ('active', '=', True),
+            ('date_from', '<=', now),
+            ('date_to', '>=', now),
+            # same channel gate as the discount badge — mobile cards/lists
+            ('channel', 'in', ('mobile', 'both', 'pos')),
+        ])
+        if not promos:
+            return []
+        cc, wid, lang = self._request_ctx()
+        ids = set()
+        for p in promos:
+            if wid and p.website_ids and wid not in p.website_ids.ids:
+                continue
+            if badge_safe_only and (
+                    (p.cond_min_subtotal or 0.0) > 0.0
+                    or (p.cond_min_qty or 0) > 0
+                    or p.cond_first_order):
+                continue
+            lines = Line.sudo().search([
+                ('promotion_id', '=', p.id),
+                ('state', '=', 'approved')])
+            ids.update(lines.mapped('product_tmpl_id').ids)
+        return list(ids)
+
+    @api.model
     def badge_rules(self):
         """Active badge-safe rules whose CONTEXT matches this request.
         Used for product-card badges and free-shipping product lists."""
@@ -338,10 +382,13 @@ class FreeShippingRule(models.Model):
 
     @api.model
     def badge_covers(self, tmpl):
-        """True when any badge-safe matching rule covers the product."""
+        """True when any badge-safe matching rule covers the product, OR a
+        running free-shipping promotion includes it (treated identically)."""
         for r in self.badge_rules():
             if r._covers_template(tmpl):
                 return True
+        if tmpl.id in self._promo_freeship_tmpl_ids():
+            return True
         return False
 
     @api.model
@@ -364,6 +411,10 @@ class FreeShippingRule(models.Model):
                 if lines:
                     ors.append(('id', 'in',
                                 lines.mapped('product_tmpl_id').ids))
+        # running free-shipping promotions feed the same free-delivery lists
+        promo_ids = self._promo_freeship_tmpl_ids()
+        if promo_ids:
+            ors.append(('id', 'in', promo_ids))
         return ors
 
     @api.model

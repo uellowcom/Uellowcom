@@ -34,3 +34,26 @@ access_vendor_restock_portal,vend.restock.portal,model_uellow_vendor_restock,bas
 access_uellow_product_import_admin,uellow.product.import admin,model_uellow_product_import,base.group_system,1,1,1,1
 access_uellow_product_import_portal,uellow.product.import portal,model_uellow_product_import,base.group_portal,1,1,1,0
 access_uellow_product_import_user,uellow.product.import user,model_uellow_product_import,base.group_user,1,0,0,0
+access_price_report_wizard_mgr,price.report.wizard.mgr,model_uellow_price_report_wizard,uellow_multivendor.group_marketplace_manager,1,1,1,1
+access_product_change_user,product.change.user,model_uellow_product_change,base.group_user,1,1,1,0
+access_product_change_admin,product.change.admin,model_uellow_product_change,base.group_system,1,1,1,1
+access_product_change_portal,product.change.portal,model_uellow_product_change,base.group_portal,1,1,1,0
+access_return_req_user,return.req.user,model_uellow_return_request,base.group_user,1,1,1,0
+access_return_req_admin,return.req.admin,model_uellow_return_request,base.group_system,1,1,1,1
+access_return_req_portal,return.req.portal,model_uellow_return_request,base.group_portal,1,1,1,0
+access_return_line_user,return.line.user,model_uellow_return_request_line,base.group_user,1,1,1,0
+access_return_line_admin,return.line.admin,model_uellow_return_request_line,base.group_system,1,1,1,1
+access_return_line_portal,return.line.portal,model_uellow_return_request_line,base.group_portal,1,1,1,0
+access_price_report_wizard_user,price.report.wizard.user,model_uellow_price_report_wizard,base.group_user,1,1,1,0
+access_vendor_api_key_user,vendor.api.key.user,model_vendor_api_key,base.group_user,1,1,1,0
+access_vendor_api_key_admin,vendor.api.key.admin,model_vendor_api_key,base.group_system,1,1,1,1
+access_vendor_api_key_portal,vendor.api.key.portal,model_vendor_api_key,base.group_portal,1,1,1,0
+access_vendor_webhook_user,vendor.webhook.user,model_vendor_webhook,base.group_user,1,1,1,0
+access_vendor_webhook_admin,vendor.webhook.admin,model_vendor_webhook,base.group_system,1,1,1,1
+access_vendor_webhook_portal,vendor.webhook.portal,model_vendor_webhook,base.group_portal,1,1,1,0
+access_vendor_ad_user,vendor.ad.user,model_vendor_ad_campaign,base.group_user,1,1,1,0
+access_vendor_ad_admin,vendor.ad.admin,model_vendor_ad_campaign,base.group_system,1,1,1,1
+access_vendor_ad_portal,vendor.ad.portal,model_vendor_ad_campaign,base.group_portal,1,1,1,0
+access_vendor_dispute_user,vendor.dispute.user,model_vendor_order_dispute,base.group_user,1,1,1,0
+access_vendor_dispute_admin,vendor.dispute.admin,model_vendor_order_dispute,base.group_system,1,1,1,1
+access_vendor_dispute_portal,vendor.dispute.portal,model_vendor_order_dispute,base.group_portal,1,1,1,0

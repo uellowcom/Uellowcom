@@ -8,7 +8,7 @@
     'category': 'Sales/Sales',
     'depends': [
         'base', 'mail', 'sale_management', 'stock', 'website', 'payment',
-        'uellow_multivendor',
+        'uellow_multivendor', 'uellow_price_request',
     ],
     'data': ['security/ir.model.access.csv'],
     'installable': True,

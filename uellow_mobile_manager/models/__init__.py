@@ -29,3 +29,4 @@ from . import customer_notification
 from . import product_website_extra
 from . import partner_address_extra
 from . import sale_order_kanban
+from . import live_activity

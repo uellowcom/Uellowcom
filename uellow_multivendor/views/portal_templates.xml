@@ -483,6 +483,27 @@
       </t>
     </div>
 
+    <!-- RTL flip for Arabic: move sidebar to the right, content to the left.
+         (website.layout already sets html dir=rtl for ar, so text flows RTL;
+         we only need to flip the fixed-position sidebar/main offsets.) -->
+    <t t-set="is_ar_dir" t-value="(request.env.lang or 'en_US').startswith('ar')"/>
+    <t t-if="is_ar_dir">
+      <style>
+        .vp-main { margin-left: 0 !important; margin-right: 220px !important; }
+        .vp-sidebar { left: auto !important; right: 0 !important;
+                      border-right: none !important;
+                      border-left: 0.5px solid #e8e8e8 !important; }
+        .vp-layout, .vp-main, .vp-topbar { direction: rtl; text-align: right; }
+        .vp-notif-panel { left: 12px !important; right: auto !important; }
+        .vp-sidebar-badge, #vp-notif-badge { margin-left: 0 !important; margin-right: auto !important; }
+        @media (max-width: 768px) {
+          .vp-sidebar { transform: translateX(100%) !important; }
+          .vp-sidebar.open { transform: translateX(0) !important; }
+          .vp-main { margin-right: 0 !important; }
+        }
+      </style>
+    </t>
+
     <!-- Layout -->
     <div class="vp-layout">
 
@@ -490,65 +511,69 @@
       <nav class="vp-sidebar" id="vp-sidebar">
         <div style="padding:0 8px">
 
-          <div class="vp-sidebar-label">Main</div>
+          <div class="vp-sidebar-label"><t t-esc="'الرئيسية' if is_ar_dir else 'Main'"/></div>
           <a class="vp-nav-item" t-attf-class="vp-nav-item #{page_name == 'vendor_dashboard' and 'active' or ''}"
              href="/my/vendor">
-            <i class="fa fa-home"></i> Dashboard
+            <i class="fa fa-home"></i> <t t-esc="'لوحة التحكم' if is_ar_dir else 'Dashboard'"/>
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_orders' and 'active' or ''}"
              href="/my/vendor/orders">
-            <i class="fa fa-shopping-bag"></i> Orders
+            <i class="fa fa-shopping-bag"></i> <t t-esc="'الطلبات' if is_ar_dir else 'Orders'"/>
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_products' and 'active' or ''}"
              href="/my/vendor/products">
-            <i class="fa fa-cube"></i> Products
+            <i class="fa fa-cube"></i> <t t-esc="'المنتجات' if is_ar_dir else 'Products'"/>
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_stock' and 'active' or ''}"
              href="/my/vendor/stock">
-            <i class="fa fa-cubes"></i> Stock / FBU
+            <i class="fa fa-cubes"></i> <t t-esc="'المخزون / FBU' if is_ar_dir else 'Stock / FBU'"/>
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_restock_list' and 'active' or ''}"
              href="/my/vendor/restock-requests">
-            <i class="fa fa-refresh"></i> Restock Requests
+            <i class="fa fa-refresh"></i> <t t-esc="'طلبات التعبئة' if is_ar_dir else 'Restock Requests'"/>
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_withdrawals' and 'active' or ''}"
              href="/my/vendor/withdrawals">
-            <i class="fa fa-sign-out"></i> <t t-esc="'طلبات السحب' if (request.env.lang or '').startswith('ar') else 'Stock Withdrawals'"/>
+            <i class="fa fa-sign-out"></i> <t t-esc="'طلبات السحب' if is_ar_dir else 'Stock Withdrawals'"/>
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_wallet' and 'active' or ''}"
              href="/my/vendor/wallet">
-            <i class="fa fa-credit-card"></i> Wallet
+            <i class="fa fa-credit-card"></i> <t t-esc="'المحفظة' if is_ar_dir else 'Wallet'"/>
           </a>
 
-          <div class="vp-sidebar-label" style="margin-top:6px">Marketing</div>
+          <div class="vp-sidebar-label" style="margin-top:6px"><t t-esc="'التسويق' if is_ar_dir else 'Marketing'"/></div>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_flash' and 'active' or ''}"
              href="/my/vendor/flash-sale">
-            <i class="fa fa-bolt"></i> Flash Sales
+            <i class="fa fa-bolt"></i> <t t-esc="'عروض الفلاش' if is_ar_dir else 'Flash Sales'"/>
+          </a>
+          <a t-attf-class="vp-nav-item #{page_name == 'vendor_promotions' and 'active' or ''}"
+             href="/my/vendor/promotions">
+            <i class="fa fa-tags"></i> <t t-esc="'الحملات الترويجية' if is_ar_dir else 'Promotions'"/>
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_reviews' and 'active' or ''}"
              href="/my/vendor/reviews">
-            <i class="fa fa-star"></i> Reviews
+            <i class="fa fa-star"></i> <t t-esc="'التقييمات' if is_ar_dir else 'Reviews'"/>
           </a>
 
-          <div class="vp-sidebar-label" style="margin-top:6px">Store</div>
+          <div class="vp-sidebar-label" style="margin-top:6px"><t t-esc="'المتجر' if is_ar_dir else 'Store'"/></div>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_style' and 'active' or ''}"
              href="/my/vendor/style">
-            <i class="fa fa-paint-brush"></i> Style
+            <i class="fa fa-paint-brush"></i> <t t-esc="'تصميم المتجر' if is_ar_dir else 'Style'"/>
           </a>
           <a t-attf-class="vp-nav-item #{page_name == 'vendor_settings' and 'active' or ''}"
              href="/my/vendor/settings">
-            <i class="fa fa-cog"></i> Settings
+            <i class="fa fa-cog"></i> <t t-esc="'الإعدادات' if is_ar_dir else 'Settings'"/>
           </a>
           <t t-if="vendor">
             <a class="vp-nav-item"
                t-attf-href="/store/#{vendor.store_slug}" target="_blank">
-              <i class="fa fa-external-link"></i> View Store
+              <i class="fa fa-external-link"></i> <t t-esc="'عرض المتجر' if is_ar_dir else 'View Store'"/>
             </a>
           </t>
 
           <hr class="vp-sidebar-divider"/>
           <a href="/web/session/logout?redirect=/" class="vp-nav-item" style="color:#e24b4a">
-            <i class="fa fa-sign-out"></i> Sign out
+            <i class="fa fa-sign-out"></i> <t t-esc="'تسجيل الخروج' if is_ar_dir else 'Sign out'"/>
           </a>
         </div>
       </nav>

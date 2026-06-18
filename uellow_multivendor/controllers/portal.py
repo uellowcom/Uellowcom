@@ -20,6 +20,13 @@ class VendorPortalController(http.Controller):
             ], limit=1)
         return vendor
 
+    def _denied(self, vendor, code, redirect='/my/vendor'):
+        """Return a redirect Response when the vendor lacks capability `code`,
+        else None. Usage: d = self._denied(v, 'add_products'); if d: return d"""
+        if vendor and not vendor.cap(code):
+            return request.redirect(redirect + '?denied=' + code)
+        return None
+
     # ── Dashboard ──────────────────────────────────────────────────
     @http.route('/my/vendor', type='http', auth='user', website=True)
     def vendor_dashboard(self, **kw):
@@ -207,6 +214,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'restock', '/my/vendor/stock')
+        if d:
+            return d
         try:
             if product_id and int(qty) > 0:
                 VL = request.env['uellow.vendor.location'].sudo()
@@ -261,6 +271,11 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'request_payout', '/my/vendor/wallet')
+        if d:
+            return d
+        if vendor.settings_id and vendor.settings_id.hide_financials:
+            return request.redirect('/my/vendor/wallet')
         try:
             amt = float(amount)
             if amt > 0 and amt <= (vendor.wallet_balance or 0):
@@ -310,6 +325,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'flash_sale', '/my/vendor/flash-sale')
+        if d:
+            return d
         try:
             product_ids = request.httprequest.form.getlist('product_ids')
             request.env['uellow.flash.sale'].sudo().create({
@@ -349,6 +367,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'restock', '/my/vendor/withdrawals')
+        if d:
+            return d
         try:
             VL = request.env['uellow.vendor.location'].sudo()
             vloc = VL.search([('partner_id', '=', vendor.partner_id.id)], limit=1)
@@ -394,6 +415,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'edit_store', '/my/vendor/style')
+        if d:
+            return d
         settings = vendor.settings_id
         if settings:
             settings.sudo().write({
@@ -422,6 +446,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'edit_store', '/my/vendor/settings')
+        if d:
+            return d
         try:
             vals = {}
             for field in ['store_name_en', 'store_name_ar', 'store_tagline_en',
@@ -527,6 +554,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'import_products', '/my/vendor/products')
+        if d:
+            return d
         # File upload handled here
         import_file = request.httprequest.files.get('import_file')
         if import_file:
@@ -574,6 +604,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'add_products', '/my/vendor/products')
+        if d:
+            return d
         try:
             import base64
             vals = {
@@ -632,6 +665,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'import_products', '/my/vendor/products')
+        if d:
+            return d
         if source_url:
             try:
                 # Create Smart Connector job for this vendor
@@ -654,6 +690,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'publish_products', '/my/vendor/products')
+        if d:
+            return d
         product = request.env['product.template'].sudo().browse(product_id)
         if product.exists() and product.vendor_id.id == vendor.id:
             product.sudo().write({
@@ -688,6 +727,9 @@ class VendorPortalController(http.Controller):
         vendor = self._get_vendor()
         if not vendor:
             return request.redirect('/my')
+        d = self._denied(vendor, 'edit_products', '/my/vendor/products')
+        if d:
+            return d
         product = request.env['product.template'].sudo().browse(product_id)
         if not product.exists() or product.vendor_id.id != vendor.id:
             return request.redirect('/my/vendor/products')

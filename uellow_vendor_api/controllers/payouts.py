@@ -104,6 +104,8 @@ class VendorPayoutsAPI(http.Controller):
         """Vendor-initiated payout request: bundles every released
         commission with no payout yet into a fresh draft payout."""
         v = current_vendor()
+        if not v.cap('request_payout') or (v.settings_id and v.settings_id.hide_financials):
+            return fail('FORBIDDEN', 'Payouts are disabled for your account.', 403, capability='request_payout')
         Comm = request.env['uellow.vendor.commission'].sudo()
         ready = Comm.search([
             ('vendor_id', '=', v.id),

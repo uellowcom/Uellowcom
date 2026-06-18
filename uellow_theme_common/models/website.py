@@ -181,6 +181,20 @@ class Website(models.Model):
         default="Faster checkout, member-only deals, instant order updates.",
         help="Short pitch above the newsletter input.")
 
+    # ─── Per-website footer policy links ───────────────────────────────
+    uc_policy_privacy_url = fields.Char(
+        "Privacy URL", default="/page/privacy",
+        help="Footer 'Privacy' link target for THIS storefront.")
+    uc_policy_terms_url = fields.Char(
+        "Terms URL", default="/page/terms",
+        help="Footer 'Terms' link target for THIS storefront.")
+    uc_policy_cookies_url = fields.Char(
+        "Cookies URL", default="/page/cookies",
+        help="Footer 'Cookies' link target for THIS storefront.")
+    uc_policy_accessibility_url = fields.Char(
+        "Accessibility URL", default="/page/accessibility",
+        help="Footer 'Accessibility' link target for THIS storefront.")
+
     # ─── Beena AI mobile-nav icon override ──────────────────────────────
     uc_beena_icon = fields.Binary(
         "Beena Custom Icon",
@@ -300,6 +314,8 @@ class Website(models.Model):
             'Blog':                'المدوّنة',
             'About Uellow':        'عن Uellow',
             'Careers':             'الوظائف',
+            'Partners Program':    'برنامج الشركاء — اربح مع يلو',
+            'Download the Uellow App': 'حمّل تطبيق يلو',
             'Faster checkout, member-only deals, instant order updates.':
                 'إتمام شراء أسرع، عروض للأعضاء، إشعارات فورية بحالة الطلب.',
             'Download on the':     'حمّل من',
@@ -414,6 +430,8 @@ class Website(models.Model):
             'Blog':                'Blog',
             'About Uellow':        'À propos de Uellow',
             'Careers':             'Carrières',
+            'Partners Program':    'Programme Partenaires',
+            'Download the Uellow App': "Télécharger l'app Uellow",
             'Faster checkout, member-only deals, instant order updates.':
                 'Paiement plus rapide, offres membres, mises à jour instantanées.',
             'Download on the':     'Télécharger sur',
@@ -575,6 +593,93 @@ class Website(models.Model):
             if val:
                 out.append({'icon': icon, 'url': val, 'label': label})
         return out
+
+    def _uc_free_ship_line(self):
+        """Per-website free-shipping strap line, sourced from the LIVE
+        free-shipping engine (uellow.freeship.rule.bar_threshold) so the
+        header label always matches the actual threshold for THIS storefront
+        / country. Falls back to the static uc_preheader_text if no cart-scope
+        free-ship rule applies. Returns a string or '' ."""
+        self.ensure_one()
+        try:
+            amount = self.env['uellow.freeship.rule'].sudo().bar_threshold()
+        except Exception:
+            amount = None
+        if not amount:
+            return self.uc_preheader_text or ''
+        cur = self.sudo().company_id.currency_id
+        code = (cur.name if cur else '') or 'KWD'
+        amt = ('%.0f' % amount) if float(amount).is_integer() else ('%.3f' % amount)
+        ar = (self.env.context.get('lang') or '').startswith('ar')
+        if ar:
+            return 'شحن مجاني للطلبات فوق %s %s' % (amt, code)
+        return 'Free shipping on orders above %s %s' % (amt, code)
+
+    def _uc_trending_list(self, limit=8):
+        """Trending search terms for the header — sourced from the SAME live
+        data the mobile app uses (mobile.search.analytic). Falls back to the
+        static uc_trending_terms field when analytics are empty (new sites)."""
+        self.ensure_one()
+        terms = []
+        Model = self.env.get('mobile.search.analytic')
+        if Model is not None:
+            try:
+                rows = Model.sudo().get_top_keywords(limit=limit, days=7)
+                terms = [(r.get('keyword') or '').strip() for r in rows
+                         if (r.get('keyword') or '').strip()]
+            except Exception:
+                terms = []
+        if not terms:
+            terms = [t.strip() for t in (self.uc_trending_terms or '').split(',')
+                     if t.strip()]
+        return terms[:limit]
+
+    def _uc_footer_links(self, code):
+        """Per-website editable footer column. Returns [{name,url}] from the
+        children of the '/uc-footer/<code>' container menu under the site's
+        separate 'UC Footer' root (NOT website.menu_id, so these never appear
+        in the header nav). Empty list ⇒ the template renders its built-in
+        static links (so untouched sites are unchanged)."""
+        self.ensure_one()
+        Menu = self.env['website.menu'].sudo()
+        container = Menu.search([
+            ('url', '=', '/uc-footer/%s' % code),
+            ('website_id', 'in', [self.id, False]),
+        ], limit=1)
+        if not container:
+            return []
+        out = []
+        for m in container.child_id.sorted('sequence'):
+            out.append({'name': m.name, 'url': m.url or '#'})
+        return out
+
+    def _uc_live_flash(self):
+        """The live flash sale for THIS storefront (mobile.flash.sale), used to
+        drive the header's red 'deals' card — real title, real countdown to the
+        sale's end_date, links to /flash-deals. Returns a dict compatible with
+        _uc_deals_resolve() (label/icon/url) plus an ISO 'end', or None so the
+        template falls back to the configured Today's-Deals pill."""
+        self.ensure_one()
+        Model = self.env.get('mobile.flash.sale')
+        if Model is None:
+            return None
+        try:
+            sales = Model.sudo().search(
+                [('active', '=', True), ('website_id', 'in', [False, self.id])],
+                order='sequence asc')
+            ar = (self.env.context.get('lang') or '').startswith('ar')
+            for s in sales:
+                if not getattr(s, 'is_live', False):
+                    continue
+                label = (getattr(s, 'name_ar', '') if ar else '') or s.name or 'Flash Sale'
+                end_iso = ''
+                if s.end_date:
+                    end_iso = fields.Datetime.to_string(s.end_date).replace(' ', 'T') + 'Z'
+                return {'label': label, 'icon': 'fa-bolt',
+                        'url': '/flash-deals', 'end': end_iso}
+        except Exception:
+            return None
+        return None
 
     def _uc_oauth_buttons(self):
         """Return the enabled OAuth providers, mapped to compact display

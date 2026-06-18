@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- /my home — Vendor dashboard entry card.
+       Shown ONLY to users that have a vendor account (by portal user or partner). -->
+  <template id="portal_my_home_vendor" name="Portal: Vendor entry"
+            inherit_id="portal.portal_my_home" priority="62">
+    <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+      <t t-if="request.env['uellow.vendor'].sudo().search_count([
+                 '|', ('user_id', '=', request.env.uid),
+                 ('partner_id', '=', request.env.user.partner_id.id)])">
+        <t t-call="portal.portal_docs_entry">
+          <t t-set="icon" t-value="'/uellow_multivendor/static/img/vendor.svg'"/>
+          <t t-set="title">My Store / متجري</t>
+          <t t-set="text">Vendor dashboard — products, orders, wallet, flash sales</t>
+          <t t-set="url" t-value="'/my/vendor'"/>
+          <t t-set="config_card" t-value="True"/>
+        </t>
+      </t>
+    </xpath>
+  </template>
+</odoo>

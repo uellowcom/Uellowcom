@@ -23,6 +23,7 @@
                             table.prq { width:100%;border-collapse:collapse;margin-top:10px;font-size:11.5px; }
                             table.prq th { background:#F5C320;color:#412402;padding:7px 6px;text-align:left;border:1px solid #e0c25a; }
                             table.prq td { padding:6px;border:1px solid #ddd;vertical-align:middle; }
+                            table.prq td img { max-height:44px;max-width:44px;object-fit:contain; }
                             table.prq tr:nth-child(even) td { background:#fcf7e6; }
                             .prq-fill { background:#fffce8 !important;border:1px solid #d8c97a !important; }
                             .prq-box { display:inline-block;width:13px;height:13px;border:1.4px solid #412402;border-radius:3px;margin-right:4px;vertical-align:middle; }
@@ -60,6 +61,7 @@
                             <thead>
                                 <tr>
                                     <th style="width:26px;">#</th>
+                                    <th style="width:50px;">Image<br/>الصورة</th>
                                     <th style="width:90px;">SKU / الرمز</th>
                                     <th>Product / المنتج</th>
                                     <th style="width:80px;text-align:right;">Current<br/>الحالي</th>
@@ -72,6 +74,11 @@
                                 <tr t-foreach="doc.line_ids" t-as="ln">
                                     <t t-set="i" t-value="i + 1"/>
                                     <td><span t-esc="i"/></td>
+                                    <td style="text-align:center;">
+                                        <span t-if="ln.image_128"
+                                              t-field="ln.image_128"
+                                              t-options="{'widget': 'image'}"/>
+                                    </td>
                                     <td>
                                         <span t-field="ln.default_code"/>
                                         <t t-if="not ln.default_code and ln.barcode">

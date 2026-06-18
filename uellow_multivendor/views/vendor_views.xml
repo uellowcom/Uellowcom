@@ -111,6 +111,67 @@
                 <field name="wallet_id" readonly="1"/>
               </group>
             </page>
+            <!-- Per-vendor capabilities + financial settlement.
+                 Fields are related to settings_id (write-through). -->
+            <page string="Capabilities &amp; Settlement">
+              <div class="alert alert-info" role="alert" invisible="settings_id">
+                Save the vendor first (or approve it) to create its settings record,
+                then these toggles become editable.
+              </div>
+              <group string="Vendor Type">
+                <field name="vendor_type"/>
+                <p class="text-muted" colspan="2">
+                  Business model. Seeds fulfillment toggles (stock control,
+                  customer-data visibility, settlement) — override any toggle below.
+                </p>
+              </group>
+              <group string="Quick Profile">
+                <field name="capability_preset"/>
+                <p class="text-muted" colspan="2">
+                  Pick a preset to set all toggles at once, then fine-tune below.
+                  'House brand' = no self-service + no financial tracking.
+                </p>
+              </group>
+              <group>
+                <group string="Catalog">
+                  <field name="cap_add_products"/>
+                  <field name="cap_edit_products"/>
+                  <field name="cap_archive_products"/>
+                  <field name="cap_update_stock"/>
+                  <field name="cap_publish_products"/>
+                  <field name="cap_manage_price"/>
+                  <field name="cap_import_products"/>
+                </group>
+                <group string="Merchandising &amp; Orders">
+                  <field name="cap_flash_sale"/>
+                  <field name="cap_bundles"/>
+                  <field name="cap_join_promotions"/>
+                  <field name="cap_manage_orders"/>
+                  <field name="cap_cancel_orders"/>
+                  <field name="cap_restock"/>
+                  <field name="cap_edit_store"/>
+                </group>
+              </group>
+              <group string="Financial Settlement">
+                <group>
+                  <field name="settlement_mode"/>
+                  <field name="settle_trigger"
+                         invisible="settlement_mode != 'per_order'"/>
+                </group>
+                <group>
+                  <field name="cap_request_payout"/>
+                  <field name="cap_api"/>
+                  <field name="cap_live"/>
+                  <field name="cap_quick_sale"/>
+                  <field name="hide_financials"/>
+                </group>
+                <p class="text-muted" colspan="2">
+                  <b>Per-order</b>: every order is settled instantly — the vendor
+                  never sees any outstanding dues or payable balance.
+                  <b>None</b>: no commissions or wallet at all (Uellow-owned stock).
+                </p>
+              </group>
+            </page>
             <!-- v2.1.66 — assign ANY catalog product to this vendor.
                  widget=many2many turns the one2many into a picker:
                  "Add" links an existing product (sets its vendor_id),

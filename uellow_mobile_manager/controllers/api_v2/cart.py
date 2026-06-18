@@ -425,10 +425,113 @@ def carrier_is_express(c):
         return False
 
 
+def _ensure_promo_coupon(order, program_id):
+    """v2.2.48 — force-apply a promo's coupon PROGRAM to the cart (mandatory
+    reward). No-op when already applied. Returns True if it applied now.
+    Re-applied on the next cart render if the user removes it → mandatory."""
+    try:
+        prog = request.env['loyalty.program'].sudo().browse(program_id)
+        if not prog.exists():
+            return False
+        applied = set()
+        for c in order.applied_coupon_ids:
+            applied.add(c.program_id.id)
+        for r in getattr(order, 'code_enabled_rule_ids',
+                         request.env['loyalty.rule'].browse([])):
+            applied.add(r.program_id.id)
+        for l in order.order_line.filtered('is_reward_line'):
+            rw = getattr(l, 'reward_id', False)
+            if rw:
+                applied.add(rw.program_id.id)
+        if program_id in applied:
+            return False
+        code = (prog.rule_ids[:1].code or '') if prog.rule_ids else ''
+        if code and hasattr(order, '_try_apply_code'):
+            res = order._try_apply_code(code)
+            if isinstance(res, dict) and not res.get('error'):
+                for coupon, rewards in res.items():
+                    for reward in rewards:
+                        try:
+                            order._apply_program_reward(reward, coupon)
+                            break
+                        except Exception:
+                            continue
+        if hasattr(order, '_update_programs_and_rewards'):
+            order._update_programs_and_rewards()
+        return bool(order.order_line.filtered('is_reward_line'))
+    except Exception:
+        _logger.debug('ensure promo coupon failed', exc_info=True)
+        return False
+
+
+def _sync_promo_rewards(order):
+    """v2.2.48 — keep the mandatory promo FREE GIFT line in sync with the
+    cart's eligibility. Adds it (price 0) when a running promo grants one and
+    its threshold is met; removes it otherwise. Best-effort; commits only on
+    a real change. Free-shipping is handled in order_free_shipping_reason."""
+    if not order or order.state not in ('draft', 'sent'):
+        return
+    try:
+        Promo = request.env['mobile.app.promotion'].sudo()
+        rw = Promo.cart_rewards(order, channel='mobile')
+        SOL = request.env['sale.order.line'].sudo()
+        existing = order.order_line.filtered(
+            lambda l: getattr(l, 'uellow_promo_gift', False))
+        gift = rw.get('gift')
+        changed = False
+        if gift:
+            pid, qty, promo_id = gift
+            keep = existing.filtered(lambda l: l.product_id.id == pid)
+            drop = existing - keep
+            if drop:
+                drop.unlink(); changed = True
+            if keep:
+                k = keep[0]
+                if k.product_uom_qty != qty or k.price_unit != 0.0 \
+                        or k.discount != 100.0:
+                    k.write({'product_uom_qty': qty, 'price_unit': 0.0,
+                             'discount': 100.0}); changed = True
+                if len(keep) > 1:
+                    keep[1:].unlink(); changed = True
+            else:
+                SOL.create({
+                    'order_id': order.id, 'product_id': pid,
+                    'product_uom_qty': qty, 'price_unit': 0.0,
+                    'discount': 100.0,
+                    'uellow_promo_gift': True, 'uellow_promo_id': promo_id,
+                }); changed = True
+        elif existing:
+            existing.unlink(); changed = True
+        # v2.2.48 — force-apply the promo's coupon program (mandatory).
+        if rw.get('coupon_program_id'):
+            if _ensure_promo_coupon(order, rw['coupon_program_id']):
+                changed = True
+        # v2.2.48 — record the promos that granted a reward on this cart so
+        # caps/budget are counted when the order is confirmed.
+        pids = rw.get('promo_ids') or []
+        if pids and set(pids) - set(order.uellow_promo_ids.ids):
+            order.sudo().write({'uellow_promo_ids': [(4, i) for i in pids]})
+            changed = True
+        if changed:
+            request.env.cr.commit()
+    except Exception:
+        _logger.debug('promo gift sync failed', exc_info=True)
+
+
 def order_free_shipping_reason(order):
     """Order-level free-shipping source or None.
     Returns {'reason': code, 'label': {en, ar}}."""
     ICP = request.env['ir.config_parameter'].sudo()
+    # 0) v2.2.48 — promotions engine free-shipping reward
+    try:
+        rw = request.env['mobile.app.promotion'].sudo().cart_rewards(
+            order, channel='mobile')
+        if rw.get('free_ship'):
+            return {'reason': 'promo',
+                    'label': {'en': 'Free shipping offer',
+                              'ar': 'شحن مجاني (عرض)'}}
+    except Exception:
+        pass
     # 1) coupon with a free-shipping reward
     try:
         for l in order.order_line:
@@ -652,6 +755,8 @@ def _available_shipping_methods(order):
 def serialize_cart(order):
     if not order:
         return _empty_cart()
+    # v2.2.48 — sync the mandatory promo free-gift line before rendering.
+    _sync_promo_rewards(order)
     cur = order.currency_id or request.env.company.currency_id
     lines = []
     # Exclude delivery (shipping) lines — they are NOT cart products and must
@@ -671,6 +776,8 @@ def serialize_cart(order):
             'unit_price':   fmt_price(line.price_unit, cur),
             'subtotal':     fmt_price(line.price_subtotal, cur),
             'total':        fmt_price(line.price_total, cur),
+            # v2.2.48 — mandatory promo free gift (price 0, not removable)
+            'is_gift':      bool(getattr(line, 'uellow_promo_gift', False)),
             'attributes':   [{
                 'attribute': bilingual(ptav.attribute_id, 'name'),
                 'value':     bilingual(ptav.product_attribute_value_id, 'name'),

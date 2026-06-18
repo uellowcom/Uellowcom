@@ -93,12 +93,29 @@
                         <page string="Products" name="lines">
                             <field name="line_ids">
                                 <list editable="bottom"
-                                      decoration-success="state == 'approved'"
+                                      decoration-success="state == 'approved' and not is_hidden"
+                                      decoration-muted="is_hidden"
                                       decoration-danger="state == 'rejected'">
+                                    <field name="is_hidden" column_invisible="1"/>
                                     <field name="product_tmpl_id"/>
                                     <field name="vendor_id"/>
-                                    <field name="discount_pct"/>
-                                    <field name="note" optional="show"/>
+                                    <field name="discount_pct" string="Discount % (stored)"/>
+                                    <field name="eff_discount_pct" readonly="1" optional="show"
+                                           decoration-warning="eff_discount_pct &lt; discount_pct"/>
+                                    <field name="is_hidden" optional="show" string="Hidden 🚫"/>
+                                    <field name="cost" readonly="1" optional="show"/>
+                                    <field name="price_before" readonly="1" optional="show"/>
+                                    <field name="price_after" readonly="1" optional="show"/>
+                                    <field name="profit" readonly="1" optional="show"
+                                           decoration-danger="profit &lt;= 0"
+                                           decoration-success="profit &gt; 0"/>
+                                    <field name="profit_pct" readonly="1" optional="show"
+                                           decoration-danger="profit_pct &lt;= 0"/>
+                                    <field name="net_profit" readonly="1" optional="show"
+                                           decoration-danger="net_profit &lt; 0"/>
+                                    <field name="net_profit_pct" readonly="1" optional="show"
+                                           decoration-danger="net_profit_pct &lt; 0"/>
+                                    <field name="note" optional="hide"/>
                                     <field name="state"/>
                                     <field name="reject_reason" optional="hide"/>
                                     <button name="action_approve" type="object"
@@ -109,6 +126,127 @@
                                             invisible="state == 'rejected'"/>
                                 </list>
                             </field>
+                        </page>
+                        <page string="🎯 Targeting" name="targeting">
+                            <group>
+                                <field name="target_mode" widget="radio"/>
+                            </group>
+                            <group invisible="target_mode != 'rules'">
+                                <group string="Rule discount">
+                                    <field name="global_discount_pct"/>
+                                    <field name="min_show_discount_pct"/>
+                                    <field name="targeted_count" readonly="1"/>
+                                    <field name="excluded_count" readonly="1"/>
+                                    <field name="below_min_count" readonly="1"
+                                           string="↳ hidden (weak discount)"
+                                           decoration-warning="below_min_count &gt; 0"/>
+                                    <button name="action_generate_lines"
+                                            type="object" colspan="2"
+                                            string="🔄 Generate / refresh lines"
+                                            class="btn-primary"/>
+                                </group>
+                            </group>
+                            <field name="scope_ids"
+                                   invisible="target_mode != 'rules'">
+                                <list editable="bottom"
+                                      decoration-success="kind == 'include'"
+                                      decoration-danger="kind == 'exclude'">
+                                    <field name="kind"/>
+                                    <field name="scope_type"/>
+                                    <field name="category_id"
+                                           column_invisible="0"
+                                           invisible="scope_type != 'category'"/>
+                                    <field name="include_subcats"
+                                           invisible="scope_type != 'category'"/>
+                                    <field name="brand_id"
+                                           invisible="scope_type != 'brand'"/>
+                                    <field name="vendor_id"
+                                           invisible="scope_type != 'vendor'"/>
+                                    <field name="price_min"
+                                           invisible="scope_type != 'price_range'"/>
+                                    <field name="price_max"
+                                           invisible="scope_type != 'price_range'"/>
+                                    <field name="product_tmpl_ids"
+                                           widget="many2many_tags"
+                                           invisible="scope_type != 'product'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="💰 Margin Guard" name="margin">
+                            <group>
+                                <field name="margin_guard"/>
+                                <field name="margin_mode"
+                                       invisible="not margin_guard"/>
+                                <field name="min_margin_pct"
+                                       invisible="not margin_guard"/>
+                                <field name="margin_reserve_ship"
+                                       invisible="not margin_guard"/>
+                                <field name="margin_ship_cost"
+                                       invisible="not margin_guard or not margin_reserve_ship"/>
+                            </group>
+                            <div class="text-muted" colspan="2">
+                                The discount is capped per product so the
+                                profit floor (cost vs. price) is never broken;
+                                products that cannot meet it are skipped.
+                                Enable “Reserve delivery cost” to also keep
+                                enough profit to cover free delivery (the
+                                delivery amount is added to the product cost
+                                before the floor is measured).
+                            </div>
+                        </page>
+                        <page string="📱 Channel &amp; Caps" name="channel">
+                            <group>
+                                <group string="Channel">
+                                    <field name="channel" widget="radio"/>
+                                    <field name="priority"/>
+                                    <field name="stackable"/>
+                                    <field name="exclusive"/>
+                                </group>
+                                <group string="Caps">
+                                    <field name="usage_limit"/>
+                                    <field name="per_customer_limit"/>
+                                    <field name="budget_cap"/>
+                                    <field name="usage_count" readonly="1"/>
+                                    <field name="budget_spent" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="⚙️ Conditions" name="conditions">
+                            <group>
+                                <group string="Cart">
+                                    <field name="cond_min_subtotal"/>
+                                    <field name="cond_min_qty"/>
+                                    <field name="cond_first_order"/>
+                                </group>
+                                <group string="Timing">
+                                    <field name="cond_days"/>
+                                    <field name="cond_hour_from"/>
+                                    <field name="cond_hour_to"/>
+                                </group>
+                            </group>
+                            <div class="text-muted" colspan="2">
+                                Conditions gate the order-level rewards (gift /
+                                free shipping / coupon). Product price discounts
+                                from Targeting are not gated by these.
+                            </div>
+                        </page>
+                        <page string="🎁 Rewards" name="rewards">
+                            <group>
+                                <group string="Gift &amp; shipping">
+                                    <field name="reward_free_ship"/>
+                                    <field name="reward_gift_product_id"/>
+                                    <field name="reward_gift_qty"
+                                           invisible="not reward_gift_product_id"/>
+                                    <field name="reward_gift_threshold"
+                                           invisible="not reward_gift_product_id"/>
+                                </group>
+                                <group string="Coupon &amp; loyalty">
+                                    <field name="reward_coupon_mode"/>
+                                    <field name="reward_coupon_program_id"
+                                           invisible="reward_coupon_mode == 'none'"/>
+                                    <field name="reward_loyalty_multiplier"/>
+                                </group>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>

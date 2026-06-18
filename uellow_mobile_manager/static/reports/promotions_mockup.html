@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>موكاب محرّك العروض — Uellow Promotions</title>
+<style>
+  :root{--y:#F5C320;--d:#412402;--soft:#FFF8E1;--line:#e6ddc4;--ok:#1F8A40;--red:#E63946;--blue:#1D6FB7;--mut:#8a7a5c}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Tahoma,Arial,sans-serif;background:#f3eede;color:#2c1c08}
+  .top{background:linear-gradient(135deg,var(--d),#6b3a05 70%,var(--y));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;position:sticky;top:0;z-index:9}
+  .top h1{font-size:18px;margin:0;flex:1}
+  .pill{border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700}
+  .pill.on{background:var(--y);color:var(--d)} .pill.off{background:#ffffff33;color:#fff}
+  .btn{border:0;border-radius:10px;padding:8px 16px;font-weight:800;cursor:pointer;font-size:13px}
+  .btn.p{background:var(--y);color:var(--d)} .btn.g{background:#ffffff22;color:#fff}
+  .wrap{max-width:1080px;margin:0 auto;padding:16px;display:grid;grid-template-columns:1fr 320px;gap:16px}
+  @media(max-width:860px){.wrap{grid-template-columns:1fr}}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tab{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;color:var(--d)}
+  .tab.active{background:var(--d);color:#fff;border-color:var(--d)}
+  .panel{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .panel.show{display:block}
+  h3{margin:4px 0 12px;color:var(--d);font-size:16px}
+  .sec{border:1px dashed var(--line);border-radius:10px;padding:12px;margin:10px 0;background:#fcfaf2}
+  .sec h4{margin:0 0 8px;font-size:14px;color:#6b3a05}
+  label{display:block;font-size:12px;color:var(--mut);margin:8px 0 3px;font-weight:600}
+  .f{display:flex;gap:10px;flex-wrap:wrap}
+  .f>div{flex:1;min-width:140px}
+  input[type=text],input[type=number],select,textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:13px;background:#fff;font-family:inherit}
+  .chip{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:18px;padding:4px 12px;margin:3px;font-size:12px}
+  .chip b{color:var(--d)}
+  .chip.x{background:#fde8e8;border-color:#f5c2c2}
+  .sw{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 12px;margin:4px 4px 4px 0;font-size:13px;font-weight:600}
+  .dot{width:34px;height:18px;border-radius:20px;background:#ccc;position:relative;transition:.2s}
+  .dot.on{background:var(--ok)} .dot::after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:2px;right:2px;transition:.2s} .dot.on::after{right:18px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+  .add{color:var(--blue);font-size:12px;font-weight:700;cursor:pointer}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px}
+  th,td{border:1px solid var(--line);padding:7px;text-align:right}
+  th{background:var(--d);color:#fff}
+  .bar{height:9px;border-radius:6px;background:#eee;overflow:hidden}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),var(--y))}
+  /* side preview */
+  .side{position:sticky;top:74px;align-self:start}
+  .phone{background:#fff;border:8px solid var(--d);border-radius:26px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+  .pcard{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .pimg{height:120px;background:linear-gradient(135deg,#fff,#f2ead3);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative}
+  .badge{position:absolute;top:8px;right:8px;background:var(--red);color:#fff;border-radius:8px;padding:3px 8px;font-size:11px;font-weight:800}
+  .pcard .b{padding:10px}
+  .price{color:var(--red);font-weight:900;font-size:16px}
+  .old{color:#999;text-decoration:line-through;font-size:12px;margin-right:6px}
+  .gift{background:#eafaf0;border:1px solid #bfe6cc;border-radius:10px;padding:8px;font-size:12px;margin-top:8px}
+  .note{font-size:11px;color:var(--mut);margin-top:6px}
+  .kpi{display:flex;gap:8px;margin-top:10px}
+  .kpi div{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px;text-align:center}
+  .kpi b{display:block;color:var(--d);font-size:16px}
+  .kpi span{font-size:10px;color:var(--mut)}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>🎯 محرّك العروض — تعديل عرض</h1>
+  <span class="pill off">مسودّة</span><span class="pill on">مفتوح</span><span class="pill off">يعمل</span><span class="pill off">منتهٍ</span>
+  <button class="btn g">حفظ</button><button class="btn p">تفعيل العرض ▶</button>
+</div>
+
+<div class="wrap">
+ <div>
+  <input type="text" value="عرض الجمعة البيضاء — إلكترونيات" style="font-size:16px;font-weight:800;margin-bottom:10px">
+
+  <div class="tabs">
+    <div class="tab active" onclick="go(0)">نظرة عامة</div>
+    <div class="tab" onclick="go(1)">🎯 الاستهداف</div>
+    <div class="tab" onclick="go(2)">⚙️ الشروط</div>
+    <div class="tab" onclick="go(3)">🎁 المكافآت</div>
+    <div class="tab" onclick="go(4)">💰 حارس الربح</div>
+    <div class="tab" onclick="go(5)">📱 القناة والسقوف</div>
+    <div class="tab" onclick="go(6)">👁️ العرض</div>
+  </div>
+
+  <!-- 0 overview -->
+  <div class="panel show">
+    <h3>نظرة عامة</h3>
+    <div class="f">
+      <div><label>القالب الجاهز (Preset)</label><select><option>مخصّص</option><option>جمعة بيضاء</option><option>عميل جديد</option><option>تخفيض موسمي</option><option>تصريف مخزون بطيء</option></select></div>
+      <div><label>الأولوية</label><input type="number" value="10"></div>
+    </div>
+    <div class="f">
+      <div><label>يبدأ في</label><input type="text" value="2026-11-28 00:00"></div>
+      <div><label>ينتهي في</label><input type="text" value="2026-11-30 23:59"></div>
+    </div>
+    <div class="row">
+      <span class="sw"><span class="dot on" onclick="t(this)"></span> قابل للتكديس مع عروض أخرى</span>
+      <span class="sw"><span class="dot" onclick="t(this)"></span> عرض حصري (يلغي الباقي)</span>
+      <span class="sw"><span class="dot on" onclick="t(this)"></span> إشعار Push عند الإطلاق</span>
+      <span class="sw"><span class="dot on" onclick="t(this)"></span> تطبيق وقت الحساب (لا يلوّث الويبسايت)</span>
+    </div>
+  </div>
+
+  <!-- 1 targeting -->
+  <div class="panel">
+    <h3>🎯 الاستهداف — على مَن يُطبَّق العرض؟</h3>
+    <div class="sec"><h4>تضمين (Include)</h4>
+      <span class="chip"><b>كاتيجوري:</b> إلكترونيات ✓ (مع الفرعية)</span>
+      <span class="chip"><b>براند:</b> Xiaomi، Havit</span>
+      <span class="chip"><b>نطاق سعري:</b> 5 – 50 د.ك</span>
+      <span class="add">+ أضف نطاق</span>
+    </div>
+    <div class="sec"><h4>استبعاد (Exclude)</h4>
+      <span class="chip x"><b>براند:</b> Apple</span>
+      <span class="chip x"><b>وسم:</b> هدايا</span>
+      <span class="add">+ أضف استبعاد</span>
+    </div>
+    <div class="f">
+      <div><label>حالة المخزون</label><select><option>المتوفّر فقط</option><option>يشمل النافد</option></select></div>
+      <div><label>المنطق</label><select><option>كل الشروط (AND)</option><option>أي شرط (OR)</option></select></div>
+    </div>
+    <div class="note">📊 معاينة: سيشمل العرض <b>312 منتج</b> بعد الاستبعادات.</div>
+  </div>
+
+  <!-- 2 conditions -->
+  <div class="panel">
+    <h3>⚙️ الشروط — متى يُفعَّل؟</h3>
+    <div class="f">
+      <div><label>حد أدنى لإجمالي السلة (د.ك)</label><input type="number" value="10"></div>
+      <div><label>حد أدنى لعدد القطع</label><input type="number" value="2"></div>
+    </div>
+    <div class="row">
+      <span class="sw"><span class="dot on" onclick="t(this)"></span> أول طلب فقط (عميل جديد)</span>
+      <span class="sw"><span class="dot" onclick="t(this)"></span> عملاء VIP فقط</span>
+      <span class="sw"><span class="dot" onclick="t(this)"></span> عيد ميلاد العميل</span>
+    </div>
+    <div class="f">
+      <div><label>أيام محدّدة</label><select><option>كل الأيام</option><option>الخميس + الجمعة</option><option>عطلة نهاية الأسبوع</option></select></div>
+      <div><label>طريقة الدفع</label><select><option>الكل</option><option>KNET</option><option>Taly (تقسيط)</option></select></div>
+    </div>
+    <div class="f"><div><label>كود ترويجي مطلوب لتفعيله</label><input type="text" placeholder="اتركه فارغاً = تلقائي"></div></div>
+  </div>
+
+  <!-- 3 rewards -->
+  <div class="panel">
+    <h3>🎁 المكافآت — ماذا يحصل العميل؟</h3>
+    <table>
+      <tr><th>النوع</th><th>القيمة</th><th>تفاصيل</th></tr>
+      <tr><td>نسبة خصم %</td><td>30%</td><td>على المنتجات المستهدفة (محكوم بحارس الربح)</td></tr>
+      <tr><td>🎁 هدية إجبارية بالكارت</td><td>سماعة TWS</td><td>تُضاف تلقائياً عند سلة ≥ 20 د.ك ولا يمكن حذفها</td></tr>
+      <tr><td>🚚 شحن مجاني</td><td>مُفعّل</td><td>يربط قاعدة الشحن المجاني للسلة المطابقة</td></tr>
+      <tr><td>🎟️ توليد كوبون</td><td>10% للطلب القادم</td><td>صلاحية 14 يوم بعد الشراء</td></tr>
+      <tr><td>⭐ نقاط ولاء</td><td>×2</td><td>نقاط مضاعفة على الفئة</td></tr>
+    </table>
+    <div class="row" style="margin-top:10px">
+      <span class="add">+ خصم</span> · <span class="add">+ هدية</span> · <span class="add">+ شحن مجاني</span> · <span class="add">+ كوبون إجباري</span> · <span class="add">+ توليد كوبون</span> · <span class="add">+ اشترِ X واحصل على Y</span>
+    </div>
+  </div>
+
+  <!-- 4 margin -->
+  <div class="panel">
+    <h3>💰 حارس الربح — لا خصم يأكل ربحك</h3>
+    <div class="f">
+      <div><label>وضع الحارس</label><select><option>سقف تلقائي للخصم</option><option>اشتقاق الخصم من الهامش</option></select></div>
+      <div><label>الحد الأدنى للربح % (عام)</label><input type="number" value="15"></div>
+    </div>
+    <div class="sec"><h4>override لكل كاتيجوري</h4>
+      <span class="chip"><b>إلكترونيات:</b> ربح ≥ 12%</span>
+      <span class="chip"><b>عطور:</b> ربح ≥ 25%</span>
+      <span class="add">+ أضف</span>
+    </div>
+    <div class="note">مثال حيّ: طلبت خصم 30% — منتج هامشه ضعيف سيأخذ <b>11%</b> فقط ليبقى الربح 12%. والمنتجات غير المربحة <b>تُستبعَد تلقائياً (8 منتجات)</b>.</div>
+    <table>
+      <tr><th>منتج</th><th>السعر</th><th>التكلفة</th><th>خصم مطلوب</th><th>خصم مطبّق</th><th>الربح بعده</th></tr>
+      <tr><td>Xiaomi باوربانك</td><td>9.0</td><td>5.0</td><td>30%</td><td style="color:var(--ok)"><b>30%</b></td><td>15%</td></tr>
+      <tr><td>Havit سماعة</td><td>6.0</td><td>4.6</td><td>30%</td><td style="color:var(--red)"><b>11%</b></td><td>12%</td></tr>
+      <tr><td>كيبل رخيص</td><td>2.0</td><td>1.9</td><td>30%</td><td style="color:#999">مُستبعَد</td><td>—</td></tr>
+    </table>
+  </div>
+
+  <!-- 5 channel -->
+  <div class="panel">
+    <h3>📱 القناة والسقوف</h3>
+    <div class="f">
+      <div><label>القناة</label><select><option>الموبايل فقط</option><option selected>الموبايل + الويبسايت</option><option>الويبسايت فقط</option><option>+ نقاط البيع POS</option></select></div>
+      <div><label>المواقع (Websites)</label><select><option>كل الـ17 موقع</option><option>الكويت فقط</option><option>السعودية + الإمارات</option></select></div>
+    </div>
+    <div class="f">
+      <div><label>سقف الاستخدام الكلي</label><input type="number" value="500"></div>
+      <div><label>سقف لكل عميل</label><input type="number" value="1"></div>
+      <div><label>سقف ميزانية الخصم (د.ك)</label><input type="number" value="2000"></div>
+    </div>
+    <div class="row">
+      <span class="sw"><span class="dot on" onclick="t(this)"></span> إيقاف تلقائي عند نفاد الميزانية</span>
+      <span class="sw"><span class="dot" onclick="t(this)"></span> تجربة A/B (نسختان)</span>
+    </div>
+  </div>
+
+  <!-- 6 display -->
+  <div class="panel">
+    <h3>👁️ العرض والبصريات</h3>
+    <div class="f">
+      <div><label>إيموجي البادج</label><input type="text" value="🔥"></div>
+      <div><label>نص البادج (EN)</label><input type="text" value="Black Friday"></div>
+      <div><label>نص البادج (AR)</label><input type="text" value="الجمعة البيضاء"></div>
+    </div>
+    <div class="f">
+      <div><label>لون البادج</label><input type="text" value="#E63946"></div>
+      <div><label>لون البانر</label><input type="text" value="#412402"></div>
+    </div>
+    <div class="row">
+      <span class="sw"><span class="dot on" onclick="t(this)"></span> عدّاد تنازلي</span>
+      <span class="sw"><span class="dot on" onclick="t(this)"></span> "بقي N قطعة"</span>
+      <span class="sw"><span class="dot on" onclick="t(this)"></span> بلوك مخصّص بالـPage Builder</span>
+    </div>
+  </div>
+ </div>
+
+ <!-- side live preview -->
+ <div class="side">
+  <div class="phone">
+    <div class="pcard">
+      <div class="pimg">🎧<span class="badge">🔥 -30%</span></div>
+      <div class="b">
+        <div style="font-size:13px;font-weight:700">Xiaomi باوربانك 10000</div>
+        <div><span class="price">6.300 د.ك</span><span class="old">9.000</span></div>
+        <div class="gift">🎁 هدية مجانية: سماعة TWS — تُضاف للسلة</div>
+        <div class="gift" style="background:#eef4fb;border-color:#bcd6ef">🚚 شحن مجاني على هذا الطلب</div>
+        <div class="note">⏱️ ينتهي خلال 1ي 4س 22د · بقي 7 قطع</div>
+      </div>
+    </div>
+    <div class="kpi">
+      <div><b>312</b><span>منتج مستهدف</span></div>
+      <div><b>~24%</b><span>متوسط الخصم</span></div>
+      <div><b>≥12%</b><span>ربح محفوظ</span></div>
+    </div>
+    <div class="note" style="text-align:center;margin-top:8px">معاينة حيّة لبطاقة الموبايل</div>
+  </div>
+ </div>
+</div>
+
+<script>
+function go(i){
+  document.querySelectorAll('.tab').forEach((t,k)=>t.classList.toggle('active',k===i));
+  document.querySelectorAll('.panel').forEach((p,k)=>p.classList.toggle('show',k===i));
+}
+function t(el){el.classList.toggle('on')}
+</script>
+</body>
+</html>

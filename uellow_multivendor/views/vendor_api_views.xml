@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ══ API KEYS ════════════════════════════════════════════════ -->
+  <record id="view_vendor_api_key_list" model="ir.ui.view">
+    <field name="name">vendor.api.key.list</field>
+    <field name="model">vendor.api.key</field>
+    <field name="arch" type="xml">
+      <list>
+        <field name="name"/>
+        <field name="vendor_id"/>
+        <field name="key_prefix"/>
+        <field name="scope"/>
+        <field name="last_used"/>
+        <field name="active" widget="boolean_toggle"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_vendor_api_key_form" model="ir.ui.view">
+    <field name="name">vendor.api.key.form</field>
+    <field name="model">vendor.api.key</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="vendor_id"/>
+            <field name="scope"/>
+            <field name="key_prefix" readonly="1"/>
+            <field name="active"/>
+            <field name="last_used" readonly="1"/>
+          </group>
+          <p colspan="2">The full secret is shown only once when the key is
+            created from the vendor app. Only its hash is stored here.</p>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_vendor_api_key" model="ir.actions.act_window">
+    <field name="name">API Keys</field>
+    <field name="res_model">vendor.api.key</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- ══ WEBHOOKS ════════════════════════════════════════════════ -->
+  <record id="view_vendor_webhook_list" model="ir.ui.view">
+    <field name="name">vendor.webhook.list</field>
+    <field name="model">vendor.webhook</field>
+    <field name="arch" type="xml">
+      <list decoration-danger="fail_count > 3">
+        <field name="name"/>
+        <field name="vendor_id"/>
+        <field name="url"/>
+        <field name="event_codes"/>
+        <field name="last_status"/>
+        <field name="fail_count"/>
+        <field name="last_delivery"/>
+        <field name="active" widget="boolean_toggle"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_vendor_webhook_form" model="ir.ui.view">
+    <field name="name">vendor.webhook.form</field>
+    <field name="model">vendor.webhook</field>
+    <field name="arch" type="xml">
+      <form>
+        <sheet>
+          <group>
+            <field name="name"/>
+            <field name="vendor_id"/>
+            <field name="url"/>
+            <field name="event_codes"/>
+            <field name="active"/>
+          </group>
+          <group string="Delivery">
+            <field name="secret" readonly="1"/>
+            <field name="last_status" readonly="1"/>
+            <field name="last_error" readonly="1"/>
+            <field name="fail_count" readonly="1"/>
+            <field name="last_delivery" readonly="1"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_vendor_webhook" model="ir.actions.act_window">
+    <field name="name">Webhooks</field>
+    <field name="res_model">vendor.webhook</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <!-- ══ MENU ════════════════════════════════════════════════════ -->
+  <menuitem id="menu_marketplace_developer_root"
+            name="Developer / API"
+            parent="menu_marketplace_main"
+            sequence="80"/>
+  <menuitem id="menu_marketplace_api_keys"
+            name="API Keys"
+            parent="menu_marketplace_developer_root"
+            action="action_vendor_api_key"
+            sequence="1"/>
+  <menuitem id="menu_marketplace_webhooks"
+            name="Webhooks"
+            parent="menu_marketplace_developer_root"
+            action="action_vendor_webhook"
+            sequence="2"/>
+
+  <!-- ══ SPONSORED LISTINGS ══════════════════════════════════════ -->
+  <record id="view_vendor_ad_list" model="ir.ui.view">
+    <field name="name">vendor.ad.campaign.list</field>
+    <field name="model">vendor.ad.campaign</field>
+    <field name="arch" type="xml">
+      <list decoration-success="state == 'active'" decoration-muted="state in ('ended','cancelled')">
+        <field name="name"/>
+        <field name="vendor_id"/>
+        <field name="product_tmpl_id"/>
+        <field name="start_date"/>
+        <field name="end_date"/>
+        <field name="days"/>
+        <field name="total_cost"/>
+        <field name="state"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_vendor_ad_form" model="ir.ui.view">
+    <field name="name">vendor.ad.campaign.form</field>
+    <field name="model">vendor.ad.campaign</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_activate" type="object" string="Activate"
+                  class="btn-primary" invisible="state != 'draft'"/>
+          <button name="action_cancel" type="object" string="Cancel"
+                  invisible="state in ('cancelled','ended')"/>
+          <field name="state" widget="statusbar"/>
+        </header>
+        <sheet>
+          <group>
+            <group>
+              <field name="name"/>
+              <field name="vendor_id"/>
+              <field name="product_tmpl_id"/>
+            </group>
+            <group>
+              <field name="start_date"/>
+              <field name="end_date"/>
+              <field name="daily_rate"/>
+              <field name="days"/>
+              <field name="total_cost"/>
+              <field name="charged"/>
+            </group>
+          </group>
+          <group string="Performance">
+            <field name="impressions"/>
+            <field name="clicks"/>
+          </group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_vendor_ad" model="ir.actions.act_window">
+    <field name="name">Sponsored Listings</field>
+    <field name="res_model">vendor.ad.campaign</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <menuitem id="menu_marketplace_ads"
+            name="Sponsored Listings"
+            parent="menu_marketplace_developer_root"
+            action="action_vendor_ad"
+            sequence="3"/>
+
+  <!-- ══ ORDER DISPUTES ══════════════════════════════════════════ -->
+  <record id="view_vendor_dispute_list" model="ir.ui.view">
+    <field name="name">vendor.order.dispute.list</field>
+    <field name="model">vendor.order.dispute</field>
+    <field name="arch" type="xml">
+      <list decoration-warning="state == 'open'" decoration-info="state == 'in_review'"
+            decoration-muted="state in ('resolved','rejected')">
+        <field name="name"/>
+        <field name="vendor_id"/>
+        <field name="order_id"/>
+        <field name="partner_id"/>
+        <field name="reason"/>
+        <field name="state"/>
+        <field name="create_date"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_vendor_dispute_form" model="ir.ui.view">
+    <field name="name">vendor.order.dispute.form</field>
+    <field name="model">vendor.order.dispute</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_resolve" type="object" string="Resolve"
+                  class="btn-primary" invisible="state in ('resolved','rejected')"/>
+          <button name="action_reject" type="object" string="Reject"
+                  invisible="state in ('resolved','rejected')"/>
+          <field name="state" widget="statusbar"/>
+        </header>
+        <sheet>
+          <group>
+            <group>
+              <field name="name"/>
+              <field name="vendor_id"/>
+              <field name="order_id"/>
+              <field name="partner_id"/>
+            </group>
+            <group>
+              <field name="reason"/>
+            </group>
+          </group>
+          <group string="Details"><field name="description" nolabel="1"/></group>
+          <group string="Resolution"><field name="resolution" nolabel="1"/></group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_vendor_dispute" model="ir.actions.act_window">
+    <field name="name">Order Issues</field>
+    <field name="res_model">vendor.order.dispute</field>
+    <field name="view_mode">list,form</field>
+  </record>
+
+  <menuitem id="menu_marketplace_disputes"
+            name="Order Issues"
+            parent="menu_marketplace_main"
+            action="action_vendor_dispute"
+            sequence="60"/>
+
+  <!-- ══ ADS EXPIRY CRON + DEFAULT RATE ══════════════════════════ -->
+  <record id="cron_expire_ads" model="ir.cron">
+    <field name="name">Expire sponsored listings</field>
+    <field name="model_id" ref="model_vendor_ad_campaign"/>
+    <field name="state">code</field>
+    <field name="code">model._cron_expire_ads()</field>
+    <field name="interval_number">1</field>
+    <field name="interval_type">days</field>
+    <field name="active" eval="True"/>
+  </record>
+
+  <record id="param_ad_daily_rate" model="ir.config_parameter">
+    <field name="key">uellow.vendor_api.ad_daily_rate</field>
+    <field name="value">1.0</field>
+  </record>
+
+</odoo>

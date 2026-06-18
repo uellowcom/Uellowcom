@@ -93,6 +93,11 @@ class VendorCommissionLine(models.Model):
 
     hold_days = fields.Integer('Hold Period (days)', default=7)
     release_date = fields.Date('Release Date', compute='_compute_release_date', store=True)
+    settled_per_order = fields.Boolean(
+        'Settled Per-Order', default=False, copy=False,
+        help='Order was settled instantly (per-order settlement mode); '
+             'never accrues a payable balance.')
+    settled_date = fields.Datetime('Settled On', copy=False)
 
     payout_id = fields.Many2one(
         'uellow.vendor.payout', string='Payout', ondelete='set null',
@@ -112,6 +117,11 @@ class VendorCommissionLine(models.Model):
         """Called when a sale order is confirmed."""
         vendor = order.vendor_id
         if not vendor:
+            return
+        settings = vendor.settings_id
+        mode = settings.settlement_mode if settings else 'wallet'
+        # 'none' settlement = no financial tracking at all (house / owned stock)
+        if mode == 'none':
             return
         plan = vendor.plan_id
         rate = plan.commission_rate if plan else 10.0
@@ -139,15 +149,24 @@ class VendorCommissionLine(models.Model):
         commission = order_amount * rate / 100
         net = order_amount - commission
 
-        return self.create({
+        vals = {
             'vendor_id': vendor.id,
             'order_id': order.id,
             'order_amount': order_amount,
             'commission_rate': rate,
             'commission_amount': commission,
             'net_vendor_amount': net,
-            'hold_days': vendor.plan_id.id and 7 or 7,
-        })
+            'hold_days': 7,
+        }
+        # Per-order settlement: mark the line settled on the spot so no
+        # payable balance ever accrues to the vendor wallet.
+        if mode == 'per_order':
+            vals.update({
+                'state': 'paid',
+                'settled_per_order': True,
+                'settled_date': fields.Datetime.now(),
+            })
+        return self.create(vals)
 
     def action_release(self):
         """Release held commission to vendor wallet."""

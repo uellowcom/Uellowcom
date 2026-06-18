@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="view_product_change_list" model="ir.ui.view">
+    <field name="name">uellow.product.change.list</field>
+    <field name="model">uellow.product.change</field>
+    <field name="arch" type="xml">
+      <list decoration-warning="state=='pending'" decoration-success="state=='approved'"
+            decoration-danger="state=='rejected'">
+        <field name="submitted_date"/>
+        <field name="product_tmpl_id"/>
+        <field name="vendor_id"/>
+        <field name="change_summary"/>
+        <field name="state" widget="badge"
+               decoration-warning="state=='pending'"
+               decoration-success="state=='approved'"
+               decoration-danger="state=='rejected'"/>
+        <button name="action_approve" type="object" string="Approve"
+                icon="fa-check" class="text-success"
+                invisible="state != 'pending'"/>
+        <button name="action_reject" type="object" string="Reject"
+                icon="fa-times" class="text-danger"
+                invisible="state != 'pending'"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_product_change_form" model="ir.ui.view">
+    <field name="name">uellow.product.change.form</field>
+    <field name="model">uellow.product.change</field>
+    <field name="arch" type="xml">
+      <form>
+        <header>
+          <button name="action_approve" type="object" string="Approve &amp; Apply"
+                  class="btn-primary" invisible="state != 'pending'"/>
+          <button name="action_reject" type="object" string="Reject"
+                  class="btn-secondary" invisible="state != 'pending'"
+                  confirm="Reject this edit? Fill the reject reason first if needed."/>
+          <field name="state" widget="statusbar" statusbar_visible="pending,approved,rejected"/>
+        </header>
+        <sheet>
+          <group>
+            <group>
+              <field name="product_tmpl_id"/>
+              <field name="vendor_id"/>
+              <field name="submitted_by"/>
+              <field name="submitted_date"/>
+            </group>
+            <group>
+              <field name="reviewed_by" readonly="1"/>
+              <field name="reviewed_date" readonly="1"/>
+              <field name="reject_reason" placeholder="Reason shown to the vendor on rejection"/>
+            </group>
+          </group>
+          <group string="Before → After">
+            <field name="change_summary" nolabel="1" readonly="1"/>
+          </group>
+        </sheet>
+        <chatter/>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_product_change" model="ir.actions.act_window">
+    <field name="name">Product Edit Approvals</field>
+    <field name="res_model">uellow.product.change</field>
+    <field name="view_mode">list,form</field>
+    <field name="context">{'search_default_pending': 1}</field>
+  </record>
+
+  <record id="view_product_change_search" model="ir.ui.view">
+    <field name="name">uellow.product.change.search</field>
+    <field name="model">uellow.product.change</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="product_tmpl_id"/>
+        <field name="vendor_id"/>
+        <filter name="pending" string="Under Review" domain="[('state','=','pending')]"/>
+        <filter name="approved" string="Approved" domain="[('state','=','approved')]"/>
+        <filter name="rejected" string="Rejected" domain="[('state','=','rejected')]"/>
+        <group expand="0" string="Group By">
+          <filter name="g_vendor" string="Vendor" context="{'group_by':'vendor_id'}"/>
+          <filter name="g_state" string="Status" context="{'group_by':'state'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <menuitem id="menu_product_change"
+            name="Edit Approvals"
+            parent="menu_marketplace_main"
+            action="action_product_change"
+            sequence="35"/>
+
+</odoo>

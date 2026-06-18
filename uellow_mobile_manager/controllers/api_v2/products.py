@@ -43,6 +43,22 @@ def serialize_product_card(product, lang='en_US'):
     discount = 0
     if compare and compare > list_price:
         discount = int(round((1 - list_price / compare) * 100))
+    # v2.2.48 — promotions engine: apply the active MOBILE promo discount at
+    # COMPUTE time (channel-isolated) so the app shows the reduced price +
+    # struck original WITHOUT writing list_price (which would hit the website
+    # too). Skipped when the product is already on sale (compare > price), to
+    # avoid double-discounting. The promo's discount_pct is already
+    # margin-guarded when the line was generated.
+    if not (compare and compare > list_price):
+        try:
+            _coin = _promo_badge(product)
+            _d = float((_coin or {}).get('discount_pct') or 0.0)
+            if _d > 0 and list_price > 0:
+                compare = list_price
+                list_price = round(list_price * (1 - _d / 100.0), 3)
+                discount = int(round(_d))
+        except Exception:
+            pass
     rating_avg = float(getattr(product, 'rating_avg', 0) or 0)
     rating_count = int(getattr(product, 'rating_count', 0) or 0)
     allow_oos = bool(getattr(product, 'allow_out_of_stock_order', True))
@@ -237,12 +253,29 @@ def _top_selling_ids(domain, limit=200):
     return (ranked + [i for i in base_ids if i not in seen])[:limit]
 
 
+# House fallback shown when a product has no vendor, or the vendor opted to
+# hide its name. Rendered by the app as the yellow "Uellow Vendors" bar.
+UELLOW_VENDORS_REF = {
+    'id':    0,
+    'name':  {'en': 'Uellow Vendors', 'ar': 'تجار يلو'},
+    'slug':  'uellow-vendors',
+    'logo':  None,
+    'tier':  'standard',
+    'house': True,
+}
+
+
 def _vendor_ref(product):
-    """Compact vendor reference on each product. Returns None when the
-    multivendor module isn't installed or the product has no vendor."""
+    """Compact vendor reference on each product. Always returns a ref: a real
+    vendor when set and it allows showing its name, otherwise the house
+    "Uellow Vendors" fallback (anonymous vendor or no vendor)."""
     vendor = getattr(product, 'vendor_id', None)
     if not vendor:
-        return None
+        return dict(UELLOW_VENDORS_REF)
+    # respect the vendor's "Show Vendor Name on Product" setting
+    settings = getattr(vendor, 'settings_id', None)
+    if settings and not settings.show_vendor_name:
+        return dict(UELLOW_VENDORS_REF)
     return {
         'id':   vendor.id,
         'name': {
@@ -253,6 +286,7 @@ def _vendor_ref(product):
         'logo': img_url('uellow.vendor', vendor.id, 'logo_image',
                         unique=vendor.write_date) if 'logo_image' in vendor._fields else None,
         'tier': vendor.tier or 'standard',
+        'house': False,
     }
 
 
@@ -486,6 +520,7 @@ def serialize_product_full(product, lang='en_US'):
         'sold_count': sold_count,
         'view_count': view_count,
         'brand': brand,
+        'vendor': _vendor_ref(product),
         'bulk_pricing': bulk_tiers,
         # v2.0.58: effective max purchasable quantity for this product
         # (resolution order: product override → category → global default).

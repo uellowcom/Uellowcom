@@ -28,11 +28,12 @@
                                     <i class="fa fa-caret-down small"/>
                                 </a>
                                 <div class="uc-hover-menu uc-app-menu">
+                                    <t t-set="_app_landing" t-value="(website.domain or 'https://www.uellow.com').rstrip('/') + '/app'"/>
                                     <div class="uc-app-grid">
                                         <div class="uc-app-qr">
                                             <div class="uc-qr-box">
                                                 <img alt="Uellow App QR"
-                                                     src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&amp;color=131921&amp;bgcolor=ffffff&amp;margin=8&amp;data=https://app.uellow.com"
+                                                     t-attf-src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&amp;color=131921&amp;bgcolor=ffffff&amp;margin=8&amp;data=#{_app_landing}"
                                                      loading="lazy"/>
                                             </div>
                                             <small class="uc-app-qr-hint" t-out="website._uc_t('Scan to install')"/>
@@ -41,11 +42,11 @@
                                             <strong class="uc-app-title" t-out="website._uc_t('Uellow App')"/>
                                             <p class="uc-app-text" t-out="website._uc_t('Shop faster, exclusive deals, order tracking — all in your pocket.')"/>
                                             <div class="uc-app-badges">
-                                                <a class="uc-app-badge" href="https://apps.apple.com/" target="_blank" rel="noopener">
+                                                <a class="uc-app-badge" t-att-href="website.uc_app_ios_url or _app_landing" target="_blank" rel="noopener">
                                                     <i class="fa fa-apple"/>
                                                     <span><small>Download on the</small><b>App Store</b></span>
                                                 </a>
-                                                <a class="uc-app-badge" href="https://play.google.com/" target="_blank" rel="noopener">
+                                                <a class="uc-app-badge" t-att-href="website.uc_app_android_url or _app_landing" target="_blank" rel="noopener">
                                                     <i class="fa fa-android"/>
                                                     <span><small>Get it on</small><b>Google Play</b></span>
                                                 </a>
@@ -56,10 +57,11 @@
                             </div>
 
                             <span class="uc-pre-dot d-none d-lg-inline">•</span>
+                            <t t-set="_fs_line" t-value="website._uc_free_ship_line()"/>
                             <span class="uc-pre-promo d-none d-lg-inline-flex align-items-center gap-2"
-                                  t-if="website.uc_preheader_text">
+                                  t-if="_fs_line">
                                 <i class="fa fa-truck"/>
-                                <span t-out="website.uc_preheader_text"/>
+                                <span t-out="_fs_line"/>
                             </span>
                             <span class="uc-pre-promo d-none d-xxl-inline-flex align-items-center gap-2"
                                   t-if="website.uc_preheader_phone">
@@ -245,14 +247,14 @@
                                  hidden="hidden">
                                 <!-- Populated by uc_header.js -->
                             </div>
+                            <t t-set="_trending" t-value="website._uc_trending_list()"/>
                             <div class="uc-search-hot d-none d-xxl-flex align-items-center gap-2"
-                                 t-if="website.uc_trending_terms">
+                                 t-if="_trending">
                                 <span class="uc-hot-label">
                                     <i class="fa fa-fire"/>
                                     <t t-out="website._uc_t('Trending')"/>:
                                 </span>
-                                <t t-foreach="(website.uc_trending_terms or '').split(',')" t-as="_term">
-                                    <t t-set="_q" t-value="_term.strip()"/>
+                                <t t-foreach="_trending" t-as="_q">
                                     <a t-if="_q" t-attf-href="/shop?search=#{_q.replace(' ', '+')}" t-out="_q"/>
                                 </t>
                             </div>
@@ -458,7 +460,7 @@
                                 <span t-out="website._uc_t('All Categories')"/>
                                 <i class="fa fa-angle-down ms-1"/>
                             </button>
-                            <t t-set="uc_parents" t-value="request.env['product.public.category'].sudo().search([('parent_id','=',False),('website_id','in',[False,website.id])], order='sequence, name', limit=12)"/>
+                            <t t-set="uc_parents" t-value="request.env['product.public.category'].sudo().search([('parent_id','=',False),('website_id','in',[False,website.id])], order='sequence, name', limit=40)"/>
                             <!--
                                 The mega menu is split into TWO SIBLING columns so
                                 neither can clip the other. JS sync (uc_header.js)
@@ -537,8 +539,8 @@
                                                     <a t-foreach="_cat_brands" t-as="_brand"
                                                        t-attf-href="/shop?attribute_value=#{_brand.id}"
                                                        class="uc-catmega-brand">
-                                                        <img t-if="_brand.image" loading="lazy"
-                                                             t-attf-src="/web/image/product.attribute.value/#{_brand.id}/image"
+                                                        <img t-if="_brand.dr_image" loading="lazy"
+                                                             t-attf-src="/web/image/product.attribute.value/#{_brand.id}/dr_image"
                                                              t-att-alt="_brand.name"/>
                                                         <span t-else="" t-out="_brand.name"/>
                                                     </a>
@@ -586,9 +588,11 @@
                              (margin-inline-start:auto in CSS). Gradient card
                              with a HH:MM:SS countdown to midnight painted
                              in three little red boxes above the label. -->
-                        <t t-set="_deals" t-value="website._uc_deals_resolve()"/>
+                        <t t-set="_flash" t-value="website._uc_live_flash()"/>
+                        <t t-set="_deals" t-value="_flash or website._uc_deals_resolve()"/>
                         <a t-if="_deals" t-att-href="_deals.get('url')"
-                           class="uc-deals-card" id="uc-deals-card">
+                           class="uc-deals-card" id="uc-deals-card"
+                           t-att-data-deals-end="_deals.get('end') or ''">
                             <div class="uc-deals-cd" aria-label="Ends in">
                                 <span class="uc-deals-cd-box" data-cd="hours">00</span>
                                 <span class="uc-deals-cd-sep">:</span>

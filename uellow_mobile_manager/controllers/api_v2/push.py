@@ -16,7 +16,8 @@ import urllib.request
 from odoo import http, fields
 from odoo.http import request
 
-from ._common import safe_endpoint, get_payload, ok, fail, app_setting
+from ._common import (safe_endpoint, get_payload, ok, fail, app_setting,
+                      current_partner)
 from .orders import _stage_label, _delivery_tracking
 
 _logger = logging.getLogger(__name__)
@@ -188,3 +189,51 @@ class MobileDriverLocation(http.Controller):
             return fail('NOT_FOUND', 'order not assigned', 404)
         session.driver_id.sudo().write({'is_broadcasting': False})
         return ok({'stopped': True})
+
+    # ── iOS Live Activity token registration (v2.2.48) ─────────────────
+    @http.route('/api/mobile/v2/live-activity/register',
+                type='http', auth='public', methods=['POST', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    def register_live_activity(self, **kw):
+        """التطبيق يبدأ النشاط (ActivityKit) ويرسل توكن الدفع الخاص به هنا
+        لربطه بالطلب، كي نستطيع إرسال تحديثات Live Activity عبر APNs."""
+        partner = current_partner()
+        if not partner:
+            return fail('NO_AUTH', 'login required', 401)
+        p = get_payload()
+        try:
+            order_id = int(p.get('order_id') or 0)
+        except Exception:
+            order_id = 0
+        token = (p.get('activity_token') or p.get('token') or '').strip()
+        if not order_id or not token:
+            return fail('BAD_REQUEST', 'order_id + activity_token required')
+        order = request.env['sale.order'].sudo().browse(order_id)
+        if not order.exists() or order.partner_id.id != partner.id:
+            return fail('NOT_FOUND', 'order not found', 404)
+        order.write({'live_activity_token': token,
+                     'live_activity_active': True})
+        request.env.cr.commit()
+        return ok({'registered': True, 'order_id': order_id})
+
+    @http.route('/api/mobile/v2/live-activity/end',
+                type='http', auth='public', methods=['POST', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    def end_live_activity(self, **kw):
+        """التطبيق ينهي النشاط محلياً ويبلغنا لإيقاف الإرسال."""
+        partner = current_partner()
+        if not partner:
+            return fail('NO_AUTH', 'login required', 401)
+        p = get_payload()
+        try:
+            order_id = int(p.get('order_id') or 0)
+        except Exception:
+            order_id = 0
+        order = request.env['sale.order'].sudo().browse(order_id)
+        if order.exists() and order.partner_id.id == partner.id:
+            order.with_context(skip_live_activity=True).write(
+                {'live_activity_active': False})
+            request.env.cr.commit()
+        return ok({'ended': True})

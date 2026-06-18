@@ -9,3 +9,8 @@ from . import sale_order_inherit
 from . import product_inherit
 from . import product_import
 from . import vendor_restock
+from . import vendor_product_change
+from . import vendor_return
+from . import vendor_api_key
+from . import vendor_ads
+from . import vendor_dispute

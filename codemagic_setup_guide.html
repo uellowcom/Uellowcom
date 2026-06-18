@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Uellow Vendor — Codemagic / Play / Apple Setup</title>
+<style>
+  *{box-sizing:border-box}
+  body{font-family:Arial,Helvetica,sans-serif;color:#2a2a2a;margin:0;background:#faf7ef;line-height:1.65}
+  .wrap{max-width:920px;margin:0 auto;padding:24px}
+  header{background:#412402;color:#fff;border-radius:16px;padding:26px 28px;margin-bottom:22px;
+    border-bottom:6px solid #F5C320}
+  header h1{margin:0 0 6px;font-size:26px}
+  header .sub{color:#F5C320;font-weight:bold;font-size:15px}
+  header .meta{color:#e7dcc4;font-size:13px;margin-top:8px}
+  .card{background:#fff;border:1px solid #ece3cf;border-radius:14px;padding:20px 22px;margin-bottom:18px;
+    box-shadow:0 2px 6px rgba(65,36,2,.05)}
+  .card h2{margin:0 0 12px;font-size:19px;color:#412402;border-right:5px solid #F5C320;padding-right:10px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  th{background:#F5C320;color:#412402;padding:8px 10px;text-align:right;border:1px solid #e0d2a6}
+  td{padding:8px 10px;border:1px solid #ece3cf;vertical-align:top}
+  code{background:#fff4d1;color:#7a5b10;padding:1px 6px;border-radius:5px;font-size:13px;direction:ltr;display:inline-block}
+  ol,ul{margin:6px 0;padding-right:22px}
+  li{margin:7px 0}
+  .pill{display:inline-block;background:#F5C320;color:#412402;font-weight:bold;border-radius:20px;
+    padding:3px 12px;font-size:13px;margin-bottom:8px}
+  .hint{background:#fff9e8;border:1px dashed #F5C320;border-radius:10px;padding:10px 14px;font-size:13px;margin-top:10px}
+  .desc{background:#fbf6ea;border-radius:10px;padding:12px 16px;margin:8px 0;font-size:14px}
+  .desc h4{margin:0 0 6px;color:#412402}
+  .en{direction:ltr;text-align:left}
+  footer{text-align:center;color:#9a8b66;font-size:12px;padding:16px}
+  @media print{body{background:#fff} .card{box-shadow:none}}
+</style></head>
+<body><div class="wrap">
+
+<header>
+  <div class="pill">Uellow Vendor</div>
+  <h1>إعداد النشر على Codemagic / Google Play / Apple</h1>
+  <div class="sub">Codemagic &amp; Store Release Setup Guide</div>
+  <div class="meta">المعرّف <code>com.uellow.vendors</code> · المستودع <code>uellowcom/uellow-vendor</code> · 16/06/2026</div>
+</header>
+
+<div class='card'><h2>1 · إعداد Codemagic</h2><ol><li>المستودع <code>uellowcom/uellow-vendor</code> متصل بـ Codemagic، و<b>كل push على فرع main يشغّل بناءً تلقائياً</b>.</li><li>افتح <b>codemagic.io</b> ← التطبيق <b>uellow-vendor</b>. سترى الآن workflowـين: <b>“Vendor — Android (APK + AAB)”</b> و<b>“Vendor — iOS App Store”</b>.</li><li>أضِف مجموعتَي المتغيّرات أدناه من تبويب <b>Environment variables</b> (اكتب الاسم والقيمة، فعّل <b>Secret</b>، اكتب اسم المجموعة في خانة <b>Group</b>، ثم <b>Add</b>).</li><li>للبناء: <b>Start new build</b> ← اختر الـ workflow ← <b>Start build</b>.</li><li>بعد الانتهاء، نزّل الملفات من قسم <b>Artifacts</b> (الـ AAB / APK لأندرويد، الـ IPA لـ iOS).</li></ol><h3 style='color:#412402;font-size:16px'>مجموعة <code>vendor_signing</code> — لبناء Android</h3><table><tr><th>Variable name</th><th>القيمة / Value</th><th>Secret</th></tr><tr><td><code>UELLOW_KEYSTORE_BASE64</code></td><td>محتوى ملف <code>.jks</code> مُرمّز Base64 في سطر واحد &nbsp;/&nbsp; the upload keystore as one Base64 line</td><td style='text-align:center'>✅</td></tr><tr><td><code>UELLOW_KEYSTORE_PASSWORD</code></td><td>كلمة مرور الـ keystore &nbsp;/&nbsp; keystore password</td><td style='text-align:center'>✅</td></tr><tr><td><code>UELLOW_KEY_ALIAS</code></td><td><code>uellow-upload</code></td><td style='text-align:center'>✅</td></tr></table><div class='hint'>لتوليد قيمة <code>UELLOW_KEYSTORE_BASE64</code> من ملف الـ keystore على الخادم:<br><code>base64 -w0 /root/secrets/&lt;keystore&gt;.jks</code></div><h3 style='color:#412402;font-size:16px;margin-top:18px'>مجموعة <code>appstore</code> — لبناء iOS</h3><table><tr><th>Variable name</th><th>القيمة / Value</th><th>Secret</th></tr><tr><td><code>CERTIFICATE_PRIVATE_KEY</code></td><td>المفتاح الخاص للشهادة (PEM) مُرمّز Base64 — <b>نفس قيمة تطبيق العميل</b> &nbsp;/&nbsp; signing cert private key (Base64), same as the main app</td><td style='text-align:center'>✅</td></tr><tr><td><code>APP_APPLE_ID</code></td><td>أضِفه <b>بعد</b> إنشاء التطبيق على App Store Connect (الرقم مثل <code>6912345678</code>) &nbsp;/&nbsp; add after the app exists</td><td style='text-align:center'>✅</td></tr></table><div class='hint'>إضافة إلى المجموعتَين، يحتاج iOS تكاملاً باسم <b>uellow_appstore</b> (App Store Connect API key) — نفس المستخدم في تطبيق العميل.</div></div>
+
+<div class='card'><h2>2 · النشر على Google Play (Android)</h2><ol><li>⚠️ المعرّف الآن <code>com.uellow.vendors</code> (كان <code>com.uellow.uellow_vendor</code>) — لذا هو <b>تطبيق جديد</b> على Play.</li><li>Play Console ← <b>Create app</b> ← الاسم <b>Uellow Vendor</b> ← App ← مجاني.</li><li>Production (أو Internal testing) ← <b>Create new release</b> ← ارفع ملف <code>uellow-vendors-1.1.5.aab</code>.</li><li>فعّل <b>Play App Signing</b>. مفتاح الرفع لدينا (بصمة SHA-1: <code>8D:FB:03:70:24:A7:EA:25:B4:39:9E:27:50:84:C3:07:A9:7F:21:81</code>).</li><li>املأ Store listing (الأيقونة + اللقطات + الوصف أدناه) ← أرسل للمراجعة.</li></ol></div>
+
+<div class='card'><h2>3 · النشر على Apple (iOS)</h2><ol><li><b>developer.apple.com</b> ← Certificates, Identifiers &amp; Profiles ← Identifiers ← <b>+</b> ← App IDs ← سجّل <code>com.uellow.vendors</code>.</li><li><b>App Store Connect</b> ← Apps ← <b>+ New App</b> ← اختر نفس المعرّف ← الاسم <b>Uellow Vendor</b>.</li><li>انسخ <b>Apple ID</b> الرقمي من صفحة التطبيق (App Information) وأضِفه كمتغيّر <code>APP_APPLE_ID</code> في مجموعة <code>appstore</code> بـ Codemagic.</li><li>في مشروع Firebase <code>uellow-app</code> ← أضِف تطبيق iOS بمعرّف <code>com.uellow.vendors</code> ← نزّل <code>GoogleService-Info.plist</code> ← ضعه في <code>ios/Runner/</code> (وإلا يتعطّل عند الإقلاع).</li><li>تأكّد من وجود تكامل App Store Connect باسم <b>uellow_appstore</b> في Codemagic (نفس مفتاح تطبيق العميل، الدور Admin/App Manager).</li><li>شغّل workflow <b>“Vendor — iOS App Store”</b> ← سيبني IPA ويرفعه إلى <b>TestFlight</b> تلقائياً.</li></ol><div class='hint'>ترتيب الإلزام: تسجيل المعرّف على Apple → إنشاء التطبيق على App Store Connect (للحصول على <code>APP_APPLE_ID</code>) → إضافة <code>GoogleService-Info.plist</code> → تشغيل الـ workflow.</div></div>
+
+<div class='card'><h2>4 · وصف التطبيق للمتجرَين</h2><div class='desc'><h4>العربية</h4>تطبيق Uellow Vendor رفيق التاجر المتكامل على سوق Uellow: أدِر متجرك، وانشر منتجاتك وعدّلها، وتابع الطلبات لحظياً، وراقب المخزون، وتابع محفظتك ودفعاتك، وردّ على التقييمات.</div><div class='desc en'><h4>English</h4>Uellow Vendor is the all-in-one companion app for merchants on the Uellow marketplace: manage your storefront, publish & edit products, track orders in real time, monitor stock, follow your wallet & payouts, and respond to reviews.</div></div>
+
+<footer>uellow · Vendor App Release · دليل إعداد النشر · 16/06/2026</footer>
+</div></body></html>

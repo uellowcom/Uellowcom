@@ -61,6 +61,10 @@ class ResConfigSettings(models.TransientModel):
     uc_footer_credit   = fields.Char(related='website_id.uc_footer_credit', readonly=False)
     uc_footer_newsletter_intro = fields.Char(related='website_id.uc_footer_newsletter_intro', readonly=False)
     uc_beena_icon              = fields.Binary(related='website_id.uc_beena_icon', readonly=False)
+    uc_policy_privacy_url       = fields.Char(related='website_id.uc_policy_privacy_url', readonly=False)
+    uc_policy_terms_url         = fields.Char(related='website_id.uc_policy_terms_url', readonly=False)
+    uc_policy_cookies_url       = fields.Char(related='website_id.uc_policy_cookies_url', readonly=False)
+    uc_policy_accessibility_url = fields.Char(related='website_id.uc_policy_accessibility_url', readonly=False)
 
     # This has been done in order to fix Odoo's broken behavior for theme customization.
     # If database already have theme installed, it is impossible to have custom module later.

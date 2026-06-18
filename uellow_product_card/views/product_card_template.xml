@@ -32,6 +32,9 @@
             <t t-set="uc_dp"    t-value="int(round((uc_pb - uc_pr) / uc_pb * 100)) if uc_hd and uc_pb else 0"/>
             <t t-set="uc_ravg"  t-value="product.rating_avg or 0"/>
             <t t-set="uc_rcnt"  t-value="product.rating_count or 0"/>
+            <!-- App-parity, data-driven flags -->
+            <t t-set="uc_freeship" t-value="hasattr(product, '_is_free_shipping') and product.sudo()._is_free_shipping()"/>
+            <t t-set="uc_taly"  t-value="(uc_pr or uc_pb or product.list_price or 0) >= 10"/>
 
             <!-- Discount % pill -->
             <span t-if="uc_hd and uc_dp > 0" class="uc-disc-pill">-<t t-esc="uc_dp"/>%</span>
@@ -46,8 +49,14 @@
                 <span class="uc-rating-count">(<t t-esc="uc_rcnt"/>)</span>
             </div>
 
+            <!-- Free shipping (data-driven, matches the app badge) -->
+            <div t-if="uc_freeship" class="uc-delivery uc-delivery--free" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
+                <svg class="uc-bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v8H3zM14 10h4l3 3v2h-7z"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg>
+                <span t-if="not uc_is_ar">Free Shipping</span>
+                <span t-if="uc_is_ar">شحن مجاني</span>
+            </div>
             <!-- Fast delivery -->
-            <div class="uc-delivery" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
+            <div t-else="" class="uc-delivery" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
                 <svg class="uc-bolt" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L4 14H12L11 22L20 10H12L13 2Z"/></svg>
                 <span t-if="not uc_is_ar">Fast Delivery</span>
                 <span t-if="uc_is_ar">توصيل سريع</span>
@@ -57,7 +66,7 @@
             <div class="uc-footer" t-att-dir="'rtl' if uc_is_ar else 'ltr'">
                 <div class="uc-badges">
                     <span class="uc-badge-exp">EXPRESS</span>
-                    <span class="uc-badge-taly">taly</span>
+                    <span t-if="uc_taly" class="uc-badge-taly">taly</span>
                 </div>
                 <div class="uc-avail">
                     <svg class="uc-avail-icon" viewBox="0 0 24 24" aria-hidden="true">

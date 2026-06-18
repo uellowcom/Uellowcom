@@ -19,15 +19,15 @@
 
 /* Content */
 .tp-product-content{padding:10px 12px 12px!important;border-top:1px solid #f0f0f0!important;display:flex!important;flex-direction:column!important;gap:0!important;flex:1!important;text-align:left!important;background:#fff!important}
-.tp-product-title{font-size:13px!important;font-weight:500!important;line-height:1.38!important;min-height:2.76em!important;margin-bottom:7px!important;overflow:hidden!important}
-.tp-product-title a.tp-link-dark{color:#1a1a1a!important;font-size:13px!important;font-weight:500!important;text-decoration:none!important;white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
+.tp-product-title{font-size:13px!important;font-weight:700!important;line-height:1.38!important;min-height:2.76em!important;margin-bottom:7px!important;overflow:hidden!important}
+.tp-product-title a.tp-link-dark{color:#1a1a1a!important;font-size:13px!important;font-weight:700!important;text-decoration:none!important;white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;overflow:hidden!important}
 
 /* Price container - column */
 .product_price{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:0!important;margin-bottom:0!important;width:100%!important}
 
 /* Price row - single line */
 .uc-price-row{display:flex!important;flex-direction:row!important;align-items:center!important;flex-wrap:nowrap!important;gap:5px!important;margin-bottom:4px!important;width:100%!important}
-.uc-current-price{font-size:15px!important;font-weight:700!important;color:#1a1a1a!important;line-height:1!important;white-space:nowrap!important}
+.uc-current-price{font-size:15px!important;font-weight:800!important;letter-spacing:-.3px!important;color:#1a1a1a!important;line-height:1!important;white-space:nowrap!important}
 .uc-current-price .oe_currency_value{font-size:inherit!important;font-weight:inherit!important;color:inherit!important}
 .uc-old-price{font-size:11px!important;color:#aaa!important;text-decoration:line-through!important;white-space:nowrap!important}
 .uc-old-price span{color:inherit!important;font-size:inherit!important}

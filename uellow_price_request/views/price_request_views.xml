@@ -13,6 +13,15 @@
                     <button name="action_print_report" type="object"
                             string="Print Report (PDF)" class="btn-secondary"
                             icon="fa-print"/>
+                    <button name="action_send_to_merchant" type="object"
+                            string="Send to Merchant" class="btn-primary"
+                            icon="fa-paper-plane"
+                            invisible="state not in ('draft', 'sent')"/>
+                    <button name="action_approve_all" type="object"
+                            string="Approve All Changes" class="btn-primary"
+                            icon="fa-check-double"
+                            confirm="Approve every awaiting price and write it to the catalogue?"
+                            invisible="pending_approval_count == 0"/>
                     <button name="action_mark_sent" type="object"
                             string="Mark Sent" invisible="state != 'draft'"/>
                     <button name="action_apply_new_prices" type="object"
@@ -45,6 +54,9 @@
                                    required="source_type == 'category'"/>
                             <field name="only_published"/>
                             <field name="limit"/>
+                            <field name="merchant_id"
+                                   options="{'no_create': True}"/>
+                            <field name="default_margin"/>
                         </group>
                         <group string="Report">
                             <field name="date"/>
@@ -53,6 +65,11 @@
                             <field name="supplier_label"/>
                             <field name="product_count"/>
                             <field name="filled_count"/>
+                            <field name="matched_count"/>
+                            <field name="pending_approval_count"/>
+                            <field name="sent_date" invisible="not sent_date"/>
+                            <field name="responded_date"
+                                   invisible="not responded_date"/>
                         </group>
                     </group>
                     <field name="note" placeholder="Instructions printed on the report for the supplier…"/>
@@ -61,14 +78,35 @@
                             <field name="line_ids">
                                 <list editable="bottom" create="0">
                                     <field name="sequence" widget="handle"/>
+                                    <field name="image_128" widget="image"
+                                           class="oe_avatar" options="{'size': [48, 48]}"/>
                                     <field name="product_tmpl_id" readonly="1"
                                            force_save="1"/>
                                     <field name="default_code"/>
                                     <field name="barcode" optional="hide"/>
-                                    <field name="cost" optional="hide"/>
+                                    <field name="cost" optional="show"/>
                                     <field name="current_price"/>
                                     <field name="new_price"/>
-                                    <field name="availability"/>
+                                    <field name="delta" optional="show"
+                                           decoration-success="delta &lt; 0"
+                                           decoration-danger="delta &gt; 0"/>
+                                    <field name="new_margin_pct" optional="show"
+                                           string="Margin %"/>
+                                    <field name="suggested_price" optional="show"/>
+                                    <field name="response" optional="show"/>
+                                    <field name="line_state" widget="badge"
+                                           decoration-success="line_state in ('confirmed','approved')"
+                                           decoration-warning="line_state == 'await'"
+                                           decoration-danger="line_state == 'rejected'"/>
+                                    <button name="action_approve" type="object"
+                                            string="Approve" icon="fa-check"
+                                            class="text-success"
+                                            invisible="line_state != 'await'"/>
+                                    <button name="action_reject" type="object"
+                                            string="Reject" icon="fa-times"
+                                            class="text-danger"
+                                            invisible="line_state != 'await'"/>
+                                    <field name="availability" optional="hide"/>
                                     <field name="moq" optional="hide"/>
                                     <field name="line_note" optional="hide"/>
                                     <field name="currency_id" column_invisible="1"/>
@@ -91,8 +129,11 @@
                 <field name="date"/>
                 <field name="source_type"/>
                 <field name="supplier_label"/>
+                <field name="merchant_id" optional="show"/>
                 <field name="product_count"/>
-                <field name="filled_count"/>
+                <field name="matched_count" optional="show"/>
+                <field name="pending_approval_count" optional="show"
+                       decoration-warning="pending_approval_count &gt; 0"/>
                 <field name="state" widget="badge"
                        decoration-info="state == 'sent'"
                        decoration-success="state == 'applied'"/>
@@ -112,7 +153,7 @@
     </record>
 
     <menuitem id="menu_price_request_root" name="Price Updates"
-              parent="purchase.menu_purchase_root" sequence="90"/>
+              parent="uellow_multivendor.menu_marketplace_main" sequence="90"/>
     <menuitem id="menu_price_request" name="Supplier Price Requests"
               parent="menu_price_request_root"
               action="action_price_request" sequence="10"/>

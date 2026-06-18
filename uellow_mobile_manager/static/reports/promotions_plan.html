@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>محرّك العروض المتقدّم — Uellow Promotions Engine</title>
+<style>
+  :root{ --y:#F5C320; --d:#412402; --soft:#FFF8E1; --line:#eadfbe; }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,Segoe UI,Tahoma,Arial,sans-serif;background:#faf7ef;color:#2c1c08;margin:0;line-height:1.85}
+  .wrap{max-width:980px;margin:0 auto;padding:24px}
+  header{background:linear-gradient(135deg,var(--d),#6b3a05 60%,var(--y));color:#fff;border-radius:18px;padding:30px 26px;margin-bottom:22px}
+  header h1{margin:0 0 6px;font-size:26px}
+  header p{margin:0;opacity:.92}
+  h2{color:var(--d);border-right:6px solid var(--y);padding:6px 12px;margin:34px 0 10px;font-size:21px;background:var(--soft);border-radius:8px}
+  h3{color:#6b3a05;margin:18px 0 6px;font-size:17px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  code{background:#f3ecd6;padding:2px 6px;border-radius:6px;font-size:13px;direction:ltr;display:inline-block}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:right;vertical-align:top}
+  th{background:var(--d);color:#fff}
+  tr:nth-child(even){background:#fbf6e6}
+  ul{margin:6px 0 6px 0;padding-right:22px}
+  li{margin:4px 0}
+  .tag{display:inline-block;background:var(--y);color:var(--d);font-weight:700;border-radius:20px;padding:2px 12px;font-size:12px;margin:2px}
+  .phase{border-right:4px solid var(--y);background:#fff;border-radius:10px;padding:12px 16px;margin:10px 0}
+  .phase b{color:var(--d)}
+  .star{color:#E63946;font-weight:800}
+  .muted{color:#7a6a4d;font-size:13px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}}
+  footer{margin:30px 0;color:#7a6a4d;font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>🎯 محرّك العروض المتقدّم — Uellow Promotions Engine</h1>
+  <p>تصميم شامل + أفكار + خطوات التنفيذ — لتطوير موديل العروض داخل مديول الموبايل آب</p>
+  <p class="muted" style="color:#ffe9a8">نسخة المسودّة · مبني فوق <code>mobile.app.promotion</code> الحالي</p>
+</header>
+
+<div class="card">
+<b>الوضع الحالي (ما عندنا):</b> موديل <code>mobile.app.promotion</code> = حملة بشارة (badge) + بانر + انضمام تجّار + أسطر منتجات يدوية بنسبة خصم تُطبَّق على السعر مباشرة. <br>
+<b>الهدف:</b> تحويله إلى <span class="star">محرّك خصومات قائم على قواعد</span> (Rules Engine) باستهداف ذكي + شروط + مكافآت متعددة + تحكّم بالقناة + حارس ربح + هدايا/شحن/كوبونات.
+</div>
+
+<h2>١) الاستهداف — على مَن يُطبَّق العرض؟ (Scope)</h2>
+<div class="card">
+بدل اختيار المنتجات يدوياً فقط، أضف "نطاقات" (scopes) تُجمَع بعلاقة AND/OR:
+<ul>
+  <li><b>كاتيجوري</b> (واحدة أو أكثر، مع/بدون الأقسام الفرعية).</li>
+  <li><b>براند</b> (<code>product.brand</code> / قيمة سمة Brand).</li>
+  <li><b>نطاق سعري</b> من/إلى (مثلاً 5–20 د.ك).</li>
+  <li><b>منتجات محدّدة</b> (القائمة اليدوية الحالية تبقى).</li>
+  <li><b>تاجر/Vendor</b> معيّن.</li>
+  <li><b>وسوم/Tags</b> (جديد، الأكثر مبيعاً، بطيء الحركة/Dead stock، موسمي…).</li>
+  <li><b>حالة المخزون</b> (متوفّر فقط / يشمل النافد).</li>
+  <li><b>استبعادات</b> (Exclusions) — استثنِ كاتيجوري/براند/منتجات من النطاق.</li>
+  <li>الكل (Sitewide) كخيار سريع.</li>
+</ul>
+<span class="muted">تقنياً: نبني domain ديناميكي من النطاقات، ونخزّن النتيجة كـ "preview count" قبل التفعيل.</span>
+</div>
+
+<h2>٢) الشروط — متى يُفعَّل العرض؟ (Conditions / Rules)</h2>
+<div class="grid">
+  <div class="card">
+    <h3>شروط السلة</h3>
+    <ul>
+      <li>حد أدنى لإجمالي السلة (Min subtotal).</li>
+      <li>حد أدنى لعدد القطع/المنتجات.</li>
+      <li>حد أدنى من نفس الكاتيجوري/البراند.</li>
+      <li>"اشترِ X من الفئة لتحصل على…".</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>شروط العميل</h3>
+    <ul>
+      <li>أول طلب فقط (عميل جديد).</li>
+      <li>شريحة عملاء (VIP / مستوى ولاء / مدينة).</li>
+      <li>عميل لم يطلب منذ X يوم (re-engagement).</li>
+      <li>عيد ميلاد العميل (<code>partner.uellow_birthdate</code>).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>شروط زمنية</h3>
+    <ul>
+      <li>تاريخ بداية/نهاية (موجود).</li>
+      <li>أيام/ساعات محدّدة (Happy Hour، عطلة نهاية الأسبوع).</li>
+      <li>عدّاد تنازلي (Flash).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>شروط أخرى</h3>
+    <ul>
+      <li>الدولة/الموقع (per-website، عندنا 17 موقع).</li>
+      <li>طريقة الدفع (مثلاً خصم للدفع بـKNET/Taly).</li>
+      <li>كود ترويجي مُدخل (Promo code).</li>
+      <li>قناة الدخول (حملة /aff، إعلان…).</li>
+    </ul>
+  </div>
+</div>
+
+<h2>٣) المكافآت/الإجراءات — ماذا يحدث؟ (Rewards)</h2>
+<table>
+  <tr><th>النوع</th><th>الوصف</th><th>تحكّم</th></tr>
+  <tr><td>نسبة خصم %</td><td>خصم مئوي على المنتجات المستهدفة</td><td>محكوم بحارس الربح (قسم ٥)</td></tr>
+  <tr><td>خصم ثابت</td><td>مبلغ ثابت يُخصم (للمنتج أو للسلة)</td><td>سقف أقصى</td></tr>
+  <tr><td>سعر ثابت/Override</td><td>سعر محدّد للعرض</td><td>—</td></tr>
+  <tr><td>اشترِ X واحصل على Y</td><td>BOGO / X+1، نفس المنتج أو مختلف</td><td>تكرار/سقف</td></tr>
+  <tr><td><span class="star">هدية مجانية إجبارية بالكارت</span></td><td>تُضاف تلقائياً للسلة عند تحقّق الشرط ولا يمكن حذفها</td><td>اختيار المنتج/الكمية + شرط الإضافة</td></tr>
+  <tr><td><span class="star">تفعيل الشحن المجاني</span></td><td>يفعّل قاعدة شحن مجاني للسلة المطابقة</td><td>إعادة استخدام <code>uellow.freeship.rule</code></td></tr>
+  <tr><td><span class="star">كوبون إجباري</span></td><td>يُطبَّق كود تلقائياً على السلة المطابقة</td><td>ربط بـ<code>loyalty.program</code></td></tr>
+  <tr><td><span class="star">توليد كوبون</span></td><td>يولّد كوبوناً للعميل (للطلب القادم/بعد الشراء)</td><td>صلاحية + قيمة + شرط</td></tr>
+  <tr><td>نقاط ولاء مضاعفة</td><td>x2/x3 نقاط على المنتجات المستهدفة</td><td>—</td></tr>
+  <tr><td>هدية عند حد إنفاق</td><td>"أنفق 20 واحصل على هدية"</td><td>عتبات متدرّجة</td></tr>
+</table>
+
+<h2>٤) التحكّم بالقناة — موبايل فقط أم موبايل + ويبسايت</h2>
+<div class="card">
+حقل <code>channel</code> Selection: <span class="tag">موبايل فقط</span> <span class="tag">ويبسايت فقط</span> <span class="tag">موبايل + ويبسايت</span> <span class="tag">POS أيضاً</span><br>
+نقاط التطبيق تحترم القناة:
+<ul>
+  <li><b>الموبايل:</b> عبر <code>serialize_product_card</code> + <code>cart.py</code> (سعر فعّال) + بطاقة المنتج.</li>
+  <li><b>الويبسايت:</b> عبر pricelist/سعر القائمة + بادج المتجر.</li>
+  <li>"موبايل فقط" لا يلمس أسعار الويبسايت إطلاقاً (تطبيق وقت العرض لا بالكتابة على <code>list_price</code>).</li>
+</ul>
+<span class="muted">ملاحظة مهمة: الموديل الحالي يكتب على <code>list_price</code> مباشرة (يؤثر على كل القنوات). للتحكّم بالقناة نحتاج تطبيق الخصم "وقت العرض/الحساب" بدل تعديل سعر المنتج — انظر قسم البنية.</span>
+</div>
+
+<h2>٥) ⭐ حارس الربح — خصم حسب نسبة الربح (Margin Guardrail)</h2>
+<div class="card">
+أهم فكرة طلبتها: لا يُسمح لأي خصم أن يأكل الربح تحت حدّ معيّن.
+<ul>
+  <li>لكل منتج تكلفة <code>standard_price</code> ⇒ الربح = <code>(السعر − التكلفة) / السعر</code>.</li>
+  <li>إعداد <b>الحد الأدنى للربح %</b> (عام + لكل كاتيجوري + override لكل منتج).</li>
+  <li><b>وضعان:</b>
+    <ul>
+      <li><b>سقف تلقائي:</b> تحدّد خصم 30%، والنظام يقصّه لكل منتج بحيث لا ينزل الربح تحت الحد (مثلاً منتج هامشه ضعيف يأخذ 12% فقط).</li>
+      <li><b>اشتقاق من الهامش:</b> تقول "اترك لي ربح 15%" والنظام يحسب أقصى خصم ممكن لكل منتج تلقائياً.</li>
+    </ul>
+  </li>
+  <li>منتجات لا تحقّق الحد الأدنى للربح ⇒ تُستبعَد من العرض تلقائياً (مع تقرير بها).</li>
+  <li>لوحة معاينة: "هذا العرض سيطبّق خصماً متوسطه X% على N منتج، ويحافظ على ربح ≥ Y%".</li>
+</ul>
+<span class="muted">قراءة <code>standard_price</code> تحتاج صلاحية كاملة (SUPERUSER) — معروف من كونسول الأدمن.</span>
+</div>
+
+<h2>٦) أفكار تحكّم إضافية (كثيرة كما طلبت)</h2>
+<div class="grid">
+  <div class="card"><h3>التكديس والأولوية</h3><ul>
+    <li>قابل للتكديس مع عروض أخرى أم حصري (Exclusive).</li>
+    <li>أولوية/تسلسل عند تطابق أكثر من عرض.</li>
+    <li>"الأفضل للعميل دائماً" (best-deal wins).</li>
+  </ul></div>
+  <div class="card"><h3>السقوف والميزانية</h3><ul>
+    <li>سقف استخدام كلي (أول 100 طلب).</li>
+    <li>سقف لكل عميل (مرة واحدة/يوم/شهر).</li>
+    <li>سقف ميزانية الخصم (يتوقف عند صرف X د.ك).</li>
+  </ul></div>
+  <div class="card"><h3>العرض والبصريات</h3><ul>
+    <li>بادج + بانر (موجود) + لون/إيموجي.</li>
+    <li>عدّاد تنازلي + "بقي N قطعة".</li>
+    <li>بلوك مخصّص بالـPage Builder (source=promotion موجود).</li>
+    <li>إشعار Push تلقائي عند إطلاق العرض (push_event موجود).</li>
+  </ul></div>
+  <div class="card"><h3>الذكاء والتجارب</h3><ul>
+    <li>A/B: نسختان من العرض وقياس التحويل (uellow.ab.test موجود).</li>
+    <li>استهداف بالذكاء (Brain): للمنتجات بطيئة الحركة.</li>
+    <li>جدولة متكرّرة (كل جمعة).</li>
+    <li>تقرير أداء: مبيعات/ربح/استخدام لكل عرض.</li>
+  </ul></div>
+</div>
+
+<h2>٧) البنية المقترحة (Models)</h2>
+<div class="card">
+<ul>
+  <li><code>mobile.app.promotion</code> (نوسّعه): + <code>channel</code>, <code>stackable</code>, <code>priority</code>, <code>exclusive</code>, <code>usage_limit</code>, <code>per_customer_limit</code>, <code>budget_cap</code>, <code>min_margin_pct</code>, <code>margin_mode</code>, حقول الجدولة بالساعات/الأيام.</li>
+  <li><code>mobile.promo.scope</code> (جديد): سطر نطاق (نوع: category/brand/price_range/product/vendor/tag + قيمة + تضمين/استبعاد).</li>
+  <li><code>mobile.promo.condition</code> (جديد): سطر شرط (min_subtotal/min_qty/first_order/segment/payment/day…).</li>
+  <li><code>mobile.promo.reward</code> (جديد): سطر مكافأة (percent/fixed/price/bogo/free_gift/free_ship/coupon_apply/coupon_generate/loyalty_x).</li>
+  <li>إعادة استخدام: <code>uellow.freeship.rule</code> للشحن، <code>loyalty.program</code> للكوبونات، <code>uellow_bundles</code> لباقات الهدايا.</li>
+</ul>
+نقاط التكامل (Integration points): <code>cart.py → effective_price</code> (الخصم وقت الحساب)، <code>serialize_product_card</code> (بادج/سعر)، <code>block_resolver</code> (بلوكات)، إضافة هدية إجبارية في منطق السلة، تطبيق الكوبون التلقائي عند تأكيد السلة.
+</div>
+
+<h2>٨) خطوات التنفيذ (Phased Roadmap)</h2>
+
+<div class="phase"><b>المرحلة 0 — قرار معماري (نصف يوم):</b> تحويل تطبيق الخصم من "الكتابة على list_price" إلى "خصم وقت العرض/الحساب" — شرط أساسي لتحكّم القناة وحارس الربح وعدم تلويث الويبسايت.</div>
+
+<div class="phase"><b>المرحلة 1 — الاستهداف بالقواعد:</b> نماذج <code>mobile.promo.scope</code> + بناء domain ديناميكي + معاينة عدد المنتجات. (كاتيجوري/براند/نطاق سعري/استبعادات)</div>
+
+<div class="phase"><b>المرحلة 2 — حارس الربح:</b> قراءة <code>standard_price</code>، إعدادات الحد الأدنى للربح (عام/كاتيجوري/منتج)، وضعا السقف والاشتقاق، استبعاد غير المربح + تقرير معاينة.</div>
+
+<div class="phase"><b>المرحلة 3 — التحكّم بالقناة:</b> حقل <code>channel</code> + احترامه في الموبايل/الويبسايت/POS، وفصل أسعار الموبايل عن الويبسايت.</div>
+
+<div class="phase"><b>المرحلة 4 — الشروط:</b> <code>mobile.promo.condition</code> (سلة/عميل/زمن/دفع) + محرّك تقييم الشروط في السلة.</div>
+
+<div class="phase"><b>المرحلة 5 — المكافآت الغنية:</b> هدية إجبارية بالكارت + تفعيل الشحن المجاني + كوبون إجباري/توليد كوبون + BOGO + نقاط مضاعفة.</div>
+
+<div class="phase"><b>المرحلة 6 — السقوف والتكديس:</b> usage/per-customer/budget caps + الأولوية/الحصرية + best-deal.</div>
+
+<div class="phase"><b>المرحلة 7 — العرض والقياس:</b> بادج/بانر/عدّاد + إشعار إطلاق تلقائي + تقرير أداء (مبيعات/ربح/استخدام) + A/B.</div>
+
+<div class="phase"><b>المرحلة 8 — الويبسايت:</b> مزامنة العرض على المتجر (قاعدة "كل ميزة تطبيق تظهر على الويبسايت").</div>
+
+<h2>٩) قرارات أحتاجها منك قبل البدء</h2>
+<div class="card">
+<ol>
+  <li>هل نوسّع <code>mobile.app.promotion</code> الحالي أم ننشئ موديلاً جديداً <code>mobile.promo.rule</code> ونُبقي القديم للبادجات؟ (أرشّح التوسيع التدريجي).</li>
+  <li>تطبيق الخصم: "وقت العرض/الحساب" (مرن، يحترم القناة) — موافق؟ (أرشّحه بقوة).</li>
+  <li>أولوية المراحل: أبدأ بأي ٣ مراحل؟ (أرشّح 1 الاستهداف + 2 حارس الربح + 5 الهدايا/الشحن/الكوبون).</li>
+  <li>الهدية الإجبارية: تُضاف تلقائياً وتُمنع إزالتها — هل تظهر بسعر 0 أم كخصم 100%؟</li>
+</ol>
+</div>
+
+<footer>
+  Uellow — محرّك العروض المتقدّم · مسودّة تصميم · جاهز للتنفيذ على مراحل عند موافقتك على القرارات أعلاه.
+</footer>
+
+</div>
+</body>
+</html>

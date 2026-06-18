@@ -5,7 +5,7 @@ from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, require_auth,
-    current_vendor, current_session, img_url,
+    current_vendor, current_session, img_url, is_marketplace_admin,
 )
 
 
@@ -77,6 +77,19 @@ class VendorAuthAPI(http.Controller):
         vendor = request.env['uellow.vendor'].sudo().search(
             [('user_id', '=', user.id)], limit=1)
         if not vendor:
+            # Marketplace admins (no vendor record) get an admin-mode session.
+            if is_marketplace_admin(user):
+                token, _sess = request.env['vendor.session'].sudo().issue_admin(
+                    user,
+                    device_id=p.get('device_id', ''),
+                    platform=p.get('platform', 'android'),
+                    app_version=p.get('app_version', ''),
+                    ip=request.httprequest.remote_addr or '',
+                    push_token=p.get('push_token', ''),
+                )
+                return ok({'token': token, 'is_admin': True,
+                           'admin': {'id': user.id, 'name': user.name,
+                                     'email': user.email or user.login}})
             return fail('NOT_A_VENDOR', 'This account is not a vendor', 403)
         token, _sess = request.env['vendor.session'].sudo().issue(
             vendor,
@@ -86,7 +99,50 @@ class VendorAuthAPI(http.Controller):
             ip=request.httprequest.remote_addr or '',
             push_token=p.get('push_token', ''),
         )
-        return ok({'token': token, 'vendor': _serialize_vendor(vendor)})
+        return ok({'token': token, 'vendor': _serialize_vendor(vendor),
+                   'is_admin': is_marketplace_admin(user)})
+
+    @http.route('/api/vendor/v1/auth/apply', type='http', auth='public',
+                methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def apply(self, **kw):
+        """Public vendor-account request form (from the Vendor app login screen).
+        Stores the request as a CRM lead so the team can follow up."""
+        p = get_payload()
+        store = (p.get('store_name') or '').strip()
+        owner = (p.get('owner_name') or '').strip()
+        phone = (p.get('phone') or '').strip()
+        email = (p.get('email') or '').strip()
+        if not store or not phone:
+            return fail('MISSING_FIELDS', 'store_name + phone required')
+        desc = '\n'.join([
+            'Vendor account request (Vendor app)',
+            'Store: %s' % store,
+            'Owner: %s' % (owner or '-'),
+            'Phone: %s' % phone,
+            'Email: %s' % (email or '-'),
+            'City: %s' % (p.get('city') or '-'),
+            'Category: %s' % (p.get('category') or '-'),
+            'Message: %s' % (p.get('message') or '-'),
+        ])
+        try:
+            request.env['crm.lead'].sudo().create({
+                'name': 'Vendor request: %s' % store,
+                'contact_name': owner or store,
+                'phone': phone,
+                'email_from': email or False,
+                'description': desc,
+                'type': 'lead',
+            })
+        except Exception:
+            # CRM may be unavailable — fall back to a logged note so the
+            # request is never silently lost.
+            request.env['mail.message'].sudo().create({
+                'model': 'res.partner', 'res_id': request.env.user.partner_id.id,
+                'message_type': 'comment', 'body': desc,
+                'subject': 'Vendor account request: %s' % store,
+            })
+        return ok({'submitted': True})
 
     @http.route('/api/vendor/v1/auth/logout', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)

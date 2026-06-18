@@ -131,11 +131,72 @@ class UellowVendor(models.Model):
         compute='_compute_metrics', store=True, string='Cancel Rate (%)',
     )
 
+    # ── Vendor Score (0-100 composite performance) ───────
+    uc_score = fields.Integer(compute='_compute_uc_score', string='Vendor Score')
+    uc_score_band = fields.Char(compute='_compute_uc_score', string='Score Band')
+
+    @api.depends('avg_rating', 'cancel_rate', 'order_count')
+    def _compute_uc_score(self):
+        for v in self:
+            rating = (v.avg_rating or 0) / 5.0 * 40.0          # 0-40
+            reliability = max(0.0, 30.0 - (v.cancel_rate or 0) * 6.0)  # 0-30
+            activity = min(30.0, (v.order_count or 0) * 0.3)   # 0-30
+            s = rating + reliability + activity
+            v.uc_score = int(round(s))
+            v.uc_score_band = ('excellent' if s >= 80 else 'good' if s >= 60
+                               else 'fair' if s >= 40 else 'at_risk')
+
     # ── Settings (overrides from vendor_settings) ────────
     settings_id = fields.Many2one(
         'uellow.vendor.settings', string='Settings',
         ondelete='set null', copy=False,
     )
+
+    # ── Capability & settlement mirrors (editable on the vendor form;
+    #    write straight through to settings_id so admins manage everything
+    #    from the vendor page). ────────────────────────────
+    vendor_type          = fields.Selection(related='settings_id.vendor_type',          readonly=False, store=True)
+    capability_preset    = fields.Selection(related='settings_id.capability_preset',    readonly=False)
+    cap_add_products     = fields.Boolean(related='settings_id.cap_add_products',     readonly=False)
+    cap_edit_products    = fields.Boolean(related='settings_id.cap_edit_products',    readonly=False)
+    cap_archive_products = fields.Boolean(related='settings_id.cap_archive_products', readonly=False)
+    cap_update_stock     = fields.Boolean(related='settings_id.cap_update_stock',     readonly=False)
+    cap_publish_products = fields.Boolean(related='settings_id.cap_publish_products', readonly=False)
+    cap_manage_price     = fields.Boolean(related='settings_id.cap_manage_price',     readonly=False)
+    cap_flash_sale       = fields.Boolean(related='settings_id.cap_flash_sale',       readonly=False)
+    cap_bundles          = fields.Boolean(related='settings_id.cap_bundles',          readonly=False)
+    cap_join_promotions  = fields.Boolean(related='settings_id.cap_join_promotions',  readonly=False)
+    cap_import_products  = fields.Boolean(related='settings_id.cap_import_products',  readonly=False)
+    cap_manage_orders    = fields.Boolean(related='settings_id.cap_manage_orders',    readonly=False)
+    cap_cancel_orders    = fields.Boolean(related='settings_id.cap_cancel_orders',    readonly=False)
+    cap_restock          = fields.Boolean(related='settings_id.cap_restock',          readonly=False)
+    cap_edit_store       = fields.Boolean(related='settings_id.cap_edit_store',       readonly=False)
+    cap_request_payout   = fields.Boolean(related='settings_id.cap_request_payout',   readonly=False)
+    cap_api              = fields.Boolean(related='settings_id.cap_api',              readonly=False)
+    cap_live             = fields.Boolean(related='settings_id.cap_live',             readonly=False)
+    cap_quick_sale       = fields.Boolean(related='settings_id.cap_quick_sale',       readonly=False)
+    sla_hours            = fields.Integer(related='settings_id.sla_hours',            readonly=False)
+    settlement_mode      = fields.Selection(related='settings_id.settlement_mode',     readonly=False)
+    settle_trigger       = fields.Selection(related='settings_id.settle_trigger',      readonly=False)
+    hide_financials      = fields.Boolean(related='settings_id.hide_financials',      readonly=False)
+
+    def _ensure_settings(self):
+        """Return the vendor's settings record, creating it if missing."""
+        self.ensure_one()
+        if not self.settings_id:
+            self.settings_id = self.env['uellow.vendor.settings'].sudo().create({
+                'vendor_id': self.id,
+            })
+        return self.settings_id
+
+    def cap(self, code):
+        """True if the vendor is allowed to perform capability `code`
+        (e.g. 'add_products'). No settings record = unrestricted (legacy)."""
+        self.ensure_one()
+        s = self.settings_id
+        if not s:
+            return True
+        return bool(getattr(s, 'cap_' + code, True))
 
     # ── FBU link ─────────────────────────────────────────
     fbu_location_id = fields.Many2one(

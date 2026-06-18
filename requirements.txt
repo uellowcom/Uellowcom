@@ -37,6 +37,7 @@ hiredis>=2.3.2
 
 # HTTP Client
 httpx>=0.26.0
+h2>=4.0.0  # HTTP/2 for httpx — required by iOS Live Activity APNs sender (live_activity.py)
 aiohttp>=3.9.1
 
 # Email

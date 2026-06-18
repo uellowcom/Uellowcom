@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>دليل مديول المالتي فيندور — Uellow</title>
+<style>
+  :root{
+    --yellow:#F5C320; --dark:#412402; --teal:#1A7A6E; --soft:#FFF9EC;
+    --ink:#2a2118; --muted:#8a7d6b; --line:#e7ddc9; --card:#ffffff;
+    --ok:#2e7d32; --warn:#b26a00; --bad:#b3261e; --info:#0C447C;
+  }
+  *{box-sizing:border-box}
+  body{font-family:'Segoe UI',Tahoma,Arial;background:#3a2008;color:var(--ink);margin:0;line-height:1.7}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px}
+  header.hero{background:linear-gradient(135deg,var(--dark),#5a3410);color:#fff;border-radius:18px;padding:26px 28px;margin-bottom:18px;border:1px solid #6b431d}
+  header.hero h1{margin:0 0 6px;color:var(--yellow);font-size:26px}
+  header.hero p{margin:0;color:#f0e6d2}
+  .toc{background:var(--card);border-radius:14px;padding:14px 20px;margin-bottom:18px;columns:2;column-gap:30px}
+  .toc a{color:var(--teal);text-decoration:none;font-weight:600;display:block;padding:3px 0;font-size:14px}
+  .toc a:hover{color:var(--dark)}
+  section{background:var(--card);border-radius:16px;padding:22px 24px;margin-bottom:18px;border:1px solid var(--line)}
+  h2{color:var(--dark);font-size:21px;margin:0 0 14px;padding-bottom:8px;border-bottom:3px solid var(--yellow);display:inline-block}
+  h3{color:var(--teal);font-size:16px;margin:18px 0 8px}
+  p{margin:8px 0}
+  code{background:#f4eede;padding:1px 6px;border-radius:5px;font-size:13px;color:#7a4a12;direction:ltr;display:inline-block}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:800;color:#fff}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:right;vertical-align:top}
+  th{background:var(--soft);color:var(--dark);font-weight:800}
+  tr:nth-child(even) td{background:#fcfaf4}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin:12px 0}
+  .mcard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fcfaf4}
+  .mcard h4{margin:0 0 4px;color:var(--dark);font-size:14px;direction:ltr;text-align:right}
+  .mcard small{color:var(--muted);font-size:12px}
+  .layers{display:flex;flex-direction:column;gap:0}
+  .layer{border:2px solid var(--teal);border-radius:12px;padding:12px 16px;margin:0;background:#eafaf6;position:relative;text-align:center}
+  .layer b{color:var(--teal)}
+  .layer small{display:block;color:#4a6b64;direction:ltr;font-size:12px;margin-top:3px}
+  .arrowdown{text-align:center;color:var(--yellow);font-size:22px;line-height:1;margin:2px 0}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:12px 0;direction:rtl}
+  .node{border-radius:10px;padding:8px 12px;font-weight:800;font-size:13px;color:#fff;text-align:center}
+  .ar{color:var(--yellow);font-size:20px;font-weight:900}
+  .legend{font-size:12px;color:var(--muted);margin-top:6px}
+  .note{background:#fff8e6;border-right:4px solid var(--yellow);padding:10px 14px;border-radius:8px;margin:12px 0;font-size:14px}
+  .new{background:#eafaf6;border-right:4px solid var(--teal);padding:10px 14px;border-radius:8px;margin:12px 0;font-size:14px}
+  ul{margin:8px 0;padding-right:22px}
+  li{margin:4px 0}
+  .st{display:inline-block;padding:2px 10px;border-radius:6px;font-weight:800;font-size:12px;margin:2px}
+  .foot{color:#caa;text-align:center;font-size:12px;padding:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>🏪 دليل مديول المالتي فيندور (Multi-Vendor) — Uellow</h1>
+  <p>شرح كامل للبنية، النماذج، دورات العمل، الصلاحيات، والـ APIs — مع المديولات التابعة له. مدعوم بمخططات بصرية.</p>
+</header>
+
+<nav class="toc">
+  <a href="#overview">١. نظرة عامة والمعمارية</a>
+  <a href="#models">٢. النماذج (Models) ووظائفها</a>
+  <a href="#wf-vendor">٣. دورة حياة التاجر (تسجيل → موافقة)</a>
+  <a href="#wf-product">٤. دورة موافقة المنتجات</a>
+  <a href="#wf-money">٥. الطلب → العمولة → المحفظة → الصرف</a>
+  <a href="#wf-flash">٦. عروض الفلاش (Flash Sale)</a>
+  <a href="#commission">٧. خطط العمولة وكيفية احتساب النسبة</a>
+  <a href="#security">٨. الصلاحيات والمجموعات</a>
+  <a href="#menus">٩. القوائم الإدارية</a>
+  <a href="#portal">١٠. بوابة التاجر (Portal)</a>
+  <a href="#apis">١١. الـ APIs (تطبيق التاجر + تطبيق العميل)</a>
+  <a href="#related">١٢. المديولات التابعة</a>
+  <a href="#uellowvendors">١٣. ميزة «Uellow Vendors»</a>
+</nav>
+
+<!-- 1 -->
+<section id="overview">
+  <h2>١. نظرة عامة والمعمارية</h2>
+  <p>المديول <code>uellow_multivendor</code> يحوّل المتجر إلى <b>سوق متعدد التجار (Marketplace)</b>: تسجيل تجار، موافقة على منتجاتهم، عمولات، محافظ، صرف أرباح، عروض فلاش، تعدد العملات والدول. يعتمد على: <code>website_sale, sale_management, account, stock, portal, mail, uellow_fulfillment</code>.</p>
+  <h3>طبقات النظام (من الأسفل للأعلى)</h3>
+  <div class="layers">
+    <div class="layer"><b>قاعدة المالتي فيندور</b> — uellow_multivendor<small>uellow.vendor · commission · payout · wallet · flash.sale · follower · settings</small></div>
+    <div class="arrowdown">▲</div>
+    <div class="layer" style="border-color:#b26a00;background:#fdf3e3"><b style="color:#b26a00">بوابة التاجر (Web)</b><small>/my/vendor/* — لوحة، منتجات، طلبات، مخزون، محفظة، عروض</small></div>
+    <div class="arrowdown">▲</div>
+    <div class="layer" style="border-color:#0C447C;background:#eaf1fb"><b style="color:#0C447C">API تطبيق التاجر</b><small>/api/vendor/v1/* (كامل) · /uellow/vendor/* (مبسّط)</small></div>
+    <div class="arrowdown">▲</div>
+    <div class="layer" style="border-color:var(--dark);background:#f6efe3"><b>تطبيق العميل (Flutter)</b><small>/api/mobile/v2/vendors/* + شريط التاجر على كل منتج</small></div>
+  </div>
+  <p class="legend">بالإضافة لطبقة منفصلة لموردي الدروبشيب: <code>uellow_supplier_portal</code> (/my/supplier).</p>
+</section>
+
+<!-- 2 -->
+<section id="models">
+  <h2>٢. النماذج (Models) ووظائفها</h2>
+  <div class="grid">
+    <div class="mcard"><h4>uellow.vendor</h4><small>سجل التاجر الأساسي: متجر، شعار، دولة/عملة، خطة، رتبة (bronze→platinum)، حالة (draft→pending→active→suspended)، محفظة، موقع FBU.</small></div>
+    <div class="mcard"><h4>uellow.vendor.settings</h4><small>إعدادات كل تاجر: أسلوب الموافقة، الشحن، الإشعارات، والرؤية (ومنها <b>show_vendor_name</b>).</small></div>
+    <div class="mcard"><h4>uellow.vendor.store</h4><small>إعداد صفحة المتجر: التبويبات، التخطيط، المنتجات المميّزة، SEO، عدّاد الزيارات.</small></div>
+    <div class="mcard"><h4>uellow.vendor.wallet</h4><small>محفظة التاجر: الرصيد = (دائن منفّذ − مدين منفّذ)، رصيد معلّق، إجمالي مكتسب. credit()/debit().</small></div>
+    <div class="mcard"><h4>uellow.wallet.transaction</h4><small>حركات المحفظة: credit/debit، حالة pending/done/failed، مرتبطة بسطر العمولة.</small></div>
+    <div class="mcard"><h4>uellow.vendor.commission</h4><small>عمولة كل طلب: المبلغ، النسبة، صافي التاجر، حالة (pending→hold→released→paid)، فترة حجز 7 أيام.</small></div>
+    <div class="mcard"><h4>uellow.commission.plan</h4><small>خطة الاشتراك: رسم شهري + نسبة افتراضية + تجاوزات حسب الفئة.</small></div>
+    <div class="mcard"><h4>uellow.category.commission</h4><small>نسبة عمولة مختلفة لفئة منتجات داخل الخطة.</small></div>
+    <div class="mcard"><h4>uellow.vendor.payout</h4><small>دفعة صرف (PAY/2025/0001): تجمّع أسطر عمولة released، حالة draft→confirmed→paid.</small></div>
+    <div class="mcard"><h4>uellow.vendor.follower</h4><small>متابعو المتجر (عميل↔تاجر، فريد).</small></div>
+    <div class="mcard"><h4>uellow.flash.sale</h4><small>عرض محدود بوقت: خصم %، عمولة إضافية، فترة، منتجات؛ كرون كل 15 دقيقة يفعّل/ينهي.</small></div>
+    <div class="mcard"><h4>uellow.vendor.restock</h4><small>طلب التاجر تعبئة مخزون: pending→approved→shipped→received.</small></div>
+    <div class="mcard"><h4>uellow.product.import</h4><small>رفع ملف منتجات (CSV/Excel): pending→done/rejected.</small></div>
+    <div class="mcard"><h4>uellow.marketplace.dashboard</h4><small>لوحة تحليلات (Transient): GMV، طلبات، عمولات، take rate، أفضل تجار…</small></div>
+    <div class="mcard"><h4>product.template (موسّع)</h4><small>+ vendor_id، vendor_approval_state (pending/approved/rejected)، flash_sale_id، أزرار الموافقة.</small></div>
+    <div class="mcard"><h4>sale.order (موسّع)</h4><small>+ vendor_id، commission_id؛ عند التأكيد ينشئ العمولة تلقائياً.</small></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="wf-vendor">
+  <h2>٣. دورة حياة التاجر (تسجيل → موافقة)</h2>
+  <div class="flow">
+    <span class="node" style="background:#9e9e9e">مسودّة draft</span><span class="ar">→</span>
+    <span class="node" style="background:var(--warn)">قيد المراجعة pending</span><span class="ar">→</span>
+    <span class="node" style="background:var(--ok)">نشِط active</span><span class="ar">→</span>
+    <span class="node" style="background:#7a4a12">موقوف suspended</span>
+  </div>
+  <div class="flow">
+    <span class="legend">أو من pending:</span>
+    <span class="node" style="background:var(--bad)">مرفوض rejected</span>
+  </div>
+  <ul>
+    <li>التاجر يُكمل بياناته (اسم المتجر، السجل التجاري، بنك، شعار) → <code>action_submit()</code> ينقله إلى pending.</li>
+    <li>الأدمن يضغط <b>Approve</b> → معالج (wizard) يختار <b>خطة العمولة</b> → <code>action_approve()</code> ينفّذ:
+      <ul><li>الحالة → active + تاريخ الموافقة</li><li>إنشاء <b>موقع FBU</b> فرعي للمخزون</li><li>إنشاء <b>محفظة</b> بعملة التاجر</li><li>إنشاء <b>إعدادات</b> التاجر</li><li>وسم الشريك is_uellow_vendor=True</li></ul>
+    </li>
+    <li>أو <b>Reject</b> → معالج بسبب + ملاحظة → الحالة rejected.</li>
+  </ul>
+  <div class="note">💡 التجار الذين أنشأناهم لتجميع البراندات (Blooms / Smart / Hight Quality / Sumo) أُنشئوا مباشرة بحالة <b>active</b> + إعدادات، دون استدعاء action_approve (تجنّب إنشاء محفظة/موقع FBU لأنهم تجميع براندات لا تجار حقيقيين بعد).</div>
+</section>
+
+<!-- 4 -->
+<section id="wf-product">
+  <h2>٤. دورة موافقة المنتجات</h2>
+  <div class="flow">
+    <span class="node" style="background:var(--warn)">معلّق pending</span><span class="ar">→</span>
+    <span class="node" style="background:var(--ok)">معتمد approved + منشور</span>
+    <span class="ar" style="margin:0 10px">↺</span>
+    <span class="node" style="background:var(--bad)">مرفوض rejected</span>
+  </div>
+  <ul>
+    <li>التاجر يضيف منتجاً (بوابة/تطبيق) → يُضبط تلقائياً <code>vendor_approval_state=pending</code> + غير منشور + من قدّمه/متى.</li>
+    <li>أسلوب الموافقة من إعدادات التاجر: <b>manual</b> (مراجعة يدوية) / <b>ai</b> / <b>instant</b>.</li>
+    <li>الأدمن من شاشة <b>Product Approvals</b> (action 1388): <b>Approve</b> (نشر + إشعار التاجر) أو <b>Reject</b> (بسبب) أو <b>Reset</b>.</li>
+    <li class="new" style="list-style:none">🆕 أضفنا زر <b>«✅ Approve All Pending»</b> في رأس القائمة — يوافق على كل المعلّق دفعة واحدة عبر <code>action_vendor_approve_all()</code>.</li>
+  </ul>
+</section>
+
+<!-- 5 -->
+<section id="wf-money">
+  <h2>٥. الطلب → العمولة → المحفظة → الصرف</h2>
+  <div class="flow">
+    <span class="node" style="background:var(--teal)">تأكيد الطلب</span><span class="ar">→</span>
+    <span class="node" style="background:var(--warn)">عمولة pending (حجز 7 أيام)</span><span class="ar">→</span>
+    <span class="node" style="background:#5b8f2e">released → دائن للمحفظة</span><span class="ar">→</span>
+    <span class="node" style="background:#9e9e9e">طلب صرف draft</span><span class="ar">→</span>
+    <span class="node" style="background:var(--info)">confirmed</span><span class="ar">→</span>
+    <span class="node" style="background:var(--ok)">paid + خصم المحفظة</span>
+  </div>
+  <ol>
+    <li><b>تأكيد الطلب</b> (<code>action_confirm</code>): إن كان للطلب تاجر، يُنشئ سطر عمولة عبر <code>create_from_order()</code> بحالة pending (تاريخ التحرير = تاريخ الطلب + 7).</li>
+    <li><b>التحرير</b> (<code>action_release</code>): بعد الحجز → released + <code>wallet.credit(صافي التاجر)</code> ينشئ حركة دائنة done.</li>
+    <li><b>طلب الصرف</b> (معالج): يجمع أسطر released غير المصروفة في <b>payout</b> (draft).</li>
+    <li><b>الأدمن</b>: confirm ثم <b>Mark as Paid</b> → الأسطر paid + <code>wallet.debit()</code> يخصم من الرصيد.</li>
+  </ol>
+  <div class="note">معادلة الرصيد: <code>balance = Σ(دائن done) − Σ(مدين done)</code> — والرصيد المعلّق = Σ(دائن pending). الحد الأدنى للصرف افتراضياً 20.</div>
+</section>
+
+<!-- 6 -->
+<section id="wf-flash">
+  <h2>٦. عروض الفلاش (Flash Sale)</h2>
+  <div class="flow">
+    <span class="node" style="background:#9e9e9e">draft</span><span class="ar">→</span>
+    <span class="node" style="background:var(--ok)">active (يطبّق الخصم)</span><span class="ar">→</span>
+    <span class="node" style="background:#7a4a12">ended (يزيل الخصم)</span>
+    <span class="ar" style="margin:0 8px">/</span>
+    <span class="node" style="background:var(--bad)">cancelled</span>
+  </div>
+  <ul>
+    <li>التاجر ينشئ عرضاً: خصم %، عمولة إضافية (1% افتراضي)، فترة، منتجات.</li>
+    <li><b>كرون كل 15 دقيقة</b> يفعّل المسوّدات التي حان وقتها وينهي المنتهية.</li>
+    <li>سعر العرض = <code>list_price × (1 − discount%)</code> يظهر للعميل مع عدّاد تنازلي؛ والعمولة وقت الطلب = نسبة الخطة + العمولة الإضافية.</li>
+  </ul>
+</section>
+
+<!-- 7 -->
+<section id="commission">
+  <h2>٧. خطط العمولة وكيفية احتساب النسبة</h2>
+  <p>عند تأكيد الطلب، تُحلّ النسبة هكذا:</p>
+  <ol>
+    <li>نسبة <b>خطة</b> التاجر (افتراضي 10% إن لا خطة).</li>
+    <li>إن كانت فئة المنتج ضمن <b>تجاوزات الفئات</b> في الخطة → تُستخدم نسبة الفئة (أول تطابق).</li>
+    <li>عمولة = المبلغ × النسبة ÷ 100 ؛ صافي التاجر = المبلغ − العمولة (مع تحويل العملة لعملة التاجر عند الحاجة).</li>
+  </ol>
+  <table>
+    <tr><th>الخطة</th><th>تجاوز فئة</th><th>فئة المنتج</th><th>المبلغ</th><th>النسبة</th><th>العمولة</th><th>صافي التاجر</th></tr>
+    <tr><td>Bronze 10%</td><td>إلكترونيات 12%</td><td>بقالة</td><td>100</td><td>10%</td><td>10</td><td>90</td></tr>
+    <tr><td>Bronze 10%</td><td>إلكترونيات 12%</td><td>إلكترونيات</td><td>100</td><td>12%</td><td>12</td><td>88</td></tr>
+    <tr><td>بلا خطة</td><td>—</td><td>أي</td><td>100</td><td>10%</td><td>10</td><td>90</td></tr>
+  </table>
+</section>
+
+<!-- 8 -->
+<section id="security">
+  <h2>٨. الصلاحيات والمجموعات</h2>
+  <h3>المجموعات</h3>
+  <ul>
+    <li><span class="pill" style="background:var(--dark)">Marketplace Manager</span> — يرث صلاحيات النظام (إدارة كاملة + قائمة الإعدادات).</li>
+    <li><span class="pill" style="background:var(--teal)">Vendor User</span> — يرث Portal (وصول التاجر لبوابته).</li>
+  </ul>
+  <h3>مصفوفة الوصول (ملخّص)</h3>
+  <table>
+    <tr><th>النموذج</th><th>موظف</th><th>أدمن نظام</th><th>Portal (تاجر)</th></tr>
+    <tr><td>uellow.vendor</td><td>قراءة</td><td>كامل</td><td>قراءة/كتابة (خدمة ذاتية)</td></tr>
+    <tr><td>commission / payout / wallet / transaction</td><td>قراءة</td><td>كامل</td><td>—</td></tr>
+    <tr><td>flash.sale</td><td>قراءة/كتابة/إنشاء</td><td>كامل</td><td>—</td></tr>
+    <tr><td>vendor.follower</td><td>كامل</td><td>كامل</td><td>كامل (متابعة)</td></tr>
+    <tr><td>restock / product.import</td><td>قراءة</td><td>كامل</td><td>قراءة/كتابة/إنشاء</td></tr>
+    <tr><td>الـ wizards (approve/reject/payout)</td><td>—</td><td>كامل</td><td>—</td></tr>
+  </table>
+  <p class="legend">لا توجد record rules — التحكم بالمجموعات فقط، مع تحقّق ملكية التاجر داخل مسارات الـ portal.</p>
+</section>
+
+<!-- 9 -->
+<section id="menus">
+  <h2>٩. القوائم الإدارية (Marketplace)</h2>
+  <table>
+    <tr><th>القائمة</th><th>المحتوى</th></tr>
+    <tr><td>📊 Dashboard</td><td>لوحة KPIs (GMV، طلبات، تجار، عمولات، منتجات، صرف، تقييمات).</td></tr>
+    <tr><td>🏪 Vendors</td><td>كل التجار (قائمة/نموذج + زر Approve).</td></tr>
+    <tr><td>💰 Finance</td><td>العمولات · الصرف (Payouts) · المحافظ · خطط العمولة.</td></tr>
+    <tr><td>📦 Products</td><td><b>Pending Approvals</b> + All Vendor Products (action 1388).</td></tr>
+    <tr><td>⚡ Promotions</td><td>عروض الفلاش.</td></tr>
+    <tr><td>🚚 Fulfillment</td><td>من مديول uellow_fulfillment (مواقع FBU).</td></tr>
+    <tr><td>⚙️ Configuration</td><td>خطط العمولة · إعدادات التجار <span class="legend">(مدراء فقط)</span>.</td></tr>
+  </table>
+</section>
+
+<!-- 10 -->
+<section id="portal">
+  <h2>١٠. بوابة التاجر (Portal) — /my/vendor</h2>
+  <p>خدمة ذاتية كاملة للتاجر عبر المتصفح:</p>
+  <div class="grid">
+    <div class="mcard"><h4>/my/vendor</h4><small>لوحة: طلبات حديثة، إحصاء منتجات، مخزون منخفض، عروض نشطة.</small></div>
+    <div class="mcard"><h4>/my/vendor/orders</h4><small>الطلبات + تجهيز الشحنة + طباعة بوليصة + تأكيد التسليم.</small></div>
+    <div class="mcard"><h4>/my/vendor/products</h4><small>منتجاته + إضافة يدوية + استيراد ملف + استيراد من رابط (Smart Connector).</small></div>
+    <div class="mcard"><h4>/my/vendor/stock</h4><small>المخزون + طلبات تعبئة + سحب مخزون.</small></div>
+    <div class="mcard"><h4>/my/vendor/wallet</h4><small>الرصيد + الحركات + طلب صرف + كشف حساب.</small></div>
+    <div class="mcard"><h4>/my/vendor/flash-sale</h4><small>إنشاء/إدارة عروض الفلاش.</small></div>
+    <div class="mcard"><h4>/my/vendor/promotions</h4><small>الانضمام لحملات السوق (منتجات + خصم).</small></div>
+    <div class="mcard"><h4>/my/vendor/style + /settings</h4><small>ألوان المتجر + بيانات المتجر والتواصل.</small></div>
+    <div class="mcard"><h4>/my/vendor/reviews + /notifications</h4><small>تقييمات منتجاته + إشعارات لحظية (poll).</small></div>
+    <div class="mcard"><h4>/store/&lt;slug&gt;</h4><small>واجهة المتجر العامة + متابعة + صفحة «عن المتجر».</small></div>
+  </div>
+</section>
+
+<!-- 11 -->
+<section id="apis">
+  <h2>١١. الـ APIs</h2>
+  <h3>أ) API تطبيق التاجر الكامل — <code>uellow_vendor_api</code> (/api/vendor/v1/*)</h3>
+  <p>توثيق Bearer token عبر نموذج <code>vendor.session</code> (SHA256)، استجابة موحّدة <code>{success, data, meta}</code>.</p>
+  <table>
+    <tr><th>المجال</th><th>المسارات</th></tr>
+    <tr><td>المصادقة</td><td>login · logout · me · push-token</td></tr>
+    <tr><td>لوحة</td><td>dashboard (إيرادات/طلبات/منتجات)</td></tr>
+    <tr><td>المنتجات</td><td>list · detail · create · update · stock · delete (أرشفة)</td></tr>
+    <tr><td>الطلبات</td><td>list · detail · confirm · cancel · ship · chat</td></tr>
+    <tr><td>المالية</td><td>wallet · commissions · payouts · payouts/request</td></tr>
+    <tr><td>أخرى</td><td>reviews + reply · analytics (مبيعات/أفضل منتجات/عملاء) · settings/profile</td></tr>
+  </table>
+  <h3>ب) API مبسّط — <code>uellow_vendor_app</code> (/uellow/vendor/*)</h3>
+  <p>طبقة أبسط تستخدم <code>uellow.delivery.token</code> (مشترك مع السائقين): login · dashboard · orders · stock · wallet. (واجهة أقدم/مختصرة.)</p>
+  <h3>ج) واجهة العميل — <code>uellow_mobile_manager</code> (/api/mobile/v2/vendors/*)</h3>
+  <table>
+    <tr><th>المسار</th><th>الغرض</th></tr>
+    <tr><td>/vendors</td><td>دليل التجار (بحث/فرز/ترقيم).</td></tr>
+    <tr><td>/vendors/&lt;id&gt;</td><td>صفحة التاجر (نبذة، SLA، فئات، متابعة).</td></tr>
+    <tr><td>/vendors/&lt;id&gt;/storefront</td><td>واجهة المتجر كاملة في نداء واحد (فلاش، وصل حديثاً، الأكثر مبيعاً، عروض، تقييمات).</td></tr>
+    <tr><td>/vendors/&lt;id&gt;/products</td><td>منتجات التاجر مع الفرز.</td></tr>
+    <tr><td>/vendors/&lt;id&gt;/follow</td><td>متابعة/إلغاء.</td></tr>
+  </table>
+  <p class="legend">كل بطاقة/صفحة منتج تحمل مرجع التاجر عبر <code>_vendor_ref(product)</code> (انظر القسم 13).</p>
+</section>
+
+<!-- 12 -->
+<section id="related">
+  <h2>١٢. المديولات التابعة</h2>
+  <table>
+    <tr><th>المديول</th><th>الغرض</th><th>التوثيق</th></tr>
+    <tr><td>uellow_vendor_api</td><td>API كامل لتطبيق التاجر (منتجات/طلبات/مالية/تحليلات/شات).</td><td>vendor.session (Bearer)</td></tr>
+    <tr><td>uellow_vendor_app</td><td>طبقة API مبسّطة لتطبيق Flutter للتاجر.</td><td>delivery.token</td></tr>
+    <tr><td>uellow_supplier_portal</td><td><b>موردو دروبشيب (B2B)</b> — مختلف عن التاجر: يدير أوامر الشراء (purchase.order) + Health Score.</td><td>Portal user</td></tr>
+    <tr><td>uellow_fulfillment</td><td>مواقع FBU الفرعية للمخزون (تبعية أساسية).</td><td>—</td></tr>
+    <tr><td>uellow_mobile_manager</td><td>يعرض السوق لتطبيق العميل + حملات السوق.</td><td>—</td></tr>
+  </table>
+  <div class="note"><b>تاجر (Vendor)</b> = بائع تجزئة في السوق (B2C) عبر sale.order. &nbsp; <b>مورّد (Supplier)</b> = شريك دروبشيب (B2B) عبر purchase.order. مختلفان تماماً.</div>
+</section>
+
+<!-- 13 -->
+<section id="uellowvendors">
+  <h2>١٣. ميزة «Uellow Vendors» (إخفاء اسم التاجر)</h2>
+  <p>الدالة <code>_vendor_ref(product)</code> تُرجع دائماً مرجع تاجر على كل منتج:</p>
+  <ul>
+    <li>تاجر حقيقي + <code>show_vendor_name=True</code> → اسمه + رتبته + زر «زيارة» (<code>house:false</code>).</li>
+    <li>التاجر فعّل إخفاء اسمه <b>أو</b> لا يوجد تاجر → <b>«Uellow Vendors / تجار يلو»</b> بعلم <code>house:true</code>.</li>
+  </ul>
+  <p>التطبيق يرسم <code>house:true</code> كـ<b>شريط يلو الأصفر</b> («البيع عبر Uellow Vendors»)، والتاجر الحقيقي كبطاقة «SOLD BY» مع زيارة المتجر. الخيار من <code>uellow.vendor.settings.show_vendor_name</code>.</p>
+  <div class="new">🆕 هذه الميزة مطبّقة على الـ backend (بطاقة + صفحة المنتج) وفي تطبيق العميل (نسخة 2.2.49).</div>
+</section>
+
+<div class="foot">Uellow — دليل المالتي فيندور · تم التوليد تلقائياً من قراءة كود المديول والمديولات التابعة.</div>
+</div>
+</body>
+</html>

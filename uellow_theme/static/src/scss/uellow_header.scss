@@ -1821,8 +1821,9 @@ $umn-height      : 64px;
 .uc-acc-head {
     display: flex; align-items: center; gap: 12px;
     padding: 14px;
-    background: $uc-bg;
-    color: $uc-text;
+    background: #fff;
+    color: #212529;
+    border-bottom: 1px solid #eef0f2;
 
     .uc-acc-avatar {
         width: 42px; height: 42px;
@@ -1842,9 +1843,9 @@ $umn-height      : 64px;
     .uc-acc-head-info {
         display: flex; flex-direction: column;
         min-width: 0;
-        strong { font-size: 13px; color: $uc-text; line-height: 1.2;
+        strong { font-size: 13px; color: #212529; line-height: 1.2;
                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        small  { font-size: 11px; color: rgba(255, 255, 255, .7); line-height: 1.2;
+        small  { font-size: 11px; color: #6c757d; line-height: 1.2;
                   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     }
 }

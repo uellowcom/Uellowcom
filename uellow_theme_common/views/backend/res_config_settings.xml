@@ -190,6 +190,22 @@
                              help="Small line on the right of the copyright row.">
                         <field name="uc_footer_credit"/>
                     </setting>
+                    <setting id="uc_policy_privacy_set" string="Footer · Privacy URL"
+                             help="Per-website target for the footer Privacy link.">
+                        <field name="uc_policy_privacy_url"/>
+                    </setting>
+                    <setting id="uc_policy_terms_set" string="Footer · Terms URL"
+                             help="Per-website target for the footer Terms link.">
+                        <field name="uc_policy_terms_url"/>
+                    </setting>
+                    <setting id="uc_policy_cookies_set" string="Footer · Cookies URL"
+                             help="Per-website target for the footer Cookies link.">
+                        <field name="uc_policy_cookies_url"/>
+                    </setting>
+                    <setting id="uc_policy_accessibility_set" string="Footer · Accessibility URL"
+                             help="Per-website target for the footer Accessibility link.">
+                        <field name="uc_policy_accessibility_url"/>
+                    </setting>
                     <setting id="uc_footer_socials_hint" string="Social Media"
                              help="Edit Facebook, Instagram, Twitter/X, YouTube, TikTok, LinkedIn, GitHub URLs in Website → Configuration → Settings → General (these are the standard Odoo social fields). Empty fields are hidden in the footer.">
                         <span class="text-muted small">

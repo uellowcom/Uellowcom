@@ -23,6 +23,15 @@
                                    placeholder="Paste service-account JSON here"
                                    widget="text"/>
                         </group>
+                        <group string="iOS Live Activity (APNs .p8)">
+                            <field name="apns_team_id"/>
+                            <field name="apns_key_id"/>
+                            <field name="apns_bundle_id"/>
+                            <field name="apns_use_sandbox"/>
+                            <field name="apns_p8_key"
+                                   placeholder="Paste AuthKey_XXXX.p8 contents"
+                                   widget="text"/>
+                        </group>
                     </group>
                     <group>
                         <group string="Orders">

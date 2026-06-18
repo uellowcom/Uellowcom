@@ -189,6 +189,19 @@ function init(){
 }
 
 if(document.readyState === 'loading'){ document.addEventListener('DOMContentLoaded', init); } else { init(); }
+// Robust, always-bound handler for the Write-a-Review button — works even if
+// the reviews widget is (re)rendered after init or the dialog binds late.
+document.addEventListener('click', function(e){
+  var wb = e.target.closest('#prwWriteBtn');
+  if(!wb) return;
+  e.preventDefault();
+  var w = document.querySelector('.prw');
+  var logged = w && w.dataset.logged === '1';
+  var loginUrl = (w && w.dataset.loginUrl) || '/web/login';
+  if(!logged){ window.location.href = loginUrl; return; }
+  var ov = document.getElementById('prwOverlay');
+  if(ov){ ov.style.display='flex'; document.body.style.overflow='hidden'; }
+});
 document.addEventListener('click', function(e){
   var t = e.target.closest('[href="#tp-product-rating-tab"],[data-bs-target="#tp-product-rating-tab"]');
   if(t) setTimeout(init, 200);

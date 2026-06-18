@@ -251,11 +251,22 @@
         var s = card.querySelector('[data-cd="seconds"]');
         if (!h || !m || !s) return;
         function pad(n) { return n < 10 ? "0" + n : "" + n; }
+        // Real flash-sale end (mobile.flash.sale.end_date) when present,
+        // otherwise count down to end-of-day.
+        var endAttr = card.getAttribute("data-deals-end");
+        var endTime = endAttr ? new Date(endAttr).getTime() : null;
+        if (endTime && isNaN(endTime)) endTime = null;
         function tick() {
             var now = new Date();
-            var eod = new Date(now);
-            eod.setHours(23, 59, 59, 999);
-            var diff = eod - now;
+            var target;
+            if (endTime) {
+                target = endTime;
+            } else {
+                var eod = new Date(now);
+                eod.setHours(23, 59, 59, 999);
+                target = eod.getTime();
+            }
+            var diff = target - now.getTime();
             if (diff < 0) diff = 0;
             var hh = Math.floor(diff / 3600000);
             var mm = Math.floor((diff % 3600000) / 60000);

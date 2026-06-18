@@ -19,9 +19,11 @@ class VendorSession(models.Model):
     _description = 'Vendor App Session'
     _order = 'id desc'
 
-    vendor_id = fields.Many2one('uellow.vendor', required=True,
+    vendor_id = fields.Many2one('uellow.vendor', required=False,
         ondelete='cascade', index=True)
     user_id = fields.Many2one('res.users', required=True, ondelete='cascade')
+    is_admin = fields.Boolean(default=False, index=True,
+        help='Marketplace-admin session (not bound to a single vendor).')
     token_hash = fields.Char(required=True, index=True)
     device_id = fields.Char(index=True)
     platform = fields.Selection([
@@ -44,6 +46,23 @@ class VendorSession(models.Model):
         sess = self.sudo().create({
             'vendor_id': vendor.id,
             'user_id': vendor.user_id.id,
+            'token_hash': _hash(token),
+            'device_id': device_id or '',
+            'platform': platform or 'android',
+            'app_version': app_version or '',
+            'last_ip': ip or '',
+            'push_token': push_token or '',
+        })
+        return token, sess
+
+    @api.model
+    def issue_admin(self, user, device_id='', platform='android',
+                    app_version='', ip='', push_token=''):
+        """Issue a marketplace-admin session (no vendor binding)."""
+        token = secrets.token_urlsafe(48)
+        sess = self.sudo().create({
+            'user_id': user.id,
+            'is_admin': True,
             'token_hash': _hash(token),
             'device_id': device_id or '',
             'platform': platform or 'android',

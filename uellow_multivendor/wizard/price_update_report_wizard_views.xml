@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <record id="view_price_update_report_wizard" model="ir.ui.view">
+    <field name="name">uellow.price.report.wizard.form</field>
+    <field name="model">uellow.price.report.wizard</field>
+    <field name="arch" type="xml">
+      <form string="Update Prices Report · تقرير تحديث الأسعار">
+        <sheet>
+          <div class="oe_title">
+            <h1>Update Prices · تحديث الأسعار</h1>
+            <p>Pick a vendor and print/export the price-review sheet. · اختر التاجر واطبع/صدّر كشف مراجعة الأسعار.</p>
+          </div>
+          <group>
+            <group>
+              <field name="vendor_id" options="{'no_create': True}"/>
+              <field name="category_id" options="{'no_create': True}"/>
+            </group>
+            <group>
+              <field name="only_published"/>
+              <field name="order_by"/>
+              <field name="product_count" string="Products / عدد المنتجات"/>
+            </group>
+          </group>
+        </sheet>
+        <footer>
+          <button name="action_print_pdf" string="🖨️ Print / PDF · طباعة"
+                  type="object" class="oe_highlight"/>
+          <button name="action_export_xlsx" string="📊 Export Excel · تصدير"
+                  type="object" class="btn-success"/>
+          <button string="Cancel · إلغاء" special="cancel" class="btn-secondary"/>
+        </footer>
+      </form>
+    </field>
+  </record>
+
+  <record id="action_price_update_report" model="ir.actions.act_window">
+    <field name="name">Update Prices Report · تحديث الأسعار</field>
+    <field name="res_model">uellow.price.report.wizard</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+  </record>
+
+  <menuitem id="menu_marketplace_price_report"
+            name="Update Prices Report"
+            parent="menu_marketplace_products_root"
+            action="action_price_update_report"
+            sequence="30"/>
+
+</odoo>

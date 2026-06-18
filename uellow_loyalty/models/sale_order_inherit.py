@@ -21,6 +21,17 @@ class SaleOrder(models.Model):
             # First purchase bonus
             if account.total_earned == 0:
                 points += program.points_first_purchase
+            # v2.2.48 — promotions engine: loyalty points multiplier (×2/×3)
+            # from an active mobile promotion on this order.
+            Promo = self.env.get('mobile.app.promotion')
+            if Promo is not None:
+                try:
+                    x = (Promo.sudo().cart_rewards(order, channel='mobile')
+                         .get('loyalty_x') or 1.0)
+                    if x and x > 1.0:
+                        points = int(round(points * x))
+                except Exception:
+                    pass
             account.earn_points(points, reason=order.name, order_id=order.id)
             order.loyalty_points_earned = points
         return res

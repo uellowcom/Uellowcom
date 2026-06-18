@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Sidebar nav link inside the vendor portal -->
+  <template id="portal_nav_price_requests"
+            inherit_id="uellow_multivendor.portal_vendor_layout"
+            name="Vendor nav · Price Requests">
+    <xpath expr="//a[@href='/my/vendor/restock-requests']" position="after">
+      <a t-attf-class="vp-nav-item #{page_name == 'vendor_price_requests' and 'active' or ''}"
+         href="/my/vendor/price-requests">
+        <i class="fa fa-tags"></i>
+        <t t-esc="'طلبات الأسعار' if is_ar_dir else 'Price Requests'"/>
+      </a>
+    </xpath>
+  </template>
+
+  <!-- LIST -->
+  <template id="portal_price_requests" name="Vendor Price Requests">
+    <t t-call="uellow_multivendor.portal_vendor_layout">
+      <t t-set="page_name" t-value="'vendor_price_requests'"/>
+      <div style="background:#fff;border:0.5px solid #ece3d2;border-radius:16px;padding:22px;margin-bottom:16px">
+        <h3 style="margin:0 0 4px;color:#412402;font-weight:700">
+          <t t-esc="'طلبات تحديث الأسعار' if is_ar_dir else 'Price Update Requests'"/>
+        </h3>
+        <p style="color:#8a7a5f;font-size:13px;margin:0">
+          <t t-esc="'أكّد سعرك الحالي أو اقترح سعراً جديداً لكل منتج.' if is_ar_dir else 'Confirm your current price or propose a new one for each product.'"/>
+        </p>
+      </div>
+
+      <t t-if="not requests">
+        <div style="background:#fff;border:0.5px solid #ece3d2;border-radius:16px;padding:40px;text-align:center;color:#8a7a5f">
+          <i class="fa fa-tags" style="font-size:34px;opacity:.4"></i>
+          <p style="margin-top:10px"><t t-esc="'لا توجد طلبات حالياً.' if is_ar_dir else 'No requests right now.'"/></p>
+        </div>
+      </t>
+
+      <t t-foreach="requests" t-as="r">
+        <a t-attf-href="/my/vendor/price-requests/#{r.id}"
+           style="display:block;text-decoration:none;color:inherit;background:#fff;border:0.5px solid #ece3d2;border-radius:14px;padding:16px 18px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="font-weight:700;color:#412402"><t t-esc="r.name"/></div>
+              <div style="color:#8a7a5f;font-size:12px">
+                <t t-esc="r.product_count"/> <t t-esc="'منتج' if is_ar_dir else 'products'"/>
+                · <t t-esc="r.date"/>
+              </div>
+            </div>
+            <t t-set="badge" t-value="{'sent':('#fdf0e0','#d9822b'),'received':('#e6f6ec','#1f9d55'),'applied':('#eef0f2','#555')}.get(r.state, ('#eee','#555'))"/>
+            <span t-attf-style="background:#{badge[0]};color:#{badge[1]};font-size:11px;font-weight:700;padding:5px 12px;border-radius:20px">
+              <t t-if="r.state == 'sent'"><t t-esc="'بانتظار ردّك' if is_ar_dir else 'Awaiting your reply'"/></t>
+              <t t-elif="r.state == 'received'"><t t-esc="'تم الإرسال' if is_ar_dir else 'Submitted'"/></t>
+              <t t-else=""><t t-esc="'مُطبّق' if is_ar_dir else 'Applied'"/></t>
+            </span>
+          </div>
+        </a>
+      </t>
+    </t>
+  </template>
+
+  <!-- DETAIL + RESPONSE FORM -->
+  <template id="portal_price_request_detail" name="Vendor Price Request Detail">
+    <t t-call="uellow_multivendor.portal_vendor_layout">
+      <t t-set="page_name" t-value="'vendor_price_requests'"/>
+      <t t-set="locked" t-value="req.state != 'sent'"/>
+
+      <a href="/my/vendor/price-requests" style="color:#8a7a5f;text-decoration:none;font-size:13px">
+        &#8592; <t t-esc="'كل الطلبات' if is_ar_dir else 'All requests'"/>
+      </a>
+
+      <t t-if="saved">
+        <div style="background:#e6f6ec;border:1px solid #9fdcb5;color:#1f7a45;border-radius:12px;padding:12px 16px;margin:12px 0;font-weight:600">
+          <i class="fa fa-check-circle"></i>
+          <t t-esc="'تم استلام ردّك. السطور المطابقة اعتُمدت تلقائياً، والمتغيّرة بانتظار موافقة الإدارة.' if is_ar_dir else 'Your response was received. Matched lines are auto-confirmed; changed ones await admin approval.'"/>
+        </div>
+      </t>
+
+      <div style="background:#fff;border:0.5px solid #ece3d2;border-radius:16px;padding:20px;margin:12px 0">
+        <h3 style="margin:0;color:#412402;font-weight:700"><t t-esc="req.name"/></h3>
+        <p style="color:#8a7a5f;font-size:13px;margin:6px 0 0" t-if="req.note"><t t-esc="req.note"/></p>
+      </div>
+
+      <form t-attf-action="/my/vendor/price-requests/#{req.id}/submit" method="post">
+        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+        <t t-if="not locked">
+          <label style="display:inline-flex;align-items:center;gap:8px;background:#fff6d8;border:1px solid #f0d97a;border-radius:10px;padding:10px 14px;margin-bottom:12px;cursor:pointer;font-weight:700;color:#412402">
+            <input type="checkbox" id="match_all" onclick="document.querySelectorAll('.keep-cb').forEach(function(c){c.checked=this.checked}.bind(this))"/>
+            <t t-esc="'طابِق كل الأسعار الحالية' if is_ar_dir else 'Match all current prices'"/>
+          </label>
+        </t>
+
+        <div style="background:#fff;border:0.5px solid #ece3d2;border-radius:16px;overflow:hidden">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="background:#412402;color:#F5C320">
+                <th style="padding:10px 8px;text-align:start"><t t-esc="'المنتج' if is_ar_dir else 'Product'"/></th>
+                <th style="padding:10px 8px;text-align:end"><t t-esc="'السعر الحالي' if is_ar_dir else 'Current'"/></th>
+                <th style="padding:10px 8px;text-align:center"><t t-esc="'مطابق' if is_ar_dir else 'Match'"/></th>
+                <th style="padding:10px 8px;text-align:center"><t t-esc="'سعر جديد' if is_ar_dir else 'New price'"/></th>
+                <th style="padding:10px 8px;text-align:center"><t t-esc="'الحالة' if is_ar_dir else 'Status'"/></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr t-foreach="req.line_ids" t-as="ln">
+                <td style="padding:10px 8px;border-bottom:1px solid #f2ece0">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <img t-if="ln.image_128" t-attf-src="data:image/png;base64,#{ln.image_128.decode() if ln.image_128 else ''}"
+                         style="width:40px;height:40px;border-radius:8px;object-fit:contain;border:1px solid #eee;background:#fff"/>
+                    <div>
+                      <div style="font-weight:600;color:#412402"><t t-esc="ln.product_tmpl_id.name"/></div>
+                      <div style="color:#a99" t-if="ln.default_code"><t t-esc="ln.default_code"/></div>
+                    </div>
+                  </div>
+                </td>
+                <td style="padding:10px 8px;text-align:end;font-weight:700;border-bottom:1px solid #f2ece0">
+                  <t t-esc="'%.3f' % ln.current_price"/>
+                </td>
+                <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f2ece0">
+                  <input type="checkbox" class="keep-cb" t-attf-name="keep_#{ln.id}"
+                         t-att-disabled="locked and '1' or None"
+                         t-att-checked="ln.response == 'match' and '1' or None"/>
+                </td>
+                <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f2ece0">
+                  <input type="number" step="0.001" min="0" t-attf-name="price_#{ln.id}"
+                         t-att-disabled="locked and '1' or None"
+                         t-att-value="ln.response == 'changed' and ('%.3f' % ln.new_price) or ''"
+                         style="width:100px;padding:7px;border:1px solid #ddd;border-radius:8px"/>
+                </td>
+                <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f2ece0">
+                  <t t-set="sb" t-value="{'pending':('#eee','#777'),'confirmed':('#e6f6ec','#1f9d55'),'await':('#fdf0e0','#d9822b'),'approved':('#e6f6ec','#1f9d55'),'rejected':('#fbe7e5','#c0392b')}.get(ln.line_state, ('#eee','#777'))"/>
+                  <span t-attf-style="background:#{sb[0]};color:#{sb[1]};font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px">
+                    <t t-esc="dict(ln._fields['line_state'].selection).get(ln.line_state)"/>
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <t t-if="not locked">
+          <button type="submit"
+                  style="margin-top:16px;background:#412402;color:#F5C320;border:none;border-radius:12px;padding:13px 22px;font-weight:800;font-size:15px;cursor:pointer">
+            <t t-esc="'إرسال الردّ' if is_ar_dir else 'Submit response'"/>
+          </button>
+        </t>
+        <t t-else="">
+          <p style="margin-top:14px;color:#8a7a5f;font-size:13px">
+            <i class="fa fa-lock"></i>
+            <t t-esc="'تم إرسال هذا الطلب مسبقاً.' if is_ar_dir else 'You have already responded to this request.'"/>
+          </p>
+        </t>
+      </form>
+    </t>
+  </template>
+
+</odoo>

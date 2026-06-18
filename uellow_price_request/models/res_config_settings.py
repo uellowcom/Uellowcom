@@ -10,7 +10,7 @@ class ResConfigSettings(models.TransientModel):
         config_parameter='uellow_price_request.allow_apply', default=True,
         help="When on, the 'Apply New Prices' button writes the supplier's "
              "returned prices back onto the catalogue.")
-    prr_default_note = fields.Text(
+    prr_default_note = fields.Char(
         string="Default supplier instructions",
         config_parameter='uellow_price_request.default_note',
         help="Pre-filled note printed on every price-update request.")

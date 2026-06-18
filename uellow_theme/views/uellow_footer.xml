@@ -119,43 +119,63 @@
                                 </div>
                             </div>
 
-                            <!-- Account column -->
+                            <!-- Account column (per-website editable via UC Footer menu, else static) -->
                             <div class="uc-foot-col">
                                 <h6 class="uc-foot-head" t-out="website._uc_t('My account')"/>
+                                <t t-set="_m_account" t-value="website._uc_footer_links('account')"/>
                                 <ul class="uc-foot-links">
-                                    <li><a href="/my/home"     t-out="website._uc_t('Dashboard')"/></li>
-                                    <li><a href="/my/orders"   t-out="website._uc_t('My orders')"/></li>
-                                    <li><a href="/my/invoices" t-out="website._uc_t('Invoices')"/></li>
-                                    <li><a href="/my/loyalty"  t-out="website._uc_t('Loyalty points')"/></li>
-                                    <li><a href="/shop/wishlist" t-out="website._uc_t('Wishlist')"/></li>
-                                    <li><a href="/my/account"  t-out="website._uc_t('Addresses')"/></li>
+                                    <t t-if="_m_account">
+                                        <li t-foreach="_m_account" t-as="_l"><a t-att-href="_l['url']" t-out="_l['name']"/></li>
+                                    </t>
+                                    <t t-else="">
+                                        <li><a href="/my/home"     t-out="website._uc_t('Dashboard')"/></li>
+                                        <li><a href="/my/orders"   t-out="website._uc_t('My orders')"/></li>
+                                        <li><a href="/my/invoices" t-out="website._uc_t('Invoices')"/></li>
+                                        <li><a href="/my/loyalty"  t-out="website._uc_t('Loyalty points')"/></li>
+                                        <li><a href="/shop/wishlist" t-out="website._uc_t('Wishlist')"/></li>
+                                        <li><a href="/my/account"  t-out="website._uc_t('Addresses')"/></li>
+                                    </t>
                                 </ul>
                             </div>
 
-                            <!-- Help column -->
+                            <!-- Help column (per-website editable via UC Footer menu, else static) -->
                             <div class="uc-foot-col">
                                 <h6 class="uc-foot-head" t-out="website._uc_t('Customer service')"/>
+                                <t t-set="_m_help" t-value="website._uc_footer_links('help')"/>
                                 <ul class="uc-foot-links">
-                                    <li><a href="/contactus"      t-out="website._uc_t('Contact us')"/></li>
-                                    <li><a href="/page/faq"       t-out="website._uc_t('FAQ')"/></li>
-                                    <li><a href="/page/shipping"  t-out="website._uc_t('Shipping &amp; delivery')"/></li>
-                                    <li><a href="/page/returns"   t-out="website._uc_t('Returns &amp; refunds')"/></li>
-                                    <li><a href="/my/tickets"     t-out="website._uc_t('Support tickets')"/></li>
-                                    <li><a href="/page/track-order" t-out="website._uc_t('Track my order')"/></li>
+                                    <t t-if="_m_help">
+                                        <li t-foreach="_m_help" t-as="_l"><a t-att-href="_l['url']" t-out="_l['name']"/></li>
+                                    </t>
+                                    <t t-else="">
+                                        <li><a href="/contactus"      t-out="website._uc_t('Contact us')"/></li>
+                                        <li><a href="/page/faq"       t-out="website._uc_t('FAQ')"/></li>
+                                        <li><a href="/page/shipping"  t-out="website._uc_t('Shipping &amp; delivery')"/></li>
+                                        <li><a href="/page/returns"   t-out="website._uc_t('Returns &amp; refunds')"/></li>
+                                        <li><a href="/my/tickets"     t-out="website._uc_t('Support tickets')"/></li>
+                                        <li><a href="/page/track-order" t-out="website._uc_t('Track my order')"/></li>
+                                    </t>
                                 </ul>
                             </div>
 
-                            <!-- Discover column -->
+                            <!-- Discover column (per-website editable via UC Footer menu, else static) -->
                             <div class="uc-foot-col">
                                 <h6 class="uc-foot-head" t-out="website._uc_t('Discover')"/>
+                                <t t-set="_m_disc" t-value="website._uc_footer_links('discover')"/>
                                 <ul class="uc-foot-links">
-                                    <li><a href="/shop"          t-out="website._uc_t('All categories')"/></li>
-                                    <li t-set="_d" t-value="website._uc_deals_resolve()"/>
-                                    <li t-if="_d"><a t-att-href="_d.get('url')" t-out="_d.get('label')"/></li>
-                                    <li><a href="/shop?search=new" t-out="website._uc_t('New arrivals')"/></li>
-                                    <li><a href="/blog"            t-out="website._uc_t('Blog')"/></li>
-                                    <li><a href="/page/about-us"   t-out="website._uc_t('About Uellow')"/></li>
-                                    <li><a href="/page/careers"    t-out="website._uc_t('Careers')"/></li>
+                                    <t t-if="_m_disc">
+                                        <li t-foreach="_m_disc" t-as="_l"><a t-att-href="_l['url']" t-out="_l['name']"/></li>
+                                    </t>
+                                    <t t-else="">
+                                        <li><a href="/shop"          t-out="website._uc_t('All categories')"/></li>
+                                        <li t-set="_d" t-value="website._uc_deals_resolve()"/>
+                                        <li t-if="_d"><a t-att-href="_d.get('url')" t-out="_d.get('label')"/></li>
+                                        <li><a href="/shop?search=new" t-out="website._uc_t('New arrivals')"/></li>
+                                        <li><a href="/blog"            t-out="website._uc_t('Blog')"/></li>
+                                        <li><a href="/page/about-us"   t-out="website._uc_t('About Uellow')"/></li>
+                                        <li><a href="/page/careers"    t-out="website._uc_t('Careers')"/></li>
+                                        <li><a href="/partners">🤝 <t t-out="website._uc_t('Partners Program')"/></a></li>
+                                        <li><a href="/app"><t t-out="website._uc_t('Download the Uellow App')"/></a></li>
+                                    </t>
                                 </ul>
                             </div>
 
@@ -238,14 +258,10 @@
                                 <span t-out="website._uc_t('All rights reserved.')"/>
                             </div>
                             <div class="uc-foot-policies">
-                                <a href="/page/privacy"      t-out="website._uc_t('Privacy')"/>
-                                <a href="/page/terms"        t-out="website._uc_t('Terms')"/>
-                                <a href="/page/cookies"      t-out="website._uc_t('Cookies')"/>
-                                <a href="/page/accessibility" t-out="website._uc_t('Accessibility')"/>
-                            </div>
-                            <div class="uc-foot-credit" t-if="website.uc_footer_credit">
-                                <span t-out="website.uc_footer_credit"/>
-                                <i class="fa fa-heart"/>
+                                <a t-att-href="website.uc_policy_privacy_url or '/page/privacy'"            t-out="website._uc_t('Privacy')"/>
+                                <a t-att-href="website.uc_policy_terms_url or '/page/terms'"                t-out="website._uc_t('Terms')"/>
+                                <a t-att-href="website.uc_policy_cookies_url or '/page/cookies'"            t-out="website._uc_t('Cookies')"/>
+                                <a t-att-href="website.uc_policy_accessibility_url or '/page/accessibility'" t-out="website._uc_t('Accessibility')"/>
                             </div>
                         </div>
                     </div>

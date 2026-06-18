@@ -39,7 +39,10 @@ class PosOrderAdminPush(models.Model):
 
     def _admin_push_sale(self):
         eng = _engine(self.env)
-        if not eng:
+        # الموتور recordset فارغ من نوع mobile.customer.notification ودواله
+        # @api.model تعمل عليه بشكل سليم؛ لذا نفحص None فقط لا الصدق المنطقي
+        # (recordset فارغ = falsy فكان يخرج دائماً قبل الإرسال — هذا كان العطب)
+        if eng is None:
             return
         for o in self:
             try:
@@ -92,7 +95,8 @@ class PosSessionAdminPush(models.Model):
         if not watch:
             return res
         eng = _engine(self.env)
-        if not eng:
+        # نفس إصلاح _admin_push_sale: recordset فارغ يجب ألّا يُعتبر "غير موجود"
+        if eng is None:
             return res
         for s in self:
             if prev.get(s.id) == s.state:

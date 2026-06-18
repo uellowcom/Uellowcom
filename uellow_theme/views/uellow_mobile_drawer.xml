@@ -203,8 +203,8 @@
                             <a t-foreach="_brands" t-as="_b"
                                t-attf-href="/shop?attribute_value=#{_b.id}"
                                class="uc-mobdrawer-brand">
-                                <img t-if="_b.image" loading="lazy"
-                                     t-attf-src="/web/image/product.attribute.value/#{_b.id}/image"
+                                <img t-if="_b.dr_image" loading="lazy"
+                                     t-attf-src="/web/image/product.attribute.value/#{_b.id}/dr_image"
                                      t-att-alt="_b.name"/>
                                 <span t-else="" t-out="_b.name"/>
                             </a>

@@ -13,6 +13,7 @@
         'security/ir.model.access.csv',
         'data/sequence.xml',
         'views/price_request_views.xml',
+        'views/portal_price_request.xml',
         'views/res_config_settings_views.xml',
         'report/price_request_report.xml',
     ],

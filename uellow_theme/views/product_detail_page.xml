@@ -48,6 +48,43 @@
             <attribute name="class">h2</attribute>
         </xpath>
 
+        <!-- ══ App-parity promo banner (mobile.app.promotion) ══ -->
+        <xpath expr="//h1[@t-field='product.name']" position="after">
+            <t t-set="_promo" t-value="request.env['mobile.app.promotion'].sudo().badge_for(product.id, website.id)"/>
+            <t t-if="_promo">
+                <t t-set="_ar" t-value="request.env.lang and request.env.lang.startswith('ar')"/>
+                <t t-set="_plabel" t-value="(_promo.get('label') or {}).get('ar' if _ar else 'en') or (_promo.get('label') or {}).get('en') or ''"/>
+                <div class="uc-pdp-promo" t-attf-data-promo-end="#{_promo.get('ends_at') or ''}"
+                     t-attf-style="background: linear-gradient(100deg, #{_promo.get('bg') or '#fff1f1'}, #ffffff); border:1px solid #{_promo.get('bg') or '#ffd9d9'};">
+                    <div class="uc-pdp-promo-l">
+                        <span class="uc-pdp-promo-emoji" t-out="_promo.get('emoji') or '🎯'"/>
+                        <span class="uc-pdp-promo-label" t-attf-style="color:#{_promo.get('fg') or '#c81212'};" t-out="_plabel"/>
+                        <span t-if="_promo.get('discount_pct')" class="uc-pdp-promo-disc">−<t t-esc="int(round(_promo.get('discount_pct')))"/>%</span>
+                    </div>
+                    <div class="uc-pdp-promo-cd" t-if="_promo.get('ends_at')" aria-label="Ends in">
+                        <span data-pcd="hours">00</span><b>:</b><span data-pcd="minutes">00</span><b>:</b><span data-pcd="seconds">00</span>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    (function(){
+                        var el = document.querySelector('.uc-pdp-promo[data-promo-end]');
+                        if(!el) return;
+                        var end = new Date(el.getAttribute('data-promo-end')).getTime();
+                        if(isNaN(end)) return;
+                        var h=el.querySelector('[data-pcd=hours]'), m=el.querySelector('[data-pcd=minutes]'), s=el.querySelector('[data-pcd=seconds]');
+                        function p(n){return n&lt;10?'0'+n:''+n;}
+                        function t(){
+                            var d=end-Date.now(); if(d&lt;0)d=0;
+                            if(h)h.textContent=p(Math.floor(d/3600000));
+                            if(m)m.textContent=p(Math.floor((d%3600000)/60000));
+                            if(s)s.textContent=p(Math.floor((d%60000)/1000));
+                        }
+                        t(); setInterval(t,1000);
+                    })();
+                </script>
+            </t>
+        </xpath>
+
         <t t-if="is_view_active('website_sale.product_comment')" position="replace">
             <div t-if="is_view_active('website_sale.product_comment') or product.get_recent_sold_qty().get(product.id)" class="d-flex align-items-center flex-wrap gap-3 mb-2">
                 <a t-if="is_view_active('website_sale.product_comment')" href="#o_product_page_reviews" class="o_product_page_reviews_link text-decoration-none">
@@ -95,6 +132,29 @@
 
         <xpath expr="//div[@id='o_wsale_cta_wrapper']" position="attributes">
             <attribute name="class" add="mt-3" separator=" "/>
+        </xpath>
+
+        <!-- ══ App-parity mobile sticky buy bar ══ -->
+        <xpath expr="//div[@id='o_wsale_cta_wrapper']" position="after">
+            <div class="uc-mob-buybar d-lg-none">
+                <div class="uc-mob-buybar-price">
+                    <span class="uc-mob-buybar-amt" t-esc="'%.3f' % product.list_price"/>
+                    <small t-esc="product.currency_id.symbol or 'KD'"/>
+                </div>
+                <button type="button" class="uc-mob-buybar-btn" id="uc-mob-buybar-btn">
+                    <i class="dri dri-cart me-1"/> Add to Cart
+                </button>
+            </div>
+            <script type="text/javascript">
+                (function(){
+                    var b = document.getElementById('uc-mob-buybar-btn');
+                    if(!b) return;
+                    b.addEventListener('click', function(){
+                        var real = document.getElementById('add_to_cart');
+                        if(real){ real.click(); }
+                    });
+                })();
+            </script>
         </xpath>
         <xpath expr="//a[@id='add_to_cart']" position="replace">
             <a role="button" id="add_to_cart" data-animation-selector=".product_detail_img" class="btn btn-primary btn-lg js_check_product a-submit flex-grow-1 px-5" href="#">
@@ -402,13 +462,19 @@
     <template id="product_tabs" name="Theme Prime: Product Tabs">
         <div class="tp-product-details-tab">
             <ul class="nav nav-tabs justify-content-center" role="tablist">
+                <!-- Reviews FIRST + default (app parity) -->
+                <li t-if="is_view_active('website_sale.product_comment')" class="nav-item o_not_editable">
+                    <a class="nav-link rounded-0 active" data-bs-toggle="tab" href="#tp-product-rating-tab" role="tab" aria-selected="true">
+                        <span class="fa fa-comments-o me-1"/> Reviews &amp; Rating
+                    </a>
+                </li>
                 <li groups="base.group_public,base.group_portal" t-if="product.website_description" class="nav-item o_not_editable">
-                    <a class="nav-link rounded-0 active" data-bs-toggle="tab" href="#tp-product-description-tab" role="tab" aria-selected="true">
+                    <a class="nav-link rounded-0" data-bs-toggle="tab" href="#tp-product-description-tab" role="tab" aria-selected="false">
                         <span class="fa fa-file-text-o me-1"/> Description
                     </a>
                 </li>
                 <li groups="base.group_user" class="nav-item o_not_editable">
-                    <a class="nav-link rounded-0 active" data-bs-toggle="tab" href="#tp-product-description-tab" role="tab" aria-selected="true">
+                    <a class="nav-link rounded-0" data-bs-toggle="tab" href="#tp-product-description-tab" role="tab" aria-selected="false">
                         <span class="fa fa-file-text-o me-1"/> Description
                     </a>
                 </li>
@@ -423,11 +489,6 @@
                         <span class="fa fa-file-pdf-o me-1"/> Documents
                     </a>
                 </li>
-                <li t-if="is_view_active('website_sale.product_comment')" class="nav-item o_not_editable">
-                    <a class="nav-link rounded-0" data-bs-toggle="tab" href="#tp-product-rating-tab" role="tab" aria-selected="false">
-                        <span class="fa fa-comments-o me-1"/> Reviews &amp; Rating
-                    </a>
-                </li>
                 <!-- Dynamic Tabs -->
                 <li t-foreach="product.get_content_product_tabs()" t-as="tab" class="nav-item o_not_editable">
                     <a class="nav-link rounded-0" data-bs-toggle="tab" t-attf-href="#tp-product-tab-#{tab.id}" role="tab" aria-selected="false">
@@ -437,7 +498,7 @@
             </ul>
             <div class="tab-content">
                 <!-- Description -->
-                <div groups="base.group_public,base.group_portal" t-if="product.website_description" class="tab-pane fade show active" id="tp-product-description-tab" role="tabpanel">
+                <div groups="base.group_public,base.group_portal" t-if="product.website_description" class="tab-pane fade" id="tp-product-description-tab" role="tabpanel">
                     <div class="container-fluid">
                         <div class="row m-0 py-2">
                             <div class="col-12">
@@ -446,7 +507,7 @@
                         </div>
                     </div>
                 </div>
-                <div groups="base.group_user" class="tab-pane fade show active" id="tp-product-description-tab" role="tabpanel">
+                <div groups="base.group_user" class="tab-pane fade" id="tp-product-description-tab" role="tabpanel">
                     <div class="container-fluid">
                         <div class="row m-0 py-2">
                             <div class="col-12">
@@ -522,7 +583,7 @@
                     </div>
                 </div>
                 <!-- Rating -->
-                <div t-if="is_view_active('website_sale.product_comment')" class="tab-pane fade" id="tp-product-rating-tab" role="tabpanel">
+                <div t-if="is_view_active('website_sale.product_comment')" class="tab-pane fade show active" id="tp-product-rating-tab" role="tabpanel">
                     <div class="o_shop_discussion_rating container">
                         <section class="container">
                             <div class="row m-0 mt-2">

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Custom A4 paper format: tiny margins + NO reserved header space, so there
+       is no big empty gap at the top (this report draws its own header). -->
+  <record id="paperformat_price_update" model="report.paperformat">
+    <field name="name">Uellow Update Prices A4</field>
+    <field name="format">A4</field>
+    <field name="orientation">Portrait</field>
+    <field name="margin_top">6</field>
+    <field name="margin_bottom">7</field>
+    <field name="margin_left">6</field>
+    <field name="margin_right">6</field>
+    <field name="header_line" eval="False"/>
+    <field name="header_spacing">0</field>
+    <field name="dpi">90</field>
+  </record>
+
+  <!-- Report action: print the Update-Prices sheet for the selected products -->
+  <record id="action_report_price_update" model="ir.actions.report">
+    <field name="name">Update Prices · تحديث الأسعار</field>
+    <field name="model">product.template</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">uellow_multivendor.report_price_update</field>
+    <field name="report_file">uellow_multivendor.report_price_update</field>
+    <field name="print_report_name">'UpdatePrices_%s' % (data.get('report_date') if data else '')</field>
+    <field name="paperformat_id" ref="paperformat_price_update"/>
+  </record>
+
+  <!-- Document template — table-based layout (wkhtmltopdf 0.12 has NO flexbox);
+       logo + barcode + product image all embedded as data-URIs (no network fetch). -->
+  <template id="report_price_update">
+    <t t-call="web.html_container">
+      <t t-call="web.basic_layout">
+        <t t-set="W" t-value="env['uellow.price.report.wizard']"/>
+        <div class="page" style="font-family:Arial,sans-serif;color:#2a2a2a;margin:0;">
+          <style>
+            .page, .page * { font-family: Arial, sans-serif !important; font-weight: bold !important; }
+            .upr-head{width:100%;border-collapse:collapse;background:#fff9e8;
+              border-bottom:4px solid #F5C320;}
+            .upr-head td{padding:10px 14px;vertical-align:middle;}
+            .upr-logo img{height:42px;width:auto;}
+            .upr-title{text-align:center;}
+            .upr-title .t{font-size:20px;color:#412402;font-weight:bold;}
+            .upr-title .ar{font-size:13px;color:#b9942a;font-weight:bold;}
+            .upr-title .sub{font-size:11px;color:#000;}
+            .upr-meta{font-size:11px;text-align:right;line-height:1.7;white-space:nowrap;}
+            .upr-meta .vend{background:#F5C320;color:#412402;font-weight:bold;
+              padding:1px 10px;border-radius:12px;}
+            table.upr{width:100%;border-collapse:collapse;margin-top:10px;}
+            table.upr th{background:#fff9e8;color:#412402;border:1px solid #e0d7be;
+              padding:6px 4px;font-size:10px;text-align:center;}
+            table.upr th .ar{display:block;font-size:9px;color:#a8915c;font-weight:normal;}
+            table.upr th.newp{background:#F5C320;color:#412402;}
+            table.upr td{border:1px solid #e7e2d6;padding:5px;font-size:10px;
+              vertical-align:middle;}
+            td.num{text-align:center;color:#999;width:24px;}
+            td.img{width:58px;text-align:center;}
+            td.img img{width:50px;height:50px;}
+            td.bc{text-align:center;width:140px;}
+            td.bc img{height:32px;width:128px;}
+            td.bc .code{font-size:9px;color:#000;}
+            td.nm .ar{font-weight:bold;color:#000;font-size:10px;}
+            td.nm .en{font-size:10px;color:#000;}
+            td.brand{text-align:center;width:64px;font-size:9px;color:#7a5b27;}
+            td.cost{text-align:center;font-weight:bold;color:#412402;width:64px;}
+            td.newp{width:84px;background:#fffdf4;border-right:2px dashed #F5C320;}
+          </style>
+
+          <!-- HEADER (table, not flex) -->
+          <table class="upr-head">
+            <tr>
+              <td style="width:25%">
+                <span class="upr-logo">
+                  <img t-att-src="W._logo_uri()" t-if="W._logo_uri()"/>
+                  <span t-else="" style="font-size:26px;font-weight:bold;color:#412402;">uellow<span style="color:#F5C320">.</span></span>
+                </span>
+              </td>
+              <td class="upr-title" style="width:45%">
+                <div class="t">UPDATE PRICES <span class="ar">تحديث الأسعار</span></div>
+                <div class="sub">Vendor price review · مراجعة أسعار التاجر</div>
+              </td>
+              <td class="upr-meta" style="width:30%">
+                <div>Date / التاريخ: <strong t-esc="data.get('report_date') if data else ''"/></div>
+                <div>Vendor / التاجر: <span class="vend" t-esc="data.get('vendor_name') if data else ''"/></div>
+                <div>Items / المنتجات: <strong t-esc="len(docs)"/></div>
+              </td>
+            </tr>
+          </table>
+
+          <!-- PRODUCT TABLE -->
+          <table class="upr">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Image<span class="ar">الصورة</span></th>
+                <th>Product<span class="ar">اسم المنتج</span></th>
+                <th>Barcode/Code<span class="ar">الباركود</span></th>
+                <th>Brand<span class="ar">البراند</span></th>
+                <th>Cost<span class="ar">التكلفة</span></th>
+                <th class="newp">Updated Price<span class="ar">السعر المُحدَّث</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <t t-set="i" t-value="0"/>
+              <tr t-foreach="docs" t-as="p">
+                <t t-set="i" t-value="i + 1"/>
+                <t t-set="code" t-value="p.barcode or p.default_code or ''"/>
+                <t t-set="bc" t-value="W._barcode_uri(code)"/>
+                <td class="num"><span t-esc="i"/></td>
+                <t t-set="imguri" t-value="W._img_uri(p)"/>
+                <td class="img">
+                  <img t-if="imguri" t-att-src="imguri"/>
+                </td>
+                <td class="nm">
+                  <div class="ar" t-esc="p.with_context(lang='ar_001').name"/>
+                  <div class="en" t-esc="p.with_context(lang='en_US').name"/>
+                </td>
+                <td class="bc">
+                  <img t-if="bc" t-att-src="bc"/>
+                  <div class="code" t-esc="code"/>
+                </td>
+                <td class="brand" t-esc="W._brand_of(p)"/>
+                <td class="cost">
+                  <span t-esc="'%.3f' % (p.standard_price or p.list_price or 0.0)"/>
+                </td>
+                <td class="newp"></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- FOOTER (table, not flex) -->
+          <table style="width:100%;margin-top:18px;font-size:10px;color:#777;">
+            <tr>
+              <td style="text-align:left;">uellow · Update Prices Sheet · كشف تحديث الأسعار</td>
+              <td style="text-align:right;">
+                <span style="border-top:1px solid #ccc;padding-top:4px;">Vendor signature · توقيع التاجر</span>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </t>
+    </t>
+  </template>
+
+</odoo>

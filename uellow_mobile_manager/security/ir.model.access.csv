@@ -55,6 +55,10 @@ access_mobile_app_promotion_mgr,mobile.app.promotion manager,model_mobile_app_pr
 access_mobile_app_promotion_usr,mobile.app.promotion user,model_mobile_app_promotion,base.group_user,1,0,0,0
 access_mobile_promotion_line_mgr,mobile.promotion.line manager,model_mobile_promotion_line,base.group_system,1,1,1,1
 access_mobile_promotion_line_usr,mobile.promotion.line user,model_mobile_promotion_line,base.group_user,1,1,1,0
+access_mobile_promo_scope_mgr,mobile.promo.scope manager,model_mobile_promo_scope,base.group_system,1,1,1,1
+access_mobile_promo_scope_usr,mobile.promo.scope user,model_mobile_promo_scope,base.group_user,1,0,0,0
+access_mobile_promo_usage_mgr,mobile.promo.usage manager,model_mobile_promo_usage,base.group_system,1,1,1,1
+access_mobile_promo_usage_usr,mobile.promo.usage user,model_mobile_promo_usage,base.group_user,1,0,0,0
 access_mobile_category_slide_mgr,mobile.category.slide manager,model_mobile_category_slide,base.group_system,1,1,1,1
 access_mobile_category_slide_usr,mobile.category.slide user,model_mobile_category_slide,base.group_user,1,1,1,0
 access_mobile_announcement_mgr,mobile.announcement manager,model_mobile_announcement,base.group_system,1,1,1,1

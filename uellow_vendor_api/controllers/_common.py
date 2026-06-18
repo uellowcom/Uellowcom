@@ -101,6 +101,37 @@ def require_auth(fn):
     return wrapped
 
 
+def is_marketplace_admin(user):
+    """True if the user may use the in-app admin mode."""
+    if not user:
+        return False
+    grp = user.env.ref('uellow_multivendor.group_marketplace_manager',
+                       raise_if_not_found=False)
+    sys = user.env.ref('base.group_system', raise_if_not_found=False)
+    groups = user.groups_id
+    return bool((grp and grp in groups) or (sys and sys in groups))
+
+
+def current_admin_user():
+    """The res.users of a session whose user is a marketplace admin, else
+    empty recordset. Group membership (checked live) is the real gate — works
+    for pure-admin sessions AND for a vendor session whose owner is also an
+    admin (owner is both)."""
+    sess = current_session()
+    if sess and sess.user_id and is_marketplace_admin(sess.user_id):
+        return sess.user_id
+    return request.env['res.users'].sudo().browse()
+
+
+def require_admin(fn):
+    @functools.wraps(fn)
+    def wrapped(*args, **kwargs):
+        if not current_admin_user():
+            return fail('ADMIN_REQUIRED', 'Marketplace-admin access required', status=403)
+        return fn(*args, **kwargs)
+    return wrapped
+
+
 def bilingual(record, field):
     if not record or field not in record._fields:
         return {'en': '', 'ar': ''}

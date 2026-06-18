@@ -9,3 +9,12 @@ from . import payouts
 from . import analytics
 from . import chat
 from . import settings
+from . import parity
+from . import price_requests
+from . import admin
+from . import returns
+from . import exports
+from . import developer
+from . import public_api
+from . import marketing
+from . import videos

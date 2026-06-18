@@ -146,4 +146,96 @@
             </div>
         </t>
     </template>
+
+    <template id="brands_page" name="Uellow Brands Page">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Brands · العلامات التجارية</t>
+            <div id="wrap" class="container py-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h1 class="mb-0" style="font-weight: 900; color: #412402;">🏷️ Brands</h1>
+                    <span class="badge text-bg-warning" style="font-size: 12px;"><t t-esc="total"/> brands</span>
+                </div>
+                <p class="text-muted mb-4">Shop by your favourite brand.</p>
+                <t t-if="not brands">
+                    <div class="alert alert-light text-center my-5"><h3>No brands yet</h3></div>
+                </t>
+                <div class="row g-3">
+                    <t t-foreach="brands" t-as="brand">
+                        <div class="col-4 col-md-3 col-lg-2">
+                            <a t-attf-href="/shop?attribute_value=#{brand.id}" class="text-decoration-none">
+                                <div style="background:#fff;border-radius:14px;border:1px solid #f3edde;padding:14px;text-align:center;transition:.15s;height:100%;"
+                                     onmouseover="this.style.boxShadow='0 6px 18px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+                                    <div style="aspect-ratio:1;display:grid;place-items:center;background:#fafaf6;border-radius:10px;overflow:hidden;margin-bottom:8px;">
+                                        <img t-if="brand.dr_image" t-attf-src="/web/image/product.attribute.value/#{brand.id}/dr_image"
+                                             style="max-width:100%;max-height:100%;object-fit:contain;" t-att-alt="brand.name"/>
+                                        <span t-else="" style="font-size:24px;font-weight:900;color:#412402;" t-esc="brand.name[:2].upper()"/>
+                                    </div>
+                                    <div style="font-size:12px;font-weight:700;color:#412402;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                                         t-esc="brand.name"/>
+                                </div>
+                            </a>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="bestseller_page" name="Uellow Bestseller Page">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Bestsellers · الأكثر مبيعاً</t>
+            <div id="wrap" class="container py-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h1 class="mb-0" style="font-weight: 900; color: #412402;">
+                        🏆 Bestsellers
+                    </h1>
+                    <span class="badge text-bg-warning" style="font-size: 12px;">
+                        <t t-esc="total"/> products
+                    </span>
+                </div>
+                <p class="text-muted mb-4">
+                    The most popular products on Uellow — same ranking as the app.
+                </p>
+
+                <t t-if="not products">
+                    <div class="alert alert-light text-center my-5">
+                        <h3>No bestsellers yet</h3>
+                        <p class="text-muted">Rankings populate automatically from sales.</p>
+                    </div>
+                </t>
+
+                <div class="row g-3">
+                    <t t-foreach="products" t-as="product">
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <a t-attf-href="/shop/#{product.website_url or ('product/%d' % product.id)}"
+                               class="text-decoration-none">
+                                <div style="background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #f3edde; position: relative;">
+                                    <div style="position: absolute; top: 8px; left: 8px; background: #412402; color: #F5C320; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 900; z-index: 2;">
+                                        #<t t-esc="product_index + 1"/>
+                                    </div>
+                                    <div style="aspect-ratio: 1; background: #fafaf6;">
+                                        <img t-attf-src="/web/image/product.template/#{product.id}/image_512"
+                                             class="w-100 h-100" style="object-fit: cover;"
+                                             t-att-alt="product.name"/>
+                                    </div>
+                                    <div class="p-2">
+                                        <div style="font-size: 11.5px; color: #412402; font-weight: 700; line-height: 1.3;
+                                                    overflow: hidden; text-overflow: ellipsis;
+                                                    display: -webkit-box; -webkit-line-clamp: 2;
+                                                    -webkit-box-orient: vertical; min-height: 30px;"
+                                             t-esc="product.name"/>
+                                        <div class="mt-1">
+                                            <span style="color: #412402; font-weight: 900; font-size: 13.5px;"
+                                                  t-esc="'%.3f' % product.list_price"/>
+                                            <small style="color: #999;" t-esc="product.currency_id.symbol or 'KD'"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
 </odoo>

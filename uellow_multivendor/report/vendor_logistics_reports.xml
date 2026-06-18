@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- ══ Return / Withdrawal note (signatures: vendor + Uellow) ══ -->
+  <record id="action_report_return_request" model="ir.actions.report">
+    <field name="name">Return Note</field>
+    <field name="model">uellow.return.request</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">uellow_multivendor.report_return_request</field>
+    <field name="report_file">uellow_multivendor.report_return_request</field>
+    <field name="binding_model_id" ref="model_uellow_return_request"/>
+    <field name="binding_type">report</field>
+  </record>
+
+  <template id="report_return_request">
+    <t t-call="web.html_container">
+      <t t-foreach="docs" t-as="o">
+        <t t-call="web.external_layout">
+          <div class="page">
+            <h2 style="color:#412402">UELLOW — Return / Withdrawal Note</h2>
+            <h4 style="color:#888">سند استرجاع بضاعة · <span t-field="o.name"/></h4>
+            <table class="table table-sm" style="margin-top:10px">
+              <tr><td><strong>Vendor / التاجر</strong></td><td><span t-field="o.vendor_id"/></td>
+                  <td><strong>Handover / التسليم</strong></td><td><span t-field="o.pickup_mode"/></td></tr>
+              <tr><td><strong>Date / التاريخ</strong></td><td><span t-field="o.submitted_date"/></td>
+                  <td><strong>Status</strong></td><td><span t-field="o.state"/></td></tr>
+            </table>
+            <table class="table table-sm table-bordered" style="margin-top:8px">
+              <thead style="background:#FFF7DA">
+                <tr><th>Product / المنتج</th><th>SKU</th><th class="text-end">Qty / الكمية</th>
+                    <th class="text-end">Cost / التكلفة</th></tr>
+              </thead>
+              <tbody>
+                <tr t-foreach="o.line_ids" t-as="l">
+                  <td><span t-field="l.product_id.name"/></td>
+                  <td><span t-field="l.product_id.default_code"/></td>
+                  <td class="text-end"><span t-field="l.qty"/></td>
+                  <td class="text-end"><span t-field="l.cost"/></td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr><th colspan="2" class="text-end">Total / الإجمالي</th>
+                    <th class="text-end"><span t-field="o.total_qty"/></th>
+                    <th class="text-end"><span t-field="o.total_cost"/></th></tr>
+              </tfoot>
+            </table>
+            <div style="margin-top:50px;display:flex;justify-content:space-between">
+              <div style="width:45%;text-align:center;border-top:1px solid #000;padding-top:6px">
+                Vendor signature (received)<br/>توقيع التاجر (الاستلام)</div>
+              <div style="width:45%;text-align:center;border-top:1px solid #000;padding-top:6px">
+                Uellow signature (delivered)<br/>توقيع يلو (التسليم)</div>
+            </div>
+          </div>
+        </t>
+      </t>
+    </t>
+  </template>
+
+  <!-- ══ Restock request (signatures: warehouse + purchasing) ══ -->
+  <record id="action_report_restock_request" model="ir.actions.report">
+    <field name="name">Restock Note</field>
+    <field name="model">uellow.vendor.restock</field>
+    <field name="report_type">qweb-pdf</field>
+    <field name="report_name">uellow_multivendor.report_restock_request</field>
+    <field name="report_file">uellow_multivendor.report_restock_request</field>
+    <field name="binding_model_id" ref="model_uellow_vendor_restock"/>
+    <field name="binding_type">report</field>
+  </record>
+
+  <template id="report_restock_request">
+    <t t-call="web.html_container">
+      <t t-foreach="docs" t-as="o">
+        <t t-call="web.external_layout">
+          <div class="page">
+            <h2 style="color:#412402">UELLOW — Restock Note</h2>
+            <h4 style="color:#888">تقرير طلب تعبئة</h4>
+            <table class="table table-sm" style="margin-top:10px">
+              <tr><td><strong>Vendor / التاجر</strong></td><td><span t-field="o.vendor_id"/></td></tr>
+              <tr><td><strong>Date / التاريخ</strong></td><td><span t-field="o.expected_date"/></td></tr>
+            </table>
+            <table class="table table-sm table-bordered" style="margin-top:8px">
+              <thead style="background:#FFF7DA">
+                <tr><th>Product / المنتج</th><th>SKU</th><th class="text-end">Qty / الكمية</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span t-field="o.product_id.name"/></td>
+                  <td><span t-field="o.product_id.default_code"/></td>
+                  <td class="text-end"><span t-field="o.qty"/></td>
+                </tr>
+              </tbody>
+            </table>
+            <div style="margin-top:50px;display:flex;justify-content:space-between">
+              <div style="width:45%;text-align:center;border-top:1px solid #000;padding-top:6px">
+                Warehouse manager<br/>مدير المخزن</div>
+              <div style="width:45%;text-align:center;border-top:1px solid #000;padding-top:6px">
+                Purchasing<br/>المشتريات</div>
+            </div>
+          </div>
+        </t>
+      </t>
+    </t>
+  </template>
+
+</odoo>
