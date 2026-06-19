@@ -302,7 +302,67 @@ class VendorAdminAPI(http.Controller):
                 'image_url': img_url('product.template', t.id, 'image_256',
                                      unique=t.write_date) if t.image_1920 else None,
             } for t in new_products],
+            'price_requests': self._price_requests_awaiting(),
         })
+
+    def _price_requests_awaiting(self):
+        """Price-update requests with merchant-changed lines awaiting approval."""
+        reqs = request.env['uellow.price.request'].sudo().search(
+            [('line_ids.line_state', '=', 'await')], order='id desc', limit=50)
+        out = []
+        for r in reqs:
+            awaiting = r.line_ids.filtered(lambda l: l.line_state == 'await')
+            if not awaiting:
+                continue
+            out.append({
+                'id': r.id, 'name': r.name,
+                'vendor': r.merchant_id.display_name or '',
+                'awaiting': len(awaiting),
+                'lines': [{
+                    'id': l.id,
+                    'product': bilingual(l.product_tmpl_id, 'name'),
+                    'sku': l.default_code or '',
+                    'current_price': round(l.current_price, 3),
+                    'new_price': round(l.new_price, 3),
+                    'delta_pct': round(l.delta_pct, 1),
+                    'margin_after': round(l.new_margin_pct, 1),
+                    'image_url': img_url('product.template', l.product_tmpl_id.id,
+                                         'image_128', unique=l.product_tmpl_id.write_date)
+                                 if l.product_tmpl_id.image_128 else None,
+                } for l in awaiting],
+            })
+        return out
+
+    @http.route('/api/vendor/v1/admin/price-requests/<int:rid>/approve-all',
+                type='http', auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_price_request_approve_all(self, rid, **kw):
+        r = request.env['uellow.price.request'].sudo().browse(rid)
+        if not r.exists():
+            return fail('NOT_FOUND', 'Request not found', 404)
+        r.action_approve_all()
+        return ok({'state': r.state})
+
+    @http.route('/api/vendor/v1/admin/price-lines/<int:lid>/<string:decision>',
+                type='http', auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_price_line_decide(self, lid, decision, **kw):
+        ln = request.env['uellow.price.request.line'].sudo().browse(lid)
+        if not ln.exists():
+            return fail('NOT_FOUND', 'Line not found', 404)
+        if decision == 'approve':
+            ln.action_approve()
+        elif decision == 'reject':
+            ln.action_reject()
+        else:
+            return fail('BAD_DECISION', 'approve or reject', 400)
+        # If nothing is left awaiting, mark the request applied.
+        req = ln.request_id
+        if req and not req.line_ids.filtered(lambda l: l.line_state == 'await'):
+            req.state = 'applied'
+        return ok({'line_state': ln.line_state})
 
     @http.route('/api/vendor/v1/admin/changes/<int:cid>/<string:decision>',
                 type='http', auth='public', methods=['POST', 'OPTIONS'], csrf=False)
