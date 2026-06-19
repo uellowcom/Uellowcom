@@ -230,6 +230,11 @@ class VendorProductsAPI(http.Controller):
                 })
             except (binascii.Error, ValueError):
                 continue
+        # Scope the new product to the vendor's markets (country exclusivity).
+        try:
+            v._apply_market_to_product(t)
+        except Exception:
+            pass
         return ok({'id': t.id, 'product': _ser_tmpl(t, detail=True)})
 
     @http.route('/api/vendor/v1/products/import', type='http', auth='public',
@@ -294,6 +299,10 @@ class VendorProductsAPI(http.Controller):
                     t.with_context(lang='ar_001').write({'name': name_ar})
                     if name_en:
                         t.with_context(lang='en_US').write({'name': name_en})
+                try:
+                    v._apply_market_to_product(t)
+                except Exception:
+                    pass
                 created += 1
             except Exception as e:
                 errors.append('Row %d: %s' % (i, e))

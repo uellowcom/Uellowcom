@@ -91,6 +91,14 @@
               <field name="currency_id"/>
               <field name="timezone"/>
             </group>
+            <group string="Sales Markets (Exclusivity)">
+              <field name="exclusive_markets"/>
+              <field name="market_website_ids" widget="many2many_tags"
+                     placeholder="Empty = auto from country"/>
+              <button name="action_sync_product_markets" type="object"
+                      string="Apply markets to all products" class="btn-secondary"
+                      confirm="Re-scope ALL of this vendor's products to the selected markets. Continue?"/>
+            </group>
           </group>
           <notebook>
             <page string="Store Info">

@@ -73,6 +73,72 @@ class UellowVendor(models.Model):
         '_tz_get', string='Timezone', default='Asia/Kuwait',
     )
 
+    # ── Market scoping (which storefronts this vendor sells on) ──────────
+    market_website_ids = fields.Many2many(
+        'website', 'uellow_vendor_market_website_rel', 'vendor_id', 'website_id',
+        string='Sales Markets (Websites)',
+        help='The storefronts (country web + mobile-app sites) where this '
+             "vendor's products are shown. Empty = inherits product defaults.")
+    exclusive_markets = fields.Boolean(
+        'Exclusive to Markets', default=True,
+        help='When on, the vendor\'s products are shown ONLY on the selected '
+             'markets (country exclusivity). When off, products keep their own '
+             'website visibility.')
+    product_market_count = fields.Integer(
+        compute='_compute_product_market_count', string='Products')
+
+    def _compute_product_market_count(self):
+        Tmpl = self.env['product.template'].sudo()
+        for v in self:
+            v.product_market_count = Tmpl.search_count([('vendor_id', '=', v.id)])
+
+    def _market_website_ids(self):
+        """Resolve the websites this vendor sells on. Falls back to any websites
+        whose name matches the vendor's country when no explicit markets set."""
+        self.ensure_one()
+        if self.market_website_ids:
+            return self.market_website_ids
+        if self.country_id:
+            # Seed from the country↔website map + name match (web + mobile app).
+            sites = self.env['website'].sudo()
+            try:
+                cw = self.env['mobile.country.website'].sudo().search(
+                    [('country_id', '=', self.country_id.id)])
+                sites |= cw.mapped('website_id')
+            except Exception:
+                pass
+            name = (self.country_id.name or '').strip()
+            if name:
+                sites |= self.env['website'].sudo().search([('name', 'ilike', name)])
+            return sites
+        return self.env['website'].sudo()
+
+    def _apply_market_to_product(self, product):
+        """Scope a product to the vendor's markets for country exclusivity:
+        primary website = first market, the rest become extra websites."""
+        self.ensure_one()
+        if not self.exclusive_markets:
+            return
+        sites = self._market_website_ids()
+        if not sites:
+            return
+        sites = sites.sorted('id')
+        vals = {'website_id': sites[0].id}
+        extra = sites[1:]
+        if 'uellow_extra_website_ids' in product._fields:
+            vals['uellow_extra_website_ids'] = [(6, 0, extra.ids)]
+        product.sudo().write(vals)
+
+    def action_sync_product_markets(self):
+        """Backfill: apply the vendor's market scoping to all their products."""
+        Tmpl = self.env['product.template'].sudo()
+        for v in self:
+            if not v.exclusive_markets:
+                continue
+            for t in Tmpl.search([('vendor_id', '=', v.id)]):
+                v._apply_market_to_product(t)
+        return True
+
     @api.model
     def _tz_get(self):
         return [(x, x) for x in sorted(
