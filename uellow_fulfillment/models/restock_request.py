@@ -43,6 +43,7 @@ class RestockRequest(models.Model):
     ], default='draft', string='State', tracking=True, index=True)
 
     expected_date = fields.Date('تاريخ التسليم المتوقع', required=True)
+    pickup_date = fields.Date('تاريخ التسليم/الاستلام المقترح من التاجر')
     confirmed_date = fields.Date('تاريخ الاستلام المؤكد (من Uellow)')
     transport_method = fields.Selection([
         ('self', 'التاجر يوصّل بنفسه'),
@@ -94,6 +95,18 @@ class RestockRequest(models.Model):
             r.state = 'approved'
             po = r._create_purchase_order()
             r.purchase_order_id = po
+            # Confirm the PO so its OWN receipt picking is the single stock op,
+            # and route that receipt into the request's vendor sub-location so
+            # the PO warehouse matches the request (no mismatch, no duplication).
+            try:
+                po.button_confirm()
+                if r.location_id:
+                    picks = po.picking_ids.filtered(lambda p: p.state not in ('done', 'cancel'))
+                    picks.write({'location_dest_id': r.location_id.id})
+                    picks.move_ids.write({'location_dest_id': r.location_id.id})
+                    picks.move_line_ids.write({'location_dest_id': r.location_id.id})
+            except Exception:
+                _logger.exception('Restock PO confirm/route failed for %s', r.name)
             r.message_post(body=_(
                 'تمت الموافقة. طلب الشراء المرتبط: %s') % po.name)
 
@@ -119,24 +132,39 @@ class RestockRequest(models.Model):
 
     def _create_purchase_order(self):
         """
-        Creates a purchase.order with price_unit=0 (consignment/trust).
-        One PO line per restock request line (i.e. per product.product variant).
+        Creates a purchase.order priced at the product cost (so the PO shows
+        real prices, not zeros). Its incoming picking type is the warehouse that
+        owns the request's receiving location, so the PO warehouse matches the
+        request. One PO line per restock request line (product.product variant).
         """
         self.ensure_one()
+        # Pick the incoming type of the warehouse that owns the receiving loc.
+        picking_type = False
+        if self.location_id:
+            wh = self.env['stock.warehouse'].sudo().search(
+                [('lot_stock_id', 'parent_of', self.location_id.id)], limit=1) \
+                or self.env['stock.warehouse'].sudo().search([], limit=1)
+            if wh:
+                picking_type = self.env['stock.picking.type'].sudo().search(
+                    [('code', '=', 'incoming'), ('warehouse_id', '=', wh.id)], limit=1)
         po_vals = {
             'partner_id': self.partner_id.id,
             'date_order': fields.Datetime.now(),
             'date_planned': self.expected_date,
+            'origin': self.name,
             'notes': f'FBU — {self.name} — {self.partner_id.name}\n{self.notes or ""}',
             'order_line': [],
         }
+        if picking_type:
+            po_vals['picking_type_id'] = picking_type.id
         for line in self.line_ids:
+            prod = line.product_id
             po_vals['order_line'].append((0, 0, {
-                'product_id': line.product_id.id,
-                'name': f'[FBU] {line.product_id.display_name}',
+                'product_id': prod.id,
+                'name': f'[FBU] {prod.display_name}',
                 'product_qty': line.qty_requested,
-                'price_unit': 0.0,
+                'price_unit': prod.standard_price or 0.0,
                 'date_planned': self.expected_date,
-                'product_uom': line.product_id.uom_po_id.id or line.product_id.uom_id.id,
+                'product_uom': prod.uom_po_id.id or prod.uom_id.id,
             }))
         return self.env['purchase.order'].create(po_vals)

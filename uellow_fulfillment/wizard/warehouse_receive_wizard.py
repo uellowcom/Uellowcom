@@ -63,6 +63,33 @@ class WarehouseReceiveWizard(models.TransientModel):
         if not loc_dest:
             raise UserError(_('لا يوجد موقع استلام محدد لهذا الطلب.'))
 
+        # PREFERRED PATH — receive through the PO's own picking so stock enters
+        # ONCE via the purchase procedure (no duplicate manual move).
+        po = req.purchase_order_id
+        po_pick = po.picking_ids.filtered(
+            lambda p: p.state not in ('done', 'cancel')) if po else False
+        if po_pick:
+            pick = po_pick[0]
+            # make sure it lands in the request's vendor sub-location
+            pick.write({'location_dest_id': loc_dest.id})
+            pick.move_ids.write({'location_dest_id': loc_dest.id})
+            try:
+                pick.action_assign()
+            except Exception:
+                pass
+            for move in pick.move_ids:
+                wl = self.line_ids.filtered(lambda l: l.product_id == move.product_id)[:1]
+                accepted = max(0, (wl.qty_received - wl.qty_damaged)) if wl else move.product_uom_qty
+                move.quantity = accepted
+            pick.move_line_ids.write({'location_dest_id': loc_dest.id})
+            try:
+                pick.button_validate()
+            except Exception:
+                _logger.exception('PO picking validate failed for %s', req.name)
+            self._finalize_receipt(req)
+            return {'type': 'ir.actions.act_window_close'}
+
+        # FALLBACK (no PO picking) — legacy manual receipt.
         # Source: supplier location
         supplier_loc = self.env['stock.location'].search(
             [('usage', '=', 'supplier')], limit=1)
@@ -114,33 +141,33 @@ class WarehouseReceiveWizard(models.TransientModel):
                 move.quantity = move.product_uom_qty
             picking.button_validate()
 
-        # Update restock lines
+        self._finalize_receipt(req)
+        return {'type': 'ir.actions.act_window_close'}
+
+    def _finalize_receipt(self, req):
+        """Update restock lines, PO received qty, fbu_state and request state."""
         for wline in self.line_ids:
-            accepted = max(0, wline.qty_received - wline.qty_damaged)
             wline.restock_line_id.write({
                 'qty_received': wline.qty_received,
                 'qty_damaged': wline.qty_damaged,
                 'difference_reason': wline.difference_reason,
                 'difference_note': wline.difference_note,
             })
-            # Trigger fbu_state recompute on product.product
-            wline.product_id._compute_fbu_state()
-
-        # Update PO received qty
-        if req.purchase_order_id:
+            if wline.product_id:
+                wline.product_id._compute_fbu_state()
+        # Only mirror qty_received onto the PO if it was NOT received via its own
+        # picking (the PO computes qty_received itself when its picking is done).
+        if req.purchase_order_id and not req.purchase_order_id.picking_ids.filtered(
+                lambda p: p.state == 'done'):
             for po_line in req.purchase_order_id.order_line:
-                matched = self.line_ids.filtered(
-                    lambda l: l.product_id == po_line.product_id)
+                matched = self.line_ids.filtered(lambda l: l.product_id == po_line.product_id)
                 if matched:
-                    received = sum(matched.mapped('qty_received'))
-                    po_line.qty_received = received
-
+                    po_line.qty_received = sum(matched.mapped('qty_received'))
+        req.confirmed_date = fields.Date.context_today(self)
         req.state = 'received'
         req.message_post(body=_(
             'تم تأكيد استلام المخزون. إجمالي الوحدات المقبولة: %d') % sum(
             max(0, l.qty_received - l.qty_damaged) for l in self.line_ids))
-
-        return {'type': 'ir.actions.act_window_close'}
 
 
 class WarehouseReceiveWizardLine(models.TransientModel):

@@ -28,6 +28,51 @@ def _cap_guard(vendor, code):
     return None
 
 
+_RESTOCK_STATES = {
+    'draft':     {'en': 'Draft',                'ar': 'مسودة'},
+    'submitted': {'en': 'Pending approval',     'ar': 'بانتظار الموافقة'},
+    'approved':  {'en': 'Approved — to deliver','ar': 'موافق — بانتظار التسليم'},
+    'received':  {'en': 'Received',             'ar': 'تم الاستلام'},
+    'cancelled': {'en': 'Cancelled',           'ar': 'ملغي'},
+}
+
+
+def _ser_restock(r, detail=False):
+    po = r.purchase_order_id
+    cur = po.currency_id if po else r.partner_id.company_id.currency_id
+    out = {
+        'id': r.id, 'name': r.name, 'state': r.state,
+        'state_label': _RESTOCK_STATES.get(r.state, {'en': r.state, 'ar': r.state}),
+        'expected_date': r.expected_date and str(r.expected_date),
+        'pickup_date': r.pickup_date and str(r.pickup_date),
+        'confirmed_date': r.confirmed_date and str(r.confirmed_date),
+        'transport_method': r.transport_method or '',
+        'notes': r.notes or '',
+        'location': r.location_id.complete_name if r.location_id else '',
+        'total_units': r.total_units,
+        'po_name': po.name if po else '',
+        'po_total': fmt_price(po.amount_total, po.currency_id) if po else None,
+        'has_handover': bool(po) and r.state in ('approved', 'received'),
+        'date': r.create_date and r.create_date.isoformat(),
+    }
+    if detail:
+        po_price = {l.product_id.id: l.price_unit for l in po.order_line} if po else {}
+        out['lines'] = [{
+            'product': l.product_id.display_name,
+            'qty': l.qty_requested,
+            'qty_received': l.qty_received,
+            'qty_damaged': l.qty_damaged,
+            'price': fmt_price(po_price.get(l.product_id.id, l.product_id.standard_price), cur),
+        } for l in r.line_ids]
+        # Timeline from the chatter.
+        out['timeline'] = [{
+            'body': (m.body or '').strip(),
+            'author': m.author_id.name or 'System',
+            'when': m.date.isoformat() if m.date else '',
+        } for m in r.message_ids.sorted('id') if (m.body or '').strip()]
+    return out
+
+
 class VendorParityAPI(http.Controller):
 
     # ───────────────────────── Capabilities ─────────────────────────
@@ -249,16 +294,48 @@ class VendorParityAPI(http.Controller):
         reqs = request.env['uellow.restock.request'].sudo().search(
             [('vendor_location_id', '=', vloc.id)] if vloc else [('id', '=', 0)],
             order='create_date desc', limit=80)
-        out = [{
-            'id': r.id,
-            'state': r.state,
-            'expected_date': r.expected_date and str(r.expected_date),
-            'notes': r.notes or '',
-            'lines': [{'product': l.product_id.display_name,
-                       'qty': l.qty_requested} for l in r.line_ids],
-            'date': r.create_date and r.create_date.isoformat(),
-        } for r in reqs]
-        return ok(out)
+        return ok([_ser_restock(r) for r in reqs])
+
+    @http.route('/api/vendor/v1/restock/<int:req_id>', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def restock_detail(self, req_id, **kw):
+        v = current_vendor()
+        r = request.env['uellow.restock.request'].sudo().browse(req_id)
+        if not r.exists() or r.partner_id.id != v.partner_id.id:
+            return fail('NOT_FOUND', 'Request not found', status=404)
+        return ok(_ser_restock(r, detail=True))
+
+    @http.route('/api/vendor/v1/restock/<int:req_id>/handover', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def restock_handover(self, req_id, **kw):
+        """Handover / delivery note PDF (the linked PO), available after approval."""
+        v = current_vendor()
+        r = request.env['uellow.restock.request'].sudo().browse(req_id)
+        if not r.exists() or r.partner_id.id != v.partner_id.id:
+            return fail('NOT_FOUND', 'Request not found', status=404)
+        if r.state not in ('approved', 'received') or not r.purchase_order_id:
+            return fail('NOT_READY', 'Available after approval.', status=409)
+        try:
+            from .orders import _pdf_attachment_url
+            pdf, _t = request.env['ir.actions.report'].sudo()._render_qweb_pdf(
+                'purchase.report_purchaseorder', [r.purchase_order_id.id])
+            import base64 as _b64
+            att = request.env['ir.attachment'].sudo().create({
+                'name': 'handover-%s.pdf' % r.name, 'type': 'binary',
+                'datas': _b64.b64encode(pdf), 'mimetype': 'application/pdf',
+                'res_model': 'uellow.restock.request', 'res_id': r.id,
+            })
+            att.generate_access_token()
+            base = request.httprequest.host_url.rstrip('/')
+            url = '%s/web/content/%s?access_token=%s&download=true&filename=handover-%s.pdf' % (
+                base, att.id, att.access_token, r.name)
+        except Exception as e:
+            return fail('REPORT_ERROR', str(e), status=500)
+        return ok({'url': url})
 
     @http.route('/api/vendor/v1/restock', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)
@@ -281,9 +358,21 @@ class VendorParityAPI(http.Controller):
         vloc = VL.search([('partner_id', '=', v.partner_id.id)], limit=1)
         if not vloc:
             vloc = VL.create_for_vendor(v.partner_id)
+        # Pickup/delivery date chosen by the vendor (defaults to +7 days).
+        pickup = (p.get('pickup_date') or '').strip()
+        try:
+            from datetime import datetime as _dt
+            pdate = _dt.strptime(pickup, '%Y-%m-%d').date() if pickup else (date.today() + timedelta(days=7))
+        except ValueError:
+            pdate = date.today() + timedelta(days=7)
+        transport = p.get('transport_method')
+        if transport not in ('self', 'carrier', 'uellow'):
+            transport = 'self'
         req = request.env['uellow.restock.request'].sudo().create({
             'vendor_location_id': vloc.id,
-            'expected_date': date.today() + timedelta(days=7),
+            'expected_date': pdate,
+            'pickup_date': pdate,
+            'transport_method': transport,
             'notes': p.get('notes') or '',
             'line_ids': [(0, 0, {'product_id': pid, 'qty_requested': qty})],
         })
