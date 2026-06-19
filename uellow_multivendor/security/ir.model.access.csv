@@ -36,6 +36,9 @@ access_vendor_restock_portal,vend.restock.portal,model_uellow_vendor_restock,bas
 access_uellow_product_import_admin,uellow.product.import admin,model_uellow_product_import,base.group_system,1,1,1,1
 access_uellow_product_import_portal,uellow.product.import portal,model_uellow_product_import,base.group_portal,1,1,1,0
 access_uellow_product_import_user,uellow.product.import user,model_uellow_product_import,base.group_user,1,0,0,0
+access_uellow_product_import_line_admin,uellow.product.import.line admin,model_uellow_product_import_line,base.group_system,1,1,1,1
+access_uellow_product_import_line_portal,uellow.product.import.line portal,model_uellow_product_import_line,base.group_portal,1,1,1,1
+access_uellow_product_import_line_user,uellow.product.import.line user,model_uellow_product_import_line,base.group_user,1,1,1,1
 access_price_report_wizard_mgr,price.report.wizard.mgr,model_uellow_price_report_wizard,uellow_multivendor.group_marketplace_manager,1,1,1,1
 access_product_change_user,product.change.user,model_uellow_product_change,base.group_user,1,1,1,0
 access_product_change_admin,product.change.admin,model_uellow_product_change,base.group_system,1,1,1,1
