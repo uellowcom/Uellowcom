@@ -21,7 +21,20 @@ class UellowReturnRequest(models.Model):
         ('self',   'Vendor picks up'),
         ('uellow', 'Uellow courier delivers to vendor'),
     ], default='self', string='Handover', tracking=True)
-    reason = fields.Text('Reason')
+    initiator = fields.Selection([
+        ('vendor', 'Vendor withdrawal (pull stock back)'),
+        ('uellow', 'Uellow return to vendor'),
+    ], default='vendor', string='Initiated By', tracking=True, index=True)
+    reason_code = fields.Selection([
+        ('overstock',     'Overstock'),
+        ('slow_moving',   'Slow moving / dead stock'),
+        ('quality_issue', 'Quality issue'),
+        ('expiring',      'Expiring / expired'),
+        ('end_of_season', 'End of season'),
+        ('recall',        'Product recall'),
+        ('other',         'Other'),
+    ], default='other', string='Reason', tracking=True)
+    reason = fields.Text('Reason Details')
     state = fields.Selection([
         ('submitted', 'Submitted'),
         ('approved',  'Approved'),
