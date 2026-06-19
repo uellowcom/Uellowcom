@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Standalone Uellow invoice template; the standard invoice report actions
-         are repointed to it below (robust — no fragile view inheritance). -->
     <template id="uellow_invoice">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
@@ -9,221 +7,172 @@
                 <t t-set="o" t-value="o.with_context(lang='en_US')"/>
                 <t t-set="paid" t-value="o.payment_state in ('paid', 'in_payment', 'reversed')"/>
                 <t t-set="ship" t-value="o.partner_shipping_id or o.partner_id"/>
-
                 <div class="article udoc" dir="ltr">
-                <style>
-                    @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
-                    @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
-                    .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#1C1206;
-                        -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; direction:ltr !important; unicode-bidi:isolate !important; }
-                    .udoc { font-size:12px; }
-                    .udoc table { border:0 !important; }
-                    .udoc td, .udoc th { border:0 !important; }
-                    .udoc td.ucard { border:1px solid #ece5d6 !important; }
-                    .udoc .umeta td { border:1px solid #ece5d6 !important; }
-                    .udoc .uitems td { border-bottom:1px solid #ece5d6 !important; }
-                    .udoc table.upanel { border:1px solid #ece5d6 !important; }
-                    .udoc td.uacc, .udoc .uacc td { border:1.5px dashed #ece5d6 !important; }
-                    .udoc .recv td { border:1.5px dashed #ece5d6 !important; }
+                    <style>
+                        @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
+                        @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
+                        .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#2A1B0A; direction:ltr !important; box-sizing:border-box; }
+                        .udoc { font-size:12.5px; }
+                        .udoc table { width:100%; border-collapse:collapse; table-layout:fixed; border:0 !important; }
+                        .udoc td, .udoc th { border:0 !important; vertical-align:top; }
+                        .ar { display:block; font-size:9.5px; font-weight:600; color:#9c8e76 !important; line-height:1.35; }
+                        .lbl { font-size:9.5px; font-weight:800; letter-spacing:1.2px; color:#C79A12 !important; text-transform:uppercase; }
+                        .lbl .ar { color:#b3a489 !important; letter-spacing:0; }
+                        .card { background:#FBF6EA; border-radius:16px; padding:15px 17px; }
+                        .name { font-size:15px; font-weight:800; color:#2A1B0A; margin-top:6px; }
+                        .sub { font-size:11.5px; color:#6f6048; line-height:1.55; margin-top:3px; }
+                        .ttl { font-size:34px; font-weight:800; color:#412402; line-height:1; letter-spacing:.5px; }
+                        .ttl .ar { font-size:17px; color:#9c8e76 !important; font-weight:700; margin-top:2px; }
+                        .items thead td { background:#412402 !important; color:#FFFFFF !important; font-size:10.5px; font-weight:800;
+                            letter-spacing:.5px; text-transform:uppercase; padding:12px 12px; }
+                        .items thead td .ar { color:#E7D7B8 !important; font-weight:600; }
+                        .items tbody td { font-size:12.5px; padding:12px 12px; border-bottom:1px solid #efe7d6 !important; }
+                        .grand td { padding:14px 18px; }
+                        .meta td { padding:10px 14px; }
+                        .div { border-right:1px solid #efe7d6 !important; }
+                    </style>
 
-                    .ar { font-family:'Tajawal'; font-size:9px; font-weight:600; color:#8a7c66 !important; }
-                    .uitems th .ar { color:#f0e6d0 !important; }
-                    .ucard .l .ar { color:#8a7c66 !important; }
-                    /* Override Bootstrap's @media print reset (background:transparent / color:#000 !important). */
-                    .uaccent { background:#F5C320 !important; }
-                    .uco-name { color:#412402 !important; } .utitle { color:#412402 !important; } .utitle small { color:#8a7c66 !important; }
-                    .ucard { background:#FBF7EC !important; } .ucard .l { color:#caa008 !important; }
-                    .uitems th { background:#412402 !important; color:#fff !important; }
-                    .uitems tr.alt td { background:#fcfaf4 !important; }
-                    .upanel h4 { color:#caa008 !important; }
-                    .ugrand { background:#F5C320 !important; } .ugrand .t, .ugrand .a { color:#412402 !important; } .ugrand .t small { color:#5B3410 !important; }
-                    .ustamp { color:#1f9d55 !important; } .ustamp.due { color:#B91C1C !important; }
-                    .upaid { background:#eaf7ef !important; color:#176b3c !important; }
-                    .disc { color:#1f9d55 !important; }
-                    .ufoot { background:#412402 !important; } .ufoot td { color:#e9dcc4 !important; } .ufoot .th { color:#fff !important; } .ufoot b { color:#F5C320 !important; }
-                    .uaccent { height:8px; background:#F5C320; }
-                    .utbl { width:100%; border-collapse:collapse; table-layout:fixed; }
-                    .ulogo { height:54px; max-width:150px; }
-                    .uco-name { font-size:18px; font-weight:bold; color:#412402; }
-                    .uco-line { font-size:10px; color:#6b5f4d; line-height:1.5; }
-                    .utitle { font-size:30px; font-weight:bold; color:#412402; text-align:right; line-height:1; }
-                    .utitle small { display:block; font-size:15px; color:#8a7c66; font-weight:bold; }
-                    .uno { text-align:right; font-size:11px; color:#6b5f4d; margin-top:6px; }
-                    .uno b { color:#1C1206; font-size:12px; }
-                    .ustamp { display:inline-block; margin-top:6px; border:2px solid #1f9d55; color:#1f9d55; font-weight:bold;
-                              padding:3px 12px; border-radius:7px; font-size:13px; letter-spacing:2px; }
-                    .ustamp.due { border-color:#B91C1C; color:#B91C1C; }
-                    .ucard { background:#FBF7EC; border:1px solid #ece5d6; border-radius:10px; padding:10px 12px; vertical-align:top; }
-                    .ucard .l { font-size:9px; font-weight:bold; letter-spacing:1px; color:#caa008; text-transform:uppercase; }
-                    .ucard .l span { color:#8a7c66; }
-                    .ucard .n { font-size:13px; font-weight:bold; color:#1C1206; margin-top:4px; }
-                    .ucard .x { font-size:10px; color:#5d5142; line-height:1.45; }
-                    .umeta td { border:1px solid #ece5d6; padding:8px 10px; }
-                    .umeta .k { font-size:8px; font-weight:bold; letter-spacing:.5px; color:#8a7c66; text-transform:uppercase; }
-                    .umeta .v { font-size:11px; font-weight:bold; color:#1C1206; margin-top:2px; }
-                    .uitems th { background:#412402; color:#fff; font-size:10px; font-weight:bold; text-transform:uppercase;
-                                 padding:9px 10px; text-align:left; }
-                    .uitems th.r { text-align:right; } .uitems th.c { text-align:center; }
-                    .uitems td { padding:9px 10px; font-size:11px; border-bottom:1px solid #ece5d6; vertical-align:top; }
-                    .uitems tr.alt td { background:#fcfaf4; }
-                    .uitems td.r { text-align:right; font-weight:bold; } .uitems td.c { text-align:center; }
-                    .pn { font-weight:bold; color:#1C1206; }
-                    .sku { font-size:9px; color:#8a7c66; }
-                    .upanel { border:1px solid #ece5d6; border-radius:10px; padding:12px; vertical-align:top; }
-                    .upanel h4 { font-size:9px; letter-spacing:1px; color:#caa008; text-transform:uppercase; margin:0 0 6px; }
-                    .trow td { font-size:11px; padding:4px 0; color:#5d5142; }
-                    .trow td.v { text-align:right; font-weight:bold; color:#1C1206; }
-                    .disc { color:#1f9d55; }
-                    .ugrand { background:#F5C320; border-radius:10px; }
-                    .ugrand td { padding:11px 14px; }
-                    .ugrand .t { font-weight:bold; color:#412402; font-size:13px; }
-                    .ugrand .t small { display:block; font-size:10px; color:#5B3410; font-weight:bold; }
-                    .ugrand .a { text-align:right; font-weight:bold; color:#412402; font-size:20px; }
-                    .uwords { font-size:9.5px; color:#8a7c66; font-style:italic; margin-top:6px; }
-                    .upaid { background:#eaf7ef; border:1px solid #b7e2c6; border-radius:8px; padding:8px 12px;
-                             font-size:10px; color:#176b3c; font-weight:bold; margin-top:10px; }
-                    .ufoot { background:#412402; border-radius:10px; }
-                    .ufoot td { padding:11px 14px; color:#e9dcc4; font-size:10px; }
-                    .ufoot .th { font-weight:bold; color:#fff; font-size:12px; }
-                    .ufoot b { color:#F5C320; }
-                    .qr { width:74px; height:74px; }
-                </style>
+                    <div style="height:9px;background-color:#F5C320 !important;border-radius:6px;"/>
+                    <div style="padding:8px 4px 4px;">
 
-                    <div class="uaccent" style="height:8px !important;background-color:#F5C320 !important;"/>
-                    <div style="padding:22px 26px;">
-
-                        <table class="utbl"><tr>
-                            <td style="width:58%;vertical-align:top;">
-                                <table class="utbl"><tr>
-                                    <td style="width:160px;vertical-align:middle;">
-                                        <img t-if="company.logo" class="ulogo" style="max-height:50px;max-width:150px;width:auto;" t-att-src="image_data_uri(company.logo)"/>
-                                        <span t-else="" class="uco-name" t-esc="company.name"/>
+                        <table><tr>
+                            <td style="width:60%;">
+                                <table><tr>
+                                    <td style="width:150px;vertical-align:middle;">
+                                        <img t-if="company.logo" style="max-height:56px;max-width:150px;" t-att-src="image_data_uri(company.logo)"/>
                                     </td>
-                                    <td style="vertical-align:middle;padding-left:10px;">
-                                        <div class="uco-name" t-esc="company.name"/>
-                                        <div class="uco-line">
-                                            <span t-esc="company.street"/><t t-if="company.street2">, <span t-esc="company.street2"/></t><br/>
-                                            <span t-esc="company.city"/><t t-if="company.country_id">, <span t-esc="company.country_id.name"/></t><br/>
-                                            <t t-if="company.phone"><b t-esc="company.phone"/> · </t><span t-esc="company.email"/>
+                                    <td style="vertical-align:middle;padding-left:12px;">
+                                        <div style="font-size:19px;font-weight:800;color:#412402;" t-esc="company.name"/>
+                                        <div class="sub">
+                                            <span t-esc="company.street"/><t t-if="company.city">, <span t-esc="company.city"/></t><br/>
+                                            <t t-if="company.country_id"><span t-esc="company.country_id.name"/> · </t><b t-esc="company.phone"/><br/>
+                                            <span t-esc="company.email"/>
                                         </div>
                                     </td>
                                 </tr></table>
                             </td>
-                            <td style="width:42%;vertical-align:top;">
-                                <div class="utitle">INVOICE<small>فاتورة</small></div>
-                                <div class="uno">No. <b t-esc="o.name"/></div>
-                                <div t-attf-class="ustamp #{'' if paid else 'due'}">
-                                    <t t-if="paid">PAID<br/><span class="ar">مدفوعة</span></t><t t-else="">DUE<br/><span class="ar">مستحقة</span></t>
+                            <td style="width:40%;text-align:right;">
+                                <div class="ttl">INVOICE<span class="ar">فاتورة</span></div>
+                                <div style="font-size:12px;color:#6f6048;margin-top:8px;">No. <b style="color:#2A1B0A;" t-esc="o.name"/></div>
+                                <div style="margin-top:8px;">
+                                    <span t-if="paid" style="display:inline-block;border:2px solid #1f9d55;color:#1f9d55 !important;font-weight:800;padding:4px 14px;border-radius:9px;font-size:13px;letter-spacing:2px;">PAID · مدفوعة</span>
+                                    <span t-else="" style="display:inline-block;border:2px solid #B91C1C;color:#B91C1C !important;font-weight:800;padding:4px 14px;border-radius:9px;font-size:13px;letter-spacing:1px;">DUE · مستحقة</span>
                                 </div>
                             </td>
                         </tr></table>
 
-                        <table class="utbl" style="margin-top:18px;"><tr>
-                            <td class="ucard" style="width:49%;background-color:#FBF7EC !important;">
-                                <div class="l">Bill to<br/><span class="ar">فاتورة إلى</span></div>
-                                <div class="n" t-esc="o.partner_id.name"/>
-                                <div class="x">
-                                    <t t-if="o.partner_id.street"><span t-esc="o.partner_id.street"/><br/></t>
-                                    <t t-if="o.partner_id.city"><span t-esc="o.partner_id.city"/><t t-if="o.partner_id.country_id">, <span t-esc="o.partner_id.country_id.name"/></t><br/></t>
-                                    <t t-if="o.partner_id.phone"><span t-esc="o.partner_id.phone"/></t>
+                        <table style="margin-top:18px;"><tr>
+                            <td style="width:49%;">
+                                <div class="card" style="background-color:#FBF6EA !important;box-shadow:0 4px 14px rgba(65,36,2,0.06);">
+                                    <div class="lbl">Bill to<span class="ar">فاتورة إلى</span></div>
+                                    <div class="name" t-esc="o.partner_id.name"/>
+                                    <div class="sub">
+                                        <t t-if="o.partner_id.street"><span t-esc="o.partner_id.street"/><br/></t>
+                                        <t t-if="o.partner_id.city"><span t-esc="o.partner_id.city"/><t t-if="o.partner_id.country_id">, <span t-esc="o.partner_id.country_id.name"/></t><br/></t>
+                                        <t t-if="o.partner_id.phone"><span t-esc="o.partner_id.phone"/></t>
+                                    </div>
                                 </div>
                             </td>
                             <td style="width:2%;"/>
-                            <td class="ucard" style="width:49%;background-color:#FBF7EC !important;">
-                                <div class="l">Ship to<br/><span class="ar">التوصيل إلى</span></div>
-                                <div class="n" t-esc="ship.name"/>
-                                <div class="x">
-                                    <t t-if="ship.street"><span t-esc="ship.street"/><br/></t>
-                                    <t t-if="ship.city"><span t-esc="ship.city"/><t t-if="ship.country_id">, <span t-esc="ship.country_id.name"/></t></t>
+                            <td style="width:49%;">
+                                <div class="card" style="background-color:#FBF6EA !important;box-shadow:0 4px 14px rgba(65,36,2,0.06);">
+                                    <div class="lbl">Ship to<span class="ar">التوصيل إلى</span></div>
+                                    <div class="name" t-esc="ship.name"/>
+                                    <div class="sub">
+                                        <t t-if="ship.street"><span t-esc="ship.street"/><br/></t>
+                                        <t t-if="ship.city"><span t-esc="ship.city"/></t>
+                                    </div>
                                 </div>
                             </td>
                         </tr></table>
 
-                        <table class="utbl umeta" style="margin-top:12px;border-radius:10px;overflow:hidden;"><tr>
-                            <td style="width:25%;"><div class="k">Issue date<br/><span class="ar">التاريخ</span></div><div class="v" t-field="o.invoice_date"/></td>
-                            <td style="width:25%;"><div class="k">Due<br/><span class="ar">الاستحقاق</span></div>
-                                <div class="v"><t t-if="paid">Paid</t><span t-else="" t-field="o.invoice_date_due"/></div></td>
-                            <td style="width:25%;"><div class="k">Order ref<br/><span class="ar">الطلب</span></div><div class="v"><t t-esc="o.invoice_origin or '—'"/></div></td>
-                            <td style="width:25%;"><div class="k">Salesperson<br/><span class="ar">المندوب</span></div><div class="v"><t t-esc="o.invoice_user_id.name or '—'"/></div></td>
-                        </tr></table>
+                        <div style="margin-top:14px;border:1px solid #efe7d6;border-radius:14px;overflow:hidden;">
+                            <table class="meta"><tr>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Issue date<span class="ar">التاريخ</span></div><div style="font-size:12.5px;font-weight:800;margin-top:3px;" t-field="o.invoice_date"/></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Due<span class="ar">الاستحقاق</span></div><div style="font-size:12.5px;font-weight:800;margin-top:3px;"><t t-if="paid">Paid</t><span t-else="" t-field="o.invoice_date_due"/></div></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Order ref<span class="ar">الطلب</span></div><div style="font-size:12.5px;font-weight:800;margin-top:3px;"><t t-esc="o.invoice_origin or '—'"/></div></td>
+                                <td style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Salesperson<span class="ar">المندوب</span></div><div style="font-size:12.5px;font-weight:800;margin-top:3px;"><t t-esc="o.invoice_user_id.name or '—'"/></div></td>
+                            </tr></table>
+                        </div>
 
-                        <table class="utbl uitems" style="margin-top:16px;border-radius:10px;overflow:hidden;">
-                            <thead><tr>
-                                <th class="c" style="width:30px;background-color:#412402 !important;color:#fff !important;">#</th>
-                                <th style="background-color:#412402 !important;color:#fff !important;">Description<br/><span class="ar">الوصف</span></th>
-                                <th class="c" style="width:46px;background-color:#412402 !important;color:#fff !important;">Qty</th>
-                                <th class="r" style="width:90px;background-color:#412402 !important;color:#fff !important;">Unit</th>
-                                <th class="r" style="width:56px;background-color:#412402 !important;color:#fff !important;">Disc</th>
-                                <th class="r" style="width:96px;background-color:#412402 !important;color:#fff !important;">Amount</th>
-                            </tr></thead>
-                            <tbody>
-                                <t t-set="idx" t-value="0"/>
-                                <t t-foreach="o.invoice_line_ids.filtered(lambda l: not l.display_type or l.display_type == 'product')" t-as="line">
-                                    <t t-set="idx" t-value="idx + 1"/>
-                                    <tr t-attf-class="#{'alt' if idx % 2 == 0 else ''}">
-                                        <td class="c"><t t-esc="idx"/></td>
-                                        <td><div class="pn" t-esc="line.product_id.display_name or line.name"/>
-                                            <span t-if="line.product_id.default_code" class="sku">SKU <t t-esc="line.product_id.default_code"/></span></td>
-                                        <td class="c"><t t-esc="int(line.quantity)"/></td>
-                                        <td class="r"><span t-field="line.price_unit" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
-                                        <td class="r disc"><t t-if="line.discount"><t t-esc="int(line.discount)"/>%</t><t t-else="">—</t></td>
-                                        <td class="r"><span t-field="line.price_subtotal" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
-                                    </tr>
-                                </t>
-                            </tbody>
-                        </table>
+                        <div style="margin-top:16px;border-radius:14px;overflow:hidden;border:1px solid #efe7d6;">
+                            <table class="items">
+                                <thead><tr>
+                                    <td style="width:34px;text-align:center;">#</td>
+                                    <td>Description<span class="ar">الوصف</span></td>
+                                    <td style="width:50px;text-align:center;">Qty</td>
+                                    <td style="width:96px;text-align:right;">Unit</td>
+                                    <td style="width:60px;text-align:right;">Disc</td>
+                                    <td style="width:104px;text-align:right;">Amount</td>
+                                </tr></thead>
+                                <tbody>
+                                    <t t-set="idx" t-value="0"/>
+                                    <t t-foreach="o.invoice_line_ids.filtered(lambda l: not l.display_type or l.display_type == 'product')" t-as="line">
+                                        <t t-set="idx" t-value="idx + 1"/>
+                                        <tr t-attf-style="background-color:#{'#FCFAF3' if idx % 2 == 0 else '#FFFFFF'} !important;">
+                                            <td style="text-align:center;color:#9c8e76;"><t t-esc="idx"/></td>
+                                            <td><span style="font-weight:800;" t-esc="line.product_id.display_name or line.name"/><t t-if="line.product_id.default_code"><br/><span style="font-size:9.5px;color:#9c8e76;">SKU <t t-esc="line.product_id.default_code"/></span></t></td>
+                                            <td style="text-align:center;font-weight:700;"><t t-esc="int(line.quantity)"/></td>
+                                            <td style="text-align:right;font-weight:700;"><span t-field="line.price_unit" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
+                                            <td style="text-align:right;font-weight:700;color:#1f9d55;"><t t-if="line.discount"><t t-esc="int(line.discount)"/>%</t><t t-else="">—</t></td>
+                                            <td style="text-align:right;font-weight:800;"><span t-field="line.price_subtotal" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
 
-                        <table class="utbl" style="margin-top:18px;"><tr>
-                            <td style="width:55%;vertical-align:top;">
-                                <table class="utbl upanel"><tr>
-                                    <td style="width:84px;vertical-align:middle;">
-                                        <img class="qr" t-att-src="'/report/barcode?barcode_type=QR&amp;value=%s&amp;width=160&amp;height=160' % (company.website or 'https://uellow.com')"/>
-                                    </td>
-                                    <td style="vertical-align:middle;padding-left:10px;">
-                                        <h4>Payment details<br/><span class="ar">بيانات الدفع</span></h4>
-                                        <div style="font-size:10px;line-height:1.6;">
-                                            <t t-if="company.uellow_bank_line"><span t-esc="company.uellow_bank_line"/></t>
-                                            <t t-elif="company.bank_ids">
-                                                <div><b>Bank:</b> <t t-esc="company.bank_ids[0].bank_id.name or ''"/></div>
-                                                <div><b>IBAN:</b> <t t-esc="company.bank_ids[0].acc_number"/></div>
-                                                <div><b>Account:</b> <t t-esc="company.name"/></div>
-                                            </t>
-                                            <t t-else=""><span t-esc="company.name"/> · <span t-esc="company.email"/></t>
-                                        </div>
-                                    </td>
-                                </tr></table>
-                                <div t-if="paid" class="upaid" style="background-color:#eaf7ef !important;">✓ Settled in full · تم الدفع بالكامل
-                                    <t t-if="o.invoice_date"> — <span t-field="o.invoice_date"/></t></div>
+                        <table style="margin-top:18px;"><tr>
+                            <td style="width:55%;">
+                                <div class="card" style="background-color:#FBF6EA !important;box-shadow:0 4px 14px rgba(65,36,2,0.06);">
+                                    <table><tr>
+                                        <td style="width:78px;vertical-align:middle;">
+                                            <img style="width:74px;height:74px;" t-att-src="'/report/barcode?barcode_type=QR&amp;value=%s&amp;width=160&amp;height=160' % (company.website or 'https://uellow.com')"/>
+                                        </td>
+                                        <td style="vertical-align:middle;padding-left:12px;">
+                                            <div class="lbl">Payment details<span class="ar">بيانات الدفع</span></div>
+                                            <div class="sub" style="margin-top:5px;">
+                                                <t t-if="company.uellow_bank_line"><span t-esc="company.uellow_bank_line"/></t>
+                                                <t t-elif="company.bank_ids"><b>IBAN:</b> <t t-esc="company.bank_ids[0].acc_number"/></t>
+                                                <t t-else=""><span t-esc="company.name"/> · <span t-esc="company.email"/></t>
+                                            </div>
+                                        </td>
+                                    </tr></table>
+                                </div>
+                                <div t-if="paid" style="margin-top:12px;background-color:#EAF7EF !important;border-radius:12px;padding:11px 15px;font-size:11.5px;font-weight:700;color:#176b3c !important;">
+                                    ✓ Settled in full · تم الدفع بالكامل<t t-if="o.invoice_date"> — <span t-field="o.invoice_date"/></t>
+                                </div>
                             </td>
                             <td style="width:3%;"/>
-                            <td style="width:42%;vertical-align:top;">
-                                <table class="utbl upanel">
-                                    <tr class="trow"><td>Subtotal<br/><span class="ar">الفرعي</span></td><td class="v"><span t-field="o.amount_untaxed" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
-                                    <tr class="trow"><td>Tax<br/><span class="ar">الضريبة</span></td><td class="v"><span t-field="o.amount_tax" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
+                            <td style="width:42%;">
+                                <table style="margin-bottom:4px;">
+                                    <tr><td style="font-size:12.5px;color:#6f6048;padding:5px 2px;">Subtotal<span class="ar">الفرعي</span></td><td style="text-align:right;font-weight:800;font-size:12.5px;"><span t-field="o.amount_untaxed" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
+                                    <tr><td style="font-size:12.5px;color:#6f6048;padding:5px 2px;">Tax<span class="ar">الضريبة</span></td><td style="text-align:right;font-weight:800;font-size:12.5px;"><span t-field="o.amount_tax" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
                                 </table>
-                                <table class="utbl ugrand" style="margin-top:8px;background-color:#F5C320 !important;"><tr>
-                                    <td class="t" style="color:#412402 !important;">TOTAL<small style="color:#5B3410 !important;">الإجمالي المستحق</small></td>
-                                    <td class="a" style="color:#412402 !important;"><span t-field="o.amount_total" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
+                                <table class="grand" style="background-color:#F5C320 !important;border-radius:14px;"><tr>
+                                    <td style="color:#412402 !important;font-weight:800;font-size:14px;">TOTAL<span class="ar" style="color:#6b4a12 !important;">الإجمالي المستحق</span></td>
+                                    <td style="text-align:right;color:#412402 !important;font-weight:800;font-size:24px;"><span t-field="o.amount_total" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
                                 </tr></table>
-                                <div class="uwords"><t t-esc="o.currency_id.amount_to_text(o.amount_total)"/></div>
+                                <div style="font-size:10px;color:#9c8e76;font-style:italic;margin-top:7px;text-align:right;"><t t-esc="o.currency_id.amount_to_text(o.amount_total)"/></div>
                             </td>
                         </tr></table>
 
-                        <table class="utbl" style="margin-top:16px;"><tr>
-                            <td style="width:60%;font-size:9.5px;color:#6b5f4d;line-height:1.55;vertical-align:top;">
-                                <b style="color:#412402;">Terms<br/><span class="ar">الشروط</span></b><br/>
+                        <table style="margin-top:18px;"><tr>
+                            <td style="width:62%;font-size:10.5px;color:#6f6048;line-height:1.6;">
+                                <span style="font-weight:800;color:#412402;">Terms · الشروط</span><br/>
                                 <t t-esc="company.uellow_returns_terms"/> · <t t-esc="company.uellow_warranty_terms"/>.
-                                <t t-if="o.narration"><br/><span t-field="o.narration"/></t>
                             </td>
-                            <td style="width:40%;text-align:right;font-size:9.5px;color:#8a7c66;vertical-align:bottom;">
-                                Authorized signature · التوقيع المعتمد<br/>__________________________
+                            <td style="width:38%;text-align:right;font-size:10.5px;color:#9c8e76;vertical-align:bottom;">
+                                Authorized signature · التوقيع المعتمد<br/><br/>______________________________
                             </td>
                         </tr></table>
 
-                        <table class="utbl ufoot" style="margin-top:14px;background-color:#412402 !important;"><tr>
-                            <td class="th" style="color:#fff !important;"><t t-esc="company.uellow_doc_footer"/></td>
-                            <td style="text-align:right;color:#e9dcc4 !important;"><t t-esc="company.website or 'uellow.com'"/> · <b style="color:#F5C320 !important;" t-esc="company.phone"/></td>
-                        </tr></table>
+                        <div style="margin-top:18px;background-color:#412402 !important;border-radius:14px;padding:14px 18px;">
+                            <table><tr>
+                                <td style="color:#FFFFFF !important;font-weight:800;font-size:13px;"><t t-esc="company.uellow_doc_footer"/></td>
+                                <td style="text-align:right;color:#E7D7B8 !important;font-size:10.5px;"><t t-esc="company.website or 'uellow.com'"/> · <b style="color:#F5C320 !important;" t-esc="company.phone"/></td>
+                            </tr></table>
+                        </div>
 
                     </div>
                 </div>
@@ -231,7 +180,6 @@
         </t>
     </template>
 
-    <!-- Repoint the standard invoice report actions to the Uellow template. -->
     <record id="account.account_invoices" model="ir.actions.report">
         <field name="report_name">uellow_documents.uellow_invoice</field>
         <field name="report_file">uellow_documents.uellow_invoice</field>
