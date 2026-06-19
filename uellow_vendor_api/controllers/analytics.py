@@ -142,6 +142,103 @@ class VendorAnalyticsAPI(http.Controller):
             } for t in top_viewed if (t.uellow_view_count or 0) > 0],
         })
 
+    @http.route('/api/vendor/v1/analytics/records', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def records(self, **kw):
+        """Drill-down: the actual records behind a KPI/home block. Pass
+        ?metric=KEY. Rows carry `kind` ('order'|'product'|'customer') so the app
+        knows which detail screen to open."""
+        v = current_vendor()
+        metric = (get_payload().get('metric') or '').strip()
+        cur = v.currency_id or request.env.company.currency_id
+        Order = request.env['sale.order'].sudo()
+        Tmpl = request.env['product.template'].sudo()
+        rows = []
+
+        def money_text(amount):
+            m = fmt_price(amount, cur)
+            return '%s %s' % (m['amount'], m['symbol'])
+
+        def order_rows(recs):
+            return [{
+                'id': o.id, 'kind': 'order',
+                'title': o.name,
+                'subtitle': o.partner_id.name or '',
+                'trailing': fmt_price(o.amount_total, o.currency_id),
+            } for o in recs]
+
+        def product_rows(recs):
+            return [{
+                'id': t.id, 'kind': 'product',
+                'title': bilingual(t, 'name').get('en') or bilingual(t, 'name').get('ar') or '',
+                'subtitle': '%s · %d in stock' % (
+                    money_text(t.standard_price or 0), int(t.qty_available or 0)),
+                'trailing': (t.vendor_approval_state or '').upper(),
+            } for t in recs]
+
+        if metric in ('orders_new', 'orders_active', 'orders_done',
+                      'orders_cancelled', 'orders_pending'):
+            base = [('vendor_id', '=', v.id)]
+            if metric == 'orders_cancelled':
+                rows = order_rows(Order.search(base + [('state', '=', 'cancel')],
+                                               order='id desc', limit=200))
+            elif metric == 'orders_pending':
+                rows = order_rows(Order.search(base + [('state', 'in', ('draft', 'sent'))],
+                                               order='id desc', limit=200))
+            else:
+                active = Order.search(base + [('state', 'in', ('sale', 'done'))],
+                                      order='date_order desc', limit=400)
+                quotations = Order.search(base + [('state', 'in', ('draft', 'sent'))],
+                                          order='id desc', limit=200)
+                shipped = active.filtered(lambda o: o._vendor_is_shipped())
+                delivered = active.filtered(lambda o: o.invoice_status == 'invoiced')
+                if metric == 'orders_new':
+                    rows = order_rows(quotations + (active - shipped))
+                elif metric == 'orders_active':
+                    rows = order_rows(shipped - delivered)
+                else:  # orders_done
+                    rows = order_rows(delivered)
+        elif metric in ('products_active', 'products_pending',
+                        'products_low', 'products_oos'):
+            base = [('vendor_id', '=', v.id)]
+            if metric == 'products_active':
+                dom = base + [('is_published', '=', True),
+                              ('vendor_approval_state', '=', 'approved')]
+            elif metric == 'products_pending':
+                dom = base + [('vendor_approval_state', 'in', ('draft', 'pending'))]
+            elif metric == 'products_low':
+                dom = base + [('is_storable', '=', True), ('qty_available', '>', 0),
+                              ('qty_available', '<=', 5)]
+            else:  # products_oos
+                dom = base + [('is_storable', '=', True), ('qty_available', '<=', 0)]
+            rows = product_rows(Tmpl.search(dom, order='write_date desc', limit=300))
+        elif metric == 'returns_open':
+            try:
+                rr = request.env['uellow.return.request'].sudo().search(
+                    [('vendor_id', '=', v.id), ('state', 'not in', ('settled', 'rejected'))],
+                    order='id desc', limit=200)
+                rows = [{'id': r.id, 'kind': 'return', 'title': r.name or ('#%d' % r.id),
+                         'subtitle': getattr(r, 'reason_code', '') or '',
+                         'trailing': r.state} for r in rr]
+            except Exception:
+                rows = []
+        elif metric == 'customers':
+            confirmed = Order.search([('vendor_id', '=', v.id),
+                                      ('state', 'in', ('sale', 'done'))], limit=2000)
+            agg = {}
+            for o in confirmed:
+                a = agg.setdefault(o.partner_id.id, {'p': o.partner_id, 'n': 0, 's': 0.0})
+                a['n'] += 1
+                a['s'] += o.amount_total or 0
+            for a in sorted(agg.values(), key=lambda x: -x['s'])[:200]:
+                rows.append({'id': a['p'].id, 'kind': 'customer', 'title': a['p'].name or '',
+                             'subtitle': '%d orders' % a['n'],
+                             'trailing': money_text(a['s'])})
+
+        return ok({'metric': metric, 'count': len(rows), 'rows': rows})
+
     @http.route('/api/vendor/v1/analytics/sales', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint

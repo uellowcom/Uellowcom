@@ -118,6 +118,47 @@ class VendorParityAPI(http.Controller):
             })
         return ok(out)
 
+    @http.route('/api/vendor/v1/flash-sales/<int:sale_id>', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def flash_detail(self, sale_id, **kw):
+        """Full promotion record — openable after creation: header stats plus
+        every product with its effective discount and resulting sale price."""
+        v = current_vendor()
+        s = request.env['uellow.flash.sale'].sudo().browse(sale_id)
+        if not s.exists() or s.vendor_id.id != v.id:
+            return fail('NOT_FOUND', 'Promotion not found', 404)
+        cur = v.currency_id or request.env.company.currency_id
+        products = []
+        for pt in s.product_ids:
+            pct = s._product_discount(pt)
+            base = pt.list_price or 0.0
+            products.append({
+                'id': pt.id,
+                'name': bilingual(pt, 'name'),
+                'image_url': (img_url('product.template', pt.id, 'image_128',
+                                      unique=pt.write_date) if pt.image_128 else None),
+                'list_price': fmt_price(base, cur),
+                'discount_pct': pct,
+                'sale_price': fmt_price(base * (1 - pct / 100.0), cur),
+            })
+        return ok({
+            'id': s.id,
+            'name': {'en': s.name or '', 'ar': s.name_ar or s.name or ''},
+            'state': s.state,
+            'discount_pct': s.discount_pct,
+            'extra_commission': s.extra_commission,
+            'max_quantity': s.max_quantity,
+            'start': s.start_datetime and s.start_datetime.isoformat(),
+            'end': s.end_datetime and s.end_datetime.isoformat(),
+            'remaining_seconds': s.remaining_seconds,
+            'units_sold': s.units_sold,
+            'revenue': fmt_price(s.revenue or 0, cur),
+            'product_count': len(s.product_ids),
+            'products': products,
+        })
+
     @http.route('/api/vendor/v1/flash-sales', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)
     @safe_endpoint
