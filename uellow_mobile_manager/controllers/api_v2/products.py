@@ -1151,6 +1151,13 @@ class MobileProductsAPI(http.Controller):
         product = request.env['product.template'].sudo().browse(product_id)
         if not product.exists() or not product.is_published:
             return fail('NOT_FOUND', 'Product not found', 404)
+        # Lightweight view counter (vendor KPIs). Raw SQL = no ORM recompute.
+        try:
+            request.env.cr.execute(
+                "UPDATE product_template SET uellow_view_count = "
+                "COALESCE(uellow_view_count, 0) + 1 WHERE id = %s", (product_id,))
+        except Exception:
+            pass
         return ok({'product': serialize_product_full(product, lang)})
 
     # ─── Variants ─────────────────────────────────────────────────────

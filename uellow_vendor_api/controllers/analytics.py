@@ -13,6 +13,117 @@ from ._common import (
 
 class VendorAnalyticsAPI(http.Controller):
 
+    @http.route('/api/vendor/v1/analytics/kpis', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def kpis(self, **kw):
+        """Operational KPIs for the vendor: products, categories, views,
+        profit/margin, sales & customers."""
+        v = current_vendor()
+        cur = v.currency_id
+        Tmpl = request.env['product.template'].sudo()
+        Order = request.env['sale.order'].sudo()
+        now = datetime.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        prods = Tmpl.search([('vendor_id', '=', v.id)])
+        published = prods.filtered(lambda t: t.is_published and t.vendor_approval_state == 'approved')
+        pending = prods.filtered(lambda t: t.vendor_approval_state in ('draft', 'pending'))
+        oos = prods.filtered(lambda t: t.is_storable and (t.qty_available or 0) <= 0)
+        low = prods.filtered(lambda t: t.is_storable and 0 < (t.qty_available or 0) <= 5)
+        total_views = sum(prods.mapped('uellow_view_count'))
+
+        # Top viewed products
+        top_viewed = prods.sorted(lambda t: t.uellow_view_count or 0, reverse=True)[:5]
+
+        # Confirmed orders (all-time + this month) for profit + sales
+        confirmed = Order.search([('vendor_id', '=', v.id), ('state', 'in', ('sale', 'done'))])
+        revenue = cost = 0.0
+        cat_rev, cat_units = {}, {}
+        prod_units = {}
+        month_gmv = 0.0
+        month_orders = 0
+        cust_counts = {}
+        for o in confirmed:
+            base = o.date_order or o.create_date
+            in_month = bool(base) and base >= month_start
+            if in_month:
+                month_gmv += o.amount_total or 0
+                month_orders += 1
+            cust_counts[o.partner_id.id] = cust_counts.get(o.partner_id.id, 0) + 1
+            for l in o.order_line.filtered(lambda l: not l.display_type and l.product_id):
+                sub = l.price_subtotal or 0.0
+                c = (l.product_id.standard_price or 0.0) * (l.product_uom_qty or 0.0)
+                revenue += sub
+                cost += c
+                tmpl = l.product_id.product_tmpl_id
+                prod_units[tmpl.id] = prod_units.get(tmpl.id, 0.0) + (l.product_uom_qty or 0.0)
+                categ = tmpl.public_categ_ids[:1]
+                if categ:
+                    cat_rev[categ.id] = cat_rev.get(categ.id, 0.0) + sub
+                    cat_units[categ.id] = cat_units.get(categ.id, 0.0) + (l.product_uom_qty or 0.0)
+        gross = revenue - cost
+        margin_pct = round(gross / revenue * 100, 1) if revenue else 0.0
+        distinct = len(cust_counts)
+        repeat = sum(1 for c in cust_counts.values() if c > 1)
+
+        # Top categories by revenue
+        Cat = request.env['product.public.category'].sudo()
+        top_cats = sorted(cat_rev.items(), key=lambda kv: kv[1], reverse=True)[:6]
+        categories = []
+        for cid, rev in top_cats:
+            c = Cat.browse(cid)
+            categories.append({
+                'id': cid, 'name': bilingual(c, 'name'),
+                'revenue': fmt_price(rev, cur),
+                'units': int(cat_units.get(cid, 0)),
+            })
+
+        # Top selling products (by units)
+        top_sellers = sorted(prod_units.items(), key=lambda kv: kv[1], reverse=True)[:5]
+        sellers = []
+        for tid, units in top_sellers:
+            t = Tmpl.browse(tid)
+            sellers.append({
+                'id': tid, 'name': bilingual(t, 'name'),
+                'units': int(units),
+                'views': int(t.uellow_view_count or 0),
+                'image_url': img_url('product.template', t.id, 'image_128',
+                                     unique=t.write_date) if t.image_128 else None,
+            })
+
+        aov = (month_gmv / month_orders) if month_orders else 0.0
+        return ok({
+            'products': {
+                'total': len(prods), 'published': len(published),
+                'pending': len(pending), 'out_of_stock': len(oos),
+                'low_stock': len(low), 'total_views': int(total_views),
+            },
+            'profit': {
+                'revenue': fmt_price(revenue, cur),
+                'cost': fmt_price(cost, cur),
+                'gross_profit': fmt_price(gross, cur),
+                'margin_pct': margin_pct,
+            },
+            'sales': {
+                'gmv_month': fmt_price(month_gmv, cur),
+                'orders_month': month_orders,
+                'aov': fmt_price(aov, cur),
+                'units_all': int(sum(prod_units.values())),
+            },
+            'customers': {
+                'distinct': distinct, 'repeat': repeat,
+                'repeat_pct': round(repeat / distinct * 100, 1) if distinct else 0.0,
+            },
+            'categories': categories,
+            'top_sellers': sellers,
+            'top_viewed': [{
+                'id': t.id, 'name': bilingual(t, 'name'),
+                'views': int(t.uellow_view_count or 0),
+            } for t in top_viewed if (t.uellow_view_count or 0) > 0],
+        })
+
     @http.route('/api/vendor/v1/analytics/sales', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint

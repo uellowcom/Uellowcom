@@ -15,6 +15,10 @@ class ProductTemplate(models.Model):
         help='Boosted via a paid vendor.ad.campaign. Storefront/app may rank or badge it.')
     sponsor_until = fields.Date('Sponsored Until', copy=False)
 
+    # ── Storefront views (lightweight visit counter) ─────────────
+    uellow_view_count = fields.Integer('Storefront Views', default=0, copy=False,
+        help='Incremented each time a customer opens the product page (app).')
+
     # ── Print-report thumbnail ───────────────────────────────────
     # A JPEG thumbnail used ONLY by the Update-Prices PDF, for products whose
     # main image is WebP (wkhtmltopdf cannot render WebP). Populated out-of-band
