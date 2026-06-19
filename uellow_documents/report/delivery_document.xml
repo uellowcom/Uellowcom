@@ -12,21 +12,21 @@
                         @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
                         @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
                         .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#2A1B0A; direction:ltr !important; box-sizing:border-box; }
-                        .udoc { font-size:12.5px; }
+                        .udoc { font-size:14.8px; }
                         .udoc table { width:100%; border-collapse:collapse; table-layout:fixed; border:0 !important; }
                         .udoc td, .udoc th { border:0 !important; vertical-align:top; }
-                        .ar { display:block; font-size:9.5px; font-weight:600; color:#9c8e76 !important; line-height:1.35; }
-                        .lbl { font-size:9.5px; font-weight:800; letter-spacing:1.2px; color:#C79A12 !important; text-transform:uppercase; }
+                        .ar { display:block; font-size:11.2px; font-weight:600; color:#9c8e76 !important; line-height:1.35; }
+                        .lbl { font-size:11.2px; font-weight:800; letter-spacing:1.2px; color:#C79A12 !important; text-transform:uppercase; }
                         .card { background:#FBF6EA; border-radius:16px; padding:14px 16px; }
-                        .name { font-size:14px; font-weight:800; color:#2A1B0A; margin-top:6px; }
-                        .sub { font-size:11px; color:#6f6048; line-height:1.55; margin-top:3px; }
-                        .ttl { font-size:29px; font-weight:800; color:#412402; line-height:1; letter-spacing:.5px; }
-                        .ttl .ar { font-size:16px; color:#9c8e76 !important; font-weight:700; margin-top:2px; }
-                        .items thead td { background:#412402 !important; color:#FFFFFF !important; font-size:10.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; padding:12px 12px; }
+                        .name { font-size:16.5px; font-weight:800; color:#2A1B0A; margin-top:6px; }
+                        .sub { font-size:13.0px; color:#6f6048; line-height:1.55; margin-top:3px; }
+                        .ttl { font-size:34.2px; font-weight:800; color:#412402; line-height:1; letter-spacing:.5px; }
+                        .ttl .ar { font-size:18.9px; color:#9c8e76 !important; font-weight:700; margin-top:2px; }
+                        .items thead td { background:#412402 !important; color:#FFFFFF !important; font-size:12.4px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; padding:12px 12px; }
                         .items thead td .ar { color:#E7D7B8 !important; font-weight:600; }
-                        .items tbody td { font-size:12px; padding:11px 12px; border-bottom:1px solid #efe7d6 !important; }
+                        .items tbody td { font-size:14.2px; padding:11px 12px;  }
                         .meta td { padding:10px 14px; }
-                        .div { border-right:1px solid #efe7d6 !important; }
+                        .div { }
                     </style>
 
                     <div style="height:9px;background-color:#F5C320 !important;border-radius:6px;"/>
@@ -39,7 +39,7 @@
                                         <img t-if="company.logo" style="max-height:56px;max-width:150px;" t-att-src="image_data_uri(company.logo)"/>
                                     </td>
                                     <td style="vertical-align:middle;padding-left:12px;">
-                                        <div style="font-size:19px;font-weight:800;color:#412402;" t-esc="company.name"/>
+                                        <div style="font-size:22.4px;font-weight:800;color:#412402;" t-esc="company.name"/>
                                         <div class="sub">
                                             <span t-esc="company.street"/><t t-if="company.city">, <span t-esc="company.city"/></t><br/>
                                             <b t-esc="company.phone"/> · <span t-esc="company.email"/>
@@ -49,10 +49,10 @@
                             </td>
                             <td style="width:40%;text-align:right;">
                                 <div class="ttl">DELIVERY NOTE<span class="ar">سند تسليم</span></div>
-                                <div style="font-size:12px;color:#6f6048;margin-top:8px;">No. <b style="color:#2A1B0A;" t-esc="o.name"/></div>
+                                <div style="font-size:14.2px;color:#6f6048;margin-top:8px;">No. <b style="color:#2A1B0A;" t-esc="o.name"/></div>
                                 <div style="margin-top:8px;">
-                                    <span t-if="done" style="display:inline-block;background-color:#EAF7EF !important;border:1.5px solid #1f9d55;color:#1f9d55 !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:11px;letter-spacing:1px;">DONE · تم التسليم</span>
-                                    <span t-else="" style="display:inline-block;background-color:#EAF0FE !important;border:1.5px solid #2563EB;color:#2563EB !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:11px;letter-spacing:1px;">READY · جاهز</span>
+                                    <span t-if="done" style="display:inline-block;background-color:#EAF7EF !important;border:1.5px solid #1f9d55;color:#1f9d55 !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:13.0px;letter-spacing:1px;">DONE · تم التسليم</span>
+                                    <span t-else="" style="display:inline-block;background-color:#EAF0FE !important;border:1.5px solid #2563EB;color:#2563EB !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:13.0px;letter-spacing:1px;">READY · جاهز</span>
                                 </div>
                             </td>
                         </tr></table>
@@ -74,16 +74,16 @@
                                 <div class="sub"><t t-if="o.carrier_tracking_ref">Tracking: <span t-esc="o.carrier_tracking_ref"/></t></div></div></td>
                         </tr></table>
 
-                        <div style="margin-top:14px;border:1px solid #efe7d6;border-radius:14px;overflow:hidden;">
+                        <div style="margin-top:14px;border-radius:14px;overflow:hidden;background-color:#FBF6EA !important;">
                             <table class="meta"><tr>
-                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Scheduled<span class="ar">الموعد</span></div><div style="font-size:12px;font-weight:800;margin-top:3px;" t-field="o.scheduled_date"/></td>
-                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Source<span class="ar">المصدر</span></div><div style="font-size:12px;font-weight:800;margin-top:3px;"><t t-esc="o.origin or '—'"/></div></td>
-                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Operation<span class="ar">العملية</span></div><div style="font-size:11.5px;font-weight:800;margin-top:3px;" t-esc="o.picking_type_id.name"/></td>
-                                <td style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Lines<span class="ar">البنود</span></div><div style="font-size:12.5px;font-weight:800;margin-top:3px;" t-esc="len(o.move_ids)"/></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Scheduled<span class="ar">الموعد</span></div><div style="font-size:14.2px;font-weight:800;margin-top:3px;" t-field="o.scheduled_date"/></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Source<span class="ar">المصدر</span></div><div style="font-size:14.2px;font-weight:800;margin-top:3px;"><t t-esc="o.origin or '—'"/></div></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Operation<span class="ar">العملية</span></div><div style="font-size:13.6px;font-weight:800;margin-top:3px;" t-esc="o.picking_type_id.name"/></td>
+                                <td style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Lines<span class="ar">البنود</span></div><div style="font-size:14.8px;font-weight:800;margin-top:3px;" t-esc="len(o.move_ids)"/></td>
                             </tr></table>
                         </div>
 
-                        <div style="margin-top:16px;border-radius:14px;overflow:hidden;border:1px solid #efe7d6;">
+                        <div style="margin-top:16px;border-radius:14px;overflow:hidden;">
                             <table class="items">
                                 <thead><tr>
                                     <td style="width:34px;text-align:center;">#</td>
@@ -110,8 +110,8 @@
 
                         <div t-if="o.payment_method == 'cod' and o.cod_amount" style="margin-top:14px;background-color:#FFF6D6 !important;border-radius:14px;padding:13px 18px;">
                             <table><tr>
-                                <td style="font-weight:800;color:#412402;font-size:13px;">COD to collect · مبلغ الدفع عند الاستلام</td>
-                                <td style="text-align:right;font-weight:800;color:#412402;font-size:20px;"><span t-esc="'%.3f' % o.cod_amount"/> <t t-esc="cur.symbol or cur.name"/></td>
+                                <td style="font-weight:800;color:#412402;font-size:15.3px;">COD to collect · مبلغ الدفع عند الاستلام</td>
+                                <td style="text-align:right;font-weight:800;color:#412402;font-size:23.6px;"><span t-esc="'%.3f' % o.cod_amount"/> <t t-esc="cur.symbol or cur.name"/></td>
                             </tr></table>
                         </div>
 
@@ -128,16 +128,16 @@
                                 </div>
                             </td>
                             <td style="width:4%;"/>
-                            <td style="width:48%;"><div style="border:1.5px dashed #d9cdb4;border-radius:14px;padding:14px;min-height:96px;">
+                            <td style="width:48%;"><div style="background-color:#FBF6EA !important;border-radius:14px;padding:14px;min-height:96px;">
                                 <div class="lbl" style="color:#412402 !important;">Received in good condition<span class="ar">استُلمت بحالة جيدة</span></div>
-                                <div style="margin-top:34px;border-top:1.5px solid #efe7d6;padding-top:6px;font-size:9.5px;color:#9c8e76;">Receiver name &amp; signature · اسم وتوقيع المستلم — التاريخ</div>
+                                <div style="margin-top:34px;border-top:1.5px solid #efe7d6;padding-top:6px;font-size:11.2px;color:#9c8e76;">Receiver name &amp; signature · اسم وتوقيع المستلم — التاريخ</div>
                             </div></td>
                         </tr></table>
 
                         <div style="margin-top:16px;background-color:#412402 !important;border-radius:14px;padding:14px 18px;">
                             <table><tr>
-                                <td style="color:#FFFFFF !important;font-weight:800;font-size:13px;"><t t-esc="company.uellow_doc_footer"/></td>
-                                <td style="text-align:right;color:#E7D7B8 !important;font-size:10.5px;"><t t-esc="company.website or 'uellow.com'"/> · <b style="color:#F5C320 !important;" t-esc="company.phone"/></td>
+                                <td style="color:#FFFFFF !important;font-weight:800;font-size:15.3px;"><t t-esc="company.uellow_doc_footer"/></td>
+                                <td style="text-align:right;color:#E7D7B8 !important;font-size:12.4px;"><t t-esc="company.website or 'uellow.com'"/> · <b style="color:#F5C320 !important;" t-esc="company.phone"/></td>
                             </tr></table>
                         </div>
 

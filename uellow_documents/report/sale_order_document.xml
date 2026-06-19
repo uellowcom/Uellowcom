@@ -15,23 +15,23 @@
                         @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
                         @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
                         .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#2A1B0A; direction:ltr !important; box-sizing:border-box; }
-                        .udoc { font-size:12.5px; }
+                        .udoc { font-size:14.8px; }
                         .udoc table { width:100%; border-collapse:collapse; table-layout:fixed; border:0 !important; }
                         .udoc td, .udoc th { border:0 !important; vertical-align:top; }
-                        .ar { display:block; font-size:9.5px; font-weight:600; color:#9c8e76 !important; line-height:1.35; }
-                        .lbl { font-size:9.5px; font-weight:800; letter-spacing:1.2px; color:#C79A12 !important; text-transform:uppercase; }
+                        .ar { display:block; font-size:11.2px; font-weight:600; color:#9c8e76 !important; line-height:1.35; }
+                        .lbl { font-size:11.2px; font-weight:800; letter-spacing:1.2px; color:#C79A12 !important; text-transform:uppercase; }
                         .card { background:#FBF6EA; border-radius:16px; padding:14px 16px; }
-                        .name { font-size:14px; font-weight:800; color:#2A1B0A; margin-top:6px; }
-                        .sub { font-size:11px; color:#6f6048; line-height:1.55; margin-top:3px; }
-                        .ttl { font-size:30px; font-weight:800; color:#412402; line-height:1; letter-spacing:.5px; }
-                        .ttl .ar { font-size:16px; color:#9c8e76 !important; font-weight:700; margin-top:2px; }
-                        .items thead td { background:#412402 !important; color:#FFFFFF !important; font-size:10.5px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; padding:12px 12px; }
+                        .name { font-size:16.5px; font-weight:800; color:#2A1B0A; margin-top:6px; }
+                        .sub { font-size:13.0px; color:#6f6048; line-height:1.55; margin-top:3px; }
+                        .ttl { font-size:35.4px; font-weight:800; color:#412402; line-height:1; letter-spacing:.5px; }
+                        .ttl .ar { font-size:18.9px; color:#9c8e76 !important; font-weight:700; margin-top:2px; }
+                        .items thead td { background:#412402 !important; color:#FFFFFF !important; font-size:12.4px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; padding:12px 12px; }
                         .items thead td .ar { color:#E7D7B8 !important; font-weight:600; }
-                        .items tbody td { font-size:12px; padding:11px 12px; border-bottom:1px solid #efe7d6 !important; }
+                        .items tbody td { font-size:14.2px; padding:11px 12px;  }
                         .grand td { padding:14px 18px; }
                         .meta td { padding:10px 14px; }
-                        .div { border-right:1px solid #efe7d6 !important; }
-                        .step { font-size:10px; font-weight:800; color:#2A1B0A; }
+                        .div { }
+                        .step { font-size:11.8px; font-weight:800; color:#2A1B0A; }
                     </style>
 
                     <div style="height:9px;background-color:#F5C320 !important;border-radius:6px;"/>
@@ -44,7 +44,7 @@
                                         <img t-if="company.logo" style="max-height:56px;max-width:150px;" t-att-src="image_data_uri(company.logo)"/>
                                     </td>
                                     <td style="vertical-align:middle;padding-left:12px;">
-                                        <div style="font-size:19px;font-weight:800;color:#412402;" t-esc="company.name"/>
+                                        <div style="font-size:22.4px;font-weight:800;color:#412402;" t-esc="company.name"/>
                                         <div class="sub">
                                             <span t-esc="company.street"/><t t-if="company.city">, <span t-esc="company.city"/></t><br/>
                                             <t t-if="company.country_id"><span t-esc="company.country_id.name"/> · </t><b t-esc="company.phone"/><br/>
@@ -55,10 +55,10 @@
                             </td>
                             <td style="width:40%;text-align:right;">
                                 <div class="ttl"><t t-if="is_order">SALES ORDER<span class="ar">أمر بيع</span></t><t t-else="">QUOTATION<span class="ar">عرض سعر</span></t></div>
-                                <div style="font-size:12px;color:#6f6048;margin-top:8px;">No. <b style="color:#2A1B0A;" t-esc="doc.name"/></div>
+                                <div style="font-size:14.2px;color:#6f6048;margin-top:8px;">No. <b style="color:#2A1B0A;" t-esc="doc.name"/></div>
                                 <div style="margin-top:8px;">
-                                    <span t-if="is_order" style="display:inline-block;background-color:#EAF7EF !important;border:1.5px solid #1f9d55;color:#1f9d55 !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:11px;letter-spacing:1px;">CONFIRMED · مؤكد</span>
-                                    <span t-else="" style="display:inline-block;background-color:#EAF0FE !important;border:1.5px solid #2563EB;color:#2563EB !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:11px;letter-spacing:1px;">AWAITING · بانتظار التأكيد</span>
+                                    <span t-if="is_order" style="display:inline-block;background-color:#EAF7EF !important;border:1.5px solid #1f9d55;color:#1f9d55 !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:13.0px;letter-spacing:1px;">CONFIRMED · مؤكد</span>
+                                    <span t-else="" style="display:inline-block;background-color:#EAF0FE !important;border:1.5px solid #2563EB;color:#2563EB !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:13.0px;letter-spacing:1px;">AWAITING · بانتظار التأكيد</span>
                                 </div>
                             </td>
                         </tr></table>
@@ -67,19 +67,19 @@
                         <div class="card" style="background-color:#FBF6EA !important;margin-top:16px;box-shadow:0 4px 14px rgba(65,36,2,0.06);">
                             <table><tr>
                                 <td style="width:15%;"><table><tr>
-                                    <td style="width:30px;"><div style="width:24px;height:24px;border-radius:50%;background-color:#1f9d55 !important;color:#fff !important;text-align:center;line-height:24px;font-weight:800;font-size:12px;">✓</div></td>
+                                    <td style="width:30px;"><div style="width:24px;height:24px;border-radius:50%;background-color:#1f9d55 !important;color:#fff !important;text-align:center;line-height:24px;font-weight:800;font-size:14.2px;">✓</div></td>
                                     <td class="step">Quotation<span class="ar">عرض سعر</span></td></tr></table></td>
                                 <td style="width:5%;"><div t-attf-style="height:3px;border-radius:3px;background-color:#{'#1f9d55' if s_conf else '#e2d9c6'} !important;"/></td>
                                 <td style="width:15%;"><table><tr>
-                                    <td style="width:30px;"><div t-attf-style="width:24px;height:24px;border-radius:50%;background-color:#{'#1f9d55' if s_conf else '#F5C320'} !important;color:#{'#fff' if s_conf else '#412402'} !important;text-align:center;line-height:24px;font-weight:800;font-size:12px;"><t t-if="s_conf">✓</t><t t-else="">2</t></div></td>
+                                    <td style="width:30px;"><div t-attf-style="width:24px;height:24px;border-radius:50%;background-color:#{'#1f9d55' if s_conf else '#F5C320'} !important;color:#{'#fff' if s_conf else '#412402'} !important;text-align:center;line-height:24px;font-weight:800;font-size:14.2px;"><t t-if="s_conf">✓</t><t t-else="">2</t></div></td>
                                     <td class="step">Confirmed<span class="ar">مؤكد</span></td></tr></table></td>
                                 <td style="width:5%;"><div t-attf-style="height:3px;border-radius:3px;background-color:#{'#1f9d55' if s_deliv else '#e2d9c6'} !important;"/></td>
                                 <td style="width:15%;"><table><tr>
-                                    <td style="width:30px;"><div t-attf-style="width:24px;height:24px;border-radius:50%;background-color:#{'#1f9d55' if s_deliv else '#cfc6b4'} !important;color:#fff !important;text-align:center;line-height:24px;font-weight:800;font-size:12px;">3</div></td>
+                                    <td style="width:30px;"><div t-attf-style="width:24px;height:24px;border-radius:50%;background-color:#{'#1f9d55' if s_deliv else '#cfc6b4'} !important;color:#fff !important;text-align:center;line-height:24px;font-weight:800;font-size:14.2px;">3</div></td>
                                     <td class="step">Delivered<span class="ar">تم التسليم</span></td></tr></table></td>
                                 <td style="width:5%;"><div t-attf-style="height:3px;border-radius:3px;background-color:#{'#1f9d55' if s_inv else '#e2d9c6'} !important;"/></td>
                                 <td style="width:15%;"><table><tr>
-                                    <td style="width:30px;"><div t-attf-style="width:24px;height:24px;border-radius:50%;background-color:#{'#1f9d55' if s_inv else '#cfc6b4'} !important;color:#fff !important;text-align:center;line-height:24px;font-weight:800;font-size:12px;">4</div></td>
+                                    <td style="width:30px;"><div t-attf-style="width:24px;height:24px;border-radius:50%;background-color:#{'#1f9d55' if s_inv else '#cfc6b4'} !important;color:#fff !important;text-align:center;line-height:24px;font-weight:800;font-size:14.2px;">4</div></td>
                                     <td class="step">Invoiced<span class="ar">فوترة</span></td></tr></table></td>
                             </tr></table>
                         </div>
@@ -103,17 +103,17 @@
                         </tr></table>
 
                         <!-- META -->
-                        <div style="margin-top:14px;border:1px solid #efe7d6;border-radius:14px;overflow:hidden;">
+                        <div style="margin-top:14px;border-radius:14px;overflow:hidden;background-color:#FBF6EA !important;">
                             <table class="meta"><tr>
-                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Order date<span class="ar">التاريخ</span></div><div style="font-size:12.5px;font-weight:800;margin-top:3px;" t-field="doc.date_order"/></td>
-                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Valid until<span class="ar">صالح حتى</span></div><div style="font-size:12.5px;font-weight:800;margin-top:3px;"><span t-if="doc.validity_date" t-field="doc.validity_date"/><t t-else="">—</t></div></td>
-                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Payment<span class="ar">الدفع</span></div><div style="font-size:11.5px;font-weight:800;margin-top:3px;"><t t-esc="doc.payment_term_id.name or company.uellow_payment_terms_note"/></div></td>
-                                <td style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Currency<span class="ar">العملة</span></div><div style="font-size:12.5px;font-weight:800;margin-top:3px;" t-esc="doc.currency_id.name"/></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Order date<span class="ar">التاريخ</span></div><div style="font-size:14.8px;font-weight:800;margin-top:3px;" t-field="doc.date_order"/></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Valid until<span class="ar">صالح حتى</span></div><div style="font-size:14.8px;font-weight:800;margin-top:3px;"><span t-if="doc.validity_date" t-field="doc.validity_date"/><t t-else="">—</t></div></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Payment<span class="ar">الدفع</span></div><div style="font-size:13.6px;font-weight:800;margin-top:3px;"><t t-esc="doc.payment_term_id.name or company.uellow_payment_terms_note"/></div></td>
+                                <td style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Currency<span class="ar">العملة</span></div><div style="font-size:14.8px;font-weight:800;margin-top:3px;" t-esc="doc.currency_id.name"/></td>
                             </tr></table>
                         </div>
 
                         <!-- ITEMS -->
-                        <div style="margin-top:16px;border-radius:14px;overflow:hidden;border:1px solid #efe7d6;">
+                        <div style="margin-top:16px;border-radius:14px;overflow:hidden;">
                             <table class="items">
                                 <thead><tr>
                                     <td style="width:34px;text-align:center;">#</td>
@@ -149,45 +149,45 @@
                                 <div class="card" style="background-color:#FBF6EA !important;box-shadow:0 4px 14px rgba(65,36,2,0.06);">
                                     <div class="lbl">Terms &amp; delivery<span class="ar">الشروط والتسليم</span></div>
                                     <table style="margin-top:8px;">
-                                        <tr><td style="font-size:11px;color:#6f6048;padding:4px 0;">Delivery · التسليم</td><td style="text-align:right;font-weight:800;font-size:11px;" t-esc="company.uellow_delivery_terms"/></tr>
-                                        <tr><td style="font-size:11px;color:#6f6048;padding:4px 0;">Payment · الدفع</td><td style="text-align:right;font-weight:800;font-size:11px;" t-esc="company.uellow_payment_terms_note"/></tr>
-                                        <tr><td style="font-size:11px;color:#6f6048;padding:4px 0;">Warranty · الضمان</td><td style="text-align:right;font-weight:800;font-size:11px;" t-esc="company.uellow_warranty_terms"/></tr>
-                                        <tr><td style="font-size:11px;color:#6f6048;padding:4px 0;">Returns · الإرجاع</td><td style="text-align:right;font-weight:800;font-size:11px;" t-esc="company.uellow_returns_terms"/></tr>
+                                        <tr><td style="font-size:13.0px;color:#6f6048;padding:4px 0;">Delivery · التسليم</td><td style="text-align:right;font-weight:800;font-size:13.0px;" t-esc="company.uellow_delivery_terms"/></tr>
+                                        <tr><td style="font-size:13.0px;color:#6f6048;padding:4px 0;">Payment · الدفع</td><td style="text-align:right;font-weight:800;font-size:13.0px;" t-esc="company.uellow_payment_terms_note"/></tr>
+                                        <tr><td style="font-size:13.0px;color:#6f6048;padding:4px 0;">Warranty · الضمان</td><td style="text-align:right;font-weight:800;font-size:13.0px;" t-esc="company.uellow_warranty_terms"/></tr>
+                                        <tr><td style="font-size:13.0px;color:#6f6048;padding:4px 0;">Returns · الإرجاع</td><td style="text-align:right;font-weight:800;font-size:13.0px;" t-esc="company.uellow_returns_terms"/></tr>
                                     </table>
                                 </div>
                             </td>
                             <td style="width:3%;"/>
                             <td style="width:42%;">
                                 <table style="margin-bottom:4px;">
-                                    <tr><td style="font-size:12.5px;color:#6f6048;padding:5px 2px;">Subtotal<span class="ar">الفرعي</span></td><td style="text-align:right;font-weight:800;font-size:12.5px;"><span t-field="doc.amount_untaxed" t-options="{'widget':'monetary','display_currency':doc.currency_id}"/></td></tr>
-                                    <tr><td style="font-size:12.5px;color:#6f6048;padding:5px 2px;">Tax<span class="ar">الضريبة</span></td><td style="text-align:right;font-weight:800;font-size:12.5px;"><span t-field="doc.amount_tax" t-options="{'widget':'monetary','display_currency':doc.currency_id}"/></td></tr>
+                                    <tr><td style="font-size:14.8px;color:#6f6048;padding:5px 2px;">Subtotal<span class="ar">الفرعي</span></td><td style="text-align:right;font-weight:800;font-size:14.8px;"><span t-field="doc.amount_untaxed" t-options="{'widget':'monetary','display_currency':doc.currency_id}"/></td></tr>
+                                    <tr><td style="font-size:14.8px;color:#6f6048;padding:5px 2px;">Tax<span class="ar">الضريبة</span></td><td style="text-align:right;font-weight:800;font-size:14.8px;"><span t-field="doc.amount_tax" t-options="{'widget':'monetary','display_currency':doc.currency_id}"/></td></tr>
                                 </table>
                                 <table class="grand" style="background-color:#F5C320 !important;border-radius:14px;"><tr>
-                                    <td style="color:#412402 !important;font-weight:800;font-size:14px;">TOTAL<span class="ar" style="color:#6b4a12 !important;">الإجمالي</span></td>
-                                    <td style="text-align:right;color:#412402 !important;font-weight:800;font-size:24px;"><span t-field="doc.amount_total" t-options="{'widget':'monetary','display_currency':doc.currency_id}"/></td>
+                                    <td style="color:#412402 !important;font-weight:800;font-size:16.5px;">TOTAL<span class="ar" style="color:#6b4a12 !important;">الإجمالي</span></td>
+                                    <td style="text-align:right;color:#412402 !important;font-weight:800;font-size:28.3px;"><span t-field="doc.amount_total" t-options="{'widget':'monetary','display_currency':doc.currency_id}"/></td>
                                 </tr></table>
                             </td>
                         </tr></table>
 
                         <!-- ACCEPTANCE -->
                         <table style="margin-top:16px;"><tr>
-                            <td style="width:49%;"><div style="border:1.5px dashed #d9cdb4;border-radius:14px;padding:14px;">
+                            <td style="width:49%;"><div style="background-color:#FBF6EA !important;border-radius:14px;padding:14px;">
                                 <div class="lbl" style="color:#412402 !important;">Customer acceptance<span class="ar">موافقة العميل</span></div>
-                                <div style="margin-top:30px;border-top:1.5px solid #efe7d6;padding-top:6px;font-size:9.5px;color:#9c8e76;">Signature &amp; date · التوقيع والتاريخ</div></div></td>
+                                <div style="margin-top:30px;border-top:1.5px solid #efe7d6;padding-top:6px;font-size:11.2px;color:#9c8e76;">Signature &amp; date · التوقيع والتاريخ</div></div></td>
                             <td style="width:2%;"/>
-                            <td style="width:49%;"><div style="border:1.5px dashed #d9cdb4;border-radius:14px;padding:14px;">
+                            <td style="width:49%;"><div style="background-color:#FBF6EA !important;border-radius:14px;padding:14px;">
                                 <div class="lbl" style="color:#412402 !important;">For <t t-esc="company.name"/><span class="ar">عن الشركة</span></div>
-                                <div style="margin-top:30px;border-top:1.5px solid #efe7d6;padding-top:6px;font-size:9.5px;color:#9c8e76;">Authorized signature · التوقيع المعتمد</div></div></td>
+                                <div style="margin-top:30px;border-top:1.5px solid #efe7d6;padding-top:6px;font-size:11.2px;color:#9c8e76;">Authorized signature · التوقيع المعتمد</div></div></td>
                         </tr></table>
 
                         <!-- CTA + FOOTER -->
                         <div style="margin-top:14px;background-color:#412402 !important;border-radius:14px;padding:13px 18px;">
                             <table><tr>
-                                <td style="color:#E7D7B8 !important;font-size:11px;">Confirm in one tap from the app · <b style="color:#F5C320 !important;">أكّد الطلب من التطبيق بضغطة واحدة</b></td>
-                                <td style="width:130px;text-align:right;"><span style="background-color:#F5C320 !important;color:#412402 !important;font-weight:800;font-size:11px;padding:8px 16px;border-radius:9px;">Confirm · تأكيد</span></td>
+                                <td style="color:#E7D7B8 !important;font-size:13.0px;">Confirm in one tap from the app · <b style="color:#F5C320 !important;">أكّد الطلب من التطبيق بضغطة واحدة</b></td>
+                                <td style="width:130px;text-align:right;"><span style="background-color:#F5C320 !important;color:#412402 !important;font-weight:800;font-size:13.0px;padding:8px 16px;border-radius:9px;">Confirm · تأكيد</span></td>
                             </tr></table>
                         </div>
-                        <div style="margin-top:10px;text-align:center;font-size:9.5px;color:#9c8e76;"><t t-esc="company.uellow_doc_footer"/> · <t t-esc="company.website or 'uellow.com'"/></div>
+                        <div style="margin-top:10px;text-align:center;font-size:11.2px;color:#9c8e76;"><t t-esc="company.uellow_doc_footer"/> · <t t-esc="company.website or 'uellow.com'"/></div>
 
                     </div>
                 </div>
