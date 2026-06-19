@@ -7,6 +7,7 @@ from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, require_auth, current_vendor, fmt_price,
+    img_url,
 )
 
 REASONS = [
@@ -96,6 +97,30 @@ class VendorMarketingController(http.Controller):
             'daily_rate': rate,
             'wallet_balance': v.wallet_id.balance if v.wallet_id else 0.0,
         })
+
+    @http.route('/api/vendor/v1/ads/<int:cid>', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def ad_detail(self, cid, **kw):
+        """Openable sponsored-ad record: full config + live performance."""
+        v = current_vendor()
+        c = request.env['vendor.ad.campaign'].sudo().browse(cid)
+        if not c.exists() or c.vendor_id.id != v.id:
+            return fail('NOT_FOUND', 'Campaign not found', 404)
+        imp = c.impressions or 0
+        clk = c.clicks or 0
+        out = _ser_ad(c)
+        out.update({
+            'ctr': round((clk / imp * 100), 2) if imp else 0.0,
+            'cpc': round((c.total_cost / clk), 3) if clk else 0.0,
+            'product_image': (img_url('product.template', c.product_tmpl_id.id,
+                                      'image_256', unique=c.product_tmpl_id.write_date)
+                              if c.product_tmpl_id and c.product_tmpl_id.image_256 else None),
+            'banner_url': (img_url('vendor.ad.campaign', c.id, 'banner_image',
+                                   unique=c.write_date) if c.banner_image else None),
+        })
+        return ok(out)
 
     @http.route('/api/vendor/v1/ads/create', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)

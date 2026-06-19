@@ -54,6 +54,10 @@ def _ser_tmpl(t, detail=False):
         'under_review': bool(getattr(t, 'under_review', False)),
     }
     if detail:
+        # High-resolution images for the detail page (cards keep image_256).
+        if t.image_1920:
+            out['image_url'] = img_url('product.template', t.id, 'image_1024',
+                                       unique=t.write_date)
         out['pending_change'] = (t.pending_change_id.change_summary or '') \
             if getattr(t, 'under_review', False) else ''
         out['description_sale'] = t.description_sale or ''
@@ -69,7 +73,7 @@ def _ser_tmpl(t, detail=False):
         out['name_ar'] = t.with_context(lang='ar_001').name or ''
         out['name_en'] = t.with_context(lang='en_US').name or ''
         out['gallery'] = [
-            img_url('product.image', im.id, 'image_256', unique=im.write_date)
+            img_url('product.image', im.id, 'image_1024', unique=im.write_date)
             for im in t.product_template_image_ids]
         out['variant_ids'] = [{
             'id': v.id,
@@ -113,6 +117,12 @@ class VendorProductsAPI(http.Controller):
             domain += [('active', '=', False)]
         if search:
             domain += [('name', 'ilike', search)]
+        try:
+            category_id = int(p.get('category_id') or 0)
+        except (TypeError, ValueError):
+            category_id = 0
+        if category_id:
+            domain += [('public_categ_ids', 'child_of', category_id)]
         Tmpl = request.env['product.template'].sudo()
         if state == 'archived':
             Tmpl = Tmpl.with_context(active_test=False)
@@ -123,6 +133,45 @@ class VendorProductsAPI(http.Controller):
             'page': page, 'per_page': per_page, 'total': total,
             'pages': (total + per_page - 1) // per_page,
         })
+
+    @http.route('/api/vendor/v1/shop/meta', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def shop_meta(self, **kw):
+        """Storefront meta for the Shop tab: the categories present in the
+        vendor's LIVE catalogue (with counts) + active promotions to show as a
+        block on the same page."""
+        v = current_vendor()
+        Tmpl = request.env['product.template'].sudo()
+        live = Tmpl.search([('vendor_id', '=', v.id),
+                            ('vendor_approval_state', '=', 'approved'),
+                            ('is_published', '=', True)])
+        counts = {}
+        for t in live:
+            categ = t.public_categ_ids[:1]
+            if categ:
+                c = categ.id
+                counts.setdefault(c, {'categ': categ, 'n': 0})
+                counts[c]['n'] += 1
+        cats = [{'id': d['categ'].id, 'name': bilingual(d['categ'], 'name'), 'count': d['n']}
+                for d in sorted(counts.values(), key=lambda x: -x['n'])]
+        promos = []
+        try:
+            sales = request.env['uellow.flash.sale'].sudo().search(
+                [('vendor_id', '=', v.id), ('state', '=', 'active')],
+                order='end_datetime asc', limit=10)
+            for s in sales:
+                promos.append({
+                    'id': s.id,
+                    'name': {'en': s.name or '', 'ar': s.name_ar or s.name or ''},
+                    'discount_pct': s.discount_pct,
+                    'remaining_seconds': s.remaining_seconds,
+                    'product_count': len(s.product_ids),
+                })
+        except Exception:
+            promos = []
+        return ok({'categories': cats, 'promotions': promos, 'total_live': len(live)})
 
     @http.route('/api/vendor/v1/products/by-barcode', type='http',
                 auth='public', methods=['GET', 'OPTIONS'], csrf=False)

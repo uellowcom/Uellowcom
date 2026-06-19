@@ -165,17 +165,36 @@ class VendorOrdersAPI(http.Controller):
         the whole company's warehouse list."""
         v = current_vendor()
         Wh = request.env['stock.warehouse'].sudo()
-        whs = Wh.browse()
+        vtype = v.vendor_type or 'seller'
+        store = v.partner_id.name or 'My store'
         loc = v.fbu_location_id.location_id if v.fbu_location_id else False
         if loc:
+            # FBU / consignment: their own sub-warehouse inside Yellow.
             whs = (Wh.search([('lot_stock_id', 'parent_of', loc.id)], limit=1)
                    or Wh.search([('view_location_id', 'parent_of', loc.id)], limit=1))
-        if not whs:
-            # Fallback: the vendor's company default warehouse only.
-            whs = Wh.search([('company_id', '=', request.env.company.id)], limit=1)
-        return ok([{'id': w.id, 'name': w.name, 'code': w.code or '',
-                    'location': (loc.complete_name if loc else (w.lot_stock_id.complete_name or ''))}
-                   for w in whs])
+            wh = whs[:1]
+            return ok([{
+                'id': wh.id if wh else 0,
+                'name': loc.name or (wh.name if wh else store),
+                'code': wh.code if wh else '',
+                'location': loc.complete_name,
+                'own': True,
+                'note': {'en': 'Your stock held at Yellow',
+                         'ar': 'مخزونك المحفوظ لدى يلو'},
+            }])
+        # Seller / dropshipper: stock is the vendor's own — present one clearly
+        # labelled "own" source rather than the company's warehouse list.
+        wh = Wh.search([('company_id', '=', request.env.company.id)], limit=1)
+        return ok([{
+            'id': wh.id if wh else 0,
+            'name': '%s — %s' % (store, 'مخزن التاجر' if False else 'Own stock'),
+            'code': wh.code if wh else '',
+            'location': store,
+            'own': True,
+            'is_seller': vtype in ('seller', 'dropshipper', 'hybrid'),
+            'note': {'en': 'Source is your own stock',
+                     'ar': 'المصدر هو مخزن التاجر'},
+        }])
 
     @http.route('/api/vendor/v1/quicksale', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)
@@ -423,8 +442,13 @@ class VendorOrdersAPI(http.Controller):
         picks = o.picking_ids.filtered(lambda p: p.state != 'cancel')
         try:
             if picks:
-                url = _pdf_attachment_url('stock.report_deliveryslip', picks[0].id,
-                                          'label-%s.pdf' % o.name)
+                # Use the dedicated Delivery Label report (delivery_label module),
+                # the same label printed from the picking, with graceful fallback.
+                report = 'delivery_label.report_delivery_label'
+                if not request.env.ref('delivery_label.action_report_delivery_label',
+                                       raise_if_not_found=False):
+                    report = 'stock.report_deliveryslip'
+                url = _pdf_attachment_url(report, picks[0].id, 'label-%s.pdf' % o.name)
             else:
                 url = _pdf_attachment_url('sale.report_saleorder', o.id,
                                           'order-%s.pdf' % o.name)

@@ -161,13 +161,26 @@ class VendorAnalyticsAPI(http.Controller):
             m = fmt_price(amount, cur)
             return '%s %s' % (m['amount'], m['symbol'])
 
+        _ostate = {'draft': 'Draft', 'sent': 'Quotation', 'sale': 'Confirmed',
+                   'done': 'Done', 'cancel': 'Cancelled'}
+
         def order_rows(recs):
-            return [{
-                'id': o.id, 'kind': 'order',
-                'title': o.name,
-                'subtitle': o.partner_id.name or '',
-                'trailing': fmt_price(o.amount_total, o.currency_id),
-            } for o in recs]
+            out = []
+            for o in recs:
+                d = (o.date_order or o.create_date)
+                day = d.strftime('%Y-%m-%d') if d else ''
+                items = int(sum(o.order_line.filtered(
+                    lambda l: not l.display_type).mapped('product_uom_qty')))
+                out.append({
+                    'id': o.id, 'kind': 'order',
+                    # Customer-first reads far better than a bare order code.
+                    'title': o.partner_id.name or o.name,
+                    'subtitle': '%s · %s · %d %s' % (
+                        o.name, day, items, 'items'),
+                    'trailing': money_text(o.amount_total),
+                    'badge': _ostate.get(o.state, o.state),
+                })
+            return out
 
         def product_rows(recs):
             return [{
