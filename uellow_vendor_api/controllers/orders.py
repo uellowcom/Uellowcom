@@ -155,13 +155,26 @@ class VendorOrdersAPI(http.Controller):
             'pages': (total + per_page - 1) // per_page,
         })
 
+    @http.route('/api/vendor/v1/warehouses', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def warehouses(self, **kw):
+        """Source warehouses the vendor can pull quick-sale stock from."""
+        current_vendor()
+        whs = request.env['stock.warehouse'].sudo().search([], order='id')
+        return ok([{'id': w.id, 'name': w.name, 'code': w.code or ''} for w in whs])
+
     @http.route('/api/vendor/v1/quicksale', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)
     @safe_endpoint
     @require_auth
     def quick_sale(self, **kw):
-        """Counter / quick sale: build a confirmed sale order from the vendor's
-        own products. Body: {lines:[{product_id,qty}], customer_name?, customer_phone?}."""
+        """Counter / quick sale. Captures the full customer address, a source
+        warehouse and a delivery date, then files the order in DRAFT, on hold
+        pending Uellow approval (it is NOT auto-confirmed). Body:
+        {lines:[{product_id,qty}], customer:{name,phone,street,street2,city},
+         warehouse_id?, delivery_date?, note?}."""
         v = current_vendor()
         if not v.cap('quick_sale'):
             return fail('FORBIDDEN', 'Quick sales are disabled for your account.', 403, capability='quick_sale')
@@ -169,14 +182,31 @@ class VendorOrdersAPI(http.Controller):
         lines = p.get('lines') or []
         if not lines:
             return fail('NO_LINES', 'lines required')
+        cust = p.get('customer') or {}
+        name = (cust.get('name') or p.get('customer_name') or '').strip() or 'Walk-in customer'
+        phone = (cust.get('phone') or p.get('customer_phone') or '').strip()
+        if not phone:
+            return fail('NO_PHONE', 'Customer phone is required')
         Partner = request.env['res.partner'].sudo()
-        phone = (p.get('customer_phone') or '').strip()
-        name = (p.get('customer_name') or '').strip() or 'Walk-in customer'
-        partner = False
-        if phone:
-            partner = Partner.search(['|', ('phone', '=', phone), ('mobile', '=', phone)], limit=1)
+        partner = Partner.search(['|', ('phone', '=', phone), ('mobile', '=', phone)], limit=1)
+        addr_vals = {
+            'name': name, 'phone': phone,
+            'street': (cust.get('street') or '').strip() or False,
+            'street2': (cust.get('street2') or '').strip() or False,
+            'city': (cust.get('city') or '').strip() or False,
+        }
+        if cust.get('country_id'):
+            try:
+                addr_vals['country_id'] = int(cust['country_id'])
+            except (TypeError, ValueError):
+                pass
+        elif v.country_id:
+            addr_vals['country_id'] = v.country_id.id
         if not partner:
-            partner = Partner.create({'name': name, 'phone': phone or False})
+            partner = Partner.create(addr_vals)
+        else:
+            # keep address fresh on the existing customer
+            partner.write({k: val for k, val in addr_vals.items() if val})
         order_lines = []
         for ln in lines:
             try:
@@ -191,15 +221,55 @@ class VendorOrdersAPI(http.Controller):
             order_lines.append((0, 0, {'product_id': variant.id, 'product_uom_qty': qty}))
         if not order_lines:
             return fail('NO_VALID_LINES', 'No valid product lines')
-        order = request.env['sale.order'].sudo().create({
+        vals = {
             'partner_id': partner.id,
             'vendor_id': v.id,
             'origin': 'Vendor quick sale',
-        })
+            'is_quick_sale': True,
+            'note': (p.get('note') or '').strip(),
+        }
+        if p.get('warehouse_id'):
+            try:
+                vals['warehouse_id'] = int(p['warehouse_id'])
+            except (TypeError, ValueError):
+                pass
+        if p.get('delivery_date'):
+            vals['commitment_date'] = p['delivery_date']
+        order = request.env['sale.order'].sudo().create(vals)
         order.write({'order_line': order_lines})
-        order.action_confirm()
+        # Held in DRAFT pending Uellow approval — do NOT auto-confirm.
+        order.message_post(body='Vendor quick sale submitted — awaiting Uellow approval')
+        request.env.cr.commit()
         return ok({'id': order.id, 'name': order.name, 'state': order.state,
+                   'pending_approval': True,
                    'amount': fmt_price(order.amount_total, order.currency_id)})
+
+    @http.route('/api/vendor/v1/quicksale/list', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def quick_sale_list(self, **kw):
+        """History log of the vendor's quick sales."""
+        v = current_vendor()
+        rows = request.env['sale.order'].sudo().search(
+            [('vendor_id', '=', v.id), ('is_quick_sale', '=', True)],
+            order='id desc', limit=100)
+        out = []
+        for o in rows:
+            approved = o.state in ('sale', 'done')
+            out.append({
+                'id': o.id, 'name': o.name, 'state': o.state,
+                'state_label': _state_label(o.state),
+                'approved': approved,
+                'pending': o.state in ('draft', 'sent'),
+                'customer': o.partner_id.name,
+                'city': (o.partner_shipping_id or o.partner_id).city or '',
+                'amount': fmt_price(o.amount_total, o.currency_id),
+                'delivery_date': o.commitment_date.isoformat() if o.commitment_date else '',
+                'when': (o.date_order or o.create_date).isoformat()
+                        if (o.date_order or o.create_date) else '',
+            })
+        return ok(out)
 
     @http.route('/api/vendor/v1/orders/hub', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)

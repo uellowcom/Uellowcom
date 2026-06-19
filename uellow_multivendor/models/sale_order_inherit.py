@@ -15,6 +15,10 @@ class SaleOrder(models.Model):
     vendor_ready_for_pickup = fields.Boolean(
         'Ready for Uellow Pickup', copy=False,
         help='Seller has prepared the order and it is ready for Uellow to collect.')
+    is_quick_sale = fields.Boolean(
+        'Vendor Quick Sale', copy=False, index=True,
+        help='Created by a vendor via the app counter/quick-sale flow. Held in '
+             'draft pending Uellow approval before fulfilment.')
     commission_id = fields.Many2one(
         'uellow.vendor.commission', string='Commission',
         readonly=True, copy=False,
