@@ -33,15 +33,24 @@ class VendorDashboardAPI(http.Controller):
             return sum(o.amount_total for o in confirmed
                         if (o.date_order or o.create_date) >= start)
 
-        # Orders by status (using uellow_status or fallback)
-        pending = Order.search_count([('vendor_id', '=', v.id),
-            ('state', '=', 'draft')])
-        new_count = Order.search_count([('vendor_id', '=', v.id),
-            ('state', '=', 'sent')])
-        confirmed_count = Order.search_count([('vendor_id', '=', v.id),
-            ('state', 'in', ('sale', 'done')), ('invoice_status', '!=', 'invoiced')])
-        completed_count = Order.search_count([('vendor_id', '=', v.id),
-            ('state', 'in', ('sale', 'done')), ('invoice_status', '=', 'invoiced')])
+        # Orders by FULFILLMENT status — website/app orders land directly in
+        # 'sale' (never 'sent'/'invoiced'), so counting by raw state showed
+        # "0 new / 0 done" while 100s of real orders sat invisible. Bucket the
+        # same way the order hub does: needs-action → shipped → delivered.
+        quotations = Order.search([('vendor_id', '=', v.id),
+            ('state', 'in', ('draft', 'sent'))])
+        active = Order.search([('vendor_id', '=', v.id),
+            ('state', 'in', ('sale', 'done'))])
+        shipped = active.filtered(lambda o: o._vendor_is_shipped())
+        delivered = active.filtered(lambda o: o.invoice_status == 'invoiced')
+        awaiting = active - shipped  # confirmed but not yet handed to delivery
+        pending = len(quotations)
+        # "New" = orders the vendor must still fulfil (quotations + awaiting ship)
+        new_count = len(quotations) + len(awaiting)
+        # "Active" = handed to delivery but not yet completed
+        confirmed_count = len(shipped - delivered)
+        # "Done" = delivered/invoiced
+        completed_count = len(delivered)
         cancelled_count = Order.search_count([('vendor_id', '=', v.id),
             ('state', '=', 'cancel')])
 

@@ -169,6 +169,7 @@ class UellowVendor(models.Model):
     cap_import_products  = fields.Boolean(related='settings_id.cap_import_products',  readonly=False)
     cap_manage_orders    = fields.Boolean(related='settings_id.cap_manage_orders',    readonly=False)
     cap_cancel_orders    = fields.Boolean(related='settings_id.cap_cancel_orders',    readonly=False)
+    cap_accept_orders    = fields.Boolean(related='settings_id.cap_accept_orders',    readonly=False)
     cap_restock          = fields.Boolean(related='settings_id.cap_restock',          readonly=False)
     cap_edit_store       = fields.Boolean(related='settings_id.cap_edit_store',       readonly=False)
     cap_request_payout   = fields.Boolean(related='settings_id.cap_request_payout',   readonly=False)

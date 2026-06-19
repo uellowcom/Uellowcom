@@ -19,6 +19,7 @@ _OPEN_STATES = ('sent', 'received', 'applied')
 def _line(ln):
     return {
         'id': ln.id,
+        'line_id': ln.id,
         'product_id': ln.product_tmpl_id.id,
         'name': bilingual(ln.product_tmpl_id, 'name'),
         'sku': ln.default_code or '',

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Vendor orders — /api/vendor/v1/orders*"""
+import base64
 from datetime import datetime
 
 from odoo import http, fields
@@ -9,6 +10,24 @@ from ._common import (
     safe_endpoint, get_payload, ok, fail, require_auth,
     current_vendor, fmt_price, bilingual, img_url,
 )
+
+
+def _pdf_attachment_url(report_ref, res_id, filename):
+    """Render a QWeb report to a PDF, stash it as an access-token attachment,
+    and return a public download URL the app can open without a session."""
+    pdf, _ = request.env['ir.actions.report'].sudo()._render_qweb_pdf(report_ref, [res_id])
+    att = request.env['ir.attachment'].sudo().create({
+        'name': filename,
+        'type': 'binary',
+        'datas': base64.b64encode(pdf),
+        'mimetype': 'application/pdf',
+        'res_model': 'sale.order',
+        'res_id': res_id,
+    })
+    att.generate_access_token()
+    base = request.httprequest.host_url.rstrip('/')
+    return '%s/web/content/%s?access_token=%s&download=true&filename=%s' % (
+        base, att.id, att.access_token, filename)
 
 
 def _state_label(s):
@@ -22,19 +41,31 @@ def _state_label(s):
 
 
 def _ser_order(o, detail=False):
+    vendor = o.vendor_id
+    vtype = vendor.vendor_type or 'seller'
+    # FBU / consignment: stock & fulfilment owned by Uellow → minimal customer
+    # privacy and NO vendor order controls.
+    minimal = vtype in ('fbu', 'consignment')
+    ship = o.partner_shipping_id or o.partner_id
+    cust = {
+        'id': o.partner_id.id,
+        'name': o.partner_id.name,
+        'city': ship.city or '',
+        'country': ship.country_id.name if ship.country_id else '',
+    }
+    if not minimal:
+        cust['phone'] = o.partner_id.phone or o.partner_id.mobile or ''
+        cust['email'] = o.partner_id.email or ''
     out = {
         'id': o.id,
         'name': o.name,
         'state': o.state,
         'state_label': _state_label(o.state),
+        'vendor_type': vtype,
+        'minimal': minimal,
         'when': (o.date_order or o.create_date).isoformat()
                 if (o.date_order or o.create_date) else '',
-        'customer': {
-            'id': o.partner_id.id,
-            'name': o.partner_id.name,
-            'phone': o.partner_id.phone or o.partner_id.mobile or '',
-            'email': o.partner_id.email or '',
-        },
+        'customer': cust,
         'amount': fmt_price(o.amount_total, o.currency_id),
         'subtotal': fmt_price(o.amount_untaxed, o.currency_id),
         'shipping': fmt_price(o.amount_delivery or 0, o.currency_id),
@@ -42,14 +73,36 @@ def _ser_order(o, detail=False):
         'invoice_status': o.invoice_status,
         'sla_state': o.vendor_sla_state,
         'fulfill_due': o.vendor_fulfill_due.isoformat() if o.vendor_fulfill_due else '',
+        'tracking': o._vendor_tracking(),
     }
     if detail:
-        ship = o.partner_shipping_id or o.partner_id
-        out['shipping_address'] = {
-            'name': ship.name, 'phone': ship.phone or ship.mobile or '',
-            'street': ship.street or '', 'street2': ship.street2 or '',
-            'city': ship.city or '', 'country': ship.country_id.name if ship.country_id else '',
+        ready = bool(o.vendor_ready_for_pickup)
+        shipped = o._vendor_is_shipped()
+        # What the vendor may DO with this order, by type + capability.
+        out['actions'] = {
+            'full_control':      not minimal,
+            'can_accept':        (not minimal) and vendor.cap('accept_orders')
+                                 and o.state in ('draft', 'sent'),
+            'can_reject':        (not minimal) and vendor.cap('cancel_orders')
+                                 and o.state != 'cancel' and not shipped,
+            'can_prepare':       (not minimal) and o.state in ('sale', 'done')
+                                 and not ready and not shipped,
+            'ready_for_pickup':  ready,
+            'can_print_label':   (not minimal) and o.state in ('sale', 'done'),
+            'can_print_invoice': (not minimal) and o.state in ('sale', 'done'),
         }
+        if minimal:
+            # FBU vendors see only name + city + country (already in `customer`).
+            out['shipping_address'] = {
+                'city': ship.city or '',
+                'country': ship.country_id.name if ship.country_id else '',
+            }
+        else:
+            out['shipping_address'] = {
+                'name': ship.name, 'phone': ship.phone or ship.mobile or '',
+                'street': ship.street or '', 'street2': ship.street2 or '',
+                'city': ship.city or '', 'country': ship.country_id.name if ship.country_id else '',
+            }
         out['items'] = []
         for l in o.order_line.filtered(lambda l: not l.display_type):
             p = l.product_id
@@ -241,12 +294,83 @@ class VendorOrdersAPI(http.Controller):
     @require_auth
     def confirm(self, order_id, **kw):
         v = current_vendor()
+        if not v.cap('accept_orders'):
+            return fail('FORBIDDEN', 'Accepting orders is disabled for your account.', 403, capability='accept_orders')
         o = request.env['sale.order'].sudo().browse(order_id)
         if not o.exists() or o.vendor_id.id != v.id:
             return fail('NOT_FOUND', 'Order not found', 404)
         if o.state in ('draft', 'sent'):
             o.action_confirm()
         return ok({'state': o.state})
+
+    @http.route('/api/vendor/v1/orders/<int:order_id>/prepare', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def prepare(self, order_id, **kw):
+        """Seller marks the order packed & ready for Uellow to collect. Assigns
+        pickings (reserve stock) and flags ready_for_pickup."""
+        v = current_vendor()
+        if not v.cap('manage_orders'):
+            return fail('FORBIDDEN', 'Managing orders is disabled for your account.', 403, capability='manage_orders')
+        o = request.env['sale.order'].sudo().browse(order_id)
+        if not o.exists() or o.vendor_id.id != v.id:
+            return fail('NOT_FOUND', 'Order not found', 404)
+        if o.vendor_id.vendor_type in ('fbu', 'consignment'):
+            return fail('NOT_ALLOWED', 'Uellow fulfils this order.', 403)
+        for pick in o.picking_ids.filtered(lambda p: p.state not in ('done', 'cancel')):
+            try:
+                pick.action_assign()
+            except Exception:
+                pass
+        o.write({'vendor_ready_for_pickup': True})
+        o.message_post(body='Vendor marked order ready for Uellow pickup')
+        request.env.cr.commit()
+        return ok({'ready_for_pickup': True, 'tracking': o._vendor_tracking()})
+
+    @http.route('/api/vendor/v1/orders/<int:order_id>/label', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def label(self, order_id, **kw):
+        """Packing / delivery label PDF (download URL)."""
+        v = current_vendor()
+        o = request.env['sale.order'].sudo().browse(order_id)
+        if not o.exists() or o.vendor_id.id != v.id:
+            return fail('NOT_FOUND', 'Order not found', 404)
+        picks = o.picking_ids.filtered(lambda p: p.state != 'cancel')
+        try:
+            if picks:
+                url = _pdf_attachment_url('stock.report_deliveryslip', picks[0].id,
+                                          'label-%s.pdf' % o.name)
+            else:
+                url = _pdf_attachment_url('sale.report_saleorder', o.id,
+                                          'order-%s.pdf' % o.name)
+        except Exception as e:
+            return fail('REPORT_ERROR', str(e), 500)
+        return ok({'url': url})
+
+    @http.route('/api/vendor/v1/orders/<int:order_id>/invoice', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def invoice(self, order_id, **kw):
+        """Invoice PDF if invoiced, else the order confirmation PDF."""
+        v = current_vendor()
+        o = request.env['sale.order'].sudo().browse(order_id)
+        if not o.exists() or o.vendor_id.id != v.id:
+            return fail('NOT_FOUND', 'Order not found', 404)
+        try:
+            inv = o.invoice_ids.filtered(lambda i: i.state == 'posted')[:1]
+            if inv:
+                url = _pdf_attachment_url('account.report_invoice', inv.id,
+                                          'invoice-%s.pdf' % o.name)
+            else:
+                url = _pdf_attachment_url('sale.report_saleorder', o.id,
+                                          'order-%s.pdf' % o.name)
+        except Exception as e:
+            return fail('REPORT_ERROR', str(e), 500)
+        return ok({'url': url})
 
     @http.route('/api/vendor/v1/orders/<int:order_id>/cancel', type='http',
                 auth='public', methods=['POST', 'OPTIONS'], csrf=False)

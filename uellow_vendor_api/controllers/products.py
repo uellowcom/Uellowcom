@@ -25,8 +25,14 @@ def _ser_tmpl(t, detail=False):
         'is_published': bool(t.is_published),
         'qty_available': float(t.qty_available or 0),
         'approval_state': t.vendor_approval_state or 'draft',
-        'image_url': img_url('product.template', t.id, 'image_256',
-                             unique=t.write_date) if t.image_1920 else None,
+        # Main template image, falling back to the first gallery image so the
+        # card never shows blank when a product only has gallery images.
+        'image_url': (
+            img_url('product.template', t.id, 'image_256', unique=t.write_date)
+            if t.image_256 else (
+                img_url('product.image', t.product_template_image_ids[0].id,
+                        'image_256', unique=t.product_template_image_ids[0].write_date)
+                if t.product_template_image_ids else None)),
         'rejection_reason': t.vendor_rejection_reason or '',
         'sales_count': float(getattr(t, 'sales_count', 0) or 0),
         'active': bool(t.active),

@@ -209,7 +209,8 @@ class VendorAdminAPI(http.Controller):
     CAP_KEYS = ['add_products', 'edit_products', 'archive_products', 'update_stock',
                 'publish_products', 'manage_price', 'flash_sale', 'bundles',
                 'join_promotions', 'import_products', 'manage_orders',
-                'cancel_orders', 'restock', 'edit_store', 'request_payout']
+                'cancel_orders', 'accept_orders', 'restock', 'edit_store',
+                'request_payout', 'api', 'live', 'quick_sale']
 
     @http.route('/api/vendor/v1/admin/vendors/<int:vid>', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)

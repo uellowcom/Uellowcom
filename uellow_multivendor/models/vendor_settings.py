@@ -43,11 +43,15 @@ class VendorSettings(models.Model):
             t = s.vendor_type
             if t in ('fbu', 'consignment'):
                 # Stock physically at Uellow → vendor can't set stock directly,
-                # requests restock instead; never sees the end customer.
+                # requests restock instead; never sees the end customer, and has
+                # NO order control — Uellow fulfils everything.
                 s.cap_update_stock = False
                 s.cap_restock = True
                 s.vendor_sees_customer = False
                 s.vendor_can_message = False
+                s.cap_accept_orders = False
+                s.cap_manage_orders = False
+                s.cap_cancel_orders = False
                 if t == 'consignment':
                     s.settle_trigger = 'deliver'
             elif t == 'seller':
@@ -55,12 +59,18 @@ class VendorSettings(models.Model):
                 s.cap_update_stock = True
                 s.vendor_sees_customer = False
                 s.invoice_name = 'vendor'
+                s.cap_accept_orders = True
+                s.cap_manage_orders = True
             elif t == 'dropshipper':
                 # Own stock and self-delivery → needs the customer address.
                 s.cap_update_stock = True
                 s.vendor_sees_customer = True
+                s.cap_accept_orders = True
+                s.cap_manage_orders = True
             elif t == 'hybrid':
                 s.cap_update_stock = True
+                s.cap_accept_orders = True
+                s.cap_manage_orders = True
 
     @api.onchange('vendor_type')
     def _onchange_vendor_type(self):
@@ -107,6 +117,9 @@ class VendorSettings(models.Model):
     cap_import_products  = fields.Boolean('Can Import Products (file/URL)', default=True)
     cap_manage_orders    = fields.Boolean('Can Manage Orders (confirm/ship)', default=True)
     cap_cancel_orders    = fields.Boolean('Can Cancel Orders', default=True)
+    cap_accept_orders    = fields.Boolean('Can Accept / Reject Orders', default=True,
+        help='Vendor may accept or reject incoming orders. FBU/consignment '
+             'vendors are usually off — Uellow controls fulfilment fully.')
     cap_restock          = fields.Boolean('Can Request Restock / Withdraw', default=True)
     cap_edit_store       = fields.Boolean('Can Edit Store Page & Style', default=True)
     cap_request_payout   = fields.Boolean('Can Request Payout', default=True)
@@ -141,8 +154,8 @@ class VendorSettings(models.Model):
                 'cap_update_stock', 'cap_publish_products', 'cap_manage_price',
                 'cap_flash_sale', 'cap_bundles', 'cap_join_promotions',
                 'cap_import_products', 'cap_manage_orders', 'cap_cancel_orders',
-                'cap_restock', 'cap_edit_store', 'cap_request_payout', 'cap_api',
-                'cap_live', 'cap_quick_sale']
+                'cap_accept_orders', 'cap_restock', 'cap_edit_store',
+                'cap_request_payout', 'cap_api', 'cap_live', 'cap_quick_sale']
         p = self.capability_preset
         if p == 'full':
             for c in caps:

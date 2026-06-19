@@ -12,6 +12,9 @@ class SaleOrder(models.Model):
         index=True, ondelete='set null',
     )
     vendor_rating = fields.Float('Vendor Rating', default=0.0)
+    vendor_ready_for_pickup = fields.Boolean(
+        'Ready for Uellow Pickup', copy=False,
+        help='Seller has prepared the order and it is ready for Uellow to collect.')
     commission_id = fields.Many2one(
         'uellow.vendor.commission', string='Commission',
         readonly=True, copy=False,
@@ -47,6 +50,55 @@ class SaleOrder(models.Model):
         self.ensure_one()
         picks = self.picking_ids.filtered(lambda p: p.state != 'cancel')
         return bool(picks) and all(p.state == 'done' for p in picks)
+
+    def _vendor_tracking(self):
+        """A customer-style fulfilment timeline the vendor (and FBU vendors who
+        have no controls) can watch. Driven by sale.order.delivery_status from
+        the delivery module, falling back to order state when absent."""
+        self.ensure_one()
+        ds = getattr(self, 'delivery_status', False) or 'pending'
+        ready = bool(self.vendor_ready_for_pickup) or ds not in ('pending', False)
+        failed = ds in ('failed', 'failed_returned')
+        # Map delivery_status → step index (0..3).
+        if self.state == 'cancel':
+            cur = -1
+        elif ds == 'delivered':
+            cur = 3
+        elif ds in ('picked_up', 'arrived_sorting', 'assigned',
+                    'accepted', 'out_for_delivery'):
+            cur = 2
+        elif ready:
+            cur = 1
+        elif self.state in ('sale', 'done'):
+            cur = 0
+        else:
+            cur = 0
+        # Driver name (best-effort; delivery module may be absent).
+        driver = ''
+        try:
+            line = self.env['delivery.trip.line'].sudo().search(
+                [('sale_order_id', '=', self.id)], limit=1)
+            if line and line.trip_id and line.trip_id.driver_id:
+                driver = line.trip_id.driver_id.name
+        except Exception:
+            pass
+        steps = [
+            {'key': 'confirmed', 'en': 'Confirmed',   'ar': 'تم التأكيد'},
+            {'key': 'ready',     'en': 'Prepared',    'ar': 'تم التجهيز'},
+            {'key': 'transit',   'en': 'In delivery', 'ar': 'قيد التوصيل'},
+            {'key': 'delivered', 'en': 'Delivered',   'ar': 'تم التسليم'},
+        ]
+        for i, s in enumerate(steps):
+            s['done'] = (cur >= i) if cur >= 0 else False
+            s['current'] = (cur == i)
+        return {
+            'cancelled': self.state == 'cancel',
+            'failed': failed,
+            'current': cur,
+            'driver': driver,
+            'delivery_status': ds,
+            'steps': steps,
+        }
 
     @api.depends('vendor_id', 'date_order', 'state', 'picking_ids.state')
     def _compute_vendor_sla(self):

@@ -148,6 +148,7 @@
                   <field name="cap_join_promotions"/>
                   <field name="cap_manage_orders"/>
                   <field name="cap_cancel_orders"/>
+                  <field name="cap_accept_orders"/>
                   <field name="cap_restock"/>
                   <field name="cap_edit_store"/>
                 </group>
