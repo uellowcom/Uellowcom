@@ -20,10 +20,30 @@ REASONS = [
 ]
 
 
+_AD_FORMATS = {
+    'product_boost': {'en': 'Product boost', 'ar': 'إبراز منتج'},
+    'banner':        {'en': 'Banner ad',     'ar': 'إعلان بانر'},
+    'infeed':        {'en': 'In-feed card',  'ar': 'بطاقة ضمن القائمة'},
+}
+_AD_PLACEMENTS = {
+    'home':     {'en': 'Home',     'ar': 'الرئيسية'},
+    'category': {'en': 'Category', 'ar': 'القسم'},
+    'search':   {'en': 'Search',   'ar': 'البحث'},
+    'all':      {'en': 'Everywhere', 'ar': 'كل الأماكن'},
+}
+
+
 def _ser_ad(c):
     return {
-        'id': c.id, 'name': c.name, 'product_id': c.product_tmpl_id.id,
-        'product': c.product_tmpl_id.name,
+        'id': c.id, 'name': c.name,
+        'product_id': c.product_tmpl_id.id if c.product_tmpl_id else 0,
+        'product': c.product_tmpl_id.name if c.product_tmpl_id else '',
+        'ad_format': c.ad_format,
+        'ad_format_label': _AD_FORMATS.get(c.ad_format, {'en': c.ad_format, 'ar': c.ad_format}),
+        'placement': c.placement,
+        'placement_label': _AD_PLACEMENTS.get(c.placement, {'en': c.placement, 'ar': c.placement}),
+        'headline': c.headline or '',
+        'has_banner': bool(c.banner_image),
         'start': c.start_date.isoformat() if c.start_date else '',
         'end': c.end_date.isoformat() if c.end_date else '',
         'days': c.days, 'daily_rate': c.daily_rate, 'total_cost': c.total_cost,
@@ -84,13 +104,19 @@ class VendorMarketingController(http.Controller):
     def create_ad(self, **kw):
         v = current_vendor()
         p = get_payload()
-        try:
-            pid = int(p.get('product_id'))
-        except (TypeError, ValueError):
-            return fail('BAD_PRODUCT', 'product_id required')
-        t = request.env['product.template'].sudo().browse(pid)
-        if not t.exists() or t.vendor_id.id != v.id:
-            return fail('NOT_FOUND', 'Product not found', 404)
+        ad_format = p.get('ad_format') if p.get('ad_format') in _AD_FORMATS else 'product_boost'
+        placement = p.get('placement') if p.get('placement') in _AD_PLACEMENTS else 'home'
+        # Product is required for product_boost; optional for banner/infeed.
+        t = None
+        if p.get('product_id'):
+            try:
+                t = request.env['product.template'].sudo().browse(int(p['product_id']))
+            except (TypeError, ValueError):
+                t = None
+            if not t or not t.exists() or t.vendor_id.id != v.id:
+                return fail('NOT_FOUND', 'Product not found', 404)
+        if ad_format == 'product_boost' and not t:
+            return fail('BAD_PRODUCT', 'product_id required for product boost')
         try:
             start = datetime.strptime(p.get('start'), '%Y-%m-%d').date()
             end = datetime.strptime(p.get('end'), '%Y-%m-%d').date()
@@ -98,17 +124,42 @@ class VendorMarketingController(http.Controller):
             return fail('BAD_DATE', 'start and end (YYYY-MM-DD) required')
         if end < start:
             return fail('BAD_RANGE', 'end must be on/after start')
-        camp = request.env['vendor.ad.campaign'].sudo().create({
-            'name': p.get('name') or ('Sponsored: %s' % t.name),
-            'vendor_id': v.id, 'product_tmpl_id': t.id,
+        vals = {
+            'name': p.get('name') or ('Sponsored: %s' % (t.name if t else ad_format)),
+            'vendor_id': v.id,
+            'product_tmpl_id': t.id if t else False,
+            'ad_format': ad_format, 'placement': placement,
+            'headline': (p.get('headline') or '').strip(),
             'start_date': start, 'end_date': end,
-        })
+        }
+        if p.get('banner_base64'):
+            try:
+                vals['banner_image'] = p['banner_base64'].split(',', 1)[-1]
+            except Exception:
+                pass
+        if ad_format in ('banner', 'infeed') and not (vals.get('banner_image') or t):
+            return fail('NO_CREATIVE', 'Add a banner image or pick a product.')
+        camp = request.env['vendor.ad.campaign'].sudo().create(vals)
         try:
             camp.action_activate()
         except Exception as e:
             camp.unlink()
             return fail('CHARGE_FAILED', str(e))
         return ok(_ser_ad(camp))
+
+    @http.route('/api/vendor/v1/ads/quote', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def ad_quote(self, **kw):
+        """Daily rate per format so the app can preview cost before paying."""
+        current_vendor()
+        Camp = request.env['vendor.ad.campaign'].sudo()
+        rates = {}
+        for fmt in _AD_FORMATS:
+            rates[fmt] = Camp.new({'ad_format': fmt})._quote_rate()
+        return ok({'rates': rates, 'formats': [{'code': c, **lbl} for c, lbl in _AD_FORMATS.items()],
+                   'placements': [{'code': c, **lbl} for c, lbl in _AD_PLACEMENTS.items()]})
 
     @http.route('/api/vendor/v1/ads/<int:cid>/cancel', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)
