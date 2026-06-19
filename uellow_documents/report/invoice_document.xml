@@ -12,8 +12,21 @@
                 <style>
                     @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
                     @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
-                    .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#1C1206; }
+                    .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#1C1206;
+                        -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
                     .udoc { font-size:12px; }
+                    /* Override Bootstrap's @media print reset (background:transparent / color:#000 !important). */
+                    .uaccent { background:#F5C320 !important; }
+                    .uco-name { color:#412402 !important; } .utitle { color:#412402 !important; } .utitle small { color:#8a7c66 !important; }
+                    .ucard { background:#FBF7EC !important; } .ucard .l { color:#caa008 !important; }
+                    .uitems th { background:#412402 !important; color:#fff !important; }
+                    .uitems tr.alt td { background:#fcfaf4 !important; }
+                    .upanel h4 { color:#caa008 !important; }
+                    .ugrand { background:#F5C320 !important; } .ugrand .t, .ugrand .a { color:#412402 !important; } .ugrand .t small { color:#5B3410 !important; }
+                    .ustamp { color:#1f9d55 !important; } .ustamp.due { color:#B91C1C !important; }
+                    .upaid { background:#eaf7ef !important; color:#176b3c !important; }
+                    .disc { color:#1f9d55 !important; }
+                    .ufoot { background:#412402 !important; } .ufoot td { color:#e9dcc4 !important; } .ufoot .th { color:#fff !important; } .ufoot b { color:#F5C320 !important; }
                     .uaccent { height:8px; background:#F5C320; }
                     .utbl { width:100%; border-collapse:collapse; table-layout:fixed; }
                     .ulogo { height:54px; max-width:150px; }
@@ -63,7 +76,7 @@
                 </style>
 
                 <div class="article udoc">
-                    <div class="uaccent"/>
+                    <div class="uaccent" style="height:8px !important;background-color:#F5C320 !important;"/>
                     <div style="padding:22px 26px;">
 
                         <table class="utbl"><tr>
@@ -93,7 +106,7 @@
                         </tr></table>
 
                         <table class="utbl" style="margin-top:18px;"><tr>
-                            <td class="ucard" style="width:49%;">
+                            <td class="ucard" style="width:49%;background-color:#FBF7EC !important;">
                                 <div class="l">Bill to <span>· فاتورة إلى</span></div>
                                 <div class="n" t-esc="o.partner_id.name"/>
                                 <div class="x">
@@ -103,7 +116,7 @@
                                 </div>
                             </td>
                             <td style="width:2%;"/>
-                            <td class="ucard" style="width:49%;">
+                            <td class="ucard" style="width:49%;background-color:#FBF7EC !important;">
                                 <div class="l">Ship to <span>· التوصيل إلى</span></div>
                                 <div class="n" t-esc="ship.name"/>
                                 <div class="x">
@@ -123,12 +136,12 @@
 
                         <table class="utbl uitems" style="margin-top:16px;border-radius:10px;overflow:hidden;">
                             <thead><tr>
-                                <th class="c" style="width:30px;">#</th>
-                                <th>Description · الوصف</th>
-                                <th class="c" style="width:46px;">Qty</th>
-                                <th class="r" style="width:90px;">Unit</th>
-                                <th class="r" style="width:56px;">Disc</th>
-                                <th class="r" style="width:96px;">Amount</th>
+                                <th class="c" style="width:30px;background-color:#412402 !important;color:#fff !important;">#</th>
+                                <th style="background-color:#412402 !important;color:#fff !important;">Description · الوصف</th>
+                                <th class="c" style="width:46px;background-color:#412402 !important;color:#fff !important;">Qty</th>
+                                <th class="r" style="width:90px;background-color:#412402 !important;color:#fff !important;">Unit</th>
+                                <th class="r" style="width:56px;background-color:#412402 !important;color:#fff !important;">Disc</th>
+                                <th class="r" style="width:96px;background-color:#412402 !important;color:#fff !important;">Amount</th>
                             </tr></thead>
                             <tbody>
                                 <t t-set="idx" t-value="0"/>
@@ -166,7 +179,7 @@
                                         </div>
                                     </td>
                                 </tr></table>
-                                <div t-if="paid" class="upaid">✓ Settled in full · تم الدفع بالكامل
+                                <div t-if="paid" class="upaid" style="background-color:#eaf7ef !important;">✓ Settled in full · تم الدفع بالكامل
                                     <t t-if="o.invoice_date"> — <span t-field="o.invoice_date"/></t></div>
                             </td>
                             <td style="width:3%;"/>
@@ -175,9 +188,9 @@
                                     <tr class="trow"><td>Subtotal · الفرعي</td><td class="v"><span t-field="o.amount_untaxed" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
                                     <tr class="trow"><td>Tax · الضريبة</td><td class="v"><span t-field="o.amount_tax" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
                                 </table>
-                                <table class="utbl ugrand" style="margin-top:8px;"><tr>
-                                    <td class="t">TOTAL<small>الإجمالي المستحق</small></td>
-                                    <td class="a"><span t-field="o.amount_total" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
+                                <table class="utbl ugrand" style="margin-top:8px;background-color:#F5C320 !important;"><tr>
+                                    <td class="t" style="color:#412402 !important;">TOTAL<small style="color:#5B3410 !important;">الإجمالي المستحق</small></td>
+                                    <td class="a" style="color:#412402 !important;"><span t-field="o.amount_total" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td>
                                 </tr></table>
                                 <div class="uwords"><t t-esc="o.currency_id.amount_to_text(o.amount_total)"/></div>
                             </td>
@@ -194,9 +207,9 @@
                             </td>
                         </tr></table>
 
-                        <table class="utbl ufoot" style="margin-top:14px;"><tr>
-                            <td class="th"><t t-esc="company.uellow_doc_footer"/></td>
-                            <td style="text-align:right;"><t t-esc="company.website or 'uellow.com'"/> · <b t-esc="company.phone"/></td>
+                        <table class="utbl ufoot" style="margin-top:14px;background-color:#412402 !important;"><tr>
+                            <td class="th" style="color:#fff !important;"><t t-esc="company.uellow_doc_footer"/></td>
+                            <td style="text-align:right;color:#e9dcc4 !important;"><t t-esc="company.website or 'uellow.com'"/> · <b style="color:#F5C320 !important;" t-esc="company.phone"/></td>
                         </tr></table>
 
                     </div>
@@ -209,9 +222,11 @@
     <record id="account.account_invoices" model="ir.actions.report">
         <field name="report_name">uellow_documents.uellow_invoice</field>
         <field name="report_file">uellow_documents.uellow_invoice</field>
+        <field name="paperformat_id" ref="uellow_documents.paperformat_uellow_doc"/>
     </record>
     <record id="account.account_invoices_without_payment" model="ir.actions.report">
         <field name="report_name">uellow_documents.uellow_invoice</field>
         <field name="report_file">uellow_documents.uellow_invoice</field>
+        <field name="paperformat_id" ref="uellow_documents.paperformat_uellow_doc"/>
     </record>
 </odoo>

@@ -363,7 +363,7 @@ class VendorParityAPI(http.Controller):
         try:
             from .orders import _pdf_attachment_url
             pdf, _t = request.env['ir.actions.report'].sudo()._render_qweb_pdf(
-                'purchase.report_purchaseorder', [r.purchase_order_id.id])
+                'uellow_documents.uellow_purchaseorder', [r.purchase_order_id.id])
             import base64 as _b64
             att = request.env['ir.attachment'].sudo().create({
                 'name': 'handover-%s.pdf' % r.name, 'type': 'binary',
