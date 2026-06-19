@@ -4,14 +4,17 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-set="company" t-value="o.company_id"/>
-                <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang or 'en_US')"/>
+                <t t-set="o" t-value="o.with_context(lang='en_US')"/>
                 <t t-set="confirmed" t-value="o.state in ('purchase', 'done')"/>
                 <style>
                     @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
                     @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
                     .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#1C1206;
-                        -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+                        -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; direction:ltr !important; unicode-bidi:isolate !important; }
                     .udoc { font-size:12px; }
+                    .ar { font-family:'Tajawal'; font-size:9px; font-weight:600; color:#8a7c66 !important; }
+                    .uitems th .ar { color:#f0e6d0 !important; }
+                    .ucard .l .ar { color:#8a7c66 !important; }
                     .uaccent { height:8px; background:#F5C320; }
                     .utbl { width:100%; border-collapse:collapse; table-layout:fixed; }
                     .ulogo { height:50px; max-width:150px; width:auto; }
@@ -46,7 +49,7 @@
                     .ufoot { background:#412402; border-radius:10px; } .ufoot td { padding:11px 14px; color:#e9dcc4; font-size:10px; }
                     .ufoot .th { font-weight:bold; color:#fff; font-size:12px; } .ufoot b { color:#F5C320; }
                 </style>
-                <div class="article udoc">
+                <div class="article udoc" dir="ltr">
                     <div class="uaccent" style="height:8px !important;background-color:#F5C320 !important;"/>
                     <div style="padding:22px 26px;">
                         <table class="utbl"><tr>
@@ -64,34 +67,34 @@
                                 <div class="utitle">PURCHASE ORDER<small>أمر شراء</small></div>
                                 <div class="uno">No. <b t-esc="o.name"/></div>
                                 <div t-attf-class="ustatus #{'' if confirmed else 'rfq'}" t-attf-style="background-color:#{'#eaf7ef' if confirmed else '#eaf0fe'} !important;color:#{'#1f9d55' if confirmed else '#2563EB'} !important;border-color:#{'#1f9d55' if confirmed else '#2563EB'} !important;">
-                                    <t t-if="confirmed">CONFIRMED · مؤكد</t><t t-else="">RFQ · طلب عرض سعر</t></div></td>
+                                    <t t-if="confirmed">CONFIRMED<br/><span class="ar">مؤكد</span></t><t t-else="">RFQ<br/><span class="ar">طلب عرض سعر</span></t></div></td>
                         </tr></table>
 
                         <table class="utbl" style="margin-top:18px;"><tr>
-                            <td class="ucard hi" style="background-color:#fff7df !important;width:32%;"><div class="l">Vendor <span>· المورّد</span></div>
+                            <td class="ucard hi" style="background-color:#fff7df !important;width:32%;"><div class="l">Vendor<br/><span class="ar">المورّد</span></div>
                                 <div class="n" t-esc="o.partner_id.name"/>
                                 <div class="x"><t t-if="o.partner_id.street"><span t-esc="o.partner_id.street"/><br/></t>
                                     <t t-if="o.partner_id.city"><span t-esc="o.partner_id.city"/><br/></t>
                                     <t t-if="o.partner_id.phone"><span t-esc="o.partner_id.phone"/></t></div></td>
                             <td style="width:2%;"/>
-                            <td class="ucard" style="background-color:#FBF7EC !important;width:32%;"><div class="l">Ship to <span>· التسليم إلى</span></div>
+                            <td class="ucard" style="background-color:#FBF7EC !important;width:32%;"><div class="l">Ship to<br/><span class="ar">التسليم إلى</span></div>
                                 <div class="n" t-esc="(o.picking_type_id.warehouse_id.name or company.name)"/>
                                 <div class="x"><span t-esc="company.street"/><br/><span t-esc="company.city"/></div></td>
                             <td style="width:2%;"/>
-                            <td class="ucard" style="background-color:#FBF7EC !important;width:32%;"><div class="l">Buyer <span>· المشتري</span></div>
+                            <td class="ucard" style="background-color:#FBF7EC !important;width:32%;"><div class="l">Buyer<br/><span class="ar">المشتري</span></div>
                                 <div class="n" t-esc="o.user_id.name or company.name"/>
                                 <div class="x"><span t-esc="company.email"/></div></td>
                         </tr></table>
 
                         <table class="utbl umeta" style="margin-top:12px;border-radius:10px;overflow:hidden;"><tr>
-                            <td style="width:25%;"><div class="k">Order date · التاريخ</div><div class="v" t-field="o.date_order"/></td>
-                            <td style="width:25%;"><div class="k">Expected · الوصول</div><div class="v"><span t-if="o.date_planned" t-field="o.date_planned"/><t t-else="">—</t></div></td>
-                            <td style="width:25%;"><div class="k">Payment · الدفع</div><div class="v"><t t-esc="o.payment_term_id.name or company.uellow_payment_terms_note"/></div></td>
-                            <td style="width:25%;"><div class="k">Currency · العملة</div><div class="v" t-esc="o.currency_id.name"/></td>
+                            <td style="width:25%;"><div class="k">Order date<br/><span class="ar">التاريخ</span></div><div class="v" t-field="o.date_order"/></td>
+                            <td style="width:25%;"><div class="k">Expected<br/><span class="ar">الوصول</span></div><div class="v"><span t-if="o.date_planned" t-field="o.date_planned"/><t t-else="">—</t></div></td>
+                            <td style="width:25%;"><div class="k">Payment<br/><span class="ar">الدفع</span></div><div class="v"><t t-esc="o.payment_term_id.name or company.uellow_payment_terms_note"/></div></td>
+                            <td style="width:25%;"><div class="k">Currency<br/><span class="ar">العملة</span></div><div class="v" t-esc="o.currency_id.name"/></td>
                         </tr></table>
 
                         <table class="utbl uitems" style="margin-top:16px;border-radius:10px;overflow:hidden;">
-                            <thead><tr><th class="c" style="background-color:#412402 !important;color:#fff !important;width:30px;">#</th><th style="background-color:#412402 !important;color:#fff !important;">Product · المنتج</th>
+                            <thead><tr><th class="c" style="background-color:#412402 !important;color:#fff !important;width:30px;">#</th><th style="background-color:#412402 !important;color:#fff !important;">Product<br/><span class="ar">المنتج</span></th>
                                 <th class="c" style="background-color:#412402 !important;color:#fff !important;width:50px;">Qty</th><th class="r" style="background-color:#412402 !important;color:#fff !important;width:96px;">Unit cost</th>
                                 <th class="r" style="background-color:#412402 !important;color:#fff !important;width:56px;">Tax</th><th class="r" style="background-color:#412402 !important;color:#fff !important;width:104px;">Subtotal</th></tr></thead>
                             <tbody>
@@ -113,17 +116,17 @@
 
                         <table class="utbl" style="margin-top:18px;"><tr>
                             <td style="width:55%;vertical-align:top;"><table class="utbl upanel">
-                                <tr><td colspan="2"><h4>Terms &amp; receiving · شروط الاستلام</h4></td></tr>
-                                <tr class="kv"><td>Delivery · التسليم</td><td class="v" t-esc="company.uellow_delivery_terms"/></tr>
-                                <tr class="kv"><td>Quality check · فحص الجودة</td><td class="v">On receipt · عند الاستلام</td></tr>
-                                <tr class="kv"><td>Warranty · الضمان</td><td class="v" t-esc="company.uellow_warranty_terms"/></tr>
+                                <tr><td colspan="2"><h4>Terms &amp; receiving<br/><span class="ar">شروط الاستلام</span></h4></td></tr>
+                                <tr class="kv"><td>Delivery<br/><span class="ar">التسليم</span></td><td class="v" t-esc="company.uellow_delivery_terms"/></tr>
+                                <tr class="kv"><td>Quality check<br/><span class="ar">فحص الجودة</span></td><td class="v">On receipt<br/><span class="ar">عند الاستلام</span></td></tr>
+                                <tr class="kv"><td>Warranty<br/><span class="ar">الضمان</span></td><td class="v" t-esc="company.uellow_warranty_terms"/></tr>
                                 <tr><td colspan="2" style="font-size:9.5px;color:#8a7c66;padding-top:8px;line-height:1.5">Goods must match specifications &amp; quantities; Uellow may reject non-conforming items. تُفحص البضاعة عند الاستلام.</td></tr>
                             </table></td>
                             <td style="width:3%;"/>
                             <td style="width:42%;vertical-align:top;">
                                 <table class="utbl upanel">
-                                    <tr class="trow"><td>Untaxed · غير شامل</td><td class="v"><span t-field="o.amount_untaxed" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
-                                    <tr class="trow"><td>Tax · الضريبة</td><td class="v"><span t-field="o.amount_tax" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
+                                    <tr class="trow"><td>Untaxed<br/><span class="ar">غير شامل</span></td><td class="v"><span t-field="o.amount_untaxed" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
+                                    <tr class="trow"><td>Tax<br/><span class="ar">الضريبة</span></td><td class="v"><span t-field="o.amount_tax" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
                                 </table>
                                 <table class="utbl ugrand" style="margin-top:8px;background-color:#F5C320 !important;"><tr>
                                     <td class="t" style="color:#412402 !important;">TOTAL<small>الإجمالي</small></td>
@@ -133,13 +136,13 @@
                         </tr></table>
 
                         <table class="utbl uacc" style="margin-top:14px;"><tr>
-                            <td style="width:49%;"><div class="h">Vendor confirmation · تأكيد المورّد</div><div class="sig">Signature &amp; date · التوقيع والتاريخ</div></td>
+                            <td style="width:49%;"><div class="h">Vendor confirmation<br/><span class="ar">تأكيد المورّد</span></div><div class="sig">Signature &amp; date<br/><span class="ar">التوقيع والتاريخ</span></div></td>
                             <td style="width:2%;"/>
-                            <td style="width:49%;"><div class="h">For <t t-esc="company.name"/> · عن الشركة</div><div class="sig">Authorized signature · التوقيع المعتمد</div></td>
+                            <td style="width:49%;"><div class="h">For <t t-esc="company.name"/> · عن الشركة</div><div class="sig">Authorized signature<br/><span class="ar">التوقيع المعتمد</span></div></td>
                         </tr></table>
 
                         <table class="utbl ufoot" style="margin-top:14px;background-color:#412402 !important;"><tr>
-                            <td class="th" style="color:#fff !important;">Approved purchase order · أمر شراء معتمد من يلو</td>
+                            <td class="th" style="color:#fff !important;">Approved purchase order<br/><span class="ar">أمر شراء معتمد من يلو</span></td>
                             <td style="text-align:right;color:#e9dcc4 !important;"><t t-esc="company.website or 'uellow.com'"/> · <b t-esc="company.phone"/></td>
                         </tr></table>
                     </div>

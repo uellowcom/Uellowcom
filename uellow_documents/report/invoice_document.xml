@@ -6,15 +6,18 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="o">
                 <t t-set="company" t-value="o.company_id"/>
-                <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang or 'en_US')"/>
+                <t t-set="o" t-value="o.with_context(lang='en_US')"/>
                 <t t-set="paid" t-value="o.payment_state in ('paid', 'in_payment', 'reversed')"/>
                 <t t-set="ship" t-value="o.partner_shipping_id or o.partner_id"/>
                 <style>
                     @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
                     @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
                     .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#1C1206;
-                        -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; }
+                        -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; direction:ltr !important; unicode-bidi:isolate !important; }
                     .udoc { font-size:12px; }
+                    .ar { font-family:'Tajawal'; font-size:9px; font-weight:600; color:#8a7c66 !important; }
+                    .uitems th .ar { color:#f0e6d0 !important; }
+                    .ucard .l .ar { color:#8a7c66 !important; }
                     /* Override Bootstrap's @media print reset (background:transparent / color:#000 !important). */
                     .uaccent { background:#F5C320 !important; }
                     .uco-name { color:#412402 !important; } .utitle { color:#412402 !important; } .utitle small { color:#8a7c66 !important; }
@@ -75,7 +78,7 @@
                     .qr { width:74px; height:74px; }
                 </style>
 
-                <div class="article udoc">
+                <div class="article udoc" dir="ltr">
                     <div class="uaccent" style="height:8px !important;background-color:#F5C320 !important;"/>
                     <div style="padding:22px 26px;">
 
@@ -100,14 +103,14 @@
                                 <div class="utitle">INVOICE<small>فاتورة</small></div>
                                 <div class="uno">No. <b t-esc="o.name"/></div>
                                 <div t-attf-class="ustamp #{'' if paid else 'due'}">
-                                    <t t-if="paid">PAID · مدفوعة</t><t t-else="">DUE · مستحقة</t>
+                                    <t t-if="paid">PAID<br/><span class="ar">مدفوعة</span></t><t t-else="">DUE<br/><span class="ar">مستحقة</span></t>
                                 </div>
                             </td>
                         </tr></table>
 
                         <table class="utbl" style="margin-top:18px;"><tr>
                             <td class="ucard" style="width:49%;background-color:#FBF7EC !important;">
-                                <div class="l">Bill to <span>· فاتورة إلى</span></div>
+                                <div class="l">Bill to<br/><span class="ar">فاتورة إلى</span></div>
                                 <div class="n" t-esc="o.partner_id.name"/>
                                 <div class="x">
                                     <t t-if="o.partner_id.street"><span t-esc="o.partner_id.street"/><br/></t>
@@ -117,7 +120,7 @@
                             </td>
                             <td style="width:2%;"/>
                             <td class="ucard" style="width:49%;background-color:#FBF7EC !important;">
-                                <div class="l">Ship to <span>· التوصيل إلى</span></div>
+                                <div class="l">Ship to<br/><span class="ar">التوصيل إلى</span></div>
                                 <div class="n" t-esc="ship.name"/>
                                 <div class="x">
                                     <t t-if="ship.street"><span t-esc="ship.street"/><br/></t>
@@ -127,17 +130,17 @@
                         </tr></table>
 
                         <table class="utbl umeta" style="margin-top:12px;border-radius:10px;overflow:hidden;"><tr>
-                            <td style="width:25%;"><div class="k">Issue date · التاريخ</div><div class="v" t-field="o.invoice_date"/></td>
-                            <td style="width:25%;"><div class="k">Due · الاستحقاق</div>
+                            <td style="width:25%;"><div class="k">Issue date<br/><span class="ar">التاريخ</span></div><div class="v" t-field="o.invoice_date"/></td>
+                            <td style="width:25%;"><div class="k">Due<br/><span class="ar">الاستحقاق</span></div>
                                 <div class="v"><t t-if="paid">Paid</t><span t-else="" t-field="o.invoice_date_due"/></div></td>
-                            <td style="width:25%;"><div class="k">Order ref · الطلب</div><div class="v"><t t-esc="o.invoice_origin or '—'"/></div></td>
-                            <td style="width:25%;"><div class="k">Salesperson · المندوب</div><div class="v"><t t-esc="o.invoice_user_id.name or '—'"/></div></td>
+                            <td style="width:25%;"><div class="k">Order ref<br/><span class="ar">الطلب</span></div><div class="v"><t t-esc="o.invoice_origin or '—'"/></div></td>
+                            <td style="width:25%;"><div class="k">Salesperson<br/><span class="ar">المندوب</span></div><div class="v"><t t-esc="o.invoice_user_id.name or '—'"/></div></td>
                         </tr></table>
 
                         <table class="utbl uitems" style="margin-top:16px;border-radius:10px;overflow:hidden;">
                             <thead><tr>
                                 <th class="c" style="width:30px;background-color:#412402 !important;color:#fff !important;">#</th>
-                                <th style="background-color:#412402 !important;color:#fff !important;">Description · الوصف</th>
+                                <th style="background-color:#412402 !important;color:#fff !important;">Description<br/><span class="ar">الوصف</span></th>
                                 <th class="c" style="width:46px;background-color:#412402 !important;color:#fff !important;">Qty</th>
                                 <th class="r" style="width:90px;background-color:#412402 !important;color:#fff !important;">Unit</th>
                                 <th class="r" style="width:56px;background-color:#412402 !important;color:#fff !important;">Disc</th>
@@ -167,7 +170,7 @@
                                         <img class="qr" t-att-src="'/report/barcode?barcode_type=QR&amp;value=%s&amp;width=160&amp;height=160' % (company.website or 'https://uellow.com')"/>
                                     </td>
                                     <td style="vertical-align:middle;padding-left:10px;">
-                                        <h4>Payment details · بيانات الدفع</h4>
+                                        <h4>Payment details<br/><span class="ar">بيانات الدفع</span></h4>
                                         <div style="font-size:10px;line-height:1.6;">
                                             <t t-if="company.uellow_bank_line"><span t-esc="company.uellow_bank_line"/></t>
                                             <t t-elif="company.bank_ids">
@@ -185,8 +188,8 @@
                             <td style="width:3%;"/>
                             <td style="width:42%;vertical-align:top;">
                                 <table class="utbl upanel">
-                                    <tr class="trow"><td>Subtotal · الفرعي</td><td class="v"><span t-field="o.amount_untaxed" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
-                                    <tr class="trow"><td>Tax · الضريبة</td><td class="v"><span t-field="o.amount_tax" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
+                                    <tr class="trow"><td>Subtotal<br/><span class="ar">الفرعي</span></td><td class="v"><span t-field="o.amount_untaxed" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
+                                    <tr class="trow"><td>Tax<br/><span class="ar">الضريبة</span></td><td class="v"><span t-field="o.amount_tax" t-options="{'widget':'monetary','display_currency':o.currency_id}"/></td></tr>
                                 </table>
                                 <table class="utbl ugrand" style="margin-top:8px;background-color:#F5C320 !important;"><tr>
                                     <td class="t" style="color:#412402 !important;">TOTAL<small style="color:#5B3410 !important;">الإجمالي المستحق</small></td>
@@ -198,7 +201,7 @@
 
                         <table class="utbl" style="margin-top:16px;"><tr>
                             <td style="width:60%;font-size:9.5px;color:#6b5f4d;line-height:1.55;vertical-align:top;">
-                                <b style="color:#412402;">Terms · الشروط</b><br/>
+                                <b style="color:#412402;">Terms<br/><span class="ar">الشروط</span></b><br/>
                                 <t t-esc="company.uellow_returns_terms"/> · <t t-esc="company.uellow_warranty_terms"/>.
                                 <t t-if="o.narration"><br/><span t-field="o.narration"/></t>
                             </td>
