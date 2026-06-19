@@ -63,6 +63,8 @@ class VendorProductChange(models.Model):
         if '__name_ar' in vals:
             old = product.with_context(lang='ar_001').name or '—'
             lines.append('%s: %s → %s' % (_('Name (AR)'), old, vals['__name_ar']))
+        if '__desc_ar' in vals:
+            lines.append(_('Description (AR) updated'))
         if '__public_categ_id' in vals:
             cat = self.env['product.public.category'].sudo().browse(vals['__public_categ_id'])
             lines.append('%s → %s' % (_('Category'), cat.name or vals['__public_categ_id']))
@@ -168,6 +170,7 @@ class VendorProductChange(models.Model):
             product = rec.product_tmpl_id.sudo()
             # special keys (applied separately from a plain write)
             name_ar = vals.pop('__name_ar', None)
+            desc_ar = vals.pop('__desc_ar', None)
             categ_id = vals.pop('__public_categ_id', None)
             gallery = vals.pop('__gallery', None)
             if vals:
@@ -177,6 +180,11 @@ class VendorProductChange(models.Model):
                     product.with_context(lang='ar_001').write({'name': name_ar})
                 except Exception:
                     _logger.debug('name_ar write failed', exc_info=True)
+            if desc_ar is not None:
+                try:
+                    product.with_context(lang='ar_001').write({'description_sale': desc_ar})
+                except Exception:
+                    _logger.debug('desc_ar write failed', exc_info=True)
             if categ_id:
                 try:
                     product.write({'public_categ_ids': [(4, int(categ_id))]})

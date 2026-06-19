@@ -42,6 +42,8 @@ def _ser_tmpl(t, detail=False):
         out['pending_change'] = (t.pending_change_id.change_summary or '') \
             if getattr(t, 'under_review', False) else ''
         out['description_sale'] = t.description_sale or ''
+        out['description_sale_ar'] = t.with_context(lang='ar_001').description_sale or ''
+        out['description_sale_en'] = t.with_context(lang='en_US').description_sale or ''
         out['description'] = t.description or ''
         out['default_code'] = t.default_code or ''
         out['barcode'] = t.barcode or ''
@@ -209,6 +211,13 @@ class VendorProductsAPI(http.Controller):
                     t.with_context(lang='en_US').write({'name': name_en})
             except Exception:
                 pass
+        # Arabic description translation
+        desc_ar = (p.get('description_sale_ar') or '').strip()
+        if desc_ar:
+            try:
+                t.with_context(lang='ar_001').write({'description_sale': desc_ar})
+            except Exception:
+                pass
         # extra gallery images (skip the one already used as main)
         extra = gallery[1:] if (gallery and not p.get('image_base64')) else gallery
         for g in extra:
@@ -334,6 +343,11 @@ class VendorProductsAPI(http.Controller):
             cur_ar = t.with_context(lang='ar_001').name or ''
             if (p['name_ar'] or '') != cur_ar:
                 proposed['__name_ar'] = p['name_ar']
+        # Arabic description (translation) — special key applied on approval.
+        if 'description_sale_ar' in p:
+            cur_d_ar = t.with_context(lang='ar_001').description_sale or ''
+            if (p['description_sale_ar'] or '') != cur_d_ar:
+                proposed['__desc_ar'] = p['description_sale_ar']
         # Storefront category — special key applied on approval.
         if p.get('category_id'):
             try:
