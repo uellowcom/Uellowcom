@@ -88,7 +88,9 @@ def _ser_order(o, detail=False):
             'can_prepare':       (not minimal) and o.state in ('sale', 'done')
                                  and not ready and not shipped,
             'ready_for_pickup':  ready,
-            'can_print_label':   (not minimal) and o.state in ('sale', 'done'),
+            # Label is always printable for seller-controlled orders (no longer
+            # gated on confirmed/stock state) — vendors need it on demand.
+            'can_print_label':   not minimal and o.state != 'cancel',
             'can_print_invoice': (not minimal) and o.state in ('sale', 'done'),
         }
         if minimal:

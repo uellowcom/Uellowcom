@@ -1,6 +1,15 @@
 <odoo>
     <template id="report_delivery_label">
         <t t-call="web.html_container">
+            <style>
+                @font-face { font-family: 'Amiri'; font-weight: normal;
+                    src: url('/delivery_label/static/fonts/Amiri-Regular.ttf') format('truetype'); }
+                @font-face { font-family: 'Amiri'; font-weight: bold;
+                    src: url('/delivery_label/static/fonts/Amiri-Bold.ttf') format('truetype'); }
+                /* Force an Arabic-capable font everywhere so Arabic text shapes
+                   correctly instead of rendering as broken/garbled glyphs. */
+                .page, .page * { font-family: 'Amiri', 'DejaVu Sans', sans-serif !important; }
+            </style>
             <t t-foreach="docs" t-as="o">
                 <t t-set="barcode_ref" t-value="o.get_barcode_b64(o.name, width=620, height=80)"/>
                 <t t-set="qr_value" t-value="o.carrier_tracking_url or 'https://uellow.com/contactus'"/>
