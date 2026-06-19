@@ -6,7 +6,7 @@ from odoo import http
 from odoo.http import request
 
 from ._common import (
-    safe_endpoint, get_payload, ok, fail, require_auth, current_vendor,
+    safe_endpoint, get_payload, ok, fail, require_auth, current_vendor, fmt_price,
 )
 
 REASONS = [
@@ -31,11 +31,29 @@ def _ser_ad(c):
     }
 
 
+_DISPUTE_REASONS = {
+    'out_of_stock':        {'en': 'Out of stock',            'ar': 'نفاد المخزون'},
+    'customer_unreachable':{'en': 'Customer unreachable',    'ar': 'تعذّر الوصول للعميل'},
+    'damaged':             {'en': 'Item damaged',            'ar': 'المنتج تالف'},
+    'wrong_item':          {'en': 'Wrong item',              'ar': 'منتج خاطئ'},
+    'not_received':        {'en': 'Not received',            'ar': 'لم يُستلم'},
+    'return_request':      {'en': 'Customer return request', 'ar': 'طلب إرجاع من العميل'},
+    'other':               {'en': 'Other',                   'ar': 'أخرى'},
+}
+_DISPUTE_STATES = {
+    'open':      {'en': 'Open',      'ar': 'مفتوح'},
+    'in_review': {'en': 'In review', 'ar': 'قيد المراجعة'},
+    'resolved':  {'en': 'Resolved',  'ar': 'تم الحل'},
+    'rejected':  {'en': 'Rejected',  'ar': 'مرفوض'},
+}
+
+
 def _ser_dispute(d):
     return {
         'id': d.id, 'name': d.name, 'order_id': d.order_id.id,
         'order': d.order_id.name, 'customer': d.partner_id.name or '',
-        'reason': d.reason, 'state': d.state,
+        'reason': d.reason, 'reason_label': _DISPUTE_REASONS.get(d.reason, {'en': d.reason, 'ar': d.reason}),
+        'state': d.state, 'state_label': _DISPUTE_STATES.get(d.state, {'en': d.state, 'ar': d.state}),
         'description': d.description or '', 'resolution': d.resolution or '',
         'when': d.create_date.isoformat() if d.create_date else '',
     }
@@ -139,3 +157,49 @@ class VendorMarketingController(http.Controller):
             'description': (p.get('description') or '').strip(),
         })
         return ok(_ser_dispute(d))
+
+    @http.route('/api/vendor/v1/disputes/<int:did>', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def dispute_detail(self, did, **kw):
+        v = current_vendor()
+        d = request.env['vendor.order.dispute'].sudo().browse(did)
+        if not d.exists() or d.vendor_id.id != v.id:
+            return fail('NOT_FOUND', 'Dispute not found', 404)
+        data = _ser_dispute(d)
+        o = d.order_id
+        data['order_detail'] = {
+            'id': o.id, 'name': o.name, 'state': o.state,
+            'amount': fmt_price(o.amount_total, o.currency_id),
+            'item_count': len(o.order_line.filtered(lambda l: not l.display_type)),
+            'when': (o.date_order or o.create_date).isoformat()
+                    if (o.date_order or o.create_date) else '',
+        }
+        # Message / status timeline from the chatter.
+        msgs = d.message_ids.sorted('id')
+        data['timeline'] = [{
+            'id': m.id,
+            'body': (m.body or '').strip(),
+            'author': m.author_id.name or 'System',
+            'when': m.date.isoformat() if m.date else '',
+            'is_note': m.message_type == 'comment' and not m.subtype_id.internal if m.subtype_id else False,
+        } for m in msgs if (m.body or '').strip()]
+        return ok(data)
+
+    @http.route('/api/vendor/v1/disputes/<int:did>/comment', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def dispute_comment(self, did, **kw):
+        """Vendor adds a comment/update to an open dispute."""
+        v = current_vendor()
+        d = request.env['vendor.order.dispute'].sudo().browse(did)
+        if not d.exists() or d.vendor_id.id != v.id:
+            return fail('NOT_FOUND', 'Dispute not found', 404)
+        body = (get_payload().get('body') or '').strip()
+        if not body:
+            return fail('EMPTY', 'body required')
+        d.message_post(body=body, author_id=v.partner_id.id or False)
+        request.env.cr.commit()
+        return ok({'posted': True})
