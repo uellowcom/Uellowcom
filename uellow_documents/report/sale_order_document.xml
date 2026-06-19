@@ -10,6 +10,8 @@
                 <t t-set="s_conf" t-value="doc.state in ('sale', 'done')"/>
                 <t t-set="s_inv" t-value="doc.invoice_status == 'invoiced'"/>
                 <t t-set="s_deliv" t-value="doc.state == 'done' or s_inv"/>
+
+                <div class="article udoc" dir="ltr">
                 <style>
                     @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
                     @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
@@ -79,7 +81,6 @@
                     .ufooter { margin-top:12px; text-align:center; font-size:9px; color:#8a7c66; }
                 </style>
 
-                <div class="article udoc" dir="ltr">
                     <div class="uaccent" style="height:8px !important;background-color:#F5C320 !important;"/>
                     <div style="padding:22px 26px;">
 

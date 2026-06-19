@@ -9,6 +9,8 @@
                 <t t-set="o" t-value="o.with_context(lang='en_US')"/>
                 <t t-set="paid" t-value="o.payment_state in ('paid', 'in_payment', 'reversed')"/>
                 <t t-set="ship" t-value="o.partner_shipping_id or o.partner_id"/>
+
+                <div class="article udoc" dir="ltr">
                 <style>
                     @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
                     @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
@@ -87,7 +89,6 @@
                     .qr { width:74px; height:74px; }
                 </style>
 
-                <div class="article udoc" dir="ltr">
                     <div class="uaccent" style="height:8px !important;background-color:#F5C320 !important;"/>
                     <div style="padding:22px 26px;">
 

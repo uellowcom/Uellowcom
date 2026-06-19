@@ -6,6 +6,7 @@
                 <t t-set="company" t-value="o.company_id"/>
                 <t t-set="o" t-value="o.with_context(lang='en_US')"/>
                 <t t-set="confirmed" t-value="o.state in ('purchase', 'done')"/>
+                <div class="article udoc" dir="ltr">
                 <style>
                     @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
                     @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
@@ -58,7 +59,7 @@
                     .ufoot { background:#412402; border-radius:10px; } .ufoot td { padding:11px 14px; color:#e9dcc4; font-size:10px; }
                     .ufoot .th { font-weight:bold; color:#fff; font-size:12px; } .ufoot b { color:#F5C320; }
                 </style>
-                <div class="article udoc" dir="ltr">
+
                     <div class="uaccent" style="height:8px !important;background-color:#F5C320 !important;"/>
                     <div style="padding:22px 26px;">
                         <table class="utbl"><tr>
