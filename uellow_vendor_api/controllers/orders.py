@@ -160,10 +160,22 @@ class VendorOrdersAPI(http.Controller):
     @safe_endpoint
     @require_auth
     def warehouses(self, **kw):
-        """Source warehouses the vendor can pull quick-sale stock from."""
-        current_vendor()
-        whs = request.env['stock.warehouse'].sudo().search([], order='id')
-        return ok([{'id': w.id, 'name': w.name, 'code': w.code or ''} for w in whs])
+        """Source warehouse(s) for the vendor's quick sales — restricted to the
+        vendor's OWN warehouse (the one holding their FBU sub-location), never
+        the whole company's warehouse list."""
+        v = current_vendor()
+        Wh = request.env['stock.warehouse'].sudo()
+        whs = Wh.browse()
+        loc = v.fbu_location_id.location_id if v.fbu_location_id else False
+        if loc:
+            whs = (Wh.search([('lot_stock_id', 'parent_of', loc.id)], limit=1)
+                   or Wh.search([('view_location_id', 'parent_of', loc.id)], limit=1))
+        if not whs:
+            # Fallback: the vendor's company default warehouse only.
+            whs = Wh.search([('company_id', '=', request.env.company.id)], limit=1)
+        return ok([{'id': w.id, 'name': w.name, 'code': w.code or '',
+                    'location': (loc.complete_name if loc else (w.lot_stock_id.complete_name or ''))}
+                   for w in whs])
 
     @http.route('/api/vendor/v1/quicksale', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)

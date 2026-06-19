@@ -95,11 +95,28 @@ class VendorDashboardAPI(http.Controller):
         except Exception:
             open_returns = 0
 
+        # Inventory held at Yellow (FBU / consignment) — valued at cost.
+        fbu_value = fbu_units = 0.0
+        fbu_loc = v.fbu_location_id.location_id if v.fbu_location_id else False
+        if fbu_loc:
+            quants = request.env['stock.quant'].sudo().search(
+                [('location_id', 'child_of', fbu_loc.id), ('quantity', '>', 0)])
+            for q in quants:
+                fbu_units += q.quantity or 0.0
+                fbu_value += (q.quantity or 0.0) * (q.product_id.standard_price or 0.0)
+        is_fbu = (v.vendor_type or 'seller') in ('fbu', 'consignment')
+
         # Recent 5 orders
         recent = Order.search([('vendor_id', '=', v.id)],
                               order='id desc', limit=5)
 
         return ok({
+            'vendor_type': v.vendor_type or 'seller',
+            'inventory': {
+                'value': fmt_price(fbu_value, v.currency_id),
+                'units': int(fbu_units),
+                'is_fbu': is_fbu,
+            },
             'kpis': {
                 'aov':            fmt_price(aov, v.currency_id),
                 'units_month':    int(units_month),

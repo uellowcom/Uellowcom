@@ -17,13 +17,28 @@ from ._common import (
 
 def _ser_tmpl(t, detail=False):
     cur = t.currency_id or t.company_id.currency_id or request.env.company.currency_id
+    qty = float(t.qty_available or 0)
+    # "Continue selling" awareness: a product is sellable when it is not a
+    # storable good, or the merchant allows ordering past zero stock, or it
+    # actually has stock. Without this every consignment/service product reads
+    # as out-of-stock even though it can be bought.
+    allow_oos = bool(getattr(t, 'allow_out_of_stock_order', False))
+    is_storable = bool(getattr(t, 'is_storable', getattr(t, 'type', '') == 'product'))
+    in_stock = (not is_storable) or allow_oos or qty > 0
+    cost = t.standard_price or 0
+    sale = t.list_price or 0
+    margin_pct = round(((sale - cost) / sale * 100), 1) if sale else 0.0
     out = {
         'id': t.id,
         'name': bilingual(t, 'name'),
-        'list_price': fmt_price(t.list_price or 0, cur),
-        'standard_price': fmt_price(t.standard_price or 0, cur),
+        'list_price': fmt_price(sale, cur),
+        'standard_price': fmt_price(cost, cur),
+        'margin_pct': margin_pct,
         'is_published': bool(t.is_published),
-        'qty_available': float(t.qty_available or 0),
+        'qty_available': qty,
+        'allow_oos': allow_oos,
+        'is_storable': is_storable,
+        'in_stock': in_stock,
         'approval_state': t.vendor_approval_state or 'draft',
         # Main template image, falling back to the first gallery image so the
         # card never shows blank when a product only has gallery images.

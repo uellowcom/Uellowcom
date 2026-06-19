@@ -34,6 +34,16 @@ class VendorAnalyticsAPI(http.Controller):
         low = prods.filtered(lambda t: t.is_storable and 0 < (t.qty_available or 0) <= 5)
         total_views = sum(prods.mapped('uellow_view_count'))
 
+        # Inventory held at Yellow (FBU / consignment) — valued at cost.
+        fbu_value = fbu_units = 0.0
+        fbu_loc = v.fbu_location_id.location_id if v.fbu_location_id else False
+        if fbu_loc:
+            quants = request.env['stock.quant'].sudo().search(
+                [('location_id', 'child_of', fbu_loc.id), ('quantity', '>', 0)])
+            for q in quants:
+                fbu_units += q.quantity or 0.0
+                fbu_value += (q.quantity or 0.0) * (q.product_id.standard_price or 0.0)
+
         # Top viewed products
         top_viewed = prods.sorted(lambda t: t.uellow_view_count or 0, reverse=True)[:5]
 
@@ -94,7 +104,15 @@ class VendorAnalyticsAPI(http.Controller):
             })
 
         aov = (month_gmv / month_orders) if month_orders else 0.0
+        is_fbu = (v.vendor_type or 'seller') in ('fbu', 'consignment')
         return ok({
+            'vendor_type': v.vendor_type or 'seller',
+            'inventory': {
+                'value': fmt_price(fbu_value, cur),
+                'units': int(fbu_units),
+                'is_fbu': is_fbu,
+                'location': fbu_loc.complete_name if fbu_loc else '',
+            },
             'products': {
                 'total': len(prods), 'published': len(published),
                 'pending': len(pending), 'out_of_stock': len(oos),
