@@ -40,6 +40,10 @@ class FlashSale(models.Model):
         'product.template', string='Products',
         relation='uellow_flash_sale_products',
     )
+    line_ids = fields.One2many(
+        'uellow.flash.sale.line', 'sale_id', string='Per-product Discounts',
+        help='Optional per-product discount overrides. A line with 0% uses the '
+             'general discount above.')
 
     # Stats
     units_sold = fields.Integer('Units Sold', default=0, readonly=True)
@@ -84,12 +88,21 @@ class FlashSale(models.Model):
             sale.state = 'cancelled'
             sale._remove_discounts()
 
+    def _product_discount(self, product):
+        """Per-product override if a line exists with a non-zero %, else the
+        general discount."""
+        line = self.line_ids.filtered(lambda l: l.product_id == product)[:1]
+        if line and line.discount_pct:
+            return line.discount_pct
+        return self.discount_pct
+
     def _apply_discounts(self):
-        """Set sale price on products."""
+        """Set sale price on products using per-product or general discount."""
         for product in self.product_ids:
             if not product.list_price:
                 continue
-            sale_price = product.list_price * (1 - self.discount_pct / 100)
+            pct = self._product_discount(product)
+            sale_price = product.list_price * (1 - pct / 100)
             product.write({
                 'flash_sale_id': self.id,
                 'flash_sale_price': sale_price,
@@ -117,3 +130,13 @@ class FlashSale(models.Model):
             ('end_datetime', '<=', now),
         ])
         expired.action_end()
+
+
+class FlashSaleLine(models.Model):
+    _name = 'uellow.flash.sale.line'
+    _description = 'Flash Sale Per-product Discount'
+
+    sale_id = fields.Many2one('uellow.flash.sale', required=True, ondelete='cascade', index=True)
+    product_id = fields.Many2one('product.template', required=True, ondelete='cascade')
+    discount_pct = fields.Float('Discount (%)',
+        help='0 = use the flash sale general discount.')

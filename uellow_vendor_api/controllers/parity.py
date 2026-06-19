@@ -83,17 +83,31 @@ class VendorParityAPI(http.Controller):
         if guard:
             return guard
         p = get_payload()
-        try:
-            pids = [int(x) for x in (p.get('product_ids') or []) if x]
-        except (TypeError, ValueError):
-            pids = []
+        Tmpl = request.env['product.template'].sudo()
+        # Per-product lines [{product_id, discount_pct}] take priority; fall back
+        # to a plain product_ids list with the general discount.
+        raw_lines = p.get('lines') or []
+        per_prod = {}
+        if isinstance(raw_lines, list) and raw_lines:
+            for ln in raw_lines:
+                try:
+                    per_prod[int(ln.get('product_id'))] = float(ln.get('discount_pct') or 0)
+                except (TypeError, ValueError):
+                    continue
+            pids = list(per_prod.keys())
+        else:
+            try:
+                pids = [int(x) for x in (p.get('product_ids') or []) if x]
+            except (TypeError, ValueError):
+                pids = []
         if not pids:
             return fail('VALIDATION', 'Select at least one product.')
         # vendor may only flash their OWN products
-        Tmpl = request.env['product.template'].sudo()
         own = Tmpl.search([('id', 'in', pids), ('vendor_id', '=', v.id)]).ids
         if not own:
             return fail('VALIDATION', 'No eligible products.')
+        line_cmds = [(0, 0, {'product_id': pid, 'discount_pct': per_prod.get(pid, 0.0)})
+                     for pid in own] if per_prod else []
         sale = request.env['uellow.flash.sale'].sudo().create({
             'vendor_id': v.id,
             'name': p.get('name_en') or p.get('name') or 'Flash Sale',
@@ -102,6 +116,7 @@ class VendorParityAPI(http.Controller):
             'start_datetime': (p.get('start') or '').replace('T', ' ') or fields.Datetime.now(),
             'end_datetime': (p.get('end') or '').replace('T', ' ') or False,
             'product_ids': [(6, 0, own)],
+            'line_ids': line_cmds,
         })
         return ok({'id': sale.id, 'state': sale.state})
 

@@ -17,6 +17,8 @@ access_vendor_store,vendor.store,model_uellow_vendor_store,base.group_user,1,0,0
 access_vendor_store_admin,vendor.store.admin,model_uellow_vendor_store,base.group_system,1,1,1,1
 access_flash_sale_user,flash.user,model_uellow_flash_sale,base.group_user,1,1,1,0
 access_flash_sale_admin,flash.admin,model_uellow_flash_sale,base.group_system,1,1,1,1
+access_flash_sale_line_user,flash.line.user,model_uellow_flash_sale_line,base.group_user,1,1,1,1
+access_flash_sale_line_admin,flash.line.admin,model_uellow_flash_sale_line,base.group_system,1,1,1,1
 access_vendor_settings_user,vs.user,model_uellow_vendor_settings,base.group_user,1,0,0,0
 access_vendor_settings_admin,vs.admin,model_uellow_vendor_settings,base.group_system,1,1,1,1
 access_follower_public,follower.public,model_uellow_vendor_follower,base.group_public,1,0,0,0
