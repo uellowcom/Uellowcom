@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Inventory operations (delivery / receipts / internal): newest records first -->
+    <record id="stock_vpicktree_newest" model="ir.ui.view">
+        <field name="name">stock.picking.tree.uellow.newest</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="default_order">id desc</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
