@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
             <xpath expr="//button[@name='action_cancel']" position="before">
                 <button name="print_delivery_label" string="Print Label" type="object"
-                        invisible="state not in ('assigned', 'done')"
+                        invisible="state == 'cancel'"
                         groups="stock.group_stock_user"
                         class="oe_highlight"/>
             </xpath>

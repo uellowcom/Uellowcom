@@ -11,20 +11,8 @@
                       t-att-content="'app-id=6769010765, app-argument=' + request.httprequest.url"/>
             </t>
         </xpath>
-        <!-- Crawlable internal link to the /app landing page, in the footer,
-             with keyword-rich bilingual anchor text so Google associates
-             "Uellow App / تطبيق يلو / تطبيق يلو دوت كوم" with /app. -->
-        <xpath expr="//footer" position="inside">
-            <div class="container text-center py-2"
-                 style="font-size:13px;border-top:1px solid rgba(255,255,255,.08);">
-                <a href="/app" title="تطبيق يلو · Uellow App"
-                   style="color:#F5C320;text-decoration:none;font-weight:700;">
-                    حمّل تطبيق يلو · Download the Uellow App
-                </a>
-                <span style="opacity:.4"> · </span>
-                <a href="/app" style="color:inherit;opacity:.7;text-decoration:none;">uellow.com/app</a>
-            </div>
-        </xpath>
+        <!-- Footer app-link strip removed per request. The iOS smart banner
+             (head meta) + the settings-controlled floating banner remain. -->
         <xpath expr="//header" position="before">
             <div id="uellow-app-banner" style="display:none"
                  t-if="website.uc_app_banner_enabled"

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_warranty" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.uellow.warranty</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Uellow Warranty" string="Uellow Warranty" name="uellow_warranty" logo="/uellow_warranty/static/description/icon.png">
+                    <block title="Warranty engine" name="uellow_warranty_block">
+                        <setting string="Enable warranty engine" help="Master switch for the whole warranty feature.">
+                            <field name="uellow_warranty_enabled"/>
+                        </setting>
+                        <setting string="Auto-issue on invoice" help="Create warranty cards automatically when a customer invoice is posted.">
+                            <field name="uellow_warranty_auto_invoice"/>
+                        </setting>
+                        <setting string="Auto-issue on sales order" help="Create warranty cards when a sales order is confirmed.">
+                            <field name="uellow_warranty_auto_sale"/>
+                        </setting>
+                        <setting string="Auto-issue on POS" help="Create warranty cards for POS orders (when a customer is set).">
+                            <field name="uellow_warranty_auto_pos"/>
+                        </setting>
+                        <setting string="Show on documents" help="Print a warranty block on invoice / sales order / delivery note.">
+                            <field name="uellow_warranty_show_docs"/>
+                        </setting>
+                        <setting string="Default warranty (months)" help="Fallback duration when a product has no matching policy.">
+                            <field name="uellow_warranty_default_months"/>
+                        </setting>
+                        <setting string="Warranty assignment mode" help="Choose whether warranties are resolved by product category (with default fallback) or strictly per individual product.">
+                            <field name="uellow_warranty_mode" widget="radio"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_warranty_settings" model="ir.actions.act_window">
+        <field name="name">Warranty Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'uellow_warranty'}</field>
+    </record>
+</odoo>

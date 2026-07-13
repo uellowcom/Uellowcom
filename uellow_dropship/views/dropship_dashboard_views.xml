@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_dropship_dashboard_form" model="ir.ui.view">
+        <field name="name">dropship.dashboard.form</field>
+        <field name="model">dropship.dashboard</field>
+        <field name="arch" type="xml">
+            <form create="false" edit="false" delete="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1 style="color:#412402">🌍 Uellow World — Dashboard</h1>
+                    </div>
+                    <div style="margin:4px 0 10px 0">
+                        <button name="action_refresh" type="object"
+                                string="🔄 Refresh" class="btn btn-secondary btn-sm"/>
+                        <button name="action_print_report" type="object"
+                                string="🖨️ Print PDF Report" class="btn btn-secondary btn-sm"/>
+                        <span style="color:#999;margin-left:8px">Tap any tile to drill in.</span>
+                    </div>
+                    <field name="currency_id" invisible="1"/>
+
+                    <!-- action banner: orders waiting to be fulfilled -->
+                    <div class="row" style="margin:8px 0"
+                         invisible="kpi_to_fulfill == 0">
+                        <div class="col-12">
+                            <button name="action_view_to_fulfill" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#fff3e0;border-radius:10px;padding:14px 18px;margin:5px;border:1px solid #ffcc80;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px">
+                                    <span style="font-size:28px">🚀</span>
+                                    <div>
+                                        <span style="font-size:22px;font-weight:700;color:#e65100"><field name="kpi_to_fulfill"/></span>
+                                        <span style="color:#bf5000;margin-left:8px">order(s) waiting to be fulfilled to AliExpress — tap to fulfill ›</span>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- action banner: slow movers (viewed but never sold) -->
+                    <div class="row" style="margin:8px 0"
+                         invisible="kpi_slow_movers == 0">
+                        <div class="col-12">
+                            <button name="action_view_slow_movers" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#fdecea;border-radius:10px;padding:14px 18px;margin:5px;border:1px solid #f5c6c0;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px">
+                                    <span style="font-size:28px">🐌</span>
+                                    <div>
+                                        <span style="font-size:22px;font-weight:700;color:#c62828"><field name="kpi_slow_movers"/></span>
+                                        <span style="color:#a03028;margin-left:8px">slow mover(s) — lots of views, no sales. Tap to review &amp; apply a discount ›</span>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- KPI tiles (clickable) -->
+                    <div class="row" style="margin:8px 0">
+                        <div class="col-3">
+                            <button name="action_view_published" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#fff8e1;border-radius:10px;padding:14px;margin:5px;border:1px solid #f0e2b0;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Live Products ›</div>
+                                    <div style="font-size:26px;font-weight:700;color:#412402"><field name="kpi_published"/></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button name="action_view_listings" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#fff8e1;border-radius:10px;padding:14px;margin:5px;border:1px solid #f0e2b0;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Source Listings ›</div>
+                                    <div style="font-size:26px;font-weight:700;color:#412402"><field name="kpi_listings"/></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button name="action_view_top_viewed" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#fff8e1;border-radius:10px;padding:14px;margin:5px;border:1px solid #f0e2b0;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Total Views ›</div>
+                                    <div style="font-size:26px;font-weight:700;color:#412402"><field name="kpi_views"/></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button name="action_view_materialized" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#fff8e1;border-radius:10px;padding:14px;margin:5px;border:1px solid #f0e2b0;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Units Sold ›</div>
+                                    <div style="font-size:26px;font-weight:700;color:#412402"><field name="kpi_sold"/></div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row" style="margin:8px 0">
+                        <div class="col-3">
+                            <button name="action_view_visitors" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#f3faf3;border-radius:10px;padding:14px;margin:5px;border:1px solid #cfe8cf;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Visitors (30d) ›</div>
+                                    <div style="font-size:26px;font-weight:700;color:#2e7d32"><field name="kpi_visitors_30d"/></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button name="action_view_orders" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#f3faf3;border-radius:10px;padding:14px;margin:5px;border:1px solid #cfe8cf;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Orders (30d) ›</div>
+                                    <div style="font-size:26px;font-weight:700;color:#2e7d32"><field name="kpi_orders_30d"/></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button name="action_view_revenue" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#f3faf3;border-radius:10px;padding:14px;margin:5px;border:1px solid #cfe8cf;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Revenue (30d) ›</div>
+                                    <div style="font-size:24px;font-weight:700;color:#2e7d32"><field name="kpi_revenue_30d"/></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button name="action_view_deals" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#eef4fb;border-radius:10px;padding:14px;margin:5px;border:1px solid #cddcf0;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Active Deals ›</div>
+                                    <div style="font-size:26px;font-weight:700;color:#1565c0"><field name="kpi_deals"/></div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row" style="margin:8px 0">
+                        <div class="col-3">
+                            <button name="action_view_revenue" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#e8f5e9;border-radius:10px;padding:14px;margin:5px;border:1px solid #a5d6a7;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Profit (30d) ›</div>
+                                    <div style="font-size:24px;font-weight:700;color:#1b5e20"><field name="kpi_profit_30d"/></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button name="action_view_orders" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#f6f0fb;border-radius:10px;padding:14px;margin:5px;border:1px solid #e0d0ef;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Conversion % (30d)</div>
+                                    <div style="font-size:26px;font-weight:700;color:#6a1b9a"><field name="kpi_conversion"/></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button name="action_view_videos" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#f6f0fb;border-radius:10px;padding:14px;margin:5px;border:1px solid #e0d0ef;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Products w/ Video ›</div>
+                                    <div style="font-size:26px;font-weight:700;color:#6a1b9a"><field name="kpi_videos"/></div>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="col-3">
+                            <button name="action_view_listings" type="object" class="w-100 p-0 border-0 bg-transparent">
+                                <div style="background:#f6f0fb;border-radius:10px;padding:14px;margin:5px;border:1px solid #e0d0ef;cursor:pointer;text-align:left">
+                                    <div style="font-size:12px;color:#888">Reviews Imported ›</div>
+                                    <div style="font-size:26px;font-weight:700;color:#6a1b9a"><field name="kpi_reviews"/></div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <group col="2">
+                        <group string="🌐 Top Countries (visitors)">
+                            <field name="html_countries" nolabel="1"/>
+                        </group>
+                        <group string="📈 Visitors — last 8 weeks">
+                            <field name="html_visitors_trend" nolabel="1"/>
+                        </group>
+                        <group string="💰 Profit — last 8 weeks">
+                            <field name="html_profit_trend" nolabel="1"/>
+                        </group>
+                        <group string="🔥 Most Viewed Products">
+                            <field name="html_top_products" nolabel="1"/>
+                        </group>
+                        <group string="🗂️ Top Categories">
+                            <field name="html_top_categories" nolabel="1"/>
+                        </group>
+                        <group string="🚚 Catalog Funnel">
+                            <field name="html_funnel" nolabel="1"/>
+                        </group>
+                        <group string="🏭 Providers">
+                            <field name="html_providers" nolabel="1"/>
+                        </group>
+                    </group>
+                    <group string="🏆 Provider Performance (profit ranking)">
+                        <field name="html_provider_perf" nolabel="1"/>
+                    </group>
+                    <group col="2">
+                        <group string="🩺 Provider Health">
+                            <field name="html_provider_health" nolabel="1"/>
+                        </group>
+                        <group string="⚠️ Needs Attention">
+                            <field name="html_attention" nolabel="1"/>
+                        </group>
+                    </group>
+                    <group string="🆕 Recent Imports (30 days)">
+                        <field name="html_recent" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="dropship_dashboard_main" model="dropship.dashboard">
+        <field name="name">Uellow World</field>
+    </record>
+
+    <record id="action_dropship_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard</field>
+        <field name="res_model">dropship.dashboard</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" eval="ref('dropship_dashboard_main')"/>
+        <field name="target">current</field>
+    </record>
+
+</odoo>

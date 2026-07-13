@@ -24,6 +24,7 @@ Taly Payment Gateway Integration for Odoo 18
         'security/payment_taly_security.xml',
         'data/payment_method_data.xml',
         'data/payment_provider_data.xml',
+        'data/taly_cron.xml',
         # ── Views (actions must be defined before menus that reference them) ──
         'views/payment_taly_provider_views.xml',
         'views/payment_taly_transaction_views.xml',

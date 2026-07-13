@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_dropship_text_rule_list" model="ir.ui.view">
+        <field name="name">dropship.text.rule.list</field>
+        <field name="model">dropship.text.rule</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="find"/>
+                <field name="replace"/>
+                <field name="is_regex"/>
+                <field name="case_sensitive"/>
+                <field name="hit_count" readonly="1" string="Replacements"/>
+                <field name="active" widget="boolean_toggle"/>
+                <button name="action_reset_hits" type="object" icon="fa-refresh"
+                        string="Reset count" title="Reset replacement count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dropship_text_rule" model="ir.actions.act_window">
+        <field name="name">Word Replacement</field>
+        <field name="res_model">dropship.text.rule</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Add a replacement rule</p>
+            <p>e.g. Find <b>AliExpress</b> → Replace <b>Uellow World</b>. Applied to
+               every title/description on import and before display.</p>
+        </field>
+    </record>
+
+</odoo>

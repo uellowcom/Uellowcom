@@ -15,6 +15,24 @@ class PerfConfig(models.Model):
     burst_per_ip_per_min = fields.Integer(
         string='Per-IP burst limit (req/min)', default=120,
         help='Sliding-window cap per IP within a bot class. 0 = disabled.')
+    global_burst_per_ip_per_min = fields.Integer(
+        string='Global per-IP burst on /shop (req/min)', default=240,
+        help='Sliding-window cap per IP for ANONYMOUS GET traffic to '
+             'storefront /shop pages, regardless of User-Agent. Catches '
+             'scrapers that use browser-like UAs and evade bot '
+             'classification. Logged-in customers, cart/checkout, API, '
+             'assets and images are never affected. 0 = disabled. '
+             'Generous default (240/min = 4 req/sec sustained) so humans '
+             'are never hit.')
+    faceted_burst_per_ip_per_min = fields.Integer(
+        string='Per-IP burst on FILTERED /shop (req/min)', default=40,
+        help='Much stricter sliding-window cap for ANONYMOUS GET traffic to '
+             'FACETED /shop URLs (those carrying filter query params such as '
+             'attribute_value / min_price / max_price / order / view_mode / '
+             'hide_out_of_stock). These combinations create a near-infinite '
+             'crawl space that crawlers explore and saturate the workers. A '
+             'real human filtering products never exceeds ~40 filtered loads/'
+             'min, but a crawler does. 0 = fall back to the global limit.')
 
     # ─── RUM ───────────────────────────────────────────────────
     rum_enabled = fields.Boolean(default=True)

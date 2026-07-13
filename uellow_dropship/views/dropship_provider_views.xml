@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_dropship_provider_list" model="ir.ui.view">
+        <field name="name">dropship.provider.list</field>
+        <field name="model">dropship.provider</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="is_primary"/>
+                <field name="product_count"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'connected'"
+                       decoration-danger="state == 'error'"
+                       decoration-muted="state == 'draft'"/>
+                <field name="last_sync"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dropship_provider_form" model="ir.ui.view">
+        <field name="name">dropship.provider.form</field>
+        <field name="model">dropship.provider</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_authorize_url" type="object"
+                            string="1) Authorize" class="btn-primary"/>
+                    <button name="action_exchange_code" type="object"
+                            string="2) Exchange Code"/>
+                    <button name="action_test_connection" type="object"
+                            string="Test Connection"/>
+                    <button name="action_list_feeds" type="object"
+                            string="List Feeds"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,connected"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box">
+                        <button class="oe_stat_button" icon="fa-cubes" type="object"
+                                name="action_test_connection">
+                            <field name="product_count" widget="statinfo" string="Listings"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="code"/>
+                            <field name="is_primary"/>
+                            <field name="fallback_provider_id"
+                                   domain="[('id','!=',id)]"/>
+                        </group>
+                        <group>
+                            <field name="active"/>
+                            <field name="markup_percent"/>
+                            <field name="currency"/>
+                            <field name="default_country"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Credentials &amp; Connection">
+                            <group>
+                                <group string="Credentials">
+                                    <field name="app_key"/>
+                                    <field name="app_secret" password="True"/>
+                                    <field name="endpoint"/>
+                                    <field name="redirect_uri"
+                                           placeholder="https://.../dropship/oauth/callback"/>
+                                </group>
+                                <group string="OAuth Token">
+                                    <field name="access_token" password="True"/>
+                                    <field name="refresh_token" password="True"/>
+                                    <field name="token_expiry"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert">
+                                <strong>Connect steps:</strong>
+                                (1) fill App Key / App Secret / Redirect URI →
+                                (2) click <b>Authorize</b>, approve on the provider,
+                                copy the <code>?code=</code> value → paste it in the
+                                status field below → (3) click <b>Exchange Code</b>.
+                                Tokens auto-refresh before expiry.
+                            </div>
+                            <field name="status_message"
+                                   placeholder="paste OAuth ?code=... here to exchange"/>
+                        </page>
+                        <page string="Routing">
+                            <group>
+                                <field name="feed_name"
+                                       placeholder="AEB_Droplo_BestsellersItems_20241016"/>
+                                <field name="country_ids" widget="many2many_tags"/>
+                                <field name="category_routing"
+                                       placeholder="200000343, 100003070"/>
+                                <field name="manual_shipping_cost"/>
+                            </group>
+                            <div class="alert alert-info" role="alert">
+                                Click <b>List Feeds</b> in the header to see the promo feeds
+                                available to your account, then paste one into <b>Feed Name</b>.
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dropship_provider" model="ir.actions.act_window">
+        <field name="name">Providers</field>
+        <field name="res_model">dropship.provider</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

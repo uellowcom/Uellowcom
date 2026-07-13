@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_dropship_browse_form" model="ir.ui.view">
+        <field name="name">dropship.browse.wizard.form</field>
+        <field name="model">dropship.browse.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Browse &amp; Import">
+                <sheet>
+                    <div class="oe_title">
+                        <h2>🔎 Browse &amp; Import from AliExpress</h2>
+                        <p class="text-muted">Set your filters, Search, then Import
+                            or Import &amp; Publish per product (or tick several and
+                            use the bulk buttons).</p>
+                    </div>
+                    <group>
+                        <group string="Search filters">
+                            <field name="provider_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"/>
+                            <field name="keywords" placeholder="smart watch, led strip, ..."/>
+                            <field name="category_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"/>
+                            <field name="max_results"/>
+                        </group>
+                        <group string="Quality">
+                            <field name="min_price"/>
+                            <field name="max_price"/>
+                            <field name="min_orders"/>
+                            <field name="min_rating"/>
+                        </group>
+                    </group>
+                    <div style="margin:6px 0">
+                        <button name="action_search" type="object" string="🔎 Search"
+                                class="btn-primary"/>
+                        <button name="action_import_selected" type="object"
+                                string="⬇ Import selected" class="btn-secondary"
+                                invisible="not searched"/>
+                        <button name="action_publish_selected" type="object"
+                                string="⇪ Import &amp; Publish selected" class="btn-secondary"
+                                invisible="not searched"/>
+                    </div>
+                    <field name="searched" invisible="1"/>
+                    <field name="line_ids" nolabel="1" invisible="not searched">
+                        <list editable="bottom" create="false" delete="false">
+                            <field name="selected" widget="boolean_toggle"/>
+                            <field name="image_url" widget="image_url"
+                                   options="{'size': [56, 56]}" string=""/>
+                            <field name="title" readonly="1"/>
+                            <field name="category_name" readonly="1" optional="show"/>
+                            <field name="price" readonly="1"/>
+                            <field name="currency" readonly="1" optional="hide"/>
+                            <field name="orders_text" readonly="1"/>
+                            <field name="rating" readonly="1"/>
+                            <field name="imported" widget="boolean_toggle" readonly="1"/>
+                            <field name="published" widget="boolean_toggle" readonly="1"/>
+                            <field name="source_id" readonly="1" optional="hide"/>
+                            <button name="action_import" type="object" string="Import"
+                                    icon="fa-download" invisible="imported"/>
+                            <button name="action_import_publish" type="object"
+                                    string="Import &amp; Publish" icon="fa-cloud-upload"
+                                    invisible="published"/>
+                        </list>
+                    </field>
+                </sheet>
+                <footer>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dropship_browse" model="ir.actions.act_window">
+        <field name="name">Browse &amp; Import</field>
+        <field name="res_model">dropship.browse.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem id="menu_dropship_browse" name="Browse &amp; Import"
+              parent="menu_dropship_root" action="action_dropship_browse"
+              sequence="13"/>
+
+</odoo>

@@ -78,14 +78,21 @@ def _oos_blocked(p):
         storable = (getattr(p, 'type', '') == 'product')
     if not storable:
         return False
+    # Treat the product as available when EITHER the forecast (virtual) or the
+    # on-hand quantity is positive. Using virtual_available alone hid products
+    # that have real on-hand stock but whose forecast was 0 because all of it
+    # is reserved for open orders (e.g. RW-77 1773: qty_available=2 yet
+    # virtual_available=0) — the product page still showed them in stock, so
+    # the Reels feed silently disagreed and dropped them.
     try:
-        qty = p.virtual_available
+        virt = p.virtual_available
     except Exception:
-        try:
-            qty = p.qty_available
-        except Exception:
-            qty = 0
-    return (qty or 0) <= 0
+        virt = 0
+    try:
+        onhand = p.qty_available
+    except Exception:
+        onhand = 0
+    return (virt or 0) <= 0 and (onhand or 0) <= 0
 
 
 def _build_video_item(p, lang, partner):
@@ -192,13 +199,18 @@ class MobileVideosAPI(http.Controller):
         if 'has_product_video' in Tmpl._fields:
             domain.append(('has_product_video', '=', True))
 
-        order = 'sales_count desc, write_date desc' \
-            if 'sales_count' in Tmpl._fields else 'write_date desc'
+        # NOTE: `sales_count` is a NON-STORED computed field on
+        # product.template, so using it in SQL ORDER BY raises ValueError
+        # ("not stored"). The old `order='sales_count desc, …'` therefore
+        # ALWAYS raised, and the except fallback silently DROPPED the
+        # has_product_video filter — scanning recent products instead and
+        # leaving the Reels feed with ~1 video (whichever was edited last).
+        # Order by a real stored column; keep the video filter in both paths.
         try:
-            candidates = Tmpl.search(domain, order=order, limit=limit * 4)
+            candidates = Tmpl.search(domain, order='write_date desc',
+                                     limit=limit * 4)
         except Exception:
-            candidates = Tmpl.search(_domain_published_for_app(include_oos=True),
-                                     order='write_date desc', limit=limit * 4)
+            candidates = Tmpl.search(domain, order='id desc', limit=limit * 4)
 
         items = []
         last_id = cursor

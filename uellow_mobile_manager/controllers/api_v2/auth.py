@@ -489,6 +489,12 @@ class MobileAuthAPI(http.Controller):
             request.env['mail.mail'].sudo().create({
                 'subject': 'Uellow sign-in code: %s' % code,
                 'email_to': email_to,
+                # Brand the sender explicitly — otherwise mail.mail defaults
+                # email_from to the request's user (the website public user,
+                # historically named "Developer"), so the code arrived "from
+                # Developer". Pin a clean Uellow sender (Sendgrid delivers any
+                # @uellow.com address).
+                'email_from': 'Uellow <info@uellow.com>',
                 'body_html': (
                     '<div style="font-family:sans-serif">'
                     '<h2 style="color:#412402">%s</h2>'

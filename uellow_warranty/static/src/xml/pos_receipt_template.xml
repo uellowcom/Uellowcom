@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="uellow_warranty.OrderReceipt">
+        <div class="pos-receipt u-pos-receipt p-2">
+            <t t-set="u" t-value="props.data.uReceipt"/>
+
+            <!-- HEADER -->
+            <div class="u-head">
+                <img t-if="u and u.company.id" t-attf-src="/web/image?model=res.company&amp;id={{u.company.id}}&amp;field=logo" alt="Logo" class="u-logo"/>
+                <div class="u-cn" t-esc="u and u.company.name"/>
+                <div t-if="u and u.company.nameAr" class="u-cnar" t-esc="u.company.nameAr"/>
+                <div class="u-ca">
+                    <t t-if="u and u.company.street"><t t-esc="u.company.street"/><t t-if="u.company.city">, <t t-esc="u.company.city"/></t><br/></t>
+                    <t t-if="u and u.company.phone"><t t-esc="u.company.phone"/></t><t t-if="u and u.company.email"> · <t t-esc="u.company.email"/></t>
+                </div>
+                <div class="u-doc">INVOICE · فاتورة</div>
+            </div>
+
+            <!-- META -->
+            <table class="u-meta">
+                <tr>
+                    <td><span class="k">Receipt · رقم</span><span class="v" t-esc="props.data.name"/></td>
+                    <td class="r"><span class="k">Date · التاريخ</span><span class="v" t-esc="props.data.date"/></td>
+                </tr>
+                <tr>
+                    <td><span class="k">Cashier · الكاشير</span><span class="v" t-esc="props.data.cashier"/></td>
+                    <td class="r"><span class="k">Register · نقطة البيع</span><span class="v" t-esc="u and u.register"/></td>
+                </tr>
+            </table>
+
+            <!-- CUSTOMER -->
+            <div t-if="u and u.partner" class="u-cust">
+                <div class="lbl">Customer · العميل</div>
+                <div class="nm" t-esc="u.partner.name"/>
+                <div class="ad">
+                    <t t-if="u.partner.street"><t t-esc="u.partner.street"/><t t-if="u.partner.city">, <t t-esc="u.partner.city"/></t><br/></t>
+                    <t t-if="u.partner.phone"><t t-esc="u.partner.phone"/></t><t t-if="u.partner.email"> · <t t-esc="u.partner.email"/></t>
+                </div>
+            </div>
+
+            <!-- ITEMS -->
+            <table class="u-items">
+                <thead><tr>
+                    <td>Item · المنتج</td>
+                    <td class="c">Qty<br/>كمية</td>
+                    <td class="r">Price<br/>السعر</td>
+                    <td class="r">Total<br/>الإجمالي</td>
+                </tr></thead>
+                <tbody>
+                    <tr t-foreach="props.data.orderlines" t-as="line" t-key="line_index">
+                        <td>
+                            <div class="pn" t-esc="line.uNameEn or line.productName"/>
+                            <div t-if="line.uNameAr" class="par" t-esc="line.uNameAr"/>
+                            <div t-if="line.discount and line.discount !== '0'" class="pa">−<t t-esc="line.discount"/>%</div>
+                        </td>
+                        <td class="c" t-esc="line.qty"/>
+                        <td class="r" t-esc="line.unitPrice"/>
+                        <td class="r" t-esc="line.price"/>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- TOTALS -->
+            <table class="u-tot">
+                <tr t-if="props.data.total_discount"><td>Discount · الخصم</td><td class="v">−<t t-esc="props.formatCurrency(props.data.total_discount)"/></td></tr>
+            </table>
+            <table class="u-grand"><tr>
+                <td class="lab">TOTAL<small>الإجمالي المستحق</small></td>
+                <td class="amt" t-esc="props.formatCurrency(props.data.amount_total)"/>
+            </tr></table>
+
+            <!-- PAYMENT -->
+            <div class="u-pay" t-foreach="props.data.paymentlines" t-as="line" t-key="line_index">
+                <span><t t-esc="line.name"/> · الدفع</span><span t-esc="props.formatCurrency(line.amount)"/>
+            </div>
+            <div t-if="props.data.show_change" class="u-pay">
+                <span>Change · الباقي</span><span t-esc="props.formatCurrency(props.data.order_change)"/>
+            </div>
+
+            <!-- WARRANTY (print option) -->
+            <div t-if="u and u.showWarranty" class="u-warr">
+                <span class="pill">🛡 Warranty · ضمان</span>
+                <span class="t" t-esc="u.warrantyNote"/>
+            </div>
+
+            <!-- hook divs for integrations -->
+            <div class="before-footer"/>
+            <div class="pos-receipt-order-data"/>
+
+            <!-- QR -->
+            <div t-if="props.data.pos_qr_code" class="u-qr">
+                <img t-att-src="props.data.pos_qr_code" class="pos-receipt-logo"/>
+                <div class="c">Scan to verify · امسح للتحقق</div>
+            </div>
+
+            <div class="u-thanks">Thank you for shopping with Uellow<small>شكرًا لتسوّقك مع يلو</small></div>
+
+            <div t-if="props.data.footer" class="u-foot" style="white-space:pre-line"><t t-esc="props.data.footer"/></div>
+
+            <!-- payment terminal tickets -->
+            <div class="after-footer">
+                <t t-foreach="props.data.paymentlines" t-as="line" t-key="line_index">
+                    <t t-if="line.ticket"><pre t-esc="line.ticket"/></t>
+                </t>
+            </div>
+
+            <!-- BARCODE (receipt number) -->
+            <div class="u-barcode pos-receipt-order-data">
+                <img t-attf-src="/report/barcode/?barcode_type=Code128&amp;value={{props.data.name}}&amp;width=600&amp;height=110" alt="barcode"/>
+                <div class="u-ref" t-esc="props.data.name"/>
+            </div>
+        </div>
+    </t>
+</templates>

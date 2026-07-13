@@ -103,6 +103,7 @@
             'uellow_theme/static/src/js/frontend/bottombar.js',
 
             'uellow_theme/static/src/scss/theme.scss',
+            'uellow_theme/static/src/scss/uellow_fonts.scss',  # Global Arabic font (Tajawal)
             'uellow_theme/static/src/scss/rtl.scss',
             'uellow_theme/static/src/scss/variants.scss',
             'uellow_theme/static/src/scss/website.scss',

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_dropship_category_list" model="ir.ui.view">
+        <field name="name">dropship.category.list</field>
+        <field name="model">dropship.category</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="image_preview" widget="html" string=""/>
+                <field name="icon"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="parent_id"/>
+                <field name="product_count"/>
+                <button name="action_view_products" type="object" icon="fa-cubes"
+                        string="Products" title="Show products in this category"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dropship_category_form" model="ir.ui.view">
+        <field name="name">dropship.category.form</field>
+        <field name="model">dropship.category</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_products" type="object"
+                                class="oe_stat_button" icon="fa-cubes">
+                            <field name="product_count" widget="statinfo" string="Products"/>
+                        </button>
+                    </div>
+                    <field name="image" widget="image" class="oe_avatar"
+                           options="{'size': [128, 128]}"/>
+                    <group>
+                        <group>
+                            <field name="icon" placeholder="💍"/>
+                            <field name="name"/>
+                            <field name="code"/>
+                        </group>
+                        <group>
+                            <field name="parent_id"/>
+                            <field name="sequence"/>
+                            <field name="product_count"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Live tile preview (shown on app / storefront)">
+                        <field name="image_preview" widget="html" nolabel="1"/>
+                    </group>
+                    <p class="text-muted">The tile automatically shows the real
+                       <b>AliExpress photo</b> of the best product in this category
+                       (see the live preview above). To override it, upload a custom
+                       <b>Category Image</b> (top-right); leave it empty to keep the
+                       automatic AliExpress image.</p>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dropship_category_search" model="ir.ui.view">
+        <field name="name">dropship.category.search</field>
+        <field name="model">dropship.category</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter name="roots" string="Top-level" domain="[('parent_id','=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="g_parent" string="Parent" context="{'group_by':'parent_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dropship_category" model="ir.actions.act_window">
+        <field name="name">World Categories</field>
+        <field name="res_model">dropship.category</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Uellow World categories</p>
+            <p>Separate, module-only category taxonomy for the Uellow World store —
+               each with its own icon. Auto-synced from the source catalog.</p>
+        </field>
+    </record>
+
+    <record id="action_dropship_category_sync" model="ir.actions.server">
+        <field name="name">Sync from catalog</field>
+        <field name="model_id" ref="model_dropship_category"/>
+        <field name="state">code</field>
+        <field name="code">action = model._sync_from_catalog()</field>
+    </record>
+
+    <record id="action_dropship_category_import_tree" model="ir.actions.server">
+        <field name="name">Import all AliExpress categories</field>
+        <field name="model_id" ref="model_dropship_category"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_import_provider_tree()</field>
+    </record>
+
+</odoo>

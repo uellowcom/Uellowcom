@@ -185,7 +185,11 @@
         <!-- Stock/Ship/Express row — ABOVE qty+buttons -->
         <xpath expr="//div[@id='o_wsale_cta_wrapper']" position="before">
             <t t-set="ppc_qty"  t-value="ppc_sudo.virtual_available"/>
-            <t t-set="ppc_cont" t-value="ppc_sudo.product_variant_ids and ppc_sudo.product_variant_ids[0].allow_out_of_stock_order"/>
+            <!-- Available if: continue-selling OR the product does NOT track
+                 inventory (is_storable=False → Odoo never blocks its sale, so it
+                 is always orderable). Without the is_storable check, non-tracked
+                 goods (virtual_available always 0) wrongly showed "✗ غير متوفر". -->
+            <t t-set="ppc_cont" t-value="(ppc_sudo.product_variant_ids and ppc_sudo.product_variant_ids[0].allow_out_of_stock_order) or (not ppc_sudo.is_storable)"/>
             <div class="ppc-stock-express-row" id="ppcStockInline">
                 <t t-if="ppc_qty > 0">
                     <span class="ppc-stk ppc-in-stock">

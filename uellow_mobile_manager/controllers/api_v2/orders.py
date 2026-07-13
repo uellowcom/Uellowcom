@@ -19,7 +19,71 @@ from ._common import (
 )
 from .cart import (_get_or_create_order, serialize_cart,
                    effective_shipping_price, carrier_is_express,
-                   selected_line_ids, subset_view, split_cart_for_checkout)
+                   selected_line_ids, subset_view, split_cart_for_checkout,
+                   _cart_token)
+
+
+def _world_website_id():
+    try:
+        return int(request.env['ir.config_parameter'].sudo()
+                   .get_param('uellow_dropship.website_id') or 0)
+    except Exception:  # noqa: BLE001
+        return 0
+
+
+def _request_dropship_cart():
+    """This request's draft cart that carries dropship lines — found by the
+    logged-in partner OR the guest cart token, IGNORING website scoping.
+
+    Why: the app browses Uellow World on the DEFAULT (Kuwait) website context
+    and does not always send X-Website-Id on the checkout calls, so
+    _get_or_create_order (which filters by get_website()) can't find the
+    World cart that lives under website 19. Without this, World checkouts fell
+    back to COD + a bogus 'Standard Delivery' and COD stayed visible."""
+    Order = request.env['sale.order'].sudo()
+    dom = [('state', '=', 'draft'),
+           ('order_line.product_id.product_tmpl_id.is_dropship', '=', True)]
+    partner = current_partner()
+    if partner:
+        o = Order.search(dom + [('partner_id', '=', partner.id)],
+                         order='id desc', limit=1)
+        if o:
+            return o
+    try:
+        tok = _cart_token()
+    except Exception:  # noqa: BLE001
+        tok = None
+    if tok:
+        o = Order.search(dom + [('mobile_cart_token', '=', tok)],
+                         order='id desc', limit=1)
+        if o:
+            return o
+    return Order.browse()
+
+
+def _is_world_checkout(order):
+    """True when this checkout is a Uellow World (dropship) order. Trusts a
+    resolved order (its website / dropship lines); only when NO order is
+    resolved does it probe for the request's dropship cart — so a normal
+    local checkout is never mis-flagged."""
+    wid = _world_website_id()
+    if not wid:
+        return False
+    try:
+        if get_website().id == wid:
+            return True
+    except Exception:  # noqa: BLE001
+        pass
+    if order:
+        if order.website_id and order.website_id.id == wid:
+            return True
+        try:
+            return any(l.product_id.product_tmpl_id.is_dropship
+                       for l in order.order_line if l.product_id)
+        except Exception:  # noqa: BLE001
+            return False
+    # no order under the current website → probe for a dropship cart
+    return bool(_request_dropship_cart())
 
 
 def _guest_gate(p_or_kw):
@@ -80,11 +144,51 @@ def serialize_order(order, detail=False):
         'line_count': len(order.order_line.filtered(lambda l: not l.display_type and not l.is_reward_line)),
         # v2.1.42 — customer cancellation: allowed while draft/confirmed.
         # Paid orders turn into an admin-approval request instead.
+        # A dropship order already forwarded to the provider (AliExpress) can
+        # no longer be cancelled by the customer — it's being shipped.
         'can_cancel': (u_status['code'] in ('draft', 'confirmed')
-                       and not getattr(order, 'cancel_request', False)),
+                       and not getattr(order, 'cancel_request', False)
+                       and not getattr(order, 'dropship_order_ref', False)),
         'cancel_requested': bool(getattr(order, 'cancel_request', False)),
         'is_paid': _order_is_paid(order),
     }
+    # Uellow World (dropship) tracking: China origin → air shipping → live
+    # AliExpress tracking timeline. Drives the World order-tracking screen.
+    try:
+        if getattr(order, 'is_dropship_order', False):
+            _ref = getattr(order, 'dropship_order_ref', '') or ''
+            _trk = getattr(order, 'dropship_tracking', '') or ''
+            _delivered = u_status['code'] in ('delivered', 'done', 'completed')
+            base['dropship'] = {
+                'is_dropship': True,
+                'ships_by_air': True,
+                'origin': {'en': 'China', 'ar': 'الصين', 'flag': '🇨🇳'},
+                'tracking_no': _trk,
+                'carrier': getattr(order, 'dropship_carrier', '') or 'Air Express',
+                'status': getattr(order, 'dropship_status', '') or '',
+                'timeline': [
+                    {'key': 'placed', 'icon': 'receipt',
+                     'label': {'en': 'Order placed', 'ar': 'تم تأكيد الطلب'},
+                     'done': True,
+                     'date': order.date_order and order.date_order.isoformat() or None},
+                    {'key': 'sourced', 'icon': 'store',
+                     'label': {'en': 'Sent to supplier in China',
+                               'ar': 'أُرسل للمورّد في الصين'},
+                     'done': bool(_ref), 'date': None},
+                    {'key': 'shipped', 'icon': 'flight',
+                     'label': {'en': 'Shipped by air from China',
+                               'ar': 'شُحن جواً من الصين'},
+                     'done': bool(_trk), 'date': None},
+                    {'key': 'transit', 'icon': 'local_shipping',
+                     'label': {'en': 'In transit', 'ar': 'في الطريق إليك'},
+                     'done': bool(_trk) and not _delivered, 'date': None},
+                    {'key': 'delivered', 'icon': 'check_circle',
+                     'label': {'en': 'Delivered', 'ar': 'تم التوصيل'},
+                     'done': _delivered, 'date': None},
+                ],
+            }
+    except Exception:  # noqa: BLE001
+        pass
     if not detail:
         return base
     lines = []
@@ -649,6 +753,11 @@ class MobileOrdersAPI(http.Controller):
     def shipping_methods(self, **kw):
         order = _get_or_create_order(create=False)
         if not order:
+            # Uellow World ships INTERNATIONALLY (never COD). If this request
+            # is a World checkout (dropship cart even under another website),
+            # return the World carrier instead of the COD fallback.
+            if _is_world_checkout(None):
+                return ok(self._world_shipping_list(None))
             return ok([_cod_carrier_dict()])
         # v2.2.04 — live re-rate on address switch: the app passes the
         # picked address_id so zone prices follow it instantly (rates
@@ -676,6 +785,41 @@ class MobileOrdersAPI(http.Controller):
                                lambda: self._shipping_methods_for(order))
         return self._shipping_methods_for(order)
 
+    def _world_shipping_list(self, order):
+        """The single Uellow World International carrier as the app's shipping
+        list. Returns the REAL delivery.carrier so the app can select & persist
+        it; price comes from the World settings via its rate method."""
+        Carrier = request.env['delivery.carrier'].sudo()
+        wc = Carrier.search([('delivery_type', '=', 'uellow_world'),
+                             ('active', '=', True)], limit=1)
+        if not wc:
+            try:
+                wc = Carrier._ensure_world_carrier()
+            except Exception:  # noqa: BLE001
+                wc = Carrier.browse()
+        price = 0.0
+        if wc:
+            try:
+                rate = wc.uellow_world_rate_shipment(order)
+                price = rate.get('price', 0.0) if rate.get('success') else 0.0
+            except Exception:  # noqa: BLE001
+                price = 0.0
+        is_free = (price or 0.0) <= 0.0
+        return [{
+            'id': wc.id if wc else -100,
+            'name': {'en': 'International Shipping (from China)',
+                     'ar': 'شحن دولي (من الصين)'},
+            'price': fmt_price(price),
+            'is_free': is_free,
+            'free_label': {'en': 'Free', 'ar': 'مجاني'},
+            'is_default': True,
+            'zone': None, 'logo': None, 'is_cod_fallback': False,
+            # Uellow World is prepaid-only (international from China): tell the
+            # app's _codAllowed() to hide Cash-on-Delivery even on already
+            # installed builds that don't know about the World payment filter.
+            'cod_enabled': False,
+        }]
+
     def _shipping_methods_for(self, order):
         # Build a permissive carrier list — three rounds of fallback so
         # the picker is never empty:
@@ -685,6 +829,10 @@ class MobileOrdersAPI(http.Controller):
         # Always append a synthetic "Cash on Delivery" entry so the
         # customer can pick at-door cash even if no carrier is set up.
         website = get_website()
+        # Uellow World (dropship) ships INTERNATIONALLY from China — not via the
+        # local Kuwait carriers. Return the single International carrier.
+        if _is_world_checkout(order):
+            return self._world_shipping_list(order)
         Carrier = request.env['delivery.carrier'].sudo()
         carriers = Carrier
         if website:
@@ -1135,8 +1283,31 @@ class MobileOrdersAPI(http.Controller):
             if cod_prov is None and ('cash on delivery' in nm or nm.strip() == 'cod'):
                 cod_prov = prov
 
+        # Uellow World (dropship) is PREPAID ONLY — an AliExpress/China order
+        # can never be Cash-on-Delivery, so hide COD on the World store.
+        _icp = request.env['ir.config_parameter'].sudo()
+        try:
+            _world_wid = int(_icp.get_param('uellow_dropship.website_id') or 0)
+        except Exception:  # noqa: BLE001
+            _world_wid = 0
+        _prepaid_only = _icp.get_param('uellow_dropship.prepaid_only') in ('True', '1', 'true')
+        # Detect World robustly via the shared helper: request website OR the
+        # resolved order's website/dropship lines OR — when no order resolves
+        # under the current website — the request's dropship cart (the app
+        # browses World on the default website and may not send X-Website-Id,
+        # so COD used to stay visible on World). This closes every path.
+        try:
+            _pm_order = _get_or_create_order(create=False)
+        except Exception:  # noqa: BLE001
+            _pm_order = None
+        try:
+            _is_world_co = _is_world_checkout(_pm_order)
+        except Exception:  # noqa: BLE001
+            _is_world_co = False
+        _hide_cod = _is_world_co and _prepaid_only
+
         curated = []
-        if cod_prov:
+        if cod_prov and not _hide_cod:
             curated.append({
                 'id': cod_prov.id, 'code': 'cod', 'provider_code': cod_prov.code,
                 'name': {'en': 'Cash on Delivery', 'ar': 'الدفع عند الاستلام'},
@@ -1270,13 +1441,17 @@ class MobileOrdersAPI(http.Controller):
             })
         # If no providers were configured at all, add a Cash on Delivery
         # fallback so the customer can still place an order.
-        if not out:
+        if not out and not _hide_cod:
             out.append({
                 'id': -1,
                 'name': {'en': 'Cash on Delivery', 'ar': 'الدفع عند الاستلام'},
                 'code': 'cod', 'provider_code': 'custom',
                 'image': None, 'is_default': True,
             })
+        # Uellow World is prepaid-only — strip COD from EVERY path (the curated
+        # list, the provider loop, and the empty fallback all add it).
+        if _hide_cod:
+            out = [m for m in out if m.get('code') != 'cod']
         return ok(out)
 
     @http.route('/api/mobile/v2/orders/checkout/summary', type='http', auth='public',
@@ -1376,6 +1551,47 @@ class MobileOrdersAPI(http.Controller):
                     carrier = None
         except Exception:
             carrier = None
+        # ── SHIP-GUARD (no-carrier case, 2026-06-26) ─────────────────────
+        # Some checkouts reached confirmation WITHOUT a shipping method, and
+        # the guard further below only runs when a carrier WAS chosen — so
+        # these orders confirmed with 0 delivery even when below the
+        # free-shipping threshold (e.g. S06360 / sub-10-KD app orders).
+        # Resolve the website's default (else cheapest available non-express)
+        # carrier here so the standard pricing path runs. effective_shipping_
+        # price() still returns 0 when the order genuinely qualifies for free
+        # shipping (>= threshold), so qualifying carts are NEVER over-charged.
+        if carrier is None:
+            try:
+                _ws0 = get_website()
+                _Carr = request.env['delivery.carrier'].sudo()
+                _cands = _Carr.search([
+                    ('is_published', '=', True), ('active', '=', True),
+                    '|', ('website_id', '=', False),
+                    ('website_id', '=', _ws0.id if _ws0 else False)])
+                _cc0 = ''
+                _st0 = order.partner_shipping_id or order.partner_id
+                if _st0 and _st0.country_id:
+                    _cc0 = _st0.country_id.code or ''
+                # Match the SAME availability check used below (default
+                # check_time) so the auto-picked carrier can never trip the
+                # CARRIER_UNAVAILABLE block.
+                _cands = _cands.filtered(
+                    lambda c: not hasattr(c, 'available_for_order')
+                    or c.available_for_order(
+                        order, website=_ws0, country_code=_cc0,
+                        channel='app'))
+                # Paid, non-express only; prefer is_default else cheapest.
+                _paid = _cands.filtered(
+                    lambda c: not carrier_is_express(c)
+                    and (getattr(c, 'fixed_price', 0) or 0) > 0)
+                _pick = _paid.filtered(
+                    lambda c: 'is_default' in c._fields and c.is_default)[:1]
+                if not _pick:
+                    _pick = _paid.sorted(lambda c: c.fixed_price)[:1]
+                if _pick:
+                    carrier = _pick
+            except Exception:
+                carrier = None
         if carrier is not None and hasattr(carrier, 'available_for_order'):
             try:
                 _cc2 = ''
@@ -1436,6 +1652,44 @@ class MobileOrdersAPI(http.Controller):
             if _free_lbl is not None:
                 cod_surcharge_amt = 0.0    # genuinely free stays free
             ship_rate = float(price or 0.0) + cod_surcharge_amt
+
+            # ── SHIP-GUARD (shipping-leak fix) ───────────────────────────
+            # Never confirm an order with 0 delivery charge unless it
+            # GENUINELY qualified for free shipping (_free_lbl set). If the
+            # price chain collapsed to 0 for a non-free order (a transient
+            # rate_shipment failure or an address whose zone wasn't resolved
+            # at that instant), recover with the best positive estimate:
+            # zone price → live carrier rate → carrier fixed price. This is
+            # exactly what let S06184/S06174 slip through with 0 shipping
+            # while sibling sub-threshold orders were correctly charged.
+            if _free_lbl is None and float(price or 0.0) <= 0.0:
+                _fallback = 0.0
+                try:
+                    if _zone and float(getattr(_zone, 'price', 0) or 0) > 0:
+                        _fallback = float(_zone.price)
+                except Exception:
+                    pass
+                if _fallback <= 0.0:
+                    try:
+                        _rr2 = carrier.rate_shipment(order)
+                        if isinstance(_rr2, dict) and _rr2.get('success') \
+                                and float(_rr2.get('price') or 0) > 0:
+                            _fallback = float(_rr2.get('price'))
+                    except Exception:
+                        pass
+                if _fallback <= 0.0:
+                    _fallback = float(getattr(carrier, 'fixed_price', 0.0) or 0.0)
+                if _fallback > 0.0:
+                    ship_rate = _fallback + cod_surcharge_amt
+                    try:
+                        import logging
+                        logging.getLogger(__name__).warning(
+                            'SHIP-GUARD order %s: shipping resolved to 0 for a '
+                            'non-free order — recovered to %.3f (+%.3f surcharge).',
+                            order.name, _fallback, cod_surcharge_amt)
+                    except Exception:
+                        pass
+
             # Refund eligibility (online payers): BOTH the zone switch and
             # the global Mobile-App-Settings switch must be on.
             try:
@@ -1547,6 +1801,17 @@ class MobileOrdersAPI(http.Controller):
 
         if not cod:
             base = base_url().rstrip('/')
+            # The customer-facing return/cancel URLs stay on the app's own
+            # domain (the webview closes on that path). The UPayments WEBHOOK,
+            # however, is server-to-server and must be ONE stable, registered
+            # URL — not a per-app subdomain (kwapp/saapp/qaapp/…), which the
+            # gateway may not have whitelisted. Pin it to a canonical base
+            # (config `uellow_upayments.webhook_base`, else web.base.url) so
+            # every charge points UPayments at the same reachable endpoint.
+            _icp = request.env['ir.config_parameter'].sudo()
+            wh_base = (_icp.get_param('uellow_upayments.webhook_base')
+                       or _icp.get_param('web.base.url')
+                       or base).rstrip('/')
             gateway = {'knet': 'knet', 'card': 'cc', 'apple_pay': 'apple-pay',
                        'google_pay': 'google-pay'}.get(pm)
             # Charge total INCLUDES shipping (the draft order has no delivery
@@ -1566,9 +1831,10 @@ class MobileOrdersAPI(http.Controller):
             if hasattr(order, '_upayments_create_charge'):
                 try:
                     result['payment_url'] = order._upayments_create_charge(
-                        return_url='%s/payments/upayments/return' % base,
+                        return_url='%s/payments/upayments/return?oid=%s'
+                        % (base, order.id),
                         cancel_url='%s/payments/upayments/cancel' % base,
-                        notify_url='%s/payments/upayments/webhook' % base,
+                        notify_url='%s/payments/upayments/webhook' % wh_base,
                         lang=get_lang(), gateway=gateway, amount=charge_amount)
                 except Exception as e:
                     return fail('PAYMENT_INIT_FAILED', str(e), 400)

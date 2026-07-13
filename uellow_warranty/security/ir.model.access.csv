@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_warranty_policy_user,warranty.policy.user,model_uellow_warranty_policy,base.group_user,1,1,1,0
+access_warranty_policy_mgr,warranty.policy.mgr,model_uellow_warranty_policy,base.group_system,1,1,1,1
+access_warranty_card_user,warranty.card.user,model_uellow_warranty_card,base.group_user,1,1,1,0
+access_warranty_card_mgr,warranty.card.mgr,model_uellow_warranty_card,base.group_system,1,1,1,1
+access_warranty_claim_user,warranty.claim.user,model_uellow_warranty_claim,base.group_user,1,1,1,0
+access_warranty_claim_mgr,warranty.claim.mgr,model_uellow_warranty_claim,base.group_system,1,1,1,1
+access_warranty_card_portal,warranty.card.portal,model_uellow_warranty_card,base.group_portal,1,0,0,0

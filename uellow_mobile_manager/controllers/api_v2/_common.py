@@ -412,7 +412,19 @@ _WEBSITE_CCY = {
 
 
 def web_currency():
-    """The display currency for the active website (per country)."""
+    """The display currency: a currency the user explicitly picked in the app
+    settings (X-Currency header) wins; otherwise the website's per-country
+    default. `fmt_price` converts every amount into whatever this returns."""
+    try:
+        chosen = (request.httprequest.headers.get('X-Currency')
+                  or request.httprequest.args.get('currency') or '').upper().strip()
+        if chosen:
+            c = request.env['res.currency'].sudo().with_context(
+                active_test=False).search([('name', '=', chosen)], limit=1)
+            if c:
+                return c
+    except Exception:  # noqa: BLE001
+        pass
     try:
         w = get_website()
         code = _WEBSITE_CCY.get(w.id)

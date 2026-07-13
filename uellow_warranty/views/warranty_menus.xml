@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_warranty_root" name="Warranty" sequence="65" web_icon="uellow_warranty,static/description/icon.png"/>
+
+    <menuitem id="menu_warranty_cards" name="Warranty Cards"
+              parent="menu_warranty_root" action="action_warranty_card" sequence="10"/>
+    <menuitem id="menu_warranty_claims" name="Claims"
+              parent="menu_warranty_root" action="action_warranty_claim" sequence="20"/>
+
+    <menuitem id="menu_warranty_config" name="Configuration"
+              parent="menu_warranty_root" sequence="90"/>
+    <menuitem id="menu_warranty_policies" name="Policies"
+              parent="menu_warranty_config" action="action_warranty_policy" sequence="10"/>
+    <menuitem id="menu_warranty_settings" name="Settings"
+              parent="menu_warranty_config" action="action_warranty_settings" sequence="20"/>
+</odoo>

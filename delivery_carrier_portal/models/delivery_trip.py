@@ -162,7 +162,8 @@ class DeliveryTripLine(models.Model):
 
     sequence = fields.Integer(default=10)
     trip_id = fields.Many2one('delivery.trip', string='Trip', ondelete='cascade')
-    sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True)
+    sale_order_id = fields.Many2one('sale.order', string='Sale Order', required=True,
+                                    ondelete='cascade')
     driver_id = fields.Many2one('delivery.driver', string='Driver')
 
     delivery_status = fields.Selection(

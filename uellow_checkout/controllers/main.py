@@ -99,6 +99,129 @@ def _save_uc_order(order, payment_method, env):
         _logger.warning('save_uc_order: %s', e)
 
 
+# Reuse the APP's shipping engine so the storefront charges EXACTLY what the
+# app does (zones + free-shipping by carrier-company threshold / free-over /
+# coupon / flags). Defensive import: if the app module is absent we degrade to
+# the simple rate→fixed resolver below.
+try:
+    from odoo.addons.uellow_mobile_manager.controllers.api_v2.cart import (
+        effective_shipping_price as _app_effective_ship)
+except Exception:
+    _app_effective_ship = None
+# Reuse the APP's express-availability policy (weekly schedule + zone working
+# hours + order cutoff) so the storefront shows the SAME "unavailable now"
+# state, note and cutoff line as the app.
+try:
+    from odoo.addons.uellow_mobile_manager.controllers.api_v2.orders import (
+        _carrier_now_availability as _app_carrier_avail)
+except Exception:
+    _app_carrier_avail = None
+
+
+def _uc_zone_for(carrier, order):
+    """The matched Uellow delivery zone for this carrier + destination (or
+    None) — used for the cutoff line and the availability policy."""
+    try:
+        if 'uellow_zone_ids' in carrier._fields and carrier.uellow_zone_ids:
+            return request.env['uellow.delivery.zone'].sudo().quote_for(
+                carrier, order.partner_shipping_id or order.partner_id) or None
+    except Exception:
+        pass
+    return None
+
+
+def _uc_carrier_availability(carrier, order, lang):
+    """(available_now, note_str, cutoff_str) matching the app exactly."""
+    zone = _uc_zone_for(carrier, order)
+    cutoff = ''
+    try:
+        cutoff = (zone.cutoff_time or '') if zone else ''
+    except Exception:
+        cutoff = ''
+    if _app_carrier_avail is None:
+        return True, '', cutoff
+    try:
+        ok, note = _app_carrier_avail(carrier, zone)
+        note_str = ''
+        if note:
+            note_str = note.get('ar' if (lang or '').startswith('ar') else 'en', '') or ''
+        return bool(ok), note_str, cutoff
+    except Exception:
+        return True, '', cutoff
+
+
+def _uc_carrier_name(carrier, lang):
+    """Customer-facing carrier name — the public label (EN/AR), exactly like
+    the app. Falls back to the internal method name when no label is set."""
+    ar = (lang or '').startswith('ar')
+    try:
+        if ar:
+            return (carrier.public_label_ar or carrier.public_label_en
+                    or carrier.name or '')
+        return (carrier.public_label_en or carrier.public_label_ar
+                or carrier.name or '')
+    except Exception:
+        return carrier.name or ''
+
+
+def _uc_base_ship_price(carrier, order):
+    """Base price BEFORE the free-shipping engine, resolved with the SAME
+    chain the app uses: Uellow zone quote → rate_shipment (success only) →
+    carrier fixed price. Never collapses to 0 on a transient rate failure."""
+    price = None
+    try:
+        if 'uellow_zone_ids' in carrier._fields and carrier.uellow_zone_ids:
+            z = request.env['uellow.delivery.zone'].sudo().quote_for(
+                carrier, order.partner_shipping_id or order.partner_id)
+            if z:
+                price = float(z.price or 0.0)
+    except Exception as e:
+        _logger.warning('UC zone quote: %s', e)
+    if price is None:
+        try:
+            rate = carrier.rate_shipment(order)
+            if isinstance(rate, dict) and rate.get('success'):
+                price = float(rate.get('price', 0.0) or 0.0)
+        except Exception as e:
+            _logger.warning('UC rate_shipment failed (%s)', e)
+    if price is None:
+        try:
+            price = float(carrier.fixed_price or 0.0)
+        except Exception:
+            price = 0.0
+    return price
+
+
+def _uc_resolve_shipping(carrier, order):
+    """(price, free_label) — the FINAL charged shipping, matching the app's
+    engine. free_label is a {'en','ar'} dict when delivery is genuinely free,
+    else None."""
+    base = _uc_base_ship_price(carrier, order)
+    free_label = None
+    if _app_effective_ship is not None:
+        try:
+            base, free_label = _app_effective_ship(order, carrier, base)
+        except Exception as e:
+            _logger.warning('UC effective_shipping_price: %s', e)
+    base = float(base or 0.0)
+    # SHIP-GUARD: a non-free order must never confirm with 0 shipping.
+    if free_label is None and base <= 0.0:
+        try:
+            fp = float(carrier.fixed_price or 0.0)
+        except Exception:
+            fp = 0.0
+        if fp > 0.0:
+            _logger.warning('SHIP-GUARD %s: rate 0 for non-free order — fixed %.3f',
+                            order.name, fp)
+            base = fp
+    return base, free_label
+
+
+def _uc_ship_price(carrier, order):
+    """Just the charged price (for set_delivery_line)."""
+    return _uc_resolve_shipping(carrier, order)[0]
+
+
 try:
     from odoo.addons.website_sale.controllers.main import WebsiteSale as _WSBase
 except ImportError:
@@ -116,12 +239,12 @@ class UellowCheckout(_WSBase):
         try:
             order = request.website.sale_get_order()
             if not order or line_id is None or quantity is None:
-                return {'success': False}
+                return _json_resp({'success': False})
             lid = int(line_id)
             qty = int(quantity)
             line = request.env['sale.order.line'].sudo().browse(lid)
             if not line.exists() or line.order_id.id != order.id:
-                return {'success': False, 'error': 'line_not_found'}
+                return _json_resp({'success': False, 'error': 'line_not_found'})
             if qty <= 0:
                 line.sudo().unlink()
             else:
@@ -145,16 +268,16 @@ class UellowCheckout(_WSBase):
                 for l in order.sudo().order_line
                 if not l.is_delivery
             ), 3)
-            return {
+            return _json_resp({
                 'success':  True,
                 'removed':  qty <= 0,
                 'subtotal': product_total,
                 'total':    product_total,
                 'lines':    lines_data,
-            }
+            })
         except Exception as e:
             _logger.warning('cart_update: %s', e)
-            return {'success': False, 'error': str(e)}
+            return _json_resp({'success': False, 'error': str(e)})
 
     # ── Cart ─────────────────────────────────────────────────────────────────
     @http.route(['/shop/cart'], type='http', auth='public', website=True, sitemap=False)
@@ -199,19 +322,50 @@ class UellowCheckout(_WSBase):
                 [('country_id', '=', sel_cid)], order='name asc')
         carriers = []
         try:
-            all_c = request.env['delivery.carrier'].sudo().search([('website_published', '=', True)])
+            # Destination country for scoping (selected country → shipping
+            # partner → KW fallback).
+            dest_code = ''
+            try:
+                _country = request.env['res.country'].sudo().browse(sel_cid) \
+                    if sel_cid else False
+                dest_code = (_country.code or '') if _country else ''
+            except Exception:
+                dest_code = ''
+            all_c = request.env['delivery.carrier'].sudo().search(
+                [('website_published', '=', True)])
             for c in all_c:
-                price = 0.0
+                # Issue #2 fix — only offer carriers actually available on THIS
+                # website + destination + channel. Previously every published
+                # carrier showed (so e.g. SMSA/Bosta leaked into Kuwait).
                 try:
-                    res = c.rate_shipment(order)
-                    if isinstance(res, dict) and res.get('success'):
-                        price = res.get('price', 0.0) or 0.0
+                    if hasattr(c, 'available_for_order') and not c.available_for_order(
+                            order, website=request.website,
+                            country_code=dest_code, channel='website',
+                            check_time=False):
+                        continue
                 except Exception:
                     pass
-                if price == 0.0:
-                    try: price = float(c.fixed_price or 0.0)
-                    except Exception: price = 0.0
-                carriers.append({'carrier': c, 'price': price})
+                # SHIP-GUARD + engine: picker price == charged price (zones +
+                # free shipping). Issue #3 fix — show the public label name.
+                price, free_label = _uc_resolve_shipping(c, order)
+                _ar = lang.startswith('ar')
+                _sub = ((c.public_desc_ar or c.public_desc_en) if _ar
+                        else (c.public_desc_en or c.public_desc_ar)) or ''
+                # Express-availability policy (same as the app): show out-of-
+                # hours carriers dimmed with a note + cutoff line.
+                avail_now, avail_note, cutoff = _uc_carrier_availability(c, order, lang)
+                carriers.append({
+                    'carrier':       c,
+                    'price':         price,
+                    'name':          _uc_carrier_name(c, lang),
+                    'sub':           _sub,
+                    'is_free':       free_label is not None,
+                    'free_label':    (free_label.get('ar' if _ar else 'en')
+                                      if isinstance(free_label, dict) else None),
+                    'available_now': avail_now,
+                    'avail_note':    avail_note,
+                    'cutoff':        cutoff,
+                })
         except Exception as e:
             _logger.warning('UC carriers: %s', e)
         return request.render('uellow_checkout.address', {
@@ -263,23 +417,58 @@ class UellowCheckout(_WSBase):
             'partner_invoice_id':  partner.id,
             'partner_shipping_id': partner.id,
         })
+        carrier = None
+        dest_code = (partner.country_id.code or '') if partner.country_id else ''
         carrier_id = post.get('carrier_id')
         if carrier_id:
             try:
                 c = request.env['delivery.carrier'].sudo().browse(int(carrier_id))
                 if c.exists():
-                    try:
-                        price_unit = 0.0
-                        rate = c.rate_shipment(order)
-                        if isinstance(rate, dict) and rate.get('success'):
-                            price_unit = rate.get('price', 0.0)
-                        order.sudo().set_delivery_line(c, price_unit)
-                    except Exception as e:
-                        _logger.warning('set_delivery_line: %s', e)
-                        try:    order._check_carrier_quotation(c)
-                        except Exception: order.sudo().write({'carrier_id': c.id})
+                    carrier = c
+            except Exception:
+                carrier = None
+        # Express-availability policy: reject an out-of-hours selection (e.g.
+        # express after closing) so it falls back to an open method below.
+        if carrier is not None and hasattr(carrier, 'available_for'):
+            try:
+                if not carrier.available_for(website=request.website,
+                                             country_code=dest_code,
+                                             channel='website', check_time=True):
+                    carrier = None
+            except Exception:
+                pass
+        # Safety net — a customer must NEVER reach payment without a shipping
+        # method. Default to the first carrier available NOW; if nothing is
+        # open right now, fall back to any location-valid carrier so the order
+        # still gets a correct shipping line.
+        if carrier is None:
+            try:
+                published = request.env['delivery.carrier'].sudo().search(
+                    [('website_published', '=', True)])
+                for _ct in (True, False):
+                    for c in published:
+                        try:
+                            if not hasattr(c, 'available_for_order') or c.available_for_order(
+                                    order, website=request.website,
+                                    country_code=dest_code, channel='website',
+                                    check_time=_ct):
+                                carrier = c
+                                break
+                        except Exception:
+                            continue
+                    if carrier is not None:
+                        break
             except Exception as e:
-                _logger.warning('carrier setup: %s', e)
+                _logger.warning('default carrier: %s', e)
+        if carrier is not None:
+            try:
+                # SHIP-GUARD + engine: zone/free-shipping aware price; never 0
+                # on a glitch for a non-free order.
+                order.sudo().set_delivery_line(carrier, _uc_ship_price(carrier, order))
+            except Exception as e:
+                _logger.warning('set_delivery_line: %s', e)
+                try:    order._check_carrier_quotation(carrier)
+                except Exception: order.sudo().write({'carrier_id': carrier.id})
         note_parts = []
         addr_detail = full_addr or ', '.join(filter(None, [street, city]))
         if addr_detail: note_parts.append('Delivery: ' + addr_detail)
@@ -330,13 +519,14 @@ class UellowCheckout(_WSBase):
             note = (note + chr(10) if note else '') + 'Payment: ' + payment_method
         order.write({'note': note})
 
-        # Ensure delivery line has price
+        # Ensure delivery line has price. SHIP-GUARD: resolve via the shared
+        # resolver so a transient rate failure can't confirm the order with
+        # 0 shipping (it falls back to the carrier's fixed price; a genuine
+        # free-over 0 is preserved).
         if order.carrier_id:
             try:
-                rate = order.carrier_id.rate_shipment(order)
-                if isinstance(rate, dict) and rate.get('success'):
-                    order.sudo().set_delivery_line(
-                        order.carrier_id, rate.get('price', 0.0))
+                order.sudo().set_delivery_line(
+                    order.carrier_id, _uc_ship_price(order.carrier_id, order))
             except Exception as e:
                 _logger.warning('rate_shipment: %s', e)
 
@@ -375,6 +565,36 @@ class UellowCheckout(_WSBase):
                 'currency': cur,
                 'redirect': '/shop/order/success?order_id=%d' % order.id,
             }
+
+        # Taly installments (4 payments) — MUST route to Taly, NOT UPayments.
+        # Previously 'taly' fell through to the UPayments branch below and the
+        # safety-net remapped it to KNET, so the customer was sent to KNET.
+        if payment_method.lower() == 'taly':
+            try:
+                # delivery line already set above; amount_total includes it.
+                pay_url = order._taly_mobile_charge(_lang())
+                if not pay_url:
+                    raise Exception('Taly did not return a checkout URL')
+                d = _raw()
+                _save_uc_order(order, 'taly', request.env)
+                # Order stays a draft until the Taly webhook confirms it; just
+                # detach it from the session cart and send the customer to Taly.
+                request.website.sale_reset()
+                return {
+                    'success': True, 'redirect': pay_url, 'order_id': order.id,
+                    'order_name': d['name'], 'amount_total': '%.3f' % d['total'],
+                }
+            except Exception as e:
+                import traceback
+                _logger.error('UELLOW TALY ERROR: %s\n%s', e, traceback.format_exc())
+                # Surface Taly's own (bilingual) business message — e.g. the
+                # minimum-order rule — so the customer sees the real reason
+                # instead of a generic error.
+                msg = getattr(e, 'name', None) or str(e) or ''
+                if not msg:
+                    msg = 'Taly installments unavailable right now — please pick another method'
+                return {'success': False, 'error': msg[:300], 'detail': str(e)[:200]}
+
         # Online payment via UPayments
         # Flow: create tx → call _get_specific_rendering_values (hits UPayments API)
         # → get upay_payment_link_url → redirect customer there
@@ -401,6 +621,15 @@ class UellowCheckout(_WSBase):
             if not pay_method and payment_method not in ('cod', 'custom'):
                 pay_method = request.env['payment.method'].sudo().search(
                     [('code', '=', payment_method), ('active', '=', True)], limit=1)
+            # Safety net: UPayments REQUIRES a payment method that maps to a
+            # gateway `src` (knet/cc/apple-pay/...). If none resolved, the API
+            # rejects the charge with "Payment gateway src is empty" and the
+            # customer never gets redirected. Default to a working gateway.
+            if not pay_method or pay_method not in provider.payment_method_ids:
+                pay_method = (
+                    provider.payment_method_ids.filtered(lambda m: m.code == 'knet')
+                    or provider.payment_method_ids.filtered(lambda m: m.code == 'credit_card')
+                    or provider.payment_method_ids[:1])
 
             d = _raw()
 
@@ -500,53 +729,77 @@ class UellowCheckout(_WSBase):
     @http.route(['/uellow/payment_methods_json'], type='json', auth='public',
                 website=True, csrf=False)
     def payment_methods_json(self, **post):
+        # IMPORTANT — only expose payment methods that belong to a provider
+        # actually usable on THIS storefront. Previously this listed EVERY
+        # active payment.method in the DB, including methods owned by the
+        # app-only pseudo-website providers (code='custom', website 12–18).
+        # A customer could then pick a method whose record is NOT in the
+        # storefront UPayments provider, the charge would misroute and the
+        # customer ended up on /payment/status ("payment not found") instead
+        # of the gateway. We now scope strictly to the website's own
+        # enabled providers, so every selectable method maps to a working flow.
         result    = []
         cod_added = False
         _SKIP_SET = {'paypal', 'wire_transfer'}
-        _COD_SET  = {'cod', 'COD', 'custom', 'cash_on_delivery'}
+        _COD_SET  = {'cod', 'cash', 'custom', 'cash_on_delivery'}
+
         # v2.1.77 — payment derives from the carrier COMPANY (the base): when
         # the order's selected courier doesn't collect cash, hide COD here too
         # (same rule as the app). Default ON when no carrier/company is set.
         cod_allowed = True
+        cur_website_id = False
         try:
+            cur_website_id = request.website.id
             order = request.website.sale_get_order()
             comp = order.carrier_id.carrier_company_id if order and order.carrier_id else False
             if comp:
                 cod_allowed = bool(getattr(comp, 'cod_enabled', True))
         except Exception as e:
             _logger.warning('cod gate: %s', e)
-        # Build provider image map
-        provider_img = {}
+
         try:
-            for p in request.env['payment.provider'].sudo().search(
-                    [('state', 'in', ('enabled', 'test'))]):
+            # Providers enabled and scoped to this website (global = website_id
+            # unset, or explicitly this website). This drops the app-only
+            # providers bound to other (pseudo-)websites.
+            providers = request.env['payment.provider'].sudo().search(
+                ['&', ('state', 'in', ('enabled', 'test')),
+                      '|', ('website_id', '=', False),
+                           ('website_id', '=', cur_website_id)])
+            seen_codes = set()
+            for p in providers:
+                p_is_cod = (p.code or '').lower() in _COD_SET
+                pimg = '/web/image/payment.provider/%d/image_128' % p.id
                 for m in (p.payment_method_ids or []):
-                    if m.id not in provider_img:
-                        provider_img[m.id] = '/web/image/payment.provider/%d/image_128' % p.id
-        except Exception as e:
-            _logger.warning('provider_img: %s', e)
-        try:
-            methods = request.env['payment.method'].sudo().search(
-                [('active', '=', True)], order='id asc')
-            for m in methods:
-                code = (getattr(m, 'code', None) or '').strip()
-                if not code: code = 'm%d' % m.id
-                if code.lower() in _SKIP_SET: continue
-                img = provider_img.get(m.id, '')
-                if code in _COD_SET or code.lower() in _COD_SET:
-                    if not cod_added and cod_allowed:
-                        cod_added = True
-                        result.insert(0, {
-                            'id': m.id, 'name': m.name, 'code': 'cod',
-                            'image': img, 'is_cod': True, 'is_upay': False,
-                        })
-                    continue
-                result.append({
-                    'id': m.id, 'name': m.name or '', 'code': code,
-                    'image': img, 'is_cod': False, 'is_upay': True,
-                })
+                    if not m.active:
+                        continue
+                    code = (getattr(m, 'code', None) or '').strip()
+                    if not code:
+                        code = 'm%d' % m.id
+                    lcode = code.lower()
+                    if lcode in _SKIP_SET:
+                        continue
+                    img = pimg
+                    # COD-style provider/method → single Cash-on-Delivery entry
+                    if p_is_cod or lcode in _COD_SET:
+                        if not cod_added and cod_allowed:
+                            cod_added = True
+                            result.insert(0, {
+                                'id': m.id, 'name': m.name, 'code': 'cod',
+                                'image': img, 'is_cod': True, 'is_upay': False,
+                            })
+                        continue
+                    # de-dup by visible code (e.g. one "KNET" even if two
+                    # providers expose it) — keep the first (the storefront one)
+                    if lcode in seen_codes:
+                        continue
+                    seen_codes.add(lcode)
+                    result.append({
+                        'id': m.id, 'name': m.name or '', 'code': code,
+                        'image': img, 'is_cod': False, 'is_upay': True,
+                    })
         except Exception as e:
             _logger.error('payment_methods_json: %s', e)
+
         if not result:
             result = [{'id': -1, 'name': 'Cash on Delivery', 'code': 'cod',
                        'image': '', 'is_cod': True, 'is_upay': False}]

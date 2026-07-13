@@ -7,6 +7,7 @@
     'depends': ['sale', 'payment'],
     'data': [
         'data/params.xml',
+        'data/cron.xml',
         'views/res_config_settings_views.xml',
     ],
     'installable': True,

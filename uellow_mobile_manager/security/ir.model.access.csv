@@ -73,3 +73,7 @@ access_uellow_city_mgr,uellow.city manager,model_uellow_city,base.group_system,1
 access_uellow_city_usr,uellow.city user,model_uellow_city,base.group_user,1,0,0,0
 access_mobile_newcustomer_mgr,mobile.newcustomer.offer manager,model_mobile_newcustomer_offer,base.group_system,1,1,1,1
 access_mobile_newcustomer_usr,mobile.newcustomer.offer user,model_mobile_newcustomer_offer,base.group_user,1,0,0,0
+access_uellow_customer_activity_mgr,uellow.customer.activity manager,model_uellow_customer_activity,base.group_system,1,1,1,1
+access_uellow_customer_activity_usr,uellow.customer.activity user,model_uellow_customer_activity,base.group_user,1,0,0,0
+access_uellow_stock_adjust_mgr,uellow.stock.adjust manager,model_uellow_stock_adjust,base.group_system,1,1,1,1
+access_uellow_stock_adjust_usr,uellow.stock.adjust user,model_uellow_stock_adjust,base.group_user,1,1,1,0

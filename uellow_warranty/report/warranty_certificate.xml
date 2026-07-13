@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="warranty_certificate">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="company" t-value="o.company_id or env.company"/>
+                <t t-set="o" t-value="o.with_context(lang='en_US')"/>
+                <t t-set="active" t-value="o.state == 'active'"/>
+                <div class="article udoc" dir="ltr">
+                    <style>
+                        @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
+                        @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
+                        .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#2A1B0A; direction:ltr !important; box-sizing:border-box; }
+                        .udoc { font-size:18.7px; }
+                        .udoc table { width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; border:0 !important; }
+                        .udoc table, .udoc tr, .udoc td, .udoc th { border:0 !important; vertical-align:top; }
+                        .ar { display:inline; margin-left:5px; font-size:14.3px; font-weight:600; color:#9c8e76 !important; }
+                        .lbl { font-size:13.5px; font-weight:800; letter-spacing:1px; color:#C79A12 !important; text-transform:uppercase; }
+                        .card { background:#FBF6EA; border-radius:16px; padding:16px 18px; }
+                        .name { font-size:22.6px; font-weight:800; color:#2A1B0A; margin-top:6px; }
+                        .sub { font-size:16.0px; color:#6f6048; line-height:1.55; margin-top:3px; }
+                        .terms { font-size:11.8px; color:#5a4a30; line-height:1.55; white-space:pre-line; }
+                        .udoc .rtl { direction:rtl !important; text-align:right; }
+                    </style>
+
+                    <div style="border:3px double #D9B84A;border-radius:20px;padding:22px 26px;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+
+                        <!-- HEADER -->
+                        <table><tr>
+                            <td style="width:58%;">
+                                <table><tr>
+                                    <td style="width:140px;vertical-align:middle;">
+                                        <img t-if="company.logo" style="max-height:54px;max-width:140px;" t-att-src="image_data_uri(company.logo)"/>
+                                    </td>
+                                    <td style="vertical-align:middle;padding-left:12px;">
+                                        <div style="font-size:22px;font-weight:800;color:#412402;" t-esc="company.name"/>
+                                        <div class="sub" style="font-size:14px;"><span t-esc="company.street"/><t t-if="company.city">, <span t-esc="company.city"/></t><br/><b t-esc="company.phone"/></div>
+                                    </td>
+                                </tr></table>
+                            </td>
+                            <td style="width:42%;text-align:right;">
+                                <div style="font-size:14px;font-weight:800;letter-spacing:3px;color:#C79A12 !important;">CERTIFICATE OF</div>
+                                <div style="font-size:34px;font-weight:800;color:#412402;line-height:1;">WARRANTY</div>
+                                <div style="font-size:18px;font-weight:700;color:#9c8e76;margin-top:2px;">شهادة ضمان</div>
+                                <div style="font-size:15px;color:#6f6048;margin-top:6px;">No. <b style="color:#2A1B0A;" t-esc="o.name"/></div>
+                            </td>
+                        </tr></table>
+
+                        <!-- GOLD SEAL -->
+                        <div style="text-align:center;margin-top:14px;">
+                            <div style="width:150px;height:150px;border-radius:50%;background-color:#F5C320 !important;border:4px solid #FFFFFF;box-shadow:0 0 0 7px #C79A12;text-align:center;margin:0 auto;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+                                <div style="font-size:26px;color:#8a6d0c !important;padding-top:18px;line-height:1;">★</div>
+                                <div style="font-size:48px;font-weight:800;color:#412402 !important;line-height:1;"><t t-esc="o.duration_months"/></div>
+                                <div style="font-size:14px;font-weight:800;color:#412402 !important;letter-spacing:1px;">MONTHS · شهر</div>
+                            </div>
+                            <div style="margin-top:10px;">
+                                <span t-if="active" style="display:inline-block;background-color:#EAF7EF !important;border:1.5px solid #1f9d55;color:#1f9d55 !important;font-weight:800;padding:5px 18px;border-radius:9px;font-size:16px;letter-spacing:1px;">ACTIVE · ساري المفعول</span>
+                                <span t-elif="o.state=='expired'" style="display:inline-block;background-color:#F3EFE7 !important;border:1.5px solid #9c8e76;color:#6f6048 !important;font-weight:800;padding:5px 18px;border-radius:9px;font-size:16px;">EXPIRED · منتهٍ</span>
+                                <span t-else="" style="display:inline-block;background-color:#FDECEC !important;border:1.5px solid #B91C1C;color:#B91C1C !important;font-weight:800;padding:5px 18px;border-radius:9px;font-size:16px;"><t t-esc="o.state.upper()"/></span>
+                            </div>
+                        </div>
+
+                        <!-- PRODUCT + OWNER -->
+                        <table style="margin-top:16px;"><tr>
+                            <td style="width:49%;"><div class="card" style="background-color:#FFF4D6 !important;min-height:116px;">
+                                <div class="lbl">Product<span class="ar">المنتج</span></div>
+                                <div class="name" t-esc="o.product_id.display_name"/>
+                                <div class="sub"><t t-if="o.lot_serial"><b>Serial:</b> <t t-esc="o.lot_serial"/></t></div>
+                            </div></td>
+                            <td style="width:2%;"/>
+                            <td style="width:49%;"><div class="card" style="background-color:#FBF6EA !important;min-height:116px;">
+                                <div class="lbl">Owner<span class="ar">المالك</span></div>
+                                <div class="name" t-esc="o.partner_id.name"/>
+                                <div class="sub"><t t-if="o.partner_id.phone"><span t-esc="o.partner_id.phone"/><br/></t><span t-esc="o.partner_id.email"/></div>
+                            </div></td>
+                        </tr></table>
+
+                        <!-- PERIOD -->
+                        <div style="margin-top:16px;background-color:#412402 !important;border-radius:16px;padding:18px 22px;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+                            <table><tr>
+                                <td style="width:38%;">
+                                    <div class="lbl" style="color:#E7D7B8 !important;">Starts<span class="ar" style="color:#cdb88f !important;">يبدأ</span></div>
+                                    <div style="font-size:24px;font-weight:800;color:#FFFFFF !important;margin-top:4px;" t-field="o.date_start"/>
+                                </td>
+                                <td style="width:24%;text-align:center;vertical-align:middle;color:#F5C320 !important;font-size:26px;">→</td>
+                                <td style="width:38%;text-align:right;">
+                                    <div class="lbl" style="color:#E7D7B8 !important;">Expires<span class="ar" style="color:#cdb88f !important;">ينتهي</span></div>
+                                    <div style="font-size:24px;font-weight:800;color:#F5C320 !important;margin-top:4px;" t-field="o.date_end"/>
+                                </td>
+                            </tr></table>
+                        </div>
+
+                        <!-- COVERAGE + QR -->
+                        <table style="margin-top:16px;"><tr>
+                            <td style="width:70%;vertical-align:top;">
+                                <div class="card" style="background-color:#FBF6EA !important;min-height:150px;">
+                                    <div class="lbl">Coverage<span class="ar">التغطية</span> — <t t-esc="o.policy_id.icon"/> <t t-esc="o.policy_id.name"/><span class="ar"><t t-esc="o.policy_id.name_ar"/></span></div>
+                                    <div class="sub" style="margin-top:8px;"><t t-esc="o.policy_id.coverage_en"/></div>
+                                    <div class="sub" style="margin-top:6px;color:#9c8e76;"><t t-esc="o.policy_id.coverage_ar"/></div>
+                                </div>
+                            </td>
+                            <td style="width:3%;"/>
+                            <td style="width:27%;text-align:center;vertical-align:top;">
+                                <div class="card" style="background-color:#FBF6EA !important;text-align:center;min-height:150px;">
+                                    <img style="width:118px;height:118px;" t-att-src="'/report/barcode?barcode_type=QR&amp;value=%s&amp;width=240&amp;height=240' % o.name"/>
+                                    <div class="lbl" style="margin-top:6px;">Scan to verify<span class="ar">تحقّق</span></div>
+                                </div>
+                            </td>
+                        </tr></table>
+
+                        <!-- TERMS & CONDITIONS -->
+                        <div t-if="o.policy_id.terms_en or o.policy_id.terms_ar" style="margin-top:16px;background-color:#FBF6EA !important;border-radius:14px;padding:14px 18px;print-color-adjust:exact;">
+                            <div class="lbl" style="color:#412402 !important;">Terms &amp; Conditions<span class="ar">الشروط والأحكام</span></div>
+                            <table style="margin-top:8px;"><tr>
+                                <td style="width:49%;vertical-align:top;"><div class="terms" t-esc="o.policy_id.terms_en"/></td>
+                                <td style="width:2%;"/>
+                                <td style="width:49%;vertical-align:top;"><div class="terms rtl" t-esc="o.policy_id.terms_ar"/></td>
+                            </tr></table>
+                        </div>
+
+                        <div t-if="o.invoice_id or o.sale_id or o.pos_order_id" style="margin-top:12px;font-size:15px;color:#9c8e76;text-align:center;"><t t-esc="o.source_label"/></div>
+
+                        <!-- FOOTER -->
+                        <div style="margin-top:16px;background-color:#412402 !important;border-radius:14px;padding:13px 18px;print-color-adjust:exact;-webkit-print-color-adjust:exact;">
+                            <table><tr>
+                                <td style="color:#FFFFFF !important;font-weight:800;font-size:16px;"><t t-esc="company.name"/><span style="color:#E7D7B8 !important;font-weight:400;"> · <t t-esc="company.street"/><t t-if="company.city">, <t t-esc="company.city"/></t></span></td>
+                                <td style="text-align:right;color:#E7D7B8 !important;font-size:14px;"><b style="color:#F5C320 !important;" t-esc="company.phone"/> · <t t-esc="company.website or company.email"/></td>
+                            </tr></table>
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

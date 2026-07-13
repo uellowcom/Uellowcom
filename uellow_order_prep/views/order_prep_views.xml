@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- =========================================================== -->
+    <!-- Form: prep buttons + status bar + print actions             -->
+    <!-- =========================================================== -->
+    <record id="view_order_form_prep" model="ir.ui.view">
+        <field name="name">sale.order.form.preparation</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <!-- Workflow buttons -->
+                <button name="action_prep_start" type="object"
+                        string="Start Preparing / بدء التجهيز"
+                        class="btn-primary"
+                        invisible="state != 'sale' or preparation_state != 'to_prepare'"/>
+                <button name="action_prep_done" type="object"
+                        string="Done — Ready for Pickup / تم التجهيز"
+                        class="btn-primary"
+                        invisible="state != 'sale' or preparation_state not in ('to_prepare', 'preparing')"/>
+                <button name="action_prep_reset" type="object"
+                        string="Reset Preparation / إعادة"
+                        invisible="state != 'sale' or preparation_state in ('to_prepare', 'picked_up')"/>
+                <!-- Print everything from the order screen -->
+                <button name="action_prep_print_order" type="object"
+                        string="🧾 Order / الطلب" invisible="state == 'draft'"/>
+                <button name="action_prep_print_invoices" type="object"
+                        string="🧾 Invoice / الفاتورة" invisible="state == 'draft'"/>
+                <button name="action_prep_print_label" type="object"
+                        string="🏷️ Label / الليبل" invisible="state == 'draft'"/>
+                <button name="action_prep_print_warranty" type="object"
+                        string="🛡️ Warranty / الضمان" invisible="state == 'draft'"/>
+                <!-- Preparation status bar -->
+                <field name="preparation_state" widget="statusbar"
+                       statusbar_visible="to_prepare,preparing,ready_for_pickup,picked_up"/>
+            </xpath>
+
+            <!-- Fulfillment summary fields under Other Info -->
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="preparation_done_by" readonly="1"
+                       invisible="not preparation_done_by"/>
+                <field name="preparation_done_date" readonly="1"
+                       invisible="not preparation_done_date"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- =========================================================== -->
+    <!-- List view for the preparation queue                          -->
+    <!-- =========================================================== -->
+    <record id="view_order_prep_tree" model="ir.ui.view">
+        <field name="name">sale.order.preparation.list</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list string="Order Preparation / تجهيز الطلبات"
+                  decoration-info="preparation_state == 'to_prepare'"
+                  decoration-warning="preparation_state == 'preparing'"
+                  decoration-success="preparation_state == 'ready_for_pickup'">
+                <field name="name"/>
+                <field name="date_order"/>
+                <field name="partner_id"/>
+                <field name="amount_total" sum="Total"/>
+                <field name="delivery_carrier_company_id" optional="show"/>
+                <field name="preparation_state" widget="badge"
+                       decoration-info="preparation_state == 'to_prepare'"
+                       decoration-warning="preparation_state == 'preparing'"
+                       decoration-success="preparation_state == 'ready_for_pickup'"/>
+                <field name="delivery_status" optional="hide"/>
+                <button name="action_prep_start" type="object"
+                        string="Start / بدء" class="btn-link"
+                        invisible="preparation_state != 'to_prepare'"/>
+                <button name="action_prep_done" type="object"
+                        string="Ready / تم التجهيز" class="btn-link"
+                        invisible="preparation_state not in ('to_prepare', 'preparing')"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- =========================================================== -->
+    <!-- Search / filters                                             -->
+    <!-- =========================================================== -->
+    <record id="view_order_prep_search" model="ir.ui.view">
+        <field name="name">sale.order.preparation.search</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" string="Order / الطلب"/>
+                <field name="partner_id"/>
+                <field name="delivery_carrier_company_id"/>
+                <filter name="f_to_prepare" string="To Prepare / للتجهيز"
+                        domain="[('preparation_state', '=', 'to_prepare')]"/>
+                <filter name="f_preparing" string="Preparing / جاري التجهيز"
+                        domain="[('preparation_state', '=', 'preparing')]"/>
+                <filter name="f_ready" string="Ready for Pickup / جاهز للاستلام"
+                        domain="[('preparation_state', '=', 'ready_for_pickup')]"/>
+                <separator/>
+                <filter name="f_today" string="Today / اليوم"
+                        domain="[('date_order', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
+                <group expand="0" string="Group By / تجميع حسب">
+                    <filter name="g_state" string="Preparation Status / حالة التجهيز"
+                            context="{'group_by': 'preparation_state'}"/>
+                    <filter name="g_carrier" string="Carrier / شركة التوصيل"
+                            context="{'group_by': 'delivery_carrier_company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- =========================================================== -->
+    <!-- Action + menu                                                -->
+    <!-- =========================================================== -->
+    <record id="action_order_preparation" model="ir.actions.act_window">
+        <field name="name">Order Preparation / تجهيز الطلبات</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_order_prep_tree"/>
+        <field name="search_view_id" ref="view_order_prep_search"/>
+        <field name="domain">[('state', '=', 'sale'), ('preparation_state', 'in', ('to_prepare', 'preparing', 'ready_for_pickup'))]</field>
+        <field name="context">{'search_default_f_to_prepare': 1, 'search_default_f_preparing': 1, 'search_default_f_ready': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No orders to prepare right now / لا توجد طلبات للتجهيز حالياً</p>
+            <p>Confirmed orders appear here for the warehouse to prepare, then mark Ready for Pickup.<br/>
+               تظهر الطلبات المؤكدة هنا ليجهّزها المخزن، ثم يضع عليها "جاهز للاستلام".</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_order_preparation"
+              name="Order Preparation / تجهيز الطلبات"
+              parent="sale.sale_menu_root"
+              action="action_order_preparation"
+              groups="sales_team.group_sale_salesman,stock.group_stock_user"
+              sequence="6"/>
+
+</odoo>

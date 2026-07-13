@@ -56,6 +56,24 @@ def _require_internal():
     return None
 
 
+def _world_id():
+    """Uellow World website id (0 if the dropship module isn't configured)."""
+    try:
+        return int(request.env['ir.config_parameter'].sudo()
+                   .get_param('uellow_dropship.website_id') or 0)
+    except Exception:
+        return 0
+
+
+def _req_world(kw):
+    """True when the builder picker is scoped to the Uellow World site."""
+    wid = _world_id()
+    try:
+        return bool(wid) and int(kw.get('website_id') or 0) == wid
+    except Exception:
+        return False
+
+
 def _slugify(s):
     s = (s or '').strip().lower()
     s = re.sub(r'[^a-z0-9]+', '-', s)
@@ -258,12 +276,35 @@ class PagesAdmin(http.Controller):
                 site_to_country[m.website_id.id] = (m.country_id.code, m.country_id.name)
         except Exception:
             pass
+        # Uellow World (dropship isolated site) is branded 🌍, NOT its carrier
+        # country (China) — so the builder shows it as a first-class site.
+        try:
+            world_id = int(request.env['ir.config_parameter'].sudo()
+                           .get_param('uellow_dropship.website_id') or 0)
+        except Exception:
+            world_id = 0
+
+        def _flag(code):
+            if not code:
+                return '🌐'
+            try:
+                return ''.join(chr(0x1F1E6 + ord(ch) - 65)
+                               for ch in code.upper()[:2] if 'A' <= ch <= 'Z')
+            except Exception:
+                return '🌐'
+
+        def _site(w):
+            if world_id and w.id == world_id:
+                return {'id': w.id, 'name': 'Uellow World',
+                        'country_code': None, 'country_name': 'Uellow World',
+                        'flag': '🌍'}
+            cc, cn = site_to_country.get(w.id, (None, None))
+            return {'id': w.id, 'name': w.name,
+                    'country_code': cc, 'country_name': cn, 'flag': _flag(cc)}
+
         return _ok({
-            'websites': [{
-                'id': w.id, 'name': w.name,
-                'country_code': site_to_country.get(w.id, (None, None))[0],
-                'country_name': site_to_country.get(w.id, (None, None))[1],
-            } for w in websites],
+            'world_website_id': world_id or None,
+            'websites': [_site(w) for w in websites],
             'languages': [{
                 'code': l.code, 'short': l.code.split('_')[0],
                 'name': l.name, 'iso': l.iso_code,
@@ -320,6 +361,19 @@ class AdminLookups(http.Controller):
         if guard:
             return guard
         q = (kw.get('q') or '').strip()
+        # On a Uellow World page the taxonomy is the ISOLATED dropship.category
+        # tree (never the main store's product.public.category).
+        if _req_world(kw) and 'dropship.category' in request.env:
+            DC = request.env['dropship.category'].sudo()
+            ddom = [('name', 'ilike', q)] if q else []
+            drecs = DC.search(ddom, limit=80, order='sequence, name')
+            return _ok({'categories': [{
+                'id': c.id,
+                'name': c.name or c.code or '',
+                'parent_id': c.parent_id.id if c.parent_id else None,
+                'parent_name': c.parent_id.name if c.parent_id else None,
+                'image': None,
+            } for c in drecs]})
         Cat = request.env['product.public.category'].sudo()
         dom = []
         if q:
@@ -378,6 +432,11 @@ class AdminLookups(http.Controller):
         q = (kw.get('q') or '').strip()
         Tmpl = request.env['product.template'].sudo()
         dom = [('is_published', '=', True), ('sale_ok', '=', True)]
+        # Isolation: World pages pick from the World (dropship) catalog only;
+        # every other site's picker excludes World products entirely.
+        if 'is_dropship' in Tmpl._fields:
+            dom.append(('is_dropship', '=', True) if _req_world(kw)
+                       else ('is_dropship', '=', False))
         if q:
             dom = ['&'] + dom + ['|', ('name', 'ilike', q), ('default_code', 'ilike', q)]
         recs = Tmpl.search(dom, limit=40, order='write_date desc')

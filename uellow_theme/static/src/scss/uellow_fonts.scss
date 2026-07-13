@@ -1,0 +1,38 @@
+// Global Arabic font — Tajawal.
+// Applies Tajawal as the primary UI font for Arabic-language storefront pages
+// across every Uellow website. English pages keep the existing theme font, so
+// this is an Arabic-only, fully reversible visual change.
+//
+// IMPORTANT: the Google-Fonts @import that used to live here was REMOVED.
+// A render-blocking `@import url(https://fonts.googleapis.com/...)` at the top of
+// the frontend CSS bundle makes the browser withhold EVERY rule in the bundle
+// until Google Fonts responds — so if fonts.googleapis.com is slow/unreachable
+// for a visitor, the WHOLE site renders unstyled. The fonts are now loaded via a
+// NON-blocking <link> injected in website.layout <head> (see
+// uellow_theme header_google_fonts_nonblocking), so the page always paints with
+// a fallback and upgrades to Tajawal/Readex when the fonts arrive.
+
+// The page <html lang> reflects the active language, so we scope by it.
+html[lang^="ar"],
+html[lang^="ar"] body,
+[dir="rtl"] {
+    font-family: 'Tajawal', 'Cairo', 'Tahoma', sans-serif !important;
+}
+
+// Cover the common text elements so nested overrides inherit Tajawal too.
+html[lang^="ar"] {
+    h1, h2, h3, h4, h5, h6,
+    p, a, span, li, td, th, label, input, textarea, select, button,
+    .btn, .nav-link, .dropdown-item, .o_wsale_product_grid_wrapper,
+    .navbar, .breadcrumb, .card, .modal, .o_footer, footer {
+        font-family: 'Tajawal', 'Cairo', 'Tahoma', sans-serif !important;
+    }
+}
+
+/* ── Product name = normal weight (not bold): product card + product page ── */
+.d-product-name,
+.oe_product_name,
+h1[itemprop="name"],
+#product_details h1[itemprop="name"] {
+    font-weight: 400 !important;
+}

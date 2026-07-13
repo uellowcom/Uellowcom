@@ -72,6 +72,15 @@ class PaymentTransaction(models.Model):
 
     def get_payload_data(self):
         base_url = "https://www.uellow.com/"
+        # UPayments validates customer.email / customer.mobile / customer.name
+        # as non-empty strings and rejects the charge otherwise ("The
+        # customer.email must be a string"). Many Uellow customers register
+        # with a phone only (no email), and guest checkout may have neither —
+        # so always send safe string fallbacks instead of False/None.
+        partner = self.partner_id
+        cust_name = (partner.name or '').strip() or 'Customer'
+        cust_email = (partner.email or '').strip() or ('cust%d@uellow.com' % (partner.id or 0))
+        cust_mobile = (partner.mobile or partner.phone or '').strip() or '96500000000'
         payload = {
             "order": {
                 "id": self.reference,
@@ -85,9 +94,9 @@ class PaymentTransaction(models.Model):
             "plugin": {"src": "odoo"},
             "customer": {
                 "uniqueId": str(self.partner_id.id),
-                "name": self.partner_id.name,
-                "email": self.partner_id.email,
-                "mobile": self.partner_id.phone,
+                "name": cust_name,
+                "email": cust_email,
+                "mobile": cust_mobile,
             },
             "returnUrl": f"{base_url}redirect/success",
             "cancelUrl": f"{base_url}redirect/error",

@@ -7,29 +7,29 @@
                 <t t-set="cur" t-value="o.company_id.currency_id"/>
                 <t t-set="o" t-value="o.with_context(lang='en_US')"/>
                 <t t-set="done" t-value="o.state == 'done'"/>
+                <t t-set="war_show" t-value="o.env['ir.config_parameter'].sudo().get_param('uellow_warranty.show_on_documents', 'True') in ('True','1','true')"/>
+                <t t-set="war_pol" t-value="o.env['uellow.warranty.policy'].sudo().search([('is_default','=',True)], limit=1)"/>
                 <div class="article udoc" dir="ltr">
                     <style>
                         @font-face { font-family:'Tajawal'; font-weight:normal; src:url('/uellow_documents/static/src/fonts/Tajawal-Regular.ttf') format('truetype'); }
                         @font-face { font-family:'Tajawal'; font-weight:bold; src:url('/uellow_documents/static/src/fonts/Tajawal-Bold.ttf') format('truetype'); }
                         .udoc, .udoc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#2A1B0A; direction:ltr !important; box-sizing:border-box; }
-                        .udoc { font-size:14.8px; }
-                        .udoc table { width:100%; border-collapse:collapse; table-layout:fixed; border:0 !important; }
-                        .udoc td, .udoc th { border:0 !important; vertical-align:top; }
-                        .ar { display:block; font-size:11.2px; font-weight:600; color:#9c8e76 !important; line-height:1.35; }
-                        .lbl { font-size:11.2px; font-weight:800; letter-spacing:1.2px; color:#C79A12 !important; text-transform:uppercase; }
+                        .udoc { font-size:18.7px; }
+                        .udoc table { width:100%; border-collapse:separate; border-spacing:0; table-layout:fixed; border:0 !important; }
+                        .udoc table, .udoc tr, .udoc td, .udoc th { border:0 !important; border-collapse:separate; vertical-align:top; }
+                        .ar { display:inline; margin-left:5px; font-size:14.3px; font-weight:600; color:#9c8e76 !important; line-height:1.35; }
+                        .lbl { font-size:14.3px; font-weight:800; letter-spacing:1.2px; color:#C79A12 !important; text-transform:uppercase; }
                         .card { background:#FBF6EA; border-radius:16px; padding:14px 16px; }
-                        .name { font-size:16.5px; font-weight:800; color:#2A1B0A; margin-top:6px; }
-                        .sub { font-size:13.0px; color:#6f6048; line-height:1.55; margin-top:3px; }
-                        .ttl { font-size:34.2px; font-weight:800; color:#412402; line-height:1; letter-spacing:.5px; }
-                        .ttl .ar { font-size:18.9px; color:#9c8e76 !important; font-weight:700; margin-top:2px; }
-                        .items thead td { background:#412402 !important; color:#FFFFFF !important; font-size:12.4px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; padding:12px 12px; }
+                        .name { font-size:21.0px; font-weight:800; color:#2A1B0A; margin-top:6px; }
+                        .sub { font-size:16.6px; color:#6f6048; line-height:1.55; margin-top:3px; }
+                        .ttl { font-size:33px; font-weight:800; color:#412402; line-height:1; letter-spacing:.5px; }
+                        .ttl .ar { display:block; margin-left:0; font-size:17px; color:#9c8e76 !important; font-weight:700; margin-top:2px; }
+                        .items thead td { background:#412402 !important; color:#FFFFFF !important; font-size:15.7px; font-weight:800; letter-spacing:.5px; text-transform:uppercase; padding:12px 12px; }
                         .items thead td .ar { color:#E7D7B8 !important; font-weight:600; }
-                        .items tbody td { font-size:14.2px; padding:11px 12px;  }
+                        .items tbody td { font-size:18.0px; padding:11px 12px;  }
                         .meta td { padding:10px 14px; }
-                        .div { }
+                        .div { } .grand .ar{display:block !important;margin-left:0;} .step .ar{display:block !important;margin-left:0;}
                     </style>
-
-                    <div style="height:9px;background-color:#F5C320 !important;border-radius:6px;"/>
                     <div style="padding:8px 4px 4px;">
 
                         <table><tr>
@@ -39,7 +39,7 @@
                                         <img t-if="company.logo" style="max-height:56px;max-width:150px;" t-att-src="image_data_uri(company.logo)"/>
                                     </td>
                                     <td style="vertical-align:middle;padding-left:12px;">
-                                        <div style="font-size:22.4px;font-weight:800;color:#412402;" t-esc="company.name"/>
+                                        <div style="font-size:28.6px;font-weight:800;color:#412402;" t-esc="company.name"/>
                                         <div class="sub">
                                             <span t-esc="company.street"/><t t-if="company.city">, <span t-esc="company.city"/></t><br/>
                                             <b t-esc="company.phone"/> · <span t-esc="company.email"/>
@@ -49,48 +49,48 @@
                             </td>
                             <td style="width:40%;text-align:right;">
                                 <div class="ttl">DELIVERY NOTE<span class="ar">سند تسليم</span></div>
-                                <div style="font-size:14.2px;color:#6f6048;margin-top:8px;">No. <b style="color:#2A1B0A;" t-esc="o.name"/></div>
+                                <div style="font-size:18.0px;color:#6f6048;margin-top:8px;">No. <b style="color:#2A1B0A;" t-esc="o.name"/></div>
                                 <div style="margin-top:8px;">
-                                    <span t-if="done" style="display:inline-block;background-color:#EAF7EF !important;border:1.5px solid #1f9d55;color:#1f9d55 !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:13.0px;letter-spacing:1px;">DONE · تم التسليم</span>
-                                    <span t-else="" style="display:inline-block;background-color:#EAF0FE !important;border:1.5px solid #2563EB;color:#2563EB !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:13.0px;letter-spacing:1px;">READY · جاهز</span>
+                                    <span t-if="done" style="display:inline-block;background-color:#EAF7EF !important;border:1.5px solid #1f9d55;color:#1f9d55 !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:16.6px;letter-spacing:1px;">DONE · تم التسليم</span>
+                                    <span t-else="" style="display:inline-block;background-color:#EAF0FE !important;border:1.5px solid #2563EB;color:#2563EB !important;font-weight:800;padding:4px 13px;border-radius:9px;font-size:16.6px;letter-spacing:1px;">READY · جاهز</span>
                                 </div>
                             </td>
                         </tr></table>
 
                         <table style="margin-top:16px;"><tr>
-                            <td style="width:32%;"><div class="card" style="background-color:#FBF6EA !important;box-shadow:0 4px 14px rgba(65,36,2,0.06);">
+                            <td style="width:32%;"><div class="card" style="background-color:#FBF6EA !important;min-height:132px;">
                                 <div class="lbl">From<span class="ar">من</span></div>
                                 <div class="name" t-esc="o.picking_type_id.warehouse_id.name or company.name"/>
                                 <div class="sub" t-esc="o.location_id.complete_name"/></div></td>
                             <td style="width:2%;"/>
-                            <td style="width:32%;"><div class="card" style="background-color:#FFF4D6 !important;box-shadow:0 4px 14px rgba(65,36,2,0.06);">
+                            <td style="width:32%;"><div class="card" style="background-color:#FFF4D6 !important;min-height:132px;">
                                 <div class="lbl">Deliver to<span class="ar">التوصيل إلى</span></div>
                                 <div class="name" t-esc="o.partner_id.name"/>
                                 <div class="sub"><t t-if="o.partner_id.street"><span t-esc="o.partner_id.street"/><br/></t><t t-if="o.partner_id.city"><span t-esc="o.partner_id.city"/><br/></t><t t-if="o.partner_id.phone"><span t-esc="o.partner_id.phone"/></t></div></div></td>
                             <td style="width:2%;"/>
-                            <td style="width:32%;"><div class="card" style="background-color:#FBF6EA !important;box-shadow:0 4px 14px rgba(65,36,2,0.06);">
+                            <td style="width:32%;"><div class="card" style="background-color:#FBF6EA !important;min-height:132px;">
                                 <div class="lbl">Carrier<span class="ar">الناقل</span></div>
                                 <div class="name" t-esc="(o.carrier_id.name or '—')"/>
                                 <div class="sub"><t t-if="o.carrier_tracking_ref">Tracking: <span t-esc="o.carrier_tracking_ref"/></t></div></div></td>
                         </tr></table>
 
-                        <div style="margin-top:14px;border-radius:14px;overflow:hidden;background-color:#FBF6EA !important;">
+                        <div style="margin-top:14px;border-radius:14px;background-color:#FBF6EA !important;">
                             <table class="meta"><tr>
-                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Scheduled<span class="ar">الموعد</span></div><div style="font-size:14.2px;font-weight:800;margin-top:3px;" t-field="o.scheduled_date"/></td>
-                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Source<span class="ar">المصدر</span></div><div style="font-size:14.2px;font-weight:800;margin-top:3px;"><t t-esc="o.origin or '—'"/></div></td>
-                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Operation<span class="ar">العملية</span></div><div style="font-size:13.6px;font-weight:800;margin-top:3px;" t-esc="o.picking_type_id.name"/></td>
-                                <td style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Lines<span class="ar">البنود</span></div><div style="font-size:14.8px;font-weight:800;margin-top:3px;" t-esc="len(o.move_ids)"/></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Scheduled<span class="ar">الموعد</span></div><div style="font-size:18.0px;font-weight:800;margin-top:3px;" t-field="o.scheduled_date"/></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Source<span class="ar">المصدر</span></div><div style="font-size:18.0px;font-weight:800;margin-top:3px;"><t t-esc="o.origin or '—'"/></div></td>
+                                <td class="div" style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Operation<span class="ar">العملية</span></div><div style="font-size:17.3px;font-weight:800;margin-top:3px;" t-esc="o.picking_type_id.name"/></td>
+                                <td style="width:25%;"><div class="lbl" style="color:#9c8e76 !important;">Lines<span class="ar">البنود</span></div><div style="font-size:18.7px;font-weight:800;margin-top:3px;" t-esc="len(o.move_ids)"/></td>
                             </tr></table>
                         </div>
 
-                        <div style="margin-top:16px;border-radius:14px;overflow:hidden;">
+                        <div style="margin-top:16px;border-radius:14px;">
                             <table class="items">
                                 <thead><tr>
-                                    <td style="width:34px;text-align:center;">#</td>
+                                    <td style="width:40px;text-align:center;">#</td>
                                     <td>Product<span class="ar">المنتج</span></td>
-                                    <td style="width:80px;text-align:center;">Ordered</td>
-                                    <td style="width:80px;text-align:center;">Delivered</td>
-                                    <td style="width:130px;text-align:center;">Lot / Serial</td>
+                                    <td style="width:104px;text-align:center;">Ordered</td>
+                                    <td style="width:124px;text-align:center;">Delivered</td>
+                                    <td style="width:120px;text-align:center;">Lot / Serial</td>
                                 </tr></thead>
                                 <tbody>
                                     <t t-set="idx" t-value="0"/>
@@ -108,16 +108,23 @@
                             </table>
                         </div>
 
+                        <div t-if="war_show and war_pol" style="margin-top:14px;background-color:#FBF6EA !important;border-radius:14px;padding:12px 18px;">
+                            <table><tr>
+                                <td style="width:128px;vertical-align:middle;"><span style="display:inline-block;background-color:#F5C320 !important;color:#412402 !important;font-weight:800;font-size:16.6px;padding:7px 14px;border-radius:30px;"><t t-esc="war_pol.icon"/> <t t-esc="war_pol.duration_months"/> mo · شهر</span></td>
+                                <td style="vertical-align:middle;padding-left:6px;"><div class="lbl" style="color:#412402 !important;">Warranty<span class="ar">الضمان</span> — <t t-esc="war_pol.name"/></div><div class="sub" style="margin-top:2px;">Keep this note as proof of delivery · احتفظ بهذا السند كإثبات استلام</div></td>
+                            </tr></table>
+                        </div>
+
                         <div t-if="o.payment_method == 'cod' and o.cod_amount" style="margin-top:14px;background-color:#FFF6D6 !important;border-radius:14px;padding:13px 18px;">
                             <table><tr>
-                                <td style="font-weight:800;color:#412402;font-size:15.3px;">COD to collect · مبلغ الدفع عند الاستلام</td>
-                                <td style="text-align:right;font-weight:800;color:#412402;font-size:23.6px;"><span t-esc="'%.3f' % o.cod_amount"/> <t t-esc="cur.symbol or cur.name"/></td>
+                                <td style="font-weight:800;color:#412402;font-size:19.4px;">COD to collect · مبلغ الدفع عند الاستلام</td>
+                                <td style="text-align:right;font-weight:800;color:#412402;font-size:30.0px;"><span t-esc="'%.3f' % o.cod_amount"/> <t t-esc="cur.symbol or cur.name"/></td>
                             </tr></table>
                         </div>
 
                         <table style="margin-top:16px;"><tr>
                             <td style="width:48%;">
-                                <div class="card" style="background-color:#FBF6EA !important;box-shadow:0 4px 14px rgba(65,36,2,0.06);">
+                                <div class="card" style="background-color:#FBF6EA !important;">
                                     <table><tr>
                                         <td style="width:88px;vertical-align:middle;"><img style="width:82px;height:82px;" t-att-src="'/report/barcode?barcode_type=QR&amp;value=%s&amp;width=170&amp;height=170' % (o.carrier_tracking_ref or o.name)"/></td>
                                         <td style="vertical-align:middle;padding-left:12px;">
@@ -130,14 +137,14 @@
                             <td style="width:4%;"/>
                             <td style="width:48%;"><div style="background-color:#FBF6EA !important;border-radius:14px;padding:14px;min-height:96px;">
                                 <div class="lbl" style="color:#412402 !important;">Received in good condition<span class="ar">استُلمت بحالة جيدة</span></div>
-                                <div style="margin-top:34px;border-top:1.5px solid #efe7d6;padding-top:6px;font-size:11.2px;color:#9c8e76;">Receiver name &amp; signature · اسم وتوقيع المستلم — التاريخ</div>
+                                <div style="margin-top:34px;border-top:1.5px solid #efe7d6;padding-top:6px;font-size:14.3px;color:#9c8e76;">Receiver name &amp; signature · اسم وتوقيع المستلم — التاريخ</div>
                             </div></td>
                         </tr></table>
 
                         <div style="margin-top:16px;background-color:#412402 !important;border-radius:14px;padding:14px 18px;">
                             <table><tr>
-                                <td style="color:#FFFFFF !important;font-weight:800;font-size:15.3px;"><t t-esc="company.uellow_doc_footer"/></td>
-                                <td style="text-align:right;color:#E7D7B8 !important;font-size:12.4px;"><t t-esc="company.website or 'uellow.com'"/> · <b style="color:#F5C320 !important;" t-esc="company.phone"/></td>
+                                <td style="color:#FFFFFF !important;font-weight:800;font-size:17.3px;"><t t-esc="company.name"/><span style="color:#E7D7B8 !important;font-weight:400;"> · <t t-esc="company.street"/><t t-if="company.city">, <t t-esc="company.city"/></t><t t-if="company.country_id">, <t t-esc="company.country_id.name"/></t></span></td>
+                                <td style="text-align:right;color:#E7D7B8 !important;font-size:15.7px;"><b style="color:#F5C320 !important;" t-esc="company.phone"/> · <t t-esc="company.email"/><t t-if="company.website"> · <t t-esc="company.website"/></t></td>
                             </tr></table>
                         </div>
 
@@ -148,6 +155,12 @@
     </template>
 
     <record id="stock.action_report_delivery" model="ir.actions.report">
+        <field name="report_name">uellow_documents.uellow_delivery</field>
+        <field name="report_file">uellow_documents.uellow_delivery</field>
+        <field name="paperformat_id" ref="uellow_documents.paperformat_uellow_doc"/>
+    </record>
+    <!-- Picking Operations report: reuse the same branded delivery design -->
+    <record id="stock.action_report_picking" model="ir.actions.report">
         <field name="report_name">uellow_documents.uellow_delivery</field>
         <field name="report_file">uellow_documents.uellow_delivery</field>
         <field name="paperformat_id" ref="uellow_documents.paperformat_uellow_doc"/>

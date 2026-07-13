@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Safety-net: pull authoritative status from Taly for still-open
+         transactions, so a paid order is never left stuck in 'draft'
+         when the async webhook / customer redirect doesn't arrive. -->
+    <record id="ir_cron_taly_reconcile" model="ir.cron">
+        <field name="name">Taly: reconcile open transactions / مطابقة معاملات تالي المعلّقة</field>
+        <field name="model_id" ref="payment.model_payment_transaction"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_taly_reconcile()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

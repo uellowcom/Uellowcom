@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Comprehensive Open/Completed + status/payment/delivery filters and
+         Group-By options on the Sales Orders search view. Labels are English;
+         Arabic comes from i18n/ar_001.po. -->
+    <record id="view_sales_order_filter_uellow_settled" model="ir.ui.view">
+        <field name="name">sale.order.search.uellow.filters</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='my_sale_orders_filter']" position="before">
+                <!-- ── overall completion ── -->
+                <filter name="uellow_open" string="Open"
+                        domain="[('uellow_fully_settled', '=', False)]"/>
+                <filter name="uellow_completed" string="Completed"
+                        domain="[('uellow_fully_settled', '=', True)]"/>
+                <separator/>
+                <!-- ── delivery status ── -->
+                <filter name="uellow_delivered" string="Delivered"
+                        domain="[('delivery_status', '=', 'delivered')]"/>
+                <filter name="uellow_out_for_delivery" string="Out for Delivery"
+                        domain="[('delivery_status', 'in', ['out_for_delivery', 'accepted'])]"/>
+                <filter name="uellow_assigned" string="Assigned to Driver"
+                        domain="[('delivery_status', '=', 'assigned')]"/>
+                <filter name="uellow_at_sorting" string="At Sorting Center"
+                        domain="[('delivery_status', 'in', ['arrived_sorting', 'picked_up'])]"/>
+                <filter name="uellow_pending_delivery" string="Pending Delivery"
+                        domain="[('delivery_status', 'in', ['pending', False])]"/>
+                <filter name="uellow_failed_delivery" string="Failed Delivery"
+                        domain="[('delivery_status', 'in', ['failed', 'failed_returned'])]"/>
+                <separator/>
+                <!-- ── invoicing ── -->
+                <filter name="uellow_to_invoice" string="To Invoice"
+                        domain="[('invoice_status', '=', 'to invoice')]"/>
+                <filter name="uellow_invoiced" string="Invoiced"
+                        domain="[('invoice_status', '=', 'invoiced')]"/>
+                <filter name="uellow_no_invoice" string="Nothing to Invoice"
+                        domain="[('invoice_status', '=', 'no')]"/>
+                <separator/>
+                <!-- ── payment ── -->
+                <filter name="uellow_paid" string="Paid"
+                        domain="[('invoice_ids.payment_state', '=', 'paid')]"/>
+                <filter name="uellow_unpaid" string="Not Paid"
+                        domain="[('invoice_ids.payment_state', 'in', ['not_paid', 'partial'])]"/>
+                <filter name="uellow_cod" string="Cash on Delivery (COD)"
+                        domain="[('payment_method_type', '=', 'cash')]"/>
+                <filter name="uellow_prepaid" string="Prepaid"
+                        domain="[('payment_method_type', '=', 'online')]"/>
+                <filter name="uellow_free_order" string="Free"
+                        domain="[('payment_method_type', '=', 'free')]"/>
+                <filter name="uellow_paylink_sent" string="Pay-Link Sent"
+                        domain="[('pay_link_status', '=', 'sent')]"/>
+                <separator/>
+                <!-- ── cash collection (COD) ── -->
+                <filter name="uellow_cash_collected" string="Cash Collected"
+                        domain="[('cash_collection_status', '=', 'collected')]"/>
+                <filter name="uellow_cash_pending" string="Cash Pending"
+                        domain="[('cash_collection_status', '=', 'pending')]"/>
+                <filter name="uellow_cash_remitted" string="Cash Remitted"
+                        domain="[('cash_collection_status', '=', 'remitted')]"/>
+                <separator/>
+                <!-- ── returns / exchange ── -->
+                <filter name="uellow_has_return" string="Has Return"
+                        domain="[('return_status', '!=', 'none')]"/>
+                <filter name="uellow_returned" string="Returned"
+                        domain="[('return_status', '=', 'returned_received')]"/>
+                <filter name="uellow_exchange" string="Exchange"
+                        domain="[('carrier_order_type', '=', 'exchange')]"/>
+                <separator/>
+                <!-- ── record state ── -->
+                <filter name="uellow_locked" string="Locked"
+                        domain="[('locked', '=', True)]"/>
+                <filter name="uellow_unlocked" string="Unlocked"
+                        domain="[('locked', '=', False)]"/>
+                <separator/>
+                <!-- ── date ── -->
+                <filter name="uellow_today" string="Today"
+                        domain="[('date_order', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="uellow_this_month" string="This Month"
+                        domain="[('date_order', '&gt;=', context_today().replace(day=1).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+            </xpath>
+
+            <!-- Group-By options -->
+            <xpath expr="//filter[@name='salesperson']" position="before">
+                <filter name="uellow_gb_delivery" string="Delivery Status"
+                        context="{'group_by': 'delivery_status'}"/>
+                <filter name="uellow_gb_carrier" string="Carrier"
+                        context="{'group_by': 'delivery_carrier_company_id'}"/>
+                <filter name="uellow_gb_driver" string="Driver"
+                        context="{'group_by': 'delivery_driver_id'}"/>
+                <filter name="uellow_gb_payment" string="Payment Method"
+                        context="{'group_by': 'payment_method_type'}"/>
+                <filter name="uellow_gb_invoice" string="Invoice Status"
+                        context="{'group_by': 'invoice_status'}"/>
+                <filter name="uellow_gb_website" string="Website"
+                        context="{'group_by': 'website_id'}"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Default the Sales Orders list to OPEN orders (hide fully delivered +
+         invoiced + paid). Users can switch to "Completed" or clear the filter. -->
+    <record id="sale.action_orders" model="ir.actions.act_window">
+        <field name="context">{'search_default_uellow_open': 1}</field>
+    </record>
+
+</odoo>

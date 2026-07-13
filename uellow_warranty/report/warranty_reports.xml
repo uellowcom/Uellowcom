@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_warranty" model="report.paperformat">
+        <field name="name">Uellow Warranty A4</field>
+        <field name="format">A4</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">5</field>
+        <field name="margin_bottom">6</field>
+        <field name="margin_left">6</field>
+        <field name="margin_right">6</field>
+        <field name="header_spacing">0</field>
+        <field name="dpi">110</field>
+    </record>
+
+    <record id="action_report_warranty_certificate" model="ir.actions.report">
+        <field name="name">Warranty Certificate</field>
+        <field name="model">uellow.warranty.card</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">uellow_warranty.warranty_certificate</field>
+        <field name="report_file">uellow_warranty.warranty_certificate</field>
+        <field name="paperformat_id" ref="paperformat_warranty"/>
+        <field name="binding_model_id" ref="model_uellow_warranty_card"/>
+        <field name="binding_type">report</field>
+    </record>
+</odoo>

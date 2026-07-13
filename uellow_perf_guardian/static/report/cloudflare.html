@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex, nofollow"/>
+<title>تقرير الأداء + خطوات Cloudflare — Uellow</title>
+<style>
+  :root{ --yellow:#F5C320; --dark:#412402; --bg:#fbf8f1; --card:#ffffff;
+         --muted:#7a6a55; --ok:#1f9d55; --warn:#d98c00; --line:#ece3d2; }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:var(--bg);
+       color:var(--dark);line-height:1.85;font-size:16px}
+  .wrap{max-width:920px;margin:0 auto;padding:0 18px 80px}
+  header{background:linear-gradient(135deg,var(--dark),#5e3a12);color:#fff;
+         padding:38px 24px;border-radius:0 0 26px 26px;text-align:center;
+         box-shadow:0 6px 24px rgba(65,36,2,.18)}
+  header .logo{display:inline-flex;align-items:center;justify-content:center;
+       width:64px;height:64px;border-radius:18px;background:var(--yellow);
+       color:var(--dark);font-weight:900;font-size:30px;margin-bottom:12px}
+  header h1{margin:6px 0 4px;font-size:26px}
+  header p{margin:0;opacity:.85;font-size:14px;direction:ltr}
+  .badge{display:inline-block;background:var(--yellow);color:var(--dark);
+         font-weight:700;font-size:12px;padding:3px 12px;border-radius:999px;margin-top:12px}
+  h2{margin:38px 0 8px;font-size:21px;border-right:5px solid var(--yellow);
+     padding-right:12px}
+  h3{margin:22px 0 6px;font-size:17px;color:#5e3a12}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+        padding:20px 22px;margin-top:14px;box-shadow:0 2px 10px rgba(65,36,2,.04)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:15px}
+  th,td{padding:11px 12px;text-align:right;border-bottom:1px solid var(--line)}
+  th{background:#faf4e4;color:var(--dark);font-weight:700}
+  .ok{color:var(--ok);font-weight:700}
+  .pending{color:var(--warn);font-weight:700}
+  code,pre{font-family:"Cascadia Code",Consolas,Menlo,monospace;direction:ltr;
+           text-align:left;unicode-bidi:plaintext}
+  code{background:#f3ecdc;padding:2px 7px;border-radius:6px;font-size:13px}
+  pre{background:#2b1a08;color:#ffe9a8;padding:16px 18px;border-radius:12px;
+      overflow:auto;font-size:13.5px;line-height:1.7;white-space:pre}
+  .step{display:flex;gap:14px;margin-top:18px;align-items:flex-start}
+  .step .n{flex:0 0 34px;height:34px;border-radius:50%;background:var(--yellow);
+       color:var(--dark);font-weight:900;display:flex;align-items:center;
+       justify-content:center;font-size:16px}
+  .step .b{flex:1}
+  .step .b h3{margin:2px 0 6px}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:2px 10px;
+        border-radius:999px;margin-inline-start:6px}
+  .p-high{background:#fde2e1;color:#c0392b}
+  .p-mid{background:#fcefcf;color:#b9770a}
+  .p-low{background:#e3f3e8;color:#1f9d55}
+  .note{background:#fff8e6;border:1px solid #f3dca0;border-radius:12px;
+        padding:12px 16px;margin-top:14px;font-size:14px}
+  .kv{font-size:14px;color:var(--muted)}
+  ul{margin:8px 0;padding-right:22px}
+  li{margin:4px 0}
+  footer{text-align:center;color:var(--muted);font-size:13px;margin-top:48px}
+  .path{direction:ltr;text-align:left;font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">U</div>
+  <h1>تقرير الأداء وخطوات Cloudflare</h1>
+  <p>Uellow — Performance &amp; Cloudflare Hardening Report</p>
+  <span class="badge">29 يونيو 2026</span>
+</header>
+
+<div class="wrap">
+
+  <h2>① الملخّص التنفيذي</h2>
+  <div class="card">
+    <p>كان التطبيق والموقع يعانيان من <b>بطء وتعليق متقطّع</b>، وكان تاب
+    <b>الريلز</b> لا يعرض الفيديوهات. بعد التشخيص تبيّن سببان رئيسيان:</p>
+    <ul>
+      <li><b>التطبيق:</b> نقاط نهاية قوائم المنتجات كانت تجلب
+      <b>الكتالوج كامل (~3,500 منتج)</b> في كل طلب بدون حدّ SQL، فيقوم Odoo
+      بعمل <i>prefetch</i> لكل الأعمدة عبر كل الصفوف — يستهلك الـworkers.</li>
+      <li><b>الموقع:</b> زحف <b>bots كثيف على روابط /shop المفلترة</b>
+      (مساحة فلاتر شبه لا نهائية)، كل طلب عرض كامل 1–2 ثانية وعدة طلبات/ثانية
+      → إشغال كل الـworkers → الطابور يصل 9–30 ثانية، وهذا ما كان يُسقط طلب
+      الريلز بـtimeout.</li>
+    </ul>
+    <p>تم إصلاح كل ما يخصّ السيرفر والتحقق منه. يتبقّى تطبيق
+    <b>قواعد Cloudflare</b> (تحتاج لوحتك) لإيقاف الزحف عند الحافة نهائياً.</p>
+  </div>
+
+  <h2>② ما تم تنفيذه على السيرفر</h2>
+  <div class="card">
+    <table>
+      <tr><th>الإجراء</th><th>التفصيل</th><th>الحالة</th></tr>
+      <tr><td>تسريع الـAPI</td><td>ترقيم SQL (<code>search_count</code> +
+        <code>limit/offset</code>) بدل جلب الكتالوج كامل — 4 نقاط نهاية</td>
+        <td class="ok">✅ منشور</td></tr>
+      <tr><td>تسريع /shop</td><td><code>_get_brand_attributes()</code> حُوِّل
+        إلى subquery — أسرع 6×</td><td class="ok">✅ منشور</td></tr>
+      <tr><td>تشديد اللجم</td><td>سقف صارم 40 طلب/دقيقة على روابط /shop المفلترة
+        لكل IP مجهول</td><td class="ok">✅ منشور</td></tr>
+      <tr><td>زيادة الـWorkers</td><td>من 4 إلى 6 عاملاً</td>
+        <td class="ok">✅ منشور</td></tr>
+      <tr><td>robots.txt</td><td>قواعد <code>Disallow</code> لروابط الفلترة</td>
+        <td class="ok">✅ منشور</td></tr>
+      <tr><td>قواعد Cloudflare</td><td>طُبِّقت عبر API — Rate Limiting + WAF
+        Challenge + Cache (القسم ⑥)</td>
+        <td class="ok">✅ مُطبَّقة</td></tr>
+      <tr><td>Bot Fight Mode</td><td>زر واحد في اللوحة (التوكن لا يملك صلاحيته)</td>
+        <td class="pending">🟡 زر يدوي</td></tr>
+    </table>
+    <p class="kv" style="margin-top:14px">النتيجة المقاسة: زمن استجابة الـAPI
+    الدافئ انخفض من <b>4–5 ثوانٍ → ~0.1–0.2 ثانية</b>. كل التغييرات
+    backend فقط — لا حاجة لإصدار تطبيق جديد.</p>
+  </div>
+
+  <h2>③ بخصوص الريلز 🎬</h2>
+  <div class="card">
+    <p>الـbackend <b>سليم 100%</b>: الـfeed يرجع الفيديوهات بسرعة، روابط
+    Bunny HLS تعمل (200)، و<code>embed_url</code> صحيح. اختفاء الفيديوهات كان
+    <b>عرَضاً للبطء</b> (الطلب يفصل timeout بسبب إشغال الـworkers). مع التسريعات
+    أعلاه + قواعد Cloudflare يُفترض أن يعود طبيعياً.</p>
+  </div>
+
+  <h2>④ خطوات Cloudflare بالتفصيل</h2>
+  <div class="note">
+    السبب الجذري لبطء الموقع هو الزحف على روابط الفلترة، وكل الطلبات تصل عبر
+    نطاقات Cloudflare (<code>172.x</code> / <code>104.22.x</code> /
+    <code>162.158.x</code>) فلا يكفي اللجم لكل IP من داخل السيرفر. الحل الدائم
+    أن نوقف الزحف <b>عند حافة Cloudflare</b> قبل وصوله للسيرفر. طبّق القواعد
+    الأربع التالية بالترتيب.
+  </div>
+
+  <div class="card">
+    <div class="step">
+      <div class="n">1</div>
+      <div class="b">
+        <h3>Rate Limiting على روابط /shop المفلترة
+          <span class="pill p-high">الأهم</span></h3>
+        <p class="kv">المسار في اللوحة:
+          <b>Security → WAF → Rate limiting rules → Create rule</b></p>
+        <p>اضغط <b>Edit expression</b> وألصق التعبير التالي في خانة
+          <i>When incoming requests match</i>:</p>
+<pre>(starts_with(http.request.uri.path, "/shop") and
+ (http.request.uri.query contains "attribute_value=" or
+  http.request.uri.query contains "min_price=" or
+  http.request.uri.query contains "max_price=" or
+  http.request.uri.query contains "order=" or
+  http.request.uri.query contains "view_mode=" or
+  http.request.uri.query contains "hide_out_of_stock=" or
+  http.request.uri.query contains "tags="))</pre>
+        <ul>
+          <li><b>Rate:</b> <code>20</code> requests per <code>1 minute</code></li>
+          <li><b>With the same characteristics:</b> <code>IP</code>
+            (أو <code>cf.unique_visitor_id</code> إن ظهر لديك)</li>
+          <li><b>Then take action:</b> <code>Block</code> لمدة
+            <code>1 minute</code> &nbsp;(أو <code>Managed Challenge</code> إن
+            أردت رفقاً أكبر بالبشر)</li>
+        </ul>
+        <p class="kv">هذا يوقف الزحف عند الحافة فلا يصل للـworkers إطلاقاً —
+          ويكمّل لجم السيرفر الداخلي (40/دقيقة).</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">2</div>
+      <div class="b">
+        <h3>Bot Fight Mode <span class="pill p-mid">سريع</span></h3>
+        <p class="kv">المسار: <b>Security → Bots</b></p>
+        <ul>
+          <li>فعّل <b>Bot Fight Mode</b> (مجاني) — يتصدّى للزواحف الآلية
+            المعروفة تلقائياً.</li>
+          <li>إن كنت على خطة <b>Pro+</b> استخدم <b>Super Bot Fight Mode</b>
+            واضبط: <code>Definitely automated → Block</code> و
+            <code>Likely automated → Managed Challenge</code>.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">3</div>
+      <div class="b">
+        <h3>WAF Custom Rule — تحدّي الزواحف المتنكّرة
+          <span class="pill p-mid">فعّال</span></h3>
+        <p class="kv">المسار: <b>Security → WAF → Custom rules → Create rule</b></p>
+        <p>التعبير:</p>
+<pre>(starts_with(http.request.uri.path, "/shop")
+ and http.request.uri.query contains "attribute_value="
+ and not cf.client.bot)</pre>
+        <ul>
+          <li><b>Action:</b> <code>Managed Challenge</code></li>
+        </ul>
+        <p class="kv">يمرّر البشر بصمت ويوقف الـscrapers التي تزيّف
+          الـUser-Agent لتبدو متصفحاً.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">4</div>
+      <div class="b">
+        <h3>Cache Rule لصفحة /shop العامة
+          <span class="pill p-low">تخفيف حِمل</span></h3>
+        <p class="kv">المسار: <b>Caching → Cache Rules → Create rule</b></p>
+        <p>التعبير (الصفحة الأساسية فقط بدون فلاتر):</p>
+<pre>http.request.uri.path eq "/shop"
+ and not http.request.uri.query contains "="</pre>
+        <ul>
+          <li><b>Cache eligibility:</b> <code>Eligible for cache</code></li>
+          <li><b>Edge TTL:</b> <code>Override origin → 2 minutes</code></li>
+          <li><b>Browser TTL:</b> <code>Respect origin</code></li>
+        </ul>
+        <div class="note" style="margin-top:10px">
+          ⚠️ <b>تنبيه مهم:</b> لا تُفعّل الكاش أبداً على روابط فيها فلاتر، ولا
+          على <code>/shop/cart</code> / <code>/shop/checkout</code> /
+          <code>/shop/payment</code> / <code>/my/*</code> / صفحات الحساب —
+          اقصر الكاش على المسارات العامة فقط حتى لا تُعرض بيانات مستخدم لآخر.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>⑤ كيف تتأكّد أنها تعمل</h2>
+  <div class="card">
+    <ul>
+      <li>في Cloudflare: <b>Security → Events</b> ستظهر طلبات الزحف وهي تُحجب
+        (Block / Challenge) خلال دقائق.</li>
+      <li>على السيرفر: متوسط الحِمل (<code>load</code>) يهبط وعدد الطلبات في
+        الطابور يقترب من الصفر.</li>
+      <li>في التطبيق: تاب الريلز يعرض الفيديوهات مباشرة دون انتظار.</li>
+    </ul>
+  </div>
+
+  <h2>⑥ ما طُبِّق فعلاً على Cloudflare (عبر API)</h2>
+  <div class="note">
+    النطاق <b>uellow.com</b> على الخطة <b>Free</b>
+    (<code>Zone&nbsp;0914a7620a796f14e034f8dc63d3c3da</code>). طُبِّقت القواعد
+    التالية برمجياً عبر API Token وتم التحقق منها مباشرة:
+  </div>
+  <div class="card">
+    <table>
+      <tr><th>القاعدة</th><th>التفاصيل</th><th>الحالة</th></tr>
+      <tr><td>Rate Limiting</td>
+        <td>على مسار <code>/shop</code> (باستثناء cart/checkout/payment) —
+          <b>12 طلب / 10 ثوانٍ</b> لكل IP ← Block. <span class="kv">(الخطة
+          Free تسمح بفترة 10ث فقط، فاعتُمد هذا بدل 20/دقيقة.)</span></td>
+        <td class="ok">✅ فعّالة</td></tr>
+      <tr><td>WAF Managed Challenge</td>
+        <td>على روابط <code>/shop</code> المفلترة (<code>attribute_value</code>/
+          <code>min_price</code>/<code>max_price</code>/<code>order</code>/
+          <code>view_mode</code>/<code>hide_out_of_stock</code>/<code>tags</code>)
+          مع استثناء الزواحف الموثّقة (SEO آمن)</td>
+        <td class="ok">✅ فعّالة</td></tr>
+      <tr><td>Cache صفحات HTML للزوار</td>
+        <td>قاعدة <i>Cache anonymous HTML 60s</i> كانت موجودة مسبقاً وتشمل
+          <code>/shop</code> و<code>/product</code> و<code>/blog</code> —
+          لا حاجة لتكرارها</td>
+        <td class="ok">✅ موجودة</td></tr>
+      <tr><td>Bot Fight Mode</td>
+        <td>التوكن لا يملك صلاحية Bot Management — فعّله بزر واحد من
+          <b>Security → Bots</b></td>
+        <td class="pending">🟡 زر يدوي</td></tr>
+    </table>
+    <div class="note" style="margin-top:14px">
+      🔒 <b>تذكير أمني:</b> التوكن المستخدَم ظهر في المحادثة — يُفضّل إلغاؤه
+      الآن من <b>My Profile → API Tokens</b> بعد اكتمال التطبيق، وإنشاء غيره
+      عند الحاجة لاحقاً.
+    </div>
+  </div>
+
+  <h2>⑦ كيف تمنح الصلاحية مستقبلاً (مرجع)</h2>
+  <div class="note">
+    إن احتجت منحي صلاحية لاحقاً، أنشئ <b>Cloudflare API Token</b> بصلاحيات
+    دنيا على نطاق <code>uellow.com</code> فقط — وتقدر تلغيه في أي لحظة. أضف
+    <code>Bot&nbsp;Management → Edit</code> هذه المرة لتفعيل Bot Fight Mode
+    آلياً أيضاً.
+  </div>
+
+  <div class="card">
+    <div class="step">
+      <div class="n">1</div>
+      <div class="b">
+        <h3>أنشئ توكن مخصّص (دقيقتان)</h3>
+        <p class="kv">المسار:
+          <b>My Profile → API Tokens → Create Token → Create Custom Token</b></p>
+        <p><b>Permissions</b> — الحد الأدنى المطلوب فقط:</p>
+        <ul>
+          <li><code>Zone</code> → <code>Zone WAF</code> → <b>Edit</b></li>
+          <li><code>Zone</code> → <code>Zone Settings</code> → <b>Edit</b>
+            &nbsp;<span class="kv">(لتفعيل Bot Fight Mode)</span></li>
+          <li><code>Zone</code> → <code>Cache Rules</code> → <b>Edit</b></li>
+        </ul>
+        <p><b>Zone Resources:</b> <code>Include</code> →
+          <code>Specific zone</code> → اختر <b>uellow.com</b> فقط (لا تعطِ كل
+          الـzones).</p>
+        <p><b>TTL</b> (اختياري لكن مفضّل): حدّد تاريخ انتهاء قريب (مثلاً يومين)
+          فيُلغى التوكن تلقائياً.</p>
+        <p>ثم <code>Continue → Create Token</code> وانسخ التوكن.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">2</div>
+      <div class="b">
+        <h3>سلّم التوكن بأمان <span class="pill p-high">مهم</span></h3>
+        <p><b>لا تلصق التوكن في المحادثة مباشرة.</b> بدلاً من ذلك اكتب هذا
+          السطر في الـprompt (الـ<code>!</code> يشغّله في جلستك،
+          و<code>-s</code> يخفي ما تكتبه):</p>
+<pre>! read -s CF_TOKEN && echo "$CF_TOKEN" > /root/.cf_token && chmod 600 /root/.cf_token</pre>
+        <p class="kv">فيُحفظ التوكن في ملف محمي أقرأه دون أن يظهر في المحادثة.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">3</div>
+      <div class="b">
+        <h3>زوّدني بالـZone ID</h3>
+        <p>تجده في صفحة الدومين داخل Cloudflare → <b>Overview</b> (العمود
+          الأيمن، أسفل <i>API</i>). تقدر تكتبه عادي في المحادثة — فهو معرّف
+          عام وليس سرّاً.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">4</div>
+      <div class="b">
+        <h3>ماذا سيُطبَّق تلقائياً</h3>
+        <ul>
+          <li>✅ Rate Limiting على روابط <code>/shop</code> المفلترة
+            (20/دقيقة → Block)</li>
+          <li>✅ WAF Custom rule — Managed Challenge للزواحف المتنكّرة</li>
+          <li>✅ Bot Fight Mode</li>
+          <li>✅ Cache Rule لصفحة <code>/shop</code> العامة فقط</li>
+        </ul>
+        <p class="kv">سيتم التحقق من كل قاعدة عبر الـAPI بعد إنشائها، مع تقرير
+          بالنتيجة. وبعد الانتهاء تقدر تلغي التوكن من نفس صفحة
+          <i>API Tokens</i>.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Uellow — تقرير داخلي • لا يُفهرَس (noindex)</p>
+    <p class="path">المسار على السيرفر:
+      /root/odoo-docker/uellowcom/uellow_perf_guardian/static/report/cloudflare.html</p>
+  </footer>
+
+</div>
+</body>
+</html>

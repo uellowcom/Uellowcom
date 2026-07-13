@@ -396,6 +396,27 @@ def serialize_product_full(product, lang='en_US'):
         'id': c.id,
         'name': bilingual(c, 'name'),
     } for c in product.public_categ_ids]
+    # Uellow World (dropship) products carry NO product.public.category by design
+    # — their taxonomy lives in the module-only dropship.category tree. Without a
+    # fallback the product page showed a blank "no category". Build the full
+    # root→leaf chain from the linked dropship.category so the page shows a real,
+    # tappable category (the World category routes resolve these ids natively).
+    if not public_categs and getattr(product, 'is_dropship', False):
+        try:
+            # dropship.product / dropship.category have no public read ACL, so a
+            # storefront (public) request sees an EMPTY dropship_product_id →
+            # sudo() is required or the chain comes back blank.
+            node = product.sudo().dropship_product_id.category_id
+            chain = []
+            while node:
+                chain.append(node)
+                node = node.parent_id
+            public_categs = [{
+                'id': c.id,
+                'name': bilingual(c.sudo(), 'name'),
+            } for c in reversed(chain)]
+        except Exception:
+            pass
 
     # All-time sold count from confirmed sale order lines.
     sold_count = 0
@@ -711,10 +732,22 @@ class MobileProductsAPI(http.Controller):
                         ('barcode', '=', search)] + sors
             domain += ['|'] * (len(sors) - 1) + sors
 
-        # Brand filter
+        # Brand filter — this DB links brands via the product.brand m2o
+        # (product.template.brand_id); older installs used a "Brand"
+        # attribute value. The product-detail endpoint returns the
+        # product.brand id when present, so route by what the id refers to:
+        # a real product.brand record → filter the brand_id field; otherwise
+        # fall back to the legacy attribute-value match. (Without this the
+        # brand tap from the product page filtered on attribute values that
+        # don't exist here → always empty.)
         if p.get('brand_id'):
             try:
-                domain.append(('attribute_line_ids.value_ids', 'in', [int(p['brand_id'])]))
+                bid = int(p['brand_id'])
+                Brand = request.env.get('product.brand')
+                if Brand is not None and Brand.sudo().browse(bid).exists():
+                    domain.append(('brand_id', '=', bid))
+                else:
+                    domain.append(('attribute_line_ids.value_ids', 'in', [bid]))
             except Exception:
                 pass
 
@@ -869,7 +902,41 @@ class MobileProductsAPI(http.Controller):
         order = sort_map.get(req_sort or p.get('sort', 'newest'),
                              'create_date desc')
 
+        # ── perf — page at the SQL level for the common listing case ──
+        # The old code fetched the ENTIRE matching set (~3.5k templates) on
+        # every request; reading any field on the page slice then triggered an
+        # ORM prefetch across the whole recordset → heavy, repeated DB load
+        # (a top contributor to app/website slowness). We now LIMIT/OFFSET in
+        # SQL and use a cheap COUNT(*) for the total. We only fall back to the
+        # full scan when a Python-side post-filter / re-rank genuinely needs
+        # the entire set (popular sort, min_discount, best-match re-rank).
+        try:
+            _min_disc_q = int(p.get('min_discount') or 0)
+        except Exception:
+            _min_disc_q = 0
+        _brain_rerank = bool(brain_on and (req_sort or p.get('sort')) == 'best_match')
+        _full_scan = (p.get('sort') == 'popular') or (_min_disc_q > 0) or _brain_rerank
+
         Tmpl = request.env['product.template'].sudo()
+        if not _full_scan:
+            try:
+                _page = max(1, int(p.get('page', 1)))
+            except Exception:
+                _page = 1
+            try:
+                _per = min(100, max(1, int(p.get('per_page', 20))))
+            except Exception:
+                _per = 20
+            _total = Tmpl.search_count(domain)
+            _recs = Tmpl.search(domain, order=order,
+                                limit=_per, offset=(_page - 1) * _per)
+            return ok(
+                [serialize_product_card(r, lang) for r in _recs],
+                {'page': _page, 'per_page': _per, 'total': _total,
+                 'pages': (_total + _per - 1) // _per,
+                 'has_next': _page * _per < _total},
+            )
+
         if p.get('sort') == 'popular':
             all_recs = Tmpl.browse(_top_selling_ids(domain, limit=1000))
         else:
@@ -941,20 +1008,29 @@ class MobileProductsAPI(http.Controller):
         domain = _domain_published_for_app() + [
             ('attribute_line_ids.value_ids', 'in', [value_id]),
         ]
-        records = Tmpl.search(domain, order='create_date desc')
-        items, meta = paginate(
-            records,
-            page=p.get('page', 1),
-            per_page=p.get('per_page', 20),
-            serializer=lambda r: serialize_product_card(r, lang),
-        )
+        # perf — SQL-level paging + COUNT instead of loading all brand products
+        try:
+            _page = max(1, int(p.get('page', 1)))
+        except Exception:
+            _page = 1
+        try:
+            _per = min(100, max(1, int(p.get('per_page', 20))))
+        except Exception:
+            _per = 20
+        _total = Tmpl.search_count(domain)
+        records = Tmpl.search(domain, order='create_date desc',
+                              limit=_per, offset=(_page - 1) * _per)
+        items = [serialize_product_card(r, lang) for r in records]
+        meta = {'page': _page, 'per_page': _per, 'total': _total,
+                'pages': (_total + _per - 1) // _per,
+                'has_next': _page * _per < _total}
         return ok({
             'brand': {
                 'id': v.id,
                 'name': bilingual(v, 'name'),
                 'image': img_url('product.attribute.value', v.id, 'image',
                                  unique=v.write_date) if v.image else None,
-                'total_products': len(records),
+                'total_products': _total,
             },
             'products': items,
         }, meta)

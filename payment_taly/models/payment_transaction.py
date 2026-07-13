@@ -20,6 +20,40 @@ class PaymentTransaction(models.Model):
     taly_refunded_amount = fields.Float(string='Refunded Amount', default=0.0)
     taly_refund_reason = fields.Char(string='Refund Reason')
     taly_raw_response = fields.Text(string='Raw API Response', readonly=True)
+    # Human-readable, bilingual auto-diagnosis shown under each record so any
+    # future failure is self-explanatory to whoever opens the transaction.
+    taly_diagnosis = fields.Text(
+        string='Diagnosis / التشخيص', readonly=True,
+        help='Auto-generated explanation of the current Taly status and the '
+             'recommended action. Refreshed on every status sync.')
+
+    # Map of Taly status -> bilingual (English first) diagnosis + action.
+    _TALY_DIAGNOSIS = {
+        'DONE': "✅ Paid successfully — order confirmed. / تم الدفع بنجاح — الطلب مؤكَّد.",
+        'PENDING': "⏳ Awaiting the customer to finish paying at Taly. The reconcile "
+                   "cron re-checks every 15 min; nothing to do unless it stays stuck. "
+                   "/ بانتظار إتمام العميل للدفع لدى تالي. كرون المطابقة يعيد الفحص كل "
+                   "١٥ دقيقة؛ لا إجراء مطلوب إلا إذا بقي عالقاً.",
+        'INCOMPLETED': "⚠️ The customer opened the Taly page but did NOT complete "
+                       "verification/payment (abandoned, failed the OTP, or has no "
+                       "eligible Taly account). No money was taken. Fix: make sure the "
+                       "phone is a SINGLE valid Kuwaiti number, then ask the customer to "
+                       "retry or use another method. / فتح العميل صفحة تالي ولم يُكمل "
+                       "التحقق/الدفع (تراجع، فشل رمز التحقق، أو لا يملك حساباً مؤهّلاً في "
+                       "تالي). لم يُخصم أي مبلغ. الحل: تأكد أن الهاتف رقم كويتي واحد صحيح، "
+                       "ثم اطلب من العميل إعادة المحاولة أو استخدام وسيلة دفع أخرى.",
+        'REJECTED': "❌ Taly DECLINED the installment (Taly's own credit/eligibility "
+                    "decision). This is NOT a system error and cannot be overridden from "
+                    "our side — offer the customer another payment method. / رفضت تالي "
+                    "التقسيط (قرار ائتماني/أهلية من تالي نفسها). ليس خطأ في النظام ولا "
+                    "يمكن تجاوزه من جهتنا — اعرض على العميل وسيلة دفع أخرى.",
+        'CANCELLED': "🚫 Cancelled or the 15-min payment window expired before completion. "
+                     "/ أُلغي الطلب أو انتهت نافذة الدفع (١٥ دقيقة) قبل الإتمام.",
+        'REFUNDED': "↩️ Refunded. / تم استرداد المبلغ.",
+        '': "ℹ️ No status from Taly yet — the order may not have been created, or it is "
+            "awaiting the first sync. / لا توجد حالة من تالي بعد — قد لا يكون الطلب أُنشئ، "
+            "أو بانتظار أول مزامنة.",
+    }
 
     # ── Rendering (redirect to Taly) ─────────────────────────────────────────
 
@@ -104,6 +138,9 @@ class PaymentTransaction(models.Model):
 
         odoo_state = TALY_ORDER_STATUSES.get(raw_status)
 
+        # Write the human diagnosis BEFORE changing state so it's always present.
+        self.sudo().write({'taly_diagnosis': self._taly_build_diagnosis(raw_status)})
+
         if odoo_state == 'done':
             self._set_done()
         elif odoo_state == 'pending':
@@ -116,6 +153,46 @@ class PaymentTransaction(models.Model):
                 raw_status, self.reference,
             )
 
+    def _taly_build_diagnosis(self, raw_status=None):
+        """Return a bilingual, human-readable explanation of the current Taly
+        status + recommended action, with a phone-quality warning appended when
+        the customer's phone holds more than one number."""
+        self.ensure_one()
+        from .payment_provider import TALY_ORDER_STATUSES
+        raw = (raw_status or self.taly_order_status or '').upper()
+        odoo_state = TALY_ORDER_STATUSES.get(raw)
+        if odoo_state == 'done':
+            key = 'DONE'
+        elif odoo_state == 'pending':
+            key = 'PENDING'
+        elif raw == 'INCOMPLETED':
+            key = 'INCOMPLETED'
+        elif raw in ('REJECTED', 'FAILED', 'FAILURE'):
+            key = 'REJECTED'
+        elif raw in ('CANCELLED', 'CANCEL', 'EXPIRED'):
+            key = 'CANCELLED'
+        elif raw == 'REFUNDED':
+            key = 'REFUNDED'
+        elif not raw:
+            key = ''
+        else:
+            key = None
+        text = self._TALY_DIAGNOSIS.get(key) if key is not None else (
+            "ℹ️ Taly status: %s (unmapped) — review manually. / حالة تالي: %s "
+            "(غير مصنّفة) — تُراجع يدوياً." % (raw, raw))
+
+        # Phone-quality guard: a mashed "num1/num2" phone is the #1 cause of
+        # INCOMPLETED (the verification SMS can't be delivered).
+        import re as _re
+        groups = [g for g in _re.split(r'[\/,;|]+', self.partner_id.phone or '')
+                  if len(_re.sub(r'\D', '', g)) >= 7]
+        if len(groups) >= 2:
+            text += ("\n📵 The customer phone holds MORE THAN ONE number "
+                     "(%s) — correct it to a single number. / رقم هاتف العميل "
+                     "يحتوي أكثر من رقم (%s) — صحّحه إلى رقم واحد."
+                     % (self.partner_id.phone, self.partner_id.phone))
+        return text
+
     # ── Authoritative status pull (anti-forgery) ──────────────────────────────
 
     def _taly_pull_status(self):
@@ -127,6 +204,36 @@ class PaymentTransaction(models.Model):
         data = self.provider_id._taly_get_order(self.reference)
         self._process_notification_data(data)
         return data
+
+    # ── Safety-net reconcile cron ─────────────────────────────────────────────
+
+    @api.model
+    def _cron_taly_reconcile(self, days=14, limit=200):
+        """Pull authoritative status from Taly for every still-open Taly
+        transaction and process it.
+
+        Taly's async webhook is best-effort and the customer browser-redirect
+        only fires if they come back — so without this an order the customer
+        actually PAID can sit in 'draft' forever (money received, order never
+        confirmed). This server-to-server poll closes that gap: it confirms any
+        order Taly reports CONFIRMED/PAID and cancels REJECTED/EXPIRED ones."""
+        from datetime import timedelta
+        cutoff = fields.Datetime.now() - timedelta(days=days)
+        txs = self.sudo().search([
+            ('provider_code', '=', 'taly'),
+            ('state', 'in', ('draft', 'pending')),
+            ('create_date', '>=', cutoff),
+            ('taly_order_id', '!=', False),
+        ], order='create_date desc', limit=limit)
+        for tx in txs:
+            try:
+                tx._taly_pull_status()
+                # commit per-tx so one bad order can't roll back the batch
+                self.env.cr.commit()
+            except Exception as e:
+                _logger.warning("Taly reconcile: tx %s failed: %s", tx.reference, e)
+                self.env.cr.rollback()
+        return True
 
     # ── Manual sync from backend ──────────────────────────────────────────────
 

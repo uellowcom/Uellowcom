@@ -49,6 +49,8 @@
                        help="Seconds we tell the bot to wait in the Retry-After header (default: 86400 = 24h)."/>
                 <field name="burst_per_ip_per_min"
                        help="Sliding window in seconds. 120/min ~ 2/sec — kicks distributed scrapers."/>
+                <field name="global_burst_per_ip_per_min"
+                       help="Anonymous GET /shop traffic per IP, ANY user-agent. Catches scrapers posing as browsers. 240/min = 4/sec. 0 = off."/>
               </group>
             </page>
 

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Light, load-aware auto-import. Fires often but self-throttles:
+         off-peak window + load guard + time budget + batch commits. -->
+    <record id="cron_dropship_auto_import" model="ir.cron">
+        <field name="name">Dropship: Auto-import (load-aware)</field>
+        <field name="model_id" ref="model_dropship_import_service"/>
+        <field name="state">code</field>
+        <field name="code">model.cron_auto_import()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="False"/>
+    </record>
+
+    <!-- Keep the REAL category records (icons + AR names) in sync with the
+         distinct categories present in the source catalog. Idempotent. -->
+    <record id="cron_dropship_sync_categories" model="ir.cron">
+        <field name="name">Dropship: Sync category records (icons + AR)</field>
+        <field name="model_id" ref="model_dropship_category"/>
+        <field name="state">code</field>
+        <field name="code">model._sync_from_catalog()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Housekeeping: purge never-ordered stale listings to keep the table lean. -->
+    <record id="cron_dropship_purge" model="ir.cron">
+        <field name="name">Dropship: Purge stale listings</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_purge_stale()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="False"/>
+    </record>
+
+    <!-- Scheduled imports: run every due dropship.import.schedule with its
+         own filters/cadence. Checks frequently; each schedule self-paces. -->
+    <record id="cron_dropship_run_schedules" model="ir.cron">
+        <field name="name">Dropship: Run due import schedules</field>
+        <field name="model_id" ref="model_dropship_import_schedule"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_run_schedules()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Auto-promote proven bestsellers to live products (demand radar). -->
+    <record id="cron_dropship_auto_promote" model="ir.cron">
+        <field name="name">Dropship: Auto-promote bestsellers</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_auto_promote()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="False"/>
+    </record>
+
+    <!-- Keep tracking numbers fresh for fulfilled dropship orders. -->
+    <record id="cron_dropship_sync_tracking" model="ir.cron">
+        <field name="name">Dropship: Sync order tracking</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_sync_tracking()</field>
+        <field name="interval_number">6</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Monthly performance report emailed to admins (opt-in via setting). -->
+    <record id="cron_dropship_monthly_report" model="ir.cron">
+        <field name="name">Dropship: Email monthly performance report</field>
+        <field name="model_id" ref="model_dropship_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_email_monthly_report()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">months</field>
+        <field name="active" eval="False"/>
+    </record>
+
+    <!-- Phase 2: auto-translate imported product titles to Arabic (batched,
+         fail-soft while Anthropic credits are out; processes the backlog once
+         credits are topped up). -->
+    <record id="cron_dropship_translate_names" model="ir.cron">
+        <field name="name">Dropship: Auto-translate titles to Arabic</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_translate_names()</field>
+        <field name="interval_number">2</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- Deals: short-interval price/stock refresh so offer prices stay fresh. -->
+    <record id="cron_dropship_sync_deals" model="ir.cron">
+        <field name="name">Dropship: Sync deal prices (frequent)</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_sync_deals()</field>
+        <field name="interval_number">30</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+
+    <!-- General price/stock sync for ALL live products (not just deals) so
+         nothing goes stale beyond sync_max_age_hours (default 24h). Oldest-first
+         with a stale cutoff → advances the backlog, never re-syncs fresh ones. -->
+    <record id="cron_dropship_sync_all" model="ir.cron">
+        <field name="name">Dropship: Sync all product prices/stock (freshness)</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_sync_all()</field>
+        <field name="interval_number">20</field>
+        <field name="interval_type">minutes</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

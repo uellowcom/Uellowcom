@@ -32,8 +32,21 @@ class UPaymentsController(http.Controller):
     @http.route('/payments/upayments/return', type='http', auth='public',
                 csrf=False, methods=['GET', 'POST'])
     def upay_return(self, **kw):
-        # The app's webview detects this path and closes; verification is done
-        # authoritatively by the webhook. Show a thin confirmation page.
+        # The app's webview detects this path and closes. The webhook is the
+        # primary capture signal but sometimes never fires (S06360) — so the
+        # return flow now ACTIVELY verifies the charge against the UPayments
+        # status API and captures the order if paid. `oid` is the order id we
+        # appended to our own returnUrl, so this lookup is reliable.
+        oid = kw.get('oid') or kw.get('order_id') or kw.get('ref')
+        if oid:
+            try:
+                order = request.env['sale.order'].sudo().browse(int(oid))
+                if order.exists() and hasattr(
+                        order, '_upayments_verify_status'):
+                    order._upayments_verify_status()
+            except Exception:
+                _logger.exception(
+                    'UPayments return-verify failed (oid=%s)', oid)
         return _page('Payment complete', 'You can return to the app.')
 
     @http.route('/payments/upayments/cancel', type='http', auth='public',
@@ -72,6 +85,10 @@ class UPaymentsController(http.Controller):
                     order.sudo().write({'upayments_track_id': track})
                 if result in _OK_RESULTS:
                     order._upayments_mark_paid(track_id=track, payment_id=payment_id)
+                elif not result and hasattr(order, '_upayments_verify_status'):
+                    # Webhook fired without a clear result field — confirm
+                    # against the status API rather than silently ignoring it.
+                    order._upayments_verify_status()
             except Exception:
                 _logger.exception('UPayments webhook processing failed')
         else:

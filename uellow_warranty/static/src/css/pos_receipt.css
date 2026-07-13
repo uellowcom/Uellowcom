@@ -1,0 +1,54 @@
+/* Uellow bilingual POS receipt — grayscale (thermal B/W friendly) */
+.u-pos-receipt { color: #111; font-size: 12px; line-height: 1.4; padding-left: 14px; padding-right: 14px; }
+.u-pos-receipt .u-head { background: #ededed; color: #1a1a1a; text-align: center; padding: 12px 10px 10px; border-radius: 8px; border: 1px solid #dcdcdc; }
+.u-pos-receipt .u-logo { max-height: 52px; max-width: 180px; filter: brightness(0); margin-bottom: 4px; }
+.u-pos-receipt .u-cn { font-weight: 800; font-size: 14px; color: #111; }
+.u-pos-receipt .u-cnar { font-weight: 800; font-size: 14px; color: #111; direction: rtl; }
+.u-pos-receipt .u-ca { font-size: 10.5px; color: #555; line-height: 1.45; margin-top: 2px; }
+.u-pos-receipt .u-barcode { text-align: center; margin-top: 12px; }
+.u-pos-receipt .u-barcode img { width: 80%; height: 56px; }
+.u-pos-receipt .u-doc { display: inline-block; margin-top: 8px; background: #fff; color: #222; font-weight: 800; font-size: 11px; letter-spacing: 1px; padding: 3px 12px; border-radius: 14px; border: 1px solid #999; }
+
+.u-pos-receipt .u-meta { width: 100%; margin-top: 10px; border-collapse: collapse; }
+.u-pos-receipt .u-meta td { padding: 3px 0; font-size: 11px; }
+.u-pos-receipt .u-meta td.r { text-align: right; }
+.u-pos-receipt .u-meta .k { display: block; font-size: 8.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; color: #777; }
+.u-pos-receipt .u-meta .v { font-weight: 800; color: #111; }
+
+.u-pos-receipt .u-cust { background: #f2f2f2; border-radius: 9px; padding: 9px 11px; margin-top: 10px; }
+.u-pos-receipt .u-cust .lbl { font-size: 8.5px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: #555; }
+.u-pos-receipt .u-cust .nm { font-weight: 800; font-size: 13px; margin-top: 2px; }
+.u-pos-receipt .u-cust .ad { font-size: 11px; color: #444; line-height: 1.45; margin-top: 1px; }
+
+.u-pos-receipt .u-items { width: 100%; border-collapse: collapse; margin-top: 12px; }
+.u-pos-receipt .u-items thead td { background: #e3e3e3; color: #111; font-size: 9px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: 6px 7px; border-bottom: 2px solid #111; }
+.u-pos-receipt .u-items tbody td { font-size: 11.5px; padding: 6px 7px; vertical-align: top; border-bottom: 1px solid #eee; }
+.u-pos-receipt .u-items tbody tr:nth-child(even) td { background: #fafafa; }
+.u-pos-receipt .u-items .pn { font-weight: 800; }
+.u-pos-receipt .u-items .par { font-size: 10.5px; color: #444; font-weight: 700; direction: rtl; }
+.u-pos-receipt .u-items .pa { font-size: 9.5px; color: #888; }
+.u-pos-receipt .u-items .c { text-align: center; }
+.u-pos-receipt .u-items .r { text-align: right; }
+
+.u-pos-receipt .u-tot { width: 100%; margin-top: 8px; border-collapse: collapse; }
+.u-pos-receipt .u-tot td { padding: 3px 2px; font-size: 11.5px; color: #555; }
+.u-pos-receipt .u-tot .v { text-align: right; font-weight: 800; color: #111; }
+.u-pos-receipt .u-grand { width: 100%; margin-top: 6px; border-collapse: collapse; background: #e9e9e9; border: 2px solid #2b2b2b; border-radius: 8px; }
+.u-pos-receipt .u-grand td { padding: 9px 11px; font-weight: 800; color: #111; }
+.u-pos-receipt .u-grand .lab { font-size: 13px; }
+.u-pos-receipt .u-grand .lab small { display: block; font-size: 9.5px; color: #555; font-weight: 700; }
+.u-pos-receipt .u-grand .amt { text-align: right; font-size: 20px; }
+
+.u-pos-receipt .u-pay { display: flex; justify-content: space-between; background: #f2f2f2; border-radius: 8px; padding: 7px 11px; margin-top: 7px; font-size: 11.5px; font-weight: 800; }
+.u-pos-receipt .u-warr { display: flex; align-items: center; gap: 8px; border: 1px dashed #999; border-radius: 8px; padding: 7px 10px; margin-top: 8px; }
+.u-pos-receipt .u-warr .pill { background: #2b2b2b; color: #fff; font-weight: 800; font-size: 10px; padding: 4px 9px; border-radius: 14px; white-space: nowrap; }
+.u-pos-receipt .u-warr .t { font-size: 10px; color: #444; line-height: 1.35; }
+
+.u-pos-receipt .u-qr { text-align: center; margin-top: 12px; }
+.u-pos-receipt .u-qr img { width: 96px; height: 96px; }
+.u-pos-receipt .u-qr .c { font-size: 9px; color: #777; font-weight: 700; margin-top: 3px; }
+
+.u-pos-receipt .u-thanks { text-align: center; margin-top: 12px; font-weight: 800; font-size: 13px; }
+.u-pos-receipt .u-thanks small { display: block; color: #777; font-weight: 700; font-size: 10px; margin-top: 1px; }
+.u-pos-receipt .u-foot { text-align: center; font-size: 9.5px; color: #555; margin-top: 8px; }
+.u-pos-receipt .u-ref { text-align: center; font-size: 9px; color: #999; margin-top: 8px; }

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+import base64
+import urllib.parse
+
 from odoo import models, fields, api
 
 
@@ -10,6 +13,30 @@ class SaleOrder(models.Model):
     )
     delivery_trip_id = fields.Many2one('delivery.trip', string='Delivery Trip')
     delivery_driver_id = fields.Many2one('delivery.driver', string='Assigned Driver')
+
+    # Truly-finished flag = delivered + fully invoiced + fully paid.
+    # Stored so the Sales Orders list can hide completed orders by default
+    # (NOT `locked` — this DB auto-locks every confirmed order, so lock says
+    # nothing about completion). See [[delivery-stack]].
+    uellow_fully_settled = fields.Boolean(
+        string='Fully Settled', compute='_compute_uellow_fully_settled',
+        store=True,
+        help='Delivered, fully invoiced and fully paid — used to filter '
+             'completed orders out of the active Sales Orders list.')
+
+    @api.depends('delivery_status', 'invoice_status', 'state',
+                 'invoice_ids.state', 'invoice_ids.payment_state',
+                 'invoice_ids.move_type')
+    def _compute_uellow_fully_settled(self):
+        for order in self:
+            posted = order.invoice_ids.filtered(
+                lambda m: m.move_type == 'out_invoice' and m.state == 'posted')
+            paid = bool(posted) and all(
+                m.payment_state == 'paid' for m in posted)
+            order.uellow_fully_settled = bool(
+                order.state in ('sale', 'done')
+                and order.delivery_status == 'delivered'
+                and order.invoice_status == 'invoiced' and paid)
 
     delivery_status = fields.Selection(
         selection=[
@@ -31,6 +58,16 @@ class SaleOrder(models.Model):
         string='Delivery Status',
         default='pending',
         tracking=True,
+        # This field is driven MANUALLY by the carrier/driver flow
+        # (pending → picked_up → … → delivered). It reuses the name
+        # `delivery_status` which sale_stock defines as a COMPUTED field
+        # (values 'full'/'partial'/'pending'); without detaching that
+        # compute, validating a picking ran sale_stock._compute_delivery_status
+        # → wrote 'full' → not in this selection → ValueError crash. Force it
+        # to a plain stored, writable field.
+        compute=False,
+        store=True,
+        readonly=False,
     )
 
     # Return system
@@ -82,6 +119,32 @@ class SaleOrder(models.Model):
     delivery_lat = fields.Float(string='Delivery Latitude', digits=(10, 7))
     delivery_lng = fields.Float(string='Delivery Longitude', digits=(10, 7))
     delivery_address_text = fields.Char(string='Delivery Address (Map)')
+    # Clickable Google-Maps link + a scannable QR that opens the same location.
+    delivery_gmaps_url = fields.Char(
+        string='Google Maps', compute='_compute_delivery_map', store=False)
+    delivery_location_qr = fields.Binary(
+        string='Location QR', compute='_compute_delivery_map', store=False)
+
+    @api.depends('delivery_lat', 'delivery_lng', 'delivery_address_text')
+    def _compute_delivery_map(self):
+        Report = self.env['ir.actions.report']
+        for o in self:
+            url = ''
+            if o.delivery_lat and o.delivery_lng:
+                url = ('https://www.google.com/maps/search/?api=1&query=%s,%s'
+                       % (o.delivery_lat, o.delivery_lng))
+            elif o.delivery_address_text:
+                url = ('https://www.google.com/maps/search/?api=1&query=%s'
+                       % urllib.parse.quote(o.delivery_address_text))
+            o.delivery_gmaps_url = url
+            qr = False
+            if url:
+                try:
+                    img = Report.barcode('QR', url, width=220, height=220)
+                    qr = base64.b64encode(img)
+                except Exception:
+                    qr = False
+            o.delivery_location_qr = qr
     delivery_date_actual = fields.Datetime(string='Actual Delivery Time')
     # ── Carrier pricing fields ───────────────────────────────────────────
     pricing_rule_id = fields.Many2one(
@@ -166,6 +229,66 @@ class SaleOrder(models.Model):
     )
 
 
+    # ── Map Location auto-fill ───────────────────────────────────────────
+    def _uellow_compose_address(self, ship):
+        """Build a human delivery address from the customer's registered
+        (Uellow structured) address, falling back to the checkout detail text
+        then the standard contact address."""
+        if not ship:
+            return ''
+        bits = []
+        city = ship.uellow_city_id.display_name if getattr(ship, 'uellow_city_id', False) else ''
+        gov = ship.uellow_governorate_id.display_name if getattr(ship, 'uellow_governorate_id', False) else ''
+        for v in (city, gov):
+            if v:
+                bits.append(v)
+        for label, val in (('Block', getattr(ship, 'uellow_block', '')),
+                           ('Bldg', getattr(ship, 'uellow_building', '')),
+                           ('Floor', getattr(ship, 'uellow_floor', '')),
+                           ('Apt', getattr(ship, 'uellow_apartment', ''))):
+            if val:
+                bits.append('%s %s' % (label, val))
+        parts = []
+        structured = ', '.join(bits)
+        if structured:
+            parts.append(structured)
+        detail = (getattr(self, 'delivery_address_detail', '') or '').strip()
+        if detail:
+            parts.append(detail)
+        if not parts:
+            parts.append((ship.contact_address or '').replace('\n', ', ').strip(' ,'))
+        return ' — '.join([p for p in parts if p])[:500]
+
+    def _uellow_backfill_map_location(self):
+        """Fill the Map Location (lat/lng + address text) from the customer's
+        registered delivery address — ONLY when empty, so a driver's proof GPS
+        captured at delivery is never overwritten."""
+        if self.env.context.get('_uellow_in_map_backfill'):
+            return
+        for order in self.with_context(_uellow_in_map_backfill=True):
+            ship = order.partner_shipping_id or order.partner_id
+            if not (order.delivery_lat and order.delivery_lng):
+                lat = lng = 0.0
+                # 1) the order's own checkout pin (uellow_checkout)
+                if getattr(order, 'delivery_latitude', 0) and getattr(order, 'delivery_longitude', 0):
+                    lat, lng = order.delivery_latitude, order.delivery_longitude
+                # 2) else the customer's saved GPS pin
+                elif ship and (ship.partner_latitude or ship.partner_longitude):
+                    lat, lng = ship.partner_latitude, ship.partner_longitude
+                if lat and lng:
+                    order.delivery_lat = lat
+                    order.delivery_lng = lng
+            if not order.delivery_address_text:
+                txt = order._uellow_compose_address(ship)
+                if txt:
+                    order.delivery_address_text = txt
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        orders = super().create(vals_list)
+        orders._uellow_backfill_map_location()
+        return orders
+
     def write(self, vals):
         res = super().write(vals)
         # v2.1.72 — assigning a driver on the order form must make the
@@ -176,6 +299,11 @@ class SaleOrder(models.Model):
         if 'delivery_driver_id' in vals and vals.get('delivery_driver_id'):
             for order in self:
                 order._sync_driver_trip_line()
+        # keep the Map Location in step when the address / checkout pin changes
+        if any(k in vals for k in ('partner_shipping_id', 'partner_id',
+                                   'delivery_latitude', 'delivery_longitude',
+                                   'delivery_address_detail')):
+            self._uellow_backfill_map_location()
         return res
 
     def _sync_driver_trip_line(self):

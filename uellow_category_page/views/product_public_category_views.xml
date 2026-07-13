@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="ucp_product_public_category_form" model="ir.ui.view">
+    <field name="name">product.public.category.form.ucp.hero.colors</field>
+    <field name="model">product.public.category</field>
+    <field name="inherit_id" ref="website_sale.product_public_category_form_view"/>
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='name']" position="after">
+        <label for="ucp_hero_c1" string="Category page hero colors"/>
+        <div class="o_row">
+          <field name="ucp_hero_c1" placeholder="#11182B (color 1)"/>
+          <field name="ucp_hero_c2" placeholder="#3A2F8F (color 2)"/>
+          <field name="ucp_hero_c3" placeholder="#EC4899 (optional 3rd)"/>
+        </div>
+        <div class="text-muted" style="margin-bottom:8px;">
+          Leave empty to use an automatic distinct gradient for this category.
+        </div>
+      </xpath>
+    </field>
+  </record>
+</odoo>

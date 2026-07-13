@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Open ONLY the Uellow World settings, inside the module (not the global
+         Odoo settings page). The 'module' context filters to our app block. -->
+    <record id="action_dropship_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'uellow_dropship'}</field>
+    </record>
+
+    <record id="view_dropship_config_settings" model="ir.ui.view">
+        <field name="name">res.config.settings.dropship</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="Dropship" name="uellow_dropship" logo="/uellow_dropship/static/description/icon.png">
+
+                    <block title="General" name="ds_general">
+                        <setting string="Enable Dropshipping"><field name="ds_enabled"/></setting>
+                        <setting string="Storefront Brand"><field name="ds_brand_name"/></setting>
+                        <setting string="Dropship Website"><field name="ds_website_id"/></setting>
+                        <setting string="Prepaid Only"><field name="ds_prepaid_only"/></setting>
+                        <setting string="Providers">
+                            <button name="action_open_providers" type="object"
+                                    string="Open Providers" class="btn-link"/>
+                        </setting>
+                    </block>
+
+                    <block title="Auto-import" name="ds_import">
+                        <setting string="Auto-import (Cron)"><field name="ds_auto_import"/></setting>
+                        <setting string="Every (hours)"><field name="ds_import_interval_hours"/></setting>
+                        <setting string="Keywords"><field name="ds_import_keywords"/></setting>
+                        <setting string="Categories"><field name="ds_import_categories"/></setting>
+                        <setting string="Max / Run"><field name="ds_import_max_products"/></setting>
+                        <setting string="Min Provider Orders"><field name="ds_import_min_orders"/></setting>
+                        <setting string="Min Rating"><field name="ds_import_min_rating"/></setting>
+                    </block>
+
+                    <block title="Exclusion Filters" name="ds_exclude">
+                        <setting string="Exclude Keywords"><field name="ds_exclude_keywords"/></setting>
+                        <setting string="Exclude Categories"><field name="ds_exclude_categories"/></setting>
+                        <setting string="Exclude Brands (trademark-safe)"><field name="ds_exclude_brands"/></setting>
+                        <setting string="Max Landed Price (KWD)"><field name="ds_max_price"/></setting>
+                        <setting string="Max Shipping Days"><field name="ds_max_ship_days"/></setting>
+                        <setting string="Skip Items Without Image"><field name="ds_exclude_no_image"/></setting>
+                        <setting string="Require Video"><field name="ds_exclude_no_video"/></setting>
+                    </block>
+
+                    <block title="Pricing" name="ds_pricing">
+                        <setting string="Default Markup %"><field name="ds_default_markup"/></setting>
+                        <setting string="Price Rounding"><field name="ds_price_rounding"/></setting>
+                        <setting string="FX Buffer %"><field name="ds_fx_buffer"/></setting>
+                        <setting string="Customs / Duty %"><field name="ds_customs_percent"/></setting>
+                        <setting string="Min Margin %"><field name="ds_min_margin"/></setting>
+                        <setting string="Min Landed Price (KWD)"><field name="ds_min_price"/></setting>
+                        <setting string="Auto-publish on Materialize"><field name="ds_auto_publish"/></setting>
+                        <setting string="Monthly Cost Cap (USD)"><field name="ds_monthly_cost_cap"/></setting>
+                    </block>
+
+                    <block title="Media &amp; Deals" name="ds_media">
+                        <setting string="Show Product Videos"><field name="ds_show_videos"/></setting>
+                        <setting string="Show Deals / Offers"><field name="ds_show_deals"/></setting>
+                        <setting string="Min Discount % for Deals"><field name="ds_deal_min_percent"/></setting>
+                        <setting string="Skip Flash / Limited-time Deals"><field name="ds_exclude_flash_deals"/></setting>
+                        <setting string="Max Discount % on Import"><field name="ds_max_discount_percent"/></setting>
+                    </block>
+
+                    <block title="Storefront / UX" name="ds_ux">
+                        <setting string="Show Delivery ETA Badge"><field name="ds_show_eta_badge"/></setting>
+                        <setting string="ETA Safety Buffer (days)"><field name="ds_eta_extra_days"/></setting>
+                        <setting string="Show 'Ships Internationally' Badge"><field name="ds_show_origin_badge"/></setting>
+                        <setting string="Hide Watermarked Images"><field name="ds_hide_supplier_images_with_text"/></setting>
+                        <setting string="Default Content Language"><field name="ds_default_lang"/></setting>
+                        <setting string="Products / Page"><field name="ds_products_per_page"/></setting>
+                        <setting string="Default Sort"><field name="ds_sort_default"/></setting>
+                    </block>
+
+                    <block title="Reviews &amp; Social Proof" name="ds_reviews">
+                        <setting string="Import Provider Reviews"><field name="ds_import_reviews"/></setting>
+                        <setting string="Only Import Reviews ≥ Stars"><field name="ds_min_review_stars"/></setting>
+                        <setting string="Show 'X sold today'"><field name="ds_fake_urgency"/></setting>
+                    </block>
+
+                    <block title="Product Page Display" name="ds_product_page">
+                        <setting string="Show Specifications"><field name="ds_pp_show_specs"/></setting>
+                        <setting string="Show Reviews"><field name="ds_pp_show_reviews"/></setting>
+                        <setting string="Show Shipping Info"><field name="ds_pp_show_shipping"/></setting>
+                        <setting string="Show Seller / Store Info"><field name="ds_pp_show_seller"/></setting>
+                        <setting string="Show Variants"><field name="ds_pp_show_variants"/></setting>
+                        <setting string="Show Views Count"><field name="ds_pp_show_views"/></setting>
+                        <setting string="Show Sold Count"><field name="ds_pp_show_sold"/></setting>
+                        <setting string="Hide Views Below"><field name="ds_pp_min_views"/></setting>
+                        <setting string="Views Baseline Boost"><field name="ds_pp_views_boost"/></setting>
+                        <setting string="Max Reviews Shown"><field name="ds_pp_max_reviews"/></setting>
+                        <setting string="Max Gallery Images"><field name="ds_pp_max_gallery"/></setting>
+                    </block>
+
+                    <block title="Delivery Labels" name="ds_ship_labels">
+                        <setting string="Ships Label (EN)"><field name="ds_ships_label_en"/></setting>
+                        <setting string="Ships Label (AR)"><field name="ds_ships_label_ar"/></setting>
+                    </block>
+
+                    <block title="Auto-promote Bestsellers" name="ds_autopromote">
+                        <setting string="Auto-promote Bestsellers"><field name="ds_autopromote"/></setting>
+                        <setting string="Promote if Units Sold ≥"><field name="ds_autopromote_min_orders"/></setting>
+                        <setting string="Max Promotions / Run"><field name="ds_autopromote_max_per_run"/></setting>
+                    </block>
+
+                    <block title="Slow-mover Rescue" name="ds_slowmover">
+                        <setting string="Slow-mover Min Views"><field name="ds_slowmover_min_views"/></setting>
+                        <setting string="Slow-mover Discount %"><field name="ds_slowmover_discount"/></setting>
+                    </block>
+
+                    <block title="Monthly Report" name="ds_monthly_report">
+                        <setting string="Email Monthly Report"><field name="ds_monthly_report_enabled"/></setting>
+                        <setting string="Report Recipients"><field name="ds_monthly_report_emails" placeholder="ali@uellow.com, ..."/></setting>
+                    </block>
+
+                    <block title="Import Enrichment" name="ds_enrich">
+                        <setting string="Fetch Full Detail on Import"
+                                 help="Pull reviews/specs/shipping while importing so listings are complete immediately.">
+                            <field name="ds_enrich_on_import"/>
+                        </setting>
+                    </block>
+
+                    <block title="A/B Title Testing" name="ds_ab">
+                        <setting string="Rotation Window (hours)"
+                                 help="How often the storefront flips between title A and B during a live test.">
+                            <field name="ds_ab_bucket_hours"/>
+                        </setting>
+                    </block>
+
+                    <block title="Sync Schedules" name="ds_schedules">
+                        <setting string="Enable Auto-import Cron"><field name="ds_import_cron_active"/></setting>
+                        <setting string="Auto-import Every (hours)"><field name="ds_import_interval_hours"/></setting>
+                        <setting string="Check Import Schedules Every (min)"><field name="ds_schedules_cron_mins"/></setting>
+                        <setting string="Enable Deal Price Sync"><field name="ds_deal_sync_enabled"/></setting>
+                        <setting string="Deal Sync Every (min)"><field name="ds_deal_sync_mins"/></setting>
+                        <setting string="Deal Sync Time Budget (sec)"><field name="ds_deal_sync_budget"/></setting>
+                        <setting string="Category Sync Every (days)"><field name="ds_category_sync_days"/></setting>
+                    </block>
+
+                    <block title="SEO" name="ds_seo">
+                        <setting string="No-index Dropship Pages"><field name="ds_noindex"/></setting>
+                        <setting string="Auto-generate SEO via AI"><field name="ds_auto_seo"/></setting>
+                        <setting string="Canonical Host"><field name="ds_canonical_host"/></setting>
+                    </block>
+
+                    <block title="Returns" name="ds_returns">
+                        <setting string="Returns Policy"><field name="ds_returns_policy"/></setting>
+                        <setting string="Return Window (days)"><field name="ds_return_window_days"/></setting>
+                    </block>
+
+                    <block title="Sync &amp; Quality" name="ds_sync">
+                        <setting string="Auto-sync Prices"><field name="ds_price_sync"/></setting>
+                        <setting string="Auto-sync Stock"><field name="ds_stock_sync"/></setting>
+                        <setting string="Unpublish When Out of Stock"><field name="ds_unpublish_oos"/></setting>
+                        <setting string="Max Variants / Product"><field name="ds_max_variants"/></setting>
+                        <setting string="Skip Duplicates"><field name="ds_dedupe"/></setting>
+                    </block>
+
+                    <block title="Orders" name="ds_orders">
+                        <setting string="Auto-place Order on Payment"><field name="ds_auto_place_order"/></setting>
+                        <setting string="Provider Order Note"><field name="ds_order_note"/></setting>
+                        <setting string="Default Zip / Postal Code"><field name="ds_default_zip"/></setting>
+                        <setting string="Chrome Extension API Key"
+                                 help="Paste this key into the Uellow Importer Chrome extension.">
+                            <field name="ds_ext_api_key"/>
+                            <button name="action_generate_ext_key" type="object"
+                                    string="Generate Key" class="btn-link"/>
+                            <a href="/dropship/ext/download" class="btn btn-link"
+                               role="button">⬇ Download Extension</a>
+                        </setting>
+                        <setting string="Extension Max Products / Import"><field name="ds_ext_max_per_call"/></setting>
+                        <setting string="Hold Before Placing (hours)"><field name="ds_hold_hours"/></setting>
+                        <setting string="Max Provider Orders / Day"><field name="ds_daily_order_cap"/></setting>
+                    </block>
+
+                    <block title="Notifications" name="ds_notify">
+                        <setting string="Notify Admin on Import"><field name="ds_notify_on_import"/></setting>
+                        <setting string="Alert on Cost Spike"><field name="ds_notify_price_spike"/></setting>
+                        <setting string="Cost Spike Threshold %"><field name="ds_price_spike_percent"/></setting>
+                        <setting string="Push Tracking to Customer"><field name="ds_notify_tracking"/></setting>
+                    </block>
+
+                    <block title="Caps &amp; Housekeeping" name="ds_caps">
+                        <setting string="Max Total Listings"><field name="ds_max_listings"/></setting>
+                        <setting string="Purge Unsold After (days)"><field name="ds_purge_stale_days"/></setting>
+                        <setting string="Fail-closed on Error"><field name="ds_fail_closed"/></setting>
+                    </block>
+
+                    <block title="Server-load Protection" name="ds_load">
+                        <setting string="Import Batch Size"><field name="ds_import_batch_size"/></setting>
+                        <setting string="Delay Between API Calls (ms)"><field name="ds_rate_limit_ms"/></setting>
+                        <setting string="Cron Time Budget (sec)"><field name="ds_cron_time_budget"/></setting>
+                        <setting string="Run Imports Off-peak Only"><field name="ds_offpeak_only"/></setting>
+                        <setting string="Off-peak Start (hour)"><field name="ds_offpeak_start"/></setting>
+                        <setting string="Off-peak End (hour)"><field name="ds_offpeak_end"/></setting>
+                        <setting string="Pause When Server Busy"><field name="ds_pause_when_busy"/></setting>
+                        <setting string="Max Load Average"><field name="ds_max_load"/></setting>
+                    </block>
+
+                    <block title="Content &amp; AI" name="ds_ai">
+                        <setting string="Imported Fields"><field name="ds_import_fields"/></setting>
+                        <setting string="AI Rewrite on Website too"><field name="ds_ai_rewrite_website"/></setting>
+                        <setting string="Auto-translate to Arabic"><field name="ds_ai_auto_translate"/></setting>
+                        <setting string="AI Model"><field name="ds_ai_model"/></setting>
+                        <setting string="AI Rewrite Tone"><field name="ds_ai_tone"/></setting>
+                    </block>
+
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

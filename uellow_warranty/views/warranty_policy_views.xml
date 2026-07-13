@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_warranty_policy_list" model="ir.ui.view">
+        <field name="name">uellow.warranty.policy.list</field>
+        <field name="model">uellow.warranty.policy</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="name_ar"/>
+                <field name="duration_months"/>
+                <field name="website_id" optional="show"/>
+                <field name="category_ids" widget="many2many_tags" optional="show"/>
+                <field name="is_default"/>
+                <field name="card_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_warranty_policy_form" model="ir.ui.view">
+        <field name="name">uellow.warranty.policy.form</field>
+        <field name="model">uellow.warranty.policy</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_cards" type="object" class="oe_stat_button" icon="fa-id-card-o">
+                            <field name="card_count" widget="statinfo" string="Cards"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Standard Warranty"/></h1>
+                        <field name="name_ar" placeholder="الاسم بالعربي"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="duration_months"/>
+                            <field name="website_id" options="{'no_create': True}"/>
+                            <field name="is_default"/>
+                            <field name="no_warranty"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="category_ids" widget="many2many_tags"/>
+                        </group>
+                    </group>
+                    <group string="Coverage summary (shown on the seal area)">
+                        <field name="coverage_en" nolabel="1" placeholder="Coverage (EN)"/>
+                        <field name="coverage_ar" nolabel="1" placeholder="التغطية (AR)"/>
+                    </group>
+                    <notebook>
+                        <page string="Full Terms (EN)">
+                            <field name="terms_en" nolabel="1" placeholder="Full warranty terms and conditions (English)"/>
+                        </page>
+                        <page string="Full Terms (AR)">
+                            <field name="terms_ar" nolabel="1" placeholder="الشروط والأحكام الكاملة للضمان (عربي)"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_warranty_policy" model="ir.actions.act_window">
+        <field name="name">Warranty Policies</field>
+        <field name="res_model">uellow.warranty.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

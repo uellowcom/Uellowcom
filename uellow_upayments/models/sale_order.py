@@ -27,6 +27,79 @@ class SaleOrder(models.Model):
     upayments_cod_surcharge = fields.Float(
         'COD surcharge (refund if online)', readonly=True, copy=False)
 
+    # ── ship-guard on confirm (2026-07-01, triggered by S06427) ──────────
+    def action_confirm(self):
+        """Safety net for online orders confirmed OUTSIDE the UPayments
+        capture path.
+
+        Online orders stay a draft cart with NO delivery line; the shipping
+        line is normally added by ``_upayments_mark_paid`` at payment
+        capture. If such an order is confirmed some other way (a manual
+        backend confirm, an admin action, a reconcile) BEFORE/without capture,
+        the deferred line is never added and the order ships free by accident
+        (this is exactly what happened to S06427). After the standard confirm
+        we re-add the pending shipping line so shipping is never silently 0."""
+        res = super().action_confirm()
+        for order in self:
+            try:
+                order._upayments_ship_guard_on_confirm()
+            except Exception:
+                _logger.exception(
+                    'UPayments ship-guard on confirm failed for %s', order.id)
+        return res
+
+    def _upayments_ship_guard_on_confirm(self):
+        self.ensure_one()
+        if self.state not in ('sale', 'done'):
+            return
+        # only online orders are at risk (COD adds its line at confirm time)
+        if getattr(self, 'payment_method_type', '') != 'online':
+            return
+        if not self.carrier_id:
+            return
+        # already has a delivery line → nothing to do (normal captured flow
+        # adds it while still draft, so this is the common no-op path)
+        if self.order_line.filtered(lambda l: getattr(l, 'is_delivery', False)):
+            return
+        # Only act on a KNOWN positive pending rate. If the rate is 0/unset we
+        # do NOT invent one — that could over-charge an order that genuinely
+        # qualified for free shipping. The pending rate stored at checkout is
+        # already the engine-adjusted final price (free = 0), so a positive
+        # value means real shipping that never got applied.
+        rate = self.upayments_ship_rate or 0.0
+        if rate <= 0:
+            # Still surface the anomaly for an online order confirmed without a
+            # captured payment, so ops can see it (non-breaking).
+            self._upayments_flag_unpaid_confirm()
+            return
+        try:
+            self.sudo().set_delivery_line(self.carrier_id, rate)
+            self.sudo().message_post(body=_(
+                '⚠️ Shipping line auto-added on confirm (%.3f KD). This order '
+                'was confirmed outside the UPayments capture path, so the '
+                'deferred shipping line was missing and would have shipped '
+                'free.') % rate)
+        except Exception:
+            _logger.exception(
+                'ship-guard set_delivery_line failed for %s', self.id)
+        self._upayments_flag_unpaid_confirm()
+
+    def _upayments_flag_unpaid_confirm(self):
+        """Post a one-time chatter warning when an online UPayments order is
+        confirmed while its payment was never captured (initiated → track id
+        present, but upayments_paid is still False). Visibility only."""
+        self.ensure_one()
+        try:
+            if (self.upayments_track_id and not self.upayments_paid
+                    and getattr(self, 'payment_method_type', '') == 'online'):
+                self.sudo().message_post(body=_(
+                    '⚠️ Confirmed while the UPayments payment was NOT captured '
+                    '(upayments_paid = False). Verify the payment before '
+                    'fulfilment. / تم التأكيد دون تحصيل دفعة UPayments — تحقّق '
+                    'من الدفع قبل التجهيز.'))
+        except Exception:
+            pass
+
     def _upayments_config(self):
         ICP = self.env['ir.config_parameter'].sudo()
         base = (ICP.get_param('uellow_upayments.base_url') or _DEFAULT_BASE).rstrip('/')
@@ -105,11 +178,160 @@ class SaleOrder(models.Model):
             raise UserError(_('Could not reach UPayments: %s') % e)
         if not data.get('status'):
             raise UserError(data.get('message') or _('UPayments rejected the charge.'))
-        link = (data.get('data') or {}).get('link')
+        dobj = data.get('data') or {}
+        link = dobj.get('link')
         if not link:
             raise UserError(_('UPayments did not return a payment link.'))
-        self.sudo().write({'upayments_link': link})
+        vals = {'upayments_link': link}
+        # Store the track id NOW (the /charge response returns it) so the
+        # order can be reconciled later via the status API even if the
+        # capture webhook never fires (the S06360 failure mode).
+        tid = dobj.get('trackId') or dobj.get('track_id') or dobj.get('track')
+        if tid:
+            vals['upayments_track_id'] = str(tid)
+        self.sudo().write(vals)
         return link
+
+    def _upayments_result_readonly(self):
+        """Return UPayments' live result string for this order's charge
+        (e.g. 'CAPTURED') WITHOUT mutating the order. '' on any failure."""
+        self.ensure_one()
+        if requests is None:
+            return ''
+        track = (self.upayments_track_id or '').strip()
+        if not track:
+            return ''
+        base, token = self._upayments_config()
+        if not token:
+            return ''
+        try:
+            r = requests.get(
+                '%s/get-payment-status/%s' % (base.rstrip('/'), track),
+                headers={'Authorization': 'Bearer %s' % token,
+                         'Accept': 'application/json'}, timeout=20)
+            data = r.json()
+            if not data.get('status'):
+                return ''
+            return (((data.get('data') or {}).get('transaction') or {})
+                    .get('result') or '').upper()
+        except Exception as e:
+            _logger.warning('UPayments readonly status failed for %s: %s',
+                            self.id, e)
+            return ''
+
+    @api.model
+    def _cron_upayments_reconcile(self, days=7, limit=300):
+        """Heal UPayments orders whose capture webhook never arrived.
+
+        Scans initiated-but-unpaid orders (track id present, upayments_paid
+        False) from the last `days`, INCLUDING cancelled ones — S06427 was a
+        genuinely-CAPTURED order that got cancelled while it looked unpaid, so
+        the money was received but the order was dead and no reconcile touched
+        it. For a cancelled order we FIRST confirm CAPTURED via a read-only
+        status call, and only then resurrect it (draft → heal) so we never
+        revive a genuinely abandoned cart."""
+        from datetime import timedelta
+        cutoff = fields.Datetime.now() - timedelta(days=days)
+        orders = self.sudo().search([
+            ('upayments_track_id', '!=', False),
+            ('upayments_paid', '=', False),
+            ('state', 'in', ('draft', 'sent', 'cancel')),
+            ('create_date', '>=', cutoff),
+        ], limit=limit)
+        healed = 0
+        for o in orders:
+            try:
+                if o.state == 'cancel':
+                    if o._upayments_result_readonly() not in (
+                            'CAPTURED', 'SUCCESS', 'SUCCESSFUL', 'AUTHORIZED'):
+                        continue  # genuinely unpaid → leave cancelled
+                    o.action_draft()
+                    o.message_post(body=_(
+                        '♻️ Auto-recovered by reconcile: the UPayments payment '
+                        'was CAPTURED but the order had been cancelled — '
+                        'restoring, marking paid and adding shipping. / '
+                        'استُرجع الطلب: الدفع مؤكّد لكنه كان ملغى.'))
+                if o._upayments_verify_status():
+                    healed += 1
+                    o._upayments_alert_admins_recovered()
+                    self.env.cr.commit()
+            except Exception:
+                _logger.exception(
+                    'UPayments reconcile failed for %s', o.id)
+                self.env.cr.rollback()
+        if healed:
+            _logger.warning(
+                'UPayments reconcile: recovered %s missed-webhook order(s).',
+                healed)
+        return healed
+
+    def _upayments_alert_admins_recovered(self):
+        """Notify admins that the reconcile cron caught a captured payment
+        whose webhook was missed (push + app-inbox row). Best-effort."""
+        self.ensure_one()
+        try:
+            CN = self.env.get('mobile.customer.notification')
+            if CN is None or not hasattr(CN, 'push_admins'):
+                return
+            amt = self.amount_total or 0.0
+            cur = (self.currency_id.name or 'KWD')
+            # toggle_field is optional on the settings model — a name that
+            # doesn't exist defaults to True, so this always fires (still
+            # gated by the master push switch).
+            CN.sudo().push_admins(
+                'notify_payment_reconcile',
+                title_en='Payment recovered',
+                title_ar='تم استرجاع دفعة',
+                body_en=('Order %s — a captured payment whose webhook was '
+                         'missed was auto-reconciled (%.3f %s).'
+                         % (self.name, amt, cur)),
+                body_ar=('الطلب %s — استُرجعت دفعة مؤكّدة فات إشعار الـ webhook '
+                         'الخاص بها تلقائياً (%.3f %s).' % (self.name, amt, cur)),
+                data={'type': 'order', 'order_id': self.id,
+                      'order_name': self.name})
+        except Exception:
+            _logger.debug('reconcile admin alert failed for %s',
+                          self.id, exc_info=True)
+
+    def _upayments_verify_status(self):
+        """Ask UPayments for the live status of this order's charge and
+        capture it when CAPTURED. Returns True when the order is (now) paid.
+
+        Idempotent — `_upayments_mark_paid` guards against double credit — so
+        it is safe to call from the return handler, an admin reconcile action
+        or a cron. This heals a missed/failed capture webhook: the payment
+        succeeded at the gateway but Odoo never heard about it (S06360)."""
+        self.ensure_one()
+        if self.upayments_paid:
+            return True
+        if requests is None:
+            return False
+        track = (self.upayments_track_id or '').strip()
+        if not track:
+            return False
+        base, token = self._upayments_config()
+        if not token:
+            return False
+        url = '%s/get-payment-status/%s' % (base.rstrip('/'), track)
+        try:
+            r = requests.get(
+                url, headers={'Authorization': 'Bearer %s' % token,
+                              'Accept': 'application/json'}, timeout=20)
+            data = r.json()
+        except Exception as e:
+            _logger.warning('UPayments status check failed for %s: %s',
+                            self.id, e)
+            return False
+        try:
+            res = (((data.get('data') or {}).get('transaction') or {})
+                   .get('result') or '').upper()
+        except Exception:
+            res = ''
+        if data.get('status') and res in ('CAPTURED', 'SUCCESS',
+                                          'SUCCESSFUL', 'AUTHORIZED'):
+            self._upayments_mark_paid(track_id=track)
+            return True
+        return False
 
     def _upayments_mark_paid(self, track_id=None, payment_id=None):
         """Flag the order paid + confirm it (called from the webhook on

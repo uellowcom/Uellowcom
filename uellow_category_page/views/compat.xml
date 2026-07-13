@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Compatibility shim: droggol_theme_common renders the view key
+      'theme_prime.product_extra_fields' when computing product combination
+      info, but the active theme is the uellow_theme fork (theme_prime is not
+      installed) → product pages 500 with "View 'theme_prime.product_extra_fields'
+      not found". This generic view (matched by KEY by the website-aware view
+      resolver) forwards to the fork's real implementation.
+    -->
+    <record id="ucp_compat_product_extra_fields" model="ir.ui.view">
+        <field name="name">Compat: theme_prime.product_extra_fields → uellow_theme</field>
+        <field name="type">qweb</field>
+        <field name="key">theme_prime.product_extra_fields</field>
+        <field name="arch" type="xml">
+            <t>
+                <t t-call="uellow_theme.product_extra_fields"/>
+            </t>
+        </field>
+    </record>
+</odoo>

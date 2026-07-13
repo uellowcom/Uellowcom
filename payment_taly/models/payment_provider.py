@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+import re
 import requests
 from datetime import datetime, timedelta
 
@@ -246,16 +247,42 @@ class PaymentProvider(models.Model):
             self._taly_log(endpoint, 'error', str(e), payload=json.dumps(payload or {}))
             raise UserError(_("Taly API Error: %s") % str(e))
 
-    @staticmethod
-    def _taly_split_phone(phone):
-        """Return (countryCode, nationalNumber). Taly wants them separate."""
-        p = ''.join(ch for ch in (phone or '') if ch.isdigit() or ch == '+')
-        digits = p.lstrip('+').lstrip('0')
-        # Common GCC country codes (longest first to avoid mis-splits).
-        for cc in ('965', '966', '971', '973', '974', '968', '970', '20'):
-            if digits.startswith(cc) and len(digits) > len(cc):
-                return cc, digits[len(cc):]
-        return '965', (digits or '00000000')
+    # Longest GCC codes first so a national number that happens to start with a
+    # shorter code isn't mis-split.
+    _TALY_GCC_CODES = ('966', '971', '973', '974', '968', '970', '965', '20')
+
+    @classmethod
+    def _taly_normalize_token(cls, token):
+        """Normalize a single phone token -> (countryCode, nationalNumber)."""
+        d = (token or '').lstrip('+').lstrip('0')
+        for cc in cls._TALY_GCC_CODES:
+            if d.startswith(cc) and len(d) > len(cc):
+                return cc, d[len(cc):]
+        return '965', d
+
+    @classmethod
+    def _taly_split_phone(cls, phone):
+        """Return (countryCode, nationalNumber). Taly wants them separate and
+        sends the customer a verification SMS to it — a malformed number means
+        the customer can NEVER complete the installment.
+
+        Real customer data contains mashed entries like "60477731/97276887"
+        (two numbers joined). Split on any non-digit/'+' separator and pick the
+        FIRST token that yields a plausible local number (6-12 digits) so we
+        never ship a 16-digit garbage number to Taly."""
+        raw = phone or ''
+        tokens = [t for t in re.split(r'[^\d+]+', raw) if t] or [raw]
+        # Try each separated token first (so "num1/num2" picks the clean first
+        # number, not the mash), then the whole string joined (so a number that
+        # was split by inner spaces — "+965 6047 7731" — is still recovered).
+        joined = ''.join(ch for ch in raw if ch.isdigit() or ch == '+')
+        for tok in tokens + [joined]:
+            cc, nat = cls._taly_normalize_token(tok)
+            if 6 <= len(nat) <= 12:
+                return cc, nat
+        # Nothing plausible -> normalize the first token and clamp length.
+        cc, nat = cls._taly_normalize_token(tokens[0])
+        return cc, (nat[:12] or '00000000')
 
     def _taly_order_items(self, transaction):
         """Build the orderItems array from the linked sale order(s). Each
@@ -305,7 +332,9 @@ class PaymentProvider(models.Model):
         """
         self.ensure_one()
         self._taly_check_amount(transaction.amount)
-        base_url = self.get_base_url()
+        # rstrip('/') — some website domains resolve with a trailing slash and
+        # produced "https://host//payment/taly/return" (double slash) URLs.
+        base_url = (self.get_base_url() or '').rstrip('/')
         cc, pnum = self._taly_split_phone(transaction.partner_phone)
         full = (transaction.partner_name or transaction.partner_id.name or '').strip()
         parts = full.split()
@@ -409,6 +438,7 @@ class PaymentProvider(models.Model):
         self.ensure_one()
         amount = round(float(vals.get('amount') or 0.0), 3)
         self._taly_check_amount(amount)
+        base_url = (self.get_base_url() or '').rstrip('/')
         cc, pnum = self._taly_split_phone(vals.get('phone'))
         payload = {
             'merchantOrderId': vals['merchant_order_id'],
@@ -426,11 +456,11 @@ class PaymentProvider(models.Model):
                 'phoneNumber':   pnum,
                 'countryCode':   '+' + cc,
             },
-            'merchantRedirectUrl': vals.get('redirect_url') or self.get_base_url(),
+            'merchantRedirectUrl': vals.get('redirect_url') or base_url,
             'orderItems':      vals.get('items') or None,
             'storeNameOrCode': vals.get('store') or None,
             'postBackUrl':     vals.get('post_back_url')
-                               or (self.get_base_url() + '/payment/taly/webhook'),
+                               or (base_url + '/payment/taly/webhook'),
         }
         data = self._taly_api_call(
             'POST', '/accounts/payment/in-store/checkout-session', payload=payload)

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- ═══════════════════════════════════════════════════════════════
+       Make the native "Product Catalog" picker discoverable on the
+       Purchase Order. Odoo already ships a full catalog kanban (product
+       IMAGE + name + price + quantity stepper, add MANY products at once)
+       behind purchase.action_add_from_catalog — but the default button is
+       a faint text link ("Catalog") tucked under the order lines that
+       users never notice.  Here we simply restyle that same button into a
+       prominent primary button with a bilingual EN + AR label + icon, so
+       buyers can pick products visually and select several in one go.
+       No new logic — it invokes the exact native catalog action.
+       ═══════════════════════════════════════════════════════════════ -->
+  <record id="purchase_order_form_catalog_button" model="ir.ui.view">
+    <field name="name">purchase.order.form.catalog.button.uellow</field>
+    <field name="model">purchase.order</field>
+    <field name="inherit_id" ref="purchase.purchase_order_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//button[@name='action_add_from_catalog']" position="attributes">
+        <attribute name="class">btn btn-primary px-3 me-2 mb-1</attribute>
+        <attribute name="string">🛒 Catalog (images / multi-select) — الكتالوج (صور واختيار متعدد)</attribute>
+      </xpath>
+    </field>
+  </record>
+</odoo>

@@ -27,10 +27,22 @@
                 <field name="max_tiers_shown"
                        help="How many tiers to display. Recommended 4."/>
                 <field name="show_to_guest"/>
+                <field name="exclude_discounted"
+                       string="Skip bulk pricing on discounted products"/>
                 <field name="default_max_qty"
                        string="Default max quantity per order"
                        help="Upper bound for the +/- quantity selector. Categories and individual products can override. Default 10."/>
               </group>
+              <p style="background:#e6f7ef;border-left:4px solid #2cb67d;padding:10px 14px;border-radius:6px;margin-top:8px;font-size:12px">
+                <b>عدم تكرار الخصم على المنتجات المخفّضة:</b><br/>
+                لو <b>Skip bulk pricing on discounted products</b> = ON، فأي منتج عليه خصم
+                أصلاً (سعر المقارنة أعلى من سعر البيع) <b>لن يحصل على خصم شراء الكميات</b> —
+                شراء قطعتين أو أكثر يبقى بنفس سعر القطعة العادي. خصم الجملة يطبَّق فقط على
+                المنتجات كاملة السعر (بدون خصم).<br/>
+                <span style="color:#888">When ON, products already on sale keep their normal unit
+                price even when buying several — the wholesale/quantity discount applies only to
+                full-price products, so discounts never stack.</span>
+              </p>
               <p style="background:#fff4cc;border-left:4px solid #F5C320;padding:10px 14px;border-radius:6px;margin-top:8px;font-size:12px">
                 <b>كيف يطبَّق max_qty:</b><br/>
                 ١) لو المنتج له <code>bulk_max_qty</code> &gt; 0 → يستخدمه.<br/>

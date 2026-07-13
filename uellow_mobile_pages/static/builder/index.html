@@ -1109,7 +1109,9 @@ const LANGS = [
   { code:'tl', flag:'🇵🇭', name:'Tagalog' },
 ];
 
-const WEBSITES = [
+// Fallback only — the REAL list (incl. Uellow World 🌍) is loaded from
+// /api/admin/v2/lookups at boot and replaces this array. See boot().
+let WEBSITES = [
   { id:1, name:'Kuwait Site',       country:'KW', flag:'🇰🇼' },
   { id:2, name:'Saudi Site',        country:'SA', flag:'🇸🇦' },
   { id:3, name:'UAE Site',          country:'AE', flag:'🇦🇪' },
@@ -1117,6 +1119,7 @@ const WEBSITES = [
   { id:5, name:'Egypt Site',        country:'EG', flag:'🇪🇬' },
   { id:6, name:'Oman Site',         country:'OM', flag:'🇴🇲' },
 ];
+let WORLD_WEBSITE_ID = 0;   // set from lookups; Uellow World dropship site
 
 const SNIPPETS = [
   { cat:'Headers',     items:[
@@ -5879,7 +5882,7 @@ async function _loadLinkPickerList(mode, q){
   try {
     const url = '/api/admin/v2/lookups/' + (mode === 'product' ? 'products' : 'categories')
       + (q ? ('?q=' + encodeURIComponent(q)) : '');
-    const data = await api('GET', url);
+    const data = await api('GET', _wsSuffix(url));
     const items = (mode === 'product' ? data.products : data.categories) || [];
     if (!items.length) {
       list.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:11.5px;text-align:center">No matches</div>';
@@ -6066,7 +6069,7 @@ async function _wireFilterLink(){
       const list = document.getElementById('lpfCatList');
       if (!cq.value.trim()){ list.style.display='none'; return; }
       try {
-        const data = await api('GET','/api/admin/v2/lookups/categories?q='+encodeURIComponent(cq.value.trim()));
+        const data = await api('GET',_wsSuffix('/api/admin/v2/lookups/categories?q='+encodeURIComponent(cq.value.trim())));
         const cats=(data.categories||[]).slice(0,8);
         list.style.display = cats.length?'block':'none';
         list.innerHTML = cats.map(c=>`<div class="lp-item" onclick='_pickFilterCat(${c.id},${JSON.stringify(c.name)})'>
@@ -6128,6 +6131,33 @@ function _filterQuery(){
   return q;
 }
 
+// When the page being edited targets Uellow World, the product picker must
+// browse the ISOLATED World catalog (X-Website-Id) — otherwise it would show
+// the main store's products, which never appear on World.
+function _pickerWS(){
+  try {
+    const p = (typeof cur === 'function') ? cur() : null;
+    if (p && WORLD_WEBSITE_ID && (p.websiteIds||[]).includes(WORLD_WEBSITE_ID)) {
+      return WORLD_WEBSITE_ID;
+    }
+  } catch(e){}
+  return 0;
+}
+// Append ?/&website_id=<World> to an admin-lookup URL when the open page
+// targets Uellow World, so the product/category pickers browse World's
+// isolated catalog + taxonomy instead of the main store's.
+function _wsSuffix(url){
+  const wid = _pickerWS();
+  if (!wid) return url;
+  return url + (url.includes('?') ? '&' : '?') + 'website_id=' + wid;
+}
+function _pickerHeaders(){
+  const h = {'Accept':'application/json'};
+  const wid = _pickerWS();
+  if (wid) h['X-Website-Id'] = String(wid);
+  return h;
+}
+
 async function _refreshFilterCount(){
   clearTimeout(_lpFilterCountTimer);
   _lpFilterCountTimer = setTimeout(async () => {
@@ -6137,7 +6167,7 @@ async function _refreshFilterCount(){
     box.textContent = 'Counting…';
     try {
       const q = _filterQuery(); q.set('per_page','6'); q.set('page','1');
-      const res = await fetch('/api/mobile/v2/products?'+q.toString(), {headers:{'Accept':'application/json'}});
+      const res = await fetch('/api/mobile/v2/products?'+q.toString(), {headers:_pickerHeaders()});
       const body = await res.json();
       const total = (body.meta && (body.meta.total ?? body.meta.total_count)) ?? (body.data||[]).length;
       box.textContent = '🎯 ' + total + ' product' + (total===1?'':'s') + ' match these filters';
@@ -6409,7 +6439,7 @@ async function loadCategoriesPicker(){
   const host = document.getElementById('catPickerList');
   host.innerHTML = 'Loading…';
   try {
-    const d = await api('GET', '/api/admin/v2/lookups/categories' + (q?('?q='+encodeURIComponent(q)):''));
+    const d = await api('GET', _wsSuffix('/api/admin/v2/lookups/categories' + (q?('?q='+encodeURIComponent(q)):'')));
     const cats = d.categories || [];
     if (!cats.length) { host.innerHTML = '<div style="color:var(--muted);padding:14px;text-align:center">No categories match</div>'; return; }
     const b = cur().blocks.find(x => x.id === selectedBlockId);
@@ -6477,7 +6507,7 @@ async function _doLoadProducts(){
   const host = document.getElementById('prodPickerList');
   host.innerHTML = 'Loading…';
   try {
-    const d = await api('GET', '/api/admin/v2/lookups/products' + (q?('?q='+encodeURIComponent(q)):''));
+    const d = await api('GET', _wsSuffix('/api/admin/v2/lookups/products' + (q?('?q='+encodeURIComponent(q)):'')));
     const items = d.products || [];
     if (!items.length) { host.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);padding:14px;text-align:center">No products match</div>'; return; }
     const b = cur().blocks.find(x => x.id === selectedBlockId);
@@ -6826,7 +6856,7 @@ function renderScopeWebsites(p){
     const on = selected.has(w.id);
     html.push(`<div class="scope-opt" data-wid="${w.id}" style="padding:8px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;border-radius:6px;${on?'background:var(--yellow-soft)':''}">
       <span style="width:14px">${on?'✓':''}</span>
-      <span>${w.country_code ? flagOf(w.country_code) : '🌐'}</span>
+      <span>${w.flag || (w.country_code ? flagOf(w.country_code) : '🌐')}</span>
       <span style="flex:1">${w.name}</span>
     </div>`);
   });
@@ -7103,6 +7133,23 @@ async function boot(){
     THEME_PRESETS = (themesData.themes || []).map(mapAdminTheme);
     if (!THEME_PRESETS.length) THEME_PRESETS = [{id:'uellow', name:'Uellow', primary:'#F5C320', dark:'#412402', pageBg:'#FAF6EB', heroBg:'linear-gradient(135deg,#412402,#F5C320)'}];
     websitesLookup = lookupsData.websites || [];
+    WORLD_WEBSITE_ID = lookupsData.world_website_id || 0;
+    // Drive the whole UI from the live site list (includes Uellow World 🌍)
+    // instead of the stale hardcoded fallback.
+    if (websitesLookup.length) {
+      WEBSITES = websitesLookup.map(w => ({
+        id: w.id, name: w.name,
+        country: w.country_code || null,
+        flag: w.flag || flagOf(w.country_code) || '🌐',
+      }));
+      // Repopulate the "new page" website dropdown from the live list so every
+      // site — including Uellow World 🌍 — is selectable there too.
+      const npSel = document.getElementById('npWebsite');
+      if (npSel) {
+        npSel.innerHTML = WEBSITES.map(w => `<option>${w.flag} ${w.name}</option>`).join('')
+          + '<option>🌐 All websites</option>';
+      }
+    }
     langsLookup = lookupsData.languages || [];
     countriesLookup = lookupsData.countries || [];
     pages = (pagesData.pages || []).map(mapAdminPage);

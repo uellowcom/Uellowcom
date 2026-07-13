@@ -113,7 +113,7 @@
                    t-att-data-search="search"
                    data-bs-dismiss="offcanvas">
                     <i class="fa fa-search"/>
-                    <span t-out="website.uc_search_placeholder or website._uc_t('Search for products, brands and more...')"/>
+                    <span t-out="website._uc_t(website.uc_search_placeholder or 'Search for products, brands and more...')"/>
                 </a>
 
                 <!-- ─── BODY (scrollable) ─── -->

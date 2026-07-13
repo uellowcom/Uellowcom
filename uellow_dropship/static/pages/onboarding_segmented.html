@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Uellow — Segmented Onboarding · Refined (v3)</title>
+<style>
+  :root{
+    --bg:#F5EFE3; --surface:#FFFFFF; --surface-2:#EFE7D6;
+    --ink:#211812; --muted:#786751; --line:#E2D8C4; --line-2:#EDE4D2;
+    --gold:#E7B62C; --brand:#F5C320; --espresso:#2A1B10;
+    --slate:#152029; --slate-2:#1E323C; --teal:#2E9C93; --teal-soft:#D8ECE9;
+    --shadow:0 20px 55px -24px rgba(42,27,16,.5);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#120D08;--surface:#1E160D;--surface-2:#271C10;--ink:#F1E7D5;--muted:#A28E72;
+      --line:#392A18;--line-2:#2E2011;--teal:#4FC3B8;--teal-soft:#123230;--shadow:0 24px 62px -28px rgba(0,0,0,.75);}
+  }
+  :root[data-theme="light"]{--bg:#F5EFE3;--surface:#FFFFFF;--surface-2:#EFE7D6;--ink:#211812;--muted:#786751;
+    --line:#E2D8C4;--line-2:#EDE4D2;--teal:#2E9C93;--teal-soft:#D8ECE9;--shadow:0 20px 55px -24px rgba(42,27,16,.5);}
+  :root[data-theme="dark"]{--bg:#120D08;--surface:#1E160D;--surface-2:#271C10;--ink:#F1E7D5;--muted:#A28E72;
+    --line:#392A18;--line-2:#2E2011;--teal:#4FC3B8;--teal-soft:#123230;--shadow:0 24px 62px -28px rgba(0,0,0,.75);}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1160px;margin:0 auto;padding:clamp(28px,5vw,72px) clamp(18px,4vw,40px);}
+
+  .mast{display:flex;flex-direction:column;gap:15px;margin-bottom:8px;}
+  .kicker{display:inline-flex;align-items:center;gap:9px;align-self:flex-start;font-size:12px;
+    letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--espresso);background:var(--brand);padding:7px 14px;border-radius:999px;}
+  h1{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;text-wrap:balance;font-size:clamp(30px,5.2vw,52px);line-height:1.05;margin:0;}
+  h1 em{font-style:italic;color:var(--gold);}
+  .lede{max-width:66ch;color:var(--muted);font-size:clamp(15px,1.6vw,18px);margin:0;}
+  .note{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;}
+  .tag{font-size:12.5px;color:var(--muted);border:1px solid var(--line);padding:5px 11px;border-radius:999px;background:var(--surface);}
+  .tag b{color:var(--ink);font-weight:650;}
+  .rule{height:1px;background:var(--line);margin:34px 0 8px;border:0;}
+
+  .concept{display:grid;grid-template-columns:340px 1fr;gap:clamp(24px,4vw,56px);align-items:center;padding:44px 0;border-bottom:1px solid var(--line);}
+  .concept:last-of-type{border-bottom:0;}
+  .concept.flip .stage{order:2;}
+  .stage{display:flex;justify-content:center;}
+  .brief{min-width:0;}
+  .idx{font-family:var(--serif);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:700;font-style:italic;}
+  .state{display:inline-block;margin-inline-start:8px;font-size:10px;font-style:normal;letter-spacing:.04em;
+    background:var(--surface-2);color:var(--muted);padding:2px 8px;border-radius:999px;vertical-align:middle;}
+  .cname{font-family:var(--serif);font-size:clamp(23px,3vw,32px);font-weight:600;letter-spacing:-.015em;margin:6px 0 2px;text-wrap:balance;}
+  .car{color:var(--muted);font-size:12.5px;margin-bottom:14px;direction:rtl;}
+  .thesis{font-size:16.5px;margin:0 0 18px;max-width:56ch;}
+  .thesis b{color:var(--gold);font-weight:650;}
+  ul.feats{list-style:none;margin:0;padding:0;display:grid;gap:9px;max-width:56ch;}
+  ul.feats li{position:relative;padding-inline-start:22px;font-size:14.5px;}
+  ul.feats li::before{content:"";position:absolute;inset-inline-start:0;top:8px;width:9px;height:9px;border-radius:3px;
+    background:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 22%,transparent);}
+  ul.feats li span{color:var(--muted);}
+  .why{margin-top:16px;font-size:13.5px;color:var(--muted);border-inline-start:3px solid var(--teal);padding:4px 0 4px 13px;
+    background:linear-gradient(90deg,var(--teal-soft),transparent);border-radius:0 8px 8px 0;max-width:54ch;}
+  .why b{color:var(--ink);}
+
+  /* phone shell */
+  .phone{position:relative;width:300px;height:620px;border-radius:42px;background:linear-gradient(160deg,#3a3128,#0e0a06);
+    padding:11px;box-shadow:var(--shadow);flex:none;}
+  .phone::after{content:"";position:absolute;top:20px;left:50%;transform:translateX(-50%);width:118px;height:26px;
+    background:#0b0805;border-radius:0 0 16px 16px;z-index:6;}
+  .screen{position:relative;width:100%;height:100%;border-radius:32px;overflow:hidden;background:var(--surface);color:var(--ink);font-size:14px;isolation:isolate;display:flex;flex-direction:column;}
+  .bar{height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:11px;font-weight:600;flex:none;}
+  .bar .dots{display:flex;gap:3px;align-items:center;}
+  .bar .dots i{width:15px;height:8px;border-radius:2px;background:currentColor;opacity:.85;display:inline-block}
+  .bar .dots b{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+
+  .lang{display:inline-flex;background:rgba(0,0,0,.06);border-radius:10px;padding:3px;gap:2px;font-size:11.5px;font-weight:700;flex:none;}
+  .lang b{padding:5px 11px;border-radius:7px;color:#8a795f;}
+  .lang b.on{background:#fff;color:var(--ink);box-shadow:0 2px 6px -2px rgba(0,0,0,.3);}
+  .logo{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;}
+  .logo b{color:var(--gold);}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:13px;font-weight:700;
+    font-size:14px;border:0;cursor:default;background:var(--brand);color:#3A2402;box-shadow:0 8px 18px -8px rgba(224,168,0,.75);}
+  .flag{font-size:17px;line-height:1;}
+
+  /* shared list row */
+  .clist{flex:1;overflow:hidden;}
+  .crow{display:flex;align-items:center;gap:12px;padding:11px 18px;border-top:1px solid var(--line-2);}
+  .crow .nm{flex:1;}
+  .crow .nm b{font-size:13.5px;font-weight:650;display:block;}
+  .crow .nm .sub{font-size:10.5px;color:var(--muted);}
+  .crow .cur{font-size:10px;font-weight:700;color:#a08a68;letter-spacing:.02em;}
+  .crow .chev{color:var(--muted);font-size:15px;}
+  .crow.here{background:linear-gradient(90deg,color-mix(in srgb,var(--brand) 14%,transparent),transparent);}
+  .crow.here .nm b::after{content:"موقعك";font-size:8.5px;font-weight:800;color:var(--espresso);background:var(--brand);
+    padding:1px 6px;border-radius:5px;margin-inline-start:7px;vertical-align:middle;letter-spacing:.02em;}
+
+  /* Global-tab hero (shared) */
+  .whero{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:22px 20px;color:#eaf3f1;
+    background:radial-gradient(130% 90% at 70% 12%,#22404a,var(--slate) 62%,#0f1a20);position:relative;overflow:hidden;}
+  .whero .g{position:absolute;right:-16px;top:-10px;font-size:120px;opacity:.1;}
+  .whero .ey{font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);}
+  .whero h3{font-family:var(--serif);font-size:27px;font-weight:600;margin:0;color:#fff;line-height:1.1;}
+  .whero .sub{font-size:12px;color:#b6cdc9;max-width:26ch;}
+  .whero .stats{display:flex;gap:8px;}
+  .whero .st{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px;text-align:center;}
+  .whero .st b{display:block;font-size:15px;color:var(--gold);font-weight:800;}
+  .whero .st span{font-size:9px;color:#9fb8b4;letter-spacing:.02em;}
+
+  /* ===== S1 · pill segment · ME list ===== */
+  .s1 .hd{padding:2px 18px 12px;display:flex;flex-direction:column;gap:12px;}
+  .s1 .top{display:flex;align-items:center;justify-content:space-between;}
+  .s1 .seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;font-size:12.5px;font-weight:700;}
+  .s1 .seg b{flex:1;text-align:center;padding:8px;border-radius:9px;color:var(--muted);}
+  .s1 .seg b.on{background:var(--espresso);color:var(--brand);}
+  .s1 .foot{padding:12px 18px 18px;border-top:1px solid var(--line);}
+
+  /* ===== S2 · same segment · Global tab ===== */
+  .s2 .hd{padding:2px 18px 12px;display:flex;flex-direction:column;gap:12px;}
+  .s2 .top{display:flex;align-items:center;justify-content:space-between;}
+  .s2 .seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;font-size:12.5px;font-weight:700;}
+  .s2 .seg b{flex:1;text-align:center;padding:8px;border-radius:9px;color:var(--muted);}
+  .s2 .seg b.on{background:var(--slate);color:#fff;}
+  .s2 .foot{padding:12px 18px 18px;}
+  .s2 .btn{background:var(--brand);}
+
+  /* ===== S3 · underline editorial tabs · ME ===== */
+  .s3 .hd{padding:4px 20px 0;display:flex;flex-direction:column;gap:14px;}
+  .s3 .top{display:flex;align-items:center;justify-content:space-between;}
+  .s3 h2{font-family:var(--serif);font-size:21px;font-weight:600;margin:0;}
+  .s3 .utabs{display:flex;gap:22px;border-bottom:1px solid var(--line);}
+  .s3 .utabs b{font-size:14px;font-weight:700;color:var(--muted);padding:0 0 11px;position:relative;}
+  .s3 .utabs b.on{color:var(--ink);}
+  .s3 .utabs b.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2.5px;background:var(--gold);border-radius:2px;}
+  .s3 .crow{padding:13px 20px;}
+  .s3 .foot{padding:12px 20px 18px;border-top:1px solid var(--line);}
+
+  /* ===== S4 · themed header segment · ME (warm) ===== */
+  .s4 .head{padding:16px 20px 16px;background:radial-gradient(120% 100% at 20% 0,#3A2716,#20140b);color:#f3e6d0;position:relative;overflow:hidden;flex:none;}
+  .s4 .head .globe{position:absolute;right:-12px;bottom:-20px;font-size:88px;opacity:.14;}
+  .s4 .head .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .s4 .head .lang{background:rgba(255,255,255,.1);} .s4 .head .lang b{color:#c9b998;} .s4 .head .lang b.on{background:var(--brand);color:#2a1a0b;box-shadow:none;}
+  .s4 .head h2{font-family:var(--serif);font-size:20px;font-weight:600;margin:0 0 12px;}
+  .s4 .seg{display:flex;background:rgba(0,0,0,.28);border-radius:12px;padding:4px;font-size:12.5px;font-weight:700;}
+  .s4 .seg b{flex:1;text-align:center;padding:8px;border-radius:9px;color:#c9b998;}
+  .s4 .seg b.on{background:var(--brand);color:#2a1a0b;}
+  .s4 .grid{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:16px 18px;align-content:start;overflow:hidden;}
+  .s4 .cc{display:flex;align-items:center;gap:9px;background:var(--surface);border:1.4px solid var(--line);border-radius:12px;padding:10px 11px;}
+  .s4 .cc .nm{font-size:12.5px;font-weight:650;flex:1;} .s4 .cc .cur{font-size:9px;font-weight:700;color:#a08a68;}
+  .s4 .cc.sel{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 30%,transparent);}
+  .s4 .foot{padding:0 18px 18px;}
+
+  /* ===== S5 · smart default · segment · ME ===== */
+  .s5 .hd{padding:2px 18px 12px;display:flex;flex-direction:column;gap:12px;}
+  .s5 .top{display:flex;align-items:center;justify-content:space-between;}
+  .s5 .seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;font-size:12.5px;font-weight:700;}
+  .s5 .seg b{flex:1;text-align:center;padding:8px;border-radius:9px;color:var(--muted);}
+  .s5 .seg b.on{background:var(--espresso);color:var(--brand);}
+  .s5 .smart{margin:0 18px;border-radius:16px;padding:15px;background:linear-gradient(135deg,#F7CE3f,#E0A800);color:#3a2402;position:relative;overflow:hidden;}
+  .s5 .smart .k{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;opacity:.75;}
+  .s5 .smart .big{font-family:var(--serif);font-size:22px;font-weight:700;margin-top:3px;display:flex;align-items:center;gap:8px;}
+  .s5 .smart .sub{font-size:11px;font-weight:600;opacity:.85;margin-top:2px;}
+  .s5 .smart .cta{margin-top:11px;display:flex;gap:8px;}
+  .s5 .smart .cta .b1{flex:1;background:#3a2402;color:var(--brand);border-radius:10px;padding:9px;text-align:center;font-size:12px;font-weight:700;}
+  .s5 .smart .cta .b2{background:rgba(58,36,2,.14);border-radius:10px;padding:9px 12px;font-size:12px;font-weight:700;}
+  .s5 .other{font-size:11px;color:var(--muted);font-weight:700;padding:4px 18px 0;}
+  .s5 .clist{flex:1;}
+  .s5 .crow{padding:10px 18px;}
+
+  .foot{margin-top:44px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;display:flex;flex-wrap:wrap;gap:8px 20px;}
+  .foot b{color:var(--ink);}
+  @media(max-width:760px){.concept{grid-template-columns:1fr;gap:26px;}.concept.flip .stage{order:0;}.stage{order:0;}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <span class="kicker">Uellow · Segmented — تطوير</span>
+    <h1>تبويبان: <em>الشرق الأوسط</em> · عالمي</h1>
+    <p class="lede">تطوير اتجاه Segmented الذي أعجبك: مفتاح علوي بتبويبين — <b>الشرق الأوسط</b> و<b>عالمي</b> — بلا أي بنر صيني سفلي؛ الصين تعيش داخل تبويب «عالمي» نفسه كمحتوى كامل. خمس تنويعات احترافية، أعرض فيها حالتَي التبويبين لترى الاثنين.</p>
+    <div class="note">
+      <span class="tag">الشرق الأوسط: <b>الكويت · السعودية · الإمارات · قطر · البحرين · عُمان · الأردن · مصر · العراق</b></span>
+      <span class="tag">عالمي: <b>🌍 يلو ورلد</b> (الصين)</span>
+    </div>
+  </header>
+
+  <hr class="rule">
+
+  <!-- S1 · pill segment · ME list -->
+  <section class="concept">
+    <div class="stage"><div class="phone s1"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="hd">
+        <div class="top"><div class="logo">yellow<b>·يلو</b></div><span class="lang"><b class="on">عربي</b><b>EN</b></span></div>
+        <div class="seg"><b class="on">الشرق الأوسط</b><b>عالمي</b></div>
+      </div>
+      <div class="clist">
+        <div class="crow here"><span class="flag">🇰🇼</span><span class="nm"><b>الكويت</b><span class="sub">توصيل ٤٨ ساعة · KNET</span></span><span class="cur">KWD</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇸🇦</span><span class="nm"><b>السعودية</b><span class="sub">توصيل ٢–٤ أيام · مدى</span></span><span class="cur">SAR</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇦🇪</span><span class="nm"><b>الإمارات</b><span class="sub">توصيل ٢–٣ أيام</span></span><span class="cur">AED</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇶🇦</span><span class="nm"><b>قطر</b><span class="sub">توصيل ٢–٥ أيام</span></span><span class="cur">QAR</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇧🇭</span><span class="nm"><b>البحرين</b><span class="sub">توصيل ٢–٤ أيام</span></span><span class="cur">BHD</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇴🇲</span><span class="nm"><b>عُمان</b><span class="sub">توصيل ٣–٥ أيام</span></span><span class="cur">OMR</span><span class="chev">›</span></div>
+      </div>
+      <div class="foot"><button class="btn">متابعة · Continue</button></div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">تنويع 01 <span class="state">تبويب: الشرق الأوسط</span></div>
+      <div class="cname">Pill Segment — القائمة النظيفة</div>
+      <div class="car">مفتاح كبسولة + قائمة دول مرتّبة بالمزايا الحقيقية</div>
+      <p class="thesis">النسخة المطوّرة المباشرة: <b>مفتاح كبسولة [الشرق الأوسط | عالمي]</b>، وقائمة دول أنيقة يظهر فيها موقعك أعلى القائمة تلقائياً، وكل دولة بمزاياها (توصيل + دفع + عملة). بلا بنر سفلي إطلاقاً.</p>
+      <ul class="feats">
+        <li>«موقعك» يُكتشف ويُثبّت أعلى القائمة <span>— لمسة ذكية</span></li>
+        <li>مزايا كل سوق ظاهرة (سرعة/دفع/عملة)</li>
+        <li>الأبسط والأسرع تنفيذاً على بنيتك الحالية</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> ترتيب واضح + كشف الموقع = تجربة ناضجة بأقل احتكاك.</div>
+    </div>
+  </section>
+
+  <!-- S2 · Global tab -->
+  <section class="concept flip">
+    <div class="stage"><div class="phone s2"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="hd">
+        <div class="top"><div class="logo">yellow<b>·يلو</b></div><span class="lang"><b class="on">عربي</b><b>EN</b></span></div>
+        <div class="seg"><b>الشرق الأوسط</b><b class="on">عالمي</b></div>
+      </div>
+      <div class="whero"><span class="g">🌍</span>
+        <span class="ey">◈ التسوّق العالمي</span>
+        <h3>يلو ورلد</h3>
+        <div class="sub">من الصين مباشرة إلى بابك — آلاف القطع بسعر المصنع.</div>
+        <div class="stats">
+          <div class="st"><b>8,000+</b><span>قطعة</span></div>
+          <div class="st"><b>مجاني</b><span>الشحن</span></div>
+          <div class="st"><b>10–14</b><span>يوم</span></div>
+        </div>
+      </div>
+      <div class="foot"><button class="btn">ادخل يلو ورلد · Enter</button></div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">تنويع 02 <span class="state">تبويب: عالمي</span></div>
+      <div class="cname">Global Tab — الصين محتوى لا بنر</div>
+      <div class="car">تبويب «عالمي» يفتح على لوحة يلو ورلد كاملة</div>
+      <p class="thesis">هذه هي حالة تبويب «عالمي»: بدل بنر سفلي، <b>يفتح التبويب على لوحة يلو ورلد كاملة</b> — عنوان، وصف، وثلاث إحصائيات (٨٠٠٠+ · شحن مجاني · مدة). الصين تأخذ الشاشة كاملة حين يختارها المستخدم، لا زاوية صغيرة.</p>
+      <ul class="feats">
+        <li>لا بنر سفلي — الصين محتوى تبويب متكامل</li>
+        <li>لوح بارد فاخر يميّزها عن الشرق الأوسط الدافئ</li>
+        <li>إحصائيات تبيع القيمة فوراً</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> كل تبويب يملك الشاشة بالكامل — بنية نظيفة بلا حشو.</div>
+    </div>
+  </section>
+
+  <!-- S3 · underline editorial · ME -->
+  <section class="concept">
+    <div class="stage"><div class="phone s3"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="hd">
+        <div class="top"><div class="logo">yellow<b>·يلو</b></div><span class="lang"><b class="on">عربي</b><b>EN</b></span></div>
+        <h2>اختر سوقك</h2>
+        <div class="utabs"><b class="on">الشرق الأوسط</b><b>عالمي</b></div>
+      </div>
+      <div class="clist">
+        <div class="crow here"><span class="flag">🇰🇼</span><span class="nm"><b>الكويت</b><span class="sub">توصيل ٤٨ ساعة · KNET</span></span><span class="cur">KWD</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇸🇦</span><span class="nm"><b>السعودية</b><span class="sub">مدى · Apple Pay</span></span><span class="cur">SAR</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇦🇪</span><span class="nm"><b>الإمارات</b><span class="sub">توصيل سريع</span></span><span class="cur">AED</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇯🇴</span><span class="nm"><b>الأردن</b><span class="sub">توصيل ٣–٦ أيام</span></span><span class="cur">JOD</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇪🇬</span><span class="nm"><b>مصر</b><span class="sub">توصيل ٣–٧ أيام</span></span><span class="cur">EGP</span><span class="chev">›</span></div>
+      </div>
+      <div class="foot"><button class="btn">متابعة · Continue</button></div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">تنويع 03 <span class="state">تبويب: الشرق الأوسط</span></div>
+      <div class="cname">Underline Tabs — تحرير راقٍ</div>
+      <div class="car">تبويبات نصّية بخط سفلي ذهبي متحرّك</div>
+      <p class="thesis">النسخة الأرقى: <b>تبويبات نصّية بخط سفلي ذهبي</b> (بدل الكبسولة) وعنوان Serif فوقها. إحساس تحريري «بوتيك» أهدأ وأفخم، مع نفس منطق الشرق الأوسط/عالمي. الأنسب لعلامة تريد مظهراً راقياً غير تطبيقيّ تقليدي.</p>
+      <ul class="feats">
+        <li>الخط السفلي المتحرّك لمسة راقية معروفة</li>
+        <li>عنوان Serif يرفع الإحساس التحريري</li>
+        <li>مساحة أهدأ وأكثر فخامة</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> مؤشّر التبويب الرفيع أنضج بصرياً من الكبسولة الممتلئة.</div>
+    </div>
+  </section>
+
+  <!-- S4 · themed header segment · ME warm -->
+  <section class="concept flip">
+    <div class="stage"><div class="phone s4"><div class="screen">
+      <div class="bar" style="color:#f3e6d0;position:absolute;left:0;right:0;z-index:5"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="head"><span class="globe">🕌</span>
+        <div class="top"><div class="logo" style="color:#fff">yellow<b>·يلو</b></div><span class="lang"><b class="on">عربي</b><b>EN</b></span></div>
+        <h2>اختر سوقك</h2>
+        <div class="seg"><b class="on">الشرق الأوسط</b><b>🌍 عالمي</b></div>
+      </div>
+      <div class="grid">
+        <div class="cc sel"><span class="flag">🇰🇼</span><span class="nm">الكويت</span><span class="cur">KWD</span></div>
+        <div class="cc"><span class="flag">🇸🇦</span><span class="nm">السعودية</span><span class="cur">SAR</span></div>
+        <div class="cc"><span class="flag">🇦🇪</span><span class="nm">الإمارات</span><span class="cur">AED</span></div>
+        <div class="cc"><span class="flag">🇶🇦</span><span class="nm">قطر</span><span class="cur">QAR</span></div>
+        <div class="cc"><span class="flag">🇧🇭</span><span class="nm">البحرين</span><span class="cur">BHD</span></div>
+        <div class="cc"><span class="flag">🇴🇲</span><span class="nm">عُمان</span><span class="cur">OMR</span></div>
+        <div class="cc"><span class="flag">🇮🇶</span><span class="nm">العراق</span><span class="cur">IQD</span></div>
+        <div class="cc"><span class="flag">🇯🇴</span><span class="nm">الأردن</span><span class="cur">JOD</span></div>
+      </div>
+      <div class="foot"><button class="btn">متابعة · Continue</button></div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">تنويع 04 <span class="state">تبويب: الشرق الأوسط</span></div>
+      <div class="cname">Themed Header — رأس يتلوّن بالتبويب</div>
+      <div class="car">رأس دافئ للشرق الأوسط يتحوّل بارداً عند «عالمي»</div>
+      <p class="thesis">رأس علوي كبير يحمل المفتاح، و<b>يتلوّن حسب التبويب</b>: دافئ إسبريسو للشرق الأوسط، ويتحوّل لحبر بارد عند «عالمي». شبكة أعلام مربّعة أنيقة أسفله. تمييز حسّي بين المنطقتين عبر حرارة اللون نفسها.</p>
+      <ul class="feats">
+        <li>الرأس يبدّل مزاجه اللوني مع التبويب <span>— إشارة فورية</span></li>
+        <li>شبكة أعلام مربّعة تعرض دولاً أكثر دفعة واحدة</li>
+        <li>هوية بصرية قوية تبقى في الذاكرة</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> ربط الحرارة اللونية بالتبويب لغة تصميم متقدّمة ومتّسقة.</div>
+    </div>
+  </section>
+
+  <!-- S5 · smart default · ME -->
+  <section class="concept">
+    <div class="stage"><div class="phone s5"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="hd">
+        <div class="top"><div class="logo">yellow<b>·يلو</b></div><span class="lang"><b class="on">عربي</b><b>EN</b></span></div>
+        <div class="seg"><b class="on">الشرق الأوسط</b><b>عالمي</b></div>
+      </div>
+      <div class="smart">
+        <div class="k">اكتشفنا موقعك</div>
+        <div class="big"><span class="flag">🇰🇼</span> الكويت</div>
+        <div class="sub">توصيل خلال ٤٨ ساعة · KNET · الأسعار بالـ KWD</div>
+        <div class="cta"><span class="b1">تأكيد ومتابعة</span><span class="b2">تغيير</span></div>
+      </div>
+      <div class="other">أو اختر دولة أخرى</div>
+      <div class="clist">
+        <div class="crow"><span class="flag">🇸🇦</span><span class="nm"><b>السعودية</b></span><span class="cur">SAR</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇦🇪</span><span class="nm"><b>الإمارات</b></span><span class="cur">AED</span><span class="chev">›</span></div>
+        <div class="crow"><span class="flag">🇶🇦</span><span class="nm"><b>قطر</b></span><span class="cur">QAR</span><span class="chev">›</span></div>
+      </div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">تنويع 05 <span class="state">تبويب: الشرق الأوسط</span></div>
+      <div class="cname">Smart Default — الموقع المُكتشَف بطاقةً</div>
+      <div class="car">بطاقة ذهبية للدولة المُكتشفة + تأكيد بلمسة</div>
+      <p class="thesis">أذكى تدفّق: بمجرد الفتح <b>نضع دولتك المُكتشفة في بطاقة ذهبية بارزة</b> بزرّ «تأكيد ومتابعة» — لمسة واحدة تكفي معظم المستخدمين. القائمة تحتها لمن يريد التغيير، وتبويب «عالمي» جاهز للانتقال ليلو ورلد.</p>
+      <ul class="feats">
+        <li>لمسة واحدة تُكمل ٩٠٪ من المستخدمين <span>— أعلى إتمام</span></li>
+        <li>يحترم الأقلية التي تريد سوقاً آخر</li>
+        <li>يمزج الذكاء (كشف الموقع) بالفخامة (بطاقة ذهبية)</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> «الافتراض الذكي + تجاوز سهل» توقيع تطبيقات الطبقة الأولى.</div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span><b>ملاحظة:</b> موك أب بصري — الأعلام مُجرّدة وتُستبدل بأصول حقيقية.</span>
+    <span>تبويبان ثابتان: <b>الشرق الأوسط</b> · <b>عالمي</b> — بلا بنر سفلي.</span>
+    <span>اختر تنويعاً (أو دمج) وأبنيه في شاشة البداية الفعلية.</span>
+  </div>
+</div>
+</body>
+</html>

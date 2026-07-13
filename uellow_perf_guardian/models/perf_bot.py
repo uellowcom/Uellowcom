@@ -127,12 +127,22 @@ class PerfBotClass(models.Model):
         if cache is None:
             cache = {}
             self.env.registry._perf_bot_dns_cache = cache
-        ttl = 6 * 3600  # 6 hours
+        # Positive results are cheap to trust for 6h. Negative results MUST
+        # expire fast: a single transient reverse-DNS hiccup on a real
+        # Googlebot IP would otherwise black-hole that IP for 6h (downgraded
+        # to the tiny generic budget → hard 429), which cascades into Google
+        # cutting its crawl rate. Re-verify a failed IP after 5 minutes.
+        ttl_pos = 6 * 3600   # 6 hours
+        ttl_neg = 300        # 5 minutes
         now = time.time()
         key = (bot_name, ip)
         cached = cache.get(key)
-        if cached and (now - cached[0]) < ttl:
-            return cached[1]
+        if cached:
+            age = now - cached[0]
+            if cached[1] and age < ttl_pos:
+                return True
+            if (not cached[1]) and age < ttl_neg:
+                return False
 
         verified = False
         try:

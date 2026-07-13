@@ -14,12 +14,22 @@
   <template id="settlement_report_template">
     <t t-call="web.html_container">
       <t t-foreach="docs" t-as="rem">
-        <t t-call="web.external_layout">
-          <style>
-            .page li,.page ul,.page ol{list-style:none!important;margin:0;padding:0}
-            li::marker{display:none!important;content:''}
-          </style>
-          <div class="page" style="font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;">
+        <t t-set="company" t-value="res_company or env.company"/>
+        <style>
+          .page li,.page ul,.page ol{list-style:none!important;margin:0;padding:0}
+          li::marker{display:none!important;content:''}
+        </style>
+        <!-- Custom running header: logo on the RIGHT, no company name -->
+        <div class="header" style="font-family:Arial,sans-serif;border:none;text-align:right;">
+          <img t-if="company.logo" t-att-src="company.get_settlement_logo_data_uri()"
+               style="max-height:13mm;max-width:48mm;border:none;display:inline-block;"/>
+        </div>
+        <!-- Custom running footer: small font so the full company line fits -->
+        <div class="footer" style="font-family:Arial,sans-serif;font-size:7.5px;color:#64748B;text-align:center;border-top:0.5px solid #CBD5E1;padding-top:3px;line-height:1.35;">
+          <span t-esc="company.name"/><t t-if="company.street"> &#183; <t t-esc="company.street"/></t><t t-if="company.city"> &#183; <t t-esc="company.city"/></t><t t-if="company.country_id"> &#183; <t t-esc="company.country_id.name"/></t><t t-if="company.phone"> &#183; <t t-esc="company.phone"/></t><t t-if="company.email"> &#183; <t t-esc="company.email"/></t><t t-if="company.website"> &#183; <t t-esc="company.website"/></t>
+          <span style="margin-left:8px;">Page <span class="page"/> / <span class="topage"/></span>
+        </div>
+        <div class="page" style="font-family:Arial,sans-serif;font-size:11px;color:#1a1a1a;">
             <div style="border-bottom:2px solid #1B4F96;padding-bottom:6px;margin-bottom:10px;">
               <div style="font-size:20px;font-weight:700;color:#1B4F96;line-height:1.2;">Settlement Report</div>
               <div style="font-size:9px;font-weight:700;color:#64748B;margin-top:2px;">Financial Remittance Statement</div>
@@ -135,7 +145,6 @@
               Settlement Ref: <t t-esc="rem.name"/> &#183; Carrier Ref: <t t-esc="rem.carrier_ref or '—'"/>
             </div>
           </div>
-        </t>
       </t>
     </t>
   </template>

@@ -297,8 +297,18 @@
         }
         function render(data) {
             var html = "";
+            var isAr = (document.documentElement.lang || "").indexOf("ar") >= 0
+                    || (document.documentElement.dir === "rtl")
+                    || (location.pathname.indexOf("/ar") === 0);
+            var T = {
+                cats:     isAr ? "الأقسام" : "Categories",
+                brands:   isAr ? "العلامات التجارية" : "Brands",
+                products: isAr ? "المنتجات" : "Products",
+                empty:    isAr ? "لا نتائج بعد — تابع الكتابة…" : "No matches yet — keep typing…",
+                seeAll:   isAr ? "عرض كل النتائج عن" : "See all results for"
+            };
             if (data.categories && data.categories.length) {
-                html += '<div class="uc-sg-section"><div class="uc-sg-head"><i class="fa fa-th"></i> Categories</div>';
+                html += '<div class="uc-sg-section"><div class="uc-sg-head"><i class="fa fa-th"></i> ' + T.cats + '</div>';
                 data.categories.forEach(function (c) {
                     html += '<a class="uc-sg-item" href="' + escapeHtml(c.url) + '">' +
                         (c.image ? '<img class="uc-sg-img" src="' + escapeHtml(c.image) + '" alt=""/>'
@@ -309,7 +319,7 @@
                 html += '</div>';
             }
             if (data.brands && data.brands.length) {
-                html += '<div class="uc-sg-section"><div class="uc-sg-head"><i class="fa fa-bookmark"></i> Brands</div>';
+                html += '<div class="uc-sg-section"><div class="uc-sg-head"><i class="fa fa-bookmark"></i> ' + T.brands + '</div>';
                 data.brands.forEach(function (b) {
                     html += '<a class="uc-sg-item" href="' + escapeHtml(b.url) + '">' +
                         (b.image ? '<img class="uc-sg-img" src="' + escapeHtml(b.image) + '" alt=""/>'
@@ -320,7 +330,7 @@
                 html += '</div>';
             }
             if (data.products && data.products.length) {
-                html += '<div class="uc-sg-section"><div class="uc-sg-head"><i class="fa fa-cube"></i> Products</div>';
+                html += '<div class="uc-sg-section"><div class="uc-sg-head"><i class="fa fa-cube"></i> ' + T.products + '</div>';
                 data.products.forEach(function (p) {
                     html += '<a class="uc-sg-item uc-sg-item-prod" href="' + escapeHtml(p.url) + '">' +
                         '<img class="uc-sg-img" src="' + escapeHtml(p.image) + '" alt=""/>' +
@@ -330,11 +340,11 @@
                 html += '</div>';
             }
             if (!html) {
-                html = '<div class="uc-sg-empty"><i class="fa fa-search"></i> No matches yet — keep typing…</div>';
+                html = '<div class="uc-sg-empty"><i class="fa fa-search"></i> ' + T.empty + '</div>';
             } else {
                 var q = escapeHtml(input.value || "");
                 html += '<a class="uc-sg-all" href="/shop?search=' + encodeURIComponent(input.value) +
-                        '"><i class="fa fa-arrow-right"></i> See all results for "' + q + '"</a>';
+                        '"><i class="fa fa-arrow-right"></i> ' + T.seeAll + ' "' + q + '"</a>';
             }
             box.innerHTML = html;
             open();

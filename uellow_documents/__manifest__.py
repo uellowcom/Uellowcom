@@ -6,7 +6,7 @@
     'category': 'Accounting/Sales',
     'author': 'Uellow',
     'license': 'LGPL-3',
-    'depends': ['account', 'sale_management'],
+    'depends': ['account', 'sale_management', 'uellow_warranty'],
     'data': [
         'views/res_config_settings_views.xml',
         'report/paperformat.xml',

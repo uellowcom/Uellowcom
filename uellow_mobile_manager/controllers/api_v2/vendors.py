@@ -343,11 +343,22 @@ class MobileVendorsAPI(http.Controller):
             'price_desc': 'list_price desc',
             'top_rated':  'rating_avg desc' if 'rating_avg' in request.env['product.template']._fields else 'create_date desc',
         }.get(p.get('sort', 'newest'), 'create_date desc')
-        recs = request.env['product.template'].sudo().search(domain, order=sort)
-        items, meta = paginate(
-            recs, page=p.get('page', 1), per_page=p.get('per_page', 20),
-            serializer=lambda r: serialize_product_card(r, lang),
-        )
+        # perf — page at SQL level instead of fetching the vendor's whole catalog
+        Tmpl = request.env['product.template'].sudo()
+        try:
+            _page = max(1, int(p.get('page', 1)))
+        except Exception:
+            _page = 1
+        try:
+            _per = min(100, max(1, int(p.get('per_page', 20))))
+        except Exception:
+            _per = 20
+        _total = Tmpl.search_count(domain)
+        recs = Tmpl.search(domain, order=sort, limit=_per, offset=(_page - 1) * _per)
+        items = [serialize_product_card(r, lang) for r in recs]
+        meta = {'page': _page, 'per_page': _per, 'total': _total,
+                'pages': (_total + _per - 1) // _per,
+                'has_next': _page * _per < _total}
         return ok(items, meta)
 
 

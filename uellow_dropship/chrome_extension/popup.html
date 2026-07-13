@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { width: 300px; margin: 0; font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #412402; }
+    .hd { background: #412402; color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 9px; }
+    .hd .lg { width: 26px; height: 26px; border-radius: 7px; background: #F5C320; color: #412402; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .hd b { font-size: 15px; }
+    .bd { padding: 14px 16px; }
+    label { display: block; font-size: 12px; font-weight: 700; margin: 10px 0 4px; }
+    input[type=text], input[type=password] { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; }
+    .chk { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13px; }
+    .btns { display: flex; gap: 8px; margin-top: 14px; }
+    button { flex: 1; cursor: pointer; border: none; border-radius: 9px; padding: 10px; font-weight: 700; font-size: 13px; }
+    #save { background: #F5C320; color: #412402; }
+    #test { background: #fff8e1; color: #412402; border: 1px solid #e3c94a; }
+    .msg { font-size: 12px; margin-top: 10px; min-height: 16px; }
+    .ok { color: #1b7a2f; } .err { color: #c0392b; }
+    .hint { font-size: 11px; color: #999; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="hd"><span class="lg">U</span><b>Uellow Importer</b></div>
+  <div class="bd">
+    <label>Server URL</label>
+    <input id="baseUrl" type="text" placeholder="https://world.uellow.com">
+    <div class="hint">Your Uellow World base URL (no trailing slash).</div>
+    <label>API Key</label>
+    <input id="key" type="password" placeholder="paste the key from Settings">
+    <div class="hint">Uellow World ▸ Settings ▸ Chrome Extension API Key.</div>
+    <div class="chk"><input id="publish" type="checkbox"><label for="publish" style="margin:0">Publish immediately (show in app) by default</label></div>
+    <div class="btns">
+      <button id="test">Test</button>
+      <button id="save">Save</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -72,6 +72,7 @@
             'uellow_theme_common/static/src/js/notification/**/*',
             'uellow_theme_common/static/src/js/product/**/*',
             'uellow_theme_common/static/src/js/product_template_attribute_line/**/*',
+            'uellow_theme_common/static/src/js/activity/tracker.js',
         ],
     },
     'installable': True,

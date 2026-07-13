@@ -35,6 +35,16 @@ class BulkPricingConfig(models.Model):
         default=True,
         help='If OFF, bulk pricing is only visible to logged-in users.')
 
+    # ─── Don't stack on already-discounted products ────────────
+    exclude_discounted = fields.Boolean(
+        string='Skip bulk pricing on discounted products',
+        default=True,
+        help='When ON, any product that already has a discount '
+             '(compare-at price higher than the sale price) gets NO '
+             'bulk/quantity discount — buying 2+ keeps the normal unit '
+             'price. Bulk pricing then applies ONLY to full-price products. '
+             'Prevents stacking a wholesale discount on top of a sale.')
+
     # ─── Cost-floor protection ─────────────────────────────────
     cost_floor_enabled = fields.Boolean(
         string='Protect against loss (cost floor)',
@@ -111,12 +121,28 @@ class BulkPricingConfig(models.Model):
 
     # ───────────────────────────── core logic ─────────────────
     @api.model
+    def product_has_discount(self, product):
+        """True if the product already carries a discount — i.e. its
+        compare-at price (compare_list_price) is above the sale price
+        (list_price). Used to keep bulk pricing OFF already-discounted
+        products so a wholesale discount never stacks on a sale."""
+        try:
+            lp = float(getattr(product, 'list_price', 0) or 0)
+            cmp = float(getattr(product, 'compare_list_price', 0) or 0)
+            return lp > 0 and cmp > lp
+        except Exception:
+            return False
+
+    @api.model
     def is_excluded(self, product):
         """Return True if this product is excluded from bulk pricing."""
         cfg = self.get_config()
         if not cfg.enabled:
             return True
         if not product:
+            return True
+        # Already-discounted products → no bulk pricing (don't stack)
+        if cfg.exclude_discounted and self.product_has_discount(product):
             return True
         # Per-product override flag
         if getattr(product, 'bulk_pricing_excluded', False):

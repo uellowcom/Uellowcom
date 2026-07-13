@@ -4,7 +4,13 @@
     <!-- HTML الـ Snippet الفعلي -->
     <template id="new_arrivals_assets" inherit_id="website.layout" name="New Arrivals Fonts">
         <xpath expr="//head" position="inside">
-            <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+            <!-- NON-blocking: a plain render-blocking <link rel="stylesheet"> to
+                 Google Fonts delays first paint (and, combined with a slow/blocked
+                 fonts.googleapis.com, was part of the "whole site unstyled" issue).
+                 media="print" + onload flips it to screen once fetched, so the page
+                 never waits on Google Fonts to render. -->
+            <link rel="stylesheet" media="print" onload="this.media='all'; this.onload=null;"
+                  href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap"/>
         </xpath>
     </template>
 

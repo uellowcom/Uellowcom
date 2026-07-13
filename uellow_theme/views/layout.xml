@@ -562,4 +562,32 @@
         </xpath>
     </template>
 
+    <!-- Google Fonts loaded NON-BLOCKING.
+         The website's fonts (Cairo / Tajawal / Readex Pro) used to be pulled in
+         via a render-blocking `@import url(https://fonts.googleapis.com/...)` at
+         the TOP of the frontend CSS bundle. That makes the browser withhold the
+         ENTIRE stylesheet until Google Fonts responds — so a slow/unreachable
+         fonts.googleapis.com (visitor network / ISP / Google outage) leaves the
+         whole site UNSTYLED. We removed that @import (google-fonts cleared in the
+         website customization + uellow_fonts.scss) and load the fonts here with
+         the standard non-blocking pattern: `media="print"` + `onload` flips it to
+         `all` once fetched, so the page paints instantly with a fallback font and
+         upgrades to the brand fonts when they arrive. `display=swap` avoids FOIT. -->
+    <template id="header_google_fonts_nonblocking" inherit_id="website.layout"
+              name="Uellow: non-blocking Google Fonts" priority="99">
+        <xpath expr="//head/meta[last()]" position="after">
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+            <link rel="stylesheet" media="print"
+                  onload="this.media='all'; this.onload=null;"
+                  href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;700&amp;family=Readex+Pro:wght@300;400;500;700&amp;family=Tajawal:wght@300;400;500;700;800;900&amp;display=swap"/>
+            <t t-nocache="Font fallback for no-JS clients">
+                <noscript>
+                    <link rel="stylesheet"
+                          href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;700&amp;family=Readex+Pro:wght@300;400;500;700&amp;family=Tajawal:wght@300;400;500;700;800;900&amp;display=swap"/>
+                </noscript>
+            </t>
+        </xpath>
+    </template>
+
 </odoo>

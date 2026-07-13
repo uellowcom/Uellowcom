@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add fulfillment controls to the standard sale order form -->
+    <record id="view_order_form_dropship" model="ir.ui.view">
+        <field name="name">sale.order.form.dropship</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_fulfill_dropship" type="object"
+                        string="🚀 Fulfill to AliExpress" class="btn-primary"
+                        invisible="not is_dropship_order or dropship_order_ref"
+                        confirm="Place this order with AliExpress now? Real provider order will be created."/>
+                <button name="action_sync_dropship_tracking" type="object"
+                        string="🔄 Sync Tracking"
+                        invisible="not dropship_order_ref"/>
+            </xpath>
+            <xpath expr="//sheet/notebook" position="inside">
+                <page string="Dropship" name="dropship" invisible="not is_dropship_order">
+                    <group>
+                        <group string="Provider Order">
+                            <field name="is_dropship_order" invisible="1"/>
+                            <field name="dropship_status"/>
+                            <field name="dropship_order_ref"/>
+                        </group>
+                        <group string="Tracking">
+                            <field name="dropship_carrier"/>
+                            <field name="dropship_tracking"/>
+                            <field name="dropship_synced"/>
+                        </group>
+                        <group string="Profit">
+                            <field name="dropship_cost"/>
+                            <field name="dropship_profit"/>
+                            <field name="dropship_margin"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Dropship orders list -->
+    <record id="view_dropship_order_list" model="ir.ui.view">
+        <field name="name">sale.order.dropship.list</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <list decoration-success="dropship_order_ref"
+                  decoration-warning="dropship_status == 'pending_manual'"
+                  decoration-danger="dropship_status == 'error'">
+                <field name="name"/>
+                <field name="date_order"/>
+                <field name="partner_id"/>
+                <field name="amount_total" widget="monetary"/>
+                <field name="dropship_profit" widget="monetary" sum="Total profit"/>
+                <field name="dropship_margin" optional="show"/>
+                <field name="state"/>
+                <field name="dropship_status"/>
+                <field name="dropship_order_ref"/>
+                <field name="dropship_tracking" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+                <button name="action_fulfill_dropship" type="object"
+                        icon="fa-rocket" string="Fulfill" title="Fulfill to AliExpress"
+                        invisible="dropship_order_ref"/>
+                <button name="action_sync_dropship_tracking" type="object"
+                        icon="fa-refresh" string="Sync" title="Sync tracking"
+                        invisible="not dropship_order_ref"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dropship_order_search" model="ir.ui.view">
+        <field name="name">sale.order.dropship.search</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <filter name="unfulfilled" string="Not Fulfilled"
+                        domain="[('dropship_order_ref','=',False)]"/>
+                <filter name="fulfilled" string="Fulfilled"
+                        domain="[('dropship_order_ref','!=',False)]"/>
+                <filter name="pending_manual" string="Pending Manual"
+                        domain="[('dropship_status','=','pending_manual')]"/>
+                <filter name="errors" string="Errors"
+                        domain="[('dropship_status','=','error')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="g_status" string="Dropship Status"
+                            context="{'group_by':'dropship_status'}"/>
+                    <filter name="g_state" string="Order Status"
+                            context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Kanban: quick visual pipeline by dropship status -->
+    <record id="view_dropship_order_kanban" model="ir.ui.view">
+        <field name="name">sale.order.dropship.kanban</field>
+        <field name="model">sale.order</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="dropship_status" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="amount_total"/>
+                <field name="dropship_status"/>
+                <field name="dropship_order_ref"/>
+                <field name="dropship_tracking"/>
+                <field name="currency_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click">
+                            <div class="o_kanban_record_title"><field name="name"/></div>
+                            <div class="text-muted"><field name="partner_id"/></div>
+                            <div><field name="amount_total" widget="monetary"/></div>
+                            <div t-if="record.dropship_order_ref.raw_value"
+                                 class="text-success">✓ <field name="dropship_order_ref"/></div>
+                            <div t-if="record.dropship_tracking.raw_value">
+                                📦 <field name="dropship_tracking"/></div>
+                            <button t-if="!record.dropship_order_ref.raw_value"
+                                    name="action_fulfill_dropship" type="object"
+                                    class="btn btn-sm btn-primary mt-1">🚀 Fulfill</button>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_dropship_mark_fulfill" model="ir.actions.server">
+        <field name="name">Fulfill to AliExpress</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="binding_model_id" ref="model_sale_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_fulfill_dropship()</field>
+    </record>
+
+    <record id="action_dropship_bulk_track" model="ir.actions.server">
+        <field name="name">Sync Tracking</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="binding_model_id" ref="model_sale_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_sync_dropship_tracking()</field>
+    </record>
+
+    <record id="action_dropship_export_csv" model="ir.actions.server">
+        <field name="name">Export AliExpress CSV</field>
+        <field name="model_id" ref="model_sale_order"/>
+        <field name="binding_model_id" ref="model_sale_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_export_ali_csv()</field>
+    </record>
+
+    <record id="action_dropship_orders" model="ir.actions.act_window">
+        <field name="name">Dropship Orders</field>
+        <field name="res_model">sale.order</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('is_dropship_order','=',True)]</field>
+        <field name="search_view_id" ref="view_dropship_order_search"/>
+        <field name="context">{'search_default_unfulfilled': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No dropship orders yet</p>
+            <p>Orders containing Uellow World products appear here. Fulfill them to
+               AliExpress with one click — the shipping address is auto-filled.</p>
+        </field>
+    </record>
+
+    <record id="action_dropship_orders_list_view" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_dropship_order_list"/>
+        <field name="act_window_id" ref="action_dropship_orders"/>
+    </record>
+
+</odoo>

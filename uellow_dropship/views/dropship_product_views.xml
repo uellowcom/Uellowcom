@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_dropship_product_list" model="ir.ui.view">
+        <field name="name">dropship.product.list</field>
+        <field name="model">dropship.product</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="image_url" widget="image_url" options="{'size': [48, 48]}" string=""/>
+                <field name="provider_id"/>
+                <field name="source_id"/>
+                <field name="title_en"/>
+                <field name="category_name" string="Category"/>
+                <field name="base_cost"/>
+                <field name="sale_price"/>
+                <field name="view_count" string="Views"/>
+                <field name="uellow_sold_count" string="Sold"/>
+                <field name="rating" string="★"/>
+                <field name="is_deal" widget="boolean_toggle" string="Deal"/>
+                <field name="published" widget="boolean_toggle" string="Published"/>
+                <field name="shippable" widget="boolean_toggle" string="Ships"/>
+                <field name="in_stock" widget="boolean_toggle" string="Stock"/>
+                <field name="ab_active" widget="boolean_toggle" string="A/B" optional="hide"/>
+                <field name="ab_winner" string="A/B Result" optional="hide"/>
+                <field name="detail_synced" string="Last Sync"/>
+                <field name="ai_rewritten" widget="boolean_toggle"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'listed'"
+                       decoration-warning="state == 'promoted'"
+                       decoration-success="state == 'materialized'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dropship_product_form" model="ir.ui.view">
+        <field name="name">dropship.product.form</field>
+        <field name="model">dropship.product</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_ai_rewrite" type="object"
+                            string="✨ Rewrite with AI" class="btn-primary"/>
+                    <button name="action_publish" type="object"
+                            string="🌐 Publish" class="btn-primary"
+                            invisible="published"
+                            help="Create (if needed) and publish the live product so it appears in the app / store."/>
+                    <button name="action_unpublish" type="object"
+                            string="🚫 Unpublish"
+                            invisible="not published"
+                            help="Hide from the app / store but keep the product."/>
+                    <button name="action_unpromote" type="object"
+                            string="↩ Revert to Listing"
+                            invisible="not product_tmpl_id"
+                            confirm="Unpublish and archive the live product, and send this back to a source listing?"/>
+                    <button name="action_refresh_provider" type="object"
+                            string="🔄 Refresh from Provider"/>
+                    <button name="action_ab_generate" type="object"
+                            string="🧪 A/B Title (AI)"
+                            invisible="ab_active"
+                            help="Generate a punchier alternate title with AI and start an A/B test."/>
+                    <button name="action_ab_promote_winner" type="object"
+                            string="🏆 Adopt Winner" class="btn-primary"
+                            invisible="not ab_active"/>
+                    <button name="action_ab_stop" type="object"
+                            string="⏹ Stop A/B" invisible="not ab_active"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="listed,promoted,materialized"/>
+                </header>
+                <sheet>
+                    <div class="alert alert-light" role="status" style="margin-bottom:8px">
+                        <b>States:</b>
+                        <b style="color:#6c757d">Listed</b> = source candidate only, no live product, not on the store ·
+                        <b style="color:#f0ad4e">Promoted</b> = you turned it into a live product early ·
+                        <b style="color:#28a745">Materialized</b> = a live product exists (usually created at order time).
+                        <span style="color:#888">Use <b>🌐 Publish</b> to show a product in the app, <b>🚫 Unpublish</b> to hide it (kept), or <b>↩ Revert to Listing</b> to fully undo (blocked if it has orders).</span>
+                    </div>
+                    <div class="oe_button_box">
+                        <button class="oe_stat_button" icon="fa-cube" type="object"
+                                name="action_promote" invisible="not product_tmpl_id">
+                            <field name="product_tmpl_id" widget="statinfo" string="Product"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-eye" type="object"
+                                name="action_open_source">
+                            <field name="view_count" widget="statinfo" string="Views"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-shopping-cart" type="object"
+                                name="action_open_source">
+                            <field name="uellow_sold_count" widget="statinfo" string="Sold"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-star" type="object"
+                                name="action_open_source">
+                            <field name="rating" widget="statinfo" string="Rating"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-comments" type="object"
+                                name="action_open_source">
+                            <field name="review_count" widget="statinfo" string="Reviews"/>
+                        </button>
+                    </div>
+                    <field name="image_url" widget="image_url" class="oe_avatar"
+                           options="{'size': [120, 120]}"/>
+                    <div class="oe_title">
+                        <label for="title_en" string="Product"/>
+                        <h1><field name="title_en" placeholder="Title (EN)"/></h1>
+                        <h3 dir="rtl"><field name="title_ar" placeholder="العنوان (AR)"/></h3>
+                        <div>
+                            <field name="is_deal" widget="boolean_toggle"/>
+                            <label for="is_deal" string="Deal"/>
+                            &amp;nbsp;·&amp;nbsp;
+                            <field name="orders_text" readonly="1" string="Provider sold"/>
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Source">
+                            <field name="provider_id"/>
+                            <field name="source_id"/>
+                            <field name="source_url" widget="url"
+                                   text="Open on source (AliExpress)" string="Source Link"/>
+                            <field name="category_id" string="Category"
+                                   options="{'no_create': True}"
+                                   placeholder="Pick from AliExpress categories…"/>
+                            <field name="category_parent" string="Parent Category" readonly="1"/>
+                            <field name="category" string="Category Code" readonly="1"/>
+                            <field name="category_name" string="Category Name" readonly="1"/>
+                            <field name="ai_rewritten"/>
+                            <field name="detail_synced"/>
+                            <field name="shippable"/>
+                            <field name="stock_qty"/>
+                            <field name="in_stock"/>
+                            <field name="oos_unpublished"/>
+                            <field name="ship_country_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"/>
+                        </group>
+                        <group string="Pricing">
+                            <field name="base_cost"/>
+                            <field name="currency_code"/>
+                            <field name="original_price"/>
+                            <field name="discount_percent"/>
+                            <field name="landed_price"/>
+                            <field name="sale_price"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Gallery" name="gallery">
+                            <group>
+                                <group string="Main image">
+                                    <field name="main_image_index"/>
+                                    <button name="action_set_main_image" type="object"
+                                            string="⭐ Set as Main"
+                                            class="btn-primary"/>
+                                </group>
+                            </group>
+                            <field name="gallery_preview" nolabel="1" readonly="1"/>
+                            <group string="Raw URLs">
+                                <field name="image_url" widget="url" string="Current main image"/>
+                                <field name="video_url" widget="url" string="Video"/>
+                            </group>
+                        </page>
+                        <page string="Description" name="content">
+                            <group string="English">
+                                <field name="description_html" nolabel="1"/>
+                            </group>
+                            <group string="Arabic">
+                                <field name="description_ar" nolabel="1"/>
+                            </group>
+                        </page>
+                        <page string="Specifications" name="specs">
+                            <field name="specs_preview" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Variants" name="variants">
+                            <field name="variants_preview" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Reviews" name="reviews">
+                            <field name="reviews_preview" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Shipping" name="shipping">
+                            <field name="shipping_preview" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Seller" name="seller">
+                            <field name="store_preview" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Price Intelligence" name="price_intel">
+                            <group>
+                                <group string="Margin">
+                                    <field name="margin_pct"/>
+                                    <field name="suggested_price"/>
+                                    <field name="cost_alert"/>
+                                    <field name="last_cost_change"/>
+                                    <button name="action_reprice_to_margin" type="object"
+                                            string="📈 Reprice to Target Margin"
+                                            class="btn-primary"/>
+                                </group>
+                            </group>
+                            <field name="price_history_ids" nolabel="1" readonly="1">
+                                <list default_order="create_date desc">
+                                    <field name="create_date" string="When"/>
+                                    <field name="old_cost"/>
+                                    <field name="new_cost"/>
+                                    <field name="change_pct" string="Change %"/>
+                                    <field name="sale_price"/>
+                                    <field name="margin_pct" string="Margin %"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="A/B Title Test" name="ab">
+                            <group>
+                                <group string="Variant A (current)">
+                                    <field name="title_en" string="Title A (EN)"/>
+                                    <field name="title_ar" string="Title A (AR)"/>
+                                    <field name="ab_views_a"/>
+                                    <field name="ab_orders_a"/>
+                                </group>
+                                <group string="Variant B (challenger)">
+                                    <field name="title_en_b" string="Title B (EN)"/>
+                                    <field name="title_ar_b" string="Title B (AR)"/>
+                                    <field name="ab_views_b"/>
+                                    <field name="ab_orders_b"/>
+                                </group>
+                            </group>
+                            <group>
+                                <field name="ab_active"/>
+                                <field name="ab_started"/>
+                                <field name="ab_winner"/>
+                            </group>
+                            <div style="color:#888;font-size:12px">
+                                The storefront alternates between the two titles by time window
+                                (Settings ▸ A/B Title Testing) and records views + orders for each.
+                                Use “Adopt Winner” to keep the better-converting title.
+                            </div>
+                        </page>
+                        <page string="Raw Payload" name="raw" groups="base.group_no_one">
+                            <field name="raw_json" nolabel="1" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dropship_product_search" model="ir.ui.view">
+        <field name="name">dropship.product.search</field>
+        <field name="model">dropship.product</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title_en"/>
+                <field name="source_id"/>
+                <field name="provider_id"/>
+                <filter name="listed" string="Listed" domain="[('state','=','listed')]"/>
+                <filter name="materialized" string="Materialized" domain="[('state','=','materialized')]"/>
+                <filter name="deals" string="Deals" domain="[('is_deal','=',True)]"/>
+                <filter name="unshippable" string="Doesn't ship to us" domain="[('shippable','=',False)]"/>
+                <filter name="oos" string="Out of stock" domain="[('in_stock','=',False),('state','=','materialized')]"/>
+                <filter name="with_video" string="Has Video" domain="[('video_url','!=',False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="g_provider" string="Provider" context="{'group_by':'provider_id'}"/>
+                    <filter name="g_state" string="Status" context="{'group_by':'state'}"/>
+                    <filter name="g_category" string="Category" context="{'group_by':'category_name'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dropship_product" model="ir.actions.act_window">
+        <field name="name">Source Catalog</field>
+        <field name="res_model">dropship.product</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Bulk actions on selected listings (Action menu) -->
+    <record id="action_dropship_mark_deal" model="ir.actions.server">
+        <field name="name">Mark as Deal</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_mark_deal()</field>
+    </record>
+
+    <record id="action_dropship_unmark_deal" model="ir.actions.server">
+        <field name="name">Remove Deal</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_unmark_deal()</field>
+    </record>
+
+    <record id="action_dropship_promote_bulk" model="ir.actions.server">
+        <field name="name">Promote to Live Product</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_promote()</field>
+    </record>
+
+    <record id="action_dropship_unpromote_bulk" model="ir.actions.server">
+        <field name="name">Revert to Listing (undo promote)</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_unpromote()</field>
+    </record>
+
+    <record id="action_dropship_check_coverage_bulk" model="ir.actions.server">
+        <field name="name">Check Shipping Coverage</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_check_ship_coverage()</field>
+    </record>
+
+    <record id="action_dropship_publish_bulk" model="ir.actions.server">
+        <field name="name">Publish (show in app)</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_publish()</field>
+    </record>
+
+    <record id="action_dropship_unpublish_bulk" model="ir.actions.server">
+        <field name="name">Unpublish (hide from app)</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_unpublish()</field>
+    </record>
+
+    <record id="action_dropship_refresh_bulk" model="ir.actions.server">
+        <field name="name">Refresh from Provider</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_refresh_provider()</field>
+    </record>
+
+    <record id="action_dropship_slowmover_discount" model="ir.actions.server">
+        <field name="name">Apply Slow-mover Discount</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_apply_slowmover_discount()</field>
+    </record>
+
+    <record id="action_dropship_ab_generate" model="ir.actions.server">
+        <field name="name">Start A/B Title Test (AI)</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_ab_generate()</field>
+    </record>
+
+    <record id="action_dropship_ab_promote" model="ir.actions.server">
+        <field name="name">Adopt A/B Winner</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_ab_promote_winner()</field>
+    </record>
+
+</odoo>

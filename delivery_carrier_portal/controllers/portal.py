@@ -1271,3 +1271,158 @@ class DeliveryPortalController(http.Controller):
             'recent_orders': recent_orders,
             'alerts': alerts,
         }
+
+    # ─────────────────────── Finance / Settlements ───────────────────────
+    @http.route('/delivery-portal/finance-data', type='json', csrf=False, auth='user')
+    def finance_data(self, carrier_id=0, **kwargs):
+        """Live financial balances PER carrier + the settlements ledger.
+
+        Outstanding balances are a CURRENT snapshot (not period-bound):
+        - cod_held       : cash the carrier collected and still holds
+                           (delivered + COD + status pending/collected)
+        - cod_carrier_cost: what Uellow owes the carrier on those COD orders
+        - cod_net         : cod_held − cod_carrier_cost  (carrier → Uellow)
+        - online_cost     : delivery fees Uellow owes the carrier for
+                            delivered ONLINE orders not yet in a settlement
+        - net_balance     : cod_net − online_cost
+                            (+) carrier owes Uellow  /  (−) Uellow owes carrier
+        """
+        env = request.env
+        SO = env['sale.order'].sudo()
+
+        carrier_domain = [('active', '=', True)]
+        if carrier_id:
+            carrier_domain.append(('id', '=', int(carrier_id)))
+        carriers = env['delivery.carrier.company'].sudo().search(carrier_domain)
+
+        rows = []
+        t_held = t_cod_cost = t_cod_net = t_online_cost = t_net = 0.0
+        t_cod_cnt = t_online_cnt = 0
+        for c in carriers:
+            cod = SO.search([
+                ('delivery_carrier_company_id', '=', c.id),
+                ('payment_method_type', '=', 'cash'),
+                ('delivery_status', '=', 'delivered'),
+                ('cash_collection_status', 'in', ('pending', 'collected')),
+            ])
+            cod_held = sum(cod.mapped('amount_total'))
+            cod_cost = sum(cod.mapped('carrier_net_cost'))
+            cod_net = cod_held - cod_cost
+
+            online = SO.search([
+                ('delivery_carrier_company_id', '=', c.id),
+                ('payment_method_type', 'in', ('online', 'free')),
+                ('delivery_status', '=', 'delivered'),
+                ('carrier_portal_remittance_id', '=', False),
+                ('carrier_net_cost', '>', 0),
+            ])
+            online_cost = sum(online.mapped('carrier_net_cost'))
+            net_balance = cod_net - online_cost
+
+            rows.append({
+                'id': c.id,
+                'name': c.name,
+                'settlement_mode': c.cash_settlement_mode or 'weekly',
+                'cod_held': round(cod_held, 3),
+                'cod_cost': round(cod_cost, 3),
+                'cod_net': round(cod_net, 3),
+                'cod_count': len(cod),
+                'online_cost': round(online_cost, 3),
+                'online_count': len(online),
+                'net_balance': round(net_balance, 3),
+            })
+            t_held += cod_held
+            t_cod_cost += cod_cost
+            t_cod_net += cod_net
+            t_online_cost += online_cost
+            t_net += net_balance
+            t_cod_cnt += len(cod)
+            t_online_cnt += len(online)
+
+        rows.sort(key=lambda r: r['cod_held'], reverse=True)
+
+        # Settlements ledger (most recent 40)
+        rem_domain = []
+        if carrier_id:
+            rem_domain.append(('carrier_company_id', '=', int(carrier_id)))
+        rems = env['delivery.cash.remittance'].sudo().search(
+            rem_domain, order='create_date desc', limit=40)
+        settlements = []
+        for r in rems:
+            settlements.append({
+                'id': r.id,
+                'name': r.name,
+                'carrier': r.carrier_company_id.name if r.carrier_company_id else '',
+                'total_amount': round(r.total_amount, 3),
+                'cash_collected': round(r.cash_collected, 3),
+                'carrier_cost': round(r.total_carrier_cost, 3),
+                'net_to_uellow': round(r.net_to_uellow, 3),
+                'state': r.state,
+                'date': str(r.remittance_date) if r.remittance_date else '',
+                'created': str(r.create_date)[:16] if r.create_date else '',
+                'lines': len(r.line_ids),
+            })
+
+        pending_rem = env['delivery.cash.remittance'].sudo().search([
+            ('state', 'in', ('draft', 'pending', 'partial'))])
+        pending_value = sum(pending_rem.mapped('total_amount'))
+
+        return {
+            'carriers': rows,
+            'settlements': settlements,
+            'totals': {
+                'held': round(t_held, 3),
+                'cod_cost': round(t_cod_cost, 3),
+                'cod_net': round(t_cod_net, 3),
+                'online_cost': round(t_online_cost, 3),
+                'net_balance': round(t_net, 3),
+                'cod_count': t_cod_cnt,
+                'online_count': t_online_cnt,
+                'pending_count': len(pending_rem),
+                'pending_value': round(pending_value, 3),
+            },
+        }
+
+    @http.route('/delivery-portal/finance-create-settlement', type='json', csrf=False, auth='user')
+    def finance_create_settlement(self, carrier_id, **kwargs):
+        """Create a DRAFT settlement for a carrier, pulling every outstanding
+        delivered order (COD not yet remitted + online not yet linked) into its
+        lines. Returns the new remittance id so the UI can open its form."""
+        env = request.env
+        cid = int(carrier_id)
+        carrier = env['delivery.carrier.company'].sudo().browse(cid)
+        if not carrier.exists():
+            return {'error': 'carrier_not_found'}
+
+        SO = env['sale.order'].sudo()
+        cod = SO.search([
+            ('delivery_carrier_company_id', '=', cid),
+            ('payment_method_type', '=', 'cash'),
+            ('delivery_status', '=', 'delivered'),
+            ('cash_collection_status', 'in', ('pending', 'collected')),
+        ])
+        online = SO.search([
+            ('delivery_carrier_company_id', '=', cid),
+            ('payment_method_type', 'in', ('online', 'free')),
+            ('delivery_status', '=', 'delivered'),
+            ('carrier_portal_remittance_id', '=', False),
+            ('carrier_net_cost', '>', 0),
+        ])
+        all_orders = cod | online
+        if not all_orders:
+            return {'error': 'nothing_to_settle'}
+
+        rem = env['delivery.cash.remittance'].sudo().create({
+            'carrier_company_id': cid,
+            'settlement_mode': carrier.cash_settlement_mode or 'weekly',
+            'state': 'draft',
+            'order_ids': [(6, 0, all_orders.ids)],
+            'line_ids': [(0, 0, {
+                'order_id': o.id,
+                'amount': o.amount_total if o.payment_method_type == 'cash' else 0.0,
+            }) for o in all_orders],
+        })
+        # Link online orders so they won't be pulled into another settlement
+        online.write({'carrier_portal_remittance_id': rem.id})
+        env.cr.commit()
+        return {'remittance_id': rem.id, 'name': rem.name, 'count': len(all_orders)}

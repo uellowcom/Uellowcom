@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Uellow — Onboarding · Professional Concepts (v2)</title>
+<style>
+  :root{
+    --bg:#F5EFE3; --surface:#FFFFFF; --surface-2:#EFE7D6;
+    --ink:#211812; --muted:#786751; --line:#E2D8C4;
+    --gold:#E7B62C; --brand:#F5C320; --gold-deep:#C9962012; --espresso:#2A1B10;
+    /* global (cool) identity */
+    --slate:#16232B; --slate-2:#1E323C; --teal:#2E9C93; --teal-soft:#D8ECE9;
+    --shadow:0 20px 55px -24px rgba(42,27,16,.5);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --mono:"SF Mono",ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#120D08;--surface:#1E160D;--surface-2:#271C10;--ink:#F1E7D5;--muted:#A28E72;
+      --line:#392A18;--teal:#4FC3B8;--teal-soft:#123230;--shadow:0 24px 62px -28px rgba(0,0,0,.75);}
+  }
+  :root[data-theme="light"]{--bg:#F5EFE3;--surface:#FFFFFF;--surface-2:#EFE7D6;--ink:#211812;
+    --muted:#786751;--line:#E2D8C4;--teal:#2E9C93;--teal-soft:#D8ECE9;--shadow:0 20px 55px -24px rgba(42,27,16,.5);}
+  :root[data-theme="dark"]{--bg:#120D08;--surface:#1E160D;--surface-2:#271C10;--ink:#F1E7D5;--muted:#A28E72;
+    --line:#392A18;--teal:#4FC3B8;--teal-soft:#123230;--shadow:0 24px 62px -28px rgba(0,0,0,.75);}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1160px;margin:0 auto;padding:clamp(28px,5vw,72px) clamp(18px,4vw,40px);}
+
+  .mast{display:flex;flex-direction:column;gap:16px;margin-bottom:8px;}
+  .kicker{display:inline-flex;align-items:center;gap:9px;align-self:flex-start;font-size:12px;
+    letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--espresso);
+    background:var(--brand);padding:7px 14px;border-radius:999px;}
+  h1{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;text-wrap:balance;
+    font-size:clamp(30px,5.2vw,52px);line-height:1.05;margin:0;}
+  h1 em{font-style:italic;color:var(--gold);}
+  .lede{max-width:66ch;color:var(--muted);font-size:clamp(15px,1.6vw,18px);margin:0;}
+
+  /* legend: the dual identity system */
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;}
+  .lg{display:flex;align-items:center;gap:11px;border:1px solid var(--line);border-radius:14px;
+    padding:11px 15px;background:var(--surface);min-width:250px;flex:1;}
+  .lg .swatch{width:34px;height:34px;border-radius:9px;flex:none;}
+  .lg.local .swatch{background:linear-gradient(140deg,#3A2716,#1c120a);box-shadow:inset 0 0 0 2px var(--gold);}
+  .lg.global .swatch{background:linear-gradient(140deg,var(--slate-2),var(--slate));box-shadow:inset 0 0 0 2px var(--teal);}
+  .lg .t{font-weight:700;font-size:13.5px;}
+  .lg .d{font-size:11.5px;color:var(--muted);}
+
+  .rule{height:1px;background:var(--line);margin:34px 0 8px;border:0;}
+
+  .concept{display:grid;grid-template-columns:340px 1fr;gap:clamp(24px,4vw,56px);align-items:center;
+    padding:44px 0;border-bottom:1px solid var(--line);}
+  .concept:last-of-type{border-bottom:0;}
+  .concept.flip .stage{order:2;}
+  .stage{display:flex;justify-content:center;}
+  .brief{min-width:0;}
+  .idx{font-family:var(--serif);font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--teal);font-weight:700;font-style:italic;}
+  .cname{font-family:var(--serif);font-size:clamp(23px,3vw,32px);font-weight:600;letter-spacing:-.015em;margin:6px 0 2px;text-wrap:balance;}
+  .car{color:var(--muted);font-size:12.5px;margin-bottom:14px;direction:rtl;}
+  .thesis{font-size:16.5px;margin:0 0 18px;max-width:56ch;}
+  .thesis b{color:var(--gold);font-weight:650;}
+  ul.feats{list-style:none;margin:0;padding:0;display:grid;gap:9px;max-width:56ch;}
+  ul.feats li{position:relative;padding-inline-start:22px;font-size:14.5px;}
+  ul.feats li::before{content:"";position:absolute;inset-inline-start:0;top:8px;width:9px;height:9px;
+    border-radius:3px;background:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 22%,transparent);}
+  ul.feats li span{color:var(--muted);}
+  .why{margin-top:16px;font-size:13.5px;color:var(--muted);border-inline-start:3px solid var(--teal);
+    padding:4px 0 4px 13px;background:linear-gradient(90deg,var(--teal-soft),transparent);border-radius:0 8px 8px 0;max-width:54ch;}
+  .why b{color:var(--ink);}
+
+  /* phone shell */
+  .phone{position:relative;width:300px;height:620px;border-radius:42px;
+    background:linear-gradient(160deg,#3a3128,#0e0a06);padding:11px;box-shadow:var(--shadow);flex:none;}
+  .phone::after{content:"";position:absolute;top:20px;left:50%;transform:translateX(-50%);
+    width:118px;height:26px;background:#0b0805;border-radius:0 0 16px 16px;z-index:6;}
+  .screen{position:relative;width:100%;height:100%;border-radius:32px;overflow:hidden;background:#fff;
+    color:var(--ink);font-size:14px;isolation:isolate;}
+  .bar{position:absolute;top:0;left:0;right:0;height:34px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 18px;font-size:11px;font-weight:600;z-index:5;}
+  .bar .dots{display:flex;gap:3px;align-items:center;}
+  .bar .dots i{width:15px;height:8px;border-radius:2px;background:currentColor;opacity:.85;display:inline-block}
+  .bar .dots b{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+
+  .lang{display:inline-flex;background:rgba(0,0,0,.06);border-radius:10px;padding:3px;gap:2px;font-size:11.5px;font-weight:700;}
+  .lang b{padding:5px 11px;border-radius:7px;color:#8a795f;}
+  .lang b.on{background:#fff;color:var(--ink);box-shadow:0 2px 6px -2px rgba(0,0,0,.3);}
+  .logo{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;border-radius:13px;
+    font-weight:700;font-size:14px;border:0;cursor:default;background:var(--brand);color:#3A2402;
+    box-shadow:0 8px 18px -8px rgba(224,168,0,.75);}
+  .flag{font-size:17px;line-height:1;}
+  .perk{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:700;letter-spacing:.02em;
+    padding:3px 7px;border-radius:6px;}
+  .badge{font-size:9px;font-weight:800;letter-spacing:.07em;padding:3px 7px;border-radius:5px;background:var(--espresso);color:var(--gold);}
+
+  /* ===== A1 · Dual Split ===== */
+  .a1 .screen{display:flex;flex-direction:column;background:#0e0a06;}
+  .a1 .p-local{flex:1;position:relative;padding:52px 20px 20px;color:#f3e6d0;
+    background:radial-gradient(120% 80% at 30% 0,#3A2716,#241609 70%,#1b1109);display:flex;flex-direction:column;justify-content:center;gap:9px;}
+  .a1 .p-global{flex:1;position:relative;padding:24px 20px 22px;color:#eaf3f1;
+    background:radial-gradient(120% 90% at 70% 100%,#22404a,var(--slate) 65%,#101c22);display:flex;flex-direction:column;justify-content:center;gap:9px;}
+  .a1 .ey{font-size:10.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;}
+  .a1 .p-local .ey{color:var(--gold);} .a1 .p-global .ey{color:var(--teal);}
+  .a1 .nm{font-family:var(--serif);font-size:23px;font-weight:600;display:flex;align-items:center;gap:9px;}
+  .a1 .perks{display:flex;gap:6px;flex-wrap:wrap;}
+  .a1 .p-local .perk{background:rgba(245,195,32,.16);color:var(--gold);}
+  .a1 .p-global .perk{background:rgba(46,156,147,.2);color:#7fd8cf;}
+  .a1 .go{align-self:flex-start;margin-top:4px;font-size:12px;font-weight:700;}
+  .a1 .p-local .go{color:#f3e6d0;} .a1 .p-global .go{color:#eaf3f1;}
+  .a1 .divide{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:4;
+    display:flex;align-items:center;gap:8px;}
+  .a1 .divide .lang{background:rgba(10,8,5,.55);backdrop-filter:blur(6px);}
+  .a1 .divide .lang b{color:#c9b998;} .a1 .divide .lang b.on{background:var(--brand);color:#2a1a0b;box-shadow:none;}
+  .a1 .globe{position:absolute;font-size:64px;opacity:.16;right:-8px;}
+  .a1 .p-local .globe{top:8px;} .a1 .p-global .globe{bottom:4px;}
+
+  /* ===== A2 · Segmented tabs ===== */
+  .a2 .screen{background:var(--surface);display:flex;flex-direction:column;padding:44px 0 0;}
+  .a2 .hd{padding:0 18px 12px;display:flex;flex-direction:column;gap:12px;}
+  .a2 .top{display:flex;align-items:center;justify-content:space-between;}
+  .a2 .seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;font-size:12.5px;font-weight:700;}
+  .a2 .seg b{flex:1;text-align:center;padding:8px;border-radius:9px;color:var(--muted);}
+  .a2 .seg b.on{background:var(--espresso);color:var(--brand);}
+  .a2 .list{flex:1;display:flex;flex-direction:column;}
+  .a2 .row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-top:1px solid var(--line);}
+  .a2 .row .nm{flex:1;} .a2 .row .nm b{font-size:13.5px;font-weight:650;display:block;}
+  .a2 .row .nm .sub{font-size:10.5px;color:var(--muted);}
+  .a2 .row .cur{font-size:10px;font-weight:700;color:#a08a68;}
+  .a2 .row .chev{color:var(--muted);font-size:15px;}
+  .a2 .promo{margin:12px 16px;border-radius:14px;padding:13px 15px;display:flex;align-items:center;gap:11px;
+    background:linear-gradient(135deg,var(--slate-2),var(--slate));color:#eaf3f1;}
+  .a2 .promo .g{font-size:22px;} .a2 .promo .tx{flex:1;}
+  .a2 .promo .tx b{font-size:12.5px;color:#fff;display:block;} .a2 .promo .tx span{font-size:10.5px;color:#a9c6c2;}
+  .a2 .promo .arw{color:var(--teal);font-weight:800;}
+  .a2 .foot{padding:12px 18px 18px;border-top:1px solid var(--line);}
+
+  /* ===== A3 · Membership cards ===== */
+  .a3 .screen{background:var(--surface-2);display:flex;flex-direction:column;align-items:center;padding:44px 20px 20px;gap:14px;}
+  .a3 .top{width:100%;display:flex;align-items:center;justify-content:space-between;}
+  .a3 h2{font-family:var(--serif);font-size:19px;margin:2px 0 0;font-weight:600;align-self:flex-start;}
+  .a3 .deck{position:relative;width:100%;height:340px;margin-top:6px;}
+  .a3 .mcard{position:absolute;left:50%;width:230px;height:150px;border-radius:18px;padding:16px;
+    transform:translateX(-50%);color:#f3e6d0;box-shadow:0 16px 34px -16px rgba(0,0,0,.55);overflow:hidden;}
+  .a3 .mcard .brandline{font-size:10px;font-weight:800;letter-spacing:.14em;opacity:.8;}
+  .a3 .mcard .mkt{font-family:var(--serif);font-size:20px;font-weight:600;margin-top:20px;display:flex;align-items:center;gap:8px;}
+  .a3 .mcard .meta{position:absolute;bottom:14px;left:16px;right:16px;display:flex;justify-content:space-between;font-size:10px;font-weight:700;opacity:.9;}
+  .a3 .mcard .chip{position:absolute;top:44px;right:16px;width:30px;height:22px;border-radius:5px;background:linear-gradient(135deg,#f7e08a,#caa02a);opacity:.9;}
+  .a3 .m-slate{top:0;background:linear-gradient(140deg,var(--slate-2),var(--slate));transform:translateX(-50%) translateY(0) scale(.9) rotate(-4deg);color:#eaf3f1;}
+  .a3 .m-world{top:26px;background:linear-gradient(140deg,#F7CE3f,#C99620);color:#3a2402;transform:translateX(-50%) translateY(0) scale(.95) rotate(3deg);}
+  .a3 .m-local{top:64px;background:linear-gradient(140deg,#3A2716,#20140b);z-index:3;}
+  .a3 .m-world .brandline,.a3 .m-world .meta{opacity:.75;}
+  .a3 .dots{display:flex;gap:6px;margin-top:2px;}
+  .a3 .dots i{width:7px;height:7px;border-radius:50%;background:var(--line);}
+  .a3 .dots i.on{background:var(--gold);width:18px;border-radius:4px;}
+  .a3 .cap{font-size:11px;color:var(--muted);}
+  .a3 .btn{margin-top:auto;}
+
+  /* ===== A4 · Concierge editorial ===== */
+  .a4 .screen{background:var(--surface);display:flex;flex-direction:column;padding:50px 22px 22px;gap:16px;}
+  .a4 .top{display:flex;align-items:center;justify-content:space-between;}
+  .a4 .txtlang{font-size:11.5px;font-weight:700;color:var(--muted);}
+  .a4 .txtlang b{color:var(--ink);border-bottom:2px solid var(--gold);padding-bottom:1px;}
+  .a4 .welcome{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:800;}
+  .a4 h2{font-family:var(--serif);font-size:26px;font-weight:600;margin:-8px 0 4px;line-height:1.15;}
+  .a4 .opt{position:relative;padding:18px 2px;border-top:1px solid var(--line);display:flex;align-items:center;gap:14px;}
+  .a4 .opt:last-of-type{border-bottom:1px solid var(--line);}
+  .a4 .opt .ic{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none;}
+  .a4 .opt.local .ic{background:linear-gradient(140deg,#3A2716,#20140b);color:var(--gold);}
+  .a4 .opt.global .ic{background:linear-gradient(140deg,var(--slate-2),var(--slate));color:var(--teal);}
+  .a4 .opt .tx{flex:1;} .a4 .opt .tx .k{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .a4 .opt .tx .nm{font-family:var(--serif);font-size:18px;font-weight:600;}
+  .a4 .opt .tx .sub{font-size:11.5px;color:var(--muted);}
+  .a4 .opt .arw{color:var(--gold);font-weight:800;font-size:16px;}
+  .a4 .btn{margin-top:auto;background:var(--espresso);color:var(--brand);box-shadow:none;}
+
+  /* ===== A5 · Arrivals board ===== */
+  .a5 .screen{background:#0f1519;color:#e9d9a8;font-family:var(--mono);display:flex;flex-direction:column;padding:44px 0 0;}
+  .a5 .hd{padding:0 16px 10px;display:flex;align-items:center;justify-content:space-between;}
+  .a5 .hd .ttl{font-family:var(--serif);font-size:15px;font-weight:600;color:#fff;letter-spacing:.06em;}
+  .a5 .lang{background:rgba(255,255,255,.08);} .a5 .lang b{color:#b9a778;} .a5 .lang b.on{background:var(--gold);color:#1a1206;box-shadow:none;}
+  .a5 .cols{display:flex;justify-content:space-between;padding:6px 16px;font-size:8.5px;letter-spacing:.12em;color:#7d8a86;border-bottom:1px solid #22303a;}
+  .a5 .brow{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid #1b262d;}
+  .a5 .brow .dst{flex:1;font-size:13px;font-weight:700;color:#f2e6c2;letter-spacing:.04em;}
+  .a5 .brow .cur{font-size:11px;color:#9fb0ab;}
+  .a5 .brow .eta{font-size:10.5px;color:#7fd8cf;font-weight:700;width:52px;text-align:right;}
+  .a5 .brow.cn{background:linear-gradient(90deg,rgba(231,182,44,.16),transparent);border-inline-start:3px solid var(--gold);}
+  .a5 .brow.cn .dst{color:#F5C320;} .a5 .brow.cn .tag{font-size:8px;background:var(--gold);color:#1a1206;padding:2px 5px;border-radius:4px;font-weight:800;}
+  .a5 .flip{font-family:var(--serif);}
+  .a5 .foot{margin-top:auto;padding:14px 16px 18px;}
+
+  .foot{margin-top:44px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);font-size:13px;
+    display:flex;flex-wrap:wrap;gap:8px 20px;}
+  .foot b{color:var(--ink);}
+  @media(max-width:760px){.concept{grid-template-columns:1fr;gap:26px;}.concept.flip .stage{order:0;}.stage{order:0;}.lg{min-width:100%;}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <span class="kicker">Uellow · Onboarding — النسخة الاحترافية</span>
+    <h1>خمسة اتجاهات <em>راقية</em> — تُميّز المحلي والعالمي معاً</h1>
+    <p class="lede">شاشة البداية عند فتح التطبيق. هنا لا نُبرز الصين وحدها؛ بل نمنح <b>كل سوق محلي خليجي هويته</b> (سرعة توصيل، دفع محلي، عملته) بجانب <b>يلو ورلد العالمي</b> — عبر لغة لونية مزدوجة ثابتة تجعل التمييز فورياً واحترافياً.</p>
+    <div class="legend">
+      <div class="lg local"><span class="swatch"></span><div><div class="t">محلي · Local</div><div class="d">إسبريسو + ذهبي · توصيل سريع · KNET · عملة الدولة</div></div></div>
+      <div class="lg global"><span class="swatch"></span><div><div class="t">عالمي · يلو ورلد</div><div class="d">حبر داكن + تركوازي/ذهبي · من الصين · شحن مجاني · اكتشاف</div></div></div>
+    </div>
+  </header>
+
+  <hr class="rule">
+
+  <!-- A1 -->
+  <section class="concept">
+    <div class="stage"><div class="phone a1"><div class="screen">
+      <div class="bar" style="color:#f3e6d0"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="p-local"><span class="globe">🏠</span>
+        <span class="ey">◈ تسوّق محلي</span>
+        <div class="nm"><span class="flag">🇰🇼</span> متجر الكويت</div>
+        <div class="perks"><span class="perk">توصيل خلال ٤٨ ساعة</span><span class="perk">KNET</span><span class="perk">KWD</span></div>
+        <span class="go">اختر المحلي ›</span>
+      </div>
+      <div class="p-global"><span class="globe">🌍</span>
+        <span class="ey">◈ تسوّق عالمي</span>
+        <div class="nm">يلو ورلد · الصين</div>
+        <div class="perks"><span class="perk">8,000+ قطعة</span><span class="perk">شحن مجاني</span><span class="perk">سعر المصنع</span></div>
+        <span class="go">اكتشف العالم ›</span>
+      </div>
+      <div class="divide"><span class="lang"><b class="on">عربي</b><b>EN</b></span></div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 01 · الانقسام المزدوج</div>
+      <div class="cname">Dual Split — نصفان متكافئان</div>
+      <div class="car">نصف علوي دافئ للمحلي، نصف سفلي بارد للعالمي</div>
+      <p class="thesis">الشاشة نصفان متساويان: <b>الأعلى دافئ (محلي)</b> بحرارة الإسبريسو والذهب ومزايا التوصيل السريع، <b>والأسفل بارد (عالمي)</b> بحبر داكن وتركوازي للصين. لغة تبديل عائمة في المنتصف. قرار واحد، سوقان بكامل كرامتهما.</p>
+      <ul class="feats">
+        <li>تكافؤ بصري تام بين المحلي والعالمي <span>— لا أحدهما ثانوي</span></li>
+        <li>كل نصف يعرض مزاياه الحقيقية (توصيل/دفع مقابل سعر/شحن)</li>
+        <li>اللغة اللونية تُدرَّس مرة وتُفهم للأبد</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> التماثل والتباين الحراري (دافئ/بارد) إشارة تصميمية ناضجة تُقرأ فوراً.</div>
+    </div>
+  </section>
+
+  <!-- A2 -->
+  <section class="concept flip">
+    <div class="stage"><div class="phone a2"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="hd">
+        <div class="top"><div class="logo">yellow<b style="color:var(--gold)">·يلو</b></div><span class="lang"><b class="on">عربي</b><b>EN</b></span></div>
+        <div class="seg"><b class="on">الخليج</b><b>🌍 عالمي</b></div>
+      </div>
+      <div class="list">
+        <div class="row"><span class="flag">🇰🇼</span><span class="nm"><b>الكويت</b><span class="sub">توصيل ٤٨ ساعة · KNET</span></span><span class="cur">KWD</span><span class="chev">›</span></div>
+        <div class="row"><span class="flag">🇸🇦</span><span class="nm"><b>السعودية</b><span class="sub">توصيل ٢–٤ أيام · مدى</span></span><span class="cur">SAR</span><span class="chev">›</span></div>
+        <div class="row"><span class="flag">🇦🇪</span><span class="nm"><b>الإمارات</b><span class="sub">توصيل سريع · بطاقة</span></span><span class="cur">AED</span><span class="chev">›</span></div>
+        <div class="row"><span class="flag">🇶🇦</span><span class="nm"><b>قطر</b><span class="sub">توصيل ٢–٥ أيام</span></span><span class="cur">QAR</span><span class="chev">›</span></div>
+      </div>
+      <div class="promo"><span class="g">🌍</span><span class="tx"><b>يلو ورلد — تسوّق العالم</b><span>8,000+ قطعة من الصين · شحن مجاني</span></span><span class="arw">›</span></div>
+      <div class="foot"><button class="btn">متابعة · Continue</button></div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 02 · التبويب</div>
+      <div class="cname">Segmented — الخليج / عالمي</div>
+      <div class="car">مفتاح علوي يفصل الخليج عن العالمي بوضوح</div>
+      <p class="thesis">مفتاح مقسّم أعلى الشاشة: <b>«الخليج» مقابل «🌍 عالمي»</b>. تبويب الخليج يعرض كل دولة بمزاياها المحلية الحقيقية (سرعة التوصيل ووسيلة الدفع)، وشريط يلو ورلد أنيق بلون بارد أسفلها. الأوضح والأكثر قابلية للتوسّع لكل الدول الـ17.</p>
+      <ul class="feats">
+        <li>كل سوق محلي بمزاياه الفعلية <span>— ثقة وسرعة</span></li>
+        <li>فصل واضح بين المحلي والعالمي عبر تبويب مألوف</li>
+        <li>أنيق واحترافي وأقل احتكاكاً للمستخدم المعتاد</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> بنية معلومات ناضجة — تصنيف صريح بدل قائمة مسطّحة طويلة.</div>
+    </div>
+  </section>
+
+  <!-- A3 -->
+  <section class="concept">
+    <div class="stage"><div class="phone a3"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="top"><div class="logo">yellow<b style="color:var(--gold)">·يلو</b></div><span class="lang"><b class="on">عربي</b><b>EN</b></span></div>
+      <h2>اختر بطاقة سوقك</h2>
+      <div class="deck">
+        <div class="mcard m-slate"><span class="brandline">UELLOW · GULF</span><span class="chip"></span><div class="mkt">🇸🇦 السعودية</div><div class="meta"><span>SAR</span><span>توصيل ٢–٤ أيام</span></div></div>
+        <div class="mcard m-world"><span class="brandline">UELLOW · WORLD</span><span class="chip"></span><div class="mkt">🌍 يلو ورلد</div><div class="meta"><span>من الصين</span><span>شحن مجاني</span></div></div>
+        <div class="mcard m-local"><span class="brandline">UELLOW · LOCAL</span><span class="chip"></span><div class="mkt">🇰🇼 الكويت</div><div class="meta"><span>KWD</span><span>توصيل ٤٨ ساعة · KNET</span></div></div>
+      </div>
+      <div class="dots"><i class="on"></i><i></i><i></i></div>
+      <div class="cap">اسحب لاختيار سوقك · Swipe to choose</div>
+      <button class="btn">تأكيد · Confirm</button>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 03 · بطاقات العضوية</div>
+      <div class="cname">Membership Cards — رفّ بطاقات فاخر</div>
+      <div class="car">كل سوق بطاقة معدنية/ذهبية تُسحب للاختيار</div>
+      <p class="thesis">كل سوق يصبح <b>بطاقة عضوية فاخرة</b> بشريحة ذهبية: الكويت إسبريسو، يلو ورلد ذهبية، الخليج بلون بارد — تُسحب أفقياً للاختيار. تجربة تلمّس «الانتماء لسوق»، أرقى إحساس ممكن لشاشة بداية.</p>
+      <ul class="feats">
+        <li>كل سوق هوية بصرية كاملة (لون + شريحة + مزايا)</li>
+        <li>إحساس «عضوية/امتياز» يرفع القيمة المُدرَكة</li>
+        <li>حركة السحب ممتعة وتذكّر ببطاقات الدفع الفاخرة</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> استعارة البطاقة المعدنية = رقيّ فوري ومعروف عالمياً.</div>
+    </div>
+  </section>
+
+  <!-- A4 -->
+  <section class="concept flip">
+    <div class="stage"><div class="phone a4"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="top"><div class="logo">yellow<b style="color:var(--gold)">·يلو</b></div><span class="txtlang"><b>العربية</b> · English</span></div>
+      <span class="welcome">أهلاً بك</span>
+      <h2>أين تتسوّق اليوم؟</h2>
+      <div class="opt local"><span class="ic">🇰🇼</span><span class="tx"><span class="k">محلي</span><span class="nm">متجر الكويت</span><span class="sub">توصيل خلال يومين · دفع KNET · KWD</span></span><span class="arw">›</span></div>
+      <div class="opt global"><span class="ic">🌍</span><span class="tx"><span class="k">عالمي</span><span class="nm">يلو ورلد</span><span class="sub">من الصين مباشرة · 8,000+ قطعة · شحن مجاني</span></span><span class="arw">›</span></div>
+      <button class="btn">المتابعة</button>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 04 · الكونسيرج</div>
+      <div class="cname">Concierge — تحرير راقٍ بمساحات بيضاء</div>
+      <div class="car">تخطيط تحريري هادئ، خطّان راقيان: محلي وعالمي</div>
+      <p class="thesis">أناقة الحد الأدنى: عنوان بخط Serif <b>«أين تتسوّق اليوم؟»</b>، وخياران راقيان مفصولان بخطوط شعرية رفيعة — محلي بأيقونة دافئة، عالمي بأيقونة باردة. مساحات بيضاء سخيّة تمنح إحساس متجر فاخر لا تطبيق مزدحم.</p>
+      <ul class="feats">
+        <li>رقيّ عبر التنفّس والطباعة لا الزخرفة</li>
+        <li>أيقونتان بلونين يرسّخان لغة محلي/عالمي</li>
+        <li>الأنسب لعلامة تريد إحساساً «بوتيك» فاخر</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> الاحتراف الحقيقي غالباً أقل — المساحة والطباعة تصنعان الفخامة.</div>
+    </div>
+  </section>
+
+  <!-- A5 -->
+  <section class="concept">
+    <div class="stage"><div class="phone a5"><div class="screen">
+      <div class="bar" style="color:#e9d9a8"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="hd"><span class="ttl">Uellow · وجهات التسوّق</span><span class="lang"><b class="on">ع</b><b>EN</b></span></div>
+      <div class="cols"><span>الوجهة · DESTINATION</span><span>العملة</span><span>التوصيل</span></div>
+      <div class="brow"><span class="dst flip">🇰🇼 الكويت</span><span class="cur">KWD</span><span class="eta">48H</span></div>
+      <div class="brow"><span class="dst flip">🇸🇦 السعودية</span><span class="cur">SAR</span><span class="eta">2–4D</span></div>
+      <div class="brow"><span class="dst flip">🇦🇪 الإمارات</span><span class="cur">AED</span><span class="eta">2–3D</span></div>
+      <div class="brow"><span class="dst flip">🇧🇭 البحرين</span><span class="cur">BHD</span><span class="eta">2–4D</span></div>
+      <div class="brow cn"><span class="dst flip">🌍 يلو ورلد · الصين <span class="tag">دولي</span></span><span class="cur">FREE</span><span class="eta">10–14D</span></div>
+      <div class="foot"><button class="btn">اختر الوجهة · Select</button></div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 05 · لوحة الوجهات</div>
+      <div class="cname">Arrivals Board — لوحة صالة سفر</div>
+      <div class="car">لوحة وجهات على طراز صالات الطيران الفاخرة</div>
+      <p class="thesis">شاشة على طراز <b>لوحة وجهات صالة السفر</b>: كل سوق «وجهة» بعملتها ومدة توصيلها، والصين وجهة دولية مميّزة ذهبية بشارة «دولي · FREE». استعارة السفر ترفع كل الأسواق — المحلي دقة وسرعة، والعالمي مغامرة.</p>
+      <ul class="feats">
+        <li>يعرض مزايا كل سوق كبيانات (عملة + مدة) بأناقة</li>
+        <li>الصين وجهة دولية مميّزة دون تهميش المحلي</li>
+        <li>طابع فاخر لا يُنسى — هوية افتتاحية فريدة</li>
+      </ul>
+      <div class="why"><b>الاحترافية:</b> عرض البيانات المنظّم (وجهة/عملة/مدة) لغة تصميم ناضجة وواثقة.</div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span><b>ملاحظة:</b> موك أب بصري — الأعلام/الأيقونات مُجرّدة وتُستبدل بأصول حقيقية.</span>
+    <span>النظام اللوني: محلي = إسبريسو/ذهبي · عالمي = حبر داكن/تركوازي — ثابت عبر الاتجاهات كلّها.</span>
+    <span>اختر اتجاهاً (أو دمج) وأبنيه في شاشة البداية الفعلية.</span>
+  </div>
+</div>
+</body>
+</html>

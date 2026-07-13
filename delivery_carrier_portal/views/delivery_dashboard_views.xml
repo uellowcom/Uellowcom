@@ -1,12 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-  <!-- Dashboard — opens /delivery/dashboard in same tab -->
-  <!-- v2.1.18 — open the portal dashboard in a NEW tab so the normal
-       Odoo backend menu stays put (it used to hijack the whole tab and
-       replace Odoo's chrome with the portal layout). -->
-  <record id="action_delivery_dashboard_client" model="ir.actions.act_url">
+  <!-- Backend OWL dashboard — the main landing page of the Delivery module.
+       KPIs + Chart.js charts (daily trend / status doughnut / carrier compare)
+       + carriers / cash / returns / driver leaderboard / recent orders / alerts.
+       Renders inside the Odoo backend chrome (client action). -->
+  <record id="action_delivery_dashboard_main" model="ir.actions.client">
     <field name="name">Delivery Dashboard</field>
+    <field name="tag">delivery_carrier_portal.dashboard</field>
+  </record>
+
+  <!-- Backend OWL Finance & Settlements center — cash held per carrier,
+       carrier costs, net balances, one-click settlement, settlements ledger. -->
+  <record id="action_delivery_finance_main" model="ir.actions.client">
+    <field name="name">Delivery Finance</field>
+    <field name="tag">delivery_carrier_portal.finance</field>
+  </record>
+
+  <!-- Legacy portal dashboard — opens /delivery/dashboard in a NEW tab.
+       Kept for the standalone portal page; no longer the main menu. -->
+  <record id="action_delivery_dashboard_client" model="ir.actions.act_url">
+    <field name="name">Delivery Dashboard (Portal)</field>
     <field name="url">/delivery/dashboard</field>
     <field name="target">new</field>
   </record>

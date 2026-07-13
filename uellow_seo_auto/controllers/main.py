@@ -29,6 +29,24 @@ class SEOController(http.Controller):
             'Allow: /\n'
             'Sitemap: /sitemap.xml\n'
         )
+        # Google REQUIRES fully-qualified Sitemap URLs in robots.txt; a
+        # site-relative "Sitemap: /sitemap.xml" is silently ignored, so new
+        # URLs never get discovered. The config stores relative paths so the
+        # same text works for every country subdomain — rewrite them to
+        # absolute against the current request host.
+        try:
+            base = request.httprequest.host_url.rstrip('/')
+
+            def _abs_sitemap(m):
+                path = m.group(1).strip()
+                if path.startswith(('http://', 'https://')):
+                    return 'Sitemap: ' + path
+                return 'Sitemap: ' + base + '/' + path.lstrip('/')
+
+            body = re.sub(r'(?im)^[ \t]*Sitemap:[ \t]*(\S+)[ \t]*$',
+                          _abs_sitemap, body)
+        except Exception:
+            pass
         return Response(body, mimetype='text/plain; charset=utf-8')
 
     # ──────────────────────────────────────────────────────────────────

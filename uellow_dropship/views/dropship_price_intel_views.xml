@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Price Intelligence: materialized products worst-margin first -->
+    <record id="view_dropship_price_intel_list" model="ir.ui.view">
+        <field name="name">dropship.product.price.intel.list</field>
+        <field name="model">dropship.product</field>
+        <field name="arch" type="xml">
+            <list default_order="margin_pct asc"
+                  decoration-danger="cost_alert == True"
+                  decoration-warning="margin_pct &lt; 15 and cost_alert == False">
+                <field name="image_url" widget="image_url" options="{'size': [40, 40]}" string=""/>
+                <field name="provider_id"/>
+                <field name="title_en"/>
+                <field name="base_cost" string="Cost"/>
+                <field name="currency_code" string="Ccy" optional="hide"/>
+                <field name="landed_price" string="Landed"/>
+                <field name="sale_price" string="Sale"/>
+                <field name="margin_pct" string="Margin %"/>
+                <field name="suggested_price" string="Suggested"/>
+                <field name="cost_alert" widget="boolean_toggle" string="At risk"/>
+                <field name="last_cost_change" string="Cost changed"/>
+                <button name="action_reprice_to_margin" type="object"
+                        string="Reprice" icon="fa-line-chart"
+                        invisible="not cost_alert"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dropship_price_intel_search" model="ir.ui.view">
+        <field name="name">dropship.product.price.intel.search</field>
+        <field name="model">dropship.product</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title_en"/>
+                <field name="provider_id"/>
+                <filter name="at_risk" string="Margin at risk" domain="[('cost_alert','=',True)]"/>
+                <filter name="thin" string="Thin margin (&lt;15%)" domain="[('margin_pct','&lt;',15)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="g_provider" string="Provider" context="{'group_by':'provider_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_dropship_price_intel" model="ir.actions.act_window">
+        <field name="name">Price Intelligence</field>
+        <field name="res_model">dropship.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state','=','materialized')]</field>
+        <field name="context">{'search_default_at_risk': 0}</field>
+        <field name="view_id" ref="view_dropship_price_intel_list"/>
+        <field name="search_view_id" ref="view_dropship_price_intel_search"/>
+    </record>
+
+    <record id="action_dropship_reprice_bulk" model="ir.actions.server">
+        <field name="name">Reprice to Target Margin</field>
+        <field name="model_id" ref="model_dropship_product"/>
+        <field name="binding_model_id" ref="model_dropship_product"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_reprice_to_margin()</field>
+    </record>
+
+    <!-- Top Products: bestsellers first -->
+    <record id="view_dropship_top_products_list" model="ir.ui.view">
+        <field name="name">dropship.product.top.list</field>
+        <field name="model">dropship.product</field>
+        <field name="arch" type="xml">
+            <list default_order="uellow_sold_count desc, view_count desc" create="false">
+                <field name="image_url" widget="image_url" options="{'size': [40, 40]}" string=""/>
+                <field name="title_en"/>
+                <field name="provider_id" optional="show"/>
+                <field name="category_id" optional="show"/>
+                <field name="view_count" string="Views"/>
+                <field name="uellow_sold_count" string="Sold"/>
+                <field name="orders_text" string="Provider sold"/>
+                <field name="sale_price" string="Price"/>
+                <field name="margin_pct" string="Margin %"/>
+                <field name="is_deal" widget="boolean_toggle" string="Deal"/>
+                <field name="published" widget="boolean_toggle" string="Live"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_dropship_top_products" model="ir.actions.act_window">
+        <field name="name">Top Products</field>
+        <field name="res_model">dropship.product</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state','=','materialized')]</field>
+        <field name="view_id" ref="view_dropship_top_products_list"/>
+    </record>
+
+    <menuitem id="menu_dropship_price_intel" name="Price Intelligence"
+              parent="menu_dropship_root" action="action_dropship_price_intel"
+              sequence="25"/>
+    <menuitem id="menu_dropship_top_products" name="Top Products"
+              parent="menu_dropship_root" action="action_dropship_top_products"
+              sequence="26"/>
+
+</odoo>

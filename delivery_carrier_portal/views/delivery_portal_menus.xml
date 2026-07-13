@@ -20,11 +20,13 @@
               name="Delivery"
               sequence="50"/>
 
+    <!-- Main landing page of the module: backend OWL dashboard.
+         sequence=1 → Odoo opens it first when the Delivery root menu is clicked. -->
     <menuitem id="menu_delivery_dashboard"
               name="Dashboard"
               parent="menu_delivery_portal_root"
-              action="action_delivery_dashboard_client"
-              sequence="90"/>
+              action="action_delivery_dashboard_main"
+              sequence="1"/>
 
     <menuitem id="menu_carrier_companies"
               name="Carrier Companies"
@@ -55,6 +57,14 @@
               parent="menu_delivery_portal_root"
               action="action_delivered_orders"
               sequence="45"/>
+
+    <!-- Finance & Settlements center (backend OWL): cash held per carrier,
+         net balances, one-click settlement + settlements ledger. -->
+    <menuitem id="menu_delivery_finance"
+              name="Finance Center"
+              parent="menu_delivery_portal_root"
+              action="action_delivery_finance_main"
+              sequence="40"/>
 
     <menuitem id="menu_cash_remittances"
               name="Financial Remitting"

@@ -107,64 +107,36 @@
             </div>
         </div>
 
-        <!-- Chart + Donut -->
+        <!-- Chart + Donut (Chart.js) -->
         <div class="db-owl-section-title">📈 اتجاه التوصيل</div>
         <div class="db-owl-grid-2">
             <div class="db-owl-card">
                 <div class="db-owl-card-head">
                     <span class="db-owl-card-title">اتجاه التوصيل اليومي — آخر 14 يوم</span>
-                    <div style="display:flex;gap:10px;font-size:10px;">
-                        <span style="color:#2d6be4;">■ تم</span>
-                        <span style="color:#fca5a5;">■ فشل</span>
-                    </div>
                 </div>
                 <div class="db-owl-card-body">
-                    <div class="db-owl-chart">
-                        <t t-foreach="state.daily_trend" t-as="d" t-key="d.date">
-                            <div class="db-owl-bar-wrap">
-                                <div class="db-owl-bar-col">
-                                    <div class="db-owl-bar-fail" t-att-style="'height:' + failHeight(d, state.daily_trend) + 'px;'"/>
-                                    <div t-attf-class="db-owl-bar-del {{ d_last ? 'today' : '' }}"
-                                         t-att-style="'height:' + barHeight(d, state.daily_trend) + 'px;'"
-                                         t-att-title="d.total"/>
-                                </div>
-                                <div class="db-owl-bar-label" t-esc="d.date ? d.date.slice(5) : ''"/>
-                            </div>
-                        </t>
+                    <div class="db-owl-canvas-box">
+                        <canvas t-ref="trendCanvas"/>
                     </div>
                 </div>
             </div>
             <div class="db-owl-card">
                 <div class="db-owl-card-head"><span class="db-owl-card-title">🥧 توزيع الحالات</span></div>
                 <div class="db-owl-card-body">
-                    <div class="db-owl-donut-wrap">
-                        <div class="db-owl-donut-circle">
-                            <div class="db-owl-donut-center">
-                                <div class="db-owl-donut-pct"><t t-esc="(state.kpi.success_rate || 0) + '%'"/></div>
-                                <div style="font-size:9px;color:#64748b;">نجاح</div>
-                            </div>
-                        </div>
-                        <div class="db-owl-donut-info">
-                            <t t-foreach="[
-                                {label: '✅ تم التوصيل', val: state.kpi.delivered, color: '#16a34a'},
-                                {label: '🚚 في الطريق', val: state.kpi.in_transit, color: '#2d6be4'},
-                                {label: '🕐 مخصص', val: state.kpi.assigned, color: '#d97706'},
-                                {label: '❌ فشل', val: state.kpi.failed, color: '#dc2626'},
-                            ]" t-as="row" t-key="row.label">
-                                <div class="db-owl-donut-row">
-                                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
-                                        <span t-att-style="'color:' + row.color" t-esc="row.label"/>
-                                        <span style="font-weight:700;">
-                                            <t t-esc="row.val || 0"/> (<t t-esc="state.kpi.total ? Math.round((row.val||0)/state.kpi.total*100) : 0"/>%)
-                                        </span>
-                                    </div>
-                                    <div class="db-owl-prog">
-                                        <div class="db-owl-prog-fill" t-att-style="'width:' + (state.kpi.total ? Math.round((row.val||0)/state.kpi.total*100) : 0) + '%;background:' + row.color"/>
-                                    </div>
-                                </div>
-                            </t>
-                        </div>
+                    <div class="db-owl-canvas-box">
+                        <canvas t-ref="statusCanvas"/>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Carrier comparison chart (Chart.js) -->
+        <div class="db-owl-section-title">📊 مقارنة شركات التوصيل</div>
+        <div class="db-owl-card">
+            <div class="db-owl-card-head"><span class="db-owl-card-title">طلبات مقابل مُوصَّل لكل شركة</span></div>
+            <div class="db-owl-card-body">
+                <div class="db-owl-canvas-box">
+                    <canvas t-ref="carrierCanvas"/>
                 </div>
             </div>
         </div>

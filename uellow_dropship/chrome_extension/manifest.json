@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Uellow Importer — AliExpress → Uellow World",
+  "version": "1.0.0",
+  "description": "Import any AliExpress product (or a whole page / store) into Uellow World with one click — Import or Import & Publish.",
+  "permissions": ["storage", "notifications"],
+  "host_permissions": [
+    "*://*.aliexpress.com/*",
+    "*://*.aliexpress.us/*",
+    "https://world.uellow.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Uellow Importer",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["*://*.aliexpress.com/*", "*://*.aliexpress.us/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

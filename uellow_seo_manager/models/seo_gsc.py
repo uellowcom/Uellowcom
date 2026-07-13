@@ -78,7 +78,7 @@ class SEOGSCRow(models.Model):
             return 0
 
         creds = service_account.Credentials.from_service_account_info(
-            sa_info, scopes=['https://www.googleapis.com/auth/webmasters.readonly'])
+            sa_info, scopes=['https://www.googleapis.com/auth/webmasters'])
         svc = build('searchconsole', 'v1', credentials=creds)
 
         end = date.today()
@@ -170,7 +170,7 @@ class SEOIndexingIssue(models.Model):
             _logger.warning('Invalid GSC service-account JSON')
             return None
         creds = service_account.Credentials.from_service_account_info(
-            sa, scopes=['https://www.googleapis.com/auth/webmasters.readonly'])
+            sa, scopes=['https://www.googleapis.com/auth/webmasters'])
         return build('searchconsole', 'v1', credentials=creds)
 
     def _candidate_urls(self, cfg, limit=180):
@@ -327,7 +327,16 @@ class SEOIndexingIssue(models.Model):
         svc = self._gsc_service(cfg)
         if svc is None:
             return False
-        base = (cfg.gsc_property_url or '').rstrip('/')
+        # A domain property is "sc-domain:uellow.com" — that is NOT a URL, so
+        # feedpath must be built from the real site base, not the property id
+        # (previously produced the broken "sc-domain:uellow.com/sitemap.xml"
+        # which silently 400'd every submit).
+        prop = cfg.gsc_property_url or ''
+        if prop.startswith('sc-domain:'):
+            base = (self.env['ir.config_parameter'].sudo()
+                    .get_param('web.base.url') or '').rstrip('/')
+        else:
+            base = prop.rstrip('/')
         sitemap = base + '/sitemap.xml'
         try:
             svc.sitemaps().submit(siteUrl=cfg.gsc_property_url,

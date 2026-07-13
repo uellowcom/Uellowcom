@@ -1,0 +1,175 @@
+# Translation of Carrier Portal (Sales Orders filters) — Arabic.
+msgid ""
+msgstr ""
+"Project-Id-Version: delivery_carrier_portal\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 ? 4 : 5);\n"
+"Language: ar_001\n"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Open"
+msgstr "مفتوحة"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Completed"
+msgstr "مكتملة"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Delivered"
+msgstr "تم التسليم"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Out for Delivery"
+msgstr "قيد التوصيل"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Assigned to Driver"
+msgstr "مع السائق"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "At Sorting Center"
+msgstr "في مركز الفرز"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Pending Delivery"
+msgstr "بانتظار الشحن"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Failed Delivery"
+msgstr "فشل التوصيل"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "To Invoice"
+msgstr "للفوترة"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Invoiced"
+msgstr "مفوترة"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Nothing to Invoice"
+msgstr "لا يوجد ما يُفوتَر"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Paid"
+msgstr "مدفوعة"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Not Paid"
+msgstr "غير مدفوعة"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Cash on Delivery (COD)"
+msgstr "دفع عند الاستلام"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Prepaid"
+msgstr "مدفوع مسبقًا"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Free"
+msgstr "مجاني"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Pay-Link Sent"
+msgstr "رابط دفع مُرسل"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Cash Collected"
+msgstr "نقد محصّل"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Cash Pending"
+msgstr "نقد بانتظار التحصيل"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Cash Remitted"
+msgstr "نقد مُورّد"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Has Return"
+msgstr "يوجد مرتجع"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Returned"
+msgstr "تم الإرجاع"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Exchange"
+msgstr "استبدال"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Locked"
+msgstr "مغلقة"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Unlocked"
+msgstr "غير مغلقة"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Today"
+msgstr "اليوم"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "This Month"
+msgstr "هذا الشهر"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Delivery Status"
+msgstr "حالة التوصيل"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Carrier"
+msgstr "شركة الشحن"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Driver"
+msgstr "السائق"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Payment Method"
+msgstr "طريقة الدفع"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Invoice Status"
+msgstr "حالة الفوترة"
+
+#. module: delivery_carrier_portal
+#: model_terms:ir.ui.view,arch_db:delivery_carrier_portal.view_sales_order_filter_uellow_settled
+msgid "Website"
+msgstr "الموقع"

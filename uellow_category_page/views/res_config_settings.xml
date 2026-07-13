@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ucp_res_config_settings_view" model="ir.ui.view">
+        <field name="name">res.config.settings.uellow.category.page</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="website_sale.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//block[@id='sale_product_catalog_settings']" position="after">
+                <block title="Category Page (Uellow v3c)" id="ucp_block" name="ucp_block">
+                    <setting string="Enable Category Page Redesign"
+                             help="Master switch for the Uellow category-page experience on this website.">
+                        <field name="ucp_enabled"/>
+                    </setting>
+                    <setting string="Category hero (image header)"
+                             help="Compact hero with the category image, title and product count."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_hero_enabled"/>
+                        <div class="content-group mt-2" invisible="not ucp_hero_enabled">
+                            <field name="ucp_hero_image" widget="image" class="oe_avatar"/>
+                            <div class="text-muted">Optional — leave empty to use the category's own image.</div>
+                        </div>
+                    </setting>
+                    <setting string="Breadcrumb trail"
+                             help="Home › parent › category links above the hero."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_breadcrumb_enabled"/>
+                    </setting>
+                    <setting string="Trust badges in hero"
+                             help="Authentic · fast delivery chips."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_badges_enabled"/>
+                    </setting>
+                    <setting string="Smart search bar in hero"
+                             help="A search bar (with voice input) that searches inside this category."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_ai_enabled"/>
+                        <div class="content-group mt-2" invisible="not ucp_ai_enabled">
+                            <field name="ucp_ai_placeholder" placeholder="Search this category…"/>
+                        </div>
+                    </setting>
+                    <setting string="Quick chips (brands + sort)"
+                             help="Real top-brand shortcuts for this category + sort chips (Newest · Price · Name · Deals)."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_presets_enabled"/>
+                    </setting>
+                    <setting string="Free-shipping unlock bar"
+                             help="Shows the live free-shipping threshold from the engine (or the manual fallback below)."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_unlock_enabled"/>
+                        <div class="content-group mt-2" invisible="not ucp_unlock_enabled">
+                            <span>Manual threshold (fallback): </span>
+                            <field name="ucp_freeship_threshold" class="oe_inline"/>
+                            <div class="text-muted">Used only when no free-shipping rule matches. 0 = rely on the engine.</div>
+                        </div>
+                    </setting>
+                    <setting string="Flash-deals strip (live)"
+                             help="Shows a live Flash Sale (mobile.flash.sale) for this website, while one is running."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_flash_enabled"/>
+                    </setting>
+                    <setting string="Live activity ticker"
+                             help="Real category pulse (e.g. new-this-fortnight count). Set text to override."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_ticker_enabled"/>
+                        <div class="content-group mt-2" invisible="not ucp_ticker_enabled">
+                            <field name="ucp_ticker_text" placeholder="(auto) leave empty for the live pulse"/>
+                        </div>
+                    </setting>
+                    <setting string="Restyle product cards (v3c look)"
+                             help="Rounded cards + hover lift on this category grid."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_card_restyle"/>
+                    </setting>
+                    <setting string="Card badges (installments + low-stock)"
+                             help="On product cards: real Taly monthly installment (price ÷ installments, only above Taly's minimum) + a low-stock 'only N left' urgency badge."
+                             invisible="not ucp_enabled">
+                        <field name="ucp_card_badges"/>
+                    </setting>
+                </block>
+            </xpath>
+        </field>
+    </record>
+</odoo>

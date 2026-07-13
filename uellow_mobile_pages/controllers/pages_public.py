@@ -104,7 +104,12 @@ class PagesPublic(http.Controller):
         wid = _website_id()
         cache_key = (slug, wid, _lang(), _country_code())
         hit = self._PAGE_CACHE.get(cache_key)
-        if hit and _t.time() - hit[1] < 45 \
+        # v2.2.x — TTL raised 45→120s. Resolving every block (products,
+        # ranks, promos…) costs ~1s warm but balloons to 5s under crawler
+        # CPU contention, and a cold rebuild every 45s per worker was making
+        # the app hang / time out. 120s cuts cold builds ~3×; staff/editors
+        # bypass the cache (group_user) so Builder edits still show instantly.
+        if hit and _t.time() - hit[1] < 120 \
                 and not request.env.user.has_group('base.group_user'):
             return _ok(hit[0])
         rec = request.env['mobile.page'].sudo().browse([])

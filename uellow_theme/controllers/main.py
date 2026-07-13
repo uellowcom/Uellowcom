@@ -603,7 +603,12 @@ class ThemePrimeMainClass(http.Controller):
     @http.route('/uellow_theme/get_similar_products_sidebar', type='http', auth='public', website=True, sitemap=False)
     def _get_similar_products_sidebar(self, productID, **post):
         product_tmpl_id = request.env['product.template'].browse(int(productID))
-        return request.render('uellow_theme.similar_products_sidebar', {'products': product_tmpl_id.alternative_product_ids}, headers={'Cache-Control': 'no-cache'})
+        # Related products must come ONLY from the current website — filter the
+        # raw alternatives through the website sale-product domain so a product
+        # from another site (e.g. the main catalog vs. Uellow World) never leaks.
+        similar = product_tmpl_id.alternative_product_ids.filtered_domain(
+            request.env['website'].sale_product_domain())
+        return request.render('uellow_theme.similar_products_sidebar', {'products': similar}, headers={'Cache-Control': 'no-cache'})
 
     @http.route('/uellow_theme/get_tab_listing_products', type='json', auth='public', website=True)
     def get_tab_listing_products(self, domain=None, fields=[], options={}, limit=25, order=None, **kwargs):

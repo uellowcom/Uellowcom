@@ -101,14 +101,80 @@ class MobileGeoAPI(http.Controller):
             'manual_choice': sess.country_code if (sess and sess.country_code) else None,
         })
 
+    def _detect_country_code(self, kw):
+        """Resolve ONLY the user's ISO country code (no primary fallback, so
+        the caller can tell 'country has no site' apart from 'is Kuwait')."""
+        p = get_payload()
+        sess = current_session()
+        code = (p.get('country') or kw.get('country') or '').upper().strip()
+        if not code and sess and sess.country_code:
+            code = (sess.country_code or '').upper()
+        if not code:
+            cf = (request.httprequest.headers.get('CF-IPCountry') or '').upper()
+            if cf and cf not in ('XX', 'T1'):
+                code = cf
+        if not code:
+            try:
+                ip = (p.get('ip') or request.httprequest.remote_addr or '').strip()
+                c = request.env['res.country'].sudo()._get_country_from_ip(ip)
+                code = (c.code if hasattr(c, 'code') else c) or ''
+            except Exception:  # noqa: BLE001
+                code = ''
+        return (code or '').upper()
+
+    @http.route('/api/mobile/v2/app/currencies', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def currencies_list(self, **kw):
+        """Currencies the user can switch the app display to (Settings ▸
+        Currency). Prices convert live via `fmt_price` once the app sends the
+        chosen code in the `X-Currency` header."""
+        from ._common import web_currency
+        Cur = request.env['res.currency'].sudo()
+        # only currencies we actually price a country in (+ USD) — all rated
+        codes = ['KWD', 'SAR', 'AED', 'QAR', 'OMR', 'EGP', 'USD']
+        current = web_currency()
+        out = []
+        for code in codes:
+            c = Cur.with_context(active_test=False).search(
+                [('name', '=', code)], limit=1)
+            if not c:
+                continue
+            out.append({
+                'code': c.name,
+                'symbol': c.symbol or c.name,
+                'name': c.full_name or c.name,
+                'digits': c.decimal_places,
+                'selected': c.id == current.id,
+            })
+        return ok({'currencies': out, 'current': current.name})
+
     @http.route('/api/mobile/v2/app/countries-list', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)
     @safe_endpoint
     def countries_list(self, **kw):
-        """Full list for the country picker on app launch / in settings."""
-        mappings = request.env['mobile.country.website'].sudo().search(
-            [('active', '=', True)])
-        return ok([m.to_dict() for m in mappings])
+        """Full list for the country picker on app launch / in settings.
+
+        Reordered for a friendlier first-open: the user's own country floats to
+        the top IF it has a Uellow website; otherwise China (Uellow World) is
+        shown first, since anyone with no local site can still buy from China.
+        """
+        Mapping = request.env['mobile.country.website'].sudo()
+        mappings = Mapping.search([('active', '=', True)])
+        ordered = list(mappings)
+
+        code = self._detect_country_code(kw)
+        # DIRECT search (no primary fallback) → empty when the country has no site
+        site = Mapping.search([('country_id.code', '=', code),
+                               ('active', '=', True)], limit=1) if code else Mapping.browse()
+        first = site or Mapping.search([('country_id.code', '=', 'CN'),
+                                        ('active', '=', True)], limit=1) \
+            or Mapping.search([('is_primary', '=', True), ('active', '=', True)], limit=1)
+        if first and first in ordered:
+            ordered.remove(first)
+            ordered.insert(0, first)
+
+        return ok([m.to_dict() for m in ordered])
 
     @http.route('/api/mobile/v2/app/set-country', type='http', auth='public',
                 methods=['POST', 'OPTIONS'], csrf=False)

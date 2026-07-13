@@ -461,6 +461,7 @@
 
     <template id="product_tabs" name="Theme Prime: Product Tabs">
         <div class="tp-product-details-tab">
+            <t t-set="uwpol" t-value="product.sudo()._uellow_get_warranty_policy(website)"/>
             <ul class="nav nav-tabs justify-content-center" role="tablist">
                 <!-- Reviews FIRST + default (app parity) -->
                 <li t-if="is_view_active('website_sale.product_comment')" class="nav-item o_not_editable">
@@ -489,6 +490,12 @@
                         <span class="fa fa-file-pdf-o me-1"/> Documents
                     </a>
                 </li>
+                <!-- Warranty tab (uellow_warranty) -->
+                <li t-if="uwpol and not uwpol.no_warranty" class="nav-item o_not_editable">
+                    <a class="nav-link rounded-0" data-bs-toggle="tab" href="#tp-product-warranty-tab" role="tab" aria-selected="false">
+                        <span class="fa fa-shield me-1"/> Warranty · الضمان
+                    </a>
+                </li>
                 <!-- Dynamic Tabs -->
                 <li t-foreach="product.get_content_product_tabs()" t-as="tab" class="nav-item o_not_editable">
                     <a class="nav-link rounded-0" data-bs-toggle="tab" t-attf-href="#tp-product-tab-#{tab.id}" role="tab" aria-selected="false">
@@ -512,6 +519,33 @@
                         <div class="row m-0 py-2">
                             <div class="col-12">
                                 <div itemprop="description" t-field="product.website_description" class="oe_structure" id="product_full_description" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Warranty (uellow_warranty) -->
+                <div t-if="uwpol and not uwpol.no_warranty" class="tab-pane fade" id="tp-product-warranty-tab" role="tabpanel">
+                    <div class="container py-3" style="max-width:900px;">
+                        <div class="d-flex align-items-center justify-content-center mb-3 p-3 rounded-3" style="background:#FBF6EA;">
+                            <div class="text-center px-3">
+                                <div style="font-size:34px;line-height:1;"><t t-esc="uwpol.icon"/></div>
+                            </div>
+                            <div class="text-center px-3">
+                                <span class="d-inline-block px-3 py-2 rounded-pill fw-bold" style="background:#F5C320;color:#412402;font-size:20px;"><span style="font-size:13px;">★</span> <t t-esc="uwpol.duration_months"/> months · شهر</span>
+                            </div>
+                            <div class="px-3">
+                                <div class="fw-bold" style="color:#412402;font-size:18px;"><t t-esc="uwpol.name"/> · <t t-esc="uwpol.name_ar"/></div>
+                                <div class="text-muted" style="font-size:14px;"><t t-esc="uwpol.coverage_en"/></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12 col-lg-6">
+                                <h6 class="fw-bold" style="color:#C79A12;">Terms &amp; Conditions</h6>
+                                <div style="white-space:pre-line;font-size:13.5px;color:#5a4a30;line-height:1.6;"><t t-esc="uwpol.terms_en"/></div>
+                            </div>
+                            <div class="col-12 col-lg-6" dir="rtl">
+                                <h6 class="fw-bold" style="color:#C79A12;">الشروط والأحكام</h6>
+                                <div style="white-space:pre-line;font-size:13.5px;color:#5a4a30;line-height:1.6;"><t t-esc="uwpol.terms_ar"/></div>
                             </div>
                         </div>
                     </div>

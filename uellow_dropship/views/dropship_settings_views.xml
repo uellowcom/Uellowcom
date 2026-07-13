@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_dropship_settings_form" model="ir.ui.view">
+        <field name="name">dropship.settings.form</field>
+        <field name="model">dropship.settings</field>
+        <field name="arch" type="xml">
+            <form string="Uellow World Settings">
+                <sheet>
+                    <div class="oe_title">
+                        <h1 style="color:#412402">⚙️ Uellow World — Settings</h1>
+                    </div>
+                    <notebook>
+                        <page string="General" name="general">
+                            <group>
+                                <group string="Store">
+                                    <field name="ds_enabled"/>
+                                    <field name="ds_brand_name"/>
+                                    <field name="ds_prepaid_only"/>
+                                    <field name="ds_auto_publish"/>
+                                    <button name="action_open_providers" type="object"
+                                            string="Open Providers" class="btn-link"/>
+                                </group>
+                                <group string="Pricing">
+                                    <field name="ds_default_markup"/>
+                                    <field name="ds_fx_buffer"/>
+                                    <field name="ds_customs_percent"/>
+                                    <field name="ds_min_margin"/>
+                                    <field name="ds_min_price"/>
+                                    <field name="ds_max_price"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Import" name="import">
+                            <group>
+                                <group string="Quality gates">
+                                    <field name="ds_import_min_orders"/>
+                                    <field name="ds_import_min_rating"/>
+                                    <field name="ds_import_max_products"/>
+                                    <field name="ds_import_max_scan"/>
+                                </group>
+                                <group string="Behaviour">
+                                    <field name="ds_enrich_on_import"/>
+                                    <field name="ds_require_shippable"/>
+                                    <field name="ds_exclude_flash_deals"/>
+                                    <field name="ds_max_discount_percent"/>
+                                </group>
+                                <group string="Prohibited products" colspan="2">
+                                    <field name="ds_block_restricted"/>
+                                    <field name="ds_block_terms"
+                                           placeholder="food, medicine, vape, weapon, israel, ..."/>
+                                </group>
+                                <group string="Shipping coverage">
+                                    <field name="ds_target_country_ids" widget="many2many_tags"
+                                           options="{'no_create': True}"/>
+                                    <field name="ds_filter_by_ship_country"/>
+                                    <field name="ds_max_ship_checks"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Deals &amp; Display" name="deals">
+                            <group>
+                                <group string="Deals">
+                                    <field name="ds_show_deals"/>
+                                    <field name="ds_deal_min_percent"/>
+                                    <field name="ds_deal_sync_enabled"/>
+                                    <field name="ds_deal_sync_mins"/>
+                                    <field name="ds_autopromote"/>
+                                </group>
+                                <group string="Product page">
+                                    <field name="ds_pp_show_specs"/>
+                                    <field name="ds_pp_show_reviews"/>
+                                    <field name="ds_pp_show_shipping"/>
+                                    <field name="ds_pp_show_views"/>
+                                    <field name="ds_pp_show_sold"/>
+                                </group>
+                                <group string="Slow-mover rescue">
+                                    <field name="ds_slowmover_min_views"/>
+                                    <field name="ds_slowmover_discount"/>
+                                </group>
+                                <group string="Price intelligence">
+                                    <field name="ds_auto_reprice"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Orders" name="orders">
+                            <group>
+                                <group string="Fulfilment">
+                                    <field name="ds_auto_place_order"/>
+                                    <field name="ds_default_zip"/>
+                                    <field name="ds_daily_order_cap"/>
+                                </group>
+                                <group string="Shipping (International carrier)">
+                                    <field name="ds_free_shipping"/>
+                                    <field name="ds_shipping_price"
+                                           invisible="ds_free_shipping"/>
+                                    <field name="ds_free_ship_threshold"
+                                           invisible="ds_free_shipping"/>
+                                </group>
+                            </group>
+                            <group string="Home Tab Navigation">
+                                <field name="ds_tabnav_category_ids"
+                                       widget="many2many_tags"
+                                       options="{'no_create': True}"/>
+                            </group>
+                        </page>
+                        <page string="Tools &amp; Reports" name="tools">
+                            <group>
+                                <group string="Chrome extension">
+                                    <field name="ds_ext_api_key"/>
+                                    <button name="action_generate_ext_key" type="object"
+                                            string="Generate Key" class="btn-link"/>
+                                    <a href="/dropship/ext/download" class="btn btn-link"
+                                       role="button">⬇ Download Extension</a>
+                                    <field name="ds_ext_max_per_call"/>
+                                </group>
+                                <group string="Monthly report">
+                                    <field name="ds_monthly_report_enabled"/>
+                                    <field name="ds_monthly_report_emails"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="dropship_settings_main" model="dropship.settings">
+        <field name="name">Uellow World Settings</field>
+    </record>
+
+    <record id="action_dropship_settings_page" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">dropship.settings</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" eval="ref('dropship_settings_main')"/>
+        <field name="target">current</field>
+    </record>
+
+</odoo>

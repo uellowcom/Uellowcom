@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- ===================================================================
+       APP-STYLE RICH PRODUCT CARD — make the website card match the mobile
+       app's category ProductCard (_RichLayout): clean photo + 🏆 rank badge,
+       2-line name with promo coin, price + struck + bigger -% pill + Save,
+       rating + price-trend, an upward TICKER (text+icon perks) ABOVE a
+       no-wrap auto-shrink STATUS-badges row.
+       All data from website._ucp_app_card() (fail-safe). Animation + badge
+       auto-shrink in category_page.js. Patches BOTH grid styles.
+       =================================================================== -->
+
+  <!-- Replace the card body (content) with the rich app layout -->
+  <template id="ucp_card_body_g2" inherit_id="uellow_theme.product_item_grid_2"
+            name="Uellow App Card — body (grid 2)">
+    <xpath expr="//div[hasclass('tp-product-content')]" position="replace">
+      <t t-call="uellow_category_page.ucp_appcard_body"/>
+    </xpath>
+    <xpath expr="//a[hasclass('tp-product-image-container')]" position="after">
+      <t t-call="uellow_category_page.ucp_appcard_imgbadges"/>
+    </xpath>
+  </template>
+
+  <template id="ucp_card_body_g1" inherit_id="uellow_theme.product_item_grid_1"
+            name="Uellow App Card — body (grid 1)">
+    <xpath expr="//div[hasclass('tp-product-content')]" position="replace">
+      <t t-call="uellow_category_page.ucp_appcard_body"/>
+    </xpath>
+    <xpath expr="//a[hasclass('tp-product-image-container')]" position="after">
+      <t t-call="uellow_category_page.ucp_appcard_imgbadges"/>
+    </xpath>
+  </template>
+
+  <!-- On-image badges: 🏆 rank (top-start) + 🎬 video / 📦 bundle. No discount,
+       no free-ship on the image (those live in the bottom badges row). -->
+  <template id="ucp_appcard_imgbadges" name="Uellow App Card — image badges">
+    <t t-set="ucp_c" t-value="website.sudo()._ucp_app_card(product, template_price_vals)"/>
+    <t t-set="ucp_ar" t-value="bool(request.env.lang and request.env.lang.startswith('ar'))"/>
+    <div class="ucp-ac-cn ucp-ac-tl">
+      <span t-if="ucp_c.get('rank') is not None" class="ucp-ac-rank">🏆<t t-if="ucp_c['rank'].get('n')"> #<t t-esc="ucp_c['rank']['n']"/></t></span>
+      <span t-if="ucp_c.get('bundle')" class="ucp-ac-bundle">📦 <t t-if="ucp_ar">باقة</t><t t-else="">Bundle</t></span>
+    </div>
+    <div t-if="ucp_c.get('video')" class="ucp-ac-cn ucp-ac-tr">
+      <span class="ucp-ac-video">▶ <t t-if="ucp_ar">فيديو</t><t t-else="">Video</t></span>
+    </div>
+  </template>
+
+  <!-- Rich content body -->
+  <template id="ucp_appcard_body" name="Uellow App Card — content body">
+    <t t-set="ucp_c" t-value="website.sudo()._ucp_app_card(product, template_price_vals)"/>
+    <t t-set="ucp_ar" t-value="bool(request.env.lang and request.env.lang.startswith('ar'))"/>
+    <div class="tp-product-content ucp-appcard" t-att-dir="'rtl' if ucp_ar else 'ltr'">
+      <!-- name (2 lines) + promo coin inline -->
+      <a t-att-href="product_href" class="ucp-ac-name" t-att-title="product.name" itemprop="name" t-att-content="product.name">
+        <span t-if="ucp_c.get('promo')" class="ucp-ac-promo"
+              t-attf-style="background:#{ucp_c['promo'].get('bg') or '#FFF1C2'};color:#{ucp_c['promo'].get('fg') or '#8B6508'};">
+          <t t-esc="ucp_c['promo'].get('emoji') or '🎯'"/>
+          <t t-esc="(ucp_c['promo'].get('label') or {}).get('ar') if ucp_ar else (ucp_c['promo'].get('label') or {}).get('en')"/>
+        </span>
+        <span class="ucp-ac-nm" t-field="product.name"/>
+      </a>
+      <a t-if="not product.website_published" role="button" t-att-href="product_href" class="btn btn-sm btn-danger">Unpublished</a>
+
+      <!-- price row: current + struck old + bigger -% pill + Save -->
+      <div class="ucp-ac-price">
+        <span class="ucp-ac-cur" t-out="template_price_vals['price_reduce']"
+              t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+        <t t-if="ucp_c.get('disc')">
+          <del class="ucp-ac-old"><span t-out="template_price_vals['base_price']"
+              t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/></del>
+          <span class="ucp-ac-pct">-<t t-esc="ucp_c['disc']"/>%</span>
+        </t>
+      </div>
+
+      <!-- rating stars + price-trend -->
+      <div class="ucp-ac-rrow">
+        <t t-set="ucp_av" t-value="int(round(ucp_c.get('rating', {}).get('avg') or 0))"/>
+        <span class="ucp-ac-stars">
+          <t t-foreach="[1,2,3,4,5]" t-as="ucp_s">
+            <span t-attf-class="ucp-ac-star #{'on' if ucp_s &lt;= ucp_av else 'off'}">★</span>
+          </t>
+        </span>
+        <span class="ucp-ac-rcnt">(<t t-esc="ucp_c.get('rating', {}).get('count') or 0"/>)</span>
+        <span t-if="ucp_c.get('trend') and ucp_c['trend'].get('dir') == 'down'" class="ucp-ac-trend ucp-ac-trend-down">▼<t t-if="ucp_c['trend'].get('pct')"><t t-esc="ucp_c['trend']['pct']"/>%</t></span>
+      </div>
+
+      <!-- Save (small word) + upward TICKER on ONE row -->
+      <div t-if="ucp_c.get('save') or ucp_c.get('slider')" class="ucp-ac-sliderrow">
+        <span t-if="ucp_c.get('save')" class="ucp-ac-save">🏷️ <span class="ucp-ac-savew"><t t-if="ucp_ar">وفّر</t><t t-else="">Save</t></span> <t t-esc="ucp_c.get('save_txt')"/></span>
+        <div t-if="ucp_c.get('slider')" class="ucp-ac-ticker">
+          <div class="ucp-ac-tlist">
+            <t t-foreach="ucp_c['slider']" t-as="ucp_sl">
+              <span class="ucp-ac-ti"><span class="ucp-ac-ic" t-esc="ucp_sl['ic']"/><span t-esc="ucp_sl['ar'] if ucp_ar else ucp_sl['en']"/></span>
+            </t>
+            <span class="ucp-ac-ti"><span class="ucp-ac-ic" t-esc="ucp_c['slider'][0]['ic']"/><span t-esc="ucp_c['slider'][0]['ar'] if ucp_ar else ucp_c['slider'][0]['en']"/></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATUS badges row (max 3) — never wraps, auto-shrinks to fit -->
+      <div t-if="ucp_c.get('badges')" class="ucp-ac-badges">
+        <t t-foreach="ucp_c['badges'][:3]" t-as="ucp_b">
+          <span t-attf-class="ucp-ac-chip ucp-ac-#{ucp_b['cls']}">
+            <span t-if="ucp_b.get('truck')" class="ucp-ac-em">🚚</span>
+            <span t-if="ucp_b.get('em')" class="ucp-ac-em" t-esc="ucp_b['em']"/>
+            <t t-esc="ucp_b['ar'] if ucp_ar else ucp_b['en']"/>
+          </span>
+        </t>
+      </div>
+    </div>
+  </template>
+</odoo>

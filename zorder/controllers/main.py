@@ -7,6 +7,63 @@ _logger = logging.getLogger(__name__)
 _SKIP_PAY = {'paypal', 'wire_transfer'}
 _COD_PAY  = {'cod', 'COD', 'custom', 'cash_on_delivery'}
 
+# Reuse the standard checkout's zone/free-shipping-aware, SHIP-GUARD-protected
+# price helper so zorder charges the exact same shipping as /shop/checkout.
+try:
+    from odoo.addons.uellow_checkout.controllers.main import _uc_ship_price
+except Exception:  # pragma: no cover - defensive on load order
+    _uc_ship_price = None
+
+
+def _zo_apply_shipping(order):
+    """Resolve a default carrier and add the delivery line BEFORE confirm.
+
+    zorder confirms a plain website cart that never passes through
+    /shop/checkout/address/save, so without this it has no carrier and no
+    shipping line — sub-threshold orders ship free by accident. This mirrors
+    the SHIP-GUARD safety-net in uellow_checkout.save_address.
+    """
+    try:
+        if order.carrier_id:
+            return  # a delivery method is already set
+    except Exception:
+        pass
+    partner = order.partner_shipping_id or order.partner_id
+    dest_code = (partner.country_id.code or '') if partner and partner.country_id else ''
+    carrier = None
+    try:
+        published = request.env['delivery.carrier'].sudo().search(
+            [('website_published', '=', True)])
+        # Prefer a carrier open right now (check_time=True), else any
+        # location-valid one so the order still gets a correct shipping line.
+        for _ct in (True, False):
+            for c in published:
+                try:
+                    if not hasattr(c, 'available_for_order') or c.available_for_order(
+                            order, website=request.website,
+                            country_code=dest_code, channel='website',
+                            check_time=_ct):
+                        carrier = c
+                        break
+                except Exception:
+                    continue
+            if carrier is not None:
+                break
+    except Exception as e:
+        _logger.warning('zorder default carrier: %s', e)
+    if carrier is None:
+        _logger.warning('zorder %s: no carrier resolved — no shipping line added', order.id)
+        return
+    try:
+        price = _uc_ship_price(carrier, order) if _uc_ship_price else float(carrier.fixed_price or 0.0)
+        order.sudo().set_delivery_line(carrier, price)
+    except Exception as e:
+        _logger.warning('zorder set_delivery_line: %s', e)
+        try:
+            order.sudo().write({'carrier_id': carrier.id})
+        except Exception:
+            pass
+
 
 def _get_product_url(product):
     """Get product page URL safely across Odoo versions."""
@@ -166,6 +223,9 @@ class ZOrderController(http.Controller):
 
         order.write({'partner_id': partner.id, 'partner_invoice_id': partner.id,
                      'partner_shipping_id': partner.id, 'is_zorder': True, 'note': note})
+        # Resolve carrier + add shipping line before confirming (zorder bypasses
+        # the standard checkout, so this is where the SHIP-GUARD must run).
+        _zo_apply_shipping(order)
         order.action_confirm()
 
         # Read confirmed order data directly from DB

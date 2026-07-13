@@ -7,6 +7,8 @@ product/page and emit the right schema.
 """
 import json
 
+from markupsafe import Markup
+
 from odoo import models, fields, _
 from odoo.http import request
 
@@ -62,11 +64,23 @@ class WebsiteSEOManager(models.Model):
         }
 
     def seo_dump_json(self, data):
-        """Helper used inside Qweb templates to JSON-encode safely."""
+        """Helper used inside Qweb templates to JSON-encode safely.
+
+        Returns a ``Markup`` so Qweb ``t-out`` emits the raw JSON instead of
+        HTML-escaping every quote (which produced ``&#34;`` and made the
+        <script type="application/ld+json"> blocks unparseable by Google).
+        We still neutralise the three characters that could break out of the
+        <script> context — ``<``, ``>``, ``&`` — by unicode-escaping them,
+        which keeps the JSON valid while preventing a ``</script>`` injection.
+        """
         try:
-            return json.dumps(data, ensure_ascii=False, default=str)
+            raw = json.dumps(data, ensure_ascii=False, default=str)
+            raw = (raw.replace('<', '\\u003c')
+                      .replace('>', '\\u003e')
+                      .replace('&', '\\u0026'))
+            return Markup(raw)
         except Exception:
-            return '{}'
+            return Markup('{}')
 
     def seo_current_product(self):
         """Return the product.template of the current product detail page,

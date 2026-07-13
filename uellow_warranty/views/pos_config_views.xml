@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pos_config_view_form_warranty" model="ir.ui.view">
+        <field name="name">pos.config.form.uellow.warranty</field>
+        <field name="model">pos.config</field>
+        <field name="inherit_id" ref="point_of_sale.pos_config_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="inside">
+                <group string="Uellow Warranty Receipt" name="uellow_warranty_receipt">
+                    <field name="uellow_receipt_warranty"/>
+                    <field name="uellow_receipt_warranty_note" invisible="not uellow_receipt_warranty"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

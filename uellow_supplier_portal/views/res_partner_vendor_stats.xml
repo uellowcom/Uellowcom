@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Vendor purchase statistics band on the partner (vendor) form.
+       Shows Total Purchases / Paid / Outstanding / Bill count at the top
+       of the page, only for vendors (supplier_rank > 0). Bilingual EN/AR. -->
+  <record id="view_partner_form_vendor_stats" model="ir.ui.view">
+    <field name="name">res.partner.form.vendor.stats</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//div[hasclass('oe_title')]" position="after">
+        <field name="vendor_currency_id" invisible="1"/>
+        <group invisible="supplier_rank == 0" name="uellow_vendor_stats">
+          <separator string="Purchase Statistics · إحصائيات المشتريات"
+                     colspan="2"/>
+          <group>
+            <field name="vendor_purchase_total"
+                   string="Total Purchases · إجمالي المشتريات"/>
+            <field name="vendor_amount_paid"
+                   string="Paid · المدفوع"/>
+          </group>
+          <group>
+            <field name="vendor_amount_due"
+                   string="Outstanding · المتبقّي"/>
+            <field name="vendor_bill_count"
+                   string="Vendor Bills · عدد الفواتير"/>
+          </group>
+        </group>
+      </xpath>
+    </field>
+  </record>
+</odoo>

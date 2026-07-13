@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Branded, printable/emailable performance report (PDF) reusing the
+         same live figures the dashboard computes. Bilingual EN + AR. -->
+    <record id="action_report_dropship_dashboard" model="ir.actions.report">
+        <field name="name">World Performance Report</field>
+        <field name="model">dropship.dashboard</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">uellow_dropship.report_dashboard_pdf</field>
+        <field name="report_file">uellow_dropship.report_dashboard_pdf</field>
+        <field name="binding_model_id" ref="model_dropship_dashboard"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_euro"/>
+    </record>
+
+    <template id="report_dashboard_pdf">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <div class="page" style="font-family:Arial,'Noto Sans Arabic',sans-serif;color:#333">
+
+                        <!-- Header -->
+                        <div style="background:#412402;color:#fff;padding:22px 26px;border-radius:12px;margin-bottom:18px">
+                            <div style="font-size:26px;font-weight:800">🌍 Uellow World</div>
+                            <div style="font-size:15px;color:#F5C320;font-weight:600">Performance Report · تقرير الأداء</div>
+                            <div style="font-size:12px;color:#e8d9c5;margin-top:4px">
+                                Generated <span t-esc="datetime.datetime.now().strftime('%Y-%m-%d %H:%M')"/> · last 30 days
+                            </div>
+                        </div>
+
+                        <!-- KPI grid -->
+                        <table style="width:100%;border-collapse:separate;border-spacing:8px;margin-bottom:8px">
+                            <tr>
+                                <td style="background:#e8f5e9;border-radius:10px;padding:12px;width:33%">
+                                    <div style="font-size:11px;color:#777">Revenue (30d) · الإيراد</div>
+                                    <div style="font-size:22px;font-weight:700;color:#1b5e20">
+                                        <span t-esc="doc.kpi_revenue_30d" t-options="{'widget':'monetary','display_currency':doc.currency_id}"/>
+                                    </div>
+                                </td>
+                                <td style="background:#e8f5e9;border-radius:10px;padding:12px;width:33%">
+                                    <div style="font-size:11px;color:#777">Profit (30d) · الربح</div>
+                                    <div style="font-size:22px;font-weight:700;color:#1b5e20">
+                                        <span t-esc="doc.kpi_profit_30d" t-options="{'widget':'monetary','display_currency':doc.currency_id}"/>
+                                    </div>
+                                </td>
+                                <td style="background:#eef4fb;border-radius:10px;padding:12px;width:33%">
+                                    <div style="font-size:11px;color:#777">Orders (30d) · الطلبات</div>
+                                    <div style="font-size:22px;font-weight:700;color:#1565c0"><span t-esc="doc.kpi_orders_30d"/></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="background:#fff8e1;border-radius:10px;padding:12px">
+                                    <div style="font-size:11px;color:#777">Visitors (30d) · الزوار</div>
+                                    <div style="font-size:22px;font-weight:700;color:#412402"><span t-esc="doc.kpi_visitors_30d"/></div>
+                                </td>
+                                <td style="background:#fff8e1;border-radius:10px;padding:12px">
+                                    <div style="font-size:11px;color:#777">Conversion % · التحويل</div>
+                                    <div style="font-size:22px;font-weight:700;color:#412402"><span t-esc="doc.kpi_conversion"/>%</div>
+                                </td>
+                                <td style="background:#fff8e1;border-radius:10px;padding:12px">
+                                    <div style="font-size:11px;color:#777">Live Products · المنتجات</div>
+                                    <div style="font-size:22px;font-weight:700;color:#412402"><span t-esc="doc.kpi_published"/></div>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Provider performance -->
+                        <h3 style="color:#412402;margin:18px 0 6px 0">🏆 Provider Performance · أداء المزوّدين</h3>
+                        <t t-out="doc.html_provider_perf"/>
+
+                        <!-- Top products -->
+                        <h3 style="color:#412402;margin:18px 0 6px 0">🔥 Most Viewed Products · الأكثر مشاهدة</h3>
+                        <t t-out="doc.html_top_products"/>
+
+                        <!-- Profit trend -->
+                        <h3 style="color:#412402;margin:18px 0 6px 0">💰 Profit — last 8 weeks · الربح آخر 8 أسابيع</h3>
+                        <t t-out="doc.html_profit_trend"/>
+
+                        <!-- Attention -->
+                        <h3 style="color:#412402;margin:18px 0 6px 0">⚠️ Needs Attention · يحتاج انتباه</h3>
+                        <t t-out="doc.html_attention"/>
+
+                        <div style="margin-top:24px;text-align:center;color:#aaa;font-size:11px">
+                            Uellow World · world.uellow.com — auto-generated report
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

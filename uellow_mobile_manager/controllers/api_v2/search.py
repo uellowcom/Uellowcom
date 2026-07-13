@@ -36,6 +36,18 @@ def _lang_script_clause():
     return "AND keyword !~ '[ء-ي]'"
 
 
+def _website_clause():
+    """SQL fragment scoping keyword feeds to the CURRENT website, so each
+    site (Kuwait, World/China, …) has its own trending/popular terms. The id
+    is int-cast, so this is injection-safe. Rows with a NULL website match
+    every site (legacy rows logged before per-site tagging existed)."""
+    try:
+        wid = int(get_website().id)
+    except Exception:
+        return ""
+    return " AND (website_id = %d OR website_id IS NULL) " % wid
+
+
 def _matches_ui_lang(keyword):
     """Python mirror of _lang_script_clause for in-memory (recent) filtering."""
     has_ar = bool(_AR_CHAR_RE.search(keyword or ''))
@@ -46,12 +58,19 @@ def _log_search(q, results_count):
     """Best-effort analytic row (recent + trending feeds)."""
     try:
         sess = current_session()
+        # v2.2.65 — tag the ORIGIN website so trending/popular are per-site
+        # (World's trending must never mix in Kuwait search terms).
+        try:
+            wid = get_website().id
+        except Exception:
+            wid = False
         request.env['mobile.search.analytic'].sudo().create({
             'keyword': q,
             'results_count': results_count,
             'session_id': sess.id if sess else False,
             'platform': (sess.platform if sess else 'android'),
             'lang': _norm_lang(get_lang()),
+            'website_id': wid,
         })
     except Exception:
         pass
@@ -284,7 +303,7 @@ class MobileSearchAPI(http.Controller):
             SELECT keyword, COUNT(*) AS cnt
             FROM mobile_search_analytic
             WHERE keyword IS NOT NULL AND keyword NOT LIKE '[barcode]%%'
-            """ + _lang_script_clause() + """
+            """ + _lang_script_clause() + _website_clause() + """
             GROUP BY keyword
             HAVING MAX(results_count) > 0
             ORDER BY cnt DESC
@@ -310,7 +329,7 @@ class MobileSearchAPI(http.Controller):
                 WHERE create_date >= %s
                   AND keyword IS NOT NULL
                   AND keyword NOT LIKE '[barcode]%%'
-                  """ + _lang_script_clause() + """
+                  """ + _lang_script_clause() + _website_clause() + """
                 GROUP BY keyword
                 HAVING MAX(results_count) > 0
                 ORDER BY cnt DESC

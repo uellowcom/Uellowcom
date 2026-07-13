@@ -151,3 +151,42 @@ class IrHttp(models.AbstractModel):
         except Exception:
             pass
         return super()._post_dispatch(response)
+
+    @classmethod
+    def _url_localized(cls, url=None, lang_code=None, canonical_domain=None,
+                       prefetch_langs=False, force_default_lang=False):
+        """Homepage canonical fix.
+
+        The website `index` controller reroutes `/` to the configured homepage
+        page (`homepage_url`, e.g. /new or /home-ksa), so
+        `request.httprequest.path` becomes that page's URL. Odoo then emits it
+        as the canonical for `/`, marking the root domain a duplicate of /new
+        and bleeding the homepage's authority away from the clean root.
+
+        When the current page IS the homepage (its path matches the site's
+        homepage_url, optionally lang-prefixed), canonicalize to the localized
+        ROOT `/` instead. Only applies when no explicit `url` is passed (i.e.
+        we're canonicalising the CURRENT page); alternates that pass an
+        explicit url are left untouched. Sites with no homepage_url (World,
+        the app sites) are unaffected.
+        """
+        if url is None and request is not None and request.httprequest:
+            try:
+                hp = request.website._get_cached('homepage_url')
+                if hp and hp != '/':
+                    cur = request.httprequest.path or '/'
+                    candidates = {hp}
+                    lang = request.lang
+                    if lang and lang.url_code:
+                        candidates.add('/' + lang.url_code.strip('/') + hp)
+                    if cur in candidates:
+                        return super()._url_localized(
+                            url='/', lang_code=lang_code,
+                            canonical_domain=canonical_domain,
+                            prefetch_langs=prefetch_langs,
+                            force_default_lang=force_default_lang)
+            except Exception:
+                pass
+        return super()._url_localized(
+            url=url, lang_code=lang_code, canonical_domain=canonical_domain,
+            prefetch_langs=prefetch_langs, force_default_lang=force_default_lang)

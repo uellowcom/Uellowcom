@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_warranty_card_list" model="ir.ui.view">
+        <field name="name">uellow.warranty.card.list</field>
+        <field name="model">uellow.warranty.card</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state=='active'" decoration-muted="state=='expired'" decoration-danger="state=='void'" decoration-warning="state=='claimed'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="lot_serial" optional="show"/>
+                <field name="policy_id"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="days_left" optional="hide"/>
+                <field name="claim_count" optional="show"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_warranty_card_form" model="ir.ui.view">
+        <field name="name">uellow.warranty.card.form</field>
+        <field name="model">uellow.warranty.card</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_print_certificate" type="object" string="Print Certificate" class="btn-primary"/>
+                    <button name="action_void" type="object" string="Void" invisible="voided"/>
+                    <button name="action_unvoid" type="object" string="Reactivate" invisible="not voided"/>
+                    <field name="state" widget="statusbar" statusbar_visible="active,expired,claimed,void"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_claims" type="object" class="oe_stat_button" icon="fa-wrench">
+                            <field name="claim_count" widget="statinfo" string="Claims"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="product_id"/>
+                            <field name="lot_serial"/>
+                            <field name="policy_id"/>
+                        </group>
+                        <group>
+                            <field name="date_start"/>
+                            <field name="duration_months"/>
+                            <field name="date_end" readonly="1"/>
+                            <field name="days_left" readonly="1"/>
+                            <field name="voided"/>
+                        </group>
+                    </group>
+                    <group string="Source" col="3">
+                        <field name="invoice_id"/>
+                        <field name="sale_id"/>
+                        <field name="picking_id"/>
+                    </group>
+                    <field name="note" placeholder="Internal notes..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_warranty_card_search" model="ir.ui.view">
+        <field name="name">uellow.warranty.card.search</field>
+        <field name="model">uellow.warranty.card</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="lot_serial"/>
+                <filter name="active" string="Active" domain="[('state','=','active')]"/>
+                <filter name="expired" string="Expired" domain="[('state','=','expired')]"/>
+                <filter name="claimed" string="Claimed" domain="[('state','=','claimed')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="g_policy" string="Policy" context="{'group_by':'policy_id'}"/>
+                    <filter name="g_state" string="Status" context="{'group_by':'state'}"/>
+                    <filter name="g_partner" string="Customer" context="{'group_by':'partner_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_warranty_card" model="ir.actions.act_window">
+        <field name="name">Warranty Cards</field>
+        <field name="res_model">uellow.warranty.card</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_warranty_card_search"/>
+    </record>
+</odoo>

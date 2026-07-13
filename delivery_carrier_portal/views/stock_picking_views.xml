@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Add a "Confirm Delivery / تأكيد التوصيل" button to the delivery order
+         (outgoing picking) header. Marks the linked sale order delivered. -->
+    <record id="view_picking_form_uellow_confirm_delivery" model="ir.ui.view">
+        <field name="name">stock.picking.form.uellow.confirm.delivery</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="uellow_can_confirm_delivery" invisible="1"/>
+                <field name="uellow_can_settle" invisible="1"/>
+                <field name="uellow_is_delivered" invisible="1"/>
+                <field name="uellow_is_settled" invisible="1"/>
+                <!-- action buttons (short labels) -->
+                <button name="action_uellow_confirm_delivery"
+                        type="object"
+                        string="توصيل / Deliver"
+                        class="btn-warning"
+                        icon="fa-check-circle"
+                        invisible="not uellow_can_confirm_delivery"
+                        confirm="تأكيد تسليم هذا الطلب وإشعار العميل؟&#10;Mark delivered and notify the customer?"/>
+                <button name="action_uellow_complete_and_settle"
+                        type="object"
+                        string="إتمام / Complete"
+                        class="btn-primary"
+                        icon="fa-flag-checkered"
+                        invisible="not uellow_can_settle"
+                        confirm="سيؤكّد التوصيل وينشئ الفاتورة ويؤكّد الدفع (تسوية مالية) ويغلق الطلب. متابعة؟&#10;Confirm delivery, invoice, mark PAID (settled) and lock the order?"/>
+                <!-- once done, the button turns into the achieved state -->
+                <button string="✓ تم التسليم / Delivered"
+                        class="btn-success" disabled="1"
+                        invisible="uellow_is_settled or not uellow_is_delivered"/>
+                <button string="✓ مكتملة ومُسوّاة / Settled"
+                        class="btn-success" disabled="1"
+                        invisible="not uellow_is_settled"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

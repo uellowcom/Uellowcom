@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="policy_standard" model="uellow.warranty.policy">
+        <field name="name">Standard Warranty</field>
+        <field name="name_ar">ضمان قياسي</field>
+        <field name="duration_months">12</field>
+        <field name="is_default">True</field>
+        <field name="sequence">99</field>
+        <field name="coverage_en">Covers manufacturing defects under normal use. Excludes physical damage, water damage, unauthorized repair and misuse.</field>
+        <field name="coverage_ar">يغطي عيوب التصنيع تحت الاستخدام الطبيعي. لا يشمل الكسر أو ضرر المياه أو الإصلاح غير المعتمد أو سوء الاستخدام.</field>
+    </record>
+</odoo>

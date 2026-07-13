@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+{
+    'name': 'Uellow Warranty',
+    'version': '18.0.1.0.0',
+    'summary': 'Professional warranty management: policies, cards, claims, certificate & document integration',
+    'category': 'Inventory/Inventory',
+    'author': 'Uellow',
+    'license': 'LGPL-3',
+    'depends': ['account', 'sale', 'stock', 'point_of_sale', 'website'],
+    'data': [
+        'security/ir.model.access.csv',
+        'data/sequences.xml',
+        'data/default_policy.xml',
+        'data/cron.xml',
+        'report/warranty_certificate.xml',
+        'report/warranty_reports.xml',
+        'views/warranty_policy_views.xml',
+        'views/warranty_card_views.xml',
+        'views/warranty_claim_views.xml',
+        'views/product_views.xml',
+        'views/sale_order_views.xml',
+        'views/res_config_settings_views.xml',
+        'views/pos_config_views.xml',
+        'views/warranty_menus.xml',
+    ],
+    'assets': {
+        'point_of_sale._assets_pos': [
+            'uellow_warranty/static/src/js/pos_warranty.js',
+            'uellow_warranty/static/src/xml/pos_warranty.xml',
+            'uellow_warranty/static/src/js/pos_receipt.js',
+            'uellow_warranty/static/src/xml/pos_receipt_template.xml',
+            'uellow_warranty/static/src/css/pos_receipt.css',
+        ],
+    },
+    'application': True,
+    'installable': True,
+}

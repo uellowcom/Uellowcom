@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Uellow — Country & Language · First-run Concepts</title>
+<style>
+  :root{
+    --bg:#FBF8F0; --surface:#FFFFFF; --surface-2:#F4EEDF;
+    --ink:#2A1A0B; --muted:#7C6A52; --line:#E7DEC9;
+    --brand:#F5C320; --brand-deep:#E0A800; --brown:#412402;
+    --air:#2E9C93; --air-soft:#DDF0ED;
+    --night:#1B1206;
+    --shadow:0 18px 50px -22px rgba(65,36,2,.45);
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#140E07;--surface:#211709;--surface-2:#2B1E0C;--ink:#F3E9D6;
+      --muted:#A69274;--line:#3A2A12;--air:#4FC3B8;--air-soft:#123531;--shadow:0 22px 60px -26px rgba(0,0,0,.7);}
+  }
+  :root[data-theme="light"]{--bg:#FBF8F0;--surface:#FFFFFF;--surface-2:#F4EEDF;--ink:#2A1A0B;
+    --muted:#7C6A52;--line:#E7DEC9;--air:#2E9C93;--air-soft:#DDF0ED;--shadow:0 18px 50px -22px rgba(65,36,2,.45);}
+  :root[data-theme="dark"]{--bg:#140E07;--surface:#211709;--surface-2:#2B1E0C;--ink:#F3E9D6;
+    --muted:#A69274;--line:#3A2A12;--air:#4FC3B8;--air-soft:#123531;--shadow:0 22px 60px -26px rgba(0,0,0,.7);}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1160px;margin:0 auto;padding:clamp(28px,5vw,72px) clamp(18px,4vw,40px);}
+
+  .mast{display:flex;flex-direction:column;gap:18px;margin-bottom:14px;}
+  .kicker{display:inline-flex;align-items:center;gap:9px;align-self:flex-start;
+    font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+    color:var(--brown);background:var(--brand);padding:7px 13px;border-radius:999px;}
+  @media (prefers-color-scheme:dark){.kicker{color:var(--night)}}
+  :root[data-theme="dark"] .kicker{color:var(--night)}
+  h1{font-family:var(--serif);font-weight:600;letter-spacing:-.02em;text-wrap:balance;
+    font-size:clamp(30px,5.2vw,52px);line-height:1.04;margin:0;}
+  h1 em{font-style:italic;color:var(--brand-deep);}
+  .lede{max-width:64ch;color:var(--muted);font-size:clamp(15px,1.6vw,18px);margin:0;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+  .tag{font-size:12.5px;color:var(--muted);border:1px solid var(--line);
+    padding:5px 11px;border-radius:999px;background:var(--surface);}
+  .tag b{color:var(--ink);font-weight:650;}
+  .rule{height:1px;background:var(--line);margin:40px 0 8px;border:0;}
+
+  .concept{display:grid;grid-template-columns:340px 1fr;gap:clamp(24px,4vw,56px);
+    align-items:center;padding:44px 0;border-bottom:1px solid var(--line);}
+  .concept:last-of-type{border-bottom:0;}
+  .concept.flip .stage{order:2;}
+  .stage{display:flex;justify-content:center;}
+  .brief{min-width:0;}
+  .idx{font-family:var(--serif);font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--air);font-weight:700;font-style:italic;}
+  .cname{font-family:var(--serif);font-size:clamp(23px,3vw,32px);font-weight:600;
+    letter-spacing:-.015em;margin:6px 0 2px;text-wrap:balance;}
+  .car{color:var(--muted);font-size:12.5px;margin-bottom:14px;direction:rtl;}
+  .thesis{font-size:16.5px;margin:0 0 18px;max-width:56ch;}
+  .thesis b{color:var(--brand-deep);font-weight:650;}
+  ul.feats{list-style:none;margin:0;padding:0;display:grid;gap:9px;max-width:56ch;}
+  ul.feats li{position:relative;padding-inline-start:22px;font-size:14.5px;color:var(--ink);}
+  ul.feats li::before{content:"";position:absolute;inset-inline-start:0;top:8px;
+    width:9px;height:9px;border-radius:3px;background:var(--brand);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 22%,transparent);}
+  ul.feats li span{color:var(--muted);}
+  .why{margin-top:16px;font-size:13.5px;color:var(--muted);border-inline-start:3px solid var(--air);
+    padding:4px 0 4px 13px;background:linear-gradient(90deg,var(--air-soft),transparent);
+    border-radius:0 8px 8px 0;max-width:54ch;}
+  .why b{color:var(--ink);}
+
+  /* phone */
+  .phone{position:relative;width:300px;height:620px;border-radius:42px;
+    background:linear-gradient(160deg,#3a3128,#0e0a06);padding:11px;box-shadow:var(--shadow);flex:none;}
+  .phone::after{content:"";position:absolute;top:20px;left:50%;transform:translateX(-50%);
+    width:120px;height:26px;background:#0b0805;border-radius:0 0 16px 16px;z-index:6;}
+  .screen{position:relative;width:100%;height:100%;border-radius:32px;overflow:hidden;
+    background:#fff;color:#2A1A0B;font-size:14px;isolation:isolate;}
+  .bar{position:absolute;top:0;left:0;right:0;height:34px;display:flex;align-items:center;
+    justify-content:space-between;padding:0 18px;font-size:11px;font-weight:600;z-index:5;}
+  .bar .dots{display:flex;gap:3px;align-items:center;}
+  .bar .dots i{width:15px;height:8px;border-radius:2px;background:currentColor;opacity:.85;display:inline-block}
+  .bar .dots b{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+
+  .logo{font-family:var(--serif);font-weight:600;letter-spacing:-.01em;}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:46px;
+    border-radius:13px;font-weight:700;font-size:14px;border:0;cursor:default;}
+  .btn.p{background:var(--brand);color:#3A2402;box-shadow:0 8px 18px -8px rgba(224,168,0,.8);}
+  /* language segmented control */
+  .lang{display:inline-flex;background:rgba(0,0,0,.06);border-radius:11px;padding:3px;gap:2px;font-size:12px;font-weight:700;}
+  .lang b{padding:5px 12px;border-radius:8px;color:#7a6a52;}
+  .lang b.on{background:#fff;color:#2A1A0B;box-shadow:0 2px 6px -2px rgba(0,0,0,.3);}
+  /* country chip / row */
+  .flag{font-size:18px;line-height:1;}
+  .cur{font-size:10px;font-weight:700;color:#9a8b73;letter-spacing:.03em;}
+
+  /* NEW / global badge */
+  .badge{font-size:9.5px;font-weight:800;letter-spacing:.06em;padding:3px 7px;border-radius:6px;
+    background:#412402;color:#F5C320;}
+  .badge.air{background:var(--air);color:#04211e;}
+
+  /* ===== C1 · World Featured grid ===== */
+  .c1 .screen{background:var(--surface-2);display:flex;flex-direction:column;padding:44px 18px 18px;gap:14px;}
+  .c1 .top{display:flex;align-items:center;justify-content:space-between;}
+  .c1 .top .logo{font-size:18px;}.c1 .top .logo b{color:var(--brand-deep);}
+  .c1 h2{font-family:var(--serif);font-size:20px;margin:2px 0 0;font-weight:600;}
+  .c1 .hero{position:relative;border-radius:18px;padding:16px;color:#3a2402;overflow:hidden;
+    background:linear-gradient(140deg,#F7CE3f,#E0A800);box-shadow:0 12px 26px -12px rgba(224,168,0,.85);}
+  .c1 .hero .globe{position:absolute;right:-14px;bottom:-18px;font-size:74px;opacity:.28;}
+  .c1 .hero .badge{position:absolute;top:12px;left:12px;}
+  .c1 .hero .htitle{font-family:var(--serif);font-weight:700;font-size:21px;margin-top:14px;}
+  .c1 .hero .hsub{font-size:11.5px;font-weight:600;opacity:.85;max-width:20ch;margin-top:2px;}
+  .c1 .lbl{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.02em;margin-top:2px;}
+  .c1 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .c1 .cc{display:flex;align-items:center;gap:9px;background:var(--surface);border:1.4px solid var(--line);
+    border-radius:12px;padding:9px 11px;}
+  .c1 .cc .nm{font-size:12.5px;font-weight:650;}
+  .c1 .cc.sel{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 30%,transparent);}
+  .c1 .btn.p{margin-top:auto;}
+
+  /* ===== C2 · Destinations map (dark) ===== */
+  .c2 .screen{background:radial-gradient(120% 80% at 60% 8%,#2a1c08,#140d05 60%,#0f0a04);color:#f4ead4;
+    display:flex;flex-direction:column;padding:44px 18px 18px;gap:12px;}
+  .c2 .top{display:flex;align-items:center;justify-content:space-between;}
+  .c2 .lang{background:rgba(255,255,255,.09);} .c2 .lang b{color:#c9b997;} .c2 .lang b.on{background:#F5C320;color:#2a1a0b;box-shadow:none;}
+  .c2 h2{font-family:var(--serif);font-size:19px;margin:0;font-weight:600;color:#fff;}
+  .c2 .globe{position:relative;height:210px;border-radius:16px;overflow:hidden;
+    background:radial-gradient(circle at 50% 55%,rgba(46,156,147,.16),transparent 60%);}
+  .c2 .dots{position:absolute;inset:0;background-image:radial-gradient(rgba(245,195,32,.28) 1px,transparent 1.4px);
+    background-size:15px 15px;mask:radial-gradient(circle at 50% 55%,#000 42%,transparent 68%);}
+  .c2 .pin{position:absolute;font-size:10px;font-weight:700;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .c2 .pin i{width:9px;height:9px;border-radius:50%;background:#8a7a5a;}
+  .c2 .pin.cn i{width:13px;height:13px;background:#F5C320;box-shadow:0 0 0 6px rgba(245,195,32,.22),0 0 14px rgba(245,195,32,.8);}
+  .c2 .pin.cn{color:#F5C320;} .c2 .pin.kw i{background:#4FC3B8}
+  .c2 .selbar{display:flex;align-items:center;gap:10px;background:rgba(245,195,32,.12);
+    border:1px solid rgba(245,195,32,.4);border-radius:13px;padding:11px 13px;}
+  .c2 .selbar .nm{font-weight:700;font-size:13.5px;color:#fff;} .c2 .selbar .sub{font-size:10.5px;color:#d9c79c;}
+  .c2 .btn.p{margin-top:auto;}
+
+  /* ===== C3 · Clean list (World pinned) ===== */
+  .c3 .screen{background:var(--surface);display:flex;flex-direction:column;padding:44px 0 0;}
+  .c3 .hd{padding:0 18px 12px;display:flex;flex-direction:column;gap:10px;}
+  .c3 .hd .top{display:flex;align-items:center;justify-content:space-between;}
+  .c3 h2{font-family:var(--serif);font-size:20px;margin:0;font-weight:600;}
+  .c3 .list{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+  .c3 .row{display:flex;align-items:center;gap:12px;padding:13px 18px;border-top:1px solid var(--line);}
+  .c3 .row .nm{font-size:14px;font-weight:600;flex:1;}
+  .c3 .row .radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);}
+  .c3 .row.world{background:linear-gradient(90deg,rgba(245,195,32,.14),transparent);
+    border-inline-start:4px solid var(--brand);}
+  .c3 .row.world .nm b{color:var(--brand-deep);}
+  .c3 .row.sel .radio{border-color:var(--brand);background:radial-gradient(circle,var(--brand) 42%,transparent 46%);}
+  .c3 .foot{padding:14px 18px 18px;border-top:1px solid var(--line);background:var(--surface);}
+
+  /* ===== C4 · Two paths ===== */
+  .c4 .screen{background:var(--surface-2);display:flex;flex-direction:column;padding:44px 18px 18px;gap:13px;}
+  .c4 .top{display:flex;align-items:center;justify-content:space-between;}
+  .c4 h2{font-family:var(--serif);font-size:20px;margin:0;font-weight:600;text-align:center;}
+  .c4 .subq{font-size:12px;color:var(--muted);text-align:center;margin-top:-6px;}
+  .c4 .paths{display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center;}
+  .c4 .path{position:relative;border-radius:18px;padding:18px;border:1.6px solid var(--line);
+    background:var(--surface);overflow:hidden;}
+  .c4 .path .k{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;}
+  .c4 .path .t{font-family:var(--serif);font-size:19px;font-weight:600;margin-top:3px;display:flex;align-items:center;gap:8px;}
+  .c4 .path .d{font-size:11.5px;color:var(--muted);margin-top:3px;}
+  .c4 .path.world{background:linear-gradient(140deg,#F7CE3f,#E0A800);border-color:transparent;color:#3a2402;
+    box-shadow:0 14px 30px -14px rgba(224,168,0,.9);transform:scale(1.015);}
+  .c4 .path.world .k,.c4 .path.world .d{color:#5a3a06;}
+  .c4 .path.world .badge{position:absolute;top:14px;left:14px;}
+  .c4 .path .globe{position:absolute;right:-10px;bottom:-16px;font-size:66px;opacity:.25;}
+  .c4 .lang{align-self:center;}
+
+  /* ===== C5 · World hero immersive ===== */
+  .c5 .screen{background:#160f07;color:#f3ead6;}
+  .c5 .mason{position:absolute;inset:0;columns:3;column-gap:7px;padding:36px 9px 0;}
+  .c5 .mason i{display:block;width:100%;margin-bottom:7px;border-radius:10px;break-inside:avoid;}
+  .c5 .scrim{position:absolute;inset:0;background:linear-gradient(180deg,rgba(22,15,7,.35),rgba(22,15,7,.72) 48%,rgba(22,15,7,.98) 88%);}
+  .c5 .top{position:absolute;top:44px;left:18px;right:18px;display:flex;align-items:center;justify-content:space-between;z-index:3;}
+  .c5 .lang{background:rgba(255,255,255,.12);} .c5 .lang b{color:#d9c79c;} .c5 .lang b.on{background:#F5C320;color:#2a1a0b;box-shadow:none;}
+  .c5 .panel{position:absolute;left:0;right:0;bottom:0;padding:20px 20px 20px;display:flex;flex-direction:column;gap:12px;z-index:3;}
+  .c5 .badge.air{align-self:flex-start;}
+  .c5 .head{font-family:var(--serif);font-size:25px;font-weight:600;color:#fff;line-height:1.05;}
+  .c5 .head b{color:var(--brand);}
+  .c5 .strip{display:flex;align-items:center;gap:6px;font-size:11px;color:#d9c79c;flex-wrap:wrap;}
+  .c5 .strip .f{font-size:17px;}
+  .c5 .btn.p{margin-top:2px;}
+  .c5 .btn.ghost{background:transparent;border:1.4px solid rgba(255,255,255,.22);color:#f3ead6;height:40px;
+    border-radius:12px;font-weight:600;font-size:12.5px;display:flex;align-items:center;justify-content:center;}
+
+  .foot{margin-top:44px;padding-top:22px;border-top:1px solid var(--line);color:var(--muted);
+    font-size:13px;display:flex;flex-wrap:wrap;gap:8px 20px;}
+  .foot b{color:var(--ink);}
+  @media(max-width:760px){.concept{grid-template-columns:1fr;gap:26px;}.concept.flip .stage{order:0;}.stage{order:0;}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <span class="kicker">Uellow · اختيار الدولة واللغة</span>
+    <h1>خمسة اتجاهات لشاشة <em>البداية</em> — تُبرز الصين</h1>
+    <p class="lede">أول شاشة عند فتح التطبيق: اختيار الدولة واللغة. في كل اتجاه يظهر <b>يلو ورلد (الصين)</b> كخيار مميّز — ليس صفاً عادياً بين الدول، بل نجم الشاشة — بينما تبقى المتاجر المحلية الخليجية متاحة بوضوح. جميعها بهوية يلو، ثنائية اللغة، وتدعم الوضع الفاتح والداكن.</p>
+    <div class="meta">
+      <span class="tag">دول: <b>الكويت · السعودية · الإمارات · قطر · البحرين · عُمان</b></span>
+      <span class="tag">+ <b>🌍 يلو ورلد</b> (الصين)</span>
+      <span class="tag">لغة: <b>عربي / EN</b></span>
+    </div>
+  </header>
+
+  <hr class="rule">
+
+  <!-- C1 · World Featured grid -->
+  <section class="concept">
+    <div class="stage"><div class="phone c1"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="top">
+        <div class="logo">yellow<b>·يلو</b></div>
+        <div class="lang"><b class="on">عربي</b><b>EN</b></div>
+      </div>
+      <h2>اختر متجرك</h2>
+      <div class="hero">
+        <span class="badge">جديد · NEW</span><span class="globe">🌍</span>
+        <div class="htitle">يلو ورلد</div>
+        <div class="hsub">شحن مباشر من الصين · 8,000+ قطعة بسعر المصنع</div>
+      </div>
+      <div class="lbl">أو اختر متجرك المحلي</div>
+      <div class="grid">
+        <div class="cc sel"><span class="flag">🇰🇼</span><span class="nm">الكويت</span><span class="cur">KWD</span></div>
+        <div class="cc"><span class="flag">🇸🇦</span><span class="nm">السعودية</span><span class="cur">SAR</span></div>
+        <div class="cc"><span class="flag">🇦🇪</span><span class="nm">الإمارات</span><span class="cur">AED</span></div>
+        <div class="cc"><span class="flag">🇶🇦</span><span class="nm">قطر</span><span class="cur">QAR</span></div>
+        <div class="cc"><span class="flag">🇧🇭</span><span class="nm">البحرين</span><span class="cur">BHD</span></div>
+        <div class="cc"><span class="flag">🇴🇲</span><span class="nm">عُمان</span><span class="cur">OMR</span></div>
+      </div>
+      <button class="btn p">متابعة · Continue</button>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 01 · الخيار المميّز</div>
+      <div class="cname">World Featured — بطاقة صدارة</div>
+      <div class="car">بطاقة يلو ورلد ذهبية كبيرة فوق شبكة الدول</div>
+      <p class="thesis">يلو ورلد يجلس في <b>بطاقة ذهبية كاملة العرض بشارة «جديد»</b> فوق شبكة أعلام الدول الخليجية. أول ما تلمسه العين هو الصين، والمحلي متاح تحته مباشرة — بلا إخفاء لأي خيار.</p>
+      <ul class="feats">
+        <li>هرمية بصرية واضحة: عالمي أولاً، محلي ثانياً <span>— بلا لبس</span></li>
+        <li>عملة كل دولة ظاهرة على الشريحة</li>
+        <li>يعمل فوراً مع بنية المواقع الـ17 الحالية</li>
+      </ul>
+      <div class="why"><b>لماذا يبرز الصين:</b> الحجم والذهب والشارة يجعلون يلو ورلد الوجهة الافتراضية دون إجبار.</div>
+    </div>
+  </section>
+
+  <!-- C2 · Destinations map -->
+  <section class="concept flip">
+    <div class="stage"><div class="phone c2"><div class="screen">
+      <div class="bar" style="color:#f4ead4"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="top"><h2>اختر وجهتك</h2><div class="lang"><b class="on">عربي</b><b>EN</b></div></div>
+      <div class="globe"><div class="dots"></div>
+        <span class="pin cn" style="top:34%;right:24%"><i></i>الصين</span>
+        <span class="pin kw" style="top:60%;left:30%"><i></i>الكويت</span>
+        <span class="pin" style="top:52%;left:52%"><i></i></span>
+        <span class="pin" style="top:70%;right:34%"><i></i></span>
+      </div>
+      <div class="selbar"><span class="flag">🌍</span>
+        <div><div class="nm">يلو ورلد — الصين</div><div class="sub">شحن دولي مجاني · 10–14 يوم</div></div>
+      </div>
+      <button class="btn p">ابدأ من هنا · Start</button>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 02 · الخريطة</div>
+      <div class="cname">Destinations — وجهات على الكرة</div>
+      <div class="car">كرة أرضية منقّطة + دبوس الصين متوهّج ذهبياً</div>
+      <p class="thesis">كرة أرضية ليلية بدبابيس؛ <b>دبوس الصين يتوهّج ذهبياً وأكبر من البقية</b>. اختيار الدولة يصبح اختيار «وجهة» — تجربة أقرب للسفر والاكتشاف منها لقائمة إعدادات.</p>
+      <ul class="feats">
+        <li>الصين مركز الجذب البصري بالتوهّج والحجم</li>
+        <li>شريط سفلي يؤكد «شحن مجاني 10–14 يوم»</li>
+        <li>مناسب كشاشة داكنة غامرة تترك انطباعاً أول</li>
+      </ul>
+      <div class="why"><b>لماذا يبرز الصين:</b> على الخريطة، الصين حرفياً ألمع نقطة — رسالة بلا كلمات.</div>
+    </div>
+  </section>
+
+  <!-- C3 · Clean list -->
+  <section class="concept">
+    <div class="stage"><div class="phone c3"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="hd">
+        <div class="top"><div class="logo">yellow<b>·يلو</b></div><div class="lang"><b class="on">عربي</b><b>EN</b></div></div>
+        <h2>اختر دولتك</h2>
+      </div>
+      <div class="list">
+        <div class="row world sel"><span class="flag">🌍</span>
+          <span class="nm"><b>يلو ورلد</b> · من الصين مباشرة</span>
+          <span class="badge">جديد</span><span class="radio"></span></div>
+        <div class="row"><span class="flag">🇰🇼</span><span class="nm">الكويت <span class="cur">KWD</span></span><span class="radio"></span></div>
+        <div class="row"><span class="flag">🇸🇦</span><span class="nm">السعودية <span class="cur">SAR</span></span><span class="radio"></span></div>
+        <div class="row"><span class="flag">🇦🇪</span><span class="nm">الإمارات <span class="cur">AED</span></span><span class="radio"></span></div>
+        <div class="row"><span class="flag">🇶🇦</span><span class="nm">قطر <span class="cur">QAR</span></span><span class="radio"></span></div>
+        <div class="row"><span class="flag">🇧🇭</span><span class="nm">البحرين <span class="cur">BHD</span></span><span class="radio"></span></div>
+      </div>
+      <div class="foot"><button class="btn p">متابعة · Continue</button></div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 03 · القائمة النظيفة</div>
+      <div class="cname">Pinned List — يلو ورلد مثبّت بالأعلى</div>
+      <div class="car">قائمة أعلام أنيقة، والصين مثبّتة أول الصف بلمسة ذهبية</div>
+      <p class="thesis">قائمة كلاسيكية مألوفة وسريعة، لكن <b>يلو ورلد مثبّت دائماً في القمة بخلفية ذهبية وحدّ جانبي وشارة «جديد»</b>. الأبسط تنفيذاً والأوضح للمستخدم المعتاد على القوائم.</p>
+      <ul class="feats">
+        <li>مألوف وسريع المسح <span>— أقل احتكاك</span></li>
+        <li>تثبيت + لون ذهبي يفصل العالمي عن المحلي بصرياً</li>
+        <li>يتوسّع بسهولة لكل الدول الـ17</li>
+      </ul>
+      <div class="why"><b>لماذا يبرز الصين:</b> التثبيت الدائم أعلى القائمة يمنحه أولوية بصرية بلا مبالغة.</div>
+    </div>
+  </section>
+
+  <!-- C4 · Two paths -->
+  <section class="concept flip">
+    <div class="stage"><div class="phone c4"><div class="screen">
+      <div class="bar" style="color:#5a4a2e"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="top"><div class="logo">yellow<b>·يلو</b></div><div class="lang"><b class="on">عربي</b><b>EN</b></div></div>
+      <h2>كيف تحب تتسوّق؟</h2>
+      <div class="subq">تقدر تبدّل في أي وقت</div>
+      <div class="paths">
+        <div class="path world">
+          <span class="badge">مميّز</span><span class="globe">🌍</span>
+          <div class="k">تسوّق عالمي</div>
+          <div class="t">يلو ورلد</div>
+          <div class="d">من الصين مباشرة · 8,000+ قطعة · شحن مجاني</div>
+        </div>
+        <div class="path">
+          <div class="k">تسوّق محلي</div>
+          <div class="t">🇰🇼 متجر الكويت</div>
+          <div class="d">توصيل سريع خلال أيام · دفع محلي</div>
+        </div>
+      </div>
+      <div class="lang"><b class="on">عربي</b><b>EN</b></div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 04 · مسارَان</div>
+      <div class="cname">Two Paths — عالمي أم محلي</div>
+      <div class="car">بطاقتا اختيار كبيرتان: يلو ورلد الذهبية vs متجرك المحلي</div>
+      <p class="thesis">سؤال واحد صريح: <b>عالمي أم محلي؟</b> بطاقتان كبيرتان — يلو ورلد الذهبية بارزة وأكبر قليلاً، والمحلي هادئ أنيق. قرار من لمسة واحدة، والصين هي الاختيار الأبرز.</p>
+      <ul class="feats">
+        <li>قرار مبسّط إلى خيارين <span>— أعلى وضوح للمستخدم الجديد</span></li>
+        <li>تباين حجم/لون يرجّح كفة العالمي</li>
+        <li>«تقدر تبدّل لاحقاً» يزيل قلق الالتزام</li>
+      </ul>
+      <div class="why"><b>لماذا يبرز الصين:</b> يضع العالمي نداً للمحلي بدل أن يدفنه في قائمة دول.</div>
+    </div>
+  </section>
+
+  <!-- C5 · World hero immersive -->
+  <section class="concept">
+    <div class="stage"><div class="phone c5"><div class="screen">
+      <div class="bar" style="color:#f3ead6"><span>9:41</span><span class="dots"><i></i><b></b></span></div>
+      <div class="mason" id="c5mason"></div>
+      <div class="scrim"></div>
+      <div class="top"><div class="logo" style="color:#fff">yellow<b style="color:#F5C320">·يلو</b></div>
+        <div class="lang"><b class="on">عربي</b><b>EN</b></div></div>
+      <div class="panel">
+        <span class="badge air">🌍 من الصين مباشرة</span>
+        <div class="head">اكتشف <b>يلو ورلد</b><br>8,000+ قطعة من الصين</div>
+        <button class="btn p">ابدأ بالعالمي · Explore World</button>
+        <button class="btn ghost">أو اختر متجرك المحلي 🇰🇼 🇸🇦 🇦🇪 🇶🇦 ▾</button>
+      </div>
+    </div></div></div>
+    <div class="brief">
+      <div class="idx">اتجاه 05 · البطل الغامر</div>
+      <div class="cname">World Hero — الصين تملأ الشاشة</div>
+      <div class="car">جدار منتجات الصين خلفية + يلو ورلد كبطل، والمحلي زر ثانوي</div>
+      <p class="thesis">شاشة افتتاحية جريئة: <b>جدار قطع من الصين يملأ الخلفية</b>، ويلو ورلد بطل الشاشة بزر أساسي، بينما المتجر المحلي زر ثانوي أنيق. الأقوى انطباعاً لجذب مستخدم جديد للعالمي.</p>
+      <ul class="feats">
+        <li>المنتجات نفسها تبيع الصين <span>— شهية فورية</span></li>
+        <li>هرمية صريحة: عالمي أساسي، محلي ثانوي</li>
+        <li>يصلح كحملة إطلاق «يلو ورلد» بواجهة مميّزة</li>
+      </ul>
+      <div class="why"><b>لماذا يبرز الصين:</b> يجعل الدخول للعالمي المسار الافتراضي مع إبقاء المحلي بلمسة واحدة.</div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span><b>ملاحظة:</b> موك أب بصري — الأعلام/الصور مُجرّدة وتُستبدل بأصول حقيقية عند التنفيذ.</span>
+    <span>الهوية: أصفر <b>#F5C320</b> · بنّي <b>#412402</b> · لمسة عالمية تركواز <b>#2E9C93</b>.</span>
+    <span>اختر اتجاهاً (أو دمج) وأبنيه في شاشة اختيار الدولة/اللغة الفعلية.</span>
+  </div>
+</div>
+
+<script>
+  (function(){
+    var pal=[['#F5C320','#E0A800'],['#2E9C93','#1c6f68'],['#412402','#6b4413'],
+             ['#d98b3b','#a85f1c'],['#c9542f','#8f3620'],['#3a6ea5','#274c73'],
+             ['#e7c34a','#c99a1e'],['#7a8b3a','#556025'],['#b0602e','#7c3f18']];
+    function grad(){var p=pal[Math.floor(Math.random()*pal.length)];
+      return 'linear-gradient(150deg,'+p[0]+','+p[1]+')';}
+    var m=document.getElementById('c5mason');
+    if(m){var hs=[70,110,90,130,80,120,95,140,85,115,100,125];
+      for(var j=0;j<12;j++){var b=document.createElement('i');b.style.background=grad();
+        b.style.height=hs[j%hs.length]+'px';m.appendChild(b);}}
+  })();
+</script>
+</body>
+</html>

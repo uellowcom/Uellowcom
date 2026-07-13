@@ -55,17 +55,7 @@ publicWidget.registry.WebsiteSale.include({
         if (this.el.classList.contains("tp-shop-layout") && this.isLazyLoad) {
             window.addEventListener('popstate', this._handleBackNavigation);
         }
-        if (this.el.querySelector(".tp-load-more-on-scroll")) {
-            this.loadMoreObserver = new IntersectionObserver(entries => {
-                entries.forEach((entry) => {
-                    if (entry.intersectionRatio > 0) {
-                        this._loadMoreProducts(this.el.querySelector(".tp-load-more-on-scroll").getAttribute("href"));
-                        this.el.querySelector(".tp-load-more-on-scroll").remove();
-                    }
-                })
-            }, {});
-            this.loadMoreObserver.observe(this.el.querySelector(".tp-load-more-on-scroll"));
-        }
+        this._observeLoadMore();
         this.isQuickViewDialog = this.el.classList.contains('tp-product-quick-view-layout');
         return this._super(...arguments);
     },
@@ -315,12 +305,78 @@ publicWidget.registry.WebsiteSale.include({
             this.trigger_up('widgets_start_request', {
                 $target: this.$el,
             });
+            // filtering/sorting replaces the grid + pager → re-arm infinite scroll
+            this._loadingMore = false;
+            this._observeLoadMore();
         });
     },
     _onClickLoadMoreBtn: function (ev) {
         ev.preventDefault();
         this._loadMoreProducts(ev.currentTarget.getAttribute("href"));
         ev.currentTarget.remove();
+    },
+    // Infinite scroll: keep loading the next page as the user nears the bottom.
+    // Uses an IntersectionObserver AND a scroll-position fallback (the observer
+    // alone proved unreliable for the invisible sentinel inside #wrapwrap).
+    // Must be (re)armed after every load/filter because the pager (and thus the
+    // sentinel) is replaced with the next page's markup.
+    _observeLoadMore: function () {
+        // Wire the scroll/resize fallback exactly once.
+        if (!this._loadMoreScrollBound) {
+            this._loadMoreScrollBound = this._onMaybeLoadMore.bind(this);
+            const sc = document.getElementById("wrapwrap") || window;
+            this._loadMoreScrollTarget = sc;
+            sc.addEventListener("scroll", this._loadMoreScrollBound, { passive: true });
+            window.addEventListener("resize", this._loadMoreScrollBound, { passive: true });
+        }
+        const sentinel = this.el.querySelector(".tp-load-more-on-scroll");
+        if (!sentinel) {
+            return;
+        }
+        if (window.IntersectionObserver) {
+            if (!this.loadMoreObserver) {
+                this.loadMoreObserver = new IntersectionObserver(entries => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            this._triggerLoadMore();
+                        }
+                    });
+                }, { rootMargin: "0px 0px 900px 0px" });
+            }
+            this.loadMoreObserver.observe(sentinel);
+        }
+        // The sentinel may already sit within range right after a (re)load.
+        this._onMaybeLoadMore();
+    },
+    _onMaybeLoadMore: function () {
+        if (this._loadingMore) {
+            return;
+        }
+        const s = this.el.querySelector(".tp-load-more-on-scroll");
+        if (!s) {
+            return;
+        }
+        const rect = s.getBoundingClientRect();
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        if (rect.top <= vh + 900) {
+            this._triggerLoadMore();
+        }
+    },
+    _triggerLoadMore: function () {
+        if (this._loadingMore) {
+            return;
+        }
+        const s = this.el.querySelector(".tp-load-more-on-scroll");
+        if (!s) {
+            return;
+        }
+        this._loadingMore = true;
+        const href = s.getAttribute("href");
+        if (this.loadMoreObserver) {
+            this.loadMoreObserver.unobserve(s);
+        }
+        s.remove();
+        this._loadMoreProducts(href);
     },
     _loadMoreProducts: function (url) {
         this.$shopLoader = $(renderToElement("uellow_theme.Loader", { height: "20vh" }));
@@ -332,6 +388,9 @@ publicWidget.registry.WebsiteSale.include({
                     type: "GET",
                     success: data => {
                         resolve(data);
+                    },
+                    error: () => {
+                        reject();
                     }
                 });
             })
@@ -341,6 +400,15 @@ publicWidget.registry.WebsiteSale.include({
             this.trigger_up("widgets_start_request", {
                 $target: this.$el,
             });
+            this._loadingMore = false;
+            // re-arm for the next page's sentinel
+            this._observeLoadMore();
+        }).catch(() => {
+            // never leave the loader spinning / the scroll locked on failure
+            this._loadingMore = false;
+            if (this.$shopLoader) {
+                this.$shopLoader.remove();
+            }
         });
     },
     _replaceShopContent: function (data) {
@@ -370,8 +438,12 @@ publicWidget.registry.WebsiteSale.include({
     },
     destroy: function () {
         window.removeEventListener('popstate', this._handleBackNavigation);
-        if (this.loadMoreObserver && this.el.querySelector(".tp-load-more-on-scroll")) {
-            this.loadMoreObserver.unobserve(this.el.querySelector(".tp-load-more-on-scroll"));
+        if (this.loadMoreObserver) {
+            this.loadMoreObserver.disconnect();
+        }
+        if (this._loadMoreScrollBound) {
+            (this._loadMoreScrollTarget || window).removeEventListener("scroll", this._loadMoreScrollBound);
+            window.removeEventListener("resize", this._loadMoreScrollBound);
         }
         this.driftImages.forEach(drift => { drift.disable() });
         this._super.apply(this, arguments);

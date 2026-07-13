@@ -13,6 +13,16 @@
                             <field name="uellow_vendor_carriers_enabled"/>
                         </setting>
                     </block>
+                    <block title="Warehouse / Inventory">
+                        <setting string="Inventory Confirm-Delivery Button"
+                                 help="Show a 'Confirm Delivery / تأكيد التوصيل' button on outgoing delivery orders so warehouse staff can mark the sale order delivered (and notify the customer) straight from Inventory.">
+                            <field name="uellow_inventory_confirm_btn"/>
+                        </setting>
+                        <setting string="Inventory Deliver+Settle Button"
+                                 help="Show a one-click button that confirms delivery, creates &amp; posts the invoice, marks it PAID (settled via a reconciled bank entry) and locks the order.">
+                            <field name="uellow_inventory_settle_btn"/>
+                        </setting>
+                    </block>
                 </app>
             </xpath>
         </field>

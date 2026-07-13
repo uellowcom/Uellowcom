@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Default AliExpress provider (empty credentials; admin fills + authorizes). -->
+    <record id="provider_aliexpress" model="dropship.provider">
+        <field name="name">AliExpress DS</field>
+        <field name="code">aliexpress</field>
+        <field name="is_primary" eval="True"/>
+        <field name="sequence">10</field>
+        <field name="endpoint">https://api-sg.aliexpress.com/sync</field>
+        <field name="redirect_uri">https://uellow.com/dropship/oauth/callback</field>
+        <field name="currency">USD</field>
+        <field name="default_country">KW</field>
+    </record>
+
+    <!-- Manual/curated provider — safe default for testing the pipeline. -->
+    <record id="provider_manual" model="dropship.provider">
+        <field name="name">Manual / Curated</field>
+        <field name="code">manual</field>
+        <field name="sequence">90</field>
+        <field name="state">connected</field>
+    </record>
+
+    <!-- Default brand-scrub rules: strip provider/origin wording from listings. -->
+    <record id="rule_aliexpress" model="dropship.text.rule">
+        <field name="name">AliExpress → Uellow World</field>
+        <field name="find">AliExpress</field>
+        <field name="replace">Uellow World</field>
+        <field name="sequence">10</field>
+    </record>
+    <record id="rule_aliexpress_short" model="dropship.text.rule">
+        <field name="name">Remove "AE" tag</field>
+        <field name="find">\bAliExpress Standard Shipping\b</field>
+        <field name="replace">Standard Shipping</field>
+        <field name="is_regex" eval="True"/>
+        <field name="sequence">15</field>
+    </record>
+    <record id="rule_ship_from_china" model="dropship.text.rule">
+        <field name="name">Remove "Ship from China"</field>
+        <field name="find">Ship(ping)? from China</field>
+        <field name="replace"></field>
+        <field name="is_regex" eval="True"/>
+        <field name="sequence">20</field>
+    </record>
+    <record id="rule_dropshipping" model="dropship.text.rule">
+        <field name="name">Remove "Dropshipping"</field>
+        <field name="find">Drop\s*shipping</field>
+        <field name="replace"></field>
+        <field name="is_regex" eval="True"/>
+        <field name="sequence">30</field>
+    </record>
+    <record id="rule_cheap" model="dropship.text.rule">
+        <field name="name">Remove "Cheap"</field>
+        <field name="find">\bCheap\b</field>
+        <field name="replace"></field>
+        <field name="is_regex" eval="True"/>
+        <field name="sequence">40</field>
+    </record>
+
+</odoo>

@@ -113,8 +113,9 @@
                                        t-att-href="_s.get('url')"
                                        t-att-aria-label="_s.get('label')"
                                        t-att-title="_s.get('label')"
-                                       target="_blank" rel="noopener">
-                                        <i t-attf-class="fa fa-#{_s.get('icon')}"/>
+                                       target="_blank" rel="noopener"
+                                       t-attf-class="uc-soc uc-soc-#{_s.get('icon')}">
+                                        <t t-out="website._uc_social_svg(_s.get('icon'))"/>
                                     </a>
                                 </div>
                             </div>
@@ -173,8 +174,6 @@
                                         <li><a href="/blog"            t-out="website._uc_t('Blog')"/></li>
                                         <li><a href="/page/about-us"   t-out="website._uc_t('About Uellow')"/></li>
                                         <li><a href="/page/careers"    t-out="website._uc_t('Careers')"/></li>
-                                        <li><a href="/partners">🤝 <t t-out="website._uc_t('Partners Program')"/></a></li>
-                                        <li><a href="/app"><t t-out="website._uc_t('Download the Uellow App')"/></a></li>
                                     </t>
                                 </ul>
                             </div>

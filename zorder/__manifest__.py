@@ -2,7 +2,7 @@
     'name': 'ZOrder',
     'version': '1.0',
     'category': 'Website/Website',
-    'depends': ['website_sale', 'sale', 'contacts'],
+    'depends': ['website_sale', 'sale', 'contacts', 'delivery', 'uellow_checkout'],
     'data': [
         'security/ir.model.access.csv',
         'views/templates.xml',

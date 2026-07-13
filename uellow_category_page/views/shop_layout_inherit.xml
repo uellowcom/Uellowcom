@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <template id="ucp_shop_top" inherit_id="uellow_theme.shop_layout" name="Uellow Category Page Top">
+    <!-- Inject the v3c compact top block (full width) above the topbar. -->
+    <xpath expr="//div[hasclass('tp-shop-layout')]" position="before">
+      <t t-set="ucp" t-value="website.sudo()._ucp_settings()"/>
+      <t t-if="ucp.get('on')">
+       <div class="container">
+        <t t-set="ucp_lang" t-value="'ar' if (request.env.lang or '').startswith('ar') else 'en'"/>
+        <t t-set="ucp_cat_img" t-value="website.sudo()._ucp_cat_image(category) if category else ''"/>
+        <t t-set="ucp_flash" t-value="website.sudo()._ucp_flash()"/>
+        <t t-set="ucp_fs" t-value="website.sudo()._ucp_freeship()"/>
+        <t t-set="ucp_base" t-value="('/shop/category/%s' % category.id) if category else '/shop'"/>
+
+        <div t-attf-class="ucp-top #{'ucp-restyle' if ucp.get('restyle') else ''}"
+             t-att-dir="'rtl' if ucp_lang=='ar' else 'ltr'">
+
+          <t t-set="ucp_fstyle" t-value="('background:linear-gradient(120deg,%s,%s);' % (ucp_flash.get('c1'), ucp_flash.get('c2'))) if (ucp_flash and ucp_flash.get('c1') and ucp_flash.get('c2')) else ''"/>
+          <!-- HERO (real category + real image + real count) — flash nested INSIDE on desktop -->
+          <div t-if="ucp.get('hero')" class="ucp-hero"
+               t-att-style="website.sudo()._ucp_hero_style(category)">
+            <div class="ucp-hero-media">
+              <img t-if="ucp_cat_img" t-att-src="ucp_cat_img" class="ucp-hero-img" loading="lazy"
+                   t-att-alt="category.name if category else 'Shop'"/>
+              <div t-else="" class="ucp-hero-ph">🛍️</div>
+            </div>
+            <div class="ucp-hero-body">
+              <h1 class="ucp-hero-title" t-esc="category.name if category else 'Shop · المتجر'"/>
+              <!-- BREADCRUMB (real ancestor chain) — below the category name -->
+              <nav t-if="ucp.get('crumb')" class="ucp-crumb ucp-crumb-hero"
+                   t-att-dir="'rtl' if ucp_lang=='ar' else 'ltr'">
+                <t t-set="ucp_trail" t-value="website.sudo()._ucp_breadcrumb(category)"/>
+                <t t-foreach="ucp_trail" t-as="ucp_c">
+                  <a class="ucp-crumb-i" t-att-href="ucp_c['url']" t-esc="ucp_c['name']"/>
+                  <span t-if="not ucp_c_last" class="ucp-crumb-sep">›</span>
+                </t>
+              </nav>
+              <div class="ucp-hero-meta">
+                <b><t t-esc="search_count or 0"/></b>
+                <t t-if="ucp_lang=='ar'"> منتج</t><t t-else=""> products</t>
+                <span t-if="ucp.get('ticker')" class="ucp-hero-pulse">
+                  <span class="ucp-dot"></span><t t-esc="website.sudo()._ucp_pulse(category)"/>
+                </span>
+              </div>
+              <div t-if="ucp.get('ai')" class="ucp-ai">
+                <span class="ucp-ai-av">🔎</span>
+                <input class="ucp-ai-in" type="text"
+                       t-att-data-cat="category.id if category else ''"
+                       t-att-placeholder="('ابحث في هذا القسم…' if ucp_lang=='ar' else (ucp.get('ai_ph') or 'Search this category…'))"
+                       onkeydown="if(event.key==='Enter'){var c=this.getAttribute('data-cat');var b=c?('/shop/category/'+c):'/shop';location.href=b+'?search='+encodeURIComponent(this.value)}"/>
+                <span class="ucp-ai-mic" title="Voice search">🎤</span>
+                <span class="ucp-ai-go"
+                      onclick="var i=this.parentNode.querySelector('.ucp-ai-in');var c=i.getAttribute('data-cat');var b=c?('/shop/category/'+c):'/shop';location.href=b+'?search='+encodeURIComponent(i.value||'')">
+                  <t t-if="ucp_lang=='ar'">بحث</t><t t-else="">Find</t>
+                </span>
+              </div>
+              <div t-if="ucp.get('badges')" class="ucp-badges">
+                <span class="ucp-badge">✅ <t t-if="ucp_lang=='ar'">أصلي 100%</t><t t-else="">100% authentic</t></span>
+                <span class="ucp-badge">🚚 <t t-if="ucp_lang=='ar'">توصيل سريع</t><t t-else="">Fast delivery</t></span>
+              </div>
+            </div>
+
+          <!-- DESKTOP rich flash — nested INSIDE the hero (desktop only), compact -->
+          <t t-if="ucp_flash">
+            <div class="ucp-flashbar" t-att-style="ucp_fstyle">
+              <div class="ucp-flashbar-head">
+                <div class="ucp-flashbar-ttl">
+                  <span class="ucp-flashbar-ic" t-esc="ucp_flash.get('emoji') or '⚡'"/>
+                  <span class="ucp-flashbar-nm" t-esc="ucp_flash.get('label')"/>
+                  <span t-if="ucp_flash.get('pct')" class="ucp-hero-flash-pct">−<t t-esc="ucp_flash.get('pct')"/>%</span>
+                </div>
+                <div t-if="ucp_flash.get('end')" class="ucp-cd" t-att-data-end="ucp_flash.get('end')">
+                  <span class="ucp-cd-lbl"><t t-if="ucp_lang=='ar'">ينتهي خلال</t><t t-else="">Ends in</t></span>
+                  <span class="ucp-cd-box"><b class="ucp-cd-d">--</b><i><t t-if="ucp_lang=='ar'">ي</t><t t-else="">d</t></i></span>
+                  <span class="ucp-cd-box"><b class="ucp-cd-h">--</b><i>h</i></span>
+                  <span class="ucp-cd-box"><b class="ucp-cd-m">--</b><i>m</i></span>
+                  <span class="ucp-cd-box"><b class="ucp-cd-s">--</b><i>s</i></span>
+                </div>
+                <a class="ucp-flashbar-all" t-att-href="ucp_flash.get('url')">
+                  <t t-if="ucp_lang=='ar'">عرض الكل ←</t><t t-else="">See all →</t></a>
+              </div>
+              <div class="ucp-flashbar-prods">
+                <t t-set="ucp_fp" t-value="website.sudo()._ucp_flash_products(ucp_flash.get('promo_id'), 8)"/>
+                <a t-foreach="ucp_fp" t-as="fp" class="ucp-fp" t-att-href="fp['url']">
+                  <span class="ucp-fp-img"><img t-att-src="fp['img']" loading="lazy" t-att-alt="fp['name']"/></span>
+                  <span t-if="fp['pct']" class="ucp-fp-badge">−<t t-esc="fp['pct']"/>%</span>
+                  <span class="ucp-fp-nm" t-esc="fp['name']"/>
+                  <span class="ucp-fp-pr">
+                    <b t-esc="'%.3f' % fp['after']"/>
+                    <s t-if="fp['pct']" t-esc="'%.3f' % fp['before']"/>
+                  </span>
+                </a>
+              </div>
+            </div>
+          </t>
+          </div>
+          <!-- end ucp-hero (flash nested inside on desktop) -->
+
+          <!-- MOBILE flash line (below the hero) -->
+          <t t-if="ucp_flash">
+            <a class="ucp-flashline" t-att-href="ucp_flash.get('url')"
+               t-att-data-end="ucp_flash.get('end')" t-att-style="ucp_fstyle">
+              <span class="ucp-hero-flash-ic" t-esc="ucp_flash.get('emoji') or '⚡'"/>
+              <span class="ucp-hero-flash-tx" t-esc="ucp_flash.get('label')"/>
+              <span t-if="ucp_flash.get('pct')" class="ucp-hero-flash-pct">−<t t-esc="ucp_flash.get('pct')"/>%</span>
+              <span class="ucp-flashline-cd" t-if="ucp_flash.get('end')" t-att-data-end="ucp_flash.get('end')">--:--:--</span>
+            </a>
+          </t>
+
+          <!-- QUICK CHIPS — REAL functional filters (sort + stock + price + brands).
+               Row scrolls horizontally (slider) when it overflows. -->
+          <div t-if="ucp.get('presets')" class="ucp-fitrow">
+            <div class="ucp-presets">
+              <a class="ucp-preset on" t-att-href="ucp_base">
+                <t t-if="ucp_lang=='ar'">الكل</t><t t-else="">All</t></a>
+              <a class="ucp-preset" t-att-href="keep(order='create_date desc')">
+                <t t-if="ucp_lang=='ar'">🆕 الأحدث</t><t t-else="">🆕 Newest</t></a>
+              <a class="ucp-preset" t-att-href="keep(order='list_price asc')">
+                <t t-if="ucp_lang=='ar'">⬆️ الأقل سعرًا</t><t t-else="">⬆️ Price: Low</t></a>
+              <a class="ucp-preset" t-att-href="keep(order='list_price desc')">
+                <t t-if="ucp_lang=='ar'">⬇️ الأعلى سعرًا</t><t t-else="">⬇️ Price: High</t></a>
+              <a class="ucp-preset" t-att-href="keep(order='name asc')">
+                <t t-if="ucp_lang=='ar'">🔤 الاسم أ-ي</t><t t-else="">🔤 Name A-Z</t></a>
+              <a t-if="ucp_flash" class="ucp-preset" t-att-href="ucp_flash.get('url')">
+                <t t-if="ucp_lang=='ar'">🔥 العروض</t><t t-else="">🔥 Deals</t></a>
+              <!-- in-stock only (storefront hide_out_of_stock param) -->
+              <a class="ucp-preset" t-att-href="keep(hide_out_of_stock='true')">
+                <t t-if="ucp_lang=='ar'">✅ المتوفر فقط</t><t t-else="">✅ In stock</t></a>
+              <!-- real price buckets (storefront min_price/max_price params, KD) -->
+              <a class="ucp-preset" t-att-href="keep(min_price='0', max_price='5')">
+                <t t-if="ucp_lang=='ar'">💸 أقل من 5 د.ك</t><t t-else="">💸 Under 5 KD</t></a>
+              <a class="ucp-preset" t-att-href="keep(min_price='5', max_price='20')">
+                <t t-if="ucp_lang=='ar'">💵 5 – 20 د.ك</t><t t-else="">💵 5 – 20 KD</t></a>
+              <a class="ucp-preset" t-att-href="keep(min_price='20', max_price='50')">
+                <t t-if="ucp_lang=='ar'">💰 20 – 50 د.ك</t><t t-else="">💰 20 – 50 KD</t></a>
+              <a class="ucp-preset" t-att-href="keep(min_price='50', max_price='100000')">
+                <t t-if="ucp_lang=='ar'">💎 أكثر من 50 د.ك</t><t t-else="">💎 50+ KD</t></a>
+              <!-- real brand shortcuts (storefront filter links) -->
+              <t t-set="ucp_brands" t-value="website.sudo()._ucp_top_brands(category, 9) if category else []"/>
+              <t t-foreach="ucp_brands" t-as="ucp_b">
+                <a class="ucp-preset ucp-preset-brand"
+                   t-attf-href="#{ucp_base}?attribute_value=#{ucp_b['attr']}-#{ucp_b['id']}">
+                  <t t-esc="ucp_b['name']"/></a>
+              </t>
+            </div>
+          </div>
+
+          <!-- INFO STRIP — varied value/info items that fill the whole row.
+               Free-ship threshold is real (from delivery settings); the rest
+               are genuine Uellow value props. Flex items stretch to fill. -->
+          <div t-if="ucp.get('unlock')" class="ucp-utrow">
+            <div t-if="ucp_fs" class="ucp-uitem ucp-uitem-hl">
+              <span class="ucp-uitem-ic">🎁</span>
+              <span class="ucp-uitem-tx">
+                <t t-if="ucp_lang=='ar'">شحن مجاني عند <b><t t-esc="'%.3f' % ucp_fs"/> د.ك</b></t>
+                <t t-else="">FREE shipping over <b><t t-esc="'%.3f' % ucp_fs"/> KD</b></t>
+              </span>
+            </div>
+            <div class="ucp-uitem">
+              <span class="ucp-uitem-ic">💵</span>
+              <span class="ucp-uitem-tx">
+                <t t-if="ucp_lang=='ar'">الدفع عند الاستلام</t><t t-else="">Cash on delivery</t></span>
+            </div>
+            <div class="ucp-uitem">
+              <span class="ucp-uitem-ic">⭐</span>
+              <span class="ucp-uitem-tx">
+                <t t-if="ucp_lang=='ar'">نقاط ولاء مع كل طلب</t><t t-else="">Loyalty points each order</t></span>
+            </div>
+            <div class="ucp-uitem">
+              <span class="ucp-uitem-ic">↩️</span>
+              <span class="ucp-uitem-tx">
+                <t t-if="ucp_lang=='ar'">إرجاع سهل</t><t t-else="">Easy returns</t></span>
+            </div>
+            <div class="ucp-uitem">
+              <span class="ucp-uitem-ic">🔒</span>
+              <span class="ucp-uitem-tx">
+                <t t-if="ucp_lang=='ar'">دفع آمن ومضمون</t><t t-else="">Secure checkout</t></span>
+            </div>
+          </div>
+
+        </div>
+       </div>
+      </t>
+    </xpath>
+  </template>
+</odoo>

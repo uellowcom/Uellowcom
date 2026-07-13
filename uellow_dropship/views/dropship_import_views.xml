@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Import wizard ─────────────────────────────────────────────── -->
+    <record id="view_dropship_import_wizard_form" model="ir.ui.view">
+        <field name="name">dropship.import.wizard.form</field>
+        <field name="model">dropship.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import Products">
+                <sheet>
+                    <div class="oe_title">
+                        <h2>🛒 Import Products</h2>
+                        <p class="text-muted">Pull products from your connected providers.
+                            Leave a field empty to use the module default.</p>
+                    </div>
+                    <group>
+                        <group string="What to import">
+                            <field name="provider_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"/>
+                            <field name="import_mode" widget="radio"/>
+                            <field name="source_ids"
+                                   invisible="import_mode != 'direct'"
+                                   required="import_mode == 'direct'"
+                                   placeholder="1005001322196508&#10;https://www.aliexpress.com/item/1005....html"/>
+                            <field name="keywords" invisible="import_mode != 'search'"
+                                   placeholder="smart watch, led strip, ..."/>
+                            <field name="category_ids" widget="many2many_tags"
+                                   invisible="import_mode != 'search'"
+                                   options="{'no_create': True}"/>
+                            <field name="categories" invisible="import_mode != 'search'"
+                                   placeholder="optional extra codes: 200000343, ..."/>
+                            <field name="max_products"/>
+                        </group>
+                        <group string="Quality filters"
+                               invisible="import_mode == 'direct'">
+                            <field name="min_price"/>
+                            <field name="max_price"/>
+                            <field name="min_orders"/>
+                            <field name="min_rating"/>
+                            <field name="require_video"/>
+                        </group>
+                        <group string="Options">
+                            <field name="skip_existing"/>
+                            <field name="mark_as_deal"/>
+                            <field name="enrich_on_import"/>
+                        </group>
+                    </group>
+                    <group string="Schedule">
+                        <field name="save_as_schedule"/>
+                        <field name="schedule_name" invisible="not save_as_schedule"
+                               required="save_as_schedule"/>
+                        <label for="interval_number" string="Run every"
+                               invisible="not save_as_schedule"/>
+                        <div invisible="not save_as_schedule">
+                            <field name="interval_number" class="oe_inline"/>
+                            <field name="interval_type" class="oe_inline"/>
+                        </div>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_run" type="object" string="Run now"
+                            class="btn-primary"/>
+                    <button name="action_save_schedule" type="object"
+                            string="Save schedule only"
+                            invisible="not save_as_schedule"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dropship_import_wizard" model="ir.actions.act_window">
+        <field name="name">Import Products</field>
+        <field name="res_model">dropship.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ── Scheduled imports ─────────────────────────────────────────── -->
+    <record id="view_dropship_import_schedule_list" model="ir.ui.view">
+        <field name="name">dropship.import.schedule.list</field>
+        <field name="model">dropship.import.schedule</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'running'"
+                  decoration-danger="state == 'error'"
+                  decoration-muted="active == False">
+                <field name="name"/>
+                <field name="keywords"/>
+                <field name="interval_number"/>
+                <field name="interval_type"/>
+                <field name="next_run"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'running'"
+                       decoration-success="state == 'done'"
+                       decoration-warning="state == 'stopped'"
+                       decoration-danger="state == 'error'"/>
+                <field name="progress" widget="progressbar"/>
+                <field name="progress_text" optional="show"/>
+                <field name="last_imported"/>
+                <field name="imported_total"/>
+                <field name="run_count"/>
+                <field name="active" widget="boolean_toggle"/>
+                <button name="action_run_now" type="object" icon="fa-play"
+                        string="Run now" title="Run this schedule now"
+                        invisible="state == 'running'"/>
+                <button name="action_stop" type="object" icon="fa-stop"
+                        string="Stop" title="Stop this run" class="text-danger"
+                        invisible="state != 'running'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_dropship_import_schedule_form" model="ir.ui.view">
+        <field name="name">dropship.import.schedule.form</field>
+        <field name="model">dropship.import.schedule</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_run_now" type="object"
+                            string="▶ Run now" class="btn-primary"
+                            invisible="state == 'running'"/>
+                    <button name="action_stop" type="object"
+                            string="⏹ Stop" class="btn-danger"
+                            invisible="state != 'running'"/>
+                    <button name="action_refresh" type="object"
+                            string="🔄 Refresh"
+                            invisible="state != 'running'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="idle,running,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Male Smart Watches — daily"/></h1>
+                    </div>
+
+                    <!-- live run status -->
+                    <div class="alert alert-info" role="status"
+                         invisible="state != 'running'"
+                         style="display:flex;align-items:center;gap:12px">
+                        <i class="fa fa-spinner fa-spin" title="Running" role="img" aria-label="Running"/>
+                        <div style="flex:1">
+                            <field name="progress" widget="progressbar"/>
+                            <div><field name="progress_text" readonly="1" nolabel="1"/></div>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger" role="alert"
+                         invisible="state != 'error'">
+                        <field name="last_error" readonly="1" nolabel="1"/>
+                    </div>
+
+                    <group>
+                        <group string="What to import">
+                            <field name="provider_ids" widget="many2many_tags"/>
+                            <field name="category_ids" widget="many2many_tags"
+                                   options="{'no_create': True}"/>
+                            <field name="keywords" placeholder="e.g. male smart watch, ..."/>
+                            <field name="categories" placeholder="optional extra codes"/>
+                            <field name="max_products"/>
+                        </group>
+                        <group string="Quality filters">
+                            <field name="min_price"/>
+                            <field name="max_price"/>
+                            <field name="min_orders"/>
+                            <field name="min_rating"/>
+                            <field name="require_video"/>
+                        </group>
+                        <group string="Options">
+                            <field name="skip_existing"/>
+                            <field name="mark_as_deal"/>
+                            <field name="enrich_on_import"/>
+                        </group>
+                        <group string="Frequency">
+                            <label for="interval_number" string="Run every"/>
+                            <div>
+                                <field name="interval_number" class="oe_inline"/>
+                                <field name="interval_type" class="oe_inline"/>
+                            </div>
+                            <field name="next_run"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Stats">
+                            <field name="last_run"/>
+                            <field name="last_imported"/>
+                            <field name="last_scanned"/>
+                            <field name="imported_total"/>
+                            <field name="run_count"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Last Imported Products"
+                              name="last_imported">
+                            <field name="last_imported_ids" nolabel="1" readonly="1">
+                                <list>
+                                    <field name="image_url" widget="image_url" options="{'size': [40, 40]}" string=""/>
+                                    <field name="title_en"/>
+                                    <field name="category_id"/>
+                                    <field name="base_cost"/>
+                                    <field name="sale_price"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_dropship_import_schedule" model="ir.actions.act_window">
+        <field name="name">Scheduled Imports</field>
+        <field name="res_model">dropship.import.schedule</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a recurring import</p>
+            <p>Each schedule pulls products on its own cadence with its own filters.</p>
+        </field>
+    </record>
+
+</odoo>

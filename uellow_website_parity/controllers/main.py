@@ -1,4 +1,5 @@
 import base64
+from datetime import datetime
 from odoo import http
 from odoo.http import request
 
@@ -97,9 +98,36 @@ class WebsiteFlashDeals(http.Controller):
             ('active', '=', True),
             '|', ('website_id', '=', False), ('website_id', '=', website.id),
         ], order='sequence asc')
-        # Hand them all to the template; the template decides how to split
-        # them into live / upcoming / ended sections.
+        # Live promotions (the PROMOTION system) for this website/channel, with
+        # their approved products — this is the source the storefront flash
+        # strips link to, so the page must show them here too.
+        promo_blocks = []
+        Promo = request.env['mobile.app.promotion'].sudo()
+        Line = request.env['mobile.promotion.line'].sudo()
+        now = datetime.now()
+        for p in Promo.search([
+                ('state', '=', 'running'), ('active', '=', True),
+                ('date_from', '<=', now), ('date_to', '>=', now),
+                ('channel', 'in', ['website', 'both', 'pos']),
+            ], order='priority desc, id'):
+            if p.website_ids and website.id not in p.website_ids.ids:
+                continue
+            prods = []
+            for l in Line.search([('promotion_id', '=', p.id),
+                                  ('state', '=', 'approved')]):
+                pt = l.product_tmpl_id
+                if not pt or not pt.active or not pt.is_published:
+                    continue
+                pct = l.discount_pct or 0.0
+                before = pt.list_price or 0.0
+                after = (l.price_applied or 0.0) or \
+                    (before * (1.0 - pct / 100.0) if pct else before)
+                prods.append({'p': pt, 'pct': int(pct),
+                              'before': before, 'after': after})
+            if prods:
+                promo_blocks.append({'promo': p, 'products': prods})
         return request.render('uellow_website_parity.flash_deals_page', {
             'sales': sales,
+            'promo_blocks': promo_blocks,
             'page_title': 'Flash deals · صفقات سريعة',
         })

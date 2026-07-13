@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+  <t t-name="delivery_carrier_portal.Finance">
+    <div class="db-owl-wrap">
+
+      <!-- Loading overlay -->
+      <div class="db-owl-loading" t-if="state.loading">
+        <div class="db-owl-spinner"/>
+      </div>
+
+      <!-- Header -->
+      <div class="db-owl-header">
+        <div>
+          <div class="db-owl-title">💰 المركز المالي للتوصيل — Delivery Finance</div>
+          <div class="db-owl-sub">
+            الكاش المحتجز عند شركات التوصيل والتسويات — Cash held by carriers &amp; settlements
+            <span class="db-owl-live"><span class="db-owl-live-dot"/> آخر تحديث <t t-esc="state.timestamp"/></span>
+          </div>
+        </div>
+        <div class="db-owl-controls">
+          <select class="db-owl-select" t-on-change="onCarrierChange">
+            <option value="0">كل الشركات — All carriers</option>
+            <t t-foreach="state.allCarriers" t-as="c" t-key="c.id">
+              <option t-att-value="c.id" t-att-selected="c.id === state.carrier_id"><t t-esc="c.name"/></option>
+            </t>
+          </select>
+          <button class="db-owl-btn-primary" t-on-click="() => this.loadData()">🔄 تحديث</button>
+          <button class="db-owl-btn-primary" style="background:#475569;" t-on-click="() => this.openAllSettlements()">📑 كل التسويات</button>
+        </div>
+      </div>
+
+      <!-- Top KPIs -->
+      <div class="db-owl-section-title">نظرة مالية عامة — Overview</div>
+      <div class="db-owl-kpi-grid">
+        <div class="db-owl-kpi db-owl-kpi-yellow">
+          <div class="db-owl-kpi-icon">💵</div>
+          <div class="db-owl-kpi-label">كاش محتجز عند الشركات</div>
+          <div class="db-owl-kpi-value"><t t-esc="fmt(state.totals.held)"/></div>
+          <div class="db-owl-kpi-note">KD · <t t-esc="state.totals.cod_count || 0"/> طلب COD</div>
+        </div>
+        <div class="db-owl-kpi db-owl-kpi-green">
+          <div class="db-owl-kpi-icon">⬆️</div>
+          <div class="db-owl-kpi-label">صافي مستحق لـ Uellow</div>
+          <div class="db-owl-kpi-value"><t t-esc="fmt(state.totals.cod_net)"/></div>
+          <div class="db-owl-kpi-note">KD · بعد خصم رسوم الشركات</div>
+        </div>
+        <div class="db-owl-kpi db-owl-kpi-red">
+          <div class="db-owl-kpi-icon">⬇️</div>
+          <div class="db-owl-kpi-label">رسوم مستحقة على Uellow</div>
+          <div class="db-owl-kpi-value"><t t-esc="fmt(state.totals.online_cost)"/></div>
+          <div class="db-owl-kpi-note">KD · طلبات أونلاين موصّلة</div>
+        </div>
+        <div class="db-owl-kpi db-owl-kpi-blue">
+          <div class="db-owl-kpi-icon">⚖️</div>
+          <div class="db-owl-kpi-label">صافي الرصيد الكلي</div>
+          <div class="db-owl-kpi-value"><t t-esc="fmt(state.totals.net_balance)"/></div>
+          <div class="db-owl-kpi-note">KD · (+) لنا / (−) علينا</div>
+        </div>
+        <div class="db-owl-kpi db-owl-kpi-purple">
+          <div class="db-owl-kpi-icon">🧾</div>
+          <div class="db-owl-kpi-label">رسوم الشركات (COD)</div>
+          <div class="db-owl-kpi-value"><t t-esc="fmt(state.totals.cod_cost)"/></div>
+          <div class="db-owl-kpi-note">KD · عمولة + توصيل</div>
+        </div>
+        <div class="db-owl-kpi db-owl-kpi-yellow">
+          <div class="db-owl-kpi-icon">⏳</div>
+          <div class="db-owl-kpi-label">تسويات معلقة</div>
+          <div class="db-owl-kpi-value"><t t-esc="state.totals.pending_count || 0"/></div>
+          <div class="db-owl-kpi-note">KD <t t-esc="fmt(state.totals.pending_value)"/></div>
+        </div>
+      </div>
+
+      <!-- Per-carrier balances -->
+      <div class="db-owl-section-title">الأرصدة حسب الشركة — Balances by carrier</div>
+      <div style="padding: 0 24px;">
+        <div class="db-owl-card">
+          <div class="db-owl-card-body" style="padding:0;">
+            <table class="db-owl-table">
+              <thead>
+                <tr>
+                  <th>الشركة</th>
+                  <th>وضع التسوية</th>
+                  <th>كاش محتجز (KD)</th>
+                  <th>طلبات COD</th>
+                  <th>رسوم الشركة (KD)</th>
+                  <th>صافي لنا (KD)</th>
+                  <th>رسوم أونلاين (KD)</th>
+                  <th>الرصيد الصافي</th>
+                  <th style="text-align:center;">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr t-foreach="state.carriers" t-as="c" t-key="c.id">
+                  <td style="font-weight:700;"><t t-esc="c.name"/></td>
+                  <td><span class="db-owl-tag db-owl-tag-blue"><t t-esc="c.settlement_mode"/></span></td>
+                  <td style="font-weight:700; color:#b45309;"><t t-esc="fmt(c.cod_held)"/></td>
+                  <td>
+                    <a href="#" style="color:#2d6be4; font-weight:700;"
+                       t-on-click.prevent="() => this.openCarrierOrders(c)">
+                      <t t-esc="c.cod_count"/> طلب
+                    </a>
+                  </td>
+                  <td><t t-esc="fmt(c.cod_cost)"/></td>
+                  <td style="font-weight:700; color:#15803d;"><t t-esc="fmt(c.cod_net)"/></td>
+                  <td>
+                    <t t-esc="fmt(c.online_cost)"/>
+                    <span style="color:#94a3b8; font-size:10px;" t-if="c.online_count"> (<t t-esc="c.online_count"/>)</span>
+                  </td>
+                  <td>
+                    <span class="db-owl-tag" t-att-class="netClass(c.net_balance)">
+                      <t t-esc="fmt(c.net_balance)"/>
+                    </span>
+                  </td>
+                  <td style="text-align:center; white-space:nowrap;">
+                    <button class="db-owl-btn-primary" style="padding:5px 10px;"
+                            t-att-disabled="state.busy || (!c.cod_count and !c.online_count)"
+                            t-on-click="() => this.createSettlement(c)">
+                      🧾 إنشاء تسوية
+                    </button>
+                  </td>
+                </tr>
+                <tr t-if="!state.carriers.length">
+                  <td colspan="9" style="text-align:center; color:#94a3b8; padding:24px;">
+                    لا توجد بيانات — No data
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settlements ledger -->
+      <div class="db-owl-section-title">سجل التسويات — Settlements ledger</div>
+      <div style="padding: 0 24px 24px;">
+        <div class="db-owl-card">
+          <div class="db-owl-card-body" style="padding:0;">
+            <table class="db-owl-table">
+              <thead>
+                <tr>
+                  <th>المرجع</th>
+                  <th>الشركة</th>
+                  <th>طلبات</th>
+                  <th>كاش محصّل (KD)</th>
+                  <th>رسوم الشركة (KD)</th>
+                  <th>صافي لـ Uellow (KD)</th>
+                  <th>الحالة</th>
+                  <th>التاريخ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr t-foreach="state.settlements" t-as="s" t-key="s.id"
+                    style="cursor:pointer;" t-on-click="() => this.openSettlement(s.id)">
+                  <td style="font-weight:700; color:#2d6be4;"><t t-esc="s.name"/></td>
+                  <td><t t-esc="s.carrier"/></td>
+                  <td><t t-esc="s.lines"/></td>
+                  <td><t t-esc="fmt(s.cash_collected)"/></td>
+                  <td><t t-esc="fmt(s.carrier_cost)"/></td>
+                  <td style="font-weight:700;"><t t-esc="fmt(s.net_to_uellow)"/></td>
+                  <td><span class="db-owl-tag" t-att-class="stateClass(s.state)"><t t-esc="stateLabel(s.state)"/></span></td>
+                  <td style="color:#64748b; font-size:11px;"><t t-esc="s.date || s.created"/></td>
+                </tr>
+                <tr t-if="!state.settlements.length">
+                  <td colspan="8" style="text-align:center; color:#94a3b8; padding:24px;">
+                    لا توجد تسويات بعد — No settlements yet
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </t>
+
+</templates>

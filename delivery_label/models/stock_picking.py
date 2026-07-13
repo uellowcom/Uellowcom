@@ -80,6 +80,34 @@ class StockPicking(models.Model):
                 return invoice.amount_residual or invoice.amount_total or 0.0
         return sale_order.amount_total or 0.0
 
+    def get_location_qr_url(self):
+        """Google-Maps URL for the delivery location, used as the QR payload so
+        scanning the label opens the customer's address straight in Maps."""
+        self.ensure_one()
+        import urllib.parse
+        so = self._get_related_sale_order()
+        # 1) the order's computed Google-Maps link (lat/lng or address fallback)
+        if so and getattr(so, 'delivery_gmaps_url', False):
+            return so.delivery_gmaps_url
+        # 2) the order's saved GPS pin
+        if so and getattr(so, 'delivery_lat', 0) and getattr(so, 'delivery_lng', 0):
+            return ('https://www.google.com/maps/search/?api=1&query=%s,%s'
+                    % (so.delivery_lat, so.delivery_lng))
+        # 3) the picking partner's saved GPS pin
+        p = self.partner_id
+        if p and (p.partner_latitude or p.partner_longitude):
+            return ('https://www.google.com/maps/search/?api=1&query=%s,%s'
+                    % (p.partner_latitude, p.partner_longitude))
+        # 4) build a text query from the address
+        if p:
+            bits = [p.street, p.street2, p.city,
+                    p.country_id.name if p.country_id else '']
+            addr = ', '.join([b for b in bits if b])
+            if addr:
+                return ('https://www.google.com/maps/search/?api=1&query=%s'
+                        % urllib.parse.quote(addr))
+        return ''
+
     def get_barcode_b64(self, value, barcode_type='Code128', width=300, height=40):
         if not value:
             return ''

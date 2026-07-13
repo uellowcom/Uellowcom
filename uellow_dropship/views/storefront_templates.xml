@@ -1,0 +1,490 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Uellow World browsing page. Uses website.layout so the header/footer and
+         all site chrome are IDENTICAL to the rest of Uellow. Cards mirror the
+         Uellow product-card design (white, radius 14, soft shadow, discount
+         badge, price + strike-through). Clicking a card goes to /dropship/p/<id>
+         which materializes the product and opens the STANDARD Uellow product
+         page — so product page, cart, checkout, payment and order are all the
+         normal Uellow flow with no difference. -->
+    <!-- Block archiving of the ENTIRE dropship website (all pages incl. the
+         materialized product pages): inject noindex whenever the current
+         website is the configured dropship site. app-first => web is secondary
+         and must not create duplicate-content SEO penalties. -->
+    <template id="dropship_noindex" inherit_id="website.layout"
+              name="Dropship: noindex whole site">
+        <xpath expr="//head" position="inside">
+            <t t-if="website and str(website.id) == request.env['ir.config_parameter'].sudo().get_param('uellow_dropship.website_id')">
+                <meta name="robots" content="noindex,nofollow,noarchive"/>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- On the World website (dropship site) the product experience is stripped
+         down: no Beena AI assistant, no installments widget, no reviews section.
+         Beena is injected by JS (#beena-float/#beena-chat), the others are qweb
+         blocks; hiding them with scoped CSS on website 19 only keeps every other
+         Uellow site untouched. -->
+    <template id="dropship_world_hide" inherit_id="website.layout"
+              name="Dropship World: hide Beena / installments / reviews">
+        <xpath expr="//head" position="inside">
+            <t t-if="website and str(website.id) == request.env['ir.config_parameter'].sudo().get_param('uellow_dropship.website_id')">
+                <style>
+                    /* Beena AI assistant (JS-injected launcher + chat) */
+                    #beena-float, #beena-chat,
+                    /* Installments / Taly widget + its modal */
+                    .taly-product-widget, #talyWidgetModal,
+                    /* Reviews: custom widget, standard anchor, theme rating tab + link */
+                    .prw, #o_product_page_reviews,
+                    #tp-product-rating-tab, .o_shop_discussion_rating,
+                    .o_product_page_reviews_link,
+                    li:has(> a[href="#tp-product-rating-tab"]),
+                    .nav-item:has(> a[href="#o_product_page_reviews"]) {
+                        display: none !important;
+                    }
+                </style>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Native HTML5 video player for dropship products. The provider video is a
+         raw mp4 that Odoo's product.image video (YouTube/Vimeo embed) can't play,
+         so we render a real <video> under the image gallery. Only shows for
+         dropship products that actually carry a video; sudo() reads the linked
+         dropship.product (public has no direct rule on it). -->
+    <template id="dropship_product_video" inherit_id="website_sale.product"
+              name="Dropship: product video player">
+        <xpath expr="//div[@id='product_details']" position="before">
+            <t t-set="ds_video"
+               t-value="product.is_dropship and product.dropship_product_id and product.dropship_product_id.sudo().video_url"/>
+            <div t-if="ds_video" class="ds-video-wrap container mb-3">
+                <style>
+                    .ds-video-wrap video{width:100%;max-height:520px;border-radius:14px;background:#000;display:block}
+                    .ds-video-wrap .ds-video-cap{font-size:12px;color:#6B6B6B;margin-top:6px;text-align:center}
+                </style>
+                <video controls="controls" preload="metadata"
+                       t-att-poster="'/web/image/product.template/%s/image_1024' % product.id">
+                    <source t-att-src="'/dropship/video/%s' % product.id" type="video/mp4"/>
+                </video>
+                <div class="ds-video-cap">▶ فيديو المنتج / Product video</div>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- "Back to category" chip on the World product page. Dropship products are
+         deliberately NOT in the shared product.public.category tree, so the normal
+         breadcrumb has no category — this restores category context from the
+         module-only dropship.category, linking back to the filtered shop. -->
+    <template id="dropship_product_category" inherit_id="website_sale.product"
+              name="Dropship: product category chip">
+        <xpath expr="//div[@id='product_details']" position="before">
+            <t t-set="ds_cat"
+               t-value="product.is_dropship and product.dropship_product_id and request.env['dropship.category'].sudo().search([('code','=',product.dropship_product_id.sudo().category_name)], limit=1)"/>
+            <div t-if="ds_cat" class="ds-cat-chip container mb-2">
+                <style>
+                    .ds-cat-chip a{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #EAEAEA;border-radius:999px;padding:6px 14px;font-weight:700;color:#412402;text-decoration:none;font-size:13px}
+                    .ds-cat-chip a:hover{border-color:#F5C320;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+                </style>
+                <a t-att-href="ds_cat.shop_url">
+                    <span><t t-esc="ds_cat.icon"/></span>
+                    <span><t t-esc="ds_cat.name"/></span>
+                </a>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Rich provider content on the Uellow product page: the delivery/shipping
+         band, the review + seller-rating summary, and the full specifications
+         table — everything the source (AliExpress) product page shows. All read
+         from the linked dropship.product (enriched lazily on open); each section
+         renders only when its data is present. Bilingual EN + AR. -->
+    <template id="dropship_product_enrichment" inherit_id="website_sale.product"
+              name="Dropship: shipping + reviews + specifications">
+        <xpath expr="//div[@id='product_details']" position="before">
+            <t t-if="product.is_dropship and product.dropship_product_id">
+                <t t-set="ds" t-value="product.dropship_product_id.sudo()"/>
+                <t t-set="ds_ship" t-value="ds._ds_shipping()"/>
+                <t t-set="ds_rev" t-value="ds._ds_review_summary()"/>
+                <t t-set="ds_reviews" t-value="ds._ds_reviews()"/>
+                <t t-set="ds_specs" t-value="ds._ds_specs()"/>
+                <div class="ds-enrich container" t-if="ds_ship or ds_rev or ds_specs">
+                    <style>
+                        .ds-enrich{margin:6px auto 14px;max-width:1200px}
+                        .ds-enrich .card{background:#fff;border:1px solid #EEE;border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+                        .ds-enrich .h{font-weight:800;color:#412402;font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+                        /* reviews */
+                        .ds-rev-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+                        .ds-rev-score{font-size:34px;font-weight:900;color:#412402;line-height:1}
+                        .ds-stars{font-size:18px;letter-spacing:2px}
+                        .ds-stars .st{color:#D9D9D9}
+                        .ds-stars .st.on{color:#F5C320}
+                        .ds-stars .st.half{background:linear-gradient(90deg,#F5C320 50%,#D9D9D9 50%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+                        .ds-rev-sub{color:#6B6B6B;font-size:13px;margin-top:3px}
+                        .ds-rev-sold{background:#FFF6D8;color:#7a5b00;font-weight:800;border-radius:999px;padding:4px 12px;font-size:12px}
+                        .ds-seller{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed #EEE}
+                        .ds-seller .m{font-size:12px;color:#6B6B6B}
+                        .ds-seller .m b{display:block;color:#412402;font-size:15px;font-weight:800}
+                        /* rating breakdown bars */
+                        .ds-bd{margin-top:12px;display:flex;flex-direction:column;gap:5px;max-width:340px}
+                        .ds-bd-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#6B6B6B}
+                        .ds-bd-row .lbl{width:26px;text-align:end;color:#412402;font-weight:700}
+                        .ds-bd-row .bar{flex:1;height:8px;background:#EFEFEF;border-radius:999px;overflow:hidden}
+                        .ds-bd-row .fill{height:100%;background:#F5C320;border-radius:999px}
+                        .ds-bd-row .n{width:34px}
+                        /* individual reviews */
+                        .ds-rv-list{margin-top:14px;padding-top:12px;border-top:1px dashed #EEE;display:flex;flex-direction:column;gap:14px}
+                        .ds-rv{display:flex;flex-direction:column;gap:4px}
+                        .ds-rv-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+                        .ds-rv-nm{font-weight:800;color:#412402;font-size:13px}
+                        .ds-rv-ct{font-size:11px;color:#8a8a8a;background:#F5F5F5;border-radius:999px;padding:1px 8px}
+                        .ds-rv-st{color:#F5C320;font-size:13px;letter-spacing:1px}
+                        .ds-rv-st .e{color:#D9D9D9}
+                        .ds-rv-dt{font-size:11px;color:#9a9a9a;margin-inline-start:auto}
+                        .ds-rv-tx{font-size:13.5px;color:#333;line-height:1.5}
+                        .ds-rv-imgs{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+                        .ds-rv-imgs img{width:66px;height:66px;object-fit:cover;border-radius:8px;border:1px solid #eee;cursor:pointer;transition:transform .12s}
+                        .ds-rv-imgs img:hover{transform:scale(1.04)}
+                        .ds-rv-sku{font-size:11px;color:#8a8a8a}
+                        /* shipping */
+                        .ds-ship-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:#333}
+                        .ds-ship-badge{background:#EAF7EE;color:#1a7f37;font-weight:800;border-radius:999px;padding:4px 12px;font-size:12px}
+                        .ds-ship-opt{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #F3F3F3;font-size:13px;color:#444}
+                        .ds-ship-opt .eta{margin-inline-start:auto;font-weight:800;color:#412402}
+                        /* specs */
+                        .ds-specs table{width:100%;border-collapse:collapse;font-size:13.5px}
+                        .ds-specs td{padding:9px 10px;border-bottom:1px solid #F2F2F2;vertical-align:top}
+                        .ds-specs td.k{color:#6B6B6B;width:42%;font-weight:600}
+                        .ds-specs td.v{color:#1A1A1A;font-weight:600}
+                        .ds-specs tr:last-child td{border-bottom:0}
+                        /* provider description images: never overflow the column */
+                        #product_full_description img, .oe_website_sale img.img-fluid,
+                        [itemprop='description'] img{max-width:100%!important;height:auto!important}
+                    </style>
+
+                    <!-- Review + seller-rating summary -->
+                    <div class="card ds-reviews" t-if="ds_rev">
+                        <div class="h">⭐ Ratings &amp; Reviews · التقييمات والمراجعات</div>
+                        <div class="ds-rev-top">
+                            <div>
+                                <div class="ds-rev-score"><t t-esc="ds_rev['rating']"/></div>
+                                <div class="ds-stars">
+                                    <t t-foreach="range(ds_rev['stars_full'])" t-as="s"><span class="st on">★</span></t>
+                                    <t t-if="ds_rev['stars_half']"><span class="st half">★</span></t>
+                                    <t t-foreach="range(ds_rev['stars_empty'])" t-as="s"><span class="st">★</span></t>
+                                </div>
+                                <div class="ds-rev-sub" t-if="ds_rev['review_count']">
+                                    <t t-esc="ds_rev['review_count']"/> reviews · مراجعة
+                                </div>
+                            </div>
+                            <span class="ds-rev-sold" t-if="ds_rev['orders_text']">
+                                🔥 <t t-esc="ds_rev['orders_text']"/> sold · تم بيعها
+                            </span>
+                        </div>
+                        <div class="ds-seller" t-if="ds_rev['store'] and (ds_rev['store'].get('shipping_rating') or ds_rev['store'].get('item_rating') or ds_rev['store'].get('comm_rating'))">
+                            <div class="m" t-if="ds_rev['store'].get('item_rating')">
+                                <b><t t-esc="ds_rev['store']['item_rating']"/></b>As described · مطابقة الوصف
+                            </div>
+                            <div class="m" t-if="ds_rev['store'].get('shipping_rating')">
+                                <b><t t-esc="ds_rev['store']['shipping_rating']"/></b>Shipping speed · سرعة الشحن
+                            </div>
+                            <div class="m" t-if="ds_rev['store'].get('comm_rating')">
+                                <b><t t-esc="ds_rev['store']['comm_rating']"/></b>Service · الخدمة
+                            </div>
+                        </div>
+                        <!-- rating breakdown bars -->
+                        <div class="ds-bd" t-if="ds_rev.get('breakdown')">
+                            <t t-foreach="ds_rev['breakdown']" t-as="b">
+                                <div class="ds-bd-row" t-if="b['n']">
+                                    <span class="lbl"><t t-esc="b['label']"/>★</span>
+                                    <span class="bar"><span class="fill" t-attf-style="width:#{b['pct']}%"/></span>
+                                    <span class="n"><t t-esc="int(b['n'])"/></span>
+                                </div>
+                            </t>
+                        </div>
+                        <!-- individual customer reviews -->
+                        <div class="ds-rv-list" t-if="ds_reviews">
+                            <t t-foreach="ds_reviews" t-as="rv">
+                                <div class="ds-rv">
+                                    <div class="ds-rv-top">
+                                        <span class="ds-rv-nm"><t t-esc="rv['name']"/></span>
+                                        <span class="ds-rv-ct" t-if="rv['country']"><t t-esc="rv['country']"/></span>
+                                        <span class="ds-rv-st">
+                                            <t t-foreach="range(rv['stars_full'])" t-as="s">★</t><t t-foreach="range(rv['stars_empty'])" t-as="s"><span class="e">★</span></t>
+                                        </span>
+                                        <span class="ds-rv-dt" t-if="rv['date']"><t t-esc="rv['date']"/></span>
+                                    </div>
+                                    <div class="ds-rv-tx"><t t-esc="rv['text']"/></div>
+                                    <div class="ds-rv-imgs" t-if="rv.get('images')">
+                                        <t t-foreach="rv['images']" t-as="im">
+                                            <a t-att-href="im" target="_blank"><img t-att-src="im" loading="lazy" alt="Customer photo"/></a>
+                                        </t>
+                                    </div>
+                                    <div class="ds-rv-sku" t-if="rv['sku']"><t t-esc="rv['sku']"/></div>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Shipping / delivery -->
+                    <div class="card ds-ship" t-if="ds_ship">
+                        <div class="h">🚚 Shipping &amp; Delivery · الشحن والتوصيل</div>
+                        <div class="ds-ship-row">
+                            <span class="ds-ship-badge">✓ Free delivery · توصيل مجاني</span>
+                            <span>Ships internationally to Kuwait · يُشحن دولياً إلى الكويت</span>
+                        </div>
+                        <t t-foreach="ds_ship" t-as="opt">
+                            <div class="ds-ship-opt">
+                                <span>📦 <t t-esc="opt['service']"/><t t-if="opt['tracking']"> · 🔎 Tracked / مع تتبّع</t></span>
+                                <span class="eta" t-if="opt['days_max']">
+                                    <t t-esc="opt['days_min']"/>–<t t-esc="opt['days_max']"/> days · يوم
+                                </span>
+                            </div>
+                        </t>
+                    </div>
+
+                    <!-- Specifications -->
+                    <div class="card ds-specs" t-if="ds_specs">
+                        <div class="h">📋 Specifications · المواصفات</div>
+                        <table>
+                            <t t-foreach="ds_specs" t-as="sp">
+                                <tr>
+                                    <td class="k"><t t-esc="sp['name']"/></td>
+                                    <td class="v"><t t-esc="sp['value']"/></td>
+                                </tr>
+                            </t>
+                        </table>
+                    </div>
+                </div>
+            </t>
+        </xpath>
+    </template>
+
+    <template id="world_shop" name="Uellow World">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Shop All · تسوّق كل المنتجات</t>
+            <div class="uw-wrap">
+                <style>
+                    .uw-wrap{background:#F6F6F6;min-height:60vh;font-family:'Tajawal','Inter',sans-serif}
+                    .uw-hero{background:linear-gradient(135deg,#412402,#63410c);color:#fff;padding:34px 16px;text-align:center}
+                    .uw-hero h1{font-weight:900;margin:0;font-size:28px}
+                    .uw-hero .b{display:inline-block;background:#F5C320;color:#412402;font-weight:900;border-radius:999px;padding:2px 12px;margin-bottom:8px;font-size:13px}
+                    .uw-hero p{opacity:.9;margin:6px 0 0}
+                    .uw-tools{max-width:1200px;margin:16px auto;padding:0 14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+                    .uw-tools form{display:flex;gap:8px;flex:1;min-width:220px}
+                    .uw-tools input[type=text]{flex:1;border:1px solid #EAEAEA;border-radius:12px;padding:10px 14px;background:#fff}
+                    .uw-tools .btn-y{background:#F5C320;color:#412402;font-weight:800;border:0;border-radius:12px;padding:10px 18px;cursor:pointer}
+                    .uw-tools .chip{border:1px solid #EAEAEA;background:#fff;border-radius:999px;padding:8px 16px;font-weight:700;color:#412402;text-decoration:none}
+                    .uw-tools .chip.on{background:#412402;color:#fff}
+                    .uw-count{max-width:1200px;margin:0 auto 6px;padding:0 16px;color:#6B6B6B;font-size:13px}
+                    .uw-grid{max-width:1200px;margin:0 auto;padding:8px 12px 30px;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+                    .uw-card{background:#fff;border:1px solid transparent;border-radius:14px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.05);text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:box-shadow .15s}
+                    .uw-card:hover{box-shadow:0 6px 18px rgba(0,0,0,.10)}
+                    .uw-imgw{position:relative;aspect-ratio:1;background:#f2f2f2}
+                    .uw-imgw img{width:100%;height:100%;object-fit:cover}
+                    .uw-badge{position:absolute;top:8px;inset-inline-start:8px;background:#FF4D4D;color:#fff;font-weight:800;font-size:12px;border-radius:8px;padding:2px 8px}
+                    .uw-vid{position:absolute;top:8px;inset-inline-end:8px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px}
+                    .uw-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}
+                    .uw-title{font-size:13px;line-height:1.35;color:#1A1A1A;font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:35px}
+                    .uw-price{display:flex;align-items:baseline;gap:6px}
+                    .uw-price .now{color:#412402;font-weight:900;font-size:16px}
+                    .uw-price .cur{color:#412402;font-weight:700;font-size:12px}
+                    .uw-price .was{color:#9a9a9a;text-decoration:line-through;font-size:12px}
+                    .uw-empty{text-align:center;padding:60px 16px;color:#6B6B6B}
+                    .uw-pager{display:flex;justify-content:center;gap:6px;padding:10px 0 40px;flex-wrap:wrap}
+                    .uw-pager a,.uw-pager span{border:1px solid #EAEAEA;background:#fff;border-radius:10px;padding:7px 12px;text-decoration:none;color:#412402;font-weight:700}
+                    .uw-pager .active{background:#412402;color:#fff}
+                </style>
+
+                <div class="uw-hero">
+                    <span class="b">🌍 <t t-esc="brand"/></span>
+                    <h1>العالم كله في جيبك</h1>
+                    <p>The whole world in your pocket · <t t-esc="total"/> منتج</p>
+                </div>
+
+                <div class="uw-tools">
+                    <form action="/world/shop" method="get">
+                        <input type="text" name="search" t-att-value="search" placeholder="Search products… / ابحث عن منتج"/>
+                        <button class="btn-y" type="submit">Search / بحث</button>
+                    </form>
+                    <a t-att-class="'chip on' if (not deals and not category) else 'chip'" href="/world/shop">All / الكل</a>
+                    <a t-att-class="'chip on' if deals else 'chip'" href="/world/shop?deals=1">🔥 Deals / عروض</a>
+                    <form action="/world/shop" method="get" class="uw-sort">
+                        <style>
+                            .uw-sort{margin-inline-start:auto;display:flex;align-items:center;gap:6px}
+                            .uw-sort select{border:1px solid #EAEAEA;border-radius:12px;padding:9px 12px;background:#fff;color:#412402;font-weight:700;cursor:pointer}
+                        </style>
+                        <t t-if="search"><input type="hidden" name="search" t-att-value="search"/></t>
+                        <t t-if="deals"><input type="hidden" name="deals" value="1"/></t>
+                        <t t-if="category"><input type="hidden" name="category" t-att-value="category"/></t>
+                        <select name="sort" onchange="this.form.submit()">
+                            <option value="featured" t-att-selected="'selected' if sort == 'featured' else None">Featured / مميّز</option>
+                            <option value="price_asc" t-att-selected="'selected' if sort == 'price_asc' else None">Price: Low to High / السعر تصاعدي</option>
+                            <option value="price_desc" t-att-selected="'selected' if sort == 'price_desc' else None">Price: High to Low / السعر تنازلي</option>
+                            <option value="discount" t-att-selected="'selected' if sort == 'discount' else None">Biggest Discount / أكبر خصم</option>
+                            <option value="newest" t-att-selected="'selected' if sort == 'newest' else None">Newest / الأحدث</option>
+                        </select>
+                    </form>
+                </div>
+
+                <!-- Category tiles from REAL category records — each with its own
+                     emoji icon + bilingual name. Horizontally scrollable. -->
+                <div class="uw-cats" t-if="categories">
+                    <style>
+                        .uw-cats{max-width:1200px;margin:6px auto 4px;padding:2px 14px 8px;display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+                        .uw-cats::-webkit-scrollbar{height:0}
+                        .uw-cat{flex:0 0 auto;width:82px;text-align:center;text-decoration:none;color:#412402}
+                        .uw-cat .ic{width:60px;height:60px;margin:0 auto;border-radius:18px;background:#fff;border:1px solid #EEE;box-shadow:0 2px 8px rgba(0,0,0,.05);display:flex;align-items:center;justify-content:center;font-size:28px;transition:.15s}
+                        .uw-cat:hover .ic{box-shadow:0 6px 16px rgba(0,0,0,.12);transform:translateY(-2px)}
+                        .uw-cat.on .ic{background:#F5C320;border-color:#F5C320}
+                        .uw-cat .lbl{display:block;margin-top:6px;font-size:11.5px;font-weight:700;line-height:1.25;color:#412402;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:29px}
+                        .uw-cat .n{color:#9a9a9a;font-weight:600;font-size:10px}
+                    </style>
+                    <a t-attf-class="uw-cat#{' on' if not category else ''}" href="/world/shop">
+                        <span class="ic">🌐</span>
+                        <span class="lbl">All / الكل</span>
+                    </a>
+                    <t t-foreach="categories" t-as="c">
+                        <a t-att-class="'uw-cat on' if category == c['name'] else 'uw-cat'"
+                           t-att-href="c['url']">
+                            <span class="ic"><t t-esc="c['icon']"/></span>
+                            <span class="lbl"><t t-esc="c['label']"/> <span class="n">(<t t-esc="c['count']"/>)</span></span>
+                        </a>
+                    </t>
+                </div>
+
+                <div class="uw-count">
+                    <t t-esc="total"/> results / نتيجة
+                </div>
+
+                <t t-if="products">
+                    <t t-set="is_ar" t-value="(request.env.context.get('lang') or '').startswith('ar')"/>
+                    <div class="uw-grid">
+                        <t t-foreach="products" t-as="p">
+                            <a class="uw-card" t-attf-href="/dropship/p/#{p.id}">
+                                <div class="uw-imgw">
+                                    <img t-attf-src="/dropship/img/#{p.id}" t-att-alt="p.title_en" loading="lazy"/>
+                                    <t t-if="p.is_deal and p.discount_percent">
+                                        <span class="uw-badge">-<t t-esc="int(p.discount_percent)"/>%</span>
+                                    </t>
+                                    <t t-if="p.video_url">
+                                        <span class="uw-vid">▶</span>
+                                    </t>
+                                </div>
+                                <div class="uw-body">
+                                    <div class="uw-title"><t t-esc="(p.title_ar or p.title_en) if is_ar else (p.title_en or p.title_ar)"/></div>
+                                    <div class="uw-price">
+                                        <span class="now"><t t-esc="prices[p.id]['now']"/></span>
+                                        <span class="cur"><t t-esc="currency.symbol or '$'"/></span>
+                                        <t t-if="prices[p.id]['was']">
+                                            <span class="was"><t t-esc="prices[p.id]['was']"/></span>
+                                        </t>
+                                    </div>
+                                    <div class="uw-rate" t-if="p.rating">
+                                        <style>
+                                            .uw-rate{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#8a8a8a;margin-top:2px}
+                                            .uw-rate .rv{color:#F5C320;font-weight:800}
+                                            .uw-rate .so{margin-inline-start:auto}
+                                        </style>
+                                        <span class="rv">★ <t t-esc="round(p.rating, 1)"/></span>
+                                        <t t-if="p.review_count">(<t t-esc="p.review_count"/>)</t>
+                                        <span class="so" t-if="p.orders_text">🔥 <t t-esc="p.orders_text"/></span>
+                                    </div>
+                                </div>
+                            </a>
+                        </t>
+                    </div>
+
+                    <div class="uw-pager" t-if="pager['page_count'] &gt; 1">
+                        <t t-foreach="pager['pages']" t-as="pg">
+                            <a t-if="pg['num'] != pager['page']['num']"
+                               t-att-href="pg['url']"><t t-esc="pg['num']"/></a>
+                            <span t-else="" class="active"><t t-esc="pg['num']"/></span>
+                        </t>
+                    </div>
+                </t>
+                <t t-else="">
+                    <div class="uw-empty">No products yet — the catalog is filling via automatic import.<br/>لا توجد منتجات بعد — سيبدأ الاستيراد التلقائي بملء الكتالوج.</div>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <!-- Entry page: country grid + China Hub (mirrors the app entry). -->
+    <template id="world_entry" name="Uellow World — Entry">
+        <t t-call="website.layout">
+            <t t-set="additional_title">Global Shopping · تسوّق عالمي</t>
+            <div class="uw-wrap">
+                <style>
+                    .uw-wrap{background:#F6F6F6;min-height:70vh;font-family:'Tajawal','Inter',sans-serif}
+                    .uwe-hero{background:linear-gradient(135deg,#412402,#63410c);color:#fff;padding:40px 16px;text-align:center}
+                    .uwe-hero .b{display:inline-block;background:#F5C320;color:#412402;font-weight:900;border-radius:999px;padding:3px 14px;margin-bottom:10px;font-size:14px}
+                    .uwe-hero h1{font-weight:900;margin:0;font-size:30px}
+                    .uwe-hero p{opacity:.9;margin:8px 0 0}
+                    .uwe-sec{max-width:1000px;margin:22px auto 8px;padding:0 16px;font-weight:800;color:#412402;font-size:15px}
+                    .cgrid{max-width:1000px;margin:0 auto;padding:6px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+                    .ctile{background:#fff;border-radius:16px;padding:18px 12px;text-align:center;text-decoration:none;color:#412402;box-shadow:0 2px 8px rgba(0,0,0,.05);border:2px solid transparent;transition:.15s}
+                    .ctile:hover{box-shadow:0 8px 20px rgba(0,0,0,.10);transform:translateY(-2px)}
+                    .ctile.feat{border-color:#F5C320}
+                    .ctile .fl{font-size:40px;line-height:1}
+                    .ctile .nm{font-weight:800;margin-top:8px}
+                    .ctile .sub{color:#8a8a8a;font-size:12px;margin-top:2px}
+                    .hub{max-width:1000px;margin:16px auto 40px;padding:0 16px}
+                    .hub a{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#412402,#7a4e12);color:#fff;border-radius:18px;padding:20px 22px;text-decoration:none;box-shadow:0 6px 18px rgba(65,36,2,.25)}
+                    .hub .ic{font-size:38px}
+                    .hub .t{font-weight:900;font-size:19px}
+                    .hub .d{opacity:.85;font-size:13px;margin-top:2px}
+                    .hub .chip{margin-inline-start:auto;background:#F5C320;color:#412402;font-weight:900;border-radius:999px;padding:4px 12px;font-size:12px}
+                </style>
+
+                <div class="uwe-hero">
+                    <span class="b">🌍 <t t-esc="brand"/></span>
+                    <h1>The whole world in your pocket</h1>
+                    <p>العالم كله في جيبك · Choose your destination · <t t-esc="total"/> products</p>
+                </div>
+
+                <div class="uwe-sec">Countries / الدول</div>
+                <div class="cgrid">
+                    <t t-foreach="countries" t-as="c">
+                        <a t-attf-class="ctile#{' feat' if c.get('featured') else ''}"
+                           t-attf-href="/world/shop?country=#{c['code']}">
+                            <div class="fl"><t t-esc="c['flag']"/></div>
+                            <div class="nm"><t t-esc="c['name_ar']"/></div>
+                            <div class="sub"><t t-esc="c['name']"/></div>
+                        </a>
+                    </t>
+                </div>
+
+                <div class="uwe-sec" t-if="categories">Shop by Category / تسوّق حسب القسم</div>
+                <div class="uwe-cgrid" t-if="categories">
+                    <style>
+                        .uwe-cgrid{max-width:1000px;margin:2px auto 8px;padding:6px 12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:14px}
+                        .uwe-ct{text-decoration:none;color:#412402;text-align:center}
+                        .uwe-ct .ic{width:64px;height:64px;margin:0 auto;border-radius:20px;background:#fff;border:1px solid #EEE;box-shadow:0 2px 8px rgba(0,0,0,.05);display:flex;align-items:center;justify-content:center;font-size:30px;transition:.15s}
+                        .uwe-ct:hover .ic{box-shadow:0 8px 18px rgba(0,0,0,.12);transform:translateY(-2px)}
+                        .uwe-ct .lbl{display:block;margin-top:6px;font-size:11.5px;font-weight:700;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+                    </style>
+                    <t t-foreach="categories" t-as="c">
+                        <a class="uwe-ct" t-att-href="c['url']">
+                            <span class="ic"><t t-esc="c['icon']"/></span>
+                            <span class="lbl"><t t-esc="c['label']"/></span>
+                        </a>
+                    </t>
+                </div>
+
+                <div class="uwe-sec">Featured / مميّز</div>
+                <div class="hub">
+                    <a href="/world/shop">
+                        <div class="ic">🏪</div>
+                        <div>
+                            <div class="t">China Hub · مركز الصين</div>
+                            <div class="d">The great China destination — best products &amp; deals · أفضل المنتجات والعروض</div>
+                        </div>
+                        <span class="chip">Featured / مميّز</span>
+                    </a>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

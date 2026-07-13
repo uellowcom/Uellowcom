@@ -21,7 +21,17 @@ for rec in records:
     <field name="state">code</field>
     <field name="code">
 for rec in records:
-    rec.write({'delivery_status': 'pending'})
+    # remove the courier's trip line so it disappears from the driver app
+    env['delivery.trip.line'].search([('sale_order_id', '=', rec.id)]).unlink()
+    # clear the carrier assignment entirely and reset status to pending
+    rec.write({
+        'delivery_status': 'pending',
+        'delivery_carrier_company_id': False,
+        'delivery_driver_id': False,
+        'delivery_trip_id': False,
+        'pricing_rule_id': False,
+        'carrier_order_ref': False,
+    })
     </field>
   </record>
 
@@ -31,26 +41,47 @@ for rec in records:
     <field name="model">sale.order</field>
     <field name="inherit_id" ref="sale.view_order_form"/>
     <field name="arch" type="xml">
-      <!-- Add Assign/Recall buttons to header -->
-      <xpath expr="//div[@name='button_box']" position="before">
-        <div style="display:flex;gap:6px;align-items:center;margin-left:8px;">
-          <!-- v2.1.73 — one-click professional dispatch wizard -->
-          <button name="%(delivery_carrier_portal.action_assign_delivery_wizard)d"
-                  type="action"
-                  string="🚚 Assign to Delivery"
-                  class="btn btn-primary btn-sm"
-                  invisible="state == 'draft' or delivery_status in ('delivered','out_for_delivery')"/>
-          <button name="%(delivery_carrier_portal.action_server_assign_carrier)d"
-                  type="action"
-                  string="✅ Assign to Carrier"
-                  class="btn btn-success btn-sm"
-                  invisible="not delivery_carrier_company_id or delivery_status != 'pending'"/>
-          <button name="%(delivery_carrier_portal.action_server_recall_carrier)d"
-                  type="action"
-                  string="↩ Recall from Carrier"
-                  class="btn btn-warning btn-sm"
-                  invisible="delivery_status == 'pending'"/>
-        </div>
+      <!-- Add Assign/Recall buttons to the TOP header button row
+           (same row as Send by Email / Preview / Unlock) — placed before the
+           first header field so they sit at the start of the button row. -->
+      <xpath expr="//header/field[@name='locked']" position="before">
+        <!-- v2.1.73 — one-click professional dispatch wizard.
+             Assign shows only while the order is still pending (no carrier yet);
+             once a carrier is assigned, Recall takes its place in the same spot. -->
+        <button name="%(delivery_carrier_portal.action_assign_delivery_wizard)d"
+                type="action"
+                string="🚚 Assign to Delivery"
+                class="btn-primary"
+                invisible="state == 'draft' or delivery_status != 'pending'"/>
+        <button name="%(delivery_carrier_portal.action_server_recall_carrier)d"
+                type="action"
+                string="↩ Recall from Carrier"
+                class="btn-warning"
+                invisible="state == 'draft' or delivery_status == 'pending' or delivery_status in ('delivered','failed','failed_returned')"/>
+      </xpath>
+      <!-- Delivery & order summary on the MAIN screen (above the tabs) so the
+           carrier, payment method, website and key delivery data are visible
+           at a glance without opening the Delivery tab. -->
+      <xpath expr="//notebook" position="before">
+        <group string="🚚 Delivery &amp; Order Summary" col="4"
+               invisible="state == 'draft'">
+          <field name="delivery_carrier_company_id" readonly="1"/>
+          <field name="delivery_status" widget="badge"
+                 decoration-success="delivery_status == 'delivered'"
+                 decoration-danger="delivery_status in ('failed','failed_returned')"
+                 decoration-warning="delivery_status == 'out_for_delivery'"
+                 decoration-info="delivery_status == 'assigned'"
+                 decoration-muted="delivery_status == 'pending'"/>
+          <field name="delivery_driver_id" readonly="1"/>
+          <field name="carrier_order_ref" string="Carrier Ref" readonly="1"/>
+          <field name="payment_method_type" string="Payment Method" readonly="1"/>
+          <field name="cash_collection_status" string="Cash Status" readonly="1"
+                 invisible="payment_method_type != 'cash'"/>
+          <field name="website_id" string="Website" readonly="1"/>
+          <field name="carrier_net_cost" string="Net Carrier Cost KD" readonly="1"/>
+          <field name="delivery_gmaps_url" widget="url" text="📍 Open in Google Maps"
+                 readonly="1" invisible="not delivery_gmaps_url"/>
+        </group>
       </xpath>
       <notebook position="inside">
         <page string="Delivery Info" name="delivery_info">
@@ -85,9 +116,22 @@ for rec in records:
             </group>
           </group>
           <group string="Map Location">
-            <field name="delivery_lat"/>
-            <field name="delivery_lng"/>
-            <field name="delivery_address_text"/>
+            <group>
+              <field name="delivery_address_text"/>
+              <field name="delivery_gmaps_url" widget="url" text="📍 Open in Google Maps"
+                     readonly="1" invisible="not delivery_gmaps_url"/>
+              <field name="delivery_lat"/>
+              <field name="delivery_lng"/>
+            </group>
+            <group>
+              <field name="delivery_location_qr" widget="image"
+                     options="{'size': [180, 180]}" nolabel="1"
+                     invisible="not delivery_location_qr"/>
+              <div colspan="2" class="text-muted"
+                   invisible="not delivery_location_qr">
+                📷 Scan to open the location in Google Maps
+              </div>
+            </group>
           </group>
         </page>
         <!-- Return tab — only visible for failed orders -->

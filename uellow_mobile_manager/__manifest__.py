@@ -7,7 +7,7 @@
     'author': 'Uellow',
     'website': 'https://uellow.com',
     'depends': ['base', 'website', 'website_sale', 'sale', 'product', 'web', 'delivery',
-                'loyalty',
+                'loyalty', 'stock', 'purchase',
                 'dev_facebook_shop_integration', 'delivery_carrier_portal', 'uellow_multivendor',
                 'uellow_checkout', 'uellow_bundles'],
     'data': [

@@ -208,28 +208,25 @@ $uf-brand-dark  : #412402;
     margin-top: 8px;
 
     a {
-        width: 34px; height: 34px;
+        width: 38px; height: 38px;
         border-radius: 999px;
         border: none;
         background: #6c757d;          // neutral fallback
         color: #fff;
         display: grid; place-items: center;
-        font-size: 14px;
-        transition: transform .12s ease, filter .12s ease, box-shadow .12s ease;
-        &:hover { transform: translateY(-2px); filter: brightness(1.08);
-                  box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+        transition: transform .14s ease, box-shadow .14s ease, opacity .14s ease;
+        svg { width: 18px; height: 18px; display: block; }
+        &:hover { transform: translateY(-3px) scale(1.05);
+                  box-shadow: 0 6px 16px rgba(0,0,0,.22); }
 
-        // Real brand colours per platform
-        .fa-facebook, .fa-facebook-f      { }
-        &:has(.fa-facebook), &:has(.fa-facebook-f) { background: #1877f2; }
-        &:has(.fa-instagram) { background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fd5949 45%, #d6249f 65%, #285AEB 95%); }
-        &:has(.fa-twitter)   { background: #000; }
-        &:has(.fa-youtube-play), &:has(.fa-youtube) { background: #ff0000; }
-        &:has(.fa-music)     { background: #000; }   // TikTok
-        &:has(.fa-linkedin)  { background: #0a66c2; }
-        &:has(.fa-github)    { background: #24292e; }
-        &:has(.fa-whatsapp)  { background: #25d366; }
-        &:has(.fa-snapchat), &:has(.fa-snapchat-ghost) { background: #fffc00; color: #000; }
+        // Real brand colours per platform (crisp inline SVG logos)
+        &.uc-soc-facebook  { background: #1877f2; }
+        &.uc-soc-instagram { background: radial-gradient(circle at 30% 110%, #fdf497 0%, #fd5949 45%, #d6249f 65%, #285AEB 95%); }
+        &.uc-soc-x         { background: #000; }
+        &.uc-soc-youtube   { background: #ff0000; }
+        &.uc-soc-tiktok    { background: #000; }
+        &.uc-soc-linkedin  { background: #0a66c2; }
+        &.uc-soc-github    { background: #24292e; }
     }
 }
 

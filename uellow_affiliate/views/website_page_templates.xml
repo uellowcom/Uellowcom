@@ -209,7 +209,7 @@
 
     <!-- footer link (theme-agnostic: appended inside <footer>) -->
     <template id="footer_partners_link" name="Footer: Partners link"
-              inherit_id="website.layout">
+              inherit_id="website.layout" active="False">
         <xpath expr="//footer" position="inside">
             <div class="text-center py-2"
                  style="background:#412402">

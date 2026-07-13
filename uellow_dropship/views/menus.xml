@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_dropship_root" name="Uellow World" sequence="55"
+              web_icon="uellow_dropship,static/description/icon.png"/>
+
+    <!-- Dashboard is the module's main landing page -->
+    <menuitem id="menu_dropship_dashboard" name="Dashboard"
+              parent="menu_dropship_root" action="action_dropship_dashboard"
+              sequence="1"/>
+
+    <menuitem id="menu_dropship_catalog" name="Source Catalog"
+              parent="menu_dropship_root" action="action_dropship_product"
+              sequence="10"/>
+
+    <menuitem id="menu_dropship_orders" name="Orders"
+              parent="menu_dropship_root" action="action_dropship_orders"
+              sequence="12"/>
+
+    <menuitem id="menu_dropship_import" name="Import Products"
+              parent="menu_dropship_root" action="action_dropship_import_wizard"
+              sequence="15"/>
+
+    <menuitem id="menu_dropship_schedules" name="Scheduled Imports"
+              parent="menu_dropship_root" action="action_dropship_import_schedule"
+              sequence="18"/>
+
+    <menuitem id="menu_dropship_categories" name="World Categories"
+              parent="menu_dropship_root" action="action_dropship_category"
+              sequence="20"/>
+
+    <menuitem id="menu_dropship_config" name="Configuration"
+              parent="menu_dropship_root" sequence="90"/>
+
+    <menuitem id="menu_dropship_providers" name="Providers"
+              parent="menu_dropship_config" action="action_dropship_provider"
+              sequence="10"/>
+
+    <menuitem id="menu_dropship_text_rules" name="Word Replacement"
+              parent="menu_dropship_config" action="action_dropship_text_rule"
+              sequence="20"/>
+
+    <menuitem id="menu_dropship_settings_top" name="Settings"
+              parent="menu_dropship_root" action="action_dropship_settings_page"
+              sequence="80"/>
+
+    <menuitem id="menu_dropship_import_categories" name="Import AliExpress Categories"
+              parent="menu_dropship_config"
+              action="action_dropship_category_import_tree"
+              sequence="40"/>
+
+</odoo>

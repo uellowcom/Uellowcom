@@ -127,7 +127,7 @@ class DeliveryCashRemittanceLine(models.Model):
     _description = 'Remittance Order Line'
 
     remittance_id = fields.Many2one('delivery.cash.remittance', ondelete='cascade')
-    order_id = fields.Many2one('sale.order', string='Order')
+    order_id = fields.Many2one('sale.order', string='Order', ondelete='set null')
     order_name = fields.Char(related='order_id.name', string='Order #')
     carrier_order_ref = fields.Char(related='order_id.carrier_order_ref', string='Carrier Order Ref')
     amount = fields.Float(string='Amount (KD)', digits=(10, 3))

@@ -59,31 +59,19 @@
                 <meta property="fb:app_id" t-att-content="_seo_cfg.facebook_app_id"/>
             </t>
 
-            <!-- ── hreflang for active website languages ─────────────
-                 v2.0.40 (SEO cleanup): exclude non-target locales so
-                 Google stops crawling auto-translated low-value pages.
-                 The list mirrors uellow_seo_auto/models/website_inherit.py
-                 (DEINDEX_LANG_PREFIXES). To re-enable a locale, both
-                 places must be updated. -->
-            <t t-set="_deindex_prefixes" t-value="['fa','et','it','hi','de','fr','sv','sq','tr','es','bn']"/>
-            <t t-set="_seo_path" t-value="request.httprequest.path or '/'"/>
+            <!-- ── hreflang ──────────────────────────────────────────
+                 hreflang + x-default are emitted by Odoo's NATIVE website
+                 layout. Non-target auto-translated locales are already
+                 excluded there via our res.lang._get_frontend() override
+                 (see website_inherit.py → DEINDEX_LANG_PREFIXES).
+                 A second custom hreflang block used to live here; it emitted
+                 a DUPLICATE x-default plus conflicting locale-code alternates
+                 (ar-001/en-US pointing at different URLs than native ar/en),
+                 which invalidated the ENTIRE hreflang cluster for Google and
+                 hurt international indexing across the country subdomains.
+                 Removed 2026-07-05 — native tags are correct on their own.
+                 (_seo_base kept: the JSON-LD blocks below still use it.) -->
             <t t-set="_seo_base" t-value="(request.env['ir.config_parameter'].sudo().get_param('web.base.url') or '').rstrip('/')"/>
-            <t t-set="_all_langs" t-value="(request.website.language_ids if request.website else []).filtered(lambda l: (l.code or '').split('_')[0] not in _deindex_prefixes)"/>
-            <t t-set="_lang_codes" t-value="[l.url_code or l.code[:2] for l in _all_langs]"/>
-            <t t-set="_seo_clean_path">
-                <t t-foreach="_lang_codes" t-as="_lc">
-                    <t t-if="_seo_path.startswith('/' + _lc + '/') or _seo_path == '/' + _lc">
-                        <t t-set="_seo_path" t-value="_seo_path[len('/' + _lc):] or '/'"/>
-                    </t>
-                </t>
-            </t>
-            <t t-foreach="_all_langs" t-as="_lang">
-                <t t-set="_lc_url" t-value="_lang.url_code or _lang.code[:2]"/>
-                <t t-set="_alt_url" t-value="_seo_base + (('/' + _lc_url + _seo_path) if _seo_path != '/' else ('/' + _lc_url))"/>
-                <link rel="alternate" t-att-hreflang="(_lang.code or '').replace('_','-')" t-att-href="_alt_url"/>
-            </t>
-            <!-- x-default points at default lang (no prefix) -->
-            <link rel="alternate" hreflang="x-default" t-att-href="_seo_base + _seo_path"/>
 
             <!-- ── Organization JSON-LD ────────────────────────────── -->
             <script type="application/ld+json">

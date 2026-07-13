@@ -29,13 +29,6 @@
     <field name="daily_req_budget">1000</field>
     <field name="daily_bytes_budget_mb">100</field>
   </record>
-  <record id="bot_yandex" model="uellow.perf.bot.class">
-    <field name="name">YandexBot</field>
-    <field name="ua_pattern">YandexBot</field>
-    <field name="sequence">10</field>
-    <field name="daily_req_budget">3000</field>
-    <field name="daily_bytes_budget_mb">300</field>
-  </record>
   <record id="bot_dotbot" model="uellow.perf.bot.class">
     <field name="name">DotBot (Moz)</field>
     <field name="ua_pattern">DotBot</field>
@@ -120,6 +113,81 @@
     <field name="is_search_engine">True</field>
     <field name="daily_req_budget">5000</field>
     <field name="daily_bytes_budget_mb">500</field>
+  </record>
+  <!-- Yandex: real search engine. ua_pattern "Yandex" (not "YandexBot") so
+       all Yandex sub-crawlers (YandexImages, YandexMobileBot, whose UA URL
+       contains "/bots" and would otherwise fall to the 500/day Generic-bot
+       bucket) match here. is_search_engine → retry-cap protection so a
+       transient block never turns into a 24h back-off. -->
+  <record id="bot_yandex" model="uellow.perf.bot.class">
+    <field name="name">YandexBot</field>
+    <field name="ua_pattern">Yandex</field>
+    <field name="sequence">20</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">20000</field>
+    <field name="daily_bytes_budget_mb">2000</field>
+  </record>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       Social / messaging link-preview crawlers. These fetch a shared
+       product URL once to build the rich preview card (image + title).
+       They are NOT search engines but MUST be allowed generously: if a
+       preview fetch is throttled, WhatsApp/Facebook/X shares of Uellow
+       products render as a bare link with no image → lost social CTR.
+       is_search_engine=True gives them the Retry-After cap so a transient
+       block can never produce a 24h back-off. Matched before the generic
+       catch-all (some of these UAs' help URLs contain "crawler"/"bot",
+       e.g. meta-externalagent → developers.facebook.com/.../crawler). -->
+  <record id="bot_meta_external" model="uellow.perf.bot.class">
+    <field name="name">Meta (facebook/instagram/threads)</field>
+    <field name="ua_pattern">meta-externalagent</field>
+    <field name="sequence">15</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">10000</field>
+    <field name="daily_bytes_budget_mb">1000</field>
+  </record>
+  <record id="bot_facebook_external" model="uellow.perf.bot.class">
+    <field name="name">facebookexternalhit</field>
+    <field name="ua_pattern">facebookexternalhit</field>
+    <field name="sequence">15</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">10000</field>
+    <field name="daily_bytes_budget_mb">1000</field>
+  </record>
+  <record id="bot_whatsapp" model="uellow.perf.bot.class">
+    <field name="name">WhatsApp</field>
+    <field name="ua_pattern">WhatsApp</field>
+    <field name="sequence">15</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">10000</field>
+    <field name="daily_bytes_budget_mb">1000</field>
+  </record>
+  <record id="bot_twitter" model="uellow.perf.bot.class">
+    <field name="name">Twitterbot (X)</field>
+    <field name="ua_pattern">Twitterbot</field>
+    <field name="sequence">15</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">5000</field>
+    <field name="daily_bytes_budget_mb">500</field>
+  </record>
+  <!-- seq 14 (before Twitterbot at 15): Telegram's UA is literally
+       "TelegramBot (like TwitterBot)", so it must be checked before the
+       Twitterbot class or it mis-attributes there. -->
+  <record id="bot_telegram" model="uellow.perf.bot.class">
+    <field name="name">TelegramBot</field>
+    <field name="ua_pattern">TelegramBot</field>
+    <field name="sequence">14</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">5000</field>
+    <field name="daily_bytes_budget_mb">500</field>
+  </record>
+  <record id="bot_linkedin" model="uellow.perf.bot.class">
+    <field name="name">LinkedInBot</field>
+    <field name="ua_pattern">LinkedInBot</field>
+    <field name="sequence">15</field>
+    <field name="is_search_engine">True</field>
+    <field name="daily_req_budget">3000</field>
+    <field name="daily_bytes_budget_mb">300</field>
   </record>
 
   <!-- Catch-all crawler — anything containing "bot" / "spider" / "crawler"

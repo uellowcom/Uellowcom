@@ -11,9 +11,14 @@
   <field name="arch" type="xml">
 <t t-name="uellow_checkout.cart">
   <t t-set="uc_lang" t-value="'ar' if (request.env.lang or '').startswith('ar') else 'en'"/>
+  <t t-set="uc_colors" t-value="{'red':'#E11D48','أحمر':'#E11D48','black':'#1E293B','أسود':'#1E293B','white':'#FFFFFF','أبيض':'#FFFFFF','blue':'#2563EB','أزرق':'#2563EB','green':'#15A34A','أخضر':'#15A34A','yellow':'#F5C320','أصفر':'#F5C320','gold':'#D4AF37','ذهبي':'#D4AF37','silver':'#C0C0C0','فضي':'#C0C0C0','gray':'#6B7892','grey':'#6B7892','رمادي':'#6B7892','pink':'#EC4899','وردي':'#EC4899','purple':'#8B5CF6','بنفسجي':'#8B5CF6','orange':'#F97316','برتقالي':'#F97316','brown':'#92400E','بني':'#92400E','navy':'#1E3A5F','beige':'#E8DCC4','بيج':'#E8DCC4','rose gold':'#B76E79'}"/>
   <t t-call="website.layout">
     <t t-set="no_header" t-value="True"/>
     <t t-set="no_footer" t-value="True"/>
+    <!-- Apply the checkout body class SYNCHRONOUSLY (before paint) so the light
+         page background + chrome rules take effect immediately instead of
+         flashing the theme's dark body background until the lazy JS bundle runs. -->
+    <script>try{document.body.classList.add('uellow-checkout-active');}catch(e){}</script>
     <t t-set="title"><t t-if="uc_lang=='ar'">سلة التسوق</t><t t-else="">Shopping Cart</t></t>
 
     <div class="uc-mobile-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
@@ -51,6 +56,34 @@
           </div>
         </t>
         <t t-else="">
+          <!-- Free-shipping progress bar -->
+          <t t-set="uc_cart_total" t-value="sum(l.price_subtotal for l in order.order_line if not l.is_delivery)"/>
+          <t t-set="uc_free_threshold" t-value="10.0"/>
+          <t t-if="uc_cart_total &lt; uc_free_threshold">
+            <t t-set="uc_remaining" t-value="uc_free_threshold - uc_cart_total"/>
+            <t t-set="uc_pct" t-value="min(100, int(uc_cart_total / uc_free_threshold * 100))"/>
+            <div class="uc-fship">
+              <div class="uc-fship__t">
+                <span>&#x1F69A; <t t-if="uc_lang=='ar'">اقتربت من الشحن المجاني!</t><t t-else="">Almost there!</t></span>
+                <span><t t-out="uc_pct"/>%</span>
+              </div>
+              <div class="uc-fship__bar"><i t-att-style="'width:' + str(uc_pct) + '%'"/></div>
+              <div class="uc-fship__note">
+                <t t-if="uc_lang=='ar'">أضف <t t-out="'%.3f' % uc_remaining"/> <t t-out="currency_symbol"/> للشحن المجاني</t>
+                <t t-else="">Add <t t-out="'%.3f' % uc_remaining"/> <t t-out="currency_symbol"/> for FREE shipping</t>
+              </div>
+            </div>
+          </t>
+          <t t-else="">
+            <div class="uc-fship">
+              <div class="uc-fship__t">
+                <span>&#x1F389; <t t-if="uc_lang=='ar'">حصلت على الشحن المجاني!</t><t t-else="">You unlocked FREE shipping!</t></span>
+                <span>100%</span>
+              </div>
+              <div class="uc-fship__bar"><i style="width:100%"/></div>
+            </div>
+          </t>
+
           <!-- Cart items -->
           <t t-foreach="order.order_line.filtered(lambda l: not l.is_delivery)" t-as="line">
             <div class="uc-item" t-att-data-line-id="line.id">
@@ -63,19 +96,25 @@
                 <div class="uc-item__name"><t t-out="line.product_id.name"/></div>
                 <t t-if="line.product_id.product_template_attribute_value_ids">
                   <div class="uc-item__variant">
-                    <t t-out="', '.join(line.product_id.product_template_attribute_value_ids.mapped('name'))"/>
+                    <t t-foreach="line.product_id.product_template_attribute_value_ids.mapped('name')" t-as="vn">
+                      <t t-set="vhex" t-value="uc_colors.get((vn or '').strip().lower())"/>
+                      <span class="uc-chip">
+                        <t t-if="vhex"><span class="uc-swp" t-att-style="'background:%s' % vhex"/></t>
+                        <t t-out="vn"/>
+                      </span>
+                    </t>
                   </div>
                 </t>
                 <div class="uc-item__price"><t t-out="'%.3f' % line.price_unit"/> <t t-out="currency_symbol"/></div>
               </div>
               <div class="uc-item__right">
-                <button type="button" class="uc-del" t-att-data-line-id="line.id">&#x2715;</button>
+                <button type="button" class="uc-del" t-att-data-line-id="line.id">&#x1F5D1;</button>
                 <div class="uc-qty" t-att-data-line-id="line.id">
                   <button type="button" class="uc-qty__btn" data-action="minus">&#x2212;</button>
                   <span class="uc-qty__n"><t t-out="int(line.product_uom_qty)"/></span>
                   <button type="button" class="uc-qty__btn" data-action="plus">&#x2B;</button>
                 </div>
-                <span style="font-size:14px;font-weight:800;color:#D4500A">
+                <span class="uc-line-sub">
                   <t t-out="'%.3f' % line.price_subtotal"/> <t t-out="currency_symbol"/>
                 </span>
               </div>
@@ -111,12 +150,16 @@
         </t>
       </div><!-- end scroll-body -->
 
-      <!-- Footer -->
+      <!-- Footer: live total + action -->
       <t t-if="order and order.order_line">
         <div class="uc-footer-bar">
-          <button type="button" class="uc-btn" id="uc-to-shipping">
-            <t t-if="uc_lang=='ar'">&#x2190; متابعة للشحن</t>
-            <t t-else="">Continue to Shipping &#x2192;</t>
+          <div class="uc-footer-total">
+            <small><t t-if="uc_lang=='ar'">الإجمالي</t><t t-else="">Total</t></small>
+            <b><t t-out="'%.3f' % sum(l.price_subtotal for l in order.order_line if not l.is_delivery)"/> <t t-out="currency_symbol"/></b>
+          </div>
+          <button type="button" class="uc-btn" id="uc-to-shipping" style="flex:1.3">
+            <t t-if="uc_lang=='ar'">&#x2190; متابعة</t>
+            <t t-else="">Checkout &#x2192;</t>
           </button>
         </div>
       </t>
@@ -150,23 +193,34 @@
                 <t t-else=""><div class="uc-desk-item__ph">&#x1F4E6;</div></t>
                 <div style="flex:1;min-width:0">
                   <div class="uc-desk-item__name"><t t-out="line.product_id.name"/></div>
+                  <t t-if="line.product_id.product_template_attribute_value_ids">
+                    <div class="uc-item__variant">
+                      <t t-foreach="line.product_id.product_template_attribute_value_ids.mapped('name')" t-as="vn">
+                        <t t-set="vhex" t-value="uc_colors.get((vn or '').strip().lower())"/>
+                        <span class="uc-chip">
+                          <t t-if="vhex"><span class="uc-swp" t-att-style="'background:%s' % vhex"/></t>
+                          <t t-out="vn"/>
+                        </span>
+                      </t>
+                    </div>
+                  </t>
                   <div class="uc-desk-item__price"><t t-out="'%.3f' % line.price_unit"/> <t t-out="currency_symbol"/></div>
                 </div>
                 <div class="uc-desk-item__right">
-                  <button type="button" class="uc-del" t-att-data-line-id="line.id">&#x2715;</button>
+                  <button type="button" class="uc-del" t-att-data-line-id="line.id">&#x1F5D1;</button>
                   <div class="uc-qty" t-att-data-line-id="line.id">
                     <button type="button" class="uc-qty__btn" data-action="minus">&#x2212;</button>
                     <span class="uc-qty__n"><t t-out="int(line.product_uom_qty)"/></span>
                     <button type="button" class="uc-qty__btn" data-action="plus">&#x2B;</button>
                   </div>
-                  <span style="font-size:14px;font-weight:800;color:#D4500A">
+                  <span class="uc-line-sub">
                     <t t-out="'%.3f' % line.price_subtotal"/> <t t-out="currency_symbol"/>
                   </span>
                 </div>
               </div>
             </t>
             <!-- Coupon -->
-            <div style="padding:14px 18px;border-top:1px solid #FFF3CD">
+            <div style="padding:14px 18px;border-top:1px solid var(--uco-line)">
               <div class="uc-coupon-row">
                 <input class="uc-coupon-inp" type="text" id="uc-coupon-inp-desk"
                        t-att-placeholder="'كود الخصم...' if uc_lang=='ar' else 'Coupon code...'"/>
@@ -207,6 +261,7 @@
                 <t t-if="uc_lang=='ar'">&#x2190; متابعة للشحن</t>
                 <t t-else="">Continue to Shipping &#x2192;</t>
               </button>
+              <div class="uc-trust">&#x1F512; <t t-if="uc_lang=='ar'">دفع آمن ومشفّر 256-bit SSL</t><t t-else="">Secured &#x00B7; 256-bit SSL</t></div>
             </div>
           </div>
         </div>
@@ -232,6 +287,10 @@
   <t t-call="website.layout">
     <t t-set="no_header" t-value="True"/>
     <t t-set="no_footer" t-value="True"/>
+    <!-- Apply the checkout body class SYNCHRONOUSLY (before paint) so the light
+         page background + chrome rules take effect immediately instead of
+         flashing the theme's dark body background until the lazy JS bundle runs. -->
+    <script>try{document.body.classList.add('uellow-checkout-active');}catch(e){}</script>
     <t t-set="title"><t t-if="uc_lang=='ar'">عنوان الشحن</t><t t-else="">Shipping Address</t></t>
 
     <div class="uc-mobile-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
@@ -418,17 +477,28 @@
             </div>
             <div class="uc-card-body" style="display:flex;flex-direction:column;gap:8px">
               <t t-foreach="carriers" t-as="c">
-                <label class="uc-ship-opt" t-att-data-carrier-id="c['carrier'].id"
-                       t-att-data-price="'%.3f' % c['price']">
-                  <input type="radio" name="carrier_id" t-att-value="c['carrier'].id"/>
+                <label t-attf-class="uc-ship-opt#{'' if c['available_now'] else ' uc-ship-opt--off'}"
+                       t-att-data-carrier-id="c['carrier'].id"
+                       t-att-data-price="'%.3f' % c['price']"
+                       t-att-data-available="'1' if c['available_now'] else '0'"
+                       t-att-data-note="c['avail_note']">
+                  <input type="radio" name="carrier_id" t-att-value="c['carrier'].id"
+                         t-att-disabled="'disabled' if not c['available_now'] else None"/>
                   <div class="uc-ship-icon">&#x1F69A;</div>
                   <div class="uc-ship-info">
-                    <div class="uc-ship-name"><t t-out="c['carrier'].name"/></div>
-                    <div class="uc-ship-sub"><t t-if="uc_lang=='ar'">التوصيل القياسي</t><t t-else="">Standard delivery</t></div>
+                    <div class="uc-ship-name"><t t-out="c['name']"/></div>
+                    <div class="uc-ship-sub" t-if="c['sub']"><t t-out="c['sub']"/></div>
+                    <div class="uc-ship-off-note" t-if="not c['available_now'] and c['avail_note']"><t t-out="c['avail_note']"/></div>
+                    <div class="uc-ship-cutoff" t-if="c['available_now'] and c['cutoff']">
+                      <t t-if="uc_lang=='ar'">اطلب قبل <t t-out="c['cutoff']"/></t>
+                      <t t-else="">Order before <t t-out="c['cutoff']"/></t>
+                    </div>
                   </div>
-                  <div class="uc-ship-price">
+                  <div t-attf-class="uc-ship-price#{' free' if c['price'] == 0.0 else ''}">
                     <t t-if="c['price'] == 0.0">
-                      <t t-if="uc_lang=='ar'">مجاني</t><t t-else="">Free</t>
+                      <t t-if="c.get('free_label')"><t t-out="c['free_label']"/></t>
+                      <t t-elif="uc_lang=='ar'">مجاني</t>
+                      <t t-else="">Free</t>
                     </t>
                     <t t-else=""><t t-out="'%.3f' % c['price']"/> <t t-out="currency_symbol"/></t>
                   </div>
@@ -439,11 +509,15 @@
           </div>
         </t>
 
-        <!-- Footer -->
+        <!-- Footer: live total + action -->
         <div class="uc-footer-bar">
-          <button type="submit" class="uc-btn">
+          <div class="uc-footer-total">
+            <small><t t-if="uc_lang=='ar'">الإجمالي</t><t t-else="">Total</t></small>
+            <b><t t-out="'%.3f' % order.amount_total"/> <t t-out="currency_symbol"/></b>
+          </div>
+          <button type="submit" class="uc-btn" style="flex:1.3">
             <t t-if="uc_lang=='ar'">&#x2190; متابعة للدفع</t>
-            <t t-else="">Continue to Payment &#x2192;</t>
+            <t t-else="">Continue &#x2192;</t>
           </button>
         </div>
       </form>
@@ -583,15 +657,29 @@
                 </div>
                 <div class="uc-desk-ship">
                   <t t-foreach="carriers" t-as="c">
-                    <label class="uc-ship-opt" t-att-data-carrier-id="c['carrier'].id"
-                           t-att-data-price="'%.3f' % c['price']">
-                      <input type="radio" name="carrier_id" t-att-value="c['carrier'].id"/>
+                    <label t-attf-class="uc-ship-opt#{'' if c['available_now'] else ' uc-ship-opt--off'}"
+                           t-att-data-carrier-id="c['carrier'].id"
+                           t-att-data-price="'%.3f' % c['price']"
+                           t-att-data-available="'1' if c['available_now'] else '0'"
+                           t-att-data-note="c['avail_note']">
+                      <input type="radio" name="carrier_id" t-att-value="c['carrier'].id"
+                             t-att-disabled="'disabled' if not c['available_now'] else None"/>
                       <div class="uc-ship-icon">&#x1F69A;</div>
                       <div class="uc-ship-info">
-                        <div class="uc-ship-name"><t t-out="c['carrier'].name"/></div>
+                        <div class="uc-ship-name"><t t-out="c['name']"/></div>
+                        <div class="uc-ship-sub" t-if="c['sub']"><t t-out="c['sub']"/></div>
+                        <div class="uc-ship-off-note" t-if="not c['available_now'] and c['avail_note']"><t t-out="c['avail_note']"/></div>
+                        <div class="uc-ship-cutoff" t-if="c['available_now'] and c['cutoff']">
+                          <t t-if="uc_lang=='ar'">اطلب قبل <t t-out="c['cutoff']"/></t>
+                          <t t-else="">Order before <t t-out="c['cutoff']"/></t>
+                        </div>
                       </div>
-                      <div class="uc-ship-price">
-                        <t t-if="c['price'] == 0.0"><t t-if="uc_lang=='ar'">مجاني</t><t t-else="">Free</t></t>
+                      <div t-attf-class="uc-ship-price#{' free' if c['price'] == 0.0 else ''}">
+                        <t t-if="c['price'] == 0.0">
+                          <t t-if="c.get('free_label')"><t t-out="c['free_label']"/></t>
+                          <t t-elif="uc_lang=='ar'">مجاني</t>
+                          <t t-else="">Free</t>
+                        </t>
                         <t t-else=""><t t-out="'%.3f' % c['price']"/> <t t-out="currency_symbol"/></t>
                       </div>
                       <div class="uc-rdot"/>
@@ -627,6 +715,7 @@
                   <t t-if="uc_lang=='ar'">&#x2190; متابعة للدفع</t>
                   <t t-else="">Continue to Payment &#x2192;</t>
                 </button>
+                <div class="uc-trust">&#x1F512; <t t-if="uc_lang=='ar'">دفع آمن ومشفّر 256-bit SSL</t><t t-else="">Secured &#x00B7; 256-bit SSL</t></div>
               </div>
             </div>
           </div>
@@ -653,6 +742,10 @@
   <t t-call="website.layout">
     <t t-set="no_header" t-value="True"/>
     <t t-set="no_footer" t-value="True"/>
+    <!-- Apply the checkout body class SYNCHRONOUSLY (before paint) so the light
+         page background + chrome rules take effect immediately instead of
+         flashing the theme's dark body background until the lazy JS bundle runs. -->
+    <script>try{document.body.classList.add('uellow-checkout-active');}catch(e){}</script>
     <t t-set="title"><t t-if="uc_lang=='ar'">الدفع</t><t t-else="">Payment</t></t>
 
     <div class="uc-mobile-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">
@@ -728,14 +821,19 @@
               <t t-if="uc_lang=='ar'">اختر وسيلة الدفع</t><t t-else="">Choose Payment Method</t>
             </span>
           </div>
-          <div class="uc-card-body" id="uc-pay-list-mobile" style="display:flex;flex-direction:column;gap:8px">
-            <div style="text-align:center;padding:16px;color:#999;font-size:13px">&#x23F3; <t t-if="uc_lang=='ar'">جارٍ التحميل...</t><t t-else="">Loading...</t></div>
+          <div class="uc-card-body" id="uc-pay-list-mobile" style="display:flex;flex-direction:column;gap:10px">
+            <div class="uc-pay-loading">&#x23F3; <t t-if="uc_lang=='ar'">جارٍ التحميل...</t><t t-else="">Loading...</t></div>
           </div>
+        </div>
+
+        <!-- Loyalty teaser -->
+        <div class="uc-loyalty">
+          &#x1F381; <t t-if="uc_lang=='ar'">اكسب نقاط ولاء على هذا الطلب</t><t t-else="">Earn loyalty points on this order</t>
         </div>
 
         <!-- Secure badge -->
         <div class="uc-secure">
-          &#x1F512; <t t-if="uc_lang=='ar'">دفع آمن ومشفر</t><t t-else="">Secure Encrypted Payment</t>
+          &#x1F512; <t t-if="uc_lang=='ar'">دفع آمن ومشفّر &#x00B7; UPayments</t><t t-else="">Secured by UPayments &#x00B7; 256-bit SSL</t>
         </div>
 
       </div><!-- scroll-body -->
@@ -768,7 +866,7 @@
               <span class="uc-desk-card-title"><t t-if="uc_lang=='ar'">وسيلة الدفع</t><t t-else="">Payment Method</t></span>
             </div>
             <div class="uc-desk-pay-opts" id="uc-pay-list-desk">
-              <div style="text-align:center;padding:16px;color:#999;font-size:13px">&#x23F3; <t t-if="uc_lang=='ar'">جارٍ التحميل...</t><t t-else="">Loading...</t></div>
+              <div class="uc-pay-loading">&#x23F3; <t t-if="uc_lang=='ar'">جارٍ التحميل...</t><t t-else="">Loading...</t></div>
             </div>
           </div>
         </div>
@@ -829,6 +927,10 @@
   <t t-call="website.layout">
     <t t-set="no_header" t-value="True"/>
     <t t-set="no_footer" t-value="True"/>
+    <!-- Apply the checkout body class SYNCHRONOUSLY (before paint) so the light
+         page background + chrome rules take effect immediately instead of
+         flashing the theme's dark body background until the lazy JS bundle runs. -->
+    <script>try{document.body.classList.add('uellow-checkout-active');}catch(e){}</script>
     <t t-set="title"><t t-if="uc_lang=='ar'">تأكيد الطلب</t><t t-else="">Order Confirmed</t></t>
 
     <div class="uc-mobile-wrap" t-att-dir="'rtl' if uc_lang=='ar' else 'ltr'">

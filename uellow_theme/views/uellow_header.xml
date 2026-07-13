@@ -160,7 +160,7 @@
                                             <span t-else="" class="uc-site-flag-globe">
                                                 <i class="fa fa-globe"/>
                                             </span>
-                                            <span class="uc-site-name" t-out="_site.name.replace('Uellow','').strip() or 'Global'"/>
+                                            <span class="uc-site-name" t-out="website._uc_country_name(_site.name)"/>
                                             <i t-if="_site.id == website.id" class="fa fa-check uc-site-check"/>
                                         </a>
                                     </div>
@@ -232,7 +232,7 @@
                                 <span class="uc-search-icon d-flex"><i class="fa fa-search"/></span>
                                 <input type="search" name="search" class="uc-search-input"
                                        id="uc-search-input"
-                                       t-att-placeholder="website.uc_search_placeholder or website._uc_t('Search for products, brands and more...')"
+                                       t-att-placeholder="website._uc_t(website.uc_search_placeholder or 'Search for products, brands and more...')"
                                        aria-label="Search the store"
                                        aria-autocomplete="list"
                                        aria-controls="uc-search-suggest"

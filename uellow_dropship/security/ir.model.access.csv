@@ -1,0 +1,24 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_dropship_provider_user,dropship.provider user,model_dropship_provider,base.group_user,1,0,0,0
+access_dropship_provider_manager,dropship.provider manager,model_dropship_provider,base.group_system,1,1,1,1
+access_dropship_product_user,dropship.product user,model_dropship_product,base.group_user,1,0,0,0
+access_dropship_product_manager,dropship.product manager,model_dropship_product,base.group_system,1,1,1,1
+access_dropship_product_public,dropship.product public,model_dropship_product,base.group_public,1,0,0,0
+access_dropship_product_portal,dropship.product portal,model_dropship_product,base.group_portal,1,0,0,0
+access_dropship_text_rule_user,dropship.text.rule user,model_dropship_text_rule,base.group_user,1,0,0,0
+access_dropship_text_rule_manager,dropship.text.rule manager,model_dropship_text_rule,base.group_system,1,1,1,1
+access_dropship_category_user,dropship.category user,model_dropship_category,base.group_user,1,0,0,0
+access_dropship_category_manager,dropship.category manager,model_dropship_category,base.group_system,1,1,1,1
+access_dropship_category_public,dropship.category public,model_dropship_category,base.group_public,1,0,0,0
+access_dropship_category_portal,dropship.category portal,model_dropship_category,base.group_portal,1,0,0,0
+access_dropship_dashboard_user,dropship.dashboard user,model_dropship_dashboard,base.group_user,1,0,0,0
+access_dropship_dashboard_manager,dropship.dashboard manager,model_dropship_dashboard,base.group_system,1,1,1,1
+access_dropship_import_wizard_manager,dropship.import.wizard manager,model_dropship_import_wizard,base.group_system,1,1,1,1
+access_dropship_import_schedule_user,dropship.import.schedule user,model_dropship_import_schedule,base.group_user,1,0,0,0
+access_dropship_import_schedule_manager,dropship.import.schedule manager,model_dropship_import_schedule,base.group_system,1,1,1,1
+access_dropship_browse_wizard_manager,dropship.browse.wizard manager,model_dropship_browse_wizard,base.group_system,1,1,1,1
+access_dropship_browse_line_manager,dropship.browse.line manager,model_dropship_browse_line,base.group_system,1,1,1,1
+access_dropship_settings_user,dropship.settings user,model_dropship_settings,base.group_user,1,0,0,0
+access_dropship_settings_manager,dropship.settings manager,model_dropship_settings,base.group_system,1,1,1,1
+access_dropship_price_history_user,dropship.price.history user,model_dropship_price_history,base.group_user,1,0,0,0
+access_dropship_price_history_manager,dropship.price.history manager,model_dropship_price_history,base.group_system,1,1,1,1

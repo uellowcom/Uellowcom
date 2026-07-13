@@ -188,19 +188,40 @@
       d.querySelectorAll('.uc-confirm-btn, .uc-btn, .uc-desk-btn').forEach(function (b) {
         b.disabled = false;
       });
-      _toast(
-        (res && res.error) || 'Payment failed, please try again',
-        'فشلت عملية الدفع، حاول مجدداً',
-        'error'
-      );
+      _payDialog((res && res.error) ||
+        (isAr ? 'تعذّر إتمام الدفع، حاول مجدداً' : 'Payment could not be completed, please try again'));
     }).catch(function () {
       _hideOverlay();
       _submitInflight = false;
       d.querySelectorAll('.uc-confirm-btn, .uc-btn, .uc-desk-btn').forEach(function (b) {
         b.disabled = false;
       });
-      _toast('Connection error', 'خطأ في الاتصال', 'error');
+      _payDialog(isAr ? 'خطأ في الاتصال، تحقّق من الإنترنت وحاول مجدداً'
+                      : 'Connection error, check your internet and try again');
     });
+  }
+
+  /* Professional centered payment-error dialog (replaces the red top toast) */
+  function _payDialog(msg) {
+    var existing = d.getElementById('uc-pay-dialog');
+    if (existing) existing.remove();
+    var ov = d.createElement('div');
+    ov.id = 'uc-pay-dialog';
+    ov.className = 'uc-dlg-ov';
+    ov.setAttribute('dir', isAr ? 'rtl' : 'ltr');
+    ov.innerHTML =
+      '<div class="uc-dlg" role="alertdialog" aria-modal="true">' +
+        '<div class="uc-dlg-ic">!</div>' +
+        '<div class="uc-dlg-title">' + (isAr ? 'تعذّر إتمام الدفع' : 'Payment not completed') + '</div>' +
+        '<div class="uc-dlg-msg"></div>' +
+        '<button type="button" class="uc-dlg-btn">' + (isAr ? 'حسناً، اختيار وسيلة أخرى' : 'OK, choose another method') + '</button>' +
+      '</div>';
+    ov.querySelector('.uc-dlg-msg').textContent = msg || '';
+    function close(){ ov.classList.remove('show'); setTimeout(function(){ try{ov.remove();}catch(e){} }, 180); }
+    ov.querySelector('.uc-dlg-btn').addEventListener('click', close);
+    ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    d.body.appendChild(ov);
+    requestAnimationFrame(function(){ ov.classList.add('show'); });
   }
 
   /* Cart */
@@ -723,14 +744,28 @@
     if (!opts.length) return;
 
     function selectOpt(opt) {
+      /* Express-availability policy (matches the app): an out-of-hours method
+         can't be selected — explain via a dialog instead. */
+      if (opt.dataset.available === '0') {
+        _payDialog(opt.dataset.note ||
+          (isAr ? 'وسيلة التوصيل غير متاحة الآن' : 'This delivery method is unavailable right now'));
+        return;
+      }
+      /* The page renders TWO layouts (mobile + desktop), each with its own
+         carrier radios + address form. Sync the selection across BOTH by
+         carrier id so whichever form the customer submits always carries the
+         chosen carrier_id (previously only one layout got checked → the other
+         form could submit with no carrier → no shipping line). */
+      var cid = opt.dataset.carrierId ||
+                ((opt.querySelector('input[type="radio"]') || {}).value);
       d.querySelectorAll('.uc-ship-opt').forEach(function (o) {
-        o.classList.remove('sel');
+        var ocid = o.dataset.carrierId ||
+                   ((o.querySelector('input[type="radio"]') || {}).value);
+        var match = String(ocid) === String(cid);
+        o.classList.toggle('sel', match);
         var r = o.querySelector('input[type="radio"]');
-        if (r) r.checked = false;
+        if (r) r.checked = match;
       });
-      opt.classList.add('sel');
-      var radio = opt.querySelector('input[type="radio"]');
-      if (radio) radio.checked = true;
 
       /* Read price from data-price (set in template) */
       var priceStr = opt.dataset.price || opt.getAttribute('data-price') || '0';
@@ -798,16 +833,25 @@
           totValEl.textContent = grandTotal.toFixed(3) + ' ' + sym;
         }
       });
+
+      /* Also update the sticky bottom-bar total (mobile + desktop) so the
+         amount next to the action button INCLUDES the selected shipping. */
+      if (baseSubtotal > 0) {
+        d.querySelectorAll('.uc-footer-total b').forEach(function (el) {
+          el.textContent = grandTotal.toFixed(3) + ' ' + sym;
+        });
+      }
     }
 
     opts.forEach(function (opt) {
       opt.addEventListener('click', function () { selectOpt(opt); });
     });
 
-    /* Auto-select first option on load */
+    /* Auto-select the first AVAILABLE option on load (skip out-of-hours ones) */
     setTimeout(function () {
-      var firstOpt = d.querySelector('.uc-ship-opt');
-      if (firstOpt) selectOpt(firstOpt);
+      var firstOpt = d.querySelector('.uc-ship-opt:not(.uc-ship-opt--off)')
+                  || d.querySelector('.uc-ship-opt');
+      if (firstOpt && firstOpt.dataset.available !== '0') selectOpt(firstOpt);
     }, 200);
   }
 
