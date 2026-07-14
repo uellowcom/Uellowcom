@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Cross-country hreflang cluster.
+      Replaces Odoo's core per-site LANGUAGE hreflang (generic en/ar for the
+      current domain only) with a full reciprocal country/region cluster so
+      Google indexes each country subdomain for its own market instead of
+      consolidating them as duplicates.
+    -->
+    <template id="uellow_country_hreflang" inherit_id="website.layout"
+              name="Uellow: cross-country hreflang cluster">
+        <!-- drop the core per-language loop -->
+        <xpath expr="//t[@t-foreach='frontend_languages.values()']" position="replace"/>
+        <!-- replace core x-default with the full reciprocal country cluster -->
+        <xpath expr="//link[@hreflang='x-default']" position="replace">
+            <t t-foreach="website._uellow_country_hreflangs()" t-as="hl">
+                <link rel="alternate" t-att-hreflang="hl['hreflang']" t-att-href="hl['href']"/>
+            </t>
+        </xpath>
+    </template>
+</odoo>

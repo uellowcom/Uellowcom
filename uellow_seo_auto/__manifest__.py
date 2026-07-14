@@ -23,6 +23,7 @@
         'wizard/seo_generate_wizard_views.xml',
         'views/seo_views.xml',
         'views/seo_head_inherit.xml',
+        'views/hreflang_country_templates.xml',
         'views/menus.xml',
     ],
     'installable': True,
