@@ -2,7 +2,7 @@
 import requests
 import logging
 from datetime import date
-from odoo import http, fields
+from odoo import http, fields, fields
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)
@@ -123,6 +123,10 @@ class DeliveryPortalController(http.Controller):
                     and o.cash_collection_status in ('pending', 'collected')
                     and o.delivery_status == 'delivered'
                 ).mapped('amount_total')),
+                'total_count': len(orders),
+                'today_count': len(orders.filtered(lambda o: o.date_order and o.date_order.date() == fields.Date.context_today(request.env.user))),
+                'success_rate': int(round(100.0 * len(orders.filtered(lambda o: o.delivery_status == 'delivered')) / max(1, len(orders.filtered(lambda o: o.delivery_status in ('delivered', 'failed', 'failed_returned')))))),
+                'today': fields.Date.context_today(request.env.user).strftime('%d %b %Y'),
                 'recent_orders': orders[:10],
                 'role': 'manager',
             })

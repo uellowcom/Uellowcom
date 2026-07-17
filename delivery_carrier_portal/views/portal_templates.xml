@@ -118,11 +118,49 @@
                 <t t-set="role" t-value="'manager'"/>
 <t t-set="active_page" t-value="'dashboard'"/>
 
-        <div class="dp-topbar">
-            <div class="dp-topbar-title">
-                
-                    Welcome 👋 — <t t-esc="company.name"/>
-                
+        <div class="dp-hero">
+            <div class="dp-hero-row">
+                <div class="dp-hero-id">
+                    <div class="dp-hero-avatar"><t t-esc="(company.name or '؟')[:1].upper()"/></div>
+                    <div class="dp-hero-idtext">
+                        <div class="dp-hero-hello">مرحباً بك <span>👋</span> · Welcome back</div>
+                        <div class="dp-hero-company"><t t-esc="company.name"/></div>
+                        <div class="dp-hero-meta">
+                            <span class="dp-hero-badge">🚚 مدير الناقل · Carrier Manager</span>
+                            <span class="dp-hero-date">📅 <t t-esc="today"/></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dp-hero-cash">
+                    <div class="dp-hero-cash-lbl">كاش محتجز لديك · COD you hold</div>
+                    <div class="dp-hero-cash-val"><t t-esc="'%.3f' % (pending_cash or 0)"/> <span>KD</span></div>
+                </div>
+            </div>
+            <div class="dp-hero-kpis">
+                <div class="dp-hk">
+                    <div class="dp-hk-val"><t t-esc="total_count"/></div>
+                    <div class="dp-hk-lbl">إجمالي الطلبات<br/>Total Orders</div>
+                </div>
+                <div class="dp-hk sky">
+                    <div class="dp-hk-val"><t t-esc="today_count"/></div>
+                    <div class="dp-hk-lbl">طلبات اليوم<br/>Today</div>
+                </div>
+                <div class="dp-hk amber">
+                    <div class="dp-hk-val"><t t-esc="in_transit_count"/></div>
+                    <div class="dp-hk-lbl">جاري التوصيل<br/>Out for Delivery</div>
+                </div>
+                <div class="dp-hk green">
+                    <div class="dp-hk-val"><t t-esc="delivered_count"/></div>
+                    <div class="dp-hk-lbl">تم التوصيل<br/>Delivered</div>
+                </div>
+                <div class="dp-hk red">
+                    <div class="dp-hk-val"><t t-esc="failed_count"/></div>
+                    <div class="dp-hk-lbl">فشل / مرتجع<br/>Failed</div>
+                </div>
+                <div class="dp-hk">
+                    <div class="dp-hk-val"><t t-esc="success_rate"/><span class="dp-hk-pct">%</span></div>
+                    <div class="dp-hk-lbl">نسبة النجاح<br/>Success Rate</div>
+                </div>
             </div>
         </div>
 
