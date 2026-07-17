@@ -13,6 +13,7 @@ Pricing (Claude Sonnet 4.5 as of 2026-01):
 import json
 import logging
 import time
+from datetime import timedelta
 
 from odoo import api, fields, models, _
 
@@ -155,6 +156,14 @@ class ProductTemplateAI(models.Model):
         keywords} via Claude. Writes results into website_meta_title /
         description + a hint stored in the product chatter."""
         self.ensure_one()
+        ICP = self.env['ir.config_parameter'].sudo()
+        paused_until = ICP.get_param('uellow_seo.ai_paused_until')
+        if paused_until:
+            try:
+                if fields.Datetime.now() < fields.Datetime.to_datetime(paused_until):
+                    return False
+            except Exception:
+                pass
         if anthropic is None:
             _logger.warning('anthropic SDK not installed — falling back to rule-based')
             return False
@@ -249,7 +258,21 @@ class ProductTemplateAI(models.Model):
             except Exception:
                 pass
         except Exception as e:
-            _logger.exception('Claude call failed for product %s', self.id)
+            msg = str(e)
+            if 'credit balance is too low' in msg or 'insufficient_quota' in msg:
+                # Circuit-breaker: stop hammering the API and flooding the log
+                # with tracebacks once credits run out. Pause AI generation;
+                # the queue (seo_needs_ai_regen) is preserved and resumes when
+                # credits return.
+                hours = int(ICP.get_param('uellow_seo.ai_pause_hours', 6) or 6)
+                ICP.set_param(
+                    'uellow_seo.ai_paused_until',
+                    fields.Datetime.to_string(
+                        fields.Datetime.now() + timedelta(hours=hours)))
+                _logger.warning('[SEO-AI] Anthropic credit exhausted — pausing '
+                                'AI generation for %sh', hours)
+            else:
+                _logger.exception('Claude call failed for product %s', self.id)
             return False
 
         data = self._seo_ai_parse(text)

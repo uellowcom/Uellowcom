@@ -329,7 +329,14 @@ class DropshipProduct(models.Model):
     def _apply_stock(self, qty):
         """Store the provider stock and auto-unpublish/republish per setting."""
         self.ensure_one()
-        self.stock_qty = int(qty or 0)
+        # Clamp to a sane ceiling: some providers report absurd stock counts
+        # that exceed PostgreSQL's int4 range and raise NumericValueOutOfRange
+        # on write. Anything above this just means "plenty in stock".
+        try:
+            qty = int(qty or 0)
+        except (TypeError, ValueError):
+            qty = 0
+        self.stock_qty = max(0, min(qty, 999999))
         if self.env['ir.config_parameter'].sudo().get_param(
                 'uellow_dropship.unpublish_oos', 'True') not in ('True', '1', 'true'):
             return
@@ -942,8 +949,8 @@ class DropshipProduct(models.Model):
             vals['orders_text'] = str(unified['orders_text'])[:32]
         if unified.get('review_count') not in (None, '', 0):
             try:
-                vals['review_count'] = int(re.sub(r'[^\d]', '',
-                                                  str(unified['review_count'])) or 0)
+                vals['review_count'] = min(2000000000, int(re.sub(r'[^\d]', '',
+                                                  str(unified['review_count'])) or 0))
             except (TypeError, ValueError):
                 pass
         # auto-match the local category (same taxonomy as AliExpress): resolve
@@ -1142,7 +1149,7 @@ class DropshipProduct(models.Model):
             rc = unified.get('review_count')
             if rc:
                 try:
-                    vals['review_count'] = int(re.sub(r'[^\d]', '', str(rc)) or 0)
+                    vals['review_count'] = min(2000000000, int(re.sub(r'[^\d]', '', str(rc)) or 0))
                 except (TypeError, ValueError):
                     pass
             if unified.get('orders_text'):
