@@ -12,6 +12,7 @@ from werkzeug.exceptions import HTTPException
 
 from odoo import models
 from odoo.http import request, Response
+from odoo.addons.uellow_perf_guardian.models.perf_bot import _counter_exec
 
 _logger = logging.getLogger(__name__)
 
@@ -181,16 +182,12 @@ class IrHttpInherit(models.AbstractModel):
         # serialization conflict (common when many bots hit at once)
         # doesn't abort the whole HTTP transaction — losing a few
         # increments is fine; killing the page request is not.
-        try:
-            with env.cr.savepoint():
-                env.cr.execute("""
-                    UPDATE uellow_perf_bot_class
-                       SET req_today = req_today + 1,
-                           last_seen = NOW() AT TIME ZONE 'UTC'
-                     WHERE id = %s
-                """, [bot.id])
-        except Exception:
-            pass
+        _counter_exec(env.cr.dbname, """
+            UPDATE uellow_perf_bot_class
+               SET req_today = req_today + 1,
+                   last_seen = NOW() AT TIME ZONE 'UTC'
+             WHERE id = %s
+        """, [bot.id])
 
         try:
             with env.cr.savepoint():
@@ -336,15 +333,11 @@ class IrHttpInherit(models.AbstractModel):
         env = request.env
         mb = size / (1024 * 1024)
         # Same savepoint protection as the request counter.
-        try:
-            with env.cr.savepoint():
-                env.cr.execute("""
-                    UPDATE uellow_perf_bot_class
-                       SET bytes_today_mb = bytes_today_mb + %s
-                     WHERE id = %s
-                """, [mb, bot.id])
-        except Exception:
-            pass
+        _counter_exec(env.cr.dbname, """
+            UPDATE uellow_perf_bot_class
+               SET bytes_today_mb = bytes_today_mb + %s
+             WHERE id = %s
+        """, [mb, bot.id])
         try:
             with env.cr.savepoint():
                 env['uellow.perf.bot.hit'].sudo().record(

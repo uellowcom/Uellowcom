@@ -4,9 +4,36 @@ import socket
 import time
 from datetime import timedelta
 
+import odoo.sql_db
 from odoo import api, fields, models
 
 _logger = logging.getLogger(__name__)
+
+
+def _counter_exec(dbname, query, params):
+    """Run a hot per-minute counter write on a short, dedicated
+    READ COMMITTED connection.
+
+    Bot/error telemetry hammers a single row per (class, minute) or
+    (status, minute). Under the web request's default REPEATABLE READ
+    isolation, concurrent writers collide with 40001 "could not serialize
+    access due to concurrent update", which odoo.sql_db logs at ERROR on
+    every clash (the request itself is unaffected -- the callers already
+    swallow it in a savepoint -- but the log flood is relentless: >1000/h
+    under crawl load). At READ COMMITTED the concurrent writers simply
+    block on the row lock and proceed, so no serialization error is ever
+    raised. Telemetry only -- any failure is dropped silently.
+    """
+    try:
+        cr = odoo.sql_db.db_connect(dbname).cursor()
+        try:
+            cr.execute("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
+            cr.execute(query, params)
+            cr.commit()
+        finally:
+            cr.close()
+    except Exception:
+        pass
 
 # Allowed reverse-DNS suffixes for "real" search-engine bots
 _VERIFIED_DOMAINS = {
@@ -185,7 +212,7 @@ class PerfBotHit(models.Model):
     @api.model
     def record(self, bot_class, byte_count, over_quota, path):
         now = fields.Datetime.now().replace(second=0, microsecond=0)
-        self.env.cr.execute("""
+        _counter_exec(self.env.cr.dbname, """
             INSERT INTO uellow_perf_bot_hit
                 (bot_class_id, bucket_at, req_count, bytes_total,
                  over_quota_count, sample_path, create_uid, create_date,

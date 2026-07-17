@@ -30,7 +30,8 @@ class PerfErrorBucket(models.Model):
         if status_code < 400:
             return
         now = fields.Datetime.now().replace(second=0, microsecond=0)
-        self.env.cr.execute("""
+        from odoo.addons.uellow_perf_guardian.models.perf_bot import _counter_exec
+        _counter_exec(self.env.cr.dbname, """
             INSERT INTO uellow_perf_error_bucket
                 (bucket_at, status_code, count, sample_path,
                  create_uid, create_date, write_uid, write_date)
