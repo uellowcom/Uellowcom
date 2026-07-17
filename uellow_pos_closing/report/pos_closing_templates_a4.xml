@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_pos_closing_a4">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="d" t-value="o.get_closing_report_data()"/>
+                <div class="page" style="font-family:Helvetica,Arial,sans-serif;color:#1f3a35;font-size:12px;">
+
+                    <!-- header -->
+                    <table style="width:100%;border-bottom:3px solid #2F6E62;padding-bottom:8px;">
+                        <tr>
+                            <td style="vertical-align:top;">
+                                <table><tr>
+                                    <td style="width:54px;">
+                                        <div style="width:48px;height:48px;background:#2F6E62;color:#fff;border-radius:10px;text-align:center;font-size:26px;font-weight:bold;line-height:48px;">U</div>
+                                    </td>
+                                    <td style="padding-left:10px;">
+                                        <div style="font-size:19px;font-weight:bold;color:#1f4d44;"><span t-esc="d['company']"/></div>
+                                        <div style="font-size:11px;color:#6b7c78;"><span t-esc="d['config']"/> · State of Kuwait · دولة الكويت</div>
+                                    </td>
+                                </tr></table>
+                            </td>
+                            <td style="vertical-align:top;text-align:right;">
+                                <div style="font-size:18px;font-weight:bold;">CASHIER CLOSING REPORT</div>
+                                <div style="font-size:14px;color:#2F6E62;font-weight:bold;">تقرير إغلاق يومية الكاشير</div>
+                                <div style="font-size:11px;color:#6b7c78;margin-top:4px;">Session <b t-esc="d['session']"/> · Z-Report</div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- meta grid -->
+                    <table style="width:100%;border-collapse:collapse;margin-top:14px;font-size:11px;">
+                        <tr>
+                            <td style="padding:8px 10px;border:1px solid #e5e9e8;width:25%;"><div style="color:#6b7c78;font-size:9px;">CASHIER · الكاشير</div><b t-esc="d['cashier']"/></td>
+                            <td style="padding:8px 10px;border:1px solid #e5e9e8;width:25%;"><div style="color:#6b7c78;font-size:9px;">REGISTER · النقطة</div><b t-esc="d['config']"/></td>
+                            <td style="padding:8px 10px;border:1px solid #e5e9e8;width:25%;"><div style="color:#6b7c78;font-size:9px;">OPENED · فتح</div><b t-esc="d['opened']"/></td>
+                            <td style="padding:8px 10px;border:1px solid #e5e9e8;width:25%;"><div style="color:#6b7c78;font-size:9px;">CLOSED · إغلاق</div><b t-esc="d['closed']"/></td>
+                        </tr>
+                        <tr>
+                            <td style="padding:8px 10px;border:1px solid #e5e9e8;"><div style="color:#6b7c78;font-size:9px;">CURRENCY · العملة</div><b t-esc="d['currency']"/></td>
+                            <td style="padding:8px 10px;border:1px solid #e5e9e8;"><div style="color:#6b7c78;font-size:9px;">ORDERS · الطلبات</div><b t-esc="d['orders']"/></td>
+                            <td style="padding:8px 10px;border:1px solid #e5e9e8;"><div style="color:#6b7c78;font-size:9px;">DURATION · المدة</div><b t-esc="d['duration']"/></td>
+                            <td style="padding:8px 10px;border:1px solid #e5e9e8;"><div style="color:#6b7c78;font-size:9px;">PRINTED · طُبع</div><b t-esc="d['printed']"/></td>
+                        </tr>
+                    </table>
+
+                    <!-- KPIs -->
+                    <table style="width:100%;border-collapse:separate;border-spacing:8px 0;margin:14px 0 4px;">
+                        <tr>
+                            <td style="width:25%;background:#e8f3ef;border:1px solid #cfe6dd;border-radius:10px;padding:10px;">
+                                <div style="font-size:10px;color:#2F6E62;">Net Sales · صافي المبيعات</div>
+                                <div style="font-size:20px;font-weight:bold;color:#1f4d44;"><span t-esc="d['net']"/> <span style="font-size:10px;" t-esc="d['currency']"/></div>
+                            </td>
+                            <td style="width:25%;background:#f4f7f6;border:1px solid #e5e9e8;border-radius:10px;padding:10px;">
+                                <div style="font-size:10px;color:#6b7c78;">Transactions · المعاملات</div>
+                                <div style="font-size:20px;font-weight:bold;color:#1f4d44;"><span t-esc="d['orders']"/></div>
+                            </td>
+                            <td style="width:25%;background:#f4f7f6;border:1px solid #e5e9e8;border-radius:10px;padding:10px;">
+                                <div style="font-size:10px;color:#6b7c78;">Avg Ticket · متوسط الفاتورة</div>
+                                <div style="font-size:20px;font-weight:bold;color:#1f4d44;"><span t-esc="d['avg']"/></div>
+                            </td>
+                            <td style="width:25%;background:#f4f7f6;border:1px solid #e5e9e8;border-radius:10px;padding:10px;">
+                                <div style="font-size:10px;color:#6b7c78;">Cash Diff · فرق الصندوق</div>
+                                <div style="font-size:20px;font-weight:bold;" t-attf-style="color:#{d['diff_color']};"><span t-esc="d['r_difference']"/></div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- payments + reconciliation -->
+                    <table style="width:100%;margin-top:12px;">
+                        <tr>
+                            <td style="width:50%;vertical-align:top;padding-right:11px;">
+                                <div style="font-size:13px;font-weight:bold;color:#1f4d44;margin-bottom:6px;">Payments · طرق الدفع</div>
+                                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                                    <tr>
+                                        <th style="background:#2F6E62;color:#fff;text-align:left;padding:7px;">Method · الطريقة</th>
+                                        <th style="background:#2F6E62;color:#fff;text-align:right;padding:7px;">Txns</th>
+                                        <th style="background:#2F6E62;color:#fff;text-align:right;padding:7px;">Amount</th>
+                                    </tr>
+                                    <tr t-foreach="d['payments']" t-as="p">
+                                        <td style="padding:7px;border-bottom:1px solid #e5e9e8;" t-esc="p['name']"/>
+                                        <td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="p['cnt']"/>
+                                        <td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="p['amt']"/>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding:7px;font-weight:bold;background:#eef4f2;">Total · الإجمالي</td>
+                                        <td style="padding:7px;font-weight:bold;background:#eef4f2;text-align:right;" t-esc="d['orders']"/>
+                                        <td style="padding:7px;font-weight:bold;background:#eef4f2;text-align:right;" t-esc="d['total_collected']"/>
+                                    </tr>
+                                </table>
+                            </td>
+                            <td style="width:50%;vertical-align:top;padding-left:11px;">
+                                <div style="font-size:13px;font-weight:bold;color:#1f4d44;margin-bottom:6px;">Cash Reconciliation · تسوية الصندوق</div>
+                                <table style="width:100%;border:1px solid #e5e9e8;border-collapse:collapse;font-size:12px;">
+                                    <tr><td style="padding:7px;border-bottom:1px solid #e5e9e8;">Opening float · افتتاحي</td><td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="d['r_opening']"/></tr>
+                                    <tr><td style="padding:7px;border-bottom:1px solid #e5e9e8;">+ Cash sales · مبيعات نقدية</td><td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="d['r_cash_sales']"/></tr>
+                                    <tr><td style="padding:7px;border-bottom:1px solid #e5e9e8;">± Cash in/out · مسحوبات/إيداع</td><td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="d['r_manual']"/></tr>
+                                    <tr><td style="padding:7px;border-bottom:1px solid #e5e9e8;font-weight:bold;background:#eef4f2;">Expected · المتوقع</td><td style="padding:7px;border-bottom:1px solid #e5e9e8;font-weight:bold;background:#eef4f2;text-align:right;" t-esc="d['r_expected']"/></tr>
+                                    <tr><td style="padding:7px;border-bottom:1px solid #e5e9e8;">Counted · المعدود</td><td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="d['r_counted']"/></tr>
+                                    <tr><td style="padding:7px;font-weight:bold;background:#eef4f2;">Difference · الفرق</td><td style="padding:7px;font-weight:bold;background:#eef4f2;text-align:right;" t-attf-style="color:#{d['diff_color']};" t-esc="d['r_difference']"/></tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <!-- sales summary -->
+                    <div style="font-size:13px;font-weight:bold;color:#1f4d44;margin:16px 0 6px;">Sales Summary · ملخّص المبيعات</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                        <tr><td style="padding:7px;border-bottom:1px solid #e5e9e8;">Gross sales · إجمالي المبيعات</td><td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="d['gross']"/></tr>
+                        <tr><td style="padding:7px;border-bottom:1px solid #e5e9e8;">Refunds (<span t-esc="d['refund_cnt']"/>) · المرتجعات</td><td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;color:#c0392b;" t-esc="d['refunds']"/></tr>
+                        <tr><td style="padding:7px;border-bottom:1px solid #e5e9e8;">Discounts · الخصومات</td><td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="d['discounts']"/></tr>
+                        <tr><td style="padding:7px;border-bottom:1px solid #e5e9e8;">Taxes · الضرائب</td><td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="d['tax']"/></tr>
+                        <tr><td style="padding:7px;font-weight:bold;background:#eef4f2;border-top:2px solid #2F6E62;">Net Sales · الصافي</td><td style="padding:7px;font-weight:bold;background:#eef4f2;border-top:2px solid #2F6E62;text-align:right;"><span t-esc="d['net']"/> <span t-esc="d['currency']"/></td></tr>
+                    </table>
+
+                    <!-- top products -->
+                    <div style="font-size:13px;font-weight:bold;color:#1f4d44;margin:16px 0 6px;">Top Products · أكثر المنتجات مبيعاً</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                        <tr>
+                            <th style="background:#2F6E62;color:#fff;text-align:left;padding:7px;">Product · المنتج</th>
+                            <th style="background:#2F6E62;color:#fff;text-align:right;padding:7px;">Qty</th>
+                            <th style="background:#2F6E62;color:#fff;text-align:right;padding:7px;">Total</th>
+                        </tr>
+                        <tr t-foreach="d['top']" t-as="tp">
+                            <td style="padding:7px;border-bottom:1px solid #e5e9e8;" t-esc="tp['name']"/>
+                            <td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="tp['qty']"/>
+                            <td style="padding:7px;border-bottom:1px solid #e5e9e8;text-align:right;" t-esc="tp['total']"/>
+                        </tr>
+                    </table>
+
+                    <!-- signatures -->
+                    <table style="width:100%;margin-top:44px;">
+                        <tr>
+                            <td style="width:50%;text-align:center;padding:0 30px;"><div style="border-top:1px dashed #b9c4c1;padding-top:6px;color:#6b7c78;font-size:11px;">Cashier Signature · توقيع الكاشير</div></td>
+                            <td style="width:50%;text-align:center;padding:0 30px;"><div style="border-top:1px dashed #b9c4c1;padding-top:6px;color:#6b7c78;font-size:11px;">Manager Approval · اعتماد المدير</div></td>
+                        </tr>
+                    </table>
+                    <div style="text-align:center;color:#9aa7a3;font-size:10px;border-top:1px solid #e5e9e8;margin-top:20px;padding-top:8px;">Generated by Uellow POS · Odoo 18 — مستند سرّي خاص بالإدارة</div>
+
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

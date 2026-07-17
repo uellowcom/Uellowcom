@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pos_session_form_closing" model="ir.ui.view">
+        <field name="name">pos.session.form.closing.buttons</field>
+        <field name="model">pos.session</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_session_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="%(action_report_pos_closing_a4)d" type="action"
+                        string="Closing A4 · إغلاق A4" class="btn-secondary"
+                        icon="fa-print"/>
+                <button name="%(action_report_pos_closing_receipt)d" type="action"
+                        string="Closing Receipt · إيصال إغلاق" class="btn-secondary"
+                        icon="fa-print"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

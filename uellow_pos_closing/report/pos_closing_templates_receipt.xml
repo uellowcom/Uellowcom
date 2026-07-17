@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_pos_closing_receipt">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="d" t-value="o.get_closing_report_data()"/>
+                <div class="page" style="font-family:Helvetica,Arial,sans-serif;color:#0d0d0d;font-size:11px;line-height:1.45;width:100%;">
+
+                    <!-- brand -->
+                    <div style="text-align:center;">
+                        <div style="width:40px;height:40px;background:#111;color:#fff;border-radius:10px;font-size:22px;font-weight:bold;line-height:40px;display:inline-block;">U</div>
+                    </div>
+                    <div style="text-align:center;font-size:20px;font-weight:bold;letter-spacing:3px;">UELLOW</div>
+                    <div style="text-align:center;font-size:8.5px;color:#666;letter-spacing:1px;">POINT OF SALE · نقاط البيع</div>
+                    <div style="text-align:center;font-size:9.5px;color:#444;margin-top:4px;">
+                        <span t-esc="d['config']"/> · فرع<br/>State of Kuwait · دولة الكويت<br/>Tel 1888 000 · C.R. 123456
+                    </div>
+
+                    <!-- doc banner -->
+                    <div style="background:#111;color:#fff;text-align:center;padding:5px;font-weight:bold;font-size:10.5px;letter-spacing:1px;margin:9px 0 7px;border-radius:3px;">
+                        CASHIER CLOSING — Z REPORT<br/><span style="font-weight:normal;">تقرير إغلاق يومية الكاشير</span>
+                    </div>
+
+                    <!-- meta -->
+                    <table style="width:100%;font-size:10px;">
+                        <tr><td style="color:#666;padding:1px 0;">Session · الجلسة</td><td style="text-align:right;font-weight:bold;" t-esc="d['session']"/></tr>
+                        <tr><td style="color:#666;padding:1px 0;">Cashier · الكاشير</td><td style="text-align:right;font-weight:bold;" t-esc="d['cashier']"/></tr>
+                        <tr><td style="color:#666;padding:1px 0;">Register · النقطة</td><td style="text-align:right;font-weight:bold;" t-esc="d['config']"/></tr>
+                        <tr><td style="color:#666;padding:1px 0;">Opened · فتح</td><td style="text-align:right;" t-esc="d['opened']"/></tr>
+                        <tr><td style="color:#666;padding:1px 0;">Closed · إغلاق</td><td style="text-align:right;" t-esc="d['closed']"/></tr>
+                    </table>
+
+                    <!-- payments -->
+                    <div style="border-bottom:1.5px solid #111;font-size:9.5px;font-weight:bold;letter-spacing:1px;padding-bottom:2px;margin:9px 0 4px;">PAYMENTS · طرق الدفع</div>
+                    <table style="width:100%;font-size:10.5px;">
+                        <tr t-foreach="d['payments']" t-as="p">
+                            <td style="padding:2px 0;" t-esc="p['name']"/>
+                            <td style="padding:2px 0;text-align:center;color:#777;width:26px;" t-esc="p['cnt']"/>
+                            <td style="padding:2px 0;text-align:right;font-weight:bold;white-space:nowrap;" t-esc="p['amt']"/>
+                        </tr>
+                    </table>
+
+                    <!-- net total box -->
+                    <table style="width:100%;border:2px solid #111;border-radius:6px;margin:9px 0 6px;">
+                        <tr>
+                            <td style="padding:7px 10px;font-weight:bold;font-size:11px;">NET SALES<br/><span style="font-size:8.5px;color:#555;font-weight:normal;">صافي المبيعات</span></td>
+                            <td style="padding:7px 10px;text-align:right;font-size:19px;font-weight:bold;white-space:nowrap;"><span t-esc="d['net']"/> <span style="font-size:9.5px;" t-esc="d['currency']"/></td>
+                        </tr>
+                    </table>
+                    <table style="width:100%;font-size:10px;">
+                        <tr><td style="color:#666;">Orders · عدد الطلبات</td><td style="text-align:right;font-weight:bold;" t-esc="d['orders']"/></tr>
+                        <tr><td style="color:#666;">Avg ticket · متوسط الفاتورة</td><td style="text-align:right;font-weight:bold;" t-esc="d['avg']"/></tr>
+                    </table>
+
+                    <!-- cash drawer -->
+                    <div style="border-bottom:1.5px solid #111;font-size:9.5px;font-weight:bold;letter-spacing:1px;padding-bottom:2px;margin:9px 0 4px;">CASH DRAWER · الصندوق</div>
+                    <table style="width:100%;font-size:10.5px;">
+                        <tr><td style="padding:2px 0;">Opening float · افتتاحي</td><td style="padding:2px 0;text-align:right;font-weight:bold;" t-esc="d['r_opening']"/></tr>
+                        <tr><td style="padding:2px 0;">+ Cash sales · مبيعات نقدية</td><td style="padding:2px 0;text-align:right;font-weight:bold;" t-esc="d['r_cash_sales']"/></tr>
+                        <tr><td style="padding:2px 0;">± Cash in/out · مسحوبات/إيداع</td><td style="padding:2px 0;text-align:right;font-weight:bold;" t-esc="d['r_manual']"/></tr>
+                        <tr><td style="padding:3px 0;border-top:1px dashed #999;font-weight:bold;">Expected · المتوقع</td><td style="padding:3px 0;border-top:1px dashed #999;text-align:right;font-weight:bold;" t-esc="d['r_expected']"/></tr>
+                        <tr><td style="padding:2px 0;font-weight:bold;">Counted · المعدود</td><td style="padding:2px 0;text-align:right;font-weight:bold;" t-esc="d['r_counted']"/></tr>
+                    </table>
+                    <div t-attf-style="border:1.5px solid #{d['diff_color']};color:#{d['diff_color']};text-align:center;font-size:9.5px;font-weight:bold;letter-spacing:1px;border-radius:20px;padding:4px 0;margin-top:6px;">
+                        <t t-if="d['balanced']">✓ BALANCED · مطابق — Diff <span t-esc="d['r_difference']"/></t>
+                        <t t-else="">⚠ Difference · فرق <span t-esc="d['r_difference']"/></t>
+                    </div>
+
+                    <!-- sales breakdown -->
+                    <div style="border-bottom:1.5px solid #111;font-size:9.5px;font-weight:bold;letter-spacing:1px;padding-bottom:2px;margin:9px 0 4px;">SALES BREAKDOWN · تفصيل المبيعات</div>
+                    <table style="width:100%;font-size:10.5px;">
+                        <tr><td style="padding:2px 0;">Gross · إجمالي المبيعات</td><td style="padding:2px 0;text-align:right;font-weight:bold;" t-esc="d['gross']"/></tr>
+                        <tr><td style="padding:2px 0;">Refunds (<span t-esc="d['refund_cnt']"/>) · المرتجعات</td><td style="padding:2px 0;text-align:right;font-weight:bold;" t-esc="d['refunds']"/></tr>
+                        <tr><td style="padding:2px 0;">Discounts · الخصومات</td><td style="padding:2px 0;text-align:right;font-weight:bold;" t-esc="d['discounts']"/></tr>
+                        <tr><td style="padding:2px 0;">Tax · الضريبة</td><td style="padding:2px 0;text-align:right;font-weight:bold;" t-esc="d['tax']"/></tr>
+                    </table>
+
+                    <!-- top products -->
+                    <div style="border-bottom:1.5px solid #111;font-size:9.5px;font-weight:bold;letter-spacing:1px;padding-bottom:2px;margin:9px 0 4px;">TOP PRODUCTS · الأكثر مبيعاً</div>
+                    <table style="width:100%;font-size:10px;">
+                        <tr t-foreach="d['top'][:5]" t-as="tp">
+                            <td style="padding:2px 0;" t-esc="tp['name']"/>
+                            <td style="padding:2px 0;text-align:center;color:#777;width:24px;" t-esc="tp['qty']"/>
+                            <td style="padding:2px 0;text-align:right;font-weight:bold;white-space:nowrap;" t-esc="tp['total']"/>
+                        </tr>
+                    </table>
+
+                    <!-- signatures -->
+                    <table style="width:100%;margin-top:10px;font-size:9px;color:#555;text-align:center;">
+                        <tr><td>Cashier · الكاشير<br/>________</td><td>Manager · المدير<br/>________</td></tr>
+                    </table>
+
+                    <!-- barcode + code -->
+                    <div style="height:40px;margin:10px auto 3px;width:80%;background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 3px,#111 3px 7px,#fff 7px 8px,#111 8px 9px,#fff 9px 12px);"></div>
+                    <div style="text-align:center;font-size:9px;letter-spacing:2px;color:#333;">POS-<span t-esc="d['session']"/></div>
+
+                    <div style="text-align:center;font-weight:bold;font-size:12px;margin-top:8px;">شكراً لكم · Thank You</div>
+                    <div style="text-align:center;font-size:8.5px;color:#666;margin-top:5px;line-height:1.5;">
+                        Printed <span t-esc="d['printed']"/><br/>
+                        Internal control document — not a tax invoice<br/>
+                        مستند رقابي داخلي — ليس فاتورة ضريبية<br/>
+                        Powered by Uellow POS · Odoo 18
+                    </div>
+
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>
