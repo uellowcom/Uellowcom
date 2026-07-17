@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Keep the ~10k materialised World/dropship products OUT of the main
+      backend Products lists (Inventory / Sales / Purchase). They stay shared
+      (company_id=False) so the app/websites render them, but the backend
+      catalogue lists only real store products. Dropship products are managed
+      from the dedicated Dropship menu.
+    -->
+    <record id="stock.product_template_action_product" model="ir.actions.act_window">
+        <field name="domain">[('is_dropship', '=', False)]</field>
+    </record>
+    <record id="product.product_template_action" model="ir.actions.act_window">
+        <field name="domain">[('is_dropship', '=', False)]</field>
+    </record>
+    <record id="product.product_template_action_all" model="ir.actions.act_window">
+        <field name="domain">[('is_dropship', '=', False)]</field>
+    </record>
+    <record id="sale.product_template_action" model="ir.actions.act_window">
+        <field name="domain">[('is_dropship', '=', False)]</field>
+    </record>
+</odoo>

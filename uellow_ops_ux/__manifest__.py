@@ -8,6 +8,7 @@
     'data': [
         'views/purchase_order_views.xml',
         'views/stock_picking_views.xml',
+        'views/hide_dropship_products.xml',
     ],
     'installable': True,
     'application': False,
