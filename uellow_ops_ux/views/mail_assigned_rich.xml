@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Upgrade the plain "You have been assigned to X" email into a
+         professional, data-rich order summary (for sale.order records). -->
+    <template id="uellow_message_user_assigned_rich" inherit_id="mail.message_user_assigned">
+        <xpath expr="//span[@style='margin-top: 8px;']" position="after">
+            <t t-if="object._name == 'sale.order'">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%"
+                       style="margin-top:18px;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #e5e9e8;border-radius:14px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;">
+                    <tr>
+                        <td style="background:#2F6E62;padding:14px 20px;color:#ffffff;">
+                            <span style="font-size:15px;font-weight:bold;">🧾 Order Summary · ملخّص الطلب</span>
+                            <span style="float:right;font-size:15px;font-weight:bold;"><t t-esc="object.name"/></span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:6px 20px 14px;">
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+                                <tr>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;color:#6b7c78;font-size:12px;">Customer · العميل</td>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;color:#1f3a35;font-size:13px;font-weight:bold;text-align:right;"><t t-esc="object.partner_id.name or '-'"/></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;color:#6b7c78;font-size:12px;">Total · الإجمالي</td>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;text-align:right;">
+                                        <span style="background:#e8f3ef;color:#2F6E62;font-size:14px;font-weight:bold;padding:3px 10px;border-radius:8px;">
+                                            <t t-esc="'%.3f' % (object.amount_total or 0)"/> <t t-esc="object.currency_id.name or ''"/>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;color:#6b7c78;font-size:12px;">Order Date · تاريخ الطلب</td>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;color:#1f3a35;font-size:13px;text-align:right;"><t t-esc="object.date_order and object.date_order.strftime('%d %b %Y · %H:%M') or '-'"/></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;color:#6b7c78;font-size:12px;">Items · الأصناف</td>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;color:#1f3a35;font-size:13px;font-weight:bold;text-align:right;"><t t-esc="len(object.order_line)"/></td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;color:#6b7c78;font-size:12px;">Delivery · التوصيل</td>
+                                    <td style="padding:10px 8px;border-bottom:1px solid #f0f2f1;text-align:right;">
+                                        <span t-attf-style="font-size:12px;font-weight:bold;padding:3px 10px;border-radius:8px;background:#{'#e6f5ec' if object.delivery_status == 'delivered' else '#fff3e0'};color:#{'#2E9E6B' if object.delivery_status == 'delivered' else '#C99A2E'};">
+                                            <t t-esc="(object.delivery_status or object.state or '-').replace('_', ' ').title()"/>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:10px 8px;color:#6b7c78;font-size:12px;">Payment · الدفع</td>
+                                    <td style="padding:10px 8px;text-align:right;">
+                                        <span t-attf-style="font-size:12px;font-weight:bold;padding:3px 10px;border-radius:8px;background:#{'#e6f5ec' if object.invoice_status == 'invoiced' else '#eef3f7'};color:#{'#2E9E6B' if object.invoice_status == 'invoiced' else '#4C7DAE'};">
+                                            <t t-esc="(object.invoice_status or '-').replace('_', ' ').title()"/>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <div style="margin-top:12px;color:#8a9691;font-size:11px;font-family:Arial,Helvetica,sans-serif;">
+                    Uellow W.L.L — تم إسنادك لهذا الطلب. راجع التفاصيل واتّخذ الإجراء اللازم.
+                </div>
+            </t>
+        </xpath>
+    </template>
+</odoo>

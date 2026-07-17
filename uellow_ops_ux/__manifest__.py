@@ -9,6 +9,7 @@
         'views/purchase_order_views.xml',
         'views/stock_picking_views.xml',
         'views/hide_dropship_products.xml',
+        'views/mail_assigned_rich.xml',
     ],
     'installable': True,
     'application': False,
