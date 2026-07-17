@@ -8,7 +8,8 @@
 
                     <!-- brand -->
                     <div style="text-align:center;">
-                        <div style="width:40px;height:40px;background:#111;color:#fff;border-radius:10px;font-size:22px;font-weight:bold;line-height:40px;display:inline-block;">U</div>
+                        <img t-if="o.company_id.logo" t-att-src="image_data_uri(o.company_id.logo)" style="max-height:46px;max-width:150px;"/>
+                        <div t-else="" style="width:40px;height:40px;background:#111;color:#fff;border-radius:10px;font-size:22px;font-weight:bold;line-height:40px;display:inline-block;">U</div>
                     </div>
                     <div style="text-align:center;font-size:20px;font-weight:bold;letter-spacing:3px;">UELLOW</div>
                     <div style="text-align:center;font-size:8.5px;color:#666;letter-spacing:1px;">POINT OF SALE · نقاط البيع</div>

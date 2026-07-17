@@ -11,8 +11,9 @@
                         <tr>
                             <td style="vertical-align:top;">
                                 <table><tr>
-                                    <td style="width:54px;">
-                                        <div style="width:48px;height:48px;background:#2F6E62;color:#fff;border-radius:10px;text-align:center;font-size:26px;font-weight:bold;line-height:48px;">U</div>
+                                    <td style="width:64px;">
+                                        <img t-if="o.company_id.logo" t-att-src="image_data_uri(o.company_id.logo)" style="max-height:52px;max-width:130px;"/>
+                                        <div t-else="" style="width:48px;height:48px;background:#2F6E62;color:#fff;border-radius:10px;text-align:center;font-size:26px;font-weight:bold;line-height:48px;">U</div>
                                     </td>
                                     <td style="padding-left:10px;">
                                         <div style="font-size:19px;font-weight:bold;color:#1f4d44;"><span t-esc="d['company']"/></div>
