@@ -386,8 +386,12 @@ class MobileLoyaltyAPI(http.Controller):
             request.env['loyalty.reward'].sudo().create({
                 'program_id': prog.id,
                 'reward_type': 'discount',
-                'discount_mode': 'per_order',
-                'discount': 1,         # placeholder — overridden per card
+                # per_point so the applied discount = (card points) x
+                # discount; a card carrying kd_value points then
+                # discounts exactly kd_value (was per_order discount=1,
+                # which gave only 1 unit off regardless of the value).
+                'discount_mode': 'per_point',
+                'discount': 1.0,
                 'required_points': 1,
             })
 

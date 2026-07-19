@@ -9,7 +9,7 @@
     # NOTE: this depends on theme_prime today and will flip to 'uellow_theme'
     # as part of the staged migration documented in
     # /root/uellow_backups/MIGRATION_RUNBOOK.md (step 5).
-    'data': [],
+    'data': ['views/product_card_template.xml'],
     'assets': {
         'web.assets_frontend': [
             'uellow_product_card/static/src/css/product_card.css',

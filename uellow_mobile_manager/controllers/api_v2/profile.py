@@ -43,7 +43,12 @@ class MobileProfileAPI(http.Controller):
         if not user:
             return fail('NO_USER', 'No user account')
         try:
-            request.session.authenticate(request.db, user.login, old)
+            # Odoo 18: session.authenticate takes a credential dict, so the old
+            # 3-arg call raised TypeError (endpoint always said "wrong
+            # password"). Verify the old password directly, like login does.
+            user.with_user(user.id)._check_credentials(
+                {'password': old, 'type': 'password'},
+                {'interactive': False})
         except Exception:
             return fail('WRONG_PASSWORD', 'Old password is wrong', 401)
         user.sudo().write({'password': new})

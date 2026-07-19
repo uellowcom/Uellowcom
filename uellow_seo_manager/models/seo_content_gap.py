@@ -365,8 +365,8 @@ CRITICAL: Output ONLY the JSON object, nothing before or after."""
         """Create (or update) a website.blog.post from this suggestion."""
         self.ensure_one()
         if not self.generated_html:
-            raise self.env['ir.actions.act_window'] and Exception(
-                'No draft yet — click "Draft via AI" first.')
+            from odoo.exceptions import UserError
+            raise UserError('No draft yet — click "Draft via AI" first.')
         Blog = self.env['blog.blog']
         Post = self.env['blog.post']
         cfg = self.env['uellow.seo.config'].sudo().get_config()

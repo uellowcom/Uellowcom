@@ -1565,9 +1565,10 @@ class MobileProductsAPI(http.Controller):
             items = Tmpl.search(domain, limit=section.max_products or 20,
                                 order='create_date desc')
         elif st == 'top':
-            order_field = 'sales_count desc' if 'sales_count' in Tmpl._fields else 'create_date desc'
-            items = Tmpl.search(domain, limit=section.max_products or 20,
-                                order=order_field)
+            # sales_count is a NON-STORED compute — ordering the SQL search by
+            # it raises "Cannot convert to SQL". Rank by real sold qty instead.
+            items = Tmpl.browse(_top_selling_ids(
+                domain, limit=section.max_products or 20))
         elif st == 'sale':
             domain.append(('compare_list_price', '>', 0))
             items = Tmpl.search(domain, limit=section.max_products or 20)
