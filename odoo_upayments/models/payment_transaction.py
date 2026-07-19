@@ -2,6 +2,7 @@
 import re
 import logging
 import requests
+import json
 import pprint
 from lxml import html
 from werkzeug import urls
@@ -191,7 +192,7 @@ class PaymentTransaction(models.Model):
         result = response.json()
         _logger.info(f"Payment request response:\n{pprint.pformat(result)}")
         if result.get('status'):
-            self._handle_notification_data(self.provider_code, result.get('data').get('transactionData'))
+            self.with_context(upayments_trusted=True)._handle_notification_data(self.provider_code, result.get('data').get('transactionData'))
         else:
             raise ValidationError(_(result.get('message')))
 
@@ -269,6 +270,49 @@ class PaymentTransaction(models.Model):
             raise ValidationError(f"UPayments: No transaction found matching reference {reference}.")
         return tx
 
+    def _upayments_gateway_captured(self):
+        """Server-to-server confirmation that THIS transaction was really
+        captured at UPayments. The notification/redirect routes are public and
+        csrf-exempt, so the posted ``result`` must never be trusted on its own
+        (an attacker could POST reference=<order>&result=CAPTURED). We re-query
+        the gateway and require (a) status ok, (b) transaction.result==CAPTURED,
+        and (c) our own order reference echoed back for this track id — so a
+        valid track id from a different payment cannot be replayed onto this
+        order. Returns True only when the capture is genuinely verified."""
+        self.ensure_one()
+        track = (self.upayment_track_id or '').strip()
+        ref = (self.reference or '').strip()
+        if not track or not ref:
+            return False
+        if self.provider_id.state == 'enabled':
+            url = 'https://uapi.upayments.com/api/v1/get-payment-status/%s' % track
+        else:
+            url = 'https://sandboxapi.upayments.com/api/v1/get-payment-status/%s' % track
+        headers = {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer %s' % self.provider_id.upay_application_key,
+        }
+        try:
+            resp = requests.get(url, headers=headers, timeout=15)
+            data = resp.json()
+        except Exception as e:
+            _logger.warning('UPayments: status re-check failed for %s: %s', ref, e)
+            return False
+        if not data.get('status'):
+            return False
+        txn = (data.get('data') or {}).get('transaction') or {}
+        if (txn.get('result') or '').upper() != 'CAPTURED':
+            return False
+        try:
+            if ref not in json.dumps(data):
+                _logger.warning('UPayments: track %s captured but reference %s '
+                                'absent from gateway response — possible replay, '
+                                'rejecting.', track, ref)
+                return False
+        except Exception:
+            return False
+        return True
+
     def _process_notification_data(self, notification_data):
         """ Override of payment to process the transaction based on Mollie data.
         Note: self.ensure_one()
@@ -303,6 +347,17 @@ class PaymentTransaction(models.Model):
             raise ValidationError("UPayments: Received data with missing payment state.")
         self.write(vals)
         if status == 'CAPTURED':
+            # SECURITY: the notification/redirect routes are public and
+            # csrf-exempt, so a forged POST could set result=CAPTURED to mark an
+            # order paid. Re-verify server-to-server before completing (the
+            # tokenized/saved-card flow is exempt: its data already came from
+            # our own authenticated charge API call).
+            if not self.env.context.get('upayments_trusted') \
+                    and not self._upayments_gateway_captured():
+                _logger.warning('UPayments: unverified CAPTURED for %s - gateway '
+                                'did not confirm; not completing.', self.reference)
+                self._set_error(_('UPayments: payment could not be verified.'))
+                return
             self._set_done()
             if self.tokenize:
                 self._upayment_tokenize_from_notification_data(notification_data)

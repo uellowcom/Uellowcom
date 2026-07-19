@@ -55,6 +55,22 @@ def _is_driver(uid):
     return _check_user_group(uid, 'delivery_carrier_portal.group_carrier_driver')
 
 
+def _owned_order(uid, order):
+    """Whether the logged-in carrier user may act on this order: a manager of
+    the order's carrier company, or the driver assigned to it. Guards the
+    state-changing portal routes so a user cannot touch another company's or
+    another driver's orders."""
+    if not order or not order.exists():
+        return False
+    if _is_manager(uid):
+        company = _get_carrier_company(uid)
+        return bool(company) and order.delivery_carrier_company_id.id == company.id
+    if _is_driver(uid):
+        driver = _get_driver(uid)
+        return bool(driver) and order.delivery_driver_id.id == driver.id
+    return False
+
+
 def _full_address(partner):
     parts = []
     if partner.street:     parts.append(partner.street)
@@ -551,6 +567,8 @@ class DeliveryPortalController(http.Controller):
         order = request.env['sale.order'].sudo().browse(int(order_id))
         if not order.exists():
             return {'success': False}
+        if not _owned_order(uid, order):
+            return {'success': False, 'error': 'Access denied'}
         vals = {'delivery_status': 'delivered', 'delivery_date_actual': fields.Datetime.now()}
         if order.payment_method_type == 'cash':
             vals['cash_collection_status'] = 'collected'
@@ -589,6 +607,8 @@ class DeliveryPortalController(http.Controller):
         order = request.env['sale.order'].sudo().browse(int(order_id))
         if not order.exists():
             return {'success': False}
+        if not _owned_order(uid, order):
+            return {'success': False, 'error': 'Access denied'}
         order.write({'delivery_status': 'failed'})
         if _is_driver(uid):
             driver = _get_driver(uid)
@@ -883,6 +903,8 @@ class DeliveryPortalController(http.Controller):
         order = request.env['sale.order'].sudo().browse(int(order_id))
         if not order.exists():
             return {'success': False}
+        if not _owned_order(uid, order):
+            return {'success': False, 'error': 'Access denied'}
 
         order.write({'delivery_status': 'out_for_delivery'})
         line = request.env['delivery.trip.line'].sudo().search([
@@ -926,6 +948,8 @@ class DeliveryPortalController(http.Controller):
         order = request.env['sale.order'].sudo().browse(int(order_id))
         if not order.exists():
             return {'success': False, 'error': 'Order not found'}
+        if not _owned_order(uid, order):
+            return {'success': False, 'error': 'Access denied'}
 
         try:
             import requests as req_lib

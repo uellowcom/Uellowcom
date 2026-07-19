@@ -204,37 +204,20 @@ class MobileAuthAPI(http.Controller):
                 methods=['POST', 'OPTIONS'], csrf=False)
     @safe_endpoint
     def otp_verify(self, **kw):
+        # SECURITY: a phone + firebase_uid is NOT proof of identity — the uid is
+        # a PUBLIC identifier, so the old "find/create the user by phone and
+        # issue a token" logic let anyone mint a session for any phone number
+        # (account takeover). OTP verification now REQUIRES a real Firebase ID
+        # token, verified cryptographically through the shared _firebase_login
+        # path (the phone is taken from the verified token, not the request).
         p = get_payload()
-        phone = (p.get('phone') or '').strip()
-        firebase_uid = (p.get('firebase_uid') or '').strip()
-        if not phone:
-            return fail('MISSING_PHONE', 'Phone number required')
-
-        Partner = request.env['res.partner'].sudo()
-        partner = Partner.search([('phone', '=', phone)], limit=1)
-        if not partner:
-            partner = Partner.search([('mobile', '=', phone)], limit=1)
-        if not partner:
-            # Auto-create a minimal portal user keyed by phone.
-            login = f'+otp-{phone.replace("+", "").replace(" ", "")}@uellow.app'
-            Users = request.env['res.users'].sudo()
-            new_user = Users.with_context(no_reset_password=True).create({
-                'name':  p.get('name') or phone,
-                'login': login,
-                'phone': phone,
-                'mobile': phone,
-                'password': firebase_uid or 'firebase-otp',
-                'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])],
-            })
-            partner = new_user.partner_id
-        token = issue_token(
-            partner_id=partner.id,
-            device_id=p.get('device_id'),
-            device_name=p.get('device_name'),
-            push_token=p.get('push_token'),
-            app_version=p.get('app_version'),
-        )
-        return ok({'token': token, 'user': _serialize_user(partner)})
+        id_token = (p.get('id_token') or p.get('firebase_token')
+                    or p.get('firebase_id_token') or p.get('token') or '').strip()
+        if not id_token:
+            return fail('MISSING_TOKEN',
+                        'A verified Firebase ID token is required to complete '
+                        'OTP sign-in.', 401)
+        return self._firebase_login(id_token)
 
     # ─── Social: Google ───────────────────────────────────────────────
     @http.route('/api/mobile/v2/auth/social/google', type='http', auth='public',
@@ -371,13 +354,20 @@ class MobileAuthAPI(http.Controller):
 
         Body: id_token (required), optional phone, name, device_*.
         """
-        import jwt
-        import requests as _rq
-        from cryptography.x509 import load_pem_x509_certificate
         p = get_payload()
         id_token = (p.get('id_token') or p.get('token') or '').strip()
         if not id_token:
             return fail('MISSING_TOKEN', 'Firebase token required', 400)
+        return self._firebase_login(id_token)
+
+    def _firebase_login(self, id_token):
+        """Verify a Firebase ID token and log the customer in / create them.
+        Shared by /auth/firebase and /auth/otp/verify so BOTH paths require a
+        real, cryptographically-verified token (never a bare phone/uid)."""
+        import jwt
+        import requests as _rq
+        from cryptography.x509 import load_pem_x509_certificate
+        p = get_payload()
         ICP = request.env['ir.config_parameter'].sudo()
         project = (ICP.get_param('mail_mobile_firebase_project_id')
                    or 'uellow-app').strip()

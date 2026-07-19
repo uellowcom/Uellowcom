@@ -83,12 +83,15 @@ class UPaymentsController(http.Controller):
             try:
                 if track and not order.upayments_track_id:
                     order.sudo().write({'upayments_track_id': track})
-                if result in _OK_RESULTS:
-                    order._upayments_mark_paid(track_id=track, payment_id=payment_id)
-                elif not result and hasattr(order, '_upayments_verify_status'):
-                    # Webhook fired without a clear result field — confirm
-                    # against the status API rather than silently ignoring it.
+                # SECURITY: this endpoint is public + csrf-exempt, so the
+                # posted `result` is forgeable and must never be trusted on its
+                # own. Always re-confirm the capture against the UPayments
+                # status API using the order's own charge-issued track id
+                # (idempotent via _upayments_mark_paid's guard).
+                if hasattr(order, '_upayments_verify_status'):
                     order._upayments_verify_status()
+                elif result in _OK_RESULTS:
+                    order._upayments_mark_paid(track_id=track, payment_id=payment_id)
             except Exception:
                 _logger.exception('UPayments webhook processing failed')
         else:
