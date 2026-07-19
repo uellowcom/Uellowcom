@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Mobile API Configuration Settings -->
+        <record id="mobile_api_config" model="ir.config_parameter">
+            <field name="key">mobile_api.enabled</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="mobile_api_version" model="ir.config_parameter">
+            <field name="key">mobile_api.version</field>
+            <field name="value">1.0.0</field>
+        </record>
+        
+        <record id="mobile_api_base_url" model="ir.config_parameter">
+            <field name="key">mobile_api.base_url</field>
+            <field name="value">/mobile/v1</field>
+        </record>
+
+        <!-- JWT Configuration -->
+        <record id="jwt_secret_key" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.secret_key</field>
+            <field name="value">your-super-secret-jwt-key-change-in-production</field>
+        </record>
+        
+        <record id="jwt_algorithm" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.algorithm</field>
+            <field name="value">HS256</field>
+        </record>
+        
+        <record id="jwt_access_token_expire" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.access_token_expire_minutes</field>
+            <field name="value">30</field>
+        </record>
+        
+        <record id="jwt_refresh_token_expire" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.refresh_token_expire_days</field>
+            <field name="value">7</field>
+        </record>
+
+        <!-- Firebase Configuration -->
+        <record id="firebase_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.firebase.enabled</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="firebase_project_id" model="ir.config_parameter">
+            <field name="key">mobile_api.firebase.project_id</field>
+            <field name="value">your-firebase-project-id</field>
+        </record>
+
+        <!-- OAuth Configuration -->
+        <record id="google_oauth_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.oauth.google.enabled</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="facebook_oauth_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.oauth.facebook.enabled</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="apple_oauth_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.oauth.apple.enabled</field>
+            <field name="value">True</field>
+        </record>
+
+        <!-- Cache Configuration -->
+        <record id="redis_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.cache.redis.enabled</field>
+            <field name="value">False</field>
+        </record>
+        
+        <record id="redis_url" model="ir.config_parameter">
+            <field name="key">mobile_api.cache.redis.url</field>
+            <field name="value">redis://localhost:6379/0</field>
+        </record>
+
+        <!-- Notification Settings -->
+        <record id="push_notifications_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.notifications.push.enabled</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="email_notifications_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.notifications.email.enabled</field>
+            <field name="value">True</field>
+        </record>
+
+        <!-- API Rate Limiting -->
+        <record id="rate_limit_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.rate_limit.enabled</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="rate_limit_requests_per_minute" model="ir.config_parameter">
+            <field name="key">mobile_api.rate_limit.requests_per_minute</field>
+            <field name="value">60</field>
+        </record>
+
+        <!-- Payment Configuration -->
+        <record id="wallet_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.wallet.enabled</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="wallet_currency" model="ir.config_parameter">
+            <field name="key">mobile_api.wallet.default_currency</field>
+            <field name="value">USD</field>
+        </record>
+
+        <!-- API Documentation -->
+        <record id="docs_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.docs.enabled</field>
+            <field name="value">True</field>
+        </record>
+
+        <!-- Default Mobile User Groups -->
+        <record id="group_mobile_user" model="res.groups">
+            <field name="name">Mobile API User</field>
+            <field name="category_id" ref="base.module_category_human_resources"/>
+            <field name="comment">Users who can access mobile API endpoints</field>
+        </record>
+
+        <record id="group_mobile_admin" model="res.groups">
+            <field name="name">Mobile API Administrator</field>
+            <field name="category_id" ref="base.module_category_administration"/>
+            <field name="implied_ids" eval="[(4, ref('group_mobile_user'))]"/>
+            <field name="comment">Administrators who can manage mobile API settings</field>
+        </record>
+
+    </data>
+</odoo>

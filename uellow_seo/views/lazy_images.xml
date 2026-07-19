@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Lazy-load below-the-fold images.
+
+        We add the attribute via inline JS rather than a Python pre-render
+        because the theme injects images at many lifecycle points (template
+        render, snippet drop-in, dynamic carousel mount). One inline script
+        catches them all in O(N) without any view inheritance chain.
+
+        Hot images (above the fold = inside the first viewport) keep their
+        eager loading so LCP stays fast.
+
+        Note: native loading="lazy" is honoured by Chromium, Firefox, Safari
+        14.5+. Older browsers ignore the attribute (graceful no-op).
+    -->
+    <template id="lazy_images_hint" inherit_id="website.layout"
+              name="Uellow: Lazy-load below-the-fold images" priority="50">
+        <xpath expr="//body" position="inside">
+            <script>
+                (function () {
+                    if (typeof window === 'undefined') return;
+                    function tag () {
+                        var vh = window.innerHeight || 800;
+                        document.querySelectorAll('img:not([loading])').forEach(function (img) {
+                            var rect = img.getBoundingClientRect();
+                            // Skip anything in or near the first viewport
+                            // — that's the LCP candidate, must stay eager.
+                            if (rect.top &lt; vh + 200) return;
+                            img.loading  = 'lazy';
+                            img.decoding = 'async';
+                        });
+                    }
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', tag);
+                    } else {
+                        tag();
+                    }
+                    // Re-tag images that the theme adds after first paint
+                    // (carousels, infinite-scroll, related products, …).
+                    if ('MutationObserver' in window) {
+                        var mo = new MutationObserver(function () { tag(); });
+                        mo.observe(document.documentElement,
+                                   { childList: true, subtree: true });
+                    }
+                })();
+            </script>
+        </xpath>
+    </template>
+</odoo>

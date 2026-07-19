@@ -1,0 +1,85 @@
+# Core FastAPI Dependencies
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.0
+pydantic[email]>=2.5.0
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+cryptography>=41.0.7
+pyjwt>=2.8.0
+
+# OAuth Providers
+google-auth>=2.25.0
+google-auth-oauthlib>=1.2.0
+authlib>=1.3.0
+
+# Firebase Integration
+firebase-admin>=6.4.0
+
+# Database (PostgreSQL for Odoo)
+psycopg2-binary>=2.9.9
+
+# Redis for Caching and Sessions
+redis>=5.0.1
+hiredis>=2.3.2
+
+# HTTP Client Libraries
+httpx>=0.26.0
+requests>=2.31.0
+
+# Email Support
+python-dotenv>=1.0.0
+email-validator>=2.1.0
+
+# SMS Support (Twilio)
+twilio>=9.0.0
+
+# Date and Time Utilities
+python-dateutil>=2.8.2
+pytz>=2024.1
+
+# Environment Configuration
+pydantic-settings>=2.0.0
+
+# Logging and Monitoring
+structlog>=24.0.0
+sentry-sdk[fastapi]>=1.39.1
+
+# Development Dependencies
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+black>=24.0.0
+isort>=5.13.0
+mypy>=1.8.0
+pre-commit>=3.6.0
+
+# Performance Enhancements
+orjson>=3.9.0
+uvloop>=0.19.0
+
+# File Processing
+python-magic>=0.4.27
+pillow>=10.2.0
+
+# QR Codes and Barcodes
+python-barcode>=0.15.1
+qrcode[pil]>=7.4.2
+
+# Payment Processing
+stripe>=8.0.0
+
+# Utilities
+python-slugify>=8.0.1
+phonenumbers>=8.13.27
+
+# API Documentation
+mkdocs>=1.5.3
+mkdocs-material>=9.5.3
+
+# Additional Middleware
+slowapi>=0.1.9

@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mobile_device_user,mobile.device.user,model_mobile_device,base.group_user,1,1,1,1
+access_mobile_device_public,mobile.device.public,model_mobile_device,base.group_public,1,0,1,0
+access_mobile_wishlist_user,mobile.wishlist.user,model_mobile_wishlist,base.group_user,1,1,1,1
+access_mobile_wishlist_public,mobile.wishlist.public,model_mobile_wishlist,base.group_public,1,0,0,0
+access_mobile_notification_user,mobile.notification.user,model_mobile_notification,base.group_user,1,1,1,1
+access_mobile_notification_public,mobile.notification.public,model_mobile_notification,base.group_public,1,0,0,0
+access_mobile_product_view_user,mobile.product.view.user,model_mobile_product_view,base.group_user,1,1,1,1
+access_mobile_product_view_public,mobile.product.view.public,model_mobile_product_view,base.group_public,1,0,1,0
+access_mobile_wallet_transaction_user,mobile.wallet.transaction.user,model_mobile_wallet_transaction,base.group_user,1,1,1,0
+access_mobile_wallet_transaction_public,mobile.wallet.transaction.public,model_mobile_wallet_transaction,base.group_public,1,0,0,0

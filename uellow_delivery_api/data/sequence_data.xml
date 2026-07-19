@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="seq_delivery_trip" model="ir.sequence">
+    <field name="name">Delivery Trip</field>
+    <field name="code">uellow.delivery.trip</field>
+    <field name="prefix">TRIP/%(year)s/</field>
+    <field name="padding">4</field>
+  </record>
+</odoo>

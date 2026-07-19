@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Wallet Transaction Sequence -->
+        <record id="seq_mobile_wallet_transaction" model="ir.sequence">
+            <field name="name">Mobile Wallet Transaction</field>
+            <field name="code">mobile.wallet.transaction</field>
+            <field name="prefix">MWT</field>
+            <field name="padding">6</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>

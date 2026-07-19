@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- FastAPI App Configuration for Mobile API -->
+        <record id="fastapi_endpoint_mobile" model="fastapi.endpoint">
+            <field name="name">Mobile API v1</field>
+            <field name="app">mobile_api</field>
+            <field name="root_path">/mobile</field>
+            <field name="user_id" ref="base.user_admin"/>
+        </record>
+
+        <!-- JWT Configuration for Mobile API -->
+        <record id="mobile_jwt_secret_key" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.secret_key</field>
+            <field name="value">change-this-secret-key-in-production-please</field>
+        </record>
+
+        <record id="mobile_jwt_algorithm" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.algorithm</field>
+            <field name="value">HS256</field>
+        </record>
+
+        <record id="mobile_jwt_access_token_expire" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.access_token_expire_minutes</field>
+            <field name="value">30</field>
+        </record>
+
+        <record id="mobile_jwt_refresh_token_expire" model="ir.config_parameter">
+            <field name="key">mobile_api.jwt.refresh_token_expire_days</field>
+            <field name="value">7</field>
+        </record>
+
+        <!-- App Configuration for Mobile API -->
+        <record id="mobile_app_name" model="ir.config_parameter">
+            <field name="key">mobile_api.app_name</field>
+            <field name="value">Yellow</field>
+        </record>
+
+        <record id="mobile_app_version" model="ir.config_parameter">
+            <field name="key">mobile_api.app_version</field>
+            <field name="value">1.0.0</field>
+        </record>
+
+        <record id="mobile_support_email" model="ir.config_parameter">
+            <field name="key">mobile_api.support_email</field>
+            <field name="value">support@uellow.com</field>
+        </record>
+
+        <record id="mobile_support_phone" model="ir.config_parameter">
+            <field name="key">mobile_api.support_phone</field>
+            <field name="value">+1234567890</field>
+        </record>
+
+        <!-- Feature Flags -->
+        <record id="mobile_wallet_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.wallet_enabled</field>
+            <field name="value">true</field>
+        </record>
+
+        <record id="mobile_reviews_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.reviews_enabled</field>
+            <field name="value">true</field>
+        </record>
+
+        <record id="mobile_wishlist_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.wishlist_enabled</field>
+            <field name="value">true</field>
+        </record>
+
+        <record id="mobile_notifications_enabled" model="ir.config_parameter">
+            <field name="key">mobile_api.notifications_enabled</field>
+            <field name="value">true</field>
+        </record>
+
+    </data>
+</odoo>

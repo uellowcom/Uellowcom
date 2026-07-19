@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_delivery_trip_list" model="ir.ui.view">
+    <field name="name">uellow.delivery.trip.list</field>
+    <field name="model">uellow.delivery.trip</field>
+    <field name="arch" type="xml">
+      <list string="Delivery Trips">
+        <field name="name"/><field name="driver_id"/><field name="date"/>
+        <field name="total_orders"/><field name="cod_total"/>
+        <field name="cod_collected"/><field name="state" widget="badge"/>
+      </list>
+    </field>
+  </record>
+  <record id="action_delivery_trips" model="ir.actions.act_window">
+    <field name="name">Delivery Trips</field>
+    <field name="res_model">uellow.delivery.trip</field>
+    <field name="view_mode">list,form</field>
+  </record>
+</odoo>

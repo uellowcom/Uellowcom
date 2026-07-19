@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <menuitem id="menu_delivery_api" name="Delivery Trips"
+            parent="uellow_fulfillment.menu_fbu_root"
+            action="action_delivery_trips" sequence="52"/>
+</odoo>
