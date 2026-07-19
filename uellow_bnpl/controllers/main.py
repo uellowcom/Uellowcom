@@ -20,6 +20,12 @@ class BNPLController(http.Controller):
         plan = request.env['uellow.bnpl.plan'].sudo().browse(int(plan_id))
         if not order.exists() or not plan.exists():
             return {'error': 'Not found'}
+        # SECURITY: the order must belong to the caller (IDOR guard) — otherwise
+        # any logged-in user could attach a BNPL plan/fee to another customer's
+        # order.
+        _p = request.env.user.partner_id.commercial_partner_id
+        if order.partner_id.commercial_partner_id.id != _p.id:
+            return {'error': 'Access denied'}
         admin_fee = order.amount_total * plan.admin_fee_pct / 100
         app = request.env['uellow.bnpl.application'].sudo().create({
             'order_id': order.id,

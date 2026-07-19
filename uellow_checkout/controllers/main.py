@@ -900,6 +900,11 @@ class UellowCheckout(_WSBase):
     @http.route(['/uellow/upay_debug'], type='http', auth='user', website=True, sitemap=False)
     def upay_debug(self, **kw):
         """Debug endpoint — shows UPayments rendering_values. Admin only."""
+        # SECURITY: this endpoint runs raw SQL, creates live UPayments charges
+        # and deletes payment.transaction rows — restrict to system admins
+        # (was auth='user', reachable by any logged-in portal customer).
+        if not request.env.user.has_group('base.group_system'):
+            return request.not_found()
         import json as _j
         out = {'error': None, 'provider': None, 'rendering_values': None, 'pay_url': None}
         try:
