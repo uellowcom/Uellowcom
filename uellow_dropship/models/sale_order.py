@@ -131,8 +131,10 @@ class SaleOrder(models.Model):
                 _logger.info("tracking sync failed for %s: %s", order.name, e)
                 continue
             vals = {'dropship_synced': fields.Datetime.now()}
-            if info.get('tracking_number') or info.get('mail_no'):
-                vals['dropship_tracking'] = info.get('tracking_number') or info.get('mail_no')
+            if info.get('tracking_no') or info.get('tracking_number') or info.get('mail_no'):
+                vals['dropship_tracking'] = (info.get('tracking_no')
+                                             or info.get('tracking_number')
+                                             or info.get('mail_no'))
             if info.get('carrier') or info.get('logistics_service'):
                 vals['dropship_carrier'] = info.get('carrier') or info.get('logistics_service')
             if info.get('status'):
