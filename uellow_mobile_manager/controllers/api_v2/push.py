@@ -55,38 +55,25 @@ def send_push(partner, title, body, data=None, channel='order_update',
     if not tokens:
         _logger.info('send_push: no tokens for partner %s', partner.id)
         return False
-    server_key = _fcm_server_key()
-    if not server_key:
-        _logger.info('send_push: FCM server key not configured — would have '
-                     'pushed %s to %d tokens', title, len(tokens))
-        return False
-    payload = {
-        'registration_ids': list(tokens),
-        'priority': priority,
-        'data': data or {},
-    }
-    # Visible notification only when not silent
-    if not (data and data.get('silent')):
-        payload['notification'] = {
-            'title': title,
-            'body': body,
-            'sound': 'default',
-            'android_channel_id': channel,
-        }
-    try:
-        req = urllib.request.Request(
-            'https://fcm.googleapis.com/fcm/send',
-            data=json.dumps(payload).encode('utf-8'),
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': f'key={server_key}',
-            })
-        with urllib.request.urlopen(req, timeout=8) as r:
-            r.read()
-        return True
-    except Exception as e:
-        _logger.warning('FCM push failed: %s', e)
-        return False
+    # Prefer FCM HTTP v1 (service-account OAuth). Google decommissioned the
+    # legacy fcm.googleapis.com/fcm/send + server-key API (June 2024), so the
+    # old path silently dropped every push. Route through the working v1 sender
+    # (mobile.customer.notification.send_fcm) which mints an OAuth token from
+    # the configured service account.
+    conf = request.env['mobile.notification.setting'].sudo().search([], limit=1)
+    if conf and (conf.fcm_service_account or '').strip():
+        Engine = request.env['mobile.customer.notification'].sudo()
+        sent = 0
+        for tk in tokens:
+            try:
+                if Engine.send_fcm(conf, tk, title, body, data=data):
+                    sent += 1
+            except Exception as e:
+                _logger.warning('send_push (v1) failed for one token: %s', e)
+        return sent > 0
+    _logger.info('send_push: no FCM service account configured — %d tokens not '
+                 'pushed (%s)', len(tokens), title)
+    return False
 
 
 class MobileDriverLocation(http.Controller):
