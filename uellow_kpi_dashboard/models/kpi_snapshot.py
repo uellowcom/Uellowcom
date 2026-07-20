@@ -110,6 +110,50 @@ class KPISnapshot(models.Model):
             if first_order and first_order.date_order >= start:
                 new_customers += 1
 
+        # ── KPIs previously left permanently at 0 ──────────────────────
+        net_revenue = gmv  # amount_total already nets line refunds/discounts
+
+        cod_count = online_count = 0
+        if 'payment_method_type' in SaleOrder._fields:
+            cod_count = len(orders.filtered(
+                lambda o: o.payment_method_type == 'cash'))
+            online_count = total_orders - cod_count
+
+        vendor_total = 0
+        if 'uellow.vendor' in self.env:
+            vendor_total = self.env['uellow.vendor'].search_count([])
+
+        avg_ltv = 0.0
+        if customer_ids:
+            grp = SaleOrder.read_group(
+                [('partner_id', 'in', customer_ids),
+                 ('state', 'in', ('sale', 'done'))],
+                ['amount_total:sum'], ['partner_id'])
+            totals = [g.get('amount_total') or 0 for g in grp]
+            avg_ltv = sum(totals) / len(totals) if totals else 0.0
+
+        draft_carts = SaleOrder.search_count([
+            ('state', '=', 'draft'),
+            ('date_order', '>=', start), ('date_order', '<=', end)])
+        cart_abandon_rate = (draft_carts / (draft_carts + total_orders) * 100
+                             if (draft_carts + total_orders) else 0)
+
+        conversion_rate = 0.0
+        if 'website.visitor' in self.env:
+            visitors = self.env['website.visitor'].search_count([
+                ('create_date', '>=', start), ('create_date', '<=', end)])
+            conversion_rate = (total_orders / visitors * 100) if visitors else 0.0
+
+        points_issued = points_redeemed = 0
+        if 'loyalty.history' in self.env:
+            hist = self.env['loyalty.history'].search([
+                ('create_date', '>=', start), ('create_date', '<=', end)])
+            try:
+                points_issued = int(sum(hist.mapped('issued')))
+                points_redeemed = int(sum(hist.mapped('used')))
+            except Exception:
+                points_issued = points_redeemed = 0
+
         self.create({
             'snapshot_at': fields.Datetime.now(),
             'period': period,
@@ -124,4 +168,13 @@ class KPISnapshot(models.Model):
             'vendor_count_new': vendor_new,
             'customer_count_new': new_customers,
             'customer_count_returning': len(customer_ids) - new_customers,
+            'net_revenue': net_revenue,
+            'cod_count': cod_count,
+            'online_count': online_count,
+            'vendor_count_total': vendor_total,
+            'avg_ltv': avg_ltv,
+            'cart_abandon_rate': cart_abandon_rate,
+            'conversion_rate': conversion_rate,
+            'points_issued': points_issued,
+            'points_redeemed': points_redeemed,
         })
