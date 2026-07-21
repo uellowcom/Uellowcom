@@ -157,6 +157,23 @@ class TryOnController(http.Controller):
             profile = Profile.create({'partner_id': partner.id})
         return profile
 
+    # Max accepted upload size for a try-on source photo (decoded bytes).
+    _MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8 MB
+
+    def _looks_like_image(self, raw):
+        """True only for real JPEG/PNG/GIF/WEBP magic bytes."""
+        if not raw or len(raw) < 12:
+            return False
+        if raw[:3] == b'\xff\xd8\xff':                       # JPEG
+            return True
+        if raw[:8] == b'\x89PNG\r\n\x1a\n':                  # PNG
+            return True
+        if raw[:6] in (b'GIF87a', b'GIF89a'):                # GIF
+            return True
+        if raw[:4] == b'RIFF' and raw[8:12] == b'WEBP':      # WEBP
+            return True
+        return False
+
     def _binary_to_data_url(self, binary_b64, mime='image/jpeg'):
         """Convert an Odoo binary field value to a data URL Replicate can fetch."""
         if not binary_b64:
@@ -183,6 +200,16 @@ class TryOnController(http.Controller):
         # Strip data URL prefix if present
         if isinstance(image_b64, str) and image_b64.startswith('data:'):
             image_b64 = image_b64.split(',', 1)[1] if ',' in image_b64 else image_b64
+
+        # Validate: must be real, in-size-limit image bytes (not arbitrary data).
+        try:
+            raw = base64.b64decode(image_b64, validate=True)
+        except (ValueError, TypeError):
+            return {'success': False, 'error': 'invalid_image'}
+        if len(raw) > self._MAX_PHOTO_BYTES:
+            return {'success': False, 'error': 'image_too_large'}
+        if not self._looks_like_image(raw):
+            return {'success': False, 'error': 'invalid_image'}
 
         filename = kwargs.get('filename') or 'tryon_photo.jpg'
         profile  = self._get_or_create_profile(partner)

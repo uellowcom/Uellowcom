@@ -1,5 +1,6 @@
 import json
 import logging
+from types import SimpleNamespace
 
 from odoo import http
 from odoo.http import request
@@ -262,9 +263,12 @@ class SmartFitController(http.Controller):
         if results:
             results[0]['recommended'] = True
 
-        # Add fit labels
+        # Add fit labels. Cap the score at 100 — for shirts/tops the chest
+        # contribution can reach 100 and shoulder adds up to another 30, so the
+        # raw sum can exceed 100. Ranking above already used the raw score.
         for r in results:
-            s = r['score']
+            s = min(r['score'], 100)
+            r['score'] = s
             if s >= 85:
                 r['fit_label'] = 'مناسب تماماً'
                 r['fit_color'] = 'green'
@@ -382,6 +386,44 @@ class SmartFitController(http.Controller):
         results.sort(key=lambda x: x['overall_pct'], reverse=True)
         if results:
             results[0]['recommended'] = True
+        return results
+
+    def _chart_to_legacy(self, chart_results):
+        """Adapt per-area chart results to the legacy shape the /fit/analyze &
+        /fit/quick widgets expect (needs 'score', 'issues', 'details')."""
+        out = []
+        for r in (chart_results or []):
+            issues, details = [], {}
+            for a in (r.get('areas') or []):
+                fit = a.get('fit')
+                key = a.get('key')
+                label = a.get('label') or key or ''
+                if fit == 'tight':
+                    issues.append(f'{label} ضيق')
+                elif fit == 'loose':
+                    issues.append(f'{label} واسع')
+                if key:
+                    details[key] = {'status': fit, 'diff': a.get('diff_cm')}
+            out.append({
+                'size':        r.get('size'),
+                'score':       r.get('overall_pct', 0),
+                'overall_pct': r.get('overall_pct', 0),
+                'issues':      issues,
+                'details':     details,
+                'areas':       r.get('areas', []),
+                'fit_label':   r.get('fit_label'),
+                'fit_color':   r.get('fit_color'),
+                'recommended': r.get('recommended', False),
+                'estimate':    False,
+            })
+        return out
+
+    def _mark_estimate(self, results):
+        """Flag generic-table results as an estimate (no real product chart)."""
+        for r in (results or []):
+            r['estimate'] = True
+            if r.get('fit_label') == 'مناسب تماماً':
+                r['fit_label'] = 'مناسب (تقديري)'
         return results
 
     def _save_fit_check(self, profile, product, analysis, source='beena_check'):
@@ -522,8 +564,9 @@ class SmartFitController(http.Controller):
         # Get product sizes
         sizes    = self._get_product_sizes(product)
         category = self._detect_category(product)
+        has_chart = bool(product.size_chart_ids)
 
-        if not sizes:
+        if not sizes and not has_chart:
             return {
                 'has_sizes':  False,
                 'category':   category,
@@ -540,17 +583,35 @@ class SmartFitController(http.Controller):
                 'message':     'أضف مقاساتك لتحليل دقيق',
             }
 
-        # Run analysis
-        results = self._analyze_fit(profile_data, sizes, category)
+        # Accurate path: use the product's own size chart when it has one.
+        if has_chart and profile:
+            chart_results = self._analyze_with_chart(profile, product, category)
+            if chart_results:
+                results = self._chart_to_legacy(chart_results)
+                return {
+                    'has_sizes':   True,
+                    'has_profile': True,
+                    'source':      'chart',
+                    'category':    category,
+                    'product':     {'id': product.id, 'name': product.name},
+                    'profile':     profile_data,
+                    'results':     results,
+                    'recommended': results[0]['size'] if results else None,
+                }
+
+        # Fallback: generic hardcoded tables — an estimate only.
+        results = self._mark_estimate(self._analyze_fit(profile_data, sizes, category))
 
         return {
             'has_sizes':   True,
             'has_profile': True,
+            'source':      'estimate',
             'category':    category,
             'product':     {'id': product.id, 'name': product.name},
             'profile':     profile_data,
             'results':     results,
             'recommended': results[0]['size'] if results else None,
+            'note':        'تقدير تقريبي — لا يوجد جدول مقاسات لهذا المنتج',
         }
 
     @http.route('/fit/profile', type='json', auth='user', methods=['POST'], csrf=False)
@@ -643,12 +704,33 @@ class SmartFitController(http.Controller):
 
         sizes    = self._get_product_sizes(product)
         category = self._detect_category(product)
-        results  = self._analyze_fit(profile_data, sizes, category)
+
+        # Accurate path: use the product's own size chart when it has one.
+        if product.size_chart_ids:
+            foot_len = SHOE_EU_TO_CM.get(int(round(shoe_eu)), 0) if shoe_eu else 0
+            pseudo = SimpleNamespace(
+                chest=chest, waist=waist, shoulder=shoulder, hip=0,
+                arm_length=0, inseam=0, thigh=0, foot_length_cm=foot_len,
+                preferred_fit=pref_fit,
+            )
+            chart_results = self._analyze_with_chart(pseudo, product, category)
+            if chart_results:
+                results = self._chart_to_legacy(chart_results)
+                return {
+                    'results':     results,
+                    'recommended': results[0]['size'] if results else None,
+                    'category':    category,
+                    'source':      'chart',
+                }
+
+        # Fallback: generic hardcoded tables — an estimate only.
+        results = self._mark_estimate(self._analyze_fit(profile_data, sizes, category))
 
         return {
             'results':     results,
             'recommended': results[0]['size'] if results else None,
             'category':    category,
+            'source':      'estimate',
         }
 
     # ── Modal endpoints (product page button) ────────────────────────────
