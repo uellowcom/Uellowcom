@@ -1832,6 +1832,15 @@ CART & ORDERING RULES:
         order = request.env['sale.order'].sudo().browse(oid)
         if not order.exists():
             return {'error': 'Order not found'}
+        # SECURITY: only mint a pay link / reveal the amount for the logged-in
+        # customer own order (order_id comes from the chat).
+        _pub = request.env.ref('base.public_user')
+        if request.env.user.id == _pub.id:
+            return {'error': 'login_required'}
+        if not request.env.user.has_group('base.group_system'):
+            _cp = request.env.user.partner_id.commercial_partner_id
+            if order.partner_id.commercial_partner_id.id != _cp.id:
+                return {'error': 'Order not found'}
 
         checkout_url = f'/shop/payment?sale_order_id={oid}'
 
