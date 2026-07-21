@@ -7,6 +7,7 @@
     'depends': ['website', 'website_sale', 'portal', 'uellow_ai_engine'],
     'data': [
         'security/ir.model.access.csv',
+        'security/body_profile_rule.xml',
         'data/config_data.xml',
         'views/fit_views.xml',
         'views/size_chart_template_views.xml',
