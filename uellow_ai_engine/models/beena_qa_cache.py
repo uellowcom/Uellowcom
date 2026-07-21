@@ -90,10 +90,12 @@ class BeenaQaCache(models.Model):
         existing = self.lookup(question, product_id, lang)
         if existing:
             return existing
+        import re as _re
+        _clean = lambda t: _re.sub(r'<[^>]+>', '', t or '').strip()
         return self.create({
-            'question': question[:255],
+            'question': _clean(question)[:255],
             'question_norm': norm,
-            'answer': answer,
+            'answer': _clean(answer),
             'product_id': int(product_id) if product_id else False,
             'lang': lang or 'ar',
             'approved': True,

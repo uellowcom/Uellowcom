@@ -24,7 +24,11 @@ class AiChatSession(models.Model):
 
     @api.model
     def get_or_create(self, session_id, partner_id=None, product_id=None):
-        session = self.search([('session_id', '=', session_id)], limit=1)
+        # SECURITY: session_id is client-supplied and holds the chat history, so
+        # scope the lookup by partner — a customer must never receive another
+        # customer's session by passing a guessed/stolen session_id.
+        session = self.search([('session_id', '=', session_id),
+                               ('partner_id', '=', partner_id or False)], limit=1)
         if not session:
             session = self.create({
                 'session_id': session_id,

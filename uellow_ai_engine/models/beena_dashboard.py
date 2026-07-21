@@ -2,6 +2,7 @@
 """Beena Dashboard: a single-record model exposing KPI metrics as computed fields."""
 
 from odoo import models, fields, api
+from odoo.tools import html_escape
 from datetime import datetime, timedelta
 
 
@@ -48,30 +49,31 @@ class BeenaDashboard(models.Model):
         today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-        all_msgs = Msg.search([])
-        assistant_msgs = all_msgs.filtered(lambda m: m.role == 'assistant')
+        def _msum(field, domain=None):
+            g = Msg.read_group(domain or [], [field + ':sum'], [])
+            return (g[0].get(field) or 0) if g else 0
 
         for rec in self:
-            rec.cost_total = sum(all_msgs.mapped('cost'))
-            rec.cost_today = sum(all_msgs.filtered(lambda m: m.create_date and m.create_date >= today_start).mapped('cost'))
-            rec.cost_month = sum(all_msgs.filtered(lambda m: m.create_date and m.create_date >= month_start).mapped('cost'))
+            rec.cost_total = _msum('cost')
+            rec.cost_today = _msum('cost', [('create_date', '>=', today_start)])
+            rec.cost_month = _msum('cost', [('create_date', '>=', month_start)])
 
             rec.conversations_total = Conv.search_count([])
             rec.conversations_today = Conv.search_count([('create_date', '>=', today_start)])
-            rec.messages_total = len(all_msgs)
+            rec.messages_total = Msg.search_count([])
 
-            claude = len(assistant_msgs.filtered(lambda m: m.source == 'claude'))
-            cache = len(assistant_msgs.filtered(lambda m: m.source == 'cache'))
+            claude = Msg.search_count([('role', '=', 'assistant'), ('source', '=', 'claude')])
+            cache = Msg.search_count([('role', '=', 'assistant'), ('source', '=', 'cache')])
             rec.claude_calls = claude
             rec.cache_hits = cache
             total_replies = claude + cache
             rec.cache_hit_rate = round((cache / total_replies) * 100, 1) if total_replies else 0.0
 
-            rec.tokens_total = sum(all_msgs.mapped('input_tokens')) + sum(all_msgs.mapped('output_tokens'))
+            rec.tokens_total = int(_msum('input_tokens') + _msum('output_tokens'))
 
             # ── Orders via Beena (tagged origin='Beena AI') ──
             Order = self.env['sale.order'].sudo()
-            beena_orders = Order.search([('origin', 'like', 'Beena')])
+            beena_orders = Order.search(['|', ('origin', 'like', 'Beena'), ('is_beena_order', '=', True)])
             rec.beena_orders = len(beena_orders)
             rec.beena_orders_value = sum(beena_orders.mapped('amount_total'))
 
@@ -84,7 +86,7 @@ class BeenaDashboard(models.Model):
             if top_prod:
                 rows = ''.join(
                     '<tr><td style="padding:4px 12px 4px 0">%s</td>'
-                    '<td style="text-align:right;font-weight:500">%d</td></tr>' % (p.name, n)
+                    '<td style="text-align:right;font-weight:500">%d</td></tr>' % (html_escape(p.name or ''), n)
                     for p, n in top_prod
                 )
                 rec.top_products = '<table style="width:100%%">%s</table>' % rows
@@ -97,7 +99,7 @@ class BeenaDashboard(models.Model):
             if top_q:
                 rows = ''.join(
                     '<tr><td style="padding:4px 12px 4px 0">%s</td>'
-                    '<td style="text-align:right;font-weight:500">%d</td></tr>' % (q.question, q.hit_count)
+                    '<td style="text-align:right;font-weight:500">%d</td></tr>' % (html_escape(q.question or ''), q.hit_count)
                     for q in top_q
                 )
                 rec.top_questions = '<table style="width:100%%">%s</table>' % rows
