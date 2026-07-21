@@ -579,11 +579,19 @@ class SmartFitController(http.Controller):
 
         vals = {}
         for key, field in fields_map.items():
-            if key in kwargs and kwargs[key] is not None:
+            if key in kwargs and kwargs[key] not in (None, ''):
                 vals[field] = kwargs[key]
 
         if vals:
-            profile.sudo().write(vals)
+            try:
+                profile.sudo().write(vals)
+            except Exception:
+                # skip any single value the ORM rejects (bad float/selection)
+                for _f, _v in vals.items():
+                    try:
+                        profile.sudo().write({_f: _v})
+                    except Exception:
+                        pass
 
         return {'success': True, 'profile': profile.to_dict()}
 
@@ -598,13 +606,16 @@ class SmartFitController(http.Controller):
         if not profile:
             return {'error': 'Login required'}
 
-        request.env['customer.fit.history'].sudo().create({
-            'profile_id':  profile.id,
-            'product_id':  int(product_id) if product_id else False,
-            'size_chosen': size_chosen,
-            'fit_result':  fit_result,
-            'notes':       kwargs.get('notes', ''),
-        })
+        try:
+            request.env['customer.fit.history'].sudo().create({
+                'profile_id':  profile.id,
+                'product_id':  int(product_id) if product_id else False,
+                'size_chosen': size_chosen,
+                'fit_result':  fit_result,
+                'notes':       kwargs.get('notes', ''),
+            })
+        except Exception:
+            return {'success': False, 'error': 'invalid_feedback'}
 
         return {'success': True}
 
@@ -612,10 +623,10 @@ class SmartFitController(http.Controller):
     def quick_analyze(self, **kwargs):
         """Quick analysis with manual measurements (no saved profile needed)."""
         product_id = kwargs.get('product_id')
-        chest      = float(kwargs.get('chest', 0))
-        waist      = float(kwargs.get('waist', 0))
-        shoulder   = float(kwargs.get('shoulder', 0))
-        shoe_eu    = float(kwargs.get('shoe_size_eu', 0))
+        chest      = float(kwargs.get('chest') or 0)
+        waist      = float(kwargs.get('waist') or 0)
+        shoulder   = float(kwargs.get('shoulder') or 0)
+        shoe_eu    = float(kwargs.get('shoe_size_eu') or 0)
         pref_fit   = kwargs.get('preferred_fit', 'regular')
 
         if not product_id:

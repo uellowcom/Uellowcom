@@ -220,6 +220,9 @@ class BeenaVoiceRouter(models.AbstractModel):
         + signed URL. Never returns the raw API key to the browser."""
         if not self._param_bool('voice_phase_b_enabled', False):
             return {'success': False, 'error': 'phase_b_disabled'}
+        capped = self._check_caps(partner, 'realtime')
+        if capped:
+            return {'success': False, 'error': capped}
         prov = self._param('voice_realtime_provider', 'openai')
         if prov == 'openai':
             return self._realtime_openai(partner)

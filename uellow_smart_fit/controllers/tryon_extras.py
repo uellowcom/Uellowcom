@@ -892,6 +892,11 @@ class TryOnExtrasController(TryOnController):
             return {'success': False, 'error': 'previous_not_ready'}
         if not prev.image:
             return {'success': False, 'error': 'previous_image_missing'}
+        # SECURITY: session_id is client-supplied — the new generation (and its
+        # cost) must land in the CALLER's own session, not a victim's.
+        session = request.env['customer.tryon.session'].sudo().browse(int(session_id))
+        if not session.exists() or session.partner_id.id != partner.id:
+            return {'success': False, 'error': 'session_not_owned'}
 
         nxt_product = request.env['product.template'].sudo().browse(int(next_product_id))
         if not nxt_product.exists() or not nxt_product.image_1920:
