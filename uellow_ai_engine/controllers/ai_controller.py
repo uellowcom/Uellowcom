@@ -1148,11 +1148,15 @@ CART & ORDERING RULES:
                     )}
 
     def _fn_get_payment_options(self, args):
-        return {'options': [
-            {'name': 'UPayments', 'type': 'card', 'desc': 'بطاقة / KNET'},
-            {'name': 'Taly', 'type': 'bnpl', 'desc': 'قسّمها على دفعات'},
-            {'name': 'COD', 'type': 'cod', 'desc': 'الدفع عند الاستلام'},
-        ]}
+        # Only offer methods the store can actually process — otherwise Beena
+        # promises Taly/COD that are disabled in settings.
+        icp = request.env['ir.config_parameter'].sudo()
+        opts = [{'name': 'UPayments', 'type': 'card', 'desc': 'بطاقة / KNET'}]
+        if icp.get_param('taly.merchant_key', ''):
+            opts.append({'name': 'Taly', 'type': 'bnpl', 'desc': 'قسّمها على دفعات'})
+        if icp.get_param('uellow_ai.cod_enabled', 'True') in ('True', '1', 'true'):
+            opts.append({'name': 'COD', 'type': 'cod', 'desc': 'الدفع عند الاستلام'})
+        return {'options': opts}
 
     def _fn_check_fit(self, args):
         """Per-area fit check between customer profile and product size chart.
@@ -1537,16 +1541,19 @@ CART & ORDERING RULES:
             return {'success': True, 'product': product.name, 'quantity': qty,
                     'cart_count': int(order.cart_quantity), 'cart_total': order.amount_total,
                     'cart_url': '/shop/cart', 'message': f'تمت إضافة {product.name} للسلة'}
-        except Exception as e:
-            import traceback
-            return {'success': False, 'error': str(e),
+        except Exception:
+            _logger.exception('Beena add_to_cart failed')
+            return {'success': False, 'error': 'add_failed',
                     'fallback_url': '/shop/cart',
-                    'message': 'تعذرت الإضافة تلقائياً — اعرض على العميل رابط السلة المباشر',
-                    'traceback': traceback.format_exc()[-300:]}
+                    'message': 'تعذرت الإضافة تلقائياً — اعرض على العميل رابط السلة المباشر'}
 
 
     def _fn_create_order(self, args):
         try:
+            public_user = request.env.ref('base.public_user')
+            if request.env.user.id == public_user.id:
+                return {'error': 'guest', 'guest': True,
+                        'message': 'سجّل دخولك أو أكمل الشراء من صفحة المنتج'}
             pid   = int(args.get('product_id', 0))
             qty   = int(args.get('quantity', 1))
             name  = args.get('customer_name', '')
@@ -1560,10 +1567,16 @@ CART & ORDERING RULES:
                 else:
                     return {'error': f'Product {pid} not found'}
             partner = request.env.user.partner_id
+            # Only FILL BLANK contact fields from the chat — NEVER overwrite the
+            # customer's real account name/phone/email (an "order it for Ahmad"
+            # message must not rename the logged-in customer's own account).
             vals = {}
-            if name:  vals['name']  = name
-            if phone: vals['phone'] = phone
-            if email: vals['email'] = email
+            if name and not partner.name:
+                vals['name'] = name
+            if phone and not (partner.phone or partner.mobile):
+                vals['phone'] = phone
+            if email and not partner.email:
+                vals['email'] = email
             if vals:
                 partner.sudo().write(vals)
             website = request.env['website'].sudo().search([], limit=1)
@@ -1581,9 +1594,10 @@ CART & ORDERING RULES:
             )
             return {'success': True, 'order_id': order.id, 'order_name': order.name,
                     'amount': order.amount_total, 'upay_url': upay_url, 'cart_url': '/shop/cart'}
-        except Exception as e:
-            import traceback
-            return {'error': str(e), 'traceback': traceback.format_exc()[-300:]}
+        except Exception:
+            _logger.exception('Beena create_order failed')
+            return {'error': 'create_failed',
+                    'message': 'تعذّر إنشاء الطلب — جرّب من صفحة المنتج مباشرة'}
 
 
     def _fn_get_company_location(self, args):
