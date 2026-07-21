@@ -1865,6 +1865,16 @@ CART & ORDERING RULES:
             )
         if not order or not order.exists():
             return {'error': 'Order not found'}
+        # SECURITY: order_id/order_name come straight from the chat, so only ever
+        # reveal an order that belongs to the logged-in customer — never another
+        # customer's status/address/driver (was an unscoped sudo lookup).
+        _pub = request.env.ref('base.public_user')
+        if request.env.user.id == _pub.id:
+            return {'error': 'login_required'}
+        if not request.env.user.has_group('base.group_system'):
+            _cp = request.env.user.partner_id.commercial_partner_id
+            if order.partner_id.commercial_partner_id.id != _cp.id:
+                return {'error': 'Order not found'}
 
         state_map = {
             'draft':    'مسودة',
@@ -2009,19 +2019,30 @@ CART & ORDERING RULES:
         }
 
     def _fn_apply_coupon(self, args):
-        code  = args.get('code', '')
+        code = (args.get('code') or '').strip()
+        if not code:
+            return {'error': 'No coupon code'}
         order = request.env["website"].sudo().search([], limit=1).sale_get_order()
         if not order:
             return {'error': 'No active cart'}
+        # Odoo 18: sale.coupon.apply.code was removed — use _try_apply_code,
+        # then claim any rewards it returns but does not auto-apply.
         try:
-            order._cart_update_pricelist(pricelist_id=None)
-            promo = request.env['sale.coupon.apply.code'].sudo().create({
-                'coupon_code': code
-            })
-            promo.process_coupon()
-            return {'success': True, 'message': f'تم تطبيق الكوبون {code}'}
+            res = order.sudo()._try_apply_code(code)
         except Exception as e:
             return {'error': str(e), 'message': 'الكوبون غير صحيح أو منتهي الصلاحية'}
+        if isinstance(res, dict) and res.get('error'):
+            return {'error': res['error'],
+                    'message': 'الكوبون غير صحيح أو منتهي الصلاحية'}
+        try:
+            if isinstance(res, dict):
+                for coupon, rewards in res.items():
+                    if hasattr(coupon, 'id'):
+                        for rw in rewards:
+                            order.sudo()._apply_program_reward(rw, coupon)
+        except Exception:
+            pass
+        return {'success': True, 'message': f'تم تطبيق الكوبون {code} ✅'}
 
     def _fn_get_customer_orders(self, args):
         limit       = int(args.get('limit', 5))
