@@ -251,6 +251,15 @@ class ReviewerController(http.Controller):
         if not req.exists():
             return {'error': 'Request not found'}
 
+        # Ownership: only the reviewer this request is assigned to may
+        # accept/decline it. Without this any logged-in user could act on
+        # another reviewer's request AND read back its secret access token.
+        reviewer = request.env['reviewer.profile'].sudo().search(
+            [('partner_id', '=', request.env.user.partner_id.id)], limit=1
+        )
+        if not reviewer or req.reviewer_id.id != reviewer.id:
+            return {'error': 'Not authorized'}
+
         if action == 'accept':
             req.action_accept()
             return {'success': True, 'token': req.token, 'state': 'accepted'}
