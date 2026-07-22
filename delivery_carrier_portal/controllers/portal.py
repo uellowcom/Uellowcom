@@ -846,7 +846,8 @@ class DeliveryPortalController(http.Controller):
             return {'ok': False}
         company = _get_carrier_company(uid)
         drv = request.env['delivery.driver'].sudo().browse(int(driver_id))
-        if not drv.exists() or drv.carrier_company_id != company:
+        if not company or not drv.exists() \
+                or drv.carrier_company_id.id != company.id:
             return {'ok': False}
         new_status = 'inactive' if drv.status == 'active' else 'active'
         drv.status = new_status
@@ -1076,7 +1077,12 @@ class DeliveryPortalController(http.Controller):
             return request.not_found()
         company = _get_carrier_company(uid)
         order = request.env['sale.order'].sudo().browse(order_id)
-        if not order.exists() or not order.return_signature:
+        # SECURITY (IDOR): the signature is a customer's PII image — only the
+        # carrier company that owns this order may view it. Without this check
+        # any manager could enumerate return-signature/<id> and harvest other
+        # carriers' customers' signatures.
+        if not company or not order.exists() or not order.return_signature \
+                or order.delivery_carrier_company_id.id != company.id:
             return request.not_found()
         import base64
         img_data = base64.b64decode(order.return_signature)
