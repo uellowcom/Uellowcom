@@ -1526,12 +1526,34 @@ class MobileOrdersAPI(http.Controller):
             except Exception as e:
                 return fail('SPLIT_FAILED', str(e), 400)
 
-        # Apply chosen addresses
+        # Apply chosen addresses — ONLY when the address belongs to THIS
+        # customer (or is already attached to this cart, covering the guest
+        # ad-hoc partner). Without this an authenticated user could point
+        # their own order at any res.partner id and then read that victim's
+        # name/phone/street back from the order-detail endpoint (which
+        # serializes delivery_address). IDOR/PII-leak fix (2026-07-22).
+        def _owned_addr_id(raw):
+            try:
+                a = request.env['res.partner'].sudo().browse(int(raw))
+            except Exception:
+                return None
+            if not a.exists():
+                return None
+            if partner and (a.id == partner.id or a.parent_id.id == partner.id):
+                return a.id
+            if a.id in (order.partner_id.id, order.partner_shipping_id.id,
+                        order.partner_invoice_id.id):
+                return a.id
+            return None
         try:
             if p.get('delivery_address_id'):
-                order.partner_shipping_id = int(p['delivery_address_id'])
+                aid = _owned_addr_id(p['delivery_address_id'])
+                if aid:
+                    order.partner_shipping_id = aid
             if p.get('invoice_address_id'):
-                order.partner_invoice_id = int(p['invoice_address_id'])
+                aid = _owned_addr_id(p['invoice_address_id'])
+                if aid:
+                    order.partner_invoice_id = aid
         except Exception:
             pass
 
