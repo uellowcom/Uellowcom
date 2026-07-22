@@ -55,6 +55,16 @@ def _is_driver(uid):
     return _check_user_group(uid, 'delivery_carrier_portal.group_carrier_driver')
 
 
+def _is_internal():
+    """Only Uellow's own INTERNAL staff may see the cross-carrier backend
+    dashboard / finance center (every company's orders, cash held, net
+    balances) or create settlements. Portal carriers/drivers are NOT internal
+    users — they use the company-scoped /delivery-portal/* pages instead.
+    Guards the auth='user' backend JSON endpoints, which were otherwise
+    reachable by ANY logged-in portal user (customers included)."""
+    return request.env.user.has_group('base.group_user')
+
+
 def _owned_order(uid, order):
     """Whether the logged-in carrier user may act on this order: a manager of
     the order's carrier company, or the driver assigned to it. Guards the
@@ -105,6 +115,8 @@ class DeliveryPortalController(http.Controller):
     @http.route('/delivery/dashboard', type='http', auth='user')
     def backend_dashboard(self, **kwargs):
         """Standalone backend dashboard page."""
+        if not _is_internal():
+            return request.not_found()
         env = request.env
         carriers = env['delivery.carrier.company'].sudo().search([('active', '=', True)])
         return request.render('delivery_carrier_portal.backend_dashboard', {
@@ -283,7 +295,7 @@ class DeliveryPortalController(http.Controller):
             trip_order_ids = trip_lines.mapped('sale_order_id').ids
             extra_orders = request.env['sale.order'].sudo().search([
                 ('id', 'in', trip_order_ids),
-                ('delivery_carrier_company_id', '=', company.id),
+                ('delivery_carrier_company_id', '=', driver.carrier_company_id.id),
                 ('id', 'not in', all_orders.ids),
             ])
             all_orders = all_orders | extra_orders
@@ -1100,19 +1112,35 @@ class DeliveryPortalController(http.Controller):
                 _logger.warning("Webhook: order not found: %s", order_ref)
                 return {'success': False, 'error': 'Order not found'}
 
+            # SECURITY: this endpoint is public + csrf-exempt, so the posted
+            # `status`/`amount` are forgeable. Trusting them let anyone POST an
+            # order id/name and have it marked paid + remitted WITHOUT paying
+            # (revenue loss — cash marked settled that was never collected).
+            # Never mark paid on the posted status alone: re-confirm the capture
+            # against the UPayments status API using the order's own charge
+            # track id (idempotent + only true when the gateway says CAPTURED).
             if status in ('success', 'paid', 'captured', 'completed'):
+                verified = False
+                try:
+                    if hasattr(order, '_upayments_verify_status'):
+                        verified = bool(order.sudo()._upayments_verify_status())
+                except Exception:
+                    _logger.exception("Pay-link webhook: verify failed for %s", order.name)
+                if not verified:
+                    _logger.warning(
+                        "Pay-link webhook: unverified 'paid' for %s ignored "
+                        "(ref=%s) — not trusting posted status", order.name, pay_ref)
+                    return {'success': False, 'error': 'unverified'}
                 order.write({
                     'pay_link_status':       'paid',
                     'pay_link_ref':          pay_ref,
                     'pay_link_amount':       amount or order.amount_total,
                     'pay_link_date':         fields.Datetime.now(),
-                    'payment_method_type':   'online',
-                    'cash_collection_status': 'remitted',
                 })
                 order.message_post(
                     body=f'✅ Payment received via Pay Link | Ref: {pay_ref} | Amount: KD {amount:.3f}'
                 )
-                _logger.info("Webhook: order %s marked as paid", order.name)
+                _logger.info("Webhook: order %s marked as paid (verified)", order.name)
             else:
                 order.write({'pay_link_status': 'failed'})
                 order.message_post(body=f'❌ Payment failed via Pay Link | Status: {status}')
@@ -1125,6 +1153,8 @@ class DeliveryPortalController(http.Controller):
     @http.route('/delivery-portal/dashboard-data', type='json', csrf=False, auth='user')
     def dashboard_data(self, period='30', carrier_id=0, **kwargs):
         """Return JSON data for backend dashboard."""
+        if not _is_internal():
+            return {'error': 'access_denied'}
         from datetime import timedelta, date
         import json
 
@@ -1325,6 +1355,8 @@ class DeliveryPortalController(http.Controller):
         - net_balance     : cod_net − online_cost
                             (+) carrier owes Uellow  /  (−) Uellow owes carrier
         """
+        if not _is_internal():
+            return {'error': 'access_denied'}
         env = request.env
         SO = env['sale.order'].sudo()
 
@@ -1426,6 +1458,8 @@ class DeliveryPortalController(http.Controller):
         """Create a DRAFT settlement for a carrier, pulling every outstanding
         delivered order (COD not yet remitted + online not yet linked) into its
         lines. Returns the new remittance id so the UI can open its form."""
+        if not _is_internal():
+            return {'error': 'access_denied'}
         env = request.env
         cid = int(carrier_id)
         carrier = env['delivery.carrier.company'].sudo().browse(cid)
