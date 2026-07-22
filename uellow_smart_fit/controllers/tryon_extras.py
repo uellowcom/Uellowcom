@@ -793,6 +793,18 @@ class TryOnExtrasController(TryOnController):
         # Cap at 3 to bound cost
         product_ids = [int(x) for x in product_ids[:3]]
 
+        # Eligibility gate — same as single generate(). Every garment must be an
+        # eligible fashion item (category + min price); otherwise we'd burn
+        # provider cost on ineligible SKUs (electronics, etc.).
+        Product = request.env['product.template'].sudo()
+        for pid in product_ids:
+            p = Product.browse(pid)
+            if not p.exists():
+                return {'success': False, 'error': 'product_not_found', 'info': {'product_id': pid}}
+            ok, reason, info = self._product_eligible(p)
+            if not ok:
+                return {'success': False, 'error': reason, 'info': info}
+
         profile = self._get_or_create_profile(partner)
         if not profile.tryon_photo:
             return {'success': False, 'error': 'no_photo'}
@@ -901,6 +913,10 @@ class TryOnExtrasController(TryOnController):
         nxt_product = request.env['product.template'].sudo().browse(int(next_product_id))
         if not nxt_product.exists() or not nxt_product.image_1920:
             return {'success': False, 'error': 'next_product_missing'}
+        # Eligibility gate — the next layer must also be an eligible fashion item.
+        ok, reason, info = self._product_eligible(nxt_product)
+        if not ok:
+            return {'success': False, 'error': reason, 'info': info}
 
         token = self._fashn_token()
         if not (self._fashn_enabled() and token):
