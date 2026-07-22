@@ -171,8 +171,11 @@ class MobileNotificationsAPI(http.Controller):
     def mark_read(self, notif_id, **kw):
         # ids ≥ 1e9 are personal event rows (see list merge above)
         if notif_id >= 1000000000:
+            partner = current_partner()
             n = request.env['mobile.customer.notification'].sudo()                 .browse(notif_id - 1000000000)
-            if n.exists():
+            # Ownership guard — a personal notification may only be marked
+            # read by the customer it belongs to (was a cross-customer write).
+            if n.exists() and n.partner_id.id == partner.id:
                 n.is_read = True
                 request.env.cr.commit()
             return ok({'read': True})

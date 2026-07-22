@@ -37,6 +37,25 @@ def _cart_token():
     return (tok or '').strip()
 
 
+def _caller_owns_line(line):
+    """v2.2.51 — ownership guard for the line_id-addressed cart endpoints
+    (update / remove / save_for_later). Without it, ANY caller could pass
+    an arbitrary sale.order.line id and mutate/delete a line in another
+    customer's cart or order (cross-cart IDOR). A line is the caller's own
+    when its order belongs to the logged-in partner, OR (guest / pre-adopt)
+    when the order carries the same mobile_cart_token the caller presents."""
+    if not line or not line.exists():
+        return False
+    order = line.order_id
+    partner = current_partner()
+    if partner and order.partner_id.id == partner.id:
+        return True
+    tok = _cart_token()
+    if tok and order.mobile_cart_token and order.mobile_cart_token == tok:
+        return True
+    return False
+
+
 def _pricelist_for_currency(cur):
     """First pricelist in the website's display currency (prefer one
     scoped to the current website)."""
@@ -972,7 +991,7 @@ class MobileCartAPI(http.Controller):
         except Exception:
             return fail('BAD_REQUEST', 'line_id required')
         line = request.env['sale.order.line'].sudo().browse(line_id)
-        if not line.exists():
+        if not _caller_owns_line(line):
             return fail('NOT_FOUND', 'Line not found', 404)
         if 'brain_saved_for_later' not in line._fields:
             return fail('UNAVAILABLE', 'Save-for-later not enabled', 409)
@@ -996,7 +1015,7 @@ class MobileCartAPI(http.Controller):
         if not line_id:
             return fail('BAD_REQUEST', 'line_id required')
         line = request.env['sale.order.line'].sudo().browse(line_id)
-        if not line.exists():
+        if not _caller_owns_line(line):
             return fail('NOT_FOUND', 'Line not found', 404)
         if qty <= 0:
             line.unlink()
@@ -1014,6 +1033,8 @@ class MobileCartAPI(http.Controller):
         except Exception:
             return fail('BAD_REQUEST', 'line_id required')
         line = request.env['sale.order.line'].sudo().browse(line_id)
+        if not _caller_owns_line(line):
+            return fail('NOT_FOUND', 'Line not found', 404)
         order_id = line.order_id.id if line.exists() else None
         if line.exists():
             try:
