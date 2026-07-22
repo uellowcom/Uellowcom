@@ -78,10 +78,26 @@ class DriverCashAPI(http.Controller):
         if not driver.carrier_company_id:
             return fail('NO_COMPANY', 'Driver has no carrier company')
         order_ids = [int(x) for x in order_ids if x]
-        orders = request.env['sale.order'].sudo().browse(order_ids).filtered(lambda o: o.exists())
-        if not orders:
-            return fail('NOT_FOUND', 'No matching orders')
         Rem = request.env['delivery.cash.remittance'].sudo()
+        # OWNERSHIP + DEDUP: a driver may only settle orders HE delivered and
+        # that are not already claimed by a non-draft remittance. Without this
+        # any authenticated driver could attach another driver's (or another
+        # carrier's) delivered COD order to his own remittance, or re-submit
+        # the same order twice — corrupting cash reconciliation. Mirror the
+        # exact scope used by cash/ready.
+        own_delivered_ids = set(request.env['delivery.trip.line'].sudo().search([
+            ('driver_id', '=', driver.id),
+            ('delivery_status', '=', 'delivered'),
+        ]).mapped('sale_order_id').ids)
+        used_order_ids = set()
+        for r in Rem.search([('state', 'in', ('pending', 'partial', 'remitted'))]):
+            used_order_ids.update(r.order_ids.ids)
+            used_order_ids.update(r.line_ids.mapped('order_id').ids)
+        allowed_ids = [oid for oid in order_ids
+                       if oid in own_delivered_ids and oid not in used_order_ids]
+        orders = request.env['sale.order'].sudo().browse(allowed_ids).filtered(lambda o: o.exists())
+        if not orders:
+            return fail('NOT_FOUND', 'No settleable orders of yours in this request')
         rem = Rem.create({
             'carrier_company_id': driver.carrier_company_id.id,
             'settlement_mode': 'per_order',
