@@ -254,7 +254,9 @@ class MobileApiController(http.Controller):
     @http.route('/api/mobile/session/register', type='json', auth='public', methods=['POST'], csrf=False)
     def register_session(self, **kw):
         try:
-            params = request.jsonrequest
+            # Odoo 18 removed request.jsonrequest; for type='json' routes the
+            # JSON-RPC params are unpacked into the method kwargs.
+            params = kw or {}
             device_id = params.get('device_id')
             platform = params.get('platform', 'android')
             app_version = params.get('app_version', '')

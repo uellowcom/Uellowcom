@@ -68,9 +68,12 @@ class UellowGovernorate(models.Model):
         for g in self:
             g.city_count = len(g.city_ids)
 
-    def name_get(self):
-        return [(g.id, '%s — %s' % (g.name, g.name_ar)
-                 if g.name_ar else g.name) for g in self]
+    @api.depends('name', 'name_ar')
+    def _compute_display_name(self):
+        # Odoo 18 removed name_get; display name is computed here instead.
+        for g in self:
+            g.display_name = ('%s — %s' % (g.name, g.name_ar)) \
+                if g.name_ar else (g.name or '')
 
 
 class UellowCity(models.Model):
@@ -102,18 +105,22 @@ class UellowCity(models.Model):
                     toks.add(t)
         return toks
 
-    def name_get(self):
-        return [(c.id, '%s — %s' % (c.name, c.name_ar)
-                 if c.name_ar else c.name) for c in self]
+    @api.depends('name', 'name_ar')
+    def _compute_display_name(self):
+        # Odoo 18 removed name_get; display name is computed here instead.
+        for c in self:
+            c.display_name = ('%s — %s' % (c.name, c.name_ar)) \
+                if c.name_ar else (c.name or '')
 
     @api.model
     def name_search(self, name='', args=None, operator='ilike', limit=100):
-        args = args or []
+        args = list(args or [])
         if name:
             args = ['|', '|', ('name', operator, name),
                     ('name_ar', operator, name),
                     ('aliases', operator, name)] + args
-        return self.search(args, limit=limit).name_get()
+        records = self.search(args, limit=limit)
+        return [(rec.id, rec.display_name) for rec in records]
 
 
 class UellowDeliveryZone(models.Model):
