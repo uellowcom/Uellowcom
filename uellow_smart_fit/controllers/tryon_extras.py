@@ -133,6 +133,8 @@ class TryOnExtrasController(TryOnController):
 
     @http.route('/tryon/regenerate-color', type='json', auth='user', methods=['POST'], csrf=False)
     def regenerate_color(self, **kw):
+        if not self._is_enabled():
+            return {'success': False, 'error': 'tryon_disabled'}
         if not self._feat_enabled('color_swap'):
             return {'success': False, 'error': 'feature_disabled'}
         image_id = kw.get('image_id')
@@ -707,6 +709,8 @@ class TryOnExtrasController(TryOnController):
 
     @http.route('/tryon/regenerate-background', type='json', auth='user', methods=['POST'], csrf=False)
     def regenerate_background(self, **kw):
+        if not self._is_enabled():
+            return {'success': False, 'error': 'tryon_disabled'}
         if not self._feat_enabled('background_swap'):
             return {'success': False, 'error': 'feature_disabled'}
         image_id = kw.get('image_id')
@@ -782,6 +786,8 @@ class TryOnExtrasController(TryOnController):
     def compose_outfit(self, **kw):
         """Sequentially layer 2-3 garments: result of step N becomes the
         model_image for step N+1. Returns the first prediction; client polls."""
+        if not self._is_enabled():
+            return {'success': False, 'error': 'tryon_disabled'}
         if not self._feat_enabled('outfit_composer'):
             return {'success': False, 'error': 'feature_disabled'}
         partner = self._logged_in_partner()
@@ -889,6 +895,8 @@ class TryOnExtrasController(TryOnController):
     @http.route('/tryon/compose-outfit/next', type='json', auth='user', methods=['POST'], csrf=False)
     def compose_next(self, **kw):
         """Layer the next product on top of a completed previous step."""
+        if not self._is_enabled():
+            return {'success': False, 'error': 'tryon_disabled'}
         if not self._feat_enabled('outfit_composer'):
             return {'success': False, 'error': 'feature_disabled'}
         partner   = self._logged_in_partner()
@@ -972,6 +980,8 @@ class TryOnExtrasController(TryOnController):
     # ─────────────────────────────────────────────────────────────────────
     @http.route('/tryon/compare-models', type='json', auth='user', methods=['POST'], csrf=False)
     def compare_models(self, **kw):
+        if not self._is_enabled():
+            return {'success': False, 'error': 'tryon_disabled'}
         if not self._feat_enabled('compare_models'):
             return {'success': False, 'error': 'feature_disabled'}
         image_id = kw.get('image_id')
