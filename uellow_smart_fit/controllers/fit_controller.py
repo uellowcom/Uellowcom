@@ -110,6 +110,24 @@ class SmartFitController(http.Controller):
             f'uellow_fit.{key}', default
         )
 
+    @staticmethod
+    def _num(v, default=0.0):
+        """Parse a client-supplied numeric value without ever raising.
+        Public endpoints receive arbitrary strings; a bad value must yield a
+        clean fallback, not an HTTP 500."""
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return default
+
+    @staticmethod
+    def _int_id(v):
+        """Parse a client-supplied record id; return None on garbage."""
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
     def _get_or_create_profile(self):
         public_user = request.env.ref('base.public_user')
         if request.env.user.id == public_user.id:
@@ -549,11 +567,11 @@ class SmartFitController(http.Controller):
     @http.route('/fit/analyze', type='json', auth='public', methods=['POST'], csrf=False)
     def analyze_size(self, **kwargs):
         """Main endpoint: analyze size for a product."""
-        product_id = kwargs.get('product_id')
-        if not product_id:
+        pid = self._int_id(kwargs.get('product_id'))
+        if not pid:
             return {'error': 'product_id required'}
 
-        product = request.env['product.template'].sudo().browse(int(product_id))
+        product = request.env['product.template'].sudo().browse(pid)
         if not product.exists():
             return {'error': 'Product not found'}
 
@@ -683,17 +701,17 @@ class SmartFitController(http.Controller):
     @http.route('/fit/quick', type='json', auth='public', methods=['POST'], csrf=False)
     def quick_analyze(self, **kwargs):
         """Quick analysis with manual measurements (no saved profile needed)."""
-        product_id = kwargs.get('product_id')
-        chest      = float(kwargs.get('chest') or 0)
-        waist      = float(kwargs.get('waist') or 0)
-        shoulder   = float(kwargs.get('shoulder') or 0)
-        shoe_eu    = float(kwargs.get('shoe_size_eu') or 0)
+        pid        = self._int_id(kwargs.get('product_id'))
+        chest      = self._num(kwargs.get('chest'))
+        waist      = self._num(kwargs.get('waist'))
+        shoulder   = self._num(kwargs.get('shoulder'))
+        shoe_eu    = self._num(kwargs.get('shoe_size_eu'))
         pref_fit   = kwargs.get('preferred_fit', 'regular')
 
-        if not product_id:
+        if not pid:
             return {'error': 'product_id required'}
 
-        product = request.env['product.template'].sudo().browse(int(product_id))
+        product = request.env['product.template'].sudo().browse(pid)
         if not product.exists():
             return {'error': 'Product not found'}
 
@@ -750,10 +768,11 @@ class SmartFitController(http.Controller):
         if request.env.user.id == public_user.id:
             return {'eligible': False, 'reason': 'logged_out'}
 
-        if not product_id:
+        pid = self._int_id(product_id)
+        if not pid:
             return {'eligible': False, 'reason': 'no_product'}
 
-        product = request.env['product.template'].sudo().browse(int(product_id))
+        product = request.env['product.template'].sudo().browse(pid)
         if not product.exists():
             return {'eligible': False, 'reason': 'product_not_found'}
 
@@ -789,10 +808,11 @@ class SmartFitController(http.Controller):
         product_id = kwargs.get('product_id')
         requested_size = (kwargs.get('size') or '').strip()
 
-        if not product_id:
+        pid = self._int_id(product_id)
+        if not pid:
             return {'state': 'no_product'}
 
-        product = request.env['product.template'].sudo().browse(int(product_id))
+        product = request.env['product.template'].sudo().browse(pid)
         if not product.exists():
             return {'state': 'product_not_found'}
 
