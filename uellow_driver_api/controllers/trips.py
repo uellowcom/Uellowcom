@@ -11,6 +11,18 @@ from ._common import (
 )
 
 
+def _owns_trip(trip, driver):
+    """A driver may see/act on a trip only if it is HIS: he is the trip's
+    driver, the pickup courier, or he is assigned to one of its stops. Without
+    this any authenticated driver could read another driver's trip (customer
+    names + addresses of every stop) or re-sequence it."""
+    if not trip or not driver:
+        return False
+    if trip.driver_id.id == driver.id or trip.pickup_driver_id.id == driver.id:
+        return True
+    return driver.id in trip.line_ids.mapped('driver_id').ids
+
+
 def _serialize_trip(trip, detail=False):
     lines = trip.line_ids.sorted(lambda l: (l.sequence or 999, l.id))
     out = {
@@ -83,9 +95,10 @@ class DriverTripsAPI(http.Controller):
     @safe_endpoint
     @require_auth
     def trip_detail(self, trip_id, **kw):
+        driver = current_driver()
         Trip = request.env['delivery.trip'].sudo()
         trip = Trip.browse(trip_id)
-        if not trip.exists():
+        if not trip.exists() or not _owns_trip(trip, driver):
             return fail('NOT_FOUND', 'Trip not found', 404)
         return ok({'trip': _serialize_trip(trip, detail=True)})
 
@@ -99,6 +112,10 @@ class DriverTripsAPI(http.Controller):
         order_ids = p.get('line_ids') or []
         if not isinstance(order_ids, list):
             return fail('BAD_INPUT', 'line_ids must be a list')
+        driver = current_driver()
+        trip = request.env['delivery.trip'].sudo().browse(trip_id)
+        if not trip.exists() or not _owns_trip(trip, driver):
+            return fail('NOT_FOUND', 'Trip not found', 404)
         Line = request.env['delivery.trip.line'].sudo()
         for idx, lid in enumerate(order_ids, start=10):
             line = Line.browse(int(lid))

@@ -23,6 +23,22 @@ from ._common import (
 _logger = logging.getLogger(__name__)
 
 
+def _driver_owns_order(order, driver):
+    """The order must be assigned to THIS driver (as its delivery driver or via
+    one of his trip lines). Without this any driver with can_send_payment_link
+    could generate/cancel a payment link on ANY order and read the customer's
+    name + phone."""
+    if not order or not driver:
+        return False
+    if getattr(order, 'delivery_driver_id', False) and \
+            order.delivery_driver_id.id == driver.id:
+        return True
+    return bool(request.env['delivery.trip.line'].sudo().search_count([
+        ('sale_order_id', '=', order.id),
+        ('driver_id', '=', driver.id),
+    ]))
+
+
 def _generate(order, provider_pref='upayments'):
     """Returns (link, provider) tuple. Tries UPayments first, falls
     back to Odoo built-in payment link."""
@@ -102,7 +118,7 @@ class DriverPaylinkAPI(http.Controller):
         p = get_payload()
         provider_pref = (p.get('provider') or 'upayments').lower()
         order = request.env['sale.order'].sudo().browse(order_id)
-        if not order.exists():
+        if not order.exists() or not _driver_owns_order(order, driver):
             return fail('NOT_FOUND', 'Order not found', 404)
         link, provider = _generate(order, provider_pref=provider_pref)
         if not link:
@@ -132,8 +148,9 @@ class DriverPaylinkAPI(http.Controller):
     @safe_endpoint
     @require_auth
     def status(self, order_id, **kw):
+        driver = current_driver()
         order = request.env['sale.order'].sudo().browse(order_id)
-        if not order.exists():
+        if not order.exists() or not _driver_owns_order(order, driver):
             return fail('NOT_FOUND', 'Order not found', 404)
         last_tx = order.transaction_ids.filtered(
             lambda t: t.state in ('done', 'authorized'))[-1:]
@@ -162,7 +179,7 @@ class DriverPaylinkAPI(http.Controller):
             return fail('BAD_CHANNEL', 'channel must be whatsapp|sms|clipboard|qr')
         driver = current_driver()
         order = request.env['sale.order'].sudo().browse(order_id)
-        if not order.exists():
+        if not order.exists() or not _driver_owns_order(order, driver):
             return fail('NOT_FOUND', 'Order not found', 404)
         emoji = {'whatsapp': '💬', 'sms': '✉️',
                  'clipboard': '📋', 'qr': '🟫'}[channel]
@@ -178,7 +195,7 @@ class DriverPaylinkAPI(http.Controller):
     def cancel(self, order_id, **kw):
         driver = current_driver()
         order = request.env['sale.order'].sudo().browse(order_id)
-        if not order.exists():
+        if not order.exists() or not _driver_owns_order(order, driver):
             return fail('NOT_FOUND', 'Order not found', 404)
         if 'pay_link_status' in order._fields:
             order.sudo().write({'pay_link_status': 'cancelled'})

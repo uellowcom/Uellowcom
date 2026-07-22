@@ -142,8 +142,13 @@ class DriverCashAPI(http.Controller):
     @safe_endpoint
     @require_auth
     def remittance_detail(self, rem_id, **kw):
+        driver = current_driver()
         rem = request.env['delivery.cash.remittance'].sudo().browse(rem_id)
-        if not rem.exists():
+        # Scope to the driver's OWN carrier company — same filter as history().
+        # Without this any driver could read another carrier's cash totals,
+        # commission and the customer names on every order in the remittance.
+        if (not rem.exists() or not driver.carrier_company_id
+                or rem.carrier_company_id.id != driver.carrier_company_id.id):
             return fail('NOT_FOUND', 'Remittance not found', 404)
         return ok({
             'id':   rem.id,
