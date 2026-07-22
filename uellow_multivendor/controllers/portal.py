@@ -203,8 +203,12 @@ class VendorPortalController(http.Controller):
         products = request.env['product.product'].sudo().search([
             ('vendor_id', '=', vendor.id)], limit=100)
         selected_product = False
-        if product_id:
-            selected_product = request.env['product.product'].sudo().browse(int(product_id))
+        if product_id and str(product_id).isdigit():
+            sp = request.env['product.product'].sudo().browse(int(product_id))
+            # Only pre-select a product the vendor actually OWNS — never render
+            # another vendor's product details from a guessed ?product_id=.
+            if sp.exists() and sp.vendor_id.id == vendor.id:
+                selected_product = sp
         return request.render('uellow_multivendor.portal_vendor_restock', {
             'vendor': vendor,
             'products': products,
@@ -223,6 +227,12 @@ class VendorPortalController(http.Controller):
             return d
         try:
             if product_id and int(qty) > 0:
+                # OWNERSHIP: a vendor may only restock a product that is HIS.
+                # Without this a vendor could file a restock request (and the
+                # resulting purchase order) referencing another vendor's product.
+                prod = request.env['product.product'].sudo().browse(int(product_id))
+                if not prod.exists() or prod.vendor_id.id != vendor.id:
+                    return request.redirect('/my/vendor/stock')
                 VL = request.env['uellow.vendor.location'].sudo()
                 vloc = VL.search([('partner_id', '=', vendor.partner_id.id)], limit=1)
                 if not vloc:
