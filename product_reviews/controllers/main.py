@@ -75,10 +75,22 @@ class ProductReviewController(http.Controller):
     @http.route('/reviews/helpful/<int:review_id>', type='json', auth='public', website=True, methods=['POST'])
     def helpful_vote(self, review_id, **kw):
         r = request.env['rating.rating'].sudo().browse(review_id)
-        if r.exists():
-            r.helpful_count += 1
-            return {'count': r.helpful_count}
-        return {'error': 'not found'}
+        # Only a real, PUBLISHED product review is votable. Without this any id
+        # (incl. unrelated rating.rating rows or unmoderated/rejected reviews)
+        # could be bumped.
+        if not r.exists() or r.res_model != 'product.template' or not r.consumed:
+            return {'error': 'not found'}
+        # One vote per browser session. helpful_count drives the "most helpful"
+        # sort on the archive page + product widget, so an unbounded public
+        # counter let a single client push ANY review to the top by spamming
+        # (or even double-clicking) this endpoint. Session dedup is the standard
+        # Odoo pattern for anonymous votes and needs no schema change.
+        voted = request.session.get('prw_helpful_voted') or []
+        if review_id in voted:
+            return {'count': r.helpful_count, 'already': True}
+        r.helpful_count += 1
+        request.session['prw_helpful_voted'] = voted + [review_id]
+        return {'count': r.helpful_count}
 
     # ──────────────────────────────────────────────────────────────────
     # Archive page: full list of reviews for a product with pagination.
