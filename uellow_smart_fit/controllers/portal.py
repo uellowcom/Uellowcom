@@ -115,6 +115,15 @@ class SmartFitPortal(CustomerPortal):
         if uploaded and hasattr(uploaded, 'read'):
             data = uploaded.read()
             if data:
+                # Same validation as the JSON /tryon/upload-photo path: reject
+                # non-image bytes and oversized files so garbage never lands in
+                # tryon_photo (which is later shipped to the paid provider).
+                from odoo.addons.uellow_smart_fit.controllers.tryon_controller import TryOnController
+                validator = TryOnController()
+                if len(data) > TryOnController._MAX_PHOTO_BYTES:
+                    return request.redirect('/my/photos?error=too_large')
+                if not validator._looks_like_image(data):
+                    return request.redirect('/my/photos?error=invalid')
                 from datetime import datetime
                 profile.write({
                     'tryon_photo': base64.b64encode(data),
