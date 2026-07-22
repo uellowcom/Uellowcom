@@ -73,7 +73,11 @@ class TryOnExtrasController(TryOnController):
         partner = self._logged_in_partner()
         if not partner:
             return None, {'success': False, 'error': 'login_required'}
-        image = request.env['customer.tryon.image'].sudo().browse(int(image_id))
+        try:
+            image_id = int(image_id)
+        except (ValueError, TypeError):
+            return None, {'success': False, 'error': 'not_found'}
+        image = request.env['customer.tryon.image'].sudo().browse(image_id)
         if not image.exists() or image.partner_id.id != partner.id:
             return None, {'success': False, 'error': 'not_found'}
         return image, None
@@ -905,16 +909,22 @@ class TryOnExtrasController(TryOnController):
         next_product_id = kw.get('next_product_id')
         if not (partner and session_id and prev_image_id and next_product_id):
             return {'success': False, 'error': 'missing_params'}
+        try:
+            prev_image_id = int(prev_image_id)
+            session_id = int(session_id)
+            next_product_id = int(next_product_id)
+        except (ValueError, TypeError):
+            return {'success': False, 'error': 'missing_params'}
 
         Image = request.env['customer.tryon.image'].sudo()
-        prev = Image.browse(int(prev_image_id))
+        prev = Image.browse(prev_image_id)
         if not prev.exists() or prev.partner_id.id != partner.id or prev.status != 'done':
             return {'success': False, 'error': 'previous_not_ready'}
         if not prev.image:
             return {'success': False, 'error': 'previous_image_missing'}
         # SECURITY: session_id is client-supplied — the new generation (and its
         # cost) must land in the CALLER's own session, not a victim's.
-        session = request.env['customer.tryon.session'].sudo().browse(int(session_id))
+        session = request.env['customer.tryon.session'].sudo().browse(session_id)
         if not session.exists() or session.partner_id.id != partner.id:
             return {'success': False, 'error': 'session_not_owned'}
 
