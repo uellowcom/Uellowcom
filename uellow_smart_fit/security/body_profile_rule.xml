@@ -10,4 +10,31 @@
         <field name="perm_create" eval="True"/>
         <field name="perm_unlink" eval="True"/>
     </record>
+
+    <!-- Try-on records: a portal customer may READ only their own session/image.
+         Needed so /web/image/customer.tryon.image/<id>/image on the
+         /my/tryon-history page resolves for the owner instead of returning a
+         broken placeholder. The own-record domain prevents any IDOR read of
+         another customer's generated photo. -->
+    <record id="tryon_session_own_rule" model="ir.rule">
+        <field name="name">Try-on session: portal customer sees only their own</field>
+        <field name="model_id" ref="model_customer_tryon_session"/>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <record id="tryon_image_own_rule" model="ir.rule">
+        <field name="name">Try-on image: portal customer sees only their own</field>
+        <field name="model_id" ref="model_customer_tryon_image"/>
+        <field name="groups" eval="[(4, ref('base.group_portal'))]"/>
+        <field name="domain_force">[('partner_id', '=', user.partner_id.id)]</field>
+        <field name="perm_read" eval="True"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
 </odoo>

@@ -4,8 +4,10 @@ access_body_profile_user,customer.body.profile user,model_customer_body_profile,
 access_body_profile_admin,customer.body.profile admin,model_customer_body_profile,base.group_system,1,1,1,1
 access_fit_history_user,customer.fit.history user,model_customer_fit_history,base.group_user,1,1,1,0
 access_fit_history_admin,customer.fit.history admin,model_customer_fit_history,base.group_system,1,1,1,1
+access_tryon_session_portal,customer.tryon.session portal,model_customer_tryon_session,base.group_portal,1,0,0,0
 access_tryon_session_user,customer.tryon.session user,model_customer_tryon_session,base.group_user,1,1,1,0
 access_tryon_session_admin,customer.tryon.session admin,model_customer_tryon_session,base.group_system,1,1,1,1
+access_tryon_image_portal,customer.tryon.image portal,model_customer_tryon_image,base.group_portal,1,0,0,0
 access_tryon_image_user,customer.tryon.image user,model_customer_tryon_image,base.group_user,1,1,1,0
 access_tryon_image_admin,customer.tryon.image admin,model_customer_tryon_image,base.group_system,1,1,1,1
 access_product_size_chart_public,product.size.chart public,model_product_size_chart,,1,0,0,0
