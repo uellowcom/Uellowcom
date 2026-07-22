@@ -4,6 +4,33 @@ from odoo.http import request
 
 PER_PAGE = 12  # archive page size
 
+# Uploaded review photos are stored raw in a Binary field and shown publicly
+# on the product page. Cap the size and require REAL image magic-bytes so a
+# malicious/buggy client cannot bloat the DB or smuggle a non-image (e.g. an
+# SVG carrying script) into the gallery. Mirrors the mobile-api image guard.
+MAX_REVIEW_IMAGE_BYTES = 10 * 1024 * 1024
+
+
+def _sniff_image(raw):
+    """True when `raw` starts with a known raster-image magic-number
+    (JPEG / PNG / GIF / WebP / HEIC-HEIF-AVIF / BMP). SVG is intentionally
+    excluded — it can carry executable script."""
+    if not raw or len(raw) < 12:
+        return False
+    if raw[:3] == b'\xff\xd8\xff':                    # JPEG
+        return True
+    if raw[:8] == b'\x89PNG\r\n\x1a\n':               # PNG
+        return True
+    if raw[:4] in (b'GIF8',):                         # GIF
+        return True
+    if raw[:4] == b'RIFF' and raw[8:12] == b'WEBP':   # WebP
+        return True
+    if raw[4:8] == b'ftyp':                           # HEIC / HEIF / AVIF
+        return True
+    if raw[:2] == b'BM':                              # BMP
+        return True
+    return False
+
 
 class ProductReviewController(http.Controller):
 
@@ -15,6 +42,9 @@ class ProductReviewController(http.Controller):
             fb = kw.get('feedback', '').strip()
             if not pid or not rv or not fb:
                 return request.make_response(json.dumps({'success': False, 'error': 'Missing fields'}), headers=[('Content-Type', 'application/json')])
+            # Clamp to the 1..5 star scale — an out-of-range value fed straight
+            # into rating.rating would poison the product's average (pr_avg).
+            rv = max(1, min(5, rv))
             product = request.env['product.template'].sudo().browse(pid)
             if not product.exists():
                 return request.make_response(json.dumps({'success': False, 'error': 'Not found'}), headers=[('Content-Type', 'application/json')])
@@ -28,8 +58,13 @@ class ProductReviewController(http.Controller):
             })
             for f in request.httprequest.files.getlist('images'):
                 if f and f.filename:
+                    raw = f.read(MAX_REVIEW_IMAGE_BYTES + 1)
+                    # Reject oversized blobs and anything that isn't real image
+                    # bytes instead of storing it verbatim.
+                    if not raw or len(raw) > MAX_REVIEW_IMAGE_BYTES or not _sniff_image(raw):
+                        continue
                     request.env['rating.review.image'].sudo().create({
-                        'rating_id': rating.id, 'image': base64.b64encode(f.read()),
+                        'rating_id': rating.id, 'image': base64.b64encode(raw),
                         'image_filename': f.filename, 'mimetype': f.mimetype, 'name': f.filename,
                     })
             product._compute_pr_stats()
