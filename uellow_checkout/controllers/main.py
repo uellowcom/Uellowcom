@@ -3,9 +3,56 @@ import json
 import logging
 from odoo import http
 from odoo.http import request, Response
+from odoo.tools import consteq
 
 _logger = logging.getLogger(__name__)
 _SKIP = {'paypal', 'wire_transfer'}
+
+
+def _uc_remember_order(order):
+    """Record a just-confirmed order id in the session so its owner can view
+    the success page afterwards. Keeps the last 20 ids (a browser may place
+    several orders). Called at every confirm point."""
+    try:
+        ids = request.session.get('uc_confirmed_order_ids') or []
+        if order.id not in ids:
+            request.session['uc_confirmed_order_ids'] = (list(ids) + [order.id])[-20:]
+    except Exception as e:
+        _logger.warning('uc_remember_order: %s', e)
+
+
+def _uc_may_view_order(order):
+    """True only if the caller is allowed to see this order's details on the
+    public success page. Prevents an anonymous visitor from enumerating
+    /shop/order/success?order_id=N and harvesting other customers' PII
+    (name, address, phone, items, total). Allowed when: the logged-in user
+    owns the order, the order was just confirmed in THIS session, it is the
+    session's current cart, or a valid access_token is supplied."""
+    try:
+        user = request.env.user
+        if user and not user._is_public():
+            pcid = user.partner_id.commercial_partner_id.id
+            if order.partner_id.commercial_partner_id.id == pcid:
+                return True
+    except Exception:
+        pass
+    try:
+        if order.id in (request.session.get('uc_confirmed_order_ids') or []):
+            return True
+    except Exception:
+        pass
+    try:
+        if request.session.get('sale_order_id') == order.id:
+            return True
+    except Exception:
+        pass
+    try:
+        tok = request.params.get('access_token')
+        if tok and order.access_token and consteq(tok, order.access_token):
+            return True
+    except Exception:
+        pass
+    return False
 
 
 def _json_resp(data):
@@ -558,6 +605,7 @@ class UellowCheckout(_WSBase):
             except Exception:
                 cur = ''
             _save_uc_order(order, payment_method, request.env)
+            _uc_remember_order(order)
             request.website.sale_reset()
             return {
                 'success': True, 'order_id': order.id,
@@ -577,6 +625,7 @@ class UellowCheckout(_WSBase):
                     raise Exception('Taly did not return a checkout URL')
                 d = _raw()
                 _save_uc_order(order, 'taly', request.env)
+                _uc_remember_order(order)
                 # Order stays a draft until the Taly webhook confirms it; just
                 # detach it from the session cart and send the customer to Taly.
                 request.website.sale_reset()
@@ -674,6 +723,7 @@ class UellowCheckout(_WSBase):
             # Confirm order and redirect to UPayments payment page
             order.action_confirm()
             _save_uc_order(order, payment_method, request.env)
+            _uc_remember_order(order)
             request.website.sale_reset()
 
             response = {
@@ -711,6 +761,7 @@ class UellowCheckout(_WSBase):
         try:
             order.with_context(send_email=True).action_confirm()
             _save_uc_order(order, 'cod', request.env)
+            _uc_remember_order(order)
             request.session.update({'sale_order_id': False})
             return _json_resp({
                 'success': True, 'order_id': order.id,
@@ -983,17 +1034,20 @@ class UellowCheckout(_WSBase):
     def order_success(self, order_id=None, failed=None, **post):
         order = None
         lang  = _lang()
+        # SECURITY: only reveal an order's details (name, address, PHONE, items,
+        # total) to someone entitled to see it. A public visitor must not be
+        # able to enumerate order ids and harvest other customers' PII.
         try:
             if order_id:
                 o = request.env['sale.order'].sudo().browse(int(order_id))
-                if o.exists(): order = o
+                if o.exists() and _uc_may_view_order(o): order = o
         except Exception: pass
         if not order:
             try:
                 sid = request.session.get('last_order_id') or request.session.get('sale_order_id')
                 if sid:
                     o = request.env['sale.order'].sudo().browse(sid)
-                    if o.exists(): order = o
+                    if o.exists() and _uc_may_view_order(o): order = o
             except Exception: pass
         wa_num = '96597170933'
         try:
