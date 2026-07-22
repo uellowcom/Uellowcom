@@ -922,6 +922,14 @@ class TryOnExtrasController(TryOnController):
         if not (self._fashn_enabled() and token):
             return {'success': False, 'error': 'fashn_required'}
 
+        # Cost caps apply to EVERY layer. Each compose-next call fires a fresh
+        # paid FASHN generation; without this gate the outfit composer's "next"
+        # endpoint would bypass the monthly USD / monthly-count / daily-per-
+        # customer caps that generate() and every other generator enforce.
+        ok, reason, info = self._check_caps(partner)
+        if not ok:
+            return {'success': False, 'error': reason, 'info': info}
+
         # Use the previous result as the new model image
         human_url   = self._binary_to_data_url(prev.image)
         garment_url = self._binary_to_data_url(nxt_product.image_1920)
