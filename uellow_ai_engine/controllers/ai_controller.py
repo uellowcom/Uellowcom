@@ -904,7 +904,16 @@ CART & ORDERING RULES:
         try:
             cards = request.env['loyalty.card'].sudo().search(
                 [('partner_id', '=', partner.id)])
-            points = int(round(sum(cards.mapped('points')))) if cards else 0
+            # Coach 2026-07-22 (data): count ONLY 'loyalty'-program cards.
+            # loyalty.card also stores ewallet balances, next_order_coupons,
+            # gift_card & promo_code — summing them all inflated the points
+            # (e.g. partner 3541 saw 6500 vs the 6000 shown on the account
+            # page). Restrict to program_type='loyalty' so Beena matches the
+            # account page again.
+            if cards:
+                loyalty_cards = cards.filtered(
+                    lambda c: c.program_id.program_type == 'loyalty')
+                points = int(round(sum(loyalty_cards.mapped('points'))))
         except Exception as e:
             _logger.warning('loyalty.card read: %s', e)
 
