@@ -533,14 +533,19 @@ class DeliveryPortalController(http.Controller):
         uid = request.env.user.id
         if not _is_manager(uid):
             return {'success': False, 'error': 'Access denied'}
+        company = _get_carrier_company(uid)
         order = request.env['sale.order'].sudo().browse(order_id)
         if not order.exists():
             return {'success': False, 'error': 'Order not found'}
+        # IDOR guard — a manager may only touch orders of their OWN carrier
+        # company (matches mark_returned / assign_driver).
+        if order.delivery_carrier_company_id.id != company.id:
+            return {'success': False, 'error': 'Order not in your company'}
         order.write({'delivery_status': 'arrived_sorting'})
-        # Update trip line status too if provided
+        # Update trip line status too if provided (must belong to this order)
         if line_id:
             line = request.env['delivery.trip.line'].sudo().browse(line_id)
-            if line.exists():
+            if line.exists() and line.sale_order_id.id == order.id:
                 line.write({'delivery_status': 'arrived_sorting'})
         return {'success': True}
 
@@ -549,13 +554,18 @@ class DeliveryPortalController(http.Controller):
         uid = request.env.user.id
         if not _is_manager(uid):
             return {'success': False, 'error': 'Access denied'}
+        company = _get_carrier_company(uid)
         order = request.env['sale.order'].sudo().browse(order_id)
         if not order.exists():
             return {'success': False, 'error': 'Order not found'}
+        # IDOR guard — a manager may only touch orders of their OWN carrier
+        # company (matches mark_returned / assign_driver).
+        if order.delivery_carrier_company_id.id != company.id:
+            return {'success': False, 'error': 'Order not in your company'}
         order.write({'delivery_status': 'failed_returned'})
         if line_id:
             line = request.env['delivery.trip.line'].sudo().browse(line_id)
-            if line.exists():
+            if line.exists() and line.sale_order_id.id == order.id:
                 line.write({'delivery_status': 'failed_returned'})
         return {'success': True}
 
