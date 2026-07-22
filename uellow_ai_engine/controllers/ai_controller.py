@@ -124,11 +124,6 @@ TOOLS = [
             'limit': {'type': 'integer', 'default': 5}}},
     },
     {
-        'name': 'award_review_points',
-        'description': 'Award 50 loyalty points when customer writes a product review.',
-        'input_schema': {'type':'object','properties':{'product_id':{'type':'integer'}},'required':['product_id']},
-    },
-    {
         'name': 'apply_coupon',
         'description': 'Apply a coupon/promo code to the current cart.',
         'input_schema': {
@@ -296,7 +291,6 @@ TOOL_TRIGGERS = {
     'get_customer_orders':     ['طلباتي', 'طلبي', 'مشترياتي', 'my orders', 'order history'],
     'apply_coupon':            ['كوبون', 'كود خصم', 'coupon', 'promo'],
     'get_upsell_products':     ['يناسب', 'اضافات', 'إضافات', 'accessory', 'goes with'],
-    'award_review_points':     ['مكافاة', 'مكافأة', 'award'],
     'start_virtual_tryon':     ['جرب', 'جرّب', 'اجرب', 'أجرب', 'تجربة', 'يقاس', 'البسه', 'ألبسه',
                                 'شوف عليّ', 'شوفني', 'شكلي', 'كيف بصير', 'لو لبست',
                                 'try on', 'try-on', 'tryon', 'virtual try', 'see myself', 'wear it'],
@@ -776,7 +770,6 @@ CART & ORDERING RULES:
                 'get_order_status':    self._fn_get_order_status,
                 'get_recommendations': self._fn_get_recommendations,
                 'get_clearance_picks': self._fn_get_clearance_picks,
-                'award_review_points': self._fn_award_review,
                 'apply_coupon':        self._fn_apply_coupon,
                 'get_customer_orders': self._fn_get_customer_orders,
                 'get_upsell_products':      self._fn_get_upsell,
@@ -2016,30 +2009,17 @@ CART & ORDERING RULES:
             for p in products
         ]}
 
+    # DEPRECATED / REMOVED as a Beena tool (Coach 2026-07-22): this relied on the
+    # `loyalty.account` + `loyalty.transaction` models, which do NOT exist in this
+    # Odoo 18 install (the live loyalty system is `loyalty.card`). The old code
+    # always returned {'available': False} yet its tool description advertised
+    # "Award 50 loyalty points", which pushed Beena to promise review points she
+    # could never grant (real case: conversation #254). Points for genuine reviews
+    # are handled automatically by the store; there is no chat-triggered award.
+    # Kept as a safe stub (unwired) instead of live code against a missing model.
     def _fn_award_review(self, args):
-        pid = int(args.get('product_id', 0))
-        LoyaltyAccount = request.env.get('loyalty.account')
-        if not LoyaltyAccount:
-            return {'available': False}
-        public_user = request.env.ref('base.public_user')
-        if request.env.user.id == public_user.id:
-            return {'error': 'Login required'}
-        partner = request.env.user.partner_id
-        acc = LoyaltyAccount.sudo().get_or_create(partner.id)
-        existing = request.env['loyalty.transaction'].sudo().search([
-            ('account_id', '=', acc.id),
-            ('reason', '=', 'مراجعة منتج'),
-            ('reference', '=', str(pid)),
-        ], limit=1)
-        if existing:
-            return {'already_awarded': True, 'message': 'سبق وحصلت على نقاط لهذا المنتج'}
-        acc.add_points(50, 'مراجعة منتج', ref=str(pid))
-        return {
-            'success': True,
-            'points_awarded': 50,
-            'new_balance': acc.points_balance,
-            'message': 'شكراً على مراجعتك! ربحت 50 نقطة',
-        }
+        return {'available': False,
+                'message': 'نقاط المراجعات تُضاف تلقائياً بعد نشر مراجعة موثّقة.'}
 
     def _fn_apply_coupon(self, args):
         code = (args.get('code') or '').strip()
