@@ -5,28 +5,28 @@ Wires the mobile app to the `uellow.product.review` model (in
 is written as an ir.attachment and linked through `photo_ids`.
 """
 import base64
-import binascii
 
 from odoo import http
 from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, current_partner, require_auth,
-    img_url, bilingual,
+    img_url, bilingual, decode_image_upload,
 )
 
 
 def _decode(b64):
-    """Strip a possible 'data:image/...;base64,' prefix and decode."""
+    """Decode an uploaded review photo, verifying it is REAL image bytes
+    within the size cap (via the shared decode_image_upload helper). Accepts
+    a raw/data-URI base64 string OR a {"data": ...} dict. Returns clean raw
+    bytes, or None to skip a blank / non-image / oversized upload — so a
+    malicious client can't stash arbitrary public blobs through reviews."""
+    if isinstance(b64, dict):
+        b64 = b64.get('data') or b64.get('image') or b64.get('url') or ''
     if not b64:
         return None
-    s = b64.strip()
-    if s.startswith('data:'):
-        s = s.split(',', 1)[-1]
-    try:
-        return base64.b64decode(s)
-    except (binascii.Error, ValueError):
-        return None
+    raw, err = decode_image_upload(b64)
+    return raw if not err else None
 
 
 def _attach_review_photos(review, photos):
@@ -196,13 +196,14 @@ class MobileReviewsAPI(http.Controller):
                     and 'rating.review.image' in request.env):
                 Img = request.env['rating.review.image'].sudo()
                 for i, ph in enumerate(photos[:8]):
-                    data = ph.get('data') if isinstance(ph, dict) else ph
-                    if not data:
+                    # Validate as real image bytes (magic-number + size cap)
+                    # before mirroring — never store a raw/oversized/non-image
+                    # blob just because the client sent one.
+                    raw = _decode(ph)
+                    if not raw:
                         continue
-                    if isinstance(data, str) and ',' in data[:64]:
-                        data = data.split(',', 1)[1]
                     Img.create({'rating_id': rec.id, 'sequence': i,
-                                'image': data,
+                                'image': base64.b64encode(raw),
                                 'name': 'review-%s-%s' % (rec.id, i)})
         except Exception:
             import logging
