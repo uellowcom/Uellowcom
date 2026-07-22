@@ -85,6 +85,7 @@ class VendorReviewsAPI(http.Controller):
     @safe_endpoint
     @require_auth
     def reply(self, rid, **kw):
+        v = current_vendor()
         Review = _try_review_model()
         if Review is None:
             return fail('NO_REVIEW_MODEL', 'No review model installed', 404)
@@ -94,6 +95,16 @@ class VendorReviewsAPI(http.Controller):
             return fail('EMPTY', 'reply text required')
         r = Review.browse(rid)
         if not r.exists():
+            return fail('NOT_FOUND', 'Review not found', 404)
+        # Ownership: the reviewed product must belong to this vendor —
+        # otherwise a vendor could reply on a competitor's review (IDOR).
+        prod = None
+        for fname in ('product_tmpl_id', 'product_id', 'template_id'):
+            if fname in r._fields:
+                prod = r[fname]
+                break
+        prod_vendor = getattr(prod, 'vendor_id', None) if prod else None
+        if not prod or not prod_vendor or prod_vendor.id != v.id:
             return fail('NOT_FOUND', 'Review not found', 404)
         # Try common field names
         for fname in ('vendor_reply', 'reply'):

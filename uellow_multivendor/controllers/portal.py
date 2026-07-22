@@ -106,6 +106,8 @@ class VendorPortalController(http.Controller):
         picking = request.env['stock.picking'].sudo().browse(picking_id)
         if not picking.exists():
             return request.redirect('/my/vendor/orders')
+        if not picking.sale_id or picking.sale_id.vendor_id.id != vendor.id:
+            return request.redirect('/my/vendor/orders')
         carriers = request.env['delivery.carrier'].sudo().search([
             ('active', '=', True)], limit=20)
         return request.render('uellow_multivendor.portal_vendor_prepare', {
@@ -122,6 +124,8 @@ class VendorPortalController(http.Controller):
         if not vendor:
             return request.redirect('/my')
         picking = request.env['stock.picking'].sudo().browse(picking_id)
+        if not picking.exists() or not picking.sale_id or picking.sale_id.vendor_id.id != vendor.id:
+            return request.redirect('/my/vendor/orders')
         if picking.exists() and carrier_id:
             picking.write({
                 'carrier_id': int(carrier_id),

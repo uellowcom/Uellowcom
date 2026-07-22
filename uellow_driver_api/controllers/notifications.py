@@ -73,8 +73,14 @@ class DriverNotificationsAPI(http.Controller):
         if not partner:
             return ok({'marked': False})
         Msg = request.env['mail.message'].sudo()
-        msg = Msg.browse(msg_id)
-        if msg.exists():
+        # Ownership: only mark a message that is actually addressed to this
+        # driver's partner — otherwise a driver could mark another driver's
+        # notification read by guessing its id (IDOR).
+        msg = Msg.search([
+            ('id', '=', msg_id),
+            ('partner_ids', 'in', [partner.id]),
+        ], limit=1)
+        if msg:
             # Use needaction read marking
             try:
                 msg.set_message_done()
