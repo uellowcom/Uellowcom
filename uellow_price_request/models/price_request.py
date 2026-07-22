@@ -187,9 +187,11 @@ class PriceRequest(models.Model):
                     ln.product_tmpl_id.sudo().write({'list_price': ln.new_price})
                     ln.current_price = ln.new_price
                     applied += 1
-                # reflect availability if the supplier marked it
+                # reflect availability if the supplier marked it: an item the
+                # supplier reports OUT OF STOCK must stop being sellable, not
+                # start (the old value True force-enabled unavailable products).
                 if ln.availability == 'no':
-                    ln.product_tmpl_id.sudo().write({'sale_ok': True})
+                    ln.product_tmpl_id.sudo().write({'sale_ok': False})
             r.state = 'applied'
         return {
             'type': 'ir.actions.client',
