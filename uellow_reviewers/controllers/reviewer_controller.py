@@ -194,6 +194,19 @@ class ReviewerController(http.Controller):
         if not req:
             return {'error': 'Request not found'}
 
+        # Ownership: only the assigned reviewer may submit a verdict. Without
+        # this, anyone holding the (customer-visible) token could fabricate a
+        # "specialist" verdict that then shows publicly on the product card as
+        # a real expert opinion. Mirrors the guard on /reviewers/quick_verdict.
+        reviewer_partner = req.reviewer_id.partner_id if req.reviewer_id else False
+        if not reviewer_partner or reviewer_partner.id != request.env.user.partner_id.id:
+            return {'error': 'Not authorized'}
+
+        # Clamp sub-ratings to the 0..5 scale.
+        quality = max(0, min(5, quality))
+        value   = max(0, min(5, value))
+        comfort = max(0, min(5, comfort))
+
         req.write({
             'reviewer_verdict': verdict,
             'reviewer_notes':   notes,
@@ -351,7 +364,13 @@ class ReviewerController(http.Controller):
     @http.route('/reviewers/rate', type='json', auth='public', methods=['POST'], csrf=False)
     def rate_reviewer(self, **kwargs):
         token  = kwargs.get('token')
-        rating = int(kwargs.get('rating', 5))
+        try:
+            rating = int(kwargs.get('rating', 5))
+        except (TypeError, ValueError):
+            rating = 5
+        # Clamp to the 1..5 star scale — otherwise a crafted request could
+        # inflate/deflate the reviewer's average rating without bound.
+        rating = max(1, min(5, rating))
         review = kwargs.get('review', '')
 
         req = request.env['review.request'].sudo().search(
