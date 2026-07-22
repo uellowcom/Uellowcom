@@ -369,6 +369,63 @@ def safe_endpoint(fn):
     return wrapped
 
 
+# ─── Image upload validation ──────────────────────────────────────────
+
+# Max accepted size for a single user-uploaded photo (avatar, try-on
+# source photo, …). 10 MB of raw bytes is generous for a phone photo and
+# caps memory / DB bloat from a malicious or buggy client that POSTs a
+# huge (or non-image) blob into a Binary field.
+MAX_IMAGE_BYTES = 10 * 1024 * 1024
+
+
+def _sniff_image(raw):
+    """True when `raw` starts with a known image magic-number
+    (JPEG / PNG / GIF / WebP / HEIC-HEIF-AVIF / BMP)."""
+    if not raw or len(raw) < 12:
+        return False
+    if raw[:3] == b'\xff\xd8\xff':                    # JPEG
+        return True
+    if raw[:8] == b'\x89PNG\r\n\x1a\n':               # PNG
+        return True
+    if raw[:4] in (b'GIF8',):                         # GIF
+        return True
+    if raw[:4] == b'RIFF' and raw[8:12] == b'WEBP':   # WebP
+        return True
+    if raw[4:8] == b'ftyp':                           # HEIC / HEIF / AVIF
+        return True
+    if raw[:2] == b'BM':                              # BMP
+        return True
+    return False
+
+
+def decode_image_upload(b64, max_bytes=MAX_IMAGE_BYTES):
+    """Decode a (possibly data-URI-prefixed) base64 image string and verify
+    it is REAL image bytes within the size cap.
+
+    Returns (raw_bytes, None) on success, or (None, error_message) so the
+    caller can `return fail('BAD_IMAGE', err)`."""
+    import base64 as _b64
+    import binascii as _bin
+    s = (b64 or '').strip()
+    if not s:
+        return None, 'image is required'
+    if s.startswith('data:'):
+        s = s.split(',', 1)[-1]
+    # Cap the ENCODED length first (base64 ≈ 4/3 of raw) so we never
+    # allocate a huge buffer just to reject an oversized payload.
+    if len(s) > int(max_bytes * 4 / 3) + 1024:
+        return None, 'image too large'
+    try:
+        raw = _b64.b64decode(s)
+    except (_bin.Error, ValueError):
+        return None, 'image is not valid base64'
+    if len(raw) > max_bytes:
+        return None, 'image too large'
+    if not _sniff_image(raw):
+        return None, 'file is not a valid image'
+    return raw, None
+
+
 # ─── Pagination ───────────────────────────────────────────────────────
 
 def paginate(records, page, per_page, serializer):

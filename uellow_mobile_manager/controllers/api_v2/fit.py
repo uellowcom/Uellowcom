@@ -15,6 +15,7 @@ from odoo.http import request
 
 from ._common import (
     safe_endpoint, get_payload, ok, fail, current_partner, require_auth,
+    decode_image_upload,
 )
 
 
@@ -178,8 +179,14 @@ class MobileFitAPI(http.Controller):
         b64 = (p.get('image_base64') or '').strip()
         if not b64:
             return fail('BAD_INPUT', 'image_base64 required')
-        if b64.startswith('data:'):
-            b64 = b64.split(',', 1)[-1]
+        # Validate: real image bytes within the size cap (was stored raw,
+        # letting a client persist arbitrary / huge blobs into the Binary
+        # field). decode_image_upload returns clean bytes or an error.
+        import base64 as _b64
+        raw, err = decode_image_upload(b64)
+        if err:
+            return fail('BAD_IMAGE', err, 400)
+        b64 = _b64.b64encode(raw).decode('ascii')
         vals = {}
         if 'tryon_photo' in prof._fields:
             vals['tryon_photo'] = b64

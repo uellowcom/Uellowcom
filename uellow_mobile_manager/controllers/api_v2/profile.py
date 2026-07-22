@@ -5,7 +5,8 @@ import binascii
 from odoo import http
 from odoo.http import request
 
-from ._common import safe_endpoint, get_payload, ok, fail, current_partner, require_auth, img_url
+from ._common import (safe_endpoint, get_payload, ok, fail, current_partner,
+                      require_auth, img_url, decode_image_upload)
 from .auth import _serialize_user
 
 
@@ -65,12 +66,12 @@ class MobileProfileAPI(http.Controller):
         b64 = (p.get('image_base64') or '').strip()
         if not b64:
             return fail('NO_IMAGE', 'image_base64 is required')
-        if b64.startswith('data:'):
-            b64 = b64.split(',', 1)[-1]
-        try:
-            raw = base64.b64decode(b64)
-        except (binascii.Error, ValueError):
-            return fail('BAD_IMAGE', 'image_base64 is not valid base64')
+        # Validate: real image bytes within the size cap (previously any
+        # base64 was accepted, so a client could store a huge or non-image
+        # blob as the avatar).
+        raw, err = decode_image_upload(b64)
+        if err:
+            return fail('BAD_IMAGE', err, 400)
         partner = current_partner()
         # Odoo expects base64-encoded bytes on Binary fields, not raw.
         b64_clean = base64.b64encode(raw)
