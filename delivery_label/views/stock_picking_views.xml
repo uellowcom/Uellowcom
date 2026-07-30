@@ -19,6 +19,12 @@
                            readonly="0"
                            invisible="payment_method != 'cod'"
                            required="payment_method == 'cod'"/>
+                    <field name="payment_provider_name" string="Provider"
+                           readonly="1" invisible="payment_method != 'paid'"/>
+                    <field name="payment_reference" string="Payment Ref"
+                           readonly="1" invisible="payment_method != 'paid'"/>
+                    <field name="paid_on" string="Paid On"
+                           readonly="1" invisible="payment_method != 'paid'"/>
                 </group>
             </xpath>
         </field>

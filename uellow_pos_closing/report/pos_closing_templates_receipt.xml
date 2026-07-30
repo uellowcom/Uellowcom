@@ -14,7 +14,7 @@
                     <div style="text-align:center;font-size:20px;font-weight:bold;letter-spacing:3px;">UELLOW</div>
                     <div style="text-align:center;font-size:8.5px;color:#666;letter-spacing:1px;">POINT OF SALE · نقاط البيع</div>
                     <div style="text-align:center;font-size:9.5px;color:#444;margin-top:4px;">
-                        <span t-esc="d['config']"/> · فرع<br/>State of Kuwait · دولة الكويت<br/>Tel 1888 000 · C.R. 123456
+                        <span t-esc="d['config']"/> · فرع<br/>State of Kuwait · دولة الكويت
                     </div>
 
                     <!-- doc banner -->

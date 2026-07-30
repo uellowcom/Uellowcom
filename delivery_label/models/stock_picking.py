@@ -21,6 +21,10 @@ class StockPicking(models.Model):
         copy=True,
     )
 
+    payment_reference = fields.Char(string='Payment Reference', copy=False)
+    payment_provider_name = fields.Char(string='Payment Provider', copy=False)
+    paid_on = fields.Datetime(string='Paid On', copy=False)
+
     currency_id = fields.Many2one(
         'res.currency',
         string='Currency',
@@ -34,6 +38,11 @@ class StockPicking(models.Model):
         for picking, vals in zip(pickings, vals_list):
             if picking.payment_method == 'cod' and not vals.get('cod_amount') and not picking.cod_amount:
                 picking.cod_amount = picking._get_cod_amount_from_related_document()
+        for picking in pickings:
+            try:
+                picking._uc_sync_payment()
+            except Exception:
+                pass
         return pickings
 
     def write(self, vals):
@@ -79,6 +88,37 @@ class StockPicking(models.Model):
             if invoice:
                 return invoice.amount_residual or invoice.amount_total or 0.0
         return sale_order.amount_total or 0.0
+
+    def _uc_order_is_paid(self, so):
+        if not so:
+            return False
+        if getattr(so, 'upayments_paid', False):
+            return True
+        try:
+            if so.amount_total > 0 and getattr(so, 'amount_unpaid', so.amount_total) <= 0.001:
+                return True
+        except Exception:
+            pass
+        return bool(so.invoice_ids.filtered(lambda i: i.payment_state in ('paid', 'in_payment')))
+
+    def _uc_sync_payment(self, order=None):
+        """Flip the picking to PAID (with provider + reference) once its order is
+        actually paid online; leave COD orders as COD."""
+        for pk in self:
+            so = order or pk._get_related_sale_order()
+            if not so or not pk._uc_order_is_paid(so):
+                continue
+            tx = so.transaction_ids.sorted('id')[-1:] if so.transaction_ids else so.env['payment.transaction']
+            ref = (getattr(so, 'upayments_track_id', '') or
+                   ((tx.provider_reference or tx.reference) if tx else '') or '')
+            prov = ((tx.provider_id.name if tx and tx.provider_id else '') or
+                    ('UPayments' if getattr(so, 'upayments_paid', False) else 'Online'))
+            pk.write({
+                'payment_method': 'paid',
+                'payment_reference': ref or pk.payment_reference,
+                'payment_provider_name': prov,
+                'paid_on': pk.paid_on or fields.Datetime.now(),
+            })
 
     def get_location_qr_url(self):
         """Google-Maps URL for the delivery location, used as the QR payload so

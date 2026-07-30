@@ -71,6 +71,42 @@ class SaleOrder(models.Model):
                                 '— order continues normally.')
 
     # ── full order + payment snapshot in the chatter (2026-06-26) ────
+    def write(self, vals):
+        # When the real payment state changes, reflect it live: post the true
+        # status to the chatter AND flip the delivery (stock.picking) from COD
+        # to PAID with the provider + reference (the confirm-time snapshot is
+        # stale — it is captured before COD is chosen or online payment clears).
+        track = ('upayments_paid' in vals) or ('payment_method_type' in vals)
+        before = {o.id: (bool(getattr(o, 'upayments_paid', False)),
+                         o.payment_method_type) for o in self} if track else {}
+        res = super().write(vals)
+        for o in self:
+            if o.id not in before:
+                continue
+            old_paid, old_pmt = before[o.id]
+            cur = o.currency_id.symbol or o.currency_id.name or ''
+            if bool(getattr(o, 'upayments_paid', False)) and not old_paid:
+                try:
+                    o.message_post(body=Markup(
+                        '<b>\u2705 \u062a\u0645 \u0627\u0633\u062a\u0644\u0627\u0645 \u0627\u0644\u062f\u0641\u0639 \u2014 Payment received: %.3f %s</b>')
+                        % (o.amount_total, cur), subtype_xmlid='mail.mt_note')
+                except Exception:
+                    pass
+                try:
+                    pks = o.picking_ids if 'picking_ids' in o._fields else None
+                    if pks and hasattr(pks, '_uc_sync_payment'):
+                        pks._uc_sync_payment(o)
+                except Exception:
+                    pass
+            elif o.payment_method_type == 'cash' and old_pmt != 'cash':
+                try:
+                    o.message_post(body=Markup(
+                        '<b>\U0001f4b5 \u0627\u0644\u062f\u0641\u0639 \u0639\u0646\u062f \u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645 \u2014 Cash on Delivery: collect %.3f %s</b>')
+                        % (o.amount_total, cur), subtype_xmlid='mail.mt_note')
+                except Exception:
+                    pass
+        return res
+
     def _post_app_order_summary(self, event='Order confirmed'):
         """Post one complete order + payment + shipping snapshot to the
         order chatter so the whole picture is visible in one place for
