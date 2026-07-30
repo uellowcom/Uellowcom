@@ -21,6 +21,12 @@ and dedicated header buttons.
         'report/pos_closing_templates_receipt.xml',
         'views/pos_session_views.xml',
     ],
+    'assets': {
+        'point_of_sale._assets_pos': [
+            'uellow_pos_closing/static/src/js/closing_receipt_button.js',
+            'uellow_pos_closing/static/src/xml/closing_popup.xml',
+        ],
+    },
     'installable': True,
     'application': False,
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-inherit="point_of_sale.ClosePosPopup" t-inherit-mode="extension">
+        <xpath expr="//button[@t-on-click=&apos;downloadSalesReport&apos;]" position="after">
+            <button class="button icon btn btn-secondary"
+                    t-att-class="this.ui.isSmall ? &apos;w-100&apos; : &apos;btn-lg&apos;"
+                    t-on-click="printClosingReceipt"
+                    title="Print the cashier closing receipt (80mm) — طباعة إيصال إغلاق الكاشير">
+                <i class="fa fa-print" role="img" aria-label="Print closing"/>
+                <span class="ms-1">Print closing · طباعة الإغلاق</span>
+            </button>
+        </xpath>
+    </t>
+</templates>
