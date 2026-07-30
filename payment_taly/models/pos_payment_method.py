@@ -52,7 +52,7 @@ class PosPaymentMethod(models.Model):
         if not prov:
             return {'error': 'Taly provider is not configured / enabled.'}
         try:
-            return prov._taly_create_instore_session({
+            session = prov._taly_create_instore_session({
                 'merchant_order_id': order.get('reference'),
                 'amount':     order.get('amount'),
                 'currency':   order.get('currency') or 'KWD',
@@ -66,6 +66,14 @@ class PosPaymentMethod(models.Model):
         except Exception as e:
             _logger.warning('taly pos session failed: %s', e)
             return {'error': str(e)}
+        # Record a payment.transaction so this in-store Taly sale shows up in
+        # Taly Transactions (the POS flow otherwise created NO transaction).
+        if isinstance(session, dict) and not session.get('error'):
+            try:
+                self.sudo()._taly_pos_record_tx(prov, order, session)
+            except Exception as e:
+                _logger.warning('taly pos tx record failed: %s', e)
+        return session
 
     @api.model
     def taly_pos_poll(self, method_id, merchant_order_id):
@@ -76,6 +84,68 @@ class PosPaymentMethod(models.Model):
             return {'state': '', 'raw': 'no-provider'}
         try:
             state, raw = prov._taly_order_status(merchant_order_id)
-            return {'state': state, 'raw': raw}
         except Exception as e:
             return {'state': '', 'raw': str(e)}
+        if state == 'done':
+            try:
+                self.sudo()._taly_pos_settle_tx(merchant_order_id, raw)
+            except Exception as e:
+                _logger.warning('taly pos settle failed: %s', e)
+        return {'state': state, 'raw': raw}
+
+    # ── payment.transaction bookkeeping for in-store (POS) Taly sales ──────
+    def _taly_pos_partner(self, order):
+        Partner = self.env['res.partner'].sudo()
+        phone = (order.get('phone') or '').strip()
+        if phone:
+            digits = ''.join(ch for ch in phone if ch.isdigit())[-8:]
+            if digits:
+                pr = Partner.search(['|', ('phone', 'like', digits),
+                                     ('mobile', 'like', digits)], limit=1)
+                if pr:
+                    return pr
+        pub = self.env.ref('base.public_partner', raise_if_not_found=False)
+        return pub or self.env.company.partner_id
+
+    def _taly_pos_record_tx(self, prov, order, session):
+        ref = order.get('reference')
+        if not ref:
+            return
+        PT = self.env['payment.transaction'].sudo()
+        tx = PT.search([('reference', '=', ref),
+                        ('provider_code', '=', 'taly')], limit=1)
+        if tx:
+            return tx
+        cur = self.env['res.currency'].sudo().search(
+            [('name', '=', (order.get('currency') or 'KWD'))], limit=1) \
+            or self.env.company.currency_id
+        vals = {
+            'provider_id': prov.id,
+            'reference': ref,
+            'amount': round(float(order.get('amount') or 0.0), 3),
+            'currency_id': cur.id,
+            'partner_id': self._taly_pos_partner(order).id,
+            'taly_order_id': session.get('merchantOrderId') or ref,
+            'taly_order_token': session.get('orderToken') or '',
+            'taly_checkout_url': session.get('securePaymentLink') or '',
+            'taly_order_status': 'INSTORE_PENDING',
+        }
+        pm = prov.payment_method_ids[:1] or self.env['payment.method'].sudo().search(
+            [('code', '=', 'taly')], limit=1)
+        if pm:
+            vals['payment_method_id'] = pm.id
+        return PT.create(vals)
+
+    def _taly_pos_settle_tx(self, merchant_order_id, raw=''):
+        PT = self.env['payment.transaction'].sudo()
+        tx = PT.search(['|', ('reference', '=', merchant_order_id),
+                        ('taly_order_id', '=', merchant_order_id),
+                        ('provider_code', '=', 'taly')], limit=1)
+        if not tx or tx.state == 'done':
+            return tx
+        tx.write({'taly_order_status': raw or 'CONFIRMED'})
+        try:
+            tx._set_done()
+        except Exception:
+            tx.write({'state': 'done'})
+        return tx
