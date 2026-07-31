@@ -361,6 +361,12 @@
 {"@type":"ListItem","position":2,"item":{"@type":"Product","name":"HUAWEI Pura 90 Pro 256GB","brand":{"@type":"Brand","name":"HUAWEI"},"image":"https://www.uellow.com/web/image/product.template/16674/image_1920","description":"50 MP macro telephoto, 6000 mAh, 66 W SuperCharge, EMUI 16.","offers":{"@type":"Offer","priceCurrency":"KWD","price":"245.000","availability":"https://schema.org/InStock","url":"https://www.uellow.com/shop/huawei-pura-90-pro-256gb-phone-16674"}}}
 ]}
         </script>
+        <script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"Home","item":"https://www.uellow.com/"},
+{"@type":"ListItem","position":2,"name":"HUAWEI Pura 90","item":"https://www.uellow.com/huawei-pura-90"}
+]}
+        </script>
 
         <!-- sticky CTA -->
         <div class="p-sticky">
@@ -411,6 +417,7 @@
         <link rel="alternate" hreflang="en" href="https://www.uellow.com/huawei-pura-90"/>
         <link rel="alternate" hreflang="ar" href="https://www.uellow.com/ar/huawei-pura-90"/>
         <link rel="alternate" hreflang="x-default" href="https://www.uellow.com/huawei-pura-90"/>
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"/>
         <meta property="og:image:width" content="1200"/>
         <meta property="og:image:height" content="630"/>
         <meta property="og:image:alt" content="HUAWEI Pura 90 Pro Max"/>
