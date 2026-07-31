@@ -280,7 +280,7 @@
               <div class="sr"><span class="sl"><t t-if="is_ar">الأمامية</t><t t-else="">Front</t></span><span class="sv">13 MP · F2.0 · AF</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">الفيديو</t><t t-else="">Video</t></span><span class="sv">4K · 3840×2160</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">البطارية/الشحن</t><t t-else="">Battery / charge</t></span><span class="sv">6000 mAh · 100W wired · 80W wireless</span></div>
-              <div class="sr"><span class="sl"><t t-if="is_ar">الذاكرة</t><t t-else="">Memory</t></span><span class="sv">12GB RAM · 256/512GB</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الذاكرة</t><t t-else="">Memory</t></span><span class="sv">16GB RAM · 512GB</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">المتانة/الزجاج</t><t t-else="">Durability</t></span><span class="sv">IP68/IP69 · Anti-reflection Kunlun Glass</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">النظام</t><t t-else="">OS</t></span><span class="sv">EMUI 16.0 · Celia AI</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">الاتصال</t><t t-else="">Connectivity</t></span><span class="sv">5G · Wi-Fi 7 · BT 6.0 · NFC · USB-C · Nano+eSIM</span></div>
@@ -294,7 +294,7 @@
               <div class="sr"><span class="sl"><t t-if="is_ar">الأمامية</t><t t-else="">Front</t></span><span class="sv">13 MP · F2.0 · AF</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">الفيديو</t><t t-else="">Video</t></span><span class="sv">4K · 3840×2160</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">البطارية/الشحن</t><t t-else="">Battery / charge</t></span><span class="sv">6000 mAh · 66W wired · 50W wireless</span></div>
-              <div class="sr"><span class="sl"><t t-if="is_ar">الذاكرة</t><t t-else="">Memory</t></span><span class="sv">12GB RAM · 256/512GB</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الذاكرة</t><t t-else="">Memory</t></span><span class="sv">12GB RAM · 256GB</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">المتانة/الزجاج</t><t t-else="">Durability</t></span><span class="sv">IP68/IP69 · Kunlun Glass</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">النظام</t><t t-else="">OS</t></span><span class="sv">EMUI 16.0 · Celia AI</span></div>
               <div class="sr"><span class="sl"><t t-if="is_ar">الاتصال</t><t t-else="">Connectivity</t></span><span class="sv">5G · Wi-Fi 7 · BT 6.0 · NFC · USB-C</span></div>
@@ -419,14 +419,6 @@
       </t>
     </xpath>
   </template>
-
-  <!-- promote the page in the site top menu for discovery + internal linking -->
-  <record id="pura_menu" model="website.menu">
-    <field name="name">HUAWEI Pura 90</field>
-    <field name="url">/huawei-pura-90</field>
-    <field name="parent_id" ref="website.main_menu"/>
-    <field name="sequence">35</field>
-  </record>
 
   <record id="pura_page" model="website.page">
     <field name="name">HUAWEI Pura 90</field>
