@@ -3865,7 +3865,7 @@ function renderContent(b){
           ${sourceSelect(b, 'aspect', [['tall','▌ Tall'],['square','■ Square'],['wide','▭ Wide']], 'tall')}</div>
         ${mlField(b,'cta','CTA button text')}
         <div class="field"><label>CTA target</label>
-          ${linkFieldBtn(p.cta_link)}
+          ${linkFieldBtn(p.cta_link,'cta_link')}
         </div>
         <div class="sub-h">Images (${images.length})</div>
         ${images.map((it,i)=>`
@@ -3883,7 +3883,7 @@ function renderContent(b){
         <div class="field"><label>Icon (emoji)</label>
           <input data-prop="icon" value="${p.icon||'🎁'}" placeholder="🎁" style="max-width:80px;font-size:18px;text-align:center"/></div>
         <div class="field"><label>CTA target</label>
-          ${linkFieldBtn(p.cta_link)}
+          ${linkFieldBtn(p.cta_link,'cta_link')}
         </div>
         <div class="field"><label>Position</label>
           ${sourceSelect(b, 'sticky_position', [['inline','◽ Inline (in flow)'],['top','▲ Stick to top'],['bottom','▼ Stick to bottom']], 'inline')}</div>
@@ -4393,12 +4393,13 @@ function renderContent(b){
   }
 }
 
-function linkFieldBtn(link){
+function linkFieldBtn(link, key){
+  key = key || 'link';
   if (!link) {
-    return `<button class="link-field" onclick="openLinkPicker()"><div class="lk-ic">🔗</div><div class="lk-info"><div class="lk-t">Set link target…</div><div class="lk-s">Page · product · category · external</div></div><div class="lk-chev">›</div></button>`;
+    return `<button class="link-field" onclick="openLinkPicker(false,'${key}')"><div class="lk-ic">🔗</div><div class="lk-info"><div class="lk-t">Set link target…</div><div class="lk-s">Page · product · category · external</div></div><div class="lk-chev">›</div></button>`;
   }
   const ic = {page:'📄', product:'🛍', category:'📁', url:'🔗', collection:'📦', screen:'📱', filters:'🎚'}[link.type] || '🔗';
-  return `<button class="link-field" onclick="openLinkPicker()"><div class="lk-ic">${ic}</div><div class="lk-info"><div class="lk-t">${link.label||'—'}</div><div class="lk-s">${link.type}</div></div><div class="lk-chev">✏</div></button>`;
+  return `<button class="link-field" onclick="openLinkPicker(false,'${key}')"><div class="lk-ic">${ic}</div><div class="lk-info"><div class="lk-t">${link.label||'—'}</div><div class="lk-s">${link.type}</div></div><div class="lk-chev">✏</div></button>`;
 }
 
 /* ─── Source select (writes to a prop) ─────────────────────────── */
@@ -5814,12 +5815,16 @@ function clearNavIcon(){
    LINK PICKER
    ============================================================ */
 let linkPickerForNav = false;
-function openLinkPicker(forNav){
+function openLinkPicker(forNav, propKey){
   // Reset state so a previous "add tab" flow doesn't leak into this edit.
   // Without this, _navAddFlow would still be true and Apply would CREATE
   // a new tab instead of updating the current one's target.
   _navAddFlow = false;
   linkPickerForNav = !!forNav;
+  // Which block prop holds this link? Blocks differ (link, cta_link, …).
+  // applyLinkPick writes back to exactly this key so external URLs (and any
+  // target) are saved to the right place instead of always to `link`.
+  linkPicker.propKey = propKey || 'link';
   // Pre-mark the picker with the existing target so the user can hit
   // Apply right away after re-confirming (or change first then Apply).
   // Editing nav target: the current item's target.
@@ -5829,7 +5834,7 @@ function openLinkPicker(forNav){
     const it = navbarItems.find(x => x.id === navbarSelected);
     pre = it && it.target || null;
   } else if (linkPicker.current){
-    pre = linkPicker.current.props && linkPicker.current.props.link || null;
+    pre = linkPicker.current.props && linkPicker.current.props[linkPicker.propKey || 'link'] || null;
   }
   linkPicker.choice = pre;
   linkPicker.mode = (pre && pre.type) || 'page';
@@ -5997,7 +6002,8 @@ function renderLinkPickerMode(){
     setTimeout(() => _wireFilterLink(), 0);
     return renderFilterLinkMode();
   }
-  return `<div class="field"><label>External URL</label><input id="lpUrl" placeholder="https://example.com/landing"/></div>
+  const _curUrl = (linkPicker.choice && linkPicker.choice.type === 'url') ? (linkPicker.choice.value || '') : '';
+  return `<div class="field"><label>External URL</label><input id="lpUrl" value="${_curUrl.replace(/"/g,'&quot;')}" placeholder="https://example.com/landing"/></div>
     <div class="toggle"><div class="nm">Open in in-app browser<small>Vs. system browser</small></div><div class="switch on"></div></div>`;
 }
 
@@ -6252,7 +6258,7 @@ async function applyLinkPick(){
         catch(e){ toast('Save failed — ' + e.message); }
         return;
       }
-      linkPicker.current.props.link = choice;
+      linkPicker.current.props[linkPicker.propKey || 'link'] = choice;
       closeModal('linkPickerBd'); render();
       try { await flushSave(); toast('🔗 Link set'); }
       catch(e){ toast('Save failed — ' + e.message); }
