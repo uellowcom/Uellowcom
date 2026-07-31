@@ -404,16 +404,29 @@
     </t>
   </template>
 
-  <!-- hreflang alternates for this page only (AR ⇄ EN) -->
-  <template id="pura_hreflang" inherit_id="website.layout" name="Pura 90 hreflang">
+  <!-- hreflang + rich social/OG meta for this page only (WhatsApp / social share) -->
+  <template id="pura_hreflang" inherit_id="website.layout" name="Pura 90 head">
     <xpath expr="//head" position="inside">
       <t t-if="request and 'huawei-pura-90' in (request.httprequest.path or '')">
         <link rel="alternate" hreflang="en" href="https://www.uellow.com/huawei-pura-90"/>
         <link rel="alternate" hreflang="ar" href="https://www.uellow.com/ar/huawei-pura-90"/>
         <link rel="alternate" hreflang="x-default" href="https://www.uellow.com/huawei-pura-90"/>
+        <meta property="og:image:width" content="800"/>
+        <meta property="og:image:height" content="800"/>
+        <meta property="og:image:alt" content="HUAWEI Pura 90 Pro Max"/>
+        <meta property="og:locale" content="en_US"/>
+        <meta property="og:locale:alternate" content="ar_AR"/>
       </t>
     </xpath>
   </template>
+
+  <!-- promote the page in the site top menu for discovery + internal linking -->
+  <record id="pura_menu" model="website.menu">
+    <field name="name">HUAWEI Pura 90</field>
+    <field name="url">/huawei-pura-90</field>
+    <field name="parent_id" ref="website.main_menu"/>
+    <field name="sequence">35</field>
+  </record>
 
   <record id="pura_page" model="website.page">
     <field name="name">HUAWEI Pura 90</field>
