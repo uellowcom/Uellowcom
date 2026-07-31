@@ -365,8 +365,8 @@
         <!-- sticky CTA -->
         <div class="p-sticky">
           <span class="lbl">HUAWEI Pura 90</span>
-          <a class="btn o" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">برو ماكس · 345</t><t t-else="">Pro Max · 345</t></a>
-          <a class="btn s" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">برو · 245</t><t t-else="">Pro · 245</t></a>
+          <a class="btn o" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">برو ماكس · 345 <small style="font-size:.72em;font-weight:600;opacity:.85">دينار</small></t><t t-else="">Pro Max · 345 <small style="font-size:.72em;font-weight:600;opacity:.85">KWD</small></t></a>
+          <a class="btn s" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">برو · 245 <small style="font-size:.72em;font-weight:600;opacity:.85">دينار</small></t><t t-else="">Pro · 245 <small style="font-size:.72em;font-weight:600;opacity:.85">KWD</small></t></a>
         </div>
 
         <script>
