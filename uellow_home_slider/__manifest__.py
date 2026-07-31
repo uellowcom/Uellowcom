@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Uellow Home Slider',
-    'version': '18.0.2.0.0',
+    'version': '18.0.2.0.1',
     'category': 'Website',
     'summary': 'سلايدر الصفحة الرئيسية - يدعم العربية والإنجليزية والموبايل',
     'author': 'Uellow',

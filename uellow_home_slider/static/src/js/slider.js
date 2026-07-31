@@ -182,6 +182,60 @@ function applyData(section,data){
     runCopyBtn(copyBtn,codeEl,lang);
 }
 
+/* ---------- v2 DOM skeleton (rebuilt at runtime so stale page copies upgrade) ---------- */
+var SKELETON = '\
+<div class="uhs-desktop uhs-v2 d-none d-lg-flex">\
+  <aside class="uhs-dept" id="uhs_dept">\
+    <div class="uhs-dept-h"><span class="uhs-dept-bars"><i></i><i></i><i></i></span> <span id="uhs_dept_title">All Departments</span></div>\
+    <ul class="uhs-dept-list" id="uhs_dept_list"></ul>\
+    <a class="uhs-dept-f" id="uhs_dept_footer" href="/shop"><span id="uhs_dept_footer_t">All departments</span><span class="uhs-dept-count" id="uhs_dept_count"></span></a>\
+  </aside>\
+  <div class="uhs-spot" id="uhs_desktop_wrap">\
+    <img class="uhs-slide-img" id="uhs_desktop_img" src="/uellow_home_slider/static/src/img/placeholder_wide.svg" alt="slide"/>\
+    <div class="uhs-spot-scrim"></div>\
+    <div class="uhs-spot-in" id="uhs_d_overlay">\
+      <span class="uhs-chip" id="uhs_d_kicker" style="display:none;"></span>\
+      <h2 class="uhs-spot-title" id="uhs_d_title" style="display:none;"></h2>\
+      <p class="uhs-spot-sub" id="uhs_d_sub" style="display:none;"></p>\
+      <div class="uhs-spot-cta-row">\
+        <a class="uhs-cta" id="uhs_d_btn" href="/shop">Shop now</a>\
+        <div class="uhs-cpn" id="uhs_ticket_wrap">\
+          <span class="uhs-cpn-label" id="uhs_voucher_label">Coupon</span>\
+          <span class="uhs-cpn-code" id="uhs_coupon_code">WELCOME05</span>\
+          <span class="uhs-cpn-off"><span id="uhs_discount">5%</span></span>\
+          <button type="button" class="uhs-cpn-copy" id="uhs_copy_btn" data-code="WELCOME05">Copy</button>\
+        </div>\
+      </div>\
+      <div class="uhs-feats" id="uhs_feats"></div>\
+    </div>\
+    <div class="uhs-nav-group" id="uhs_d_controls">\
+      <button type="button" class="uhs-nav" id="uhs_d_prev" aria-label="Previous">‹</button>\
+      <button type="button" class="uhs-nav" id="uhs_d_next" aria-label="Next">›</button>\
+    </div>\
+    <div class="uhs-dots uhs-dots-left" id="uhs_d_dots"></div>\
+    <div class="uhs-pbar" id="uhs_d_pbar"></div>\
+  </div>\
+</div>\
+<div class="uhs-mobile d-lg-none" id="uhs_mobile_wrap">\
+  <img class="uhs-slide-img" id="uhs_mobile_img" src="/uellow_home_slider/static/src/img/placeholder_wide.svg" alt="slide"/>\
+  <button type="button" class="uhs-arrow uhs-right" id="uhs_m_prev">›</button>\
+  <button type="button" class="uhs-arrow uhs-left" id="uhs_m_next">‹</button>\
+  <div class="uhs-dots" id="uhs_m_dots"></div>\
+  <div class="uhs-overlay" id="uhs_m_overlay" style="display:none;">\
+    <h2 class="uhs-overlay-title" id="uhs_m_title"></h2>\
+    <p class="uhs-overlay-sub" id="uhs_m_sub"></p>\
+    <a class="uhs-overlay-btn" id="uhs_m_btn" href="/shop"></a>\
+  </div>\
+</div>';
+
+function ensureDom(section){
+    // If the section still holds an old (pre-v2) copy saved inside the page,
+    // replace it with the current skeleton so template upgrades always apply.
+    if(section.querySelector('.uhs-dept'))return;
+    var host=section.querySelector('.uellow-hero-section')||section;
+    host.innerHTML=SKELETON;
+}
+
 var FALLBACK={lang:'ar',show_coupon:true,coupon_code:'WELCOME05',coupon_discount:'5%',
     show_menu:true,show_features:true,show_overlay_text:true,show_arrows:true,show_dots:true,autoplay:true,autoplay_speed:5,
     menu_title:'كل الأقسام',menu_footer:'كل الأقسام',menu_footer_url:'/shop',menu_total:23,cta_label:'تسوّق الآن',
@@ -194,6 +248,9 @@ publicWidget.registry.UellowHomeSlider = publicWidget.Widget.extend({
     selector: '.s_uellow_home_slider',
     start: function(){
         var section=this.el;
+        // If this element wraps another slider section, let the inner one render.
+        if(section.querySelector('.s_uellow_home_slider')){return this._super.apply(this,arguments);}
+        ensureDom(section);
         fetch('/uellow/slider/data',{credentials:'same-origin'})
             .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
             .then(function(data){applyData(section,data&&data.desktop?data:FALLBACK);})
