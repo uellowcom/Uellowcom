@@ -8,145 +8,256 @@
 
       <div class="pura" t-att-dir="'rtl' if is_ar else 'ltr'">
         <style>
-          .pura{--ink:#0C0A07;--panel:#15110B;--card:#191309;--line:rgba(240,200,140,.14);--muted:#A99B82;--text:#F3ECDD;--gold:#E8B76A;--gold2:#C98B39;--ocean:#E9743B;
-            background:var(--ink);color:var(--text);font-family:'Segoe UI',Tahoma,system-ui,sans-serif;overflow:hidden}
+          .pura{--bg:#F5FAFD;--card:#FFFFFF;--ink:#12212B;--muted:#5A6B78;--line:#E1ECF3;
+            --orange:#F26A2E;--orange2:#D8500F;--sky:#22A7E0;--sky2:#1487BE;--soft-o:#FFF0E7;--soft-s:#E7F5FC;
+            background:var(--bg);color:var(--ink);font-family:'Segoe UI',Tahoma,system-ui,sans-serif;overflow:hidden;line-height:1.55}
           .pura *{box-sizing:border-box}
-          .pura .w{max-width:1160px;margin:0 auto;padding:0 22px}
-          .pura .eyebrow{font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0}
-          .pura h2{font-size:clamp(24px,4vw,40px);font-weight:800;letter-spacing:-.02em;margin:12px 0 0;line-height:1.05}
-          .pura .lede{color:var(--muted);font-size:clamp(15px,1.7vw,18px);max-width:62ch;margin:14px 0 0}
-          .pura .sec{padding:clamp(44px,6vw,80px) 0}
-          .pura-hero{position:relative}
-          .pura-hero::before{content:"";position:absolute;inset:-20% -10% auto auto;width:70%;height:120%;
-            background:radial-gradient(50% 50% at 70% 30%,rgba(232,183,106,.34),transparent 70%),radial-gradient(40% 40% at 85% 60%,rgba(233,116,59,.24),transparent 70%);filter:blur(30px);opacity:.7;pointer-events:none}
-          .pura-hero .w{position:relative}
-          .pura-hero h1{font-size:clamp(34px,6vw,66px);font-weight:800;letter-spacing:-.02em;line-height:1;margin:12px 0 0;text-wrap:balance}
-          .pura-cards{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:36px}
-          .pcard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:24px;display:flex;flex-direction:column;position:relative;overflow:hidden}
-          .pcard.max{background:linear-gradient(160deg,rgba(232,183,106,.13),var(--card))}
-          .pcard .badge{position:absolute;inset-inline-end:18px;top:18px;background:linear-gradient(120deg,var(--gold),var(--gold2));color:#1a1206;font-size:10.5px;font-weight:800;padding:5px 11px;border-radius:999px}
-          .pcard img{width:100%;aspect-ratio:1;object-fit:contain;border-radius:14px;background:#0c0b09}
-          .pcard h3{font-size:20px;font-weight:800;margin:16px 0 0;letter-spacing:-.01em}
-          .pcard .price{font-size:24px;font-weight:800;color:var(--gold);margin-top:6px}
-          .pcard .price small{font-size:13px;color:var(--muted);font-weight:600}
-          .pcard .cols{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-          .pcard .col{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);font-weight:600;border:1px solid var(--line);border-radius:999px;padding:4px 10px}
-          .pcard .dot{width:13px;height:13px;border-radius:50%;box-shadow:inset 0 1px 3px rgba(255,255,255,.35),inset 0 -2px 3px rgba(0,0,0,.4)}
-          .pura .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;border-radius:12px;padding:13px 20px;font-size:14px;text-decoration:none;transition:.15s}
-          .pura .btn.gold{background:linear-gradient(120deg,var(--gold),var(--gold2));color:#1a1206}
-          .pura .btn.gold:hover{filter:brightness(1.07)}
-          .pura .btn.ghost{border:1px solid var(--line);color:var(--text)}
-          .pcard .foot{margin-top:auto;padding-top:18px}
-          .pcard .taly{font-size:12px;color:var(--gold);font-weight:700;margin-top:9px;text-align:center}
-          .band{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
-          .band .g{display:grid;grid-template-columns:repeat(4,1fr)}
-          .stat{padding:30px 16px;text-align:center;border-inline-start:1px solid var(--line)}
-          .stat:first-child{border-inline-start:0}
-          .stat b{display:block;font-size:clamp(26px,3.6vw,44px);font-weight:800;letter-spacing:-.02em;background:linear-gradient(120deg,var(--gold),var(--ocean));-webkit-background-clip:text;background-clip:text;color:transparent}
-          .stat span{display:block;margin-top:6px;font-size:12px;color:var(--muted);font-weight:600}
-          .cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
-          .fcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
-          .fcard h3{font-size:16px;font-weight:800;margin:0 0 8px}
-          .fcard p{color:var(--muted);font-size:13.5px;margin:0}
-          .cam-media{margin-top:26px;border-radius:20px;overflow:hidden;border:1px solid var(--line)}
-          .cam-media img{width:100%;display:block;object-fit:cover;max-height:420px}
+          .pura .w{max-width:1180px;margin:0 auto;padding:0 22px}
+          .pura .eyebrow{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+            color:var(--orange2);background:var(--soft-o);border-radius:999px;padding:6px 13px;margin:0}
+          .pura h2{font-size:clamp(24px,4vw,40px);font-weight:800;letter-spacing:-.02em;margin:14px 0 0;line-height:1.06}
+          .pura .lede{color:var(--muted);font-size:clamp(15px,1.7vw,18px);max-width:64ch;margin:14px 0 0}
+          .pura .sec{padding:clamp(46px,6vw,84px) 0}
+          .pura .grad{background:linear-gradient(115deg,var(--orange),var(--sky));-webkit-background-clip:text;background-clip:text;color:transparent}
+          .pura .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:800;border-radius:12px;padding:13px 22px;font-size:14px;text-decoration:none;transition:.15s;border:1.5px solid transparent}
+          .pura .btn.o{background:linear-gradient(120deg,var(--orange),var(--orange2));color:#fff;box-shadow:0 10px 24px -10px var(--orange)}
+          .pura .btn.o:hover{filter:brightness(1.05);transform:translateY(-1px)}
+          .pura .btn.s{background:var(--card);color:var(--sky2);border-color:var(--line)}
+          .pura .btn.s:hover{border-color:var(--sky)}
+
+          /* hero */
+          .p-hero{position:relative;overflow:hidden}
+          .p-hero::before{content:"";position:absolute;inset:-30% -10% auto 40%;height:130%;
+            background:radial-gradient(45% 50% at 60% 30%,rgba(242,106,46,.20),transparent 70%),radial-gradient(45% 50% at 80% 60%,rgba(34,167,224,.20),transparent 70%);filter:blur(20px);pointer-events:none}
+          .p-hero .grid{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:center}
+          .p-hero h1{font-size:clamp(34px,6vw,64px);font-weight:800;letter-spacing:-.025em;line-height:1;margin:14px 0 0;text-wrap:balance}
+          .p-hero .price-row{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px}
+          .p-hero .pr b{font-size:26px;font-weight:800}.p-hero .pr span{display:block;font-size:12.5px;color:var(--muted);font-weight:600}
+          .p-hero .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+          .p-hero .himg{position:relative;text-align:center}
+          .p-hero .himg::before{content:"";position:absolute;inset:6% 12%;border-radius:50%;
+            background:radial-gradient(circle,rgba(242,106,46,.16),rgba(34,167,224,.12) 55%,transparent 72%)}
+          .p-hero .himg img{position:relative;max-width:100%;max-height:520px;object-fit:contain;filter:drop-shadow(0 30px 50px rgba(20,40,60,.22))}
+
+          /* stat band */
+          .p-band{background:linear-gradient(115deg,var(--soft-o),var(--soft-s));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+          .p-band .g{display:grid;grid-template-columns:repeat(4,1fr)}
+          .p-stat{padding:30px 16px;text-align:center;border-inline-start:1px solid rgba(20,40,60,.08)}
+          .p-stat:first-child{border-inline-start:0}
+          .p-stat b{display:block;font-size:clamp(26px,3.6vw,42px);font-weight:800;letter-spacing:-.02em}
+          .p-stat span{display:block;margin-top:5px;font-size:12px;color:var(--muted);font-weight:600}
+
+          /* product duo */
+          .duo{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:30px}
+          .pc{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;display:flex;flex-direction:column;box-shadow:0 20px 40px -30px rgba(20,50,80,.4)}
+          .pc .top{position:relative;border-radius:16px;background:linear-gradient(160deg,var(--soft-o),var(--soft-s));padding:16px;text-align:center}
+          .pc .top .bdg{position:absolute;inset-inline-start:14px;top:14px;background:linear-gradient(120deg,var(--orange),var(--orange2));color:#fff;font-size:10.5px;font-weight:800;padding:5px 11px;border-radius:999px}
+          .pc img{max-width:100%;aspect-ratio:1;object-fit:contain}
+          .pc h3{font-size:20px;font-weight:800;margin:16px 0 0}
+          .pc .price{font-size:22px;font-weight:800;margin-top:4px}.pc .price small{font-size:13px;color:var(--muted);font-weight:600}
+          .pc .cols{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+          .pc .col{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);font-weight:600;border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+          .pc .dot{width:13px;height:13px;border-radius:50%;box-shadow:inset 0 1px 2px rgba(255,255,255,.6),0 0 0 1px rgba(0,0,0,.05)}
+          .pc .foot{margin-top:auto;padding-top:18px}
+          .pc .taly{font-size:12px;color:var(--orange2);font-weight:700;margin-top:9px;text-align:center}
+
+          /* feature bands */
+          .feat{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center;margin-top:30px}
+          .feat.rev .txt{order:2}
+          .feat .media{border-radius:22px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(160deg,var(--soft-o),var(--soft-s))}
+          .feat .media img{width:100%;display:block;object-fit:cover;aspect-ratio:4/3}
+          .feat h3{font-size:clamp(20px,2.6vw,30px);font-weight:800;letter-spacing:-.02em;margin:12px 0 0}
+          .feat p{color:var(--muted);margin:12px 0 0;font-size:15px}
+          .mini{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+          .mini span{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 13px;font-size:12.5px;font-weight:700}
+          .mini span b{color:var(--orange2)}
+
+          /* gallery */
+          .gal{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:12px;margin-top:30px}
+          .gal a{display:block;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#fff;aspect-ratio:1}
+          .gal a.big{grid-column:span 2;grid-row:span 2;aspect-ratio:auto}
+          .gal img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+          .gal a:hover img{transform:scale(1.05)}
+
+          /* color chips */
+          .colors{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:center;margin-top:26px}
+          .colors .media{border-radius:22px;overflow:hidden;border:1px solid var(--line)}
+          .colors .media img{width:100%;display:block;aspect-ratio:4/3;object-fit:cover}
+          .cc-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+          .cc{text-align:center}.cc .sw{width:52px;height:52px;border-radius:50%;margin:0 auto;box-shadow:inset 0 2px 4px rgba(255,255,255,.5),0 6px 14px -6px rgba(0,0,0,.3)}
+          .cc small{display:block;margin-top:8px;font-size:12px;font-weight:700;color:var(--muted)}
+
+          /* specs */
           .spec2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
-          .sgroup{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
-          .sgroup h3{margin:0;padding:14px 18px;font-size:14px;font-weight:800;color:var(--gold);border-bottom:1px solid var(--line);background:var(--panel)}
-          .srow{display:grid;grid-template-columns:.85fr 1.15fr;gap:10px;padding:10px 18px;border-top:1px solid var(--line);font-size:13.5px}
-          .srow:first-of-type{border-top:0}.srow .sl{color:var(--muted);font-weight:600}.srow .sv{font-weight:600}
-          .compare{margin-top:30px;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--card)}
-          .crow{display:grid;grid-template-columns:1.1fr 1fr 1fr;border-top:1px solid var(--line)}
-          .crow:first-child{border-top:0}.crow>div{padding:14px 18px;font-size:13.5px}
-          .crow .rl{color:var(--muted);font-weight:700}.crow .cv{border-inline-start:1px solid var(--line);font-weight:600}
-          .crow.head>div{background:var(--panel);font-weight:800}.crow.head .cv.mx{color:var(--gold)}
-          .taly-sec{background:linear-gradient(150deg,rgba(232,183,106,.1),var(--panel));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-          .taly-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start}
-          .steps{list-style:none;margin:22px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+          .sg{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+          .sg h3{margin:0;padding:14px 18px;font-size:14px;font-weight:800;color:#fff;background:linear-gradient(120deg,var(--orange),var(--sky))}
+          .sr{display:grid;grid-template-columns:.85fr 1.15fr;gap:10px;padding:10px 18px;border-top:1px solid var(--line);font-size:13.5px}
+          .sr:first-of-type{border-top:0}.sr .sl{color:var(--muted);font-weight:600}.sr .sv{font-weight:600}
+
+          /* compare */
+          .cmp{margin-top:30px;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--card)}
+          .cr{display:grid;grid-template-columns:1.1fr 1fr 1fr;border-top:1px solid var(--line)}
+          .cr:first-child{border-top:0}.cr>div{padding:14px 18px;font-size:13.5px}
+          .cr .rl{color:var(--muted);font-weight:700}.cr .cv{border-inline-start:1px solid var(--line);font-weight:600}
+          .cr.head>div{background:var(--soft-s);font-weight:800}.cr.head .mx{color:var(--orange2)}
+
+          /* taly */
+          .taly{background:linear-gradient(160deg,var(--soft-o),var(--soft-s));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+          .taly .g{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:start}
+          .steps{list-style:none;margin:20px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
           .steps li{display:flex;gap:12px;align-items:flex-start}
-          .sn{flex:none;width:26px;height:26px;border-radius:50%;background:linear-gradient(120deg,var(--gold),var(--gold2));color:#1a1206;font-weight:800;font-size:13px;display:grid;place-items:center}
+          .sn{flex:none;width:26px;height:26px;border-radius:50%;background:linear-gradient(120deg,var(--orange),var(--orange2));color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}
           .steps b{font-weight:800}.steps p{margin:2px 0 0;color:var(--muted);font-size:13px}
-          .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
-          .badges span{border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--muted)}
-          .split{display:flex;gap:10px;flex-wrap:wrap}
+          .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+          .badges span{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--muted)}
+          .split{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
           .pay{flex:1 1 0;min-width:100px;border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--card)}
-          .pay.first{background:linear-gradient(150deg,rgba(232,183,106,.18),var(--card))}
-          .pay .n{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+          .pay.first{background:linear-gradient(150deg,var(--soft-o),var(--card))}
+          .pay .n{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--orange2)}
           .pay .amt{font-size:20px;font-weight:800;margin-top:4px}.pay .when{font-size:11.5px;color:var(--muted);margin-top:2px}
-          .stores{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-          .store{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:13px;padding:10px 15px;background:var(--card);text-decoration:none;color:var(--text)}
-          .store:hover{border-color:var(--gold)}
+          .stores{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+          .store{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:13px;padding:10px 15px;background:var(--card);text-decoration:none;color:var(--ink)}
+          .store:hover{border-color:var(--orange)}
           .store svg{width:22px;height:22px}.store .tx{display:flex;flex-direction:column;line-height:1.15}
           .store .tx small{font-size:10px;color:var(--muted)}.store .tx b{font-size:13.5px}
-          .note{margin-top:14px;font-size:11.5px;color:var(--muted);opacity:.9}
-          .pura-sticky{position:fixed;inset-inline:0;bottom:0;z-index:1030;background:color-mix(in srgb,var(--ink) 92%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);
-            display:flex;gap:10px;align-items:center;justify-content:center;padding:10px 16px;flex-wrap:wrap}
-          .pura-sticky .lbl{font-weight:800;font-size:13px;color:var(--text);margin-inline-end:6px}
-          @media (max-width:900px){.pura-cards,.spec2,.taly-grid{grid-template-columns:1fr}.band .g{grid-template-columns:repeat(2,1fr)}.stat:nth-child(3){border-inline-start:0}.cards3{grid-template-columns:1fr}
-            .crow,.crow.head{grid-template-columns:1fr}.crow .cv{border-inline-start:0;border-top:1px solid var(--line)}.crow .rl{background:var(--panel)}}
+          .note{margin-top:14px;font-size:11.5px;color:var(--muted)}
+
+          .p-sticky{position:fixed;inset-inline:0;bottom:0;z-index:1030;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+            display:flex;gap:10px;align-items:center;justify-content:center;padding:10px 16px;flex-wrap:wrap;box-shadow:0 -8px 24px -16px rgba(20,50,80,.4)}
+          .p-sticky .lbl{font-weight:800;font-size:13px;margin-inline-end:6px}
+
+          @media (max-width:900px){
+            .p-hero .grid,.duo,.feat,.colors,.spec2,.taly .g{grid-template-columns:1fr}
+            .feat.rev .txt{order:0}
+            .p-band .g{grid-template-columns:repeat(2,1fr)}.p-stat:nth-child(3){border-inline-start:0}
+            .gal{grid-template-columns:repeat(2,1fr)}.gal a.big{grid-column:span 2;grid-row:auto;aspect-ratio:16/10}
+            .cr,.cr.head{grid-template-columns:1fr}.cr .cv{border-inline-start:0;border-top:1px solid var(--line)}.cr .rl{background:var(--soft-s)}
+          }
         </style>
 
         <!-- HERO -->
-        <section class="pura-hero sec"><div class="w">
-          <p class="eyebrow"><t t-if="is_ar">لحظتك الآن · حصريًا على Uellow</t><t t-else="">Now is Your Moment · exclusively at Uellow</t></p>
-          <h1><t t-if="is_ar">هواوي بورا 90 برو ماكس وبرو</t><t t-else="">HUAWEI Pura 90 Pro Max &amp; Pro</t></h1>
-          <p class="lede"><t t-if="is_ar">تصوير احترافي بمستشعر تليفوتو فائق 200 ميجابكسل وزوم 100×، بطارية 6000 مللي أمبير، وشحن فائق حتى 100 واط — بزجاج Kunlun المضاد للانعكاس. متوفّر الآن للشراء أو التقسيط على 4 دفعات مع Taly.</t>
-            <t t-else="">Pro-grade photography with a 200 MP ultra-large telephoto sensor and 100× zoom, a 6000 mAh battery and up to 100 W SuperCharge — behind anti-reflection Kunlun Glass. Buy now, or split into 4 with Taly.</t></p>
+        <section class="p-hero sec"><div class="w"><div class="grid">
+          <div>
+            <p class="eyebrow"><t t-if="is_ar">لحظتك الآن · حصريًا على Uellow</t><t t-else="">Now is Your Moment · exclusively at Uellow</t></p>
+            <h1><t t-if="is_ar">هواوي <span class="grad">بيورا 90</span> برو ماكس وبرو</t><t t-else="">HUAWEI <span class="grad">Pura 90</span> Pro Max &amp; Pro</t></h1>
+            <p class="lede"><t t-if="is_ar">تصوير احترافي بمستشعر تليفوتو 200 ميجابكسل وزوم 100×، شاشة OLED 120Hz، بطارية 6000 مللي أمبير وشحن فائق حتى 100 واط — بألوان تخطف العين. اشترِ الآن أو قسّط على 4 دفعات مع Taly.</t>
+              <t t-else="">Pro-grade photography with a 200 MP telephoto and 100× zoom, a 120 Hz OLED display, 6000 mAh battery and up to 100 W SuperCharge — in colours that turn heads. Buy now, or split into 4 with Taly.</t></p>
+            <div class="price-row">
+              <div class="pr"><b>345.000 <small style="font-size:13px;color:var(--muted)"><t t-if="is_ar">د.ك</t><t t-else="">KWD</t></small></b><span>Pura 90 Pro Max</span></div>
+              <div class="pr"><b>245.000 <small style="font-size:13px;color:var(--muted)"><t t-if="is_ar">د.ك</t><t t-else="">KWD</t></small></b><span>Pura 90 Pro</span></div>
+            </div>
+            <div class="cta-row">
+              <a class="btn o" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">اشترِ برو ماكس</t><t t-else="">Buy Pro Max</t></a>
+              <a class="btn s" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">اشترِ برو</t><t t-else="">Buy Pro</t></a>
+            </div>
+          </div>
+          <div class="himg">
+            <img src="/web/image/product.image/56166/image_1024/Features-Web-01-%E6%8D%A2%E8%82%A4-%E6%A9%98%E5%AD%90%E6%B5%B7.webp" alt="HUAWEI Pura 90 Pro Max Orange Ocean" loading="eager" width="560" height="520"/>
+          </div>
+        </div></div></section>
 
-          <div class="pura-cards">
-            <div class="pcard max">
-              <span class="badge"><t t-if="is_ar">الأقوى</t><t t-else="">FLAGSHIP</t></span>
-              <img src="/web/image/product.template/16673/image_1920" alt="HUAWEI Pura 90 Pro Max" loading="eager" width="600" height="600"/>
+        <!-- STAT BAND -->
+        <section class="p-band"><div class="w g">
+          <div class="p-stat"><b class="grad">200MP</b><span><t t-if="is_ar">مستشعر تليفوتو</t><t t-else="">Telephoto sensor</t></span></div>
+          <div class="p-stat"><b class="grad">100×</b><span><t t-if="is_ar">زوم رقمي</t><t t-else="">Digital zoom</t></span></div>
+          <div class="p-stat"><b class="grad">100W</b><span><t t-if="is_ar">شحن فائق</t><t t-else="">SuperCharge</t></span></div>
+          <div class="p-stat"><b class="grad">6.9″</b><span><t t-if="is_ar">OLED 120Hz</t><t t-else="">OLED 120Hz</t></span></div>
+        </div></section>
+
+        <!-- PRODUCT DUO -->
+        <section class="sec"><div class="w">
+          <p class="eyebrow"><t t-if="is_ar">اختر جهازك</t><t t-else="">Choose your device</t></p>
+          <h2><t t-if="is_ar">هاتفان. طاقة واحدة استثنائية.</t><t t-else="">Two phones. One extraordinary power.</t></h2>
+          <div class="duo">
+            <div class="pc">
+              <div class="top"><span class="bdg"><t t-if="is_ar">الأقوى</t><t t-else="">FLAGSHIP</t></span>
+                <img src="/web/image/product.image/56156/image_1024/huawei-pura-90s-pro-max.webp" alt="HUAWEI Pura 90 Pro Max" loading="lazy" width="400" height="400"/></div>
               <h3>HUAWEI Pura 90 Pro Max</h3>
               <div class="price">345.000 <small><t t-if="is_ar">د.ك</t><t t-else="">KWD</t></small></div>
               <div class="cols">
-                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#43423F,#0C0B0A)"></span><t t-if="is_ar">أسود</t><t t-else="">Black</t></span>
-                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#F0D3AC,#A9793E)"></span><t t-if="is_ar">ذهبي</t><t t-else="">Gold</t></span>
-                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#F0975C,#8F3D14)"></span><t t-if="is_ar">برتقالي</t><t t-else="">Orange</t></span>
+                <span class="col"><span class="dot" style="background:#2A2A2C"></span><t t-if="is_ar">أسود</t><t t-else="">Black</t></span>
+                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#F0D3AC,#C99A5E)"></span><t t-if="is_ar">ذهبي</t><t t-else="">Gold</t></span>
+                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#F0975C,#C25A24)"></span><t t-if="is_ar">برتقالي</t><t t-else="">Orange</t></span>
               </div>
-              <div class="foot">
-                <a class="btn gold" style="width:100%" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">اشترِ الآن</t><t t-else="">Buy now</t></a>
-                <div class="taly"><t t-if="is_ar">أو 4 دفعات × 86.250 د.ك مع Taly</t><t t-else="">or 4× 86.250 KWD with Taly</t></div>
-              </div>
+              <div class="foot"><a class="btn o" style="width:100%" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">اشترِ الآن</t><t t-else="">Buy now</t></a>
+                <div class="taly"><t t-if="is_ar">أو 4 × 86.250 د.ك مع Taly</t><t t-else="">or 4× 86.250 KWD with Taly</t></div></div>
             </div>
-            <div class="pcard">
-              <span class="badge">PRO</span>
-              <img src="/web/image/product.template/16674/image_1920" alt="HUAWEI Pura 90 Pro" loading="eager" width="600" height="600"/>
+            <div class="pc">
+              <div class="top"><span class="bdg" style="background:linear-gradient(120deg,var(--sky),var(--sky2))">PRO</span>
+                <img src="/web/image/product.template/16674/image_1920" alt="HUAWEI Pura 90 Pro" loading="lazy" width="400" height="400"/></div>
               <h3>HUAWEI Pura 90 Pro</h3>
               <div class="price">245.000 <small><t t-if="is_ar">د.ك</t><t t-else="">KWD</t></small></div>
               <div class="cols">
-                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#43423F,#0C0B0A)"></span><t t-if="is_ar">أسود</t><t t-else="">Black</t></span>
-                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#F0975C,#8F3D14)"></span><t t-if="is_ar">برتقالي</t><t t-else="">Orange</t></span>
-                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#EEB0AB,#9C463F)"></span><t t-if="is_ar">جوافة</t><t t-else="">Guava</t></span>
+                <span class="col"><span class="dot" style="background:#2A2A2C"></span><t t-if="is_ar">أسود</t><t t-else="">Black</t></span>
+                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#F0975C,#C25A24)"></span><t t-if="is_ar">برتقالي</t><t t-else="">Orange</t></span>
+                <span class="col"><span class="dot" style="background:linear-gradient(150deg,#EEB0AB,#C56A63)"></span><t t-if="is_ar">جوافة</t><t t-else="">Guava</t></span>
               </div>
-              <div class="foot">
-                <a class="btn gold" style="width:100%" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">اشترِ الآن</t><t t-else="">Buy now</t></a>
-                <div class="taly"><t t-if="is_ar">أو 4 دفعات × 61.250 د.ك مع Taly</t><t t-else="">or 4× 61.250 KWD with Taly</t></div>
+              <div class="foot"><a class="btn o" style="width:100%" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">اشترِ الآن</t><t t-else="">Buy now</t></a>
+                <div class="taly"><t t-if="is_ar">أو 4 × 61.250 د.ك مع Taly</t><t t-else="">or 4× 61.250 KWD with Taly</t></div></div>
+            </div>
+          </div>
+        </div></section>
+
+        <!-- CAMERA FEATURE -->
+        <section class="sec" style="padding-top:0"><div class="w">
+          <div class="feat">
+            <div class="txt">
+              <p class="eyebrow"><t t-if="is_ar">الكاميرا</t><t t-else="">The camera</t></p>
+              <h3><t t-if="is_ar">تصوير إلى أقصى حدّ.</t><t t-else="">Photography to the MAX.</t></h3>
+              <p><t t-if="is_ar">مستشعر تليفوتو فائق 200 ميجابكسل بفتحة F2.6 وزوم 100×، مع رئيسية 50 ميجابكسل بفتحة متغيّرة F1.4–F4.0 وعدسة فائقة الاتساع — وكاميرا الألوان الحقيقية 2.0 مع ذكاء اصطناعي لتكوين اللقطة وإزالة الوهج.</t>
+                <t t-else="">A 200 MP ultra-large telephoto at F2.6 with 100× zoom, a 50 MP main with variable F1.4–F4.0 aperture and an ultra-wide — with True-to-Colour Camera 2.0 and AI composition and de-glare.</t></p>
+              <div class="mini"><span><b>200</b>MP</span><span><b>100×</b> zoom</span><span>F1.4–F4.0</span><span>OIS</span><span><t t-if="is_ar">فيديو</t><t t-else="">Video</t> 4K</span></div>
+            </div>
+            <div class="media"><img src="/web/image/product.image/56168/image_1024/huawei-pura-90s-pro-max-3.webp" alt="HUAWEI Pura 90 Pro Max camera" loading="lazy"/></div>
+          </div>
+          <div class="feat rev" style="margin-top:36px">
+            <div class="txt">
+              <p class="eyebrow"><t t-if="is_ar">التصميم والمتانة</t><t t-else="">Design &amp; durability</t></p>
+              <h3><t t-if="is_ar">زجاج أقوى. أيام أطول.</t><t t-else="">Tougher glass. Longer days.</t></h3>
+              <p><t t-if="is_ar">زجاج Kunlun المضاد للانعكاس يقلّل الوهج 70% ويرفع مقاومة الخدش 16×. بطارية 6000 مللي أمبير مع شحن سلكي 100 واط ولاسلكي 80 واط، ومقاومة ماء وغبار IP68/IP69.</t>
+                <t t-else="">Anti-reflection Kunlun Glass cuts glare by 70% and boosts scratch resistance 16×. A 6000 mAh battery with 100 W wired and 80 W wireless charging, and IP68/IP69 water &amp; dust resistance.</t></p>
+              <div class="mini"><span><b>6000</b>mAh</span><span><b>100W</b> <t t-if="is_ar">سلكي</t><t t-else="">wired</t></span><span><b>80W</b> <t t-if="is_ar">لاسلكي</t><t t-else="">wireless</t></span><span>IP68/IP69</span><span>Kunlun Glass</span></div>
+            </div>
+            <div class="media"><img src="/web/image/product.image/56154/image_1024/huawei-pura-90s-pro-max-1.webp" alt="HUAWEI Pura 90 Pro Max design" loading="lazy"/></div>
+          </div>
+        </div></section>
+
+        <!-- COLORS -->
+        <section class="sec" style="padding-top:0"><div class="w">
+          <p class="eyebrow"><t t-if="is_ar">الألوان</t><t t-else="">Colours</t></p>
+          <h2><t t-if="is_ar">ألوان مستوحاة من الطبيعة.</t><t t-else="">Colours inspired by nature.</t></h2>
+          <div class="colors">
+            <div class="media"><img src="/web/image/product.image/56167/image_1024/Features-Web-01-%E6%8D%A2%E8%82%A4.webp" alt="HUAWEI Pura 90 colours" loading="lazy"/></div>
+            <div>
+              <div style="font-weight:800;margin-bottom:8px">Pura 90 Pro Max</div>
+              <div class="cc-row">
+                <div class="cc"><div class="sw" style="background:#2A2A2C"></div><small><t t-if="is_ar">أسود جرافيتي</t><t t-else="">Graphite Black</t></small></div>
+                <div class="cc"><div class="sw" style="background:linear-gradient(150deg,#F0D3AC,#C99A5E)"></div><small><t t-if="is_ar">ذهبي وردي</t><t t-else="">Blush Gold</t></small></div>
+                <div class="cc"><div class="sw" style="background:linear-gradient(150deg,#F0975C,#C25A24)"></div><small><t t-if="is_ar">محيط برتقالي</t><t t-else="">Orange Ocean</t></small></div>
+              </div>
+              <div style="font-weight:800;margin:18px 0 8px">Pura 90 Pro</div>
+              <div class="cc-row">
+                <div class="cc"><div class="sw" style="background:#2A2A2C"></div><small><t t-if="is_ar">أسود توتي</t><t t-else="">Mulberry Black</t></small></div>
+                <div class="cc"><div class="sw" style="background:linear-gradient(150deg,#F0975C,#C25A24)"></div><small><t t-if="is_ar">برتقالي</t><t t-else="">Orange Soda</t></small></div>
+                <div class="cc"><div class="sw" style="background:linear-gradient(150deg,#EEB0AB,#C56A63)"></div><small><t t-if="is_ar">جوافة</t><t t-else="">Guava Soda</t></small></div>
               </div>
             </div>
           </div>
         </div></section>
 
-        <!-- STATS BAND (Pro Max) -->
-        <section class="band"><div class="w g">
-          <div class="stat"><b>200<span style="font-size:.5em">MP</span></b><span><t t-if="is_ar">مستشعر تليفوتو</t><t t-else="">Telephoto sensor</t></span></div>
-          <div class="stat"><b>100×</b><span><t t-if="is_ar">زوم رقمي</t><t t-else="">Digital zoom</t></span></div>
-          <div class="stat"><b>100<span style="font-size:.5em">W</span></b><span><t t-if="is_ar">شحن فائق</t><t t-else="">SuperCharge</t></span></div>
-          <div class="stat"><b>6.9<span style="font-size:.5em">″</span></b><span><t t-if="is_ar">شاشة OLED 120Hz</t><t t-else="">OLED 120Hz display</t></span></div>
-        </div></section>
-
-        <!-- CAMERA -->
-        <section class="sec"><div class="w">
-          <p class="eyebrow"><t t-if="is_ar">الكاميرا</t><t t-else="">The camera</t></p>
-          <h2><t t-if="is_ar">عينٌ تُبصر ساعة الذهب.</t><t t-else="">An eye for the golden hour.</t></h2>
-          <p class="lede"><t t-if="is_ar">مستشعر رئيسي 50 ميجابكسل فائق الإضاءة بفتحة متغيّرة F1.4–F4.0، وعدسة فائقة الاتساع، وتليفوتو يصل إلى 100× — مع كاميرا الألوان الحقيقية 2.0 وذكاء اصطناعي يبقي كل لقطة نقية ومتوازنة.</t>
-            <t t-else="">A 50 MP Ultra-Lighting main sensor with variable F1.4–F4.0 aperture, an ultra-wide, and a telephoto reaching 100× — with True-to-Colour Camera 2.0 and AI that keeps every frame clean and perfectly composed.</t></p>
-          <div class="cards3">
-            <div class="fcard"><h3><t t-if="is_ar">رئيسية 50 ميجابكسل + فائقة الاتساع</t><t t-else="">50 MP main + ultra-wide</t></h3><p><t t-if="is_ar">فتحة F1.4–F4.0 مع مثبّت OIS، وعدسة فائقة الاتساع 40 ميجابكسل (12.5 في برو).</t><t t-else="">F1.4–F4.0 with OIS, plus a 40 MP ultra-wide (12.5 MP on Pro).</t></p></div>
-            <div class="fcard"><h3><t t-if="is_ar">تليفوتو حتى 100×</t><t t-else="">Telephoto up to 100×</t></h3><p><t t-if="is_ar">برو ماكس: مستشعر فائق 200 ميجابكسل F2.6، 4× بصري / 100× رقمي. برو: ماكرو تليفوتو 50 ميجابكسل يركّز من 5 سم.</t><t t-else="">Pro Max: 200 MP ultra-large sensor (F2.6), 4× optical / 100× digital. Pro: 50 MP macro telephoto from 5 cm.</t></p></div>
-            <div class="fcard"><h3><t t-if="is_ar">ذكاء التكوين وإزالة الوهج</t><t t-else="">AI composition &amp; de-glare</t></h3><p><t t-if="is_ar">تأطير ذكي، وإزالة الوهج، ومعالجة الحركة — لقطات احترافية بلا مجهود.</t><t t-else="">Smart framing, glare removal and motion cleanup — pro shots, effortlessly.</t></p></div>
+        <!-- GALLERY -->
+        <section class="sec" style="padding-top:0"><div class="w">
+          <p class="eyebrow"><t t-if="is_ar">المعرض</t><t t-else="">Gallery</t></p>
+          <h2><t t-if="is_ar">كل زاوية، مصنوعة بإتقان.</t><t t-else="">Every angle, crafted.</t></h2>
+          <div class="gal">
+            <a class="big" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><img src="/web/image/product.image/56160/image_1024/800_800_7EB27A0BB1567C530F8298B2325F7D70mp.webp" alt="HUAWEI Pura 90 Pro Max" loading="lazy"/></a>
+            <a href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><img src="/web/image/product.image/56161/image_1024/800_800_D89CE3ECE87A22933E974B94EC0AA64D.webp" alt="Pura 90 Pro Max detail" loading="lazy"/></a>
+            <a href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><img src="/web/image/product.image/56162/image_1024/800_800_DDF0626E37CC3897652E5115F350742A.webp" alt="Pura 90 Pro Max detail" loading="lazy"/></a>
+            <a href="/shop/huawei-pura-90-pro-256gb-phone-16674"><img src="/web/image/product.image/56185/image_1024/800_800_63CF7A98C1E7139E6DA2AB823DB059DE.webp" alt="Pura 90 Pro detail" loading="lazy"/></a>
+            <a href="/shop/huawei-pura-90-pro-256gb-phone-16674"><img src="/web/image/product.image/56190/image_1024/800_800_F4B3624DC4B87E91F5544859C42C5A20.webp" alt="Pura 90 Pro detail" loading="lazy"/></a>
+            <a href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><img src="/web/image/product.image/56164/image_1024/800_800_C44C1D6EBA1ACF871EE3B5AFDB4346A9.webp" alt="Pura 90 Pro Max detail" loading="lazy"/></a>
+            <a href="/shop/huawei-pura-90-pro-256gb-phone-16674"><img src="/web/image/product.image/56182/image_1024/800_800_86A795BA661A96FC5DF0BE277AF7A849mp.webp" alt="Pura 90 Pro" loading="lazy"/></a>
           </div>
-          <div class="cam-media"><img src="/web/image/product.image/56168/image_1024/huawei-pura-90s-pro-max-3.webp" alt="HUAWEI Pura 90 Pro Max camera" loading="lazy"/></div>
         </div></section>
 
         <!-- FULL SPECS -->
@@ -154,27 +265,33 @@
           <p class="eyebrow"><t t-if="is_ar">المواصفات الكاملة</t><t t-else="">Full specifications</t></p>
           <h2><t t-if="is_ar">كل التفاصيل، بوضوح.</t><t t-else="">Every detail, spelled out.</t></h2>
           <div class="spec2">
-            <div class="sgroup"><h3>HUAWEI Pura 90 Pro Max</h3>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الشاشة</t><t t-else="">Display</t></span><span class="sv">6.9″ LTPO OLED · 2880×1308 · 460ppi · 1–120Hz</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الأبعاد/الوزن</t><t t-else="">Size / weight</t></span><span class="sv">164 × 77.1 × 8.1 mm · ≈230.5 g</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الكاميرا الخلفية</t><t t-else="">Rear camera</t></span><span class="sv">50MP (F1.4–4.0,OIS) + 40MP UW (F2.2) + 200MP tele (F2.6,OIS)</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الزوم</t><t t-else="">Zoom</t></span><span class="sv">4× optical · 100× digital</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الأمامية</t><t t-else="">Front</t></span><span class="sv">13 MP · F2.0 · AF</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">البطارية/الشحن</t><t t-else="">Battery / charge</t></span><span class="sv">6000 mAh · 100W wired · 80W wireless</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الذاكرة</t><t t-else="">Memory</t></span><span class="sv">12GB RAM · 256/512GB</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">المتانة/الزجاج</t><t t-else="">Durability</t></span><span class="sv">IP68/IP69 · Anti-reflection Kunlun Glass</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">النظام/الاتصال</t><t t-else="">OS / connectivity</t></span><span class="sv">EMUI 16 · 5G · Wi-Fi 7 · BT 6.0 · NFC · USB-C</span></div>
+            <div class="sg"><h3>HUAWEI Pura 90 Pro Max</h3>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الشاشة</t><t t-else="">Display</t></span><span class="sv">6.9″ LTPO OLED · 2880×1308 · 460ppi · 1–120Hz · 300Hz touch · 1.07B colours</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الأبعاد/الوزن</t><t t-else="">Size / weight</t></span><span class="sv">164 × 77.1 × 8.1 mm · ≈230.5 g</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الكاميرا الرئيسية</t><t t-else="">Main camera</t></span><span class="sv">50 MP · F1.4–F4.0 · OIS</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">فائقة الاتساع</t><t t-else="">Ultra-wide</t></span><span class="sv">40 MP · F2.2</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">تليفوتو</t><t t-else="">Telephoto</t></span><span class="sv">200 MP · F2.6 · OIS · 4× optical · 100× digital</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الأمامية</t><t t-else="">Front</t></span><span class="sv">13 MP · F2.0 · AF</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الفيديو</t><t t-else="">Video</t></span><span class="sv">4K · 3840×2160</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">البطارية/الشحن</t><t t-else="">Battery / charge</t></span><span class="sv">6000 mAh · 100W wired · 80W wireless</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الذاكرة</t><t t-else="">Memory</t></span><span class="sv">12GB RAM · 256/512GB</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">المتانة/الزجاج</t><t t-else="">Durability</t></span><span class="sv">IP68/IP69 · Anti-reflection Kunlun Glass</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">النظام</t><t t-else="">OS</t></span><span class="sv">EMUI 16.0 · Celia AI</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الاتصال</t><t t-else="">Connectivity</t></span><span class="sv">5G · Wi-Fi 7 · BT 6.0 · NFC · USB-C · Nano+eSIM</span></div>
             </div>
-            <div class="sgroup"><h3>HUAWEI Pura 90 Pro</h3>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الشاشة</t><t t-else="">Display</t></span><span class="sv">6.6″ LTPO OLED · 2760×1256 · 460ppi · 1–120Hz</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الأبعاد/الوزن</t><t t-else="">Size / weight</t></span><span class="sv">157.8 × 74.5 × 8.2 mm · ≈213.5 g</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الكاميرا الخلفية</t><t t-else="">Rear camera</t></span><span class="sv">50MP (F1.4–4.0,OIS) + 12.5MP UW (F2.2) + 50MP macro tele (F2.1,OIS,5cm)</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الزوم</t><t t-else="">Zoom</t></span><span class="sv">4× optical · 100× digital</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الأمامية</t><t t-else="">Front</t></span><span class="sv">13 MP · F2.0 · AF</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">البطارية/الشحن</t><t t-else="">Battery / charge</t></span><span class="sv">6000 mAh · 66W wired · 50W wireless</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">الذاكرة</t><t t-else="">Memory</t></span><span class="sv">12GB RAM · 256/512GB</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">المتانة/الزجاج</t><t t-else="">Durability</t></span><span class="sv">IP68/IP69 · Kunlun Glass</span></div>
-              <div class="srow"><span class="sl"><t t-if="is_ar">النظام/الاتصال</t><t t-else="">OS / connectivity</t></span><span class="sv">EMUI 16 · 5G · Wi-Fi 7 · BT 6.0 · NFC · USB-C</span></div>
+            <div class="sg"><h3>HUAWEI Pura 90 Pro</h3>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الشاشة</t><t t-else="">Display</t></span><span class="sv">6.6″ LTPO OLED · 2760×1256 · 460ppi · 1–120Hz · 300Hz touch · 1.07B colours</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الأبعاد/الوزن</t><t t-else="">Size / weight</t></span><span class="sv">157.8 × 74.5 × 8.2 mm · ≈213.5 g</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الكاميرا الرئيسية</t><t t-else="">Main camera</t></span><span class="sv">50 MP · F1.4–F4.0 · OIS</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">فائقة الاتساع</t><t t-else="">Ultra-wide</t></span><span class="sv">12.5 MP · F2.2</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">تليفوتو</t><t t-else="">Telephoto</t></span><span class="sv">50 MP macro · F2.1 · OIS · 5cm · 4× optical · 100× digital</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الأمامية</t><t t-else="">Front</t></span><span class="sv">13 MP · F2.0 · AF</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الفيديو</t><t t-else="">Video</t></span><span class="sv">4K · 3840×2160</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">البطارية/الشحن</t><t t-else="">Battery / charge</t></span><span class="sv">6000 mAh · 66W wired · 50W wireless</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الذاكرة</t><t t-else="">Memory</t></span><span class="sv">12GB RAM · 256/512GB</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">المتانة/الزجاج</t><t t-else="">Durability</t></span><span class="sv">IP68/IP69 · Kunlun Glass</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">النظام</t><t t-else="">OS</t></span><span class="sv">EMUI 16.0 · Celia AI</span></div>
+              <div class="sr"><span class="sl"><t t-if="is_ar">الاتصال</t><t t-else="">Connectivity</t></span><span class="sv">5G · Wi-Fi 7 · BT 6.0 · NFC · USB-C</span></div>
             </div>
           </div>
         </div></section>
@@ -183,19 +300,19 @@
         <section class="sec" style="padding-top:0"><div class="w">
           <p class="eyebrow"><t t-if="is_ar">أيّهما يناسبك؟</t><t t-else="">Which one is yours?</t></p>
           <h2><t t-if="is_ar">برو مقابل برو ماكس</t><t t-else="">Pro vs Pro Max</t></h2>
-          <div class="compare">
-            <div class="crow head"><div class="rl"></div><div class="cv">Pura 90 Pro</div><div class="cv mx">Pura 90 Pro Max</div></div>
-            <div class="crow"><div class="rl"><t t-if="is_ar">الشاشة</t><t t-else="">Display</t></div><div class="cv">6.6″ OLED 120Hz</div><div class="cv">6.9″ OLED 120Hz</div></div>
-            <div class="crow"><div class="rl"><t t-if="is_ar">التليفوتو</t><t t-else="">Telephoto</t></div><div class="cv"><t t-if="is_ar">ماكرو 50MP (5سم)</t><t t-else="">50MP macro (5cm)</t></div><div class="cv"><t t-if="is_ar">فائق 200MP · زوم 100×</t><t t-else="">200MP · 100× zoom</t></div></div>
-            <div class="crow"><div class="rl"><t t-if="is_ar">الشحن السلكي</t><t t-else="">Wired charge</t></div><div class="cv">66 W</div><div class="cv">100 W</div></div>
-            <div class="crow"><div class="rl"><t t-if="is_ar">الشحن اللاسلكي</t><t t-else="">Wireless</t></div><div class="cv">50 W</div><div class="cv">80 W</div></div>
-            <div class="crow"><div class="rl"><t t-if="is_ar">الزجاج</t><t t-else="">Glass</t></div><div class="cv">Kunlun</div><div class="cv"><t t-if="is_ar">Kunlun مضاد للانعكاس</t><t t-else="">Anti-reflection Kunlun</t></div></div>
-            <div class="crow"><div class="rl"><t t-if="is_ar">السعر على Uellow</t><t t-else="">Price at Uellow</t></div><div class="cv">245.000 <t t-if="is_ar">د.ك</t><t t-else="">KWD</t></div><div class="cv">345.000 <t t-if="is_ar">د.ك</t><t t-else="">KWD</t></div></div>
+          <div class="cmp">
+            <div class="cr head"><div class="rl"></div><div class="cv">Pura 90 Pro</div><div class="cv mx">Pura 90 Pro Max</div></div>
+            <div class="cr"><div class="rl"><t t-if="is_ar">الشاشة</t><t t-else="">Display</t></div><div class="cv">6.6″ OLED 120Hz</div><div class="cv">6.9″ OLED 120Hz</div></div>
+            <div class="cr"><div class="rl"><t t-if="is_ar">التليفوتو</t><t t-else="">Telephoto</t></div><div class="cv"><t t-if="is_ar">ماكرو 50MP (5سم)</t><t t-else="">50MP macro (5cm)</t></div><div class="cv"><t t-if="is_ar">200MP · زوم 100×</t><t t-else="">200MP · 100× zoom</t></div></div>
+            <div class="cr"><div class="rl"><t t-if="is_ar">فائقة الاتساع</t><t t-else="">Ultra-wide</t></div><div class="cv">12.5MP</div><div class="cv">40MP</div></div>
+            <div class="cr"><div class="rl"><t t-if="is_ar">الشحن السلكي</t><t t-else="">Wired charge</t></div><div class="cv">66 W</div><div class="cv">100 W</div></div>
+            <div class="cr"><div class="rl"><t t-if="is_ar">الشحن اللاسلكي</t><t t-else="">Wireless</t></div><div class="cv">50 W</div><div class="cv">80 W</div></div>
+            <div class="cr"><div class="rl"><t t-if="is_ar">السعر</t><t t-else="">Price</t></div><div class="cv">245.000 <t t-if="is_ar">د.ك</t><t t-else="">KWD</t></div><div class="cv">345.000 <t t-if="is_ar">د.ك</t><t t-else="">KWD</t></div></div>
           </div>
         </div></section>
 
         <!-- TALY -->
-        <section class="taly-sec"><div class="w sec"><div class="taly-grid">
+        <section class="taly"><div class="w sec"><div class="g">
           <div>
             <p class="eyebrow"><t t-if="is_ar">اشترِ بالتقسيط</t><t t-else="">Pay in installments</t></p>
             <h2><t t-if="is_ar">قسّمها على 4 دفعات مع Taly.</t><t t-else="">Split it into 4 with Taly.</t></h2>
@@ -210,30 +327,28 @@
             </ol>
           </div>
           <div>
-            <p class="eyebrow"><t t-if="is_ar">مثال — Pura 90 Pro Max بـ 345 د.ك</t><t t-else="">Example — Pura 90 Pro Max at 345 KWD</t></p>
-            <div class="split" style="margin-top:14px">
+            <p class="eyebrow"><t t-if="is_ar">مثال — 345 د.ك</t><t t-else="">Example — 345 KWD</t></p>
+            <div class="split">
               <div class="pay first"><div class="n"><t t-if="is_ar">دفعة 1</t><t t-else="">Payment 1</t></div><div class="amt">86.250</div><div class="when"><t t-if="is_ar">اليوم</t><t t-else="">Today</t></div></div>
-              <div class="pay"><div class="n"><t t-if="is_ar">دفعة 2</t><t t-else="">Payment 2</t></div><div class="amt">86.250</div><div class="when"><t t-if="is_ar">بعد شهر</t><t t-else="">Month 1</t></div></div>
-              <div class="pay"><div class="n"><t t-if="is_ar">دفعة 3</t><t t-else="">Payment 3</t></div><div class="amt">86.250</div><div class="when"><t t-if="is_ar">بعد شهرين</t><t t-else="">Month 2</t></div></div>
-              <div class="pay"><div class="n"><t t-if="is_ar">دفعة 4</t><t t-else="">Payment 4</t></div><div class="amt">86.250</div><div class="when"><t t-if="is_ar">بعد 3 أشهر</t><t t-else="">Month 3</t></div></div>
+              <div class="pay"><div class="n"><t t-if="is_ar">دفعة 2</t><t t-else="">Payment 2</t></div><div class="amt">86.250</div><div class="when"><t t-if="is_ar">شهر 1</t><t t-else="">Month 1</t></div></div>
+              <div class="pay"><div class="n"><t t-if="is_ar">دفعة 3</t><t t-else="">Payment 3</t></div><div class="amt">86.250</div><div class="when"><t t-if="is_ar">شهر 2</t><t t-else="">Month 2</t></div></div>
+              <div class="pay"><div class="n"><t t-if="is_ar">دفعة 4</t><t t-else="">Payment 4</t></div><div class="amt">86.250</div><div class="when"><t t-if="is_ar">شهر 3</t><t t-else="">Month 3</t></div></div>
             </div>
-            <div style="margin-top:22px">
-              <div style="font-size:13px;font-weight:800;margin-bottom:8px"><t t-if="is_ar">حمّل تطبيق Taly</t><t t-else="">Get the Taly app</t></div>
-              <div class="stores">
-                <a class="store" href="https://apps.apple.com/kw/app/taly-split-your-payments/id6467709774" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.8 12.6c0 2.7 2.3 3.6 2.4 3.6-.02.06-.37 1.3-1.2 2.5-.73 1.1-1.5 2.1-2.7 2.1-1.16.02-1.55-.68-2.9-.68-1.34 0-1.77.66-2.88.7-1.15.05-2.03-1.16-2.77-2.24C4.3 18.1 3.2 14.1 4.8 11.4c.78-1.35 2.2-2.2 3.72-2.23 1.13-.02 2.2.76 2.9.76.68 0 1.98-.94 3.34-.8.57.02 2.17.23 3.2 1.73-.08.05-1.9 1.12-1.9 3.34M13.6 7.2c.62-.75 1.04-1.8.93-2.85-.9.04-1.98.6-2.62 1.35-.57.66-1.07 1.72-.94 2.74 1 .08 2.02-.5 2.63-1.24z"/></svg><span class="tx"><small><t t-if="is_ar">حمّل من</t><t t-else="">Download on the</t></small><b>App Store</b></span></a>
-                <a class="store" href="https://play.google.com/store/apps/details?id=io.taly.consumer" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3l14 9-14 9z"/></svg><span class="tx"><small><t t-if="is_ar">احصل عليه من</t><t t-else="">Get it on</t></small><b>Google Play</b></span></a>
-              </div>
-              <div style="font-size:13px;font-weight:800;margin:16px 0 8px"><t t-if="is_ar">Ci-Net — ائتمان البنك المركزي</t><t t-else="">Ci-Net — Central Bank credit</t></div>
-              <div class="stores">
-                <a class="store" href="https://apps.apple.com/kw/app/cinet-kuwait/id1542150777" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.8 12.6c0 2.7 2.3 3.6 2.4 3.6-.02.06-.37 1.3-1.2 2.5-.73 1.1-1.5 2.1-2.7 2.1-1.16.02-1.55-.68-2.9-.68-1.34 0-1.77.66-2.88.7-1.15.05-2.03-1.16-2.77-2.24C4.3 18.1 3.2 14.1 4.8 11.4c.78-1.35 2.2-2.2 3.72-2.23 1.13-.02 2.2.76 2.9.76.68 0 1.98-.94 3.34-.8.57.02 2.17.23 3.2 1.73-.08.05-1.9 1.12-1.9 3.34"/></svg><span class="tx"><small><t t-if="is_ar">حمّل من</t><t t-else="">Download on the</t></small><b>App Store</b></span></a>
-                <a class="store" href="https://www.cinet.com.kw/en/qr-download/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3l14 9-14 9z"/></svg><span class="tx"><small><t t-if="is_ar">احصل عليه من</t><t t-else="">Get it on</t></small><b>Google Play</b></span></a>
-              </div>
+            <div style="margin-top:22px;font-size:13px;font-weight:800"><t t-if="is_ar">حمّل تطبيق Taly</t><t t-else="">Get the Taly app</t></div>
+            <div class="stores">
+              <a class="store" href="https://apps.apple.com/kw/app/taly-split-your-payments/id6467709774" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.8 12.6c0 2.7 2.3 3.6 2.4 3.6-.02.06-.37 1.3-1.2 2.5-.73 1.1-1.5 2.1-2.7 2.1-1.16.02-1.55-.68-2.9-.68-1.34 0-1.77.66-2.88.7-1.15.05-2.03-1.16-2.77-2.24C4.3 18.1 3.2 14.1 4.8 11.4c.78-1.35 2.2-2.2 3.72-2.23 1.13-.02 2.2.76 2.9.76.68 0 1.98-.94 3.34-.8.57.02 2.17.23 3.2 1.73-.08.05-1.9 1.12-1.9 3.34M13.6 7.2c.62-.75 1.04-1.8.93-2.85-.9.04-1.98.6-2.62 1.35-.57.66-1.07 1.72-.94 2.74 1 .08 2.02-.5 2.63-1.24z"/></svg><span class="tx"><small><t t-if="is_ar">حمّل من</t><t t-else="">Download on the</t></small><b>App Store</b></span></a>
+              <a class="store" href="https://play.google.com/store/apps/details?id=io.taly.consumer" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3l14 9-14 9z"/></svg><span class="tx"><small><t t-if="is_ar">احصل عليه من</t><t t-else="">Get it on</t></small><b>Google Play</b></span></a>
             </div>
-            <p class="note"><t t-if="is_ar">التقسيط خاضع لموافقة Taly ولوائح بنك الكويت المركزي. يتحقّق Ci-Net من أهليتك الائتمانية.</t><t t-else="">Installments subject to Taly approval and Central Bank of Kuwait regulations. Ci-Net verifies your credit eligibility.</t></p>
+            <div style="margin-top:14px;font-size:13px;font-weight:800"><t t-if="is_ar">Ci-Net — البنك المركزي</t><t t-else="">Ci-Net — Central Bank</t></div>
+            <div class="stores">
+              <a class="store" href="https://apps.apple.com/kw/app/cinet-kuwait/id1542150777" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.8 12.6c0 2.7 2.3 3.6 2.4 3.6-.02.06-.37 1.3-1.2 2.5-.73 1.1-1.5 2.1-2.7 2.1-1.16.02-1.55-.68-2.9-.68-1.34 0-1.77.66-2.88.7-1.15.05-2.03-1.16-2.77-2.24C4.3 18.1 3.2 14.1 4.8 11.4c.78-1.35 2.2-2.2 3.72-2.23"/></svg><span class="tx"><small><t t-if="is_ar">حمّل من</t><t t-else="">Download on the</t></small><b>App Store</b></span></a>
+              <a class="store" href="https://www.cinet.com.kw/en/qr-download/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 3l14 9-14 9z"/></svg><span class="tx"><small><t t-if="is_ar">احصل عليه من</t><t t-else="">Get it on</t></small><b>Google Play</b></span></a>
+            </div>
+            <p class="note"><t t-if="is_ar">التقسيط خاضع لموافقة Taly ولوائح بنك الكويت المركزي.</t><t t-else="">Installments subject to Taly approval and Central Bank of Kuwait regulations.</t></p>
           </div>
         </div></div></section>
 
-        <!-- JSON-LD structured data (real prices, in stock) -->
+        <!-- JSON-LD -->
         <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"ItemList","itemListElement":[
 {"@type":"ListItem","position":1,"item":{"@type":"Product","name":"HUAWEI Pura 90 Pro Max Dual SIM 16GB+512GB","brand":{"@type":"Brand","name":"HUAWEI"},"image":"https://www.uellow.com/web/image/product.template/16673/image_1920","description":"200 MP telephoto, 100x zoom, 6000 mAh, 100 W SuperCharge, EMUI 16.","offers":{"@type":"Offer","priceCurrency":"KWD","price":"345.000","availability":"https://schema.org/InStock","url":"https://www.uellow.com/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"}}},
@@ -241,11 +356,11 @@
 ]}
         </script>
 
-        <!-- sticky CTA bar -->
-        <div class="pura-sticky">
+        <!-- sticky CTA -->
+        <div class="p-sticky">
           <span class="lbl">HUAWEI Pura 90</span>
-          <a class="btn gold" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">برو ماكس · 345</t><t t-else="">Pro Max · 345</t></a>
-          <a class="btn ghost" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">برو · 245</t><t t-else="">Pro · 245</t></a>
+          <a class="btn o" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">برو ماكس · 345</t><t t-else="">Pro Max · 345</t></a>
+          <a class="btn s" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">برو · 245</t><t t-else="">Pro · 245</t></a>
         </div>
 
       </div>
