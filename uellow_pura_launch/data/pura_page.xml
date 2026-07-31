@@ -224,7 +224,7 @@
                 <t t-else="">Anti-reflection Kunlun Glass cuts glare by 70% and boosts scratch resistance 16×. A 6000 mAh battery with 100 W wired and 80 W wireless charging, and IP68/IP69 water &amp; dust resistance.</t></p>
               <div class="mini"><span><b>6000</b>mAh</span><span><b>100W</b> <t t-if="is_ar">سلكي</t><t t-else="">wired</t></span><span><b>80W</b> <t t-if="is_ar">لاسلكي</t><t t-else="">wireless</t></span><span>IP68/IP69</span><span>Kunlun Glass</span></div>
             </div>
-            <div class="media"><img src="/web/image/product.image/56154/image_1024/huawei-pura-90s-pro-max-1.webp" alt="HUAWEI Pura 90 Pro Max design" loading="lazy"/></div>
+            <div class="media"><img src="/uellow_pura_launch/static/src/img/pura-glass.webp" alt="HUAWEI Pura 90 Pro Max Kunlun Glass" loading="lazy"/></div>
           </div>
         </div></section>
 
