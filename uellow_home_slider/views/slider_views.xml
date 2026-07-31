@@ -61,9 +61,71 @@
                             </group>
                         </page>
 
-                        <page string="بنرات عربي" name="banners_ar">
+                        <page string="التصميم والتحكم (ديسك توب)" name="design">
                             <div class="alert alert-info" role="alert">
-                                تظهر هذه البنرات في العمود الجانبي الأيمن عند اللغة العربية.
+                                هذه الإعدادات تتحكّم في شكل السلايدر على <strong>الديسك توب</strong> (تصميم Gradient Spotlight + منيو الأقسام).
+                                <br/>شكل <strong>الموبايل يبقى كما هو</strong> ولا يتأثر بهذه الخيارات.
+                            </div>
+                            <group>
+                                <group string="منيو الأقسام">
+                                    <field name="show_menu"/>
+                                    <field name="menu_title_ar" invisible="not show_menu"/>
+                                    <field name="menu_title_en" invisible="not show_menu"/>
+                                    <field name="menu_footer_ar" invisible="not show_menu"/>
+                                    <field name="menu_footer_en" invisible="not show_menu"/>
+                                    <field name="menu_footer_url" invisible="not show_menu"/>
+                                </group>
+                                <group string="عناصر التحكّم">
+                                    <field name="show_features"/>
+                                    <field name="show_overlay_text"/>
+                                    <field name="show_arrows"/>
+                                    <field name="show_dots"/>
+                                    <field name="autoplay"/>
+                                    <field name="autoplay_speed" invisible="not autoplay"/>
+                                </group>
+                            </group>
+                            <group string="زر الشراء">
+                                <group>
+                                    <field name="cta_label_ar"/>
+                                    <field name="cta_label_en"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="منيو الأقسام" name="dept_menu">
+                            <div class="alert alert-info" role="alert">
+                                أضف أو احذف أقسام المنيو الجانبي. الترتيب بالسحب، وكل قسم له اسم بالعربي والإنجليزي، أيقونة، ورابط.
+                            </div>
+                            <field name="menu_ids">
+                                <list editable="bottom" decoration-muted="not active">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name_ar"/>
+                                    <field name="name_en"/>
+                                    <field name="icon"/>
+                                    <field name="url"/>
+                                    <field name="active"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="المزايا" name="features">
+                            <div class="alert alert-info" role="alert">
+                                شريط المزايا أسفل الهيرو (توصيل مجاني / الدفع عند الاستلام / دفع آمن...). أضف أو احذف أي ميزة.
+                            </div>
+                            <field name="feature_ids">
+                                <list editable="bottom" decoration-muted="not active">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name_ar"/>
+                                    <field name="name_en"/>
+                                    <field name="icon"/>
+                                    <field name="active"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="بنرات عربي (قديم)" name="banners_ar">
+                            <div class="alert alert-warning" role="alert">
+                                هذه البنرات كانت للتصميم القديم. تصميم الديسك توب الجديد لا يستخدمها، وتبقى هنا للرجوع فقط.
                             </div>
                             <group>
                                 <group string="البنر الأول">
@@ -81,9 +143,9 @@
                             </group>
                         </page>
 
-                        <page string="English Banners" name="banners_en">
-                            <div class="alert alert-info" role="alert">
-                                These banners appear in the right column when language is English.
+                        <page string="English Banners (old)" name="banners_en">
+                            <div class="alert alert-warning" role="alert">
+                                Legacy banners for the old design; the new desktop layout does not use them.
                             </div>
                             <group>
                                 <group string="Banner 1">
@@ -141,6 +203,7 @@
                                     <group string="نص فوق الصورة (Overlay)">
                                         <field name="show_overlay"/>
                                         <group invisible="not show_overlay">
+                                            <field name="overlay_kicker"/>
                                             <field name="overlay_title"/>
                                             <field name="overlay_sub"/>
                                             <field name="overlay_btn"/>

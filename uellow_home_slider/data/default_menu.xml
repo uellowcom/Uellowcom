@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ===== منيو الأقسام الافتراضي (قابل للإضافة/الحذف من الباك ايند) ===== -->
+        <record id="dept_mobile" model="uellow.home.slider.dept">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">10</field>
+            <field name="name_ar">الجوّالات واللوحيات</field>
+            <field name="name_en">Mobile &amp; Tablets</field>
+            <field name="icon">phone</field>
+            <field name="url">/shop</field>
+        </record>
+        <record id="dept_electronics" model="uellow.home.slider.dept">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">20</field>
+            <field name="name_ar">إلكترونيات</field>
+            <field name="name_en">Electronics</field>
+            <field name="icon">bolt</field>
+            <field name="url">/shop</field>
+        </record>
+        <record id="dept_computer" model="uellow.home.slider.dept">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">30</field>
+            <field name="name_ar">كمبيوتر ولابتوب</field>
+            <field name="name_en">Computer &amp; Laptop</field>
+            <field name="icon">laptop</field>
+            <field name="url">/shop</field>
+        </record>
+        <record id="dept_watches" model="uellow.home.slider.dept">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">40</field>
+            <field name="name_ar">ساعات</field>
+            <field name="name_en">Watches</field>
+            <field name="icon">watch</field>
+            <field name="url">/shop</field>
+        </record>
+        <record id="dept_fragrances" model="uellow.home.slider.dept">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">50</field>
+            <field name="name_ar">عطور</field>
+            <field name="name_en">Fragrances</field>
+            <field name="icon">drop</field>
+            <field name="url">/shop</field>
+        </record>
+        <record id="dept_home" model="uellow.home.slider.dept">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">60</field>
+            <field name="name_ar">المنزل</field>
+            <field name="name_en">Home</field>
+            <field name="icon">home</field>
+            <field name="url">/shop</field>
+        </record>
+        <record id="dept_baby" model="uellow.home.slider.dept">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">70</field>
+            <field name="name_ar">الأم والطفل</field>
+            <field name="name_en">Mother &amp; Baby</field>
+            <field name="icon">baby</field>
+            <field name="url">/shop</field>
+        </record>
+        <record id="dept_health" model="uellow.home.slider.dept">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">80</field>
+            <field name="name_ar">العناية الصحية</field>
+            <field name="name_en">Health Care</field>
+            <field name="icon">heart</field>
+            <field name="url">/shop</field>
+        </record>
+        <record id="dept_fashion" model="uellow.home.slider.dept">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">90</field>
+            <field name="name_ar">أزياء رجالية</field>
+            <field name="name_en">Men's Fashion</field>
+            <field name="icon">shirt</field>
+            <field name="url">/shop</field>
+        </record>
+
+        <!-- ===== المزايا الافتراضية ===== -->
+        <record id="feat_delivery" model="uellow.home.slider.feature">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">10</field>
+            <field name="name_ar">توصيل مجاني</field>
+            <field name="name_en">Free delivery</field>
+            <field name="icon">truck</field>
+        </record>
+        <record id="feat_cod" model="uellow.home.slider.feature">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">20</field>
+            <field name="name_ar">الدفع عند الاستلام</field>
+            <field name="name_en">Cash on delivery</field>
+            <field name="icon">cash</field>
+        </record>
+        <record id="feat_secure" model="uellow.home.slider.feature">
+            <field name="slider_id" ref="default_slider"/>
+            <field name="sequence">30</field>
+            <field name="name_ar">دفع آمن</field>
+            <field name="name_en">Secure checkout</field>
+            <field name="icon">lock</field>
+        </record>
+
+    </data>
+</odoo>

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Uellow Home Slider',
-    'version': '18.0.1.0.0',
+    'version': '18.0.2.0.0',
     'category': 'Website',
     'summary': 'سلايدر الصفحة الرئيسية - يدعم العربية والإنجليزية والموبايل',
     'author': 'Uellow',
@@ -12,6 +12,7 @@
         'views/slider_views.xml',
         'views/snippets/snippet.xml',
         'data/default_data.xml',
+        'data/default_menu.xml',
     ],
     'assets': {
         'web.assets_frontend': [

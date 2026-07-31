@@ -1,6 +1,37 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api
 
+# Icon keys must match the SVG set defined in static/src/js/slider.js
+ICON_SELECTION = [
+    ('phone', 'هاتف · Phone'),
+    ('mobile', 'جوّال · Mobile'),
+    ('tablet', 'لوحي · Tablet'),
+    ('bolt', 'إلكترونيات · Electronics'),
+    ('laptop', 'لابتوب · Laptop'),
+    ('tv', 'تلفزيون · TV'),
+    ('watch', 'ساعة · Watch'),
+    ('drop', 'عطر · Fragrance'),
+    ('home', 'منزل · Home'),
+    ('baby', 'طفل · Baby'),
+    ('heart', 'صحة · Health'),
+    ('shirt', 'أزياء · Fashion'),
+    ('gem', 'مجوهرات · Jewellery'),
+    ('camera', 'كاميرا · Camera'),
+    ('headphones', 'سماعات · Audio'),
+    ('game', 'ألعاب · Gaming'),
+    ('car', 'سيارات · Automotive'),
+    ('dumbbell', 'رياضة · Sports'),
+    ('tools', 'أدوات · Tools'),
+    ('shield', 'أمن · Security'),
+    ('tag', 'وسم · Tag'),
+    ('gift', 'هدية · Gift'),
+    ('star', 'نجمة · Star'),
+    ('truck', 'شحن · Delivery'),
+    ('cash', 'نقد · Cash'),
+    ('lock', 'قفل · Secure'),
+    ('percent', 'خصم · Discount'),
+]
+
 
 class UellowHomeSlider(models.Model):
     _name = 'uellow.home.slider'
@@ -18,6 +49,22 @@ class UellowHomeSlider(models.Model):
     logo_image      = fields.Binary(string='صورة الشعار', attachment=True)
     logo_url        = fields.Char(string='رابط الشعار', default='/web/image/website/1/logo/Uellow?unique=13b1cfb')
 
+    # ===== v2 desktop controls (Gradient Spotlight + departments menu) =====
+    show_menu        = fields.Boolean(string='إظهار منيو الأقسام', default=True)
+    menu_title_ar    = fields.Char(string='عنوان المنيو [ع]', default='كل الأقسام')
+    menu_title_en    = fields.Char(string='Menu title [EN]', default='All Departments')
+    menu_footer_ar   = fields.Char(string='زر أسفل المنيو [ع]', default='كل الأقسام')
+    menu_footer_en   = fields.Char(string='Menu footer [EN]', default='All departments')
+    menu_footer_url  = fields.Char(string='رابط زر المنيو', default='/shop')
+    show_features    = fields.Boolean(string='إظهار المزايا', default=True)
+    show_overlay_text = fields.Boolean(string='إظهار نص الشرائح فوق الصورة', default=True)
+    show_arrows      = fields.Boolean(string='إظهار الأسهم', default=True)
+    show_dots        = fields.Boolean(string='إظهار النقاط', default=True)
+    autoplay         = fields.Boolean(string='تشغيل تلقائي', default=True)
+    autoplay_speed   = fields.Integer(string='سرعة التشغيل (ثانية)', default=5)
+    cta_label_ar     = fields.Char(string='نص زر الشراء [ع]', default='تسوّق الآن')
+    cta_label_en     = fields.Char(string='Shop button [EN]', default='Shop now')
+
     ar_banner1_image = fields.Binary(string='[عربي] بنر 1 - صورة', attachment=True)
     ar_banner1_url   = fields.Char(string='[عربي] بنر 1 - رابط', default='/ar/shop')
     ar_banner1_alt   = fields.Char(string='[عربي] بنر 1 - نص بديل', default='بنر 1')
@@ -32,8 +79,10 @@ class UellowHomeSlider(models.Model):
     en_banner2_url   = fields.Char(string='[EN] Banner 2 - URL', default='/en/shop')
     en_banner2_alt   = fields.Char(string='[EN] Banner 2 - Alt', default='Banner 2')
 
-    slide_ids   = fields.One2many('uellow.home.slide', 'slider_id', string='الشرائح')
-    slide_count = fields.Integer(string='عدد الشرائح', compute='_compute_slide_count')
+    slide_ids    = fields.One2many('uellow.home.slide', 'slider_id', string='الشرائح')
+    slide_count  = fields.Integer(string='عدد الشرائح', compute='_compute_slide_count')
+    menu_ids     = fields.One2many('uellow.home.slider.dept', 'slider_id', string='أقسام المنيو')
+    feature_ids  = fields.One2many('uellow.home.slider.feature', 'slider_id', string='المزايا')
 
     @api.depends('slide_ids')
     def _compute_slide_count(self):
@@ -71,6 +120,7 @@ class UellowHomeSlide(models.Model):
     link_url     = fields.Char(string='رابط الضغط', default='/shop')
     open_new_tab = fields.Boolean(string='فتح في تبويب جديد', default=False)
     show_overlay   = fields.Boolean(string='إظهار نص فوق الصورة', default=False)
+    overlay_kicker = fields.Char(string='وسم صغير (Kicker)')
     overlay_title  = fields.Char(string='العنوان')
     overlay_sub    = fields.Char(string='العنوان الفرعي')
     overlay_btn    = fields.Char(string='نص الزر')
@@ -87,3 +137,30 @@ class UellowHomeSlide(models.Model):
     def get_target(self):
         self.ensure_one()
         return '_blank' if self.open_new_tab else '_self'
+
+
+class UellowHomeSliderDept(models.Model):
+    _name = 'uellow.home.slider.dept'
+    _description = 'Uellow Slider Department Menu Item'
+    _order = 'sequence, id'
+
+    slider_id = fields.Many2one('uellow.home.slider', string='السلايدر', required=True, ondelete='cascade')
+    sequence  = fields.Integer(string='الترتيب', default=10)
+    active    = fields.Boolean(string='نشط', default=True)
+    name_ar   = fields.Char(string='الاسم [ع]', required=True)
+    name_en   = fields.Char(string='Name [EN]', required=True)
+    icon      = fields.Selection(ICON_SELECTION, string='الأيقونة', default='tag')
+    url       = fields.Char(string='الرابط', default='/shop')
+
+
+class UellowHomeSliderFeature(models.Model):
+    _name = 'uellow.home.slider.feature'
+    _description = 'Uellow Slider Feature Badge'
+    _order = 'sequence, id'
+
+    slider_id = fields.Many2one('uellow.home.slider', string='السلايدر', required=True, ondelete='cascade')
+    sequence  = fields.Integer(string='الترتيب', default=10)
+    active    = fields.Boolean(string='نشط', default=True)
+    name_ar   = fields.Char(string='النص [ع]', required=True)
+    name_en   = fields.Char(string='Text [EN]', required=True)
+    icon      = fields.Selection(ICON_SELECTION, string='الأيقونة', default='star')

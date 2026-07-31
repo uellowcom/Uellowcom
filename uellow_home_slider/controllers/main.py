@@ -40,7 +40,38 @@ class UellowHomeSliderController(http.Controller):
                 slides = slider.slide_ids.filtered(
                     lambda s: s.language == lang and s.device == 'desktop' and s.active
                 ).sorted('sequence')
-            return [{'src': s.get_src(), 'href': s.link_url or '/shop', 'alt': s.alt_text or '', 'target': s.get_target(), 'overlay': s.show_overlay, 'title': s.overlay_title or '', 'sub': s.overlay_sub or '', 'btn': s.overlay_btn or '', 'btn_url': s.overlay_btn_url or s.link_url or '/shop'} for s in slides]
+            return [{
+                'src': s.get_src(), 'href': s.link_url or '/shop', 'alt': s.alt_text or '',
+                'target': s.get_target(), 'overlay': s.show_overlay,
+                'kicker': s.overlay_kicker or '', 'title': s.overlay_title or '',
+                'sub': s.overlay_sub or '', 'btn': s.overlay_btn or '',
+                'btn_url': s.overlay_btn_url or s.link_url or '/shop',
+            } for s in slides]
+
+        # departments menu (add/remove controlled from the backend)
+        menu = []
+        if slider.show_menu:
+            for m in slider.menu_ids.filtered('active').sorted('sequence'):
+                menu.append({
+                    'label': (m.name_en if lang == 'en' else m.name_ar) or m.name_ar or m.name_en or '',
+                    'icon': m.icon or 'tag',
+                    'url': m.url or '/shop',
+                })
+
+        # feature badges (delivery / COD / secure ... — add/remove from backend)
+        features = []
+        if slider.show_features:
+            for f in slider.feature_ids.filtered('active').sorted('sequence'):
+                features.append({
+                    'label': (f.name_en if lang == 'en' else f.name_ar) or f.name_ar or f.name_en or '',
+                    'icon': f.icon or 'star',
+                })
+
+        # real number of top-level storefront categories (for the menu footer)
+        try:
+            menu_total = request.env['product.public.category'].sudo().search_count([('parent_id', '=', False)])
+        except Exception:
+            menu_total = len(menu)
 
         return request.make_json_response({
             'lang': lang,
@@ -53,4 +84,19 @@ class UellowHomeSliderController(http.Controller):
             'banners': banners,
             'desktop': get_slides('desktop'),
             'mobile': get_slides('mobile'),
+            # v2 config
+            'show_menu': slider.show_menu,
+            'show_features': slider.show_features,
+            'show_overlay_text': slider.show_overlay_text,
+            'show_arrows': slider.show_arrows,
+            'show_dots': slider.show_dots,
+            'autoplay': slider.autoplay,
+            'autoplay_speed': max(2, slider.autoplay_speed or 5),
+            'menu_title': slider.menu_title_en if lang == 'en' else slider.menu_title_ar,
+            'menu_footer': slider.menu_footer_en if lang == 'en' else slider.menu_footer_ar,
+            'menu_footer_url': slider.menu_footer_url or '/shop',
+            'menu_total': menu_total,
+            'cta_label': slider.cta_label_en if lang == 'en' else slider.cta_label_ar,
+            'menu': menu,
+            'features': features,
         })
