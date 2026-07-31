@@ -411,8 +411,8 @@
         <link rel="alternate" hreflang="en" href="https://www.uellow.com/huawei-pura-90"/>
         <link rel="alternate" hreflang="ar" href="https://www.uellow.com/ar/huawei-pura-90"/>
         <link rel="alternate" hreflang="x-default" href="https://www.uellow.com/huawei-pura-90"/>
-        <meta property="og:image:width" content="800"/>
-        <meta property="og:image:height" content="800"/>
+        <meta property="og:image:width" content="1200"/>
+        <meta property="og:image:height" content="630"/>
         <meta property="og:image:alt" content="HUAWEI Pura 90 Pro Max"/>
         <meta property="og:locale" content="en_US"/>
         <meta property="og:locale:alternate" content="ar_AR"/>
@@ -428,7 +428,7 @@
     <field name="website_published">True</field>
     <field name="website_meta_title">HUAWEI Pura 90 Pro Max &amp; Pro — Buy or Pay in 4 | Uellow Kuwait</field>
     <field name="website_meta_description">Buy the HUAWEI Pura 90 Pro Max (200MP · 100x zoom · 100W) and Pura 90 Pro in Kuwait — full specs, colours and prices. Pay in 4 with Taly, 0% interest.</field>
-    <field name="website_meta_og_img">/web/image/product.template/16673/image_1920</field>
+    <field name="website_meta_og_img">/uellow_pura_launch/static/src/img/pura-share.jpg</field>
   </record>
 
 </odoo>
