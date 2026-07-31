@@ -142,6 +142,8 @@ function applyData(section,data){
 
     buildDept(section,data);
     buildFeats(section,data);
+    var _scrim=section.querySelector('.uhs-spot-scrim');
+    if(_scrim){ var _ov=(data.overlay_opacity==null?100:data.overlay_opacity); _scrim.style.opacity=Math.max(0,Math.min(100,_ov))/100; }
 
     // coupon (v2 markup)
     var T={ar:{voucher:'كوبون',shop:'تسوّق الآن'},en:{voucher:'Coupon',shop:'Shop now'}};

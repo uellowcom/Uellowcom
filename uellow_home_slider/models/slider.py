@@ -62,6 +62,7 @@ class UellowHomeSlider(models.Model):
     show_dots        = fields.Boolean(string='إظهار النقاط', default=True)
     autoplay         = fields.Boolean(string='تشغيل تلقائي', default=True)
     autoplay_speed   = fields.Integer(string='سرعة التشغيل (ثانية)', default=5)
+    overlay_opacity  = fields.Integer(string='شدة التعتيم فوق الصورة (%)', default=100)
     cta_label_ar     = fields.Char(string='نص زر الشراء [ع]', default='تسوّق الآن')
     cta_label_en     = fields.Char(string='Shop button [EN]', default='Shop now')
 

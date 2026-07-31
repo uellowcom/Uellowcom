@@ -82,6 +82,7 @@
                                     <field name="show_dots"/>
                                     <field name="autoplay"/>
                                     <field name="autoplay_speed" invisible="not autoplay"/>
+                                    <field name="overlay_opacity" string="شدة التعتيم فوق الصورة %"/>
                                 </group>
                             </group>
                             <group string="زر الشراء">

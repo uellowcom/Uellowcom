@@ -92,6 +92,7 @@ class UellowHomeSliderController(http.Controller):
             'show_dots': slider.show_dots,
             'autoplay': slider.autoplay,
             'autoplay_speed': max(2, slider.autoplay_speed or 5),
+            'overlay_opacity': slider.overlay_opacity if slider.overlay_opacity is not None else 100,
             'menu_title': slider.menu_title_en if lang == 'en' else slider.menu_title_ar,
             'menu_footer': slider.menu_footer_en if lang == 'en' else slider.menu_footer_ar,
             'menu_footer_url': slider.menu_footer_url or '/shop',
