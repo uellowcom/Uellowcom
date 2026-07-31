@@ -432,9 +432,12 @@ class AdminLookups(http.Controller):
         q = (kw.get('q') or '').strip()
         Tmpl = request.env['product.template'].sudo()
         dom = [('is_published', '=', True), ('sale_ok', '=', True)]
-        # Isolation: World pages pick from the World (dropship) catalog only;
-        # every other site's picker excludes World products entirely.
-        if 'is_dropship' in Tmpl._fields:
+        # Isolation applies to the DEFAULT browse list only: World pages default
+        # to the World (dropship) catalog, other sites default to non-World.
+        # An explicit SEARCH must find ANY product the admin sells (e.g. to
+        # feature regular-catalog phones on a World page), so we drop the
+        # dropship split whenever a query is present.
+        if not q and 'is_dropship' in Tmpl._fields:
             dom.append(('is_dropship', '=', True) if _req_world(kw)
                        else ('is_dropship', '=', False))
         if q:
