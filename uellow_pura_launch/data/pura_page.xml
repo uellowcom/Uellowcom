@@ -25,19 +25,33 @@
           .pura .btn.s{background:var(--card);color:var(--sky2);border-color:var(--line)}
           .pura .btn.s:hover{border-color:var(--sky)}
 
-          /* hero */
-          .p-hero{position:relative;overflow:hidden}
-          .p-hero::before{content:"";position:absolute;inset:-30% -10% auto 40%;height:130%;
-            background:radial-gradient(45% 50% at 60% 30%,rgba(242,106,46,.20),transparent 70%),radial-gradient(45% 50% at 80% 60%,rgba(34,167,224,.20),transparent 70%);filter:blur(20px);pointer-events:none}
-          .p-hero .grid{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:center}
-          .p-hero h1{font-size:clamp(34px,6vw,64px);font-weight:800;letter-spacing:-.025em;line-height:1;margin:14px 0 0;text-wrap:balance}
+          /* hero slider (full-bleed, edge to edge) */
+          .p-hero{position:relative;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);overflow:hidden}
+          .ph-track{display:flex;direction:ltr;transition:transform .7s cubic-bezier(.7,0,.15,1)}
+          .ph-slide{min-width:100vw;min-height:clamp(460px,64vh,660px);display:flex;align-items:center;background:linear-gradient(120deg,var(--soft-o),var(--soft-s))}
+          .ph-slide.s2{background:linear-gradient(120deg,#FFE9DB,#DEF1FB)}
+          .ph-slide.s3{background:linear-gradient(120deg,#FCEAD9,#EAEFF4)}
+          .ph-slide.s4{background:linear-gradient(120deg,#E6F4FC,#FFEFE6)}
+          .ph-slide .inner{max-width:1180px;margin:0 auto;padding:44px 22px;width:100%;display:grid;grid-template-columns:1.05fr .95fr;gap:26px;align-items:center}
+          .ph-slide.center .inner{grid-template-columns:1fr;justify-items:center;text-align:center}
+          .p-hero h1{font-size:clamp(34px,6vw,60px);font-weight:800;letter-spacing:-.025em;line-height:1;margin:14px 0 0;text-wrap:balance}
+          .p-hero .lede{max-width:46ch}
           .p-hero .price-row{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px}
           .p-hero .pr b{font-size:26px;font-weight:800}.p-hero .pr span{display:block;font-size:12.5px;color:var(--muted);font-weight:600}
           .p-hero .cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
-          .p-hero .himg{position:relative;text-align:center}
-          .p-hero .himg::before{content:"";position:absolute;inset:6% 12%;border-radius:50%;
-            background:radial-gradient(circle,rgba(242,106,46,.16),rgba(34,167,224,.12) 55%,transparent 72%)}
-          .p-hero .himg img{position:relative;max-width:100%;max-height:520px;object-fit:contain;filter:drop-shadow(0 30px 50px rgba(20,40,60,.22))}
+          .ph-shot{position:relative;text-align:center}
+          .ph-shot::before{content:"";position:absolute;inset:2% 8%;border-radius:50%;
+            background:radial-gradient(circle,rgba(242,106,46,.20),rgba(34,167,224,.15) 52%,transparent 72%);filter:blur(8px)}
+          .ph-shot img{position:relative;max-width:100%;max-height:clamp(320px,52vh,560px);object-fit:contain;filter:drop-shadow(0 34px 50px rgba(20,40,60,.30))}
+          .ph-cap{margin-top:14px;font-size:15px;font-weight:800}
+          .ph-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:5;width:44px;height:44px;border-radius:50%;
+            background:rgba(255,255,255,.9);border:1px solid var(--line);display:grid;place-items:center;font-size:20px;color:var(--ink);cursor:pointer;box-shadow:0 8px 22px -12px rgba(0,0,0,.4)}
+          .ph-nav:hover{background:#fff}
+          .ph-nav.prev{inset-inline-start:18px}.ph-nav.next{inset-inline-end:18px}
+          .ph-dots{position:absolute;inset-block-end:18px;inset-inline:0;display:flex;gap:8px;justify-content:center;z-index:5}
+          .ph-dots button{width:9px;height:9px;border-radius:50%;background:rgba(20,40,60,.22);border:0;padding:0;cursor:pointer;transition:.2s}
+          .ph-dots button[aria-current="true"]{width:26px;border-radius:5px;background:var(--orange)}
+          .ph-prog{position:absolute;inset-block-start:0;inset-inline-start:0;height:3px;background:linear-gradient(90deg,var(--orange),var(--sky));z-index:5;width:0}
 
           /* stat band */
           .p-band{background:linear-gradient(115deg,var(--soft-o),var(--soft-s));border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -127,7 +141,8 @@
           .p-sticky .lbl{font-weight:800;font-size:13px;margin-inline-end:6px}
 
           @media (max-width:900px){
-            .p-hero .grid,.duo,.feat,.colors,.spec2,.taly .g{grid-template-columns:1fr}
+            .ph-slide .inner,.duo,.feat,.colors,.spec2,.taly .g{grid-template-columns:1fr}
+            .ph-slide{min-height:auto}.p-hero .cta-row{justify-content:flex-start}
             .feat.rev .txt{order:0}
             .p-band .g{grid-template-columns:repeat(2,1fr)}.p-stat:nth-child(3){border-inline-start:0}
             .gal{grid-template-columns:repeat(2,1fr)}.gal a.big{grid-column:span 2;grid-row:auto;aspect-ratio:16/10}
@@ -135,26 +150,47 @@
           }
         </style>
 
-        <!-- HERO -->
-        <section class="p-hero sec"><div class="w"><div class="grid">
-          <div>
-            <p class="eyebrow"><t t-if="is_ar">لحظتك الآن · حصريًا على Uellow</t><t t-else="">Now is Your Moment · exclusively at Uellow</t></p>
-            <h1><t t-if="is_ar">هواوي <span class="grad">بيورا 90</span> برو ماكس وبرو</t><t t-else="">HUAWEI <span class="grad">Pura 90</span> Pro Max &amp; Pro</t></h1>
-            <p class="lede"><t t-if="is_ar">تصوير احترافي بمستشعر تليفوتو 200 ميجابكسل وزوم 100×، شاشة OLED 120Hz، بطارية 6000 مللي أمبير وشحن فائق حتى 100 واط — بألوان تخطف العين. اشترِ الآن أو قسّط على 4 دفعات مع Taly.</t>
-              <t t-else="">Pro-grade photography with a 200 MP telephoto and 100× zoom, a 120 Hz OLED display, 6000 mAh battery and up to 100 W SuperCharge — in colours that turn heads. Buy now, or split into 4 with Taly.</t></p>
-            <div class="price-row">
-              <div class="pr"><b>345.000 <small style="font-size:13px;color:var(--muted)"><t t-if="is_ar">د.ك</t><t t-else="">KWD</t></small></b><span>Pura 90 Pro Max</span></div>
-              <div class="pr"><b>245.000 <small style="font-size:13px;color:var(--muted)"><t t-if="is_ar">د.ك</t><t t-else="">KWD</t></small></b><span>Pura 90 Pro</span></div>
-            </div>
-            <div class="cta-row">
-              <a class="btn o" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">اشترِ برو ماكس</t><t t-else="">Buy Pro Max</t></a>
-              <a class="btn s" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">اشترِ برو</t><t t-else="">Buy Pro</t></a>
-            </div>
+        <!-- HERO SLIDER (full-bleed) -->
+        <section class="p-hero">
+          <div class="ph-track" id="phTrack">
+            <div class="ph-slide s1"><div class="inner" t-att-dir="'rtl' if is_ar else 'ltr'">
+              <div>
+                <p class="eyebrow"><t t-if="is_ar">لحظتك الآن · حصريًا على Uellow</t><t t-else="">Now is Your Moment · exclusively at Uellow</t></p>
+                <h1><t t-if="is_ar">هواوي <span class="grad">بيورا 90</span> برو ماكس وبرو</t><t t-else="">HUAWEI <span class="grad">Pura 90</span> Pro Max &amp; Pro</t></h1>
+                <p class="lede"><t t-if="is_ar">تصوير احترافي بمستشعر تليفوتو 200 ميجابكسل وزوم 100×، شاشة OLED 120Hz، بطارية 6000 مللي أمبير وشحن فائق حتى 100 واط. اشترِ الآن أو قسّط على 4 دفعات مع Taly.</t>
+                  <t t-else="">Pro-grade photography with a 200 MP telephoto and 100× zoom, a 120 Hz OLED display, 6000 mAh battery and up to 100 W SuperCharge. Buy now, or split into 4 with Taly.</t></p>
+                <div class="price-row">
+                  <div class="pr"><b>345.000 <small style="font-size:13px;color:var(--muted)"><t t-if="is_ar">د.ك</t><t t-else="">KWD</t></small></b><span>Pura 90 Pro Max</span></div>
+                  <div class="pr"><b>245.000 <small style="font-size:13px;color:var(--muted)"><t t-if="is_ar">د.ك</t><t t-else="">KWD</t></small></b><span>Pura 90 Pro</span></div>
+                </div>
+                <div class="cta-row">
+                  <a class="btn o" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">اشترِ برو ماكس</t><t t-else="">Buy Pro Max</t></a>
+                  <a class="btn s" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">اشترِ برو</t><t t-else="">Buy Pro</t></a>
+                </div>
+              </div>
+              <div class="ph-shot"><img src="/web/image/product.image/56156/image_1024/huawei-pura-90s-pro-max.webp" alt="HUAWEI Pura 90 Pro Max" loading="eager" width="520" height="520"/></div>
+            </div></div>
+
+            <div class="ph-slide s2 center"><div class="inner">
+              <div class="ph-shot"><img src="/web/image/product.image/56154/image_1024/huawei-pura-90s-pro-max-1.webp" alt="HUAWEI Pura 90 Pro Max" loading="lazy" width="560" height="560"/></div>
+              <div class="ph-cap">HUAWEI Pura 90 Pro Max · <span class="grad">200MP</span></div>
+            </div></div>
+
+            <div class="ph-slide s3 center"><div class="inner">
+              <div class="ph-shot"><img src="/web/image/product.image/56168/image_1024/huawei-pura-90s-pro-max-3.webp" alt="HUAWEI Pura 90 Pro Max Orange" loading="lazy" width="560" height="560"/></div>
+              <div class="ph-cap">Pura 90 Pro Max · <t t-if="is_ar">محيط برتقالي</t><t t-else="">Orange Ocean</t></div>
+            </div></div>
+
+            <div class="ph-slide s4 center"><div class="inner">
+              <div class="ph-shot"><img src="/web/image/product.template/16674/image_1920" alt="HUAWEI Pura 90 Pro" loading="lazy" width="560" height="560"/></div>
+              <div class="ph-cap">HUAWEI Pura 90 Pro · <span class="grad">245.000 <t t-if="is_ar">د.ك</t><t t-else="">KWD</t></span></div>
+            </div></div>
           </div>
-          <div class="himg">
-            <img src="/web/image/product.image/56166/image_1024/Features-Web-01-%E6%8D%A2%E8%82%A4-%E6%A9%98%E5%AD%90%E6%B5%B7.webp" alt="HUAWEI Pura 90 Pro Max Orange Ocean" loading="eager" width="560" height="520"/>
-          </div>
-        </div></div></section>
+          <button class="ph-nav prev" id="phPrev" aria-label="Previous">‹</button>
+          <button class="ph-nav next" id="phNext" aria-label="Next">›</button>
+          <div class="ph-dots" id="phDots"></div>
+          <div class="ph-prog" id="phProg"></div>
+        </section>
 
         <!-- STAT BAND -->
         <section class="p-band"><div class="w g">
@@ -312,7 +348,7 @@
         </div></section>
 
         <!-- TALY -->
-        <section class="taly"><div class="w sec"><div class="g">
+        <section class="taly sec"><div class="w"><div class="g">
           <div>
             <p class="eyebrow"><t t-if="is_ar">اشترِ بالتقسيط</t><t t-else="">Pay in installments</t></p>
             <h2><t t-if="is_ar">قسّمها على 4 دفعات مع Taly.</t><t t-else="">Split it into 4 with Taly.</t></h2>
@@ -362,6 +398,40 @@
           <a class="btn o" href="/shop/huawei-pura-90-pro-max-dual-sim-16gb-512gb-phone-16673"><t t-if="is_ar">برو ماكس · 345</t><t t-else="">Pro Max · 345</t></a>
           <a class="btn s" href="/shop/huawei-pura-90-pro-256gb-phone-16674"><t t-if="is_ar">برو · 245</t><t t-else="">Pro · 245</t></a>
         </div>
+
+        <script>
+        (function(){
+          var track=document.getElementById('phTrack'); if(!track) return;
+          var n=track.children.length, i=0, raf=null, t0=0;
+          var dots=document.getElementById('phDots'), prog=document.getElementById('phProg');
+          var reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+          for(var k=0;k!==n;k++){ (function(k){
+            var b=document.createElement('button');
+            b.setAttribute('aria-label','Slide '+(k+1));
+            if(k===0) b.setAttribute('aria-current','true');
+            b.addEventListener('click',function(){ go(k); });
+            dots.appendChild(b);
+          })(k); }
+          var de=dots.children;
+          function layout(){
+            track.style.transform='translateX('+(-i*100)+'vw)';
+            for(var k=0;k!==n;k++){ de[k].setAttribute('aria-current', k===i?'true':'false'); }
+          }
+          function go(x){ i=(x+n)%n; layout(); restart(); }
+          function step(ts){ if(!t0)t0=ts; var p=Math.min(1,(ts-t0)/5000);
+            if(prog) prog.style.width=(p*100)+'%';
+            if(p===1){ t0=0; go(i+1); return; } raf=requestAnimationFrame(step); }
+          function restart(){ if(reduce)return; cancelAnimationFrame(raf); t0=0; if(prog)prog.style.width='0'; raf=requestAnimationFrame(step); }
+          function stop(){ cancelAnimationFrame(raf); }
+          var nx=document.getElementById('phNext'), pv=document.getElementById('phPrev');
+          if(nx) nx.addEventListener('click',function(){ go(i+1); });
+          if(pv) pv.addEventListener('click',function(){ go(i-1); });
+          var hero=track.parentElement;
+          hero.addEventListener('mouseenter',stop); hero.addEventListener('mouseleave',restart);
+          window.addEventListener('resize',layout);
+          layout(); restart();
+        })();
+        </script>
 
       </div>
     </t>
