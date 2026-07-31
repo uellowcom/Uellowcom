@@ -1753,6 +1753,25 @@ class MobileOrdersAPI(http.Controller):
                 order.sudo().write({'partner_id': ship.id,
                                     'partner_invoice_id': ship.id})
 
+        # ── COMPLETE-ADDRESS GUARD (2026-08-01) ─────────────────────────
+        # _uc_addr_complete_guard: the guest block above only forced an
+        # address for guests. Logged-in users whose account partner had just
+        # a name + email (no street/phone) could still confirm, so the order
+        # shipped with no delivery details — the reported "only name & email"
+        # bug. Require a real delivery address (street + a reachable phone,
+        # on the address or its parent account) for EVERY confirmation.
+        _ship = order.partner_shipping_id
+        _has_phone = bool(_ship and (_ship.phone or _ship.mobile or (
+            _ship.parent_id and (_ship.parent_id.phone or _ship.parent_id.mobile))))
+        if not (_ship and _ship.street and _has_phone):
+            return fail('ADDRESS_REQUIRED',
+                        'Add a complete delivery address (street + phone) first'
+                        ' / \u0623\u0636\u0641 \u0639\u0646\u0648\u0627\u0646 '
+                        '\u062a\u0648\u0635\u064a\u0644 \u0643\u0627\u0645\u0644 '
+                        '(\u0627\u0644\u0634\u0627\u0631\u0639 \u0648\u0631\u0642\u0645 '
+                        '\u0627\u0644\u0647\u0627\u062a\u0641) \u0623\u0648\u0644\u0627\u064b',
+                        400)
+
         pm = (p.get('payment_method') or '').lower()
         cod = pm == 'cod'
 
