@@ -1235,22 +1235,33 @@ def resolve_reels_strip(env, props, lang, block=None):
     jump into the full Reels feed."""
     Tmpl = env['product.template'].sudo()
     limit = int(props.get('limit') or 8)
-    base_dom = [('is_published', '=', True), ('active', '=', True)] + _site_dom(env)
-    # Cheap pre-filter when the cached flag exists
-    if 'has_product_video' in Tmpl._fields:
-        base_dom.append(('has_product_video', '=', True))
-    # v2.2.18 — sales_count is a NON-STORED compute: ordering by it in SQL
-    # raises ValueError, which killed this resolver and left the block
-    # EMPTY since day one. Fetch by recency, then rank by sales in Python.
-    candidates = Tmpl.search(base_dom, order='write_date desc', limit=limit * 4)
-    try:
-        candidates = candidates.sorted(key=lambda r: -(r.sales_count or 0))
-    except Exception:
-        pass
+    source = (props.get('source') or 'trending')
+    if source == 'manual' and props.get('product_ids'):
+        # v2.2.30 — hand-picked reels: show exactly these products' videos,
+        # in the admin-chosen order (browse preserves the id order).
+        try:
+            ids = [int(x) for x in props['product_ids']]
+        except Exception:
+            ids = []
+        candidates = Tmpl.browse(ids).exists()
+        limit = len(candidates) or limit
+    else:
+        base_dom = [('is_published', '=', True), ('active', '=', True)] + _site_dom(env)
+        # Cheap pre-filter when the cached flag exists
+        if 'has_product_video' in Tmpl._fields:
+            base_dom.append(('has_product_video', '=', True))
+        # v2.2.18 — sales_count is a NON-STORED compute: ordering by it in SQL
+        # raises ValueError, which killed this resolver and left the block
+        # EMPTY since day one. Fetch by recency, then rank by sales in Python.
+        candidates = Tmpl.search(base_dom, order='write_date desc', limit=limit * 4)
+        try:
+            candidates = candidates.sorted(key=lambda r: -(r.sales_count or 0))
+        except Exception:
+            pass
     items = []
     for p in candidates:
-        # Skip products that are out of stock and not "continue selling".
-        if not getattr(p, 'allow_out_of_stock_order', True):
+        # Skip out-of-stock (AUTO mode only; hand-picked reels always show).
+        if source != 'manual' and not getattr(p, 'allow_out_of_stock_order', True):
             storable = getattr(p, 'is_storable', None)
             if storable is None:
                 storable = (getattr(p, 'type', '') == 'product')

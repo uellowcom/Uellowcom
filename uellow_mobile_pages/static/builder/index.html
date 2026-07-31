@@ -1500,6 +1500,8 @@ const KIND_DEFAULTS = {
     show_title:true, title_gap:6, pad_y:8,
     titleEn:'🔥 Trending videos', titleAr:'🔥 الفيديوهات الرائجة',
     limit:8,
+    source:'trending',      // trending (auto) | manual (hand-picked)
+    product_ids:[], product_labels:[],
     style:'bubbles',        // bubbles | squares | cards | grid | carousel
     open:'dialog',          // dialog (play in-place) | screen (/reels)
     bubble_size:62,         // px diameter
@@ -3947,8 +3949,14 @@ function renderContent(b){
         ${addItemBtn('banners', 'Add banner')}`;
     }
     case 'reels-strip':
-      return `<p class="hint">Video thumbs from your trending products with videos. v2.2.19 — 5 display styles, and each video can open in a fullscreen DIALOG with the full Reels experience (player + product + like/share).</p>
+      return `<p class="hint">Show your trending product videos automatically, or hand-pick exactly which videos appear. 5 display styles; each opens in a fullscreen dialog with the full Reels experience.</p>
         ${mlField(b,'title','Section title')}
+        <div class="field"><label>Videos source</label>
+          ${sourceSelect(b,'source',[
+            ['trending','🔥 Trending videos (automatic)'],
+            ['manual','🎯 Hand-pick videos…'],
+          ], p.source||'trending')}</div>
+        ${(p.source==='manual') ? productsPickerBtn(b) + '<p class="hint" style="margin-top:4px">Only picked products that have a video will appear — one video per product, in this order.</p>' : ''}
         <div class="field"><label>Display style</label>
           ${sourceSelect(b,'style',[
             ['bubbles','⭕ Circles (story bubbles)'],
@@ -3962,8 +3970,8 @@ function renderContent(b){
             ['dialog','▶ Play in a dialog (full reel UI)'],
             ['screen','↗ Open the Reels screen (/reels)'],
           ], p.open||'dialog')}</div>
-        <div class="field"><label>Number of videos</label>
-          <input type="number" data-prop-num="limit" min="3" max="20" value="${p.limit||8}"/></div>
+        ${(p.source==='manual') ? '' : `<div class="field"><label>Number of videos</label>
+          <input type="number" data-prop-num="limit" min="3" max="20" value="${p.limit||8}"/></div>`}
         ${(p.style||'bubbles')==='bubbles'||p.style==='squares' ? `<div class="field"><label>Thumb size (px)</label>
           <input type="number" data-prop-num="bubble_size" min="40" max="120" value="${p.bubble_size||62}"/></div>` : ''}
         <div class="field"><label>Ring color</label>
