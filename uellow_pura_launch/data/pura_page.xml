@@ -177,7 +177,7 @@
           <div class="duo">
             <div class="pc">
               <div class="top"><span class="bdg"><t t-if="is_ar">الأقوى</t><t t-else="">FLAGSHIP</t></span>
-                <img src="/web/image/product.image/56156/image_1024/huawei-pura-90s-pro-max.webp" alt="HUAWEI Pura 90 Pro Max" loading="lazy" width="400" height="400"/></div>
+                <img src="/uellow_pura_launch/static/src/img/pura-1.png" alt="HUAWEI Pura 90 Pro Max" loading="lazy" width="440" height="440"/></div>
               <h3>HUAWEI Pura 90 Pro Max</h3>
               <div class="price">345.000 <small><t t-if="is_ar">د.ك</t><t t-else="">KWD</t></small></div>
               <div class="cols">
