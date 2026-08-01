@@ -94,8 +94,9 @@
           .uh-dept .ic img{width:100%;height:100%;object-fit:cover}.uh-dept .ic span{font-size:22px}
           .uh-dept .nm{font-size:11.5px;font-weight:700;text-align:center;line-height:1.25;
             display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-          /* category grid (browse categories) */
-          .uh-catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+          /* category rail (browse categories — single row) */
+          .uh-catrail{grid-auto-columns:calc((100% - 60px)/7)}
+          .uh-cat{scroll-snap-align:start}
           .uh-cat{display:flex;flex-direction:column;align-items:center;gap:9px;text-decoration:none;color:var(--ink);
             background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 10px;
             transition:transform .18s,box-shadow .18s,border-color .18s}
@@ -106,7 +107,8 @@
           .uh-cat-emo{font-size:30px}
           .uh-cat-nm{font-size:12.5px;font-weight:700;text-align:center;line-height:1.3;
             display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-          @media (max-width:480px){.uh-catgrid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}}
+          @media (max-width:1024px){.uh-catrail{grid-auto-columns:calc((100% - 50px)/5)}}
+          @media (max-width:640px){.uh-catrail{grid-auto-columns:calc((100% - 40px)/3.5)}}
           /* feature / trust bar */
           .uh-feats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
             background:linear-gradient(180deg,#fffdf6,#fff);border:1px solid var(--line);border-radius:16px;padding:16px}
@@ -272,11 +274,15 @@
               <div t-if="sec['show_title'] and sec['title']" class="uh-head">
                 <span class="uh-ttl"><t t-esc="sec['title']"/></span>
               </div>
-              <div class="uh-catgrid">
-                <a t-foreach="sec['cats']" t-as="c" t-att-href="c['url']" class="uh-cat">
-                  <span class="uh-cat-ph"><img t-if="c['image']" t-att-src="c['image']" t-att-alt="c['name']" loading="lazy" decoding="async" width="120" height="120"/><span t-else="" class="uh-cat-emo">🛍️</span></span>
-                  <span class="uh-cat-nm" t-esc="c['name']"/>
-                </a>
+              <div class="uh-slider">
+                <button type="button" class="uh-fnav prev" aria-label="Previous">‹</button>
+                <div class="uh-frail uh-catrail">
+                  <a t-foreach="sec['cats']" t-as="c" t-att-href="c['url']" class="uh-cat">
+                    <span class="uh-cat-ph"><img t-if="c['image']" t-att-src="c['image']" t-att-alt="c['name']" loading="lazy" decoding="async" width="120" height="120"/><span t-else="" class="uh-cat-emo">🛍️</span></span>
+                    <span class="uh-cat-nm" t-esc="c['name']"/>
+                  </a>
+                </div>
+                <button type="button" class="uh-fnav next" aria-label="Next">›</button>
               </div>
             </div>
           </section>
