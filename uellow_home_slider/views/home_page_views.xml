@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_uellow_home_page_form" model="ir.ui.view">
+        <field name="name">uellow.home.page.form</field>
+        <field name="model">uellow.home.page</field>
+        <field name="arch" type="xml">
+            <form string="الصفحة الرئيسية">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-th-list" type="object" name="action_open_preview">
+                            <field name="section_count" widget="statinfo" string="قسم"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="الرئيسية الحيّة" invisible="not is_live"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="الصفحة الرئيسية"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="active"/>
+                            <field name="is_live"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group string="SEO">
+                            <field name="meta_title_en"/>
+                            <field name="meta_title_ar"/>
+                            <field name="meta_description_en"/>
+                            <field name="meta_description_ar"/>
+                            <field name="og_image" widget="image" options="{'size':[300,158]}"/>
+                            <field name="og_image_url"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="أقسام الصفحة" name="sections">
+                            <div class="alert alert-info" role="alert">
+                                رتّب الأقسام بالسحب. كل قسم له نوع وإعداداته الخاصة. المعاينة على
+                                <strong>/home-preview</strong> قبل التبديل للرئيسية.
+                            </div>
+                            <field name="section_ids">
+                                <list editable="bottom" decoration-muted="not active">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="section_type"/>
+                                    <field name="title_ar" optional="show"/>
+                                    <field name="product_source" optional="show"/>
+                                    <field name="limit" optional="show"/>
+                                    <field name="active"/>
+                                </list>
+                                <form string="قسم">
+                                    <group>
+                                        <group string="أساسي">
+                                            <field name="name"/>
+                                            <field name="section_type"/>
+                                            <field name="active"/>
+                                            <field name="sequence"/>
+                                            <field name="bg_color" placeholder="#FFFFFF"/>
+                                            <field name="pad_y"/>
+                                        </group>
+                                        <group string="العنوان">
+                                            <field name="show_title"/>
+                                            <field name="title_en" invisible="not show_title"/>
+                                            <field name="title_ar" invisible="not show_title"/>
+                                            <field name="subtitle_en" invisible="not show_title"/>
+                                            <field name="subtitle_ar" invisible="not show_title"/>
+                                        </group>
+                                    </group>
+
+                                    <group string="السلايدر" invisible="section_type != 'hero_slider'">
+                                        <field name="slider_id"/>
+                                    </group>
+
+                                    <group string="المنتجات" invisible="section_type not in ('product_row','category_strip')">
+                                        <group>
+                                            <field name="product_source"/>
+                                            <field name="category_id" invisible="product_source != 'category'"/>
+                                            <field name="product_ids" widget="many2many_tags"
+                                                   invisible="product_source == 'category'"/>
+                                            <field name="limit"/>
+                                        </group>
+                                        <group>
+                                            <field name="style"/>
+                                            <field name="columns" invisible="style != 'grid'"/>
+                                        </group>
+                                    </group>
+
+                                    <group string="البانر" invisible="section_type != 'banner'">
+                                        <field name="image" widget="image" options="{'size':[600,300]}"/>
+                                        <field name="image_url"/>
+                                        <field name="image_url_ar"/>
+                                    </group>
+
+                                    <group string="HTML مخصّص" invisible="section_type != 'custom_html'">
+                                        <field name="html_en"/>
+                                        <field name="html_ar"/>
+                                    </group>
+
+                                    <group string="الرابط / زر الكل"
+                                           invisible="section_type in ('custom_html','hero_slider','new_user_bonus')">
+                                        <field name="show_link"/>
+                                        <field name="link_url" invisible="not show_link"/>
+                                        <field name="link_label_en" invisible="not show_link"/>
+                                        <field name="link_label_ar" invisible="not show_link"/>
+                                    </group>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_uellow_home_page_list" model="ir.ui.view">
+        <field name="name">uellow.home.page.list</field>
+        <field name="model">uellow.home.page</field>
+        <field name="arch" type="xml">
+            <list string="الصفحات" decoration-muted="not active" decoration-bf="is_live">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="section_count" string="الأقسام"/>
+                <field name="is_live"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_uellow_home_page" model="ir.actions.act_window">
+        <field name="name">Homepage Builder</field>
+        <field name="res_model">uellow.home.page</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">أنشئ الصفحة الرئيسية القابلة للتخصيص</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_uellow_home_page" name="Homepage Builder"
+              parent="menu_uellow_root" action="action_uellow_home_page" sequence="5"/>
+    <menuitem id="menu_uellow_home_page_conf" name="Uellow Homepage"
+              parent="website.menu_website_configuration" action="action_uellow_home_page" sequence="49"/>
+
+</odoo>

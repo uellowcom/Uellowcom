@@ -10,6 +10,7 @@
     'data': [
         'security/ir.model.access.csv',
         'views/slider_views.xml',
+        'views/home_page_views.xml',
         'views/snippets/snippet.xml',
         'data/default_data.xml',
         'data/default_menu.xml',

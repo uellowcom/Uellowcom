@@ -7,3 +7,7 @@ access_uellow_home_slider_dept_admin,uellow.home.slider.dept.admin,model_uellow_
 access_uellow_home_slider_dept_user,uellow.home.slider.dept.user,model_uellow_home_slider_dept,base.group_user,1,0,0,0
 access_uellow_home_slider_feature_admin,uellow.home.slider.feature.admin,model_uellow_home_slider_feature,base.group_system,1,1,1,1
 access_uellow_home_slider_feature_user,uellow.home.slider.feature.user,model_uellow_home_slider_feature,base.group_user,1,0,0,0
+access_uellow_home_page_admin,uellow.home.page.admin,model_uellow_home_page,base.group_system,1,1,1,1
+access_uellow_home_page_user,uellow.home.page.user,model_uellow_home_page,base.group_user,1,0,0,0
+access_uellow_home_section_admin,uellow.home.section.admin,model_uellow_home_section,base.group_system,1,1,1,1
+access_uellow_home_section_user,uellow.home.section.user,model_uellow_home_section,base.group_user,1,0,0,0
