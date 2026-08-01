@@ -5,12 +5,12 @@
         <field name="name">uellow.home.slider.list</field>
         <field name="model">uellow.home.slider</field>
         <field name="arch" type="xml">
-            <list string="السلايدرات" decoration-muted="not active">
+            <list string="Sliders" decoration-muted="not active">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="coupon_code"/>
                 <field name="coupon_discount"/>
-                <field name="slide_count" string="الشرائح"/>
+                <field name="slide_count" string="Slides"/>
                 <field name="active" column_invisible="1"/>
             </list>
         </field>
@@ -20,39 +20,39 @@
         <field name="name">uellow.home.slider.form</field>
         <field name="model">uellow.home.slider</field>
         <field name="arch" type="xml">
-            <form string="إعدادات السلايدر">
+            <form string="Slider settings">
                 <header>
                     <button name="action_view_slides" type="object"
-                            string="عرض الشرائح" class="btn-secondary"/>
+                            string="View slides" class="btn-secondary"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_slides" type="object"
                                 class="oe_stat_button" icon="fa-images">
-                            <field name="slide_count" widget="statinfo" string="شريحة"/>
+                            <field name="slide_count" widget="statinfo" string="Slides"/>
                         </button>
                     </div>
                     <div class="oe_title">
-                        <label for="name" string="اسم السلايدر"/>
-                        <h1><field name="name" placeholder="السلايدر الرئيسي"/></h1>
+                        <label for="name" string="Slider name"/>
+                        <h1><field name="name" placeholder="Main slider"/></h1>
                     </div>
                     <notebook>
 
-                        <page string="الإعدادات العامة" name="general">
+                        <page string="General" name="general">
                             <group>
-                                <group string="الشعار">
+                                <group string="Logo">
                                     <field name="logo_image" widget="image"
                                            options="{'size': [220,80], 'preview_image': 'logo_image'}"/>
-                                    <field name="logo_url" placeholder="رابط الشعار بديل"/>
+                                    <field name="logo_url" placeholder="Fallback logo URL"/>
                                 </group>
-                                <group string="إعدادات">
+                                <group string="Settings">
                                     <field name="sequence"/>
                                     <field name="active"/>
                                     <field name="signup_url"/>
                                     <field name="login_url"/>
                                 </group>
                             </group>
-                            <group string="الكوبون الترحيبي">
+                            <group string="Welcome coupon">
                                 <group>
                                     <field name="show_coupon"/>
                                     <field name="coupon_code" invisible="not show_coupon"/>
@@ -61,13 +61,13 @@
                             </group>
                         </page>
 
-                        <page string="التصميم والتحكم (ديسك توب)" name="design">
+                        <page string="Design &amp; controls (desktop)" name="design">
                             <div class="alert alert-info" role="alert">
-                                هذه الإعدادات تتحكّم في شكل السلايدر على <strong>الديسك توب</strong> (تصميم Gradient Spotlight + منيو الأقسام).
-                                <br/>شكل <strong>الموبايل يبقى كما هو</strong> ولا يتأثر بهذه الخيارات.
+                                These settings control the slider on <strong>desktop</strong> (spotlight design + departments menu).
+                                <br/>The <strong>mobile layout is unchanged</strong> and unaffected by these options.
                             </div>
                             <group>
-                                <group string="منيو الأقسام">
+                                <group string="Departments menu">
                                     <field name="show_menu"/>
                                     <field name="menu_title_ar" invisible="not show_menu"/>
                                     <field name="menu_title_en" invisible="not show_menu"/>
@@ -75,17 +75,17 @@
                                     <field name="menu_footer_en" invisible="not show_menu"/>
                                     <field name="menu_footer_url" invisible="not show_menu"/>
                                 </group>
-                                <group string="عناصر التحكّم">
+                                <group string="Controls">
                                     <field name="show_features"/>
                                     <field name="show_overlay_text"/>
                                     <field name="show_arrows"/>
                                     <field name="show_dots"/>
                                     <field name="autoplay"/>
                                     <field name="autoplay_speed" invisible="not autoplay"/>
-                                    <field name="overlay_opacity" string="شدة التعتيم فوق الصورة %"/>
+                                    <field name="overlay_opacity" string="Overlay darkness %"/>
                                 </group>
                             </group>
-                            <group string="زر الشراء">
+                            <group string="Shop button">
                                 <group>
                                     <field name="cta_label_ar"/>
                                     <field name="cta_label_en"/>
@@ -93,9 +93,9 @@
                             </group>
                         </page>
 
-                        <page string="منيو الأقسام" name="dept_menu">
+                        <page string="Departments menu" name="dept_menu">
                             <div class="alert alert-info" role="alert">
-                                أضف أو احذف أقسام المنيو الجانبي. الترتيب بالسحب، وكل قسم له اسم بالعربي والإنجليزي، أيقونة، ورابط.
+                                Add or remove side-menu departments. Drag to reorder; each has an AR + EN name, an icon and a link.
                             </div>
                             <field name="menu_ids">
                                 <list editable="bottom" decoration-muted="not active">
@@ -109,9 +109,9 @@
                             </field>
                         </page>
 
-                        <page string="المزايا" name="features">
+                        <page string="Features" name="features">
                             <div class="alert alert-info" role="alert">
-                                شريط المزايا أسفل الهيرو (توصيل مجاني / الدفع عند الاستلام / دفع آمن...). أضف أو احذف أي ميزة.
+                                The features strip under the hero (free delivery / cash on delivery / secure payment...). Add or remove any feature.
                             </div>
                             <field name="feature_ids">
                                 <list editable="bottom" decoration-muted="not active">
@@ -124,18 +124,18 @@
                             </field>
                         </page>
 
-                        <page string="بنرات عربي (قديم)" name="banners_ar">
+                        <page string="Arabic banners (legacy)" name="banners_ar">
                             <div class="alert alert-warning" role="alert">
-                                هذه البنرات كانت للتصميم القديم. تصميم الديسك توب الجديد لا يستخدمها، وتبقى هنا للرجوع فقط.
+                                These banners were for the old design; the new desktop design does not use them (kept for reference only).
                             </div>
                             <group>
-                                <group string="البنر الأول">
+                                <group string="Banner 1">
                                     <field name="ar_banner1_image" widget="image"
                                            options="{'size': [320,150], 'preview_image': 'ar_banner1_image'}"/>
                                     <field name="ar_banner1_url"/>
                                     <field name="ar_banner1_alt"/>
                                 </group>
-                                <group string="البنر الثاني">
+                                <group string="Banner 2">
                                     <field name="ar_banner2_image" widget="image"
                                            options="{'size': [320,150], 'preview_image': 'ar_banner2_image'}"/>
                                     <field name="ar_banner2_url"/>
@@ -164,10 +164,10 @@
                             </group>
                         </page>
 
-                        <page string="الشرائح" name="slides">
+                        <page string="Slides" name="slides">
                             <div class="alert alert-warning" role="alert">
-                                أضف شريحة منفصلة لكل <strong>لغة + جهاز</strong>.
-                                إذا لم توجد صور موبايل تُستخدم صور الديسك توب تلقائياً.
+                                Add a separate slide for each <strong>language + device</strong>.
+                                If there are no mobile images, desktop images are used automatically.
                             </div>
                             <field name="slide_ids">
                                 <list editable="bottom" decoration-muted="not active">
@@ -176,16 +176,16 @@
                                     <field name="language"/>
                                     <field name="device"/>
                                     <field name="image" widget="image" options="{'size': [100,50]}"/>
-                                    <field name="image_url" optional="show" placeholder="رابط خارجي"/>
+                                    <field name="image_url" optional="show" placeholder="External URL"/>
                                     <field name="link_url"/>
                                     <field name="open_new_tab" optional="hide"/>
                                     <field name="show_overlay" optional="hide"/>
                                     <field name="alt_text" optional="hide"/>
                                     <field name="active"/>
                                 </list>
-                                <form string="تفاصيل الشريحة">
+                                <form string="Slide details">
                                     <group>
-                                        <group string="معلومات الشريحة">
+                                        <group string="Slide info">
                                             <field name="name"/>
                                             <field name="sequence"/>
                                             <field name="language"/>
@@ -195,13 +195,13 @@
                                             <field name="open_new_tab"/>
                                             <field name="alt_text"/>
                                         </group>
-                                        <group string="الصورة">
+                                        <group string="Image">
                                             <field name="image" widget="image"
                                                    options="{'size': [420,210], 'preview_image': 'image'}"/>
-                                            <field name="image_url" placeholder="أو رابط الصورة مباشرة"/>
+                                            <field name="image_url" placeholder="or paste an image URL"/>
                                         </group>
                                     </group>
-                                    <group string="نص فوق الصورة (Overlay)">
+                                    <group string="Overlay text">
                                         <field name="show_overlay"/>
                                         <group invisible="not show_overlay">
                                             <field name="overlay_kicker"/>
@@ -211,10 +211,10 @@
                                             <field name="overlay_btn_url"/>
                                         </group>
                                     </group>
-                                    <group string="كوبون ومزايا هذه الشريحة">
+                                    <group string="This slide&apos;s coupon &amp; features">
                                         <field name="sl_coupon_mode"/>
-                                        <field name="sl_coupon_code" invisible="sl_coupon_mode != 'custom'" placeholder="مثال: WELCOME05"/>
-                                        <field name="sl_coupon_disc" invisible="sl_coupon_mode != 'custom'" placeholder="مثال: 5%"/>
+                                        <field name="sl_coupon_code" invisible="sl_coupon_mode != 'custom'" placeholder="e.g. WELCOME05"/>
+                                        <field name="sl_coupon_disc" invisible="sl_coupon_mode != 'custom'" placeholder="e.g. 5%"/>
                                         <field name="sl_feats_mode"/>
                                     </group>
                                 </form>
@@ -232,19 +232,19 @@
         <field name="res_model">uellow.home.slider</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">أنشئ أول سلايدر للصفحة الرئيسية</p>
+            <p class="o_view_nocontent_smiling_face">Create your first home slider</p>
         </field>
     </record>
 
     <record id="action_uellow_home_slide" model="ir.actions.act_window">
-        <field name="name">الشرائح</field>
+        <field name="name">Slides</field>
         <field name="res_model">uellow.home.slide</field>
         <field name="view_mode">list,form</field>
     </record>
 
     <menuitem id="menu_uellow_root" name="Uellow" sequence="99"/>
     <menuitem id="menu_uellow_home_slider" name="Home Slider" parent="menu_uellow_root" action="action_uellow_home_slider" sequence="10"/>
-    <menuitem id="menu_uellow_slides" name="الشرائح" parent="menu_uellow_root" action="action_uellow_home_slide" sequence="20"/>
+    <menuitem id="menu_uellow_slides" name="Slides" parent="menu_uellow_root" action="action_uellow_home_slide" sequence="20"/>
     <menuitem id="menu_uellow_website_conf" name="Uellow Home Slider" parent="website.menu_website_configuration" action="action_uellow_home_slider" sequence="50"/>
 
 </odoo>
