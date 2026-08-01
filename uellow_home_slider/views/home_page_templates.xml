@@ -71,6 +71,7 @@
             padding:8px 20px;font-size:12.5px;text-decoration:none}
           .uh-flashbtn:hover{filter:brightness(.97)}
           .uh-flashslider{position:relative;flex:1 1 0;min-width:0}
+          .uh-slider{position:relative;width:100%}
           .uh-frail{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 50px)/6);gap:10px;
             overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding-bottom:2px;scrollbar-width:none}
           .uh-frail::-webkit-scrollbar{display:none}
@@ -121,10 +122,14 @@
                 <span class="uh-ttl"><t t-esc="sec['title']"/><small t-if="sec['subtitle']" t-esc="sec['subtitle']"/></span>
                 <a t-if="sec['show_link']" t-att-href="sec['link_url']" class="uh-all"><t t-esc="sec['link_label']"/> →</a>
               </div>
-              <div t-att-class="'uh-grid' if sec['style']=='grid' else 'uh-rail'"
-                   t-att-style="('grid-template-columns:repeat(%d,1fr)' % sec['columns']) if sec['style']=='grid' else ''">
-                <t t-set="products" t-value="sec['products']"/>
+              <t t-set="products" t-value="sec['products']"/>
+              <div t-if="sec['style']=='grid'" class="uh-grid" t-att-style="'grid-template-columns:repeat(%d,1fr)' % sec['columns']">
                 <t t-call="uellow_home_slider.home_cards"/>
+              </div>
+              <div t-else="" class="uh-slider">
+                <button type="button" class="uh-fnav prev" aria-label="Previous">‹</button>
+                <div class="uh-frail"><t t-call="uellow_home_slider.home_cards"/></div>
+                <button type="button" class="uh-fnav next" aria-label="Next">›</button>
               </div>
             </div>
           </section>
@@ -228,13 +233,15 @@
             tick(); setInterval(tick,1000);
           });
           /* flash-deals slider arrows (inside) */
-          [].slice.call(document.querySelectorAll('.uh-flashslider')).forEach(function(sl){
+          [].slice.call(document.querySelectorAll('.uh-flashslider, .uh-slider')).forEach(function(sl){
             var rail=sl.querySelector('.uh-frail'), prev=sl.querySelector('.uh-fnav.prev'), next=sl.querySelector('.uh-fnav.next');
             if(!rail) return;
             var rtl=getComputedStyle(rail).direction==='rtl';
             function step(back){ rail.scrollBy({left:Math.round(rail.clientWidth*0.85)*((back?-1:1)*(rtl?-1:1)),behavior:'smooth'}); }
+            function refresh(){ var sc=(rail.scrollWidth - rail.clientWidth) > 6; if(prev)prev.style.display=sc?'grid':'none'; if(next)next.style.display=sc?'grid':'none'; }
             if(prev) prev.addEventListener('click', function(){ step(true); });
             if(next) next.addEventListener('click', function(){ step(false); });
+            refresh(); window.addEventListener('resize', refresh);
           });
           /* infinite random feed — scroll-based, 5 auto batches then Load more */
           var w=document.querySelector('[data-infinite]'); if(!w) return;
