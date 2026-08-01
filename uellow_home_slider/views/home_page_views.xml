@@ -71,18 +71,44 @@
                                         <field name="slider_id"/>
                                     </group>
 
-                                    <group string="المنتجات" invisible="section_type not in ('product_row','category_strip')">
+                                    <group string="المنتجات · Products" invisible="section_type not in ('product_row','category_strip','flash_deals','new_user_bonus')">
                                         <group>
                                             <field name="product_source"/>
                                             <field name="category_id" invisible="product_source != 'category'"/>
                                             <field name="product_ids" widget="many2many_tags"
                                                    invisible="product_source == 'category'"/>
+                                            <field name="min_discount" invisible="product_source != 'discounted'"/>
                                             <field name="limit"/>
                                         </group>
                                         <group>
-                                            <field name="style"/>
-                                            <field name="columns" invisible="style != 'grid'"/>
+                                            <field name="style" invisible="section_type in ('flash_deals','new_user_bonus')"/>
+                                            <field name="columns" invisible="style != 'grid' or section_type in ('flash_deals','new_user_bonus')"/>
+                                            <field name="show_save_badge"/>
+                                            <field name="show_discount_badge"/>
                                         </group>
+                                    </group>
+
+                                    <group string="تخطيط الهيرو · Hero layout" invisible="section_type != 'hero_slider'">
+                                        <field name="cat_width"/>
+                                        <field name="hero_height"/>
+                                    </group>
+
+                                    <group string="بانل المكافأة · Bonus panel" invisible="section_type != 'new_user_bonus'"
+                                           col="4">
+                                        <field name="panel_icon"/>
+                                        <field name="panel_link"/>
+                                        <field name="panel_btn_ar"/>
+                                        <field name="panel_btn_en"/>
+                                        <field name="panel_color1" widget="color"/>
+                                        <field name="panel_color2" widget="color"/>
+                                    </group>
+
+                                    <group string="عروض الفلاش · Flash" invisible="section_type != 'flash_deals'"
+                                           col="4">
+                                        <field name="flash_label_ar"/>
+                                        <field name="flash_label_en"/>
+                                        <field name="flash_color1" widget="color"/>
+                                        <field name="flash_color2" widget="color"/>
                                     </group>
 
                                     <group string="البانر" invisible="section_type != 'banner'">

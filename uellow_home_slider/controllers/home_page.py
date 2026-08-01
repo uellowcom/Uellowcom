@@ -28,6 +28,18 @@ class UellowHomePageController(http.Controller):
                     'image': self._sec_image(sec, lang),
                     'limit': max(4, min(sec.limit or 12, 30)),
                     'seed': seed,
+                    'show_save': sec.show_save_badge,
+                    'show_disc': sec.show_discount_badge,
+                    'cat_width': sec.cat_width or 250,
+                    'hero_height': sec.hero_height or 620,
+                    'icon': sec.panel_icon or '🎁',
+                    'btn': (sec.panel_btn_en if lang == 'en' else sec.panel_btn_ar) or ('Go' if lang == 'en' else 'اذهب'),
+                    'panel_link': sec.panel_link or '/web/signup',
+                    'color1': sec.panel_color1 or '#FFD24D',
+                    'color2': sec.panel_color2 or '#F4A100',
+                    'flash_label': (sec.flash_label_en if lang == 'en' else sec.flash_label_ar) or ('Ends in' if lang == 'en' else 'تنتهي خلال'),
+                    'fcolor1': sec.flash_color1 or '#E63946',
+                    'fcolor2': sec.flash_color2 or '#F26A2E',
                 }
                 if sec.section_type in ('product_row', 'category_strip', 'flash_deals'):
                     d['products'] = self._home_products(sec, force='discounted' if sec.section_type == 'flash_deals' else None)
@@ -59,7 +71,8 @@ class UellowHomePageController(http.Controller):
         lang = 'en' if (request.env.lang or '').lower().startswith('en') else 'ar'
         recs = self._random_page(seed, page, limit)
         return request.render('uellow_home_slider.home_cards',
-                              {'products': self._cards(recs), 'is_ar': lang == 'ar'})
+                              {'products': self._cards(recs), 'is_ar': lang == 'ar',
+                               'show_save': True, 'show_disc': True})
 
     # ── helpers ───────────────────────────────────────────────
     def _base_dom(self):
@@ -111,8 +124,14 @@ class UellowHomePageController(http.Controller):
                 recs = Tmpl.search(base + [('public_categ_ids', 'child_of', sec.category_id.id)], limit=limit, order='create_date desc')
             elif src == 'discounted':
                 dom = base + ([('compare_list_price', '>', 0)] if 'compare_list_price' in Tmpl._fields else [])
-                cands = Tmpl.search(dom, limit=limit * 3, order='create_date desc')
-                recs = cands.filtered(lambda p: (getattr(p, 'compare_list_price', 0) or 0) > (p.list_price or 0))[:limit]
+                cands = Tmpl.search(dom, limit=limit * 4, order='create_date desc')
+                md = max(0, sec.min_discount or 0)
+
+                def _disc(p):
+                    c = getattr(p, 'compare_list_price', 0) or 0
+                    pr = p.list_price or 0
+                    return int(round((1 - pr / c) * 100)) if (c and pr and c > pr) else 0
+                recs = cands.filtered(lambda p: _disc(p) >= max(1, md))[:limit]
             elif src in ('bestsellers', 'trending'):
                 cands = Tmpl.search(base, limit=limit * 4, order='create_date desc')
                 try:

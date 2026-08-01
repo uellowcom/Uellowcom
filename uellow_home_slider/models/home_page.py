@@ -109,6 +109,30 @@ class UellowHomeSection(models.Model):
     bg_color     = fields.Char(string='لون الخلفية', default='')
     pad_y        = fields.Integer(string='هامش رأسي (px)', default=18)
 
+    # ── new-user bonus panel (new_user_bonus) ──
+    panel_icon   = fields.Char(string='أيقونة البانل (إيموجي)', default='🎁')
+    panel_btn_en = fields.Char(string='نص الزر [EN]', default='Go')
+    panel_btn_ar = fields.Char(string='نص الزر [ع]', default='اذهب')
+    panel_link   = fields.Char(string='رابط الزر', default='/web/signup')
+    panel_color1 = fields.Char(string='لون البانل 1', default='#FFD24D')
+    panel_color2 = fields.Char(string='لون البانل 2', default='#F4A100')
+    min_discount = fields.Integer(string='أقل نسبة خصم %', default=0,
+                                  help='للمصدر "عروض": يعرض فقط منتجات بخصم ≥ هذه النسبة المئوية.')
+
+    # ── hero layout (hero_slider) ──
+    cat_width    = fields.Integer(string='عرض عمود الأقسام (px)', default=250)
+    hero_height  = fields.Integer(string='ارتفاع الهيرو (px)', default=620)
+
+    # ── flash deals (flash_deals) ──
+    flash_label_en = fields.Char(string='نص العدّاد [EN]', default='Ends in')
+    flash_label_ar = fields.Char(string='نص العدّاد [ع]', default='تنتهي خلال')
+    flash_color1   = fields.Char(string='لون الفلاش 1', default='#E63946')
+    flash_color2   = fields.Char(string='لون الفلاش 2', default='#F26A2E')
+
+    # ── cards / badges ──
+    show_save_badge     = fields.Boolean(string='إظهار بادچ التوفير', default=True)
+    show_discount_badge = fields.Boolean(string='إظهار نسبة الخصم %', default=True)
+
     def title(self, lang):
         self.ensure_one()
         return (self.title_en if lang == 'en' else self.title_ar) or self.title_en or self.title_ar or ''

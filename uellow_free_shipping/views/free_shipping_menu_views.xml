@@ -7,6 +7,7 @@
     <!-- Flagged PRODUCTS -->
     <record id="view_free_shipping_product_list" model="ir.ui.view">
         <field name="name">product.template.free.shipping.list</field>
+        <field name="priority">99</field>
         <field name="model">product.template</field>
         <field name="arch" type="xml">
             <list editable="bottom" create="false" delete="false"
@@ -64,6 +65,7 @@
     <!-- Flagged CATEGORIES -->
     <record id="view_free_shipping_categ_list" model="ir.ui.view">
         <field name="name">product.public.category.free.shipping.list</field>
+        <field name="priority">99</field>
         <field name="model">product.public.category</field>
         <field name="arch" type="xml">
             <list editable="bottom" create="false" delete="false"
@@ -104,6 +106,7 @@
     <!-- Flagged TAGS -->
     <record id="view_free_shipping_tag_list" model="ir.ui.view">
         <field name="name">product.tag.free.shipping.list</field>
+        <field name="priority">99</field>
         <field name="model">product.tag</field>
         <field name="arch" type="xml">
             <list editable="bottom" create="false" delete="false"
