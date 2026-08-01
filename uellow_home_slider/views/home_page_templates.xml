@@ -70,10 +70,20 @@
           .uh-flashbtn{margin-top:2px;background:#fff;color:var(--orange2);font-weight:800;border-radius:999px;
             padding:8px 20px;font-size:12.5px;text-decoration:none}
           .uh-flashbtn:hover{filter:brightness(.97)}
-          .uh-flashgrid{flex:1 1 0;min-width:0;display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
-          @media (max-width:1024px){.uh-flashgrid{grid-template-columns:repeat(4,1fr)}}
+          .uh-flashslider{position:relative;flex:1 1 0;min-width:0}
+          .uh-frail{display:grid;grid-auto-flow:column;grid-auto-columns:calc((100% - 50px)/6);gap:10px;
+            overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding-bottom:2px;scrollbar-width:none}
+          .uh-frail::-webkit-scrollbar{display:none}
+          .uh-frail .uh-card{scroll-snap-align:start}
+          .uh-fnav{position:absolute;top:50%;transform:translateY(-50%);z-index:4;width:34px;height:34px;border-radius:50%;
+            background:rgba(255,255,255,.96);border:1px solid var(--line);color:var(--ink);display:grid;place-items:center;
+            font-size:18px;cursor:pointer;box-shadow:0 6px 16px -8px rgba(20,50,80,.5);transition:background .15s,color .15s}
+          .uh-fnav:hover{background:#fff;color:var(--orange)}
+          .uh-fnav.prev{inset-inline-start:5px}.uh-fnav.next{inset-inline-end:5px}
+          .uhome[dir="rtl"] .uh-fnav{transform:translateY(-50%) scaleX(-1)}
+          @media (max-width:1024px){.uh-frail{grid-auto-columns:calc((100% - 30px)/4)}}
           @media (max-width:640px){.uh-flashwrap{flex-direction:column}.uh-flashpanel{flex:none;flex-direction:row;flex-wrap:wrap;justify-content:center;padding:12px 16px}
-            .uh-flashgrid{grid-template-columns:repeat(3,1fr);gap:8px}}
+            .uh-frail{grid-auto-columns:calc((100% - 20px)/3);gap:8px}.uh-fnav{display:none}}
           /* departments */
           .uh-depts{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:12px}
           .uh-dept{display:flex;flex-direction:column;align-items:center;gap:7px;text-decoration:none;color:inherit;
@@ -129,9 +139,13 @@
                   <div class="uh-timer" data-countdown="1"><b>00</b><i>:</i><b>00</b><i>:</i><b>00</b></div>
                   <a class="uh-flashbtn" t-att-href="sec['link_url']"><t t-esc="'عرض الكل' if is_ar else 'View all'"/></a>
                 </div>
-                <div class="uh-flashgrid">
-                  <t t-set="products" t-value="sec['products']"/>
-                  <t t-call="uellow_home_slider.home_cards"/>
+                <div class="uh-flashslider">
+                  <button type="button" class="uh-fnav prev" aria-label="Previous">‹</button>
+                  <div class="uh-frail">
+                    <t t-set="products" t-value="sec['products']"/>
+                    <t t-call="uellow_home_slider.home_cards"/>
+                  </div>
+                  <button type="button" class="uh-fnav next" aria-label="Next">›</button>
                 </div>
               </div>
             </div>
@@ -212,6 +226,15 @@
               if(b.length>=3){ b[0].textContent=pad(Math.floor(s/3600)); b[1].textContent=pad(Math.floor((s%3600)/60)); b[2].textContent=pad(s%60); }
             }
             tick(); setInterval(tick,1000);
+          });
+          /* flash-deals slider arrows (inside) */
+          [].slice.call(document.querySelectorAll('.uh-flashslider')).forEach(function(sl){
+            var rail=sl.querySelector('.uh-frail'), prev=sl.querySelector('.uh-fnav.prev'), next=sl.querySelector('.uh-fnav.next');
+            if(!rail) return;
+            var rtl=getComputedStyle(rail).direction==='rtl';
+            function step(back){ rail.scrollBy({left:Math.round(rail.clientWidth*0.85)*((back?-1:1)*(rtl?-1:1)),behavior:'smooth'}); }
+            if(prev) prev.addEventListener('click', function(){ step(true); });
+            if(next) next.addEventListener('click', function(){ step(false); });
           });
           /* infinite random feed — scroll-based, 5 auto batches then Load more */
           var w=document.querySelector('[data-infinite]'); if(!w) return;
