@@ -49,6 +49,12 @@ class UellowHomePageController(http.Controller):
                     d['products'] = self._cards(self._random_page(seed, 0, d['limit']))
                 elif sec.section_type == 'new_user_bonus':
                     d['products'] = self._home_products(sec, force=(sec.product_source or 'newest'))
+                # category-scoped block: auto title + "view all" link from the chosen category
+                if sec.product_source == 'category' and sec.category_id:
+                    if not d['title']:
+                        d['title'] = sec.category_id.name or ''
+                    if not sec.link_url or sec.link_url == '/shop':
+                        d['link_url'] = '/shop/category/%d' % sec.category_id.id
                 sections.append(d)
         # Banggood layout: fold the new-user bonus that follows the hero into the hero's left column
         for i, d in enumerate(sections):
