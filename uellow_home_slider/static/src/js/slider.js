@@ -213,7 +213,7 @@ var SKELETON = '\
 <div class="uhs-desktop uhs-v2 d-none d-lg-flex">\
   <aside class="uhs-dept" id="uhs_dept">\
     <div class="uhs-dept-h"><span class="uhs-dept-bars"><i></i><i></i><i></i></span> <span id="uhs_dept_title">All Departments</span></div>\
-    <ul class="uhs-dept-list" id="uhs_dept_list"></ul>\
+    <ul class="uhs-dept-list" id="uhs_dept_list"><li class="uhs-sk"></li><li class="uhs-sk"></li><li class="uhs-sk"></li><li class="uhs-sk"></li><li class="uhs-sk"></li><li class="uhs-sk"></li><li class="uhs-sk"></li><li class="uhs-sk"></li></ul>\
     <a class="uhs-dept-f" id="uhs_dept_footer" href="/shop"><span id="uhs_dept_footer_t">All departments</span><span class="uhs-dept-count" id="uhs_dept_count"></span></a>\
   </aside>\
   <div class="uhs-spot" id="uhs_desktop_wrap">\
