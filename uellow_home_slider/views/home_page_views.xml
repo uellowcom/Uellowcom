@@ -1,21 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ============================================================ -->
+    <!--  Home Page Layout — form                                     -->
+    <!-- ============================================================ -->
     <record id="view_uellow_home_page_form" model="ir.ui.view">
         <field name="name">uellow.home.page.form</field>
         <field name="model">uellow.home.page</field>
         <field name="arch" type="xml">
-            <form string="الصفحة الرئيسية">
+            <form string="Home page">
                 <sheet>
                     <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" icon="fa-th-list" type="object" name="action_open_preview">
-                            <field name="section_count" widget="statinfo" string="قسم"/>
+                        <button class="oe_stat_button" icon="fa-external-link" type="object"
+                                name="action_open_preview" string="Preview">
+                            <field name="section_count" widget="statinfo" string="Blocks"/>
                         </button>
                     </div>
-                    <widget name="web_ribbon" title="الرئيسية الحيّة" invisible="not is_live"/>
+                    <widget name="web_ribbon" title="Live home page" invisible="not is_live"/>
                     <div class="oe_title">
                         <label for="name"/>
-                        <h1><field name="name" placeholder="الصفحة الرئيسية"/></h1>
+                        <h1><field name="name" placeholder="e.g. Home page"/></h1>
                     </div>
                     <group>
                         <group>
@@ -23,60 +27,60 @@
                             <field name="is_live"/>
                             <field name="sequence"/>
                         </group>
-                        <group string="SEO">
-                            <field name="meta_title_en"/>
-                            <field name="meta_title_ar"/>
-                            <field name="meta_description_en"/>
-                            <field name="meta_description_ar"/>
-                            <field name="og_image" widget="image" options="{'size':[300,158]}"/>
-                            <field name="og_image_url"/>
-                        </group>
                     </group>
                     <notebook>
-                        <page string="أقسام الصفحة" name="sections">
+                        <page string="Blocks" name="sections">
                             <div class="alert alert-info" role="alert">
-                                رتّب الأقسام بالسحب. كل قسم له نوع وإعداداته الخاصة. المعاينة على
-                                <strong>/home-preview</strong> قبل التبديل للرئيسية.
+                                Drag to reorder. Each block has its own type and settings.
+                                Preview everything on <strong>/home-preview</strong> before going live.
                             </div>
                             <field name="section_ids">
                                 <list editable="bottom" decoration-muted="not active">
                                     <field name="sequence" widget="handle"/>
                                     <field name="name"/>
                                     <field name="section_type"/>
-                                    <field name="title_ar" optional="show"/>
+                                    <field name="title_en" optional="show"/>
                                     <field name="product_source" optional="show"/>
+                                    <field name="category_id" optional="show"/>
                                     <field name="limit" optional="show"/>
                                     <field name="active"/>
                                 </list>
-                                <form string="قسم">
+                                <form string="Block">
                                     <group>
-                                        <group string="أساسي">
-                                            <field name="name"/>
-                                            <field name="section_type"/>
-                                            <field name="active"/>
-                                            <field name="sequence"/>
-                                            <field name="bg_color" placeholder="#FFFFFF"/>
-                                            <field name="pad_y"/>
-                                        </group>
-                                        <group string="العنوان">
-                                            <field name="show_title"/>
-                                            <field name="title_en" invisible="not show_title"/>
-                                            <field name="title_ar" invisible="not show_title"/>
-                                            <field name="subtitle_en" invisible="not show_title"/>
-                                            <field name="subtitle_ar" invisible="not show_title"/>
+                                        <field name="section_type"/>
+                                        <field name="name" placeholder="e.g. Best sellers"/>
+                                    </group>
+
+                                    <!-- Heading (most blocks) -->
+                                    <group string="Heading"
+                                           invisible="section_type in ('banner','custom_html','feature_bar','infinite_products')">
+                                        <field name="show_title"/>
+                                        <group invisible="not show_title">
+                                            <field name="title_en" placeholder="Best sellers"/>
+                                            <field name="title_ar" placeholder="الأكثر مبيعًا"/>
+                                            <field name="subtitle_en"/>
+                                            <field name="subtitle_ar"/>
                                         </group>
                                     </group>
 
-                                    <group string="السلايدر" invisible="section_type != 'hero_slider'">
+                                    <!-- Hero slider -->
+                                    <group string="Hero slider" invisible="section_type != 'hero_slider'">
                                         <field name="slider_id"/>
+                                        <field name="cat_width"/>
+                                        <field name="hero_height"/>
                                     </group>
 
-                                    <group string="المنتجات · Products" invisible="section_type not in ('product_row','category_strip','flash_deals','new_user_bonus')">
+                                    <!-- Products (product_row / flash_deals / new_user_bonus / category_strip) -->
+                                    <group string="Products"
+                                           invisible="section_type not in ('product_row','category_strip','flash_deals','new_user_bonus')">
                                         <group>
                                             <field name="product_source"/>
-                                            <field name="category_id" invisible="product_source != 'category'"/>
+                                            <field name="category_id"
+                                                   invisible="product_source != 'category'"
+                                                   required="product_source == 'category'"/>
                                             <field name="product_ids" widget="many2many_tags"
-                                                   invisible="product_source == 'category'"/>
+                                                   invisible="product_source != 'manual'"
+                                                   required="product_source == 'manual'"/>
                                             <field name="min_discount" invisible="product_source != 'discounted'"/>
                                             <field name="limit"/>
                                         </group>
@@ -88,59 +92,79 @@
                                         </group>
                                     </group>
 
-                                    <group string="تخطيط الهيرو · Hero layout" invisible="section_type != 'hero_slider'">
-                                        <field name="cat_width"/>
-                                        <field name="hero_height"/>
-                                    </group>
-
-                                    <group string="بانل المكافأة · Bonus panel" invisible="section_type != 'new_user_bonus'"
-                                           col="4">
+                                    <!-- New-user bonus panel -->
+                                    <group string="Bonus panel" invisible="section_type != 'new_user_bonus'" col="4">
                                         <field name="panel_icon"/>
                                         <field name="panel_link"/>
-                                        <field name="panel_btn_ar"/>
                                         <field name="panel_btn_en"/>
+                                        <field name="panel_btn_ar"/>
                                         <field name="panel_color1" widget="color"/>
                                         <field name="panel_color2" widget="color"/>
                                     </group>
 
-                                    <group string="عروض الفلاش · Flash" invisible="section_type != 'flash_deals'"
-                                           col="4">
-                                        <field name="flash_label_ar"/>
+                                    <!-- Flash deals -->
+                                    <group string="Flash deals" invisible="section_type != 'flash_deals'" col="4">
+                                        <field name="flash_end" widget="datetime"/>
+                                        <field name="flash_daily"/>
+                                        <field name="flash_sort"/>
                                         <field name="flash_label_en"/>
-                                        <field name="flash_btn_ar"/>
+                                        <field name="flash_label_ar"/>
                                         <field name="flash_btn_en"/>
+                                        <field name="flash_btn_ar"/>
                                         <field name="flash_color1" widget="color"/>
                                         <field name="flash_color2" widget="color"/>
-                                        <field name="flash_sort"/>
-                                        <field name="flash_daily"/>
-                                        <field name="flash_end" widget="datetime"/>
-                                        <field name="min_discount" string="أقل خصم %"/>
                                     </group>
 
-                                    <group string="الأقسام · Categories" invisible="section_type not in ('dept_spotlight','category_grid')">
-                                        <field name="limit" string="عدد الأقسام"/>
+                                    <!-- Categories grid / spotlight -->
+                                    <group string="Categories" invisible="section_type not in ('dept_spotlight','category_grid')">
+                                        <field name="limit" string="How many categories"/>
                                     </group>
 
-                                    <group string="البانر" invisible="section_type != 'banner'">
+                                    <!-- Banner -->
+                                    <group string="Banner" invisible="section_type != 'banner'">
                                         <field name="image" widget="image" options="{'size':[600,300]}"/>
                                         <field name="image_url"/>
                                         <field name="image_url_ar"/>
+                                        <field name="link_url"/>
                                     </group>
 
-                                    <group string="HTML مخصّص" invisible="section_type != 'custom_html'">
+                                    <!-- Custom HTML -->
+                                    <group string="Custom HTML" invisible="section_type != 'custom_html'">
                                         <field name="html_en"/>
                                         <field name="html_ar"/>
                                     </group>
 
-                                    <group string="الرابط / زر الكل"
-                                           invisible="section_type in ('custom_html','hero_slider','new_user_bonus')">
+                                    <!-- "View all" link -->
+                                    <group string="&quot;View all&quot; link"
+                                           invisible="section_type in ('custom_html','hero_slider','new_user_bonus','banner','feature_bar')">
                                         <field name="show_link"/>
                                         <field name="link_url" invisible="not show_link"/>
                                         <field name="link_label_en" invisible="not show_link"/>
                                         <field name="link_label_ar" invisible="not show_link"/>
                                     </group>
+
+                                    <!-- Advanced / styling -->
+                                    <group string="Advanced">
+                                        <field name="active"/>
+                                        <field name="bg_color" placeholder="#FFFFFF"/>
+                                        <field name="pad_y"/>
+                                    </group>
                                 </form>
                             </field>
+                        </page>
+                        <page string="SEO" name="seo">
+                            <group>
+                                <group string="Meta">
+                                    <field name="meta_title_en"/>
+                                    <field name="meta_title_ar"/>
+                                    <field name="meta_description_en"/>
+                                    <field name="meta_description_ar"/>
+                                </group>
+                                <group string="Social share">
+                                    <field name="og_image" widget="image" options="{'size':[300,158]}"/>
+                                    <field name="og_image_url"/>
+                                </group>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
@@ -148,14 +172,17 @@
         </field>
     </record>
 
+    <!-- ============================================================ -->
+    <!--  Home Page Layout — list                                     -->
+    <!-- ============================================================ -->
     <record id="view_uellow_home_page_list" model="ir.ui.view">
         <field name="name">uellow.home.page.list</field>
         <field name="model">uellow.home.page</field>
         <field name="arch" type="xml">
-            <list string="الصفحات" decoration-muted="not active" decoration-bf="is_live">
+            <list string="Home pages" decoration-muted="not active" decoration-bf="is_live">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
-                <field name="section_count" string="الأقسام"/>
+                <field name="section_count" string="Blocks"/>
                 <field name="is_live"/>
                 <field name="active" column_invisible="1"/>
             </list>
@@ -167,13 +194,14 @@
         <field name="res_model">uellow.home.page</field>
         <field name="view_mode">list,form</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">أنشئ الصفحة الرئيسية القابلة للتخصيص</p>
+            <p class="o_view_nocontent_smiling_face">Build your configurable home page</p>
+            <p>Add blocks, set each block's type and settings, then preview on /home-preview.</p>
         </field>
     </record>
 
     <menuitem id="menu_uellow_home_page" name="Homepage Builder"
               parent="menu_uellow_root" action="action_uellow_home_page" sequence="5"/>
-    <menuitem id="menu_uellow_home_page_conf" name="Uellow Homepage"
+    <menuitem id="menu_uellow_home_page_conf" name="Homepage Builder"
               parent="website.menu_website_configuration" action="action_uellow_home_page" sequence="49"/>
 
 </odoo>
