@@ -46,6 +46,12 @@ class UellowHomeSliderController(http.Controller):
                 'kicker': s.overlay_kicker or '', 'title': s.overlay_title or '',
                 'sub': s.overlay_sub or '', 'btn': s.overlay_btn or '',
                 'btn_url': s.overlay_btn_url or s.link_url or '/shop',
+                # per-slide coupon + features (resolved against the slider defaults)
+                'coupon_show': (False if s.sl_coupon_mode == 'hide'
+                                else (True if s.sl_coupon_mode == 'custom' else bool(slider.show_coupon))),
+                'coupon_code': (s.sl_coupon_code if s.sl_coupon_mode == 'custom' else slider.coupon_code) or '',
+                'coupon_disc': (s.sl_coupon_disc if s.sl_coupon_mode == 'custom' else slider.coupon_discount) or '',
+                'feats_show': (s.sl_feats_mode != 'hide') and bool(slider.show_features),
             } for s in slides]
 
         # departments menu (add/remove controlled from the backend)

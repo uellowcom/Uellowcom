@@ -126,6 +126,15 @@ class UellowHomeSlide(models.Model):
     overlay_sub    = fields.Char(string='العنوان الفرعي')
     overlay_btn    = fields.Char(string='نص الزر')
     overlay_btn_url = fields.Char(string='رابط الزر')
+    # ── per-slide coupon + features (override the slider defaults) ──
+    sl_coupon_mode = fields.Selection([
+        ('inherit', '⤴ نفس السلايدر'), ('custom', 'مخصّص لهذه الشريحة'), ('hide', 'إخفاء')],
+        string='كوبون الشريحة', default='inherit')
+    sl_coupon_code = fields.Char(string='كود كوبون الشريحة')
+    sl_coupon_disc = fields.Char(string='نسبة خصم الشريحة')
+    sl_feats_mode  = fields.Selection([
+        ('inherit', '⤴ نفس السلايدر'), ('hide', 'إخفاء في هذه الشريحة')],
+        string='مزايا الشريحة', default='inherit')
     language = fields.Selection([('ar', 'عربي'), ('en', 'English')], string='اللغة', required=True, default='ar')
     device   = fields.Selection([('desktop', 'ديسك توب'), ('mobile', 'موبايل')], string='الجهاز', required=True, default='desktop')
 

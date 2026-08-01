@@ -211,6 +211,12 @@
                                             <field name="overlay_btn_url"/>
                                         </group>
                                     </group>
+                                    <group string="كوبون ومزايا هذه الشريحة">
+                                        <field name="sl_coupon_mode"/>
+                                        <field name="sl_coupon_code" invisible="sl_coupon_mode != 'custom'" placeholder="مثال: WELCOME05"/>
+                                        <field name="sl_coupon_disc" invisible="sl_coupon_mode != 'custom'" placeholder="مثال: 5%"/>
+                                        <field name="sl_feats_mode"/>
+                                    </group>
                                 </form>
                             </field>
                         </page>
