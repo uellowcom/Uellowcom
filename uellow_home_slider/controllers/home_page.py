@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import json
 import random
+from markupsafe import Markup
 from odoo import http
 from odoo.http import request
 
@@ -75,8 +77,36 @@ class UellowHomePageController(http.Controller):
                     d['bonus'] = nxt
                     nxt['_skip'] = True
                 break
+        # ── SEO: Product ItemList structured data from the rendered products ──
+        items = []
+        for sd in sections:
+            for p in (sd.get('products') or []):
+                if len(items) >= 24:
+                    break
+                items.append({
+                    '@type': 'ListItem', 'position': len(items) + 1,
+                    'item': {
+                        '@type': 'Product', 'name': p['name'],
+                        'url': 'https://www.uellow.com' + (p['url'] or '/'),
+                        'image': 'https://www.uellow.com' + (p['image'] or ''),
+                        'offers': {'@type': 'Offer', 'price': '%.3f' % (p['price'] or 0),
+                                   'priceCurrency': 'KWD',
+                                   'availability': 'https://schema.org/InStock'},
+                    },
+                })
+            if len(items) >= 24:
+                break
+        ld = {'@context': 'https://schema.org', '@type': 'ItemList', 'itemListElement': items}
+        structured = Markup(json.dumps(ld, ensure_ascii=False).replace('<', '\\u003c'))
+        meta_title = (page and ((page.meta_title_ar if lang == 'ar' else page.meta_title_en) or page.name)) or 'Uellow'
+        meta_desc = (page and (page.meta_description_ar if lang == 'ar' else page.meta_description_en)) or (
+            'تسوّق أونلاين في الكويت: جوّالات، إلكترونيات، أجهزة منزلية وأزياء وعروض يومية مع توصيل سريع وأقساط مريحة.'
+            if lang == 'ar' else
+            'Shop online in Kuwait: phones, electronics, home appliances, fashion and daily deals with fast delivery and easy installments.')
         return request.render('uellow_home_slider.home_preview_page', {
             'page': page, 'sections': sections, 'is_ar': lang == 'ar', 'lang': lang,
+            'structured_data': structured, 'seo_desc': meta_desc, 'seo_title': meta_title,
+            'website_meta_description': meta_desc, 'website_meta_title': meta_title,
         })
 
     @http.route(['/home-preview/more'], type='http', auth='public', website=True, sitemap=False)

@@ -20,7 +20,9 @@
     <t t-call="website.layout">
       <t t-set="additional_title" t-value="(page and ((page.meta_title_ar if is_ar else page.meta_title_en) or page.name)) or 'Uellow'"/>
       <div class="uhome" t-att-dir="'rtl' if is_ar else 'ltr'">
+        <h1 class="uh-seo-h1"><t t-esc="(page and (page.meta_title_ar if is_ar else page.meta_title_en)) or ('Uellow — تسوّق أونلاين في الكويت: جوّالات وإلكترونيات وعروض يومية' if is_ar else 'Uellow — Online Shopping in Kuwait: phones, electronics &amp; daily deals')"/></h1>
         <style>
+          .uh-seo-h1{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
           .uhome{--ink:#14202b;--muted:#5d6b78;--line:#e7eef3;--bg:#f6fafd;--card:#fff;
             --orange:#F26A2E;--orange2:#d8500f;--sky:#22a7e0;--gold:#F5C320;--red:#E63946;
             background:var(--bg);color:var(--ink);font-family:'Segoe UI',Tahoma,system-ui,sans-serif;line-height:1.5}
@@ -368,7 +370,7 @@
           </section>
         </t>
 
-        <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Uellow","url":"https://www.uellow.com/","potentialAction":{"@type":"SearchAction","target":"https://www.uellow.com/shop?search={q}","query-input":"required name=q"}}</script>
+        <script type="application/ld+json" t-out="structured_data"/>
 
         <script>
         (function(){
