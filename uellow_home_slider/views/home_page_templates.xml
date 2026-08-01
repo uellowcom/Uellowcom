@@ -28,14 +28,13 @@
           .uh-w{max-width:1100px;margin:0 auto;padding:0 14px}
           .uh-hero{padding-top:10px}
           .uh-sec{position:relative}
-          .uh-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-          .uh-head .t{display:flex;align-items:center;gap:10px;min-width:0}
-          .uh-head .bar{width:5px;height:24px;border-radius:3px;background:linear-gradient(var(--orange),var(--orange2));flex:none}
-          .uh-head h2{font-size:clamp(17px,2.3vw,22px);font-weight:800;letter-spacing:-.01em;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-          .uh-head p{margin:1px 0 0;color:var(--muted);font-size:12.5px}
-          .uh-all{white-space:nowrap;font-size:12.5px;font-weight:800;color:var(--orange2);text-decoration:none;
-            border:1px solid var(--line);border-radius:999px;padding:6px 13px;background:var(--card)}
-          .uh-all:hover{border-color:var(--orange);color:var(--orange)}
+          .uh-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+          .uh-ttl{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:900;letter-spacing:.05em;
+            text-transform:uppercase;color:var(--orange2)}
+          .uh-ttl::before{content:'';width:16px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--orange),var(--orange2))}
+          .uh-ttl small{font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px}
+          .uh-all{white-space:nowrap;font-size:11.5px;font-weight:800;color:var(--muted);text-decoration:none}
+          .uh-all:hover{color:var(--orange)}
           .uh-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(158px,1fr);gap:12px;
             overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch}
           .uh-rail::-webkit-scrollbar{height:6px}.uh-rail::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
@@ -53,8 +52,9 @@
           .uh-now{font-size:14px;font-weight:800;color:var(--ink)}
           .uh-was{font-size:11.5px;color:#9aa7b2;text-decoration:line-through}
           /* flash deals */
-          .uh-flash .uh-head .bar{background:linear-gradient(var(--red),#b12633)}
-          .uh-flash .uh-head h2::after{content:' 🔥'}
+          .uh-flash .uh-ttl{color:var(--red)}
+          .uh-flash .uh-ttl::before{background:linear-gradient(90deg,var(--red),#b12633)}
+          .uh-flash .uh-ttl::after{content:' 🔥'}
           .uh-flash{background:linear-gradient(180deg,#fff4f1,transparent 60%)}
           /* departments */
           .uh-depts{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:12px}
@@ -92,7 +92,7 @@
                    t-att-style="('padding:%dpx 0;' % sec['pad_y']) + (('background:%s;' % sec['bg']) if sec['bg'] else '')">
             <div class="uh-w">
               <div t-if="sec['show_title'] and sec['title']" class="uh-head">
-                <div class="t"><span class="bar"/><div><h2 t-esc="sec['title']"/><p t-if="sec['subtitle']" t-esc="sec['subtitle']"/></div></div>
+                <span class="uh-ttl"><t t-esc="sec['title']"/><small t-if="sec['subtitle']" t-esc="sec['subtitle']"/></span>
                 <a t-if="sec['show_link']" t-att-href="sec['link_url']" class="uh-all"><t t-esc="sec['link_label']"/> →</a>
               </div>
               <div t-att-class="'uh-grid' if sec['style']=='grid' else 'uh-rail'"
@@ -107,7 +107,7 @@
                    t-att-style="('padding:%dpx 0;' % sec['pad_y']) + (('background:%s;' % sec['bg']) if sec['bg'] else '')">
             <div class="uh-w">
               <div t-if="sec['show_title'] and sec['title']" class="uh-head">
-                <div class="t"><span class="bar"/><div><h2 t-esc="sec['title']"/><p t-if="sec['subtitle']" t-esc="sec['subtitle']"/></div></div>
+                <span class="uh-ttl"><t t-esc="sec['title']"/><small t-if="sec['subtitle']" t-esc="sec['subtitle']"/></span>
               </div>
               <div class="uh-depts">
                 <a t-foreach="sec['cats']" t-as="c" t-att-href="c['url']" class="uh-dept">
@@ -142,7 +142,7 @@
           <section t-if="sec['type'] == 'infinite_products'" class="uh-sec" t-att-style="'padding:%dpx 0;' % sec['pad_y']">
             <div class="uh-w">
               <div t-if="sec['show_title'] and sec['title']" class="uh-head">
-                <div class="t"><span class="bar"/><div><h2 t-esc="sec['title']"/><p t-if="sec['subtitle']" t-esc="sec['subtitle']"/></div></div>
+                <span class="uh-ttl"><t t-esc="sec['title']"/><small t-if="sec['subtitle']" t-esc="sec['subtitle']"/></span>
               </div>
               <div class="uh-inf" data-infinite="1" t-att-data-seed="sec['seed']" t-att-data-limit="sec['limit']">
                 <div class="uh-grid uh-inf-grid">
