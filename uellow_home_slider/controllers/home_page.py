@@ -46,8 +46,10 @@ class UellowHomePageController(http.Controller):
             seed = int(seed); page = int(page); limit = max(4, min(int(limit), 30))
         except Exception:
             seed, page, limit = 0, 1, 12
+        lang = 'en' if (request.env.lang or '').lower().startswith('en') else 'ar'
         recs = self._random_page(seed, page, limit)
-        return request.render('uellow_home_slider.home_cards', {'products': self._cards(recs)})
+        return request.render('uellow_home_slider.home_cards',
+                              {'products': self._cards(recs), 'is_ar': lang == 'ar'})
 
     # ── helpers ───────────────────────────────────────────────
     def _base_dom(self):
@@ -82,6 +84,7 @@ class UellowHomePageController(http.Controller):
                 'image': '/web/image/product.template/%d/image_256' % p.id,
                 'price': price, 'currency': p.currency_id.symbol or 'KD',
                 'compare': cmp if disc else 0, 'discount': disc,
+                'save': round(cmp - price, 3) if disc else 0,
             })
         return out
 
