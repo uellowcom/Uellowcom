@@ -148,10 +148,10 @@
           .uh-bwrap .uh-card:hover .uh-thumb img{transform:none}
           .uh-bwrap .uh-save{inset-inline-start:8px;top:8px;font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:999px;
             box-shadow:0 3px 8px -3px rgba(200,60,40,.4)}
-          .uh-bwrap .uh-name{font-weight:500;font-size:11.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;padding:9px 11px 0;color:#3a2f22}
-          .uh-bwrap .uh-price{margin-top:3px;padding:0 11px 11px;flex-wrap:nowrap;gap:6px;align-items:baseline}
-          .uh-bwrap .uh-now{font-size:13px;font-weight:800}
-          .uh-bwrap .uh-was{font-size:10.5px}
+          .uh-bwrap .uh-name{font-weight:500;font-size:11.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;padding:8px 10px 0;color:#3a2f22;min-height:0}
+          .uh-bwrap .uh-price{margin-top:2px;padding:0 10px 8px;flex-wrap:nowrap;gap:5px;align-items:baseline}
+          .uh-bwrap .uh-now{font-size:11.5px;font-weight:800}
+          .uh-bwrap .uh-was{font-size:9.5px}
           .uh-bwrap .uh-pct{display:none}
           .uh-bpanel{flex:0 0 186px;border-radius:14px;text-decoration:none;color:#3f2a00;
             display:flex;flex-direction:column;align-items:center;justify-content:center;
