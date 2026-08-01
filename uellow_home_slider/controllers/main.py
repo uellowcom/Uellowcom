@@ -73,6 +73,31 @@ class UellowHomeSliderController(http.Controller):
         except Exception:
             menu_total = len(menu)
 
+        # real, full storefront category tree (parents + subcategories) for a
+        # professional flyout menu, matching the site header.
+        categories = []
+        if slider.show_menu:
+            PC = request.env['product.public.category'].sudo()
+            wid = request.website.id if request.website else False
+            parents = PC.search([('parent_id', '=', False),
+                                 ('website_id', 'in', [False, wid])],
+                                order='sequence, name', limit=40)
+            for c in parents:
+                kids = []
+                for ch in c.child_id.sorted(lambda x: (x.sequence, x.name or '')):
+                    kids.append({
+                        'name': ch.name,
+                        'url': '/shop/category/%d' % ch.id,
+                        'image': ('/web/image/product.public.category/%d/image_128' % ch.id) if ch.image_128 else '',
+                    })
+                categories.append({
+                    'id': c.id, 'name': c.name,
+                    'url': '/shop/category/%d' % c.id,
+                    'image': ('/web/image/product.public.category/%d/image_128' % c.id) if c.image_128 else '',
+                    'children': kids,
+                })
+            menu_total = len(parents)
+
         return request.make_json_response({
             'lang': lang,
             'logo': logo,
@@ -99,5 +124,6 @@ class UellowHomeSliderController(http.Controller):
             'menu_total': menu_total,
             'cta_label': slider.cta_label_en if lang == 'en' else slider.cta_label_ar,
             'menu': menu,
+            'categories': categories,
             'features': features,
         })
