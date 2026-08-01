@@ -43,8 +43,8 @@ class UellowHomePageController(http.Controller):
                 }
                 if sec.section_type in ('product_row', 'category_strip', 'flash_deals'):
                     d['products'] = self._home_products(sec, force='discounted' if sec.section_type == 'flash_deals' else None)
-                elif sec.section_type == 'dept_spotlight':
-                    d['cats'] = self._home_departments(lang)
+                elif sec.section_type in ('dept_spotlight', 'category_grid'):
+                    d['cats'] = self._home_departments(lang, limit=d['limit'])
                 elif sec.section_type == 'infinite_products':
                     d['products'] = self._cards(self._random_page(seed, 0, d['limit']))
                 elif sec.section_type == 'new_user_bonus':
@@ -86,12 +86,12 @@ class UellowHomePageController(http.Controller):
             return sec.image_url_ar
         return sec.image_url or ''
 
-    def _home_departments(self, lang):
+    def _home_departments(self, lang, limit=14):
         PC = request.env['product.public.category'].sudo()
         wid = request.website.id if request.website else False
         out = []
         for c in PC.search([('parent_id', '=', False), ('website_id', 'in', [False, wid])],
-                            order='sequence, name', limit=14):
+                            order='sequence, name', limit=max(4, min(limit or 14, 30))):
             out.append({'name': c.name, 'url': '/shop/category/%d' % c.id,
                         'image': ('/web/image/product.public.category/%d/image_256' % c.id) if c.image_128 else ''})
         return out

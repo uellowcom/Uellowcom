@@ -111,6 +111,10 @@
                                         <field name="flash_color2" widget="color"/>
                                     </group>
 
+                                    <group string="الأقسام · Categories" invisible="section_type not in ('dept_spotlight','category_grid')">
+                                        <field name="limit" string="عدد الأقسام"/>
+                                    </group>
+
                                     <group string="البانر" invisible="section_type != 'banner'">
                                         <field name="image" widget="image" options="{'size':[600,300]}"/>
                                         <field name="image_url"/>

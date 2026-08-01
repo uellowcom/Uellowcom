@@ -94,6 +94,34 @@
           .uh-dept .ic img{width:100%;height:100%;object-fit:cover}.uh-dept .ic span{font-size:22px}
           .uh-dept .nm{font-size:11.5px;font-weight:700;text-align:center;line-height:1.25;
             display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+          /* category grid (browse categories) */
+          .uh-catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+          .uh-cat{display:flex;flex-direction:column;align-items:center;gap:9px;text-decoration:none;color:var(--ink);
+            background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 10px;
+            transition:transform .18s,box-shadow .18s,border-color .18s}
+          .uh-cat:hover{transform:translateY(-3px);box-shadow:0 14px 26px -16px rgba(20,40,60,.35);border-color:#ffe08a}
+          .uh-cat-ph{width:78px;height:78px;border-radius:50%;background:linear-gradient(160deg,#fff8e6,#eef5fb);
+            display:grid;place-items:center;overflow:hidden}
+          .uh-cat-ph img{width:100%;height:100%;object-fit:contain;padding:13px}
+          .uh-cat-emo{font-size:30px}
+          .uh-cat-nm{font-size:12.5px;font-weight:700;text-align:center;line-height:1.3;
+            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+          @media (max-width:480px){.uh-catgrid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}}
+          /* feature / trust bar */
+          .uh-feats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+            background:linear-gradient(180deg,#fffdf6,#fff);border:1px solid var(--line);border-radius:16px;padding:16px}
+          .uh-feat{display:flex;align-items:center;gap:12px;padding:6px 10px}
+          .uh-feat + .uh-feat{border-inline-start:1px solid var(--line)}
+          .uh-feat-ic{width:44px;height:44px;flex:none;border-radius:12px;display:grid;place-items:center}
+          .uh-feat-ic svg{width:22px;height:22px}
+          .uh-feat-ic.c1{background:#fff1e8;color:#F26A2E}
+          .uh-feat-ic.c2{background:#e7f5fc;color:#1a90c9}
+          .uh-feat-ic.c3{background:#e9f8ee;color:#1f9d55}
+          .uh-feat-ic.c4{background:#fff6da;color:#C79200}
+          .uh-feat-tx{display:flex;flex-direction:column;line-height:1.25}
+          .uh-feat-tx b{font-size:13.5px;font-weight:800;color:var(--ink)}
+          .uh-feat-tx i{font-size:11.5px;font-style:normal;color:var(--muted)}
+          @media (max-width:860px){.uh-feats{grid-template-columns:repeat(2,1fr)}.uh-feat:nth-child(2n){border-inline-start:0}}
           /* bonus */
           .uh-bonus{background:linear-gradient(120deg,#fff2e9,#e7f5fc);border:1px solid var(--line);border-radius:18px;
             padding:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;overflow:hidden;position:relative}
@@ -104,23 +132,24 @@
             color:#fff;text-decoration:none;font-weight:800;border-radius:12px;padding:12px 22px;font-size:14px;border:0;cursor:pointer}
           .uh-btn:hover{filter:brightness(1.05)}
           /* Banggood-style under-hero row: products slider + new-user bonus panel */
-          .uh-bwrap{display:flex;gap:12px;align-items:stretch;border:1.5px solid #F3C63A;
-            border-radius:16px;padding:12px;background:#FFFBEB;box-shadow:0 6px 22px rgba(120,90,0,.06)}
+          .uh-bwrap{display:flex;gap:14px;align-items:stretch;border:1px solid rgba(150,100,0,.28);
+            border-radius:18px;padding:16px;color:#3f2a00;position:relative;overflow:hidden;
+            background-image:radial-gradient(rgba(255,255,255,.4) 1px,transparent 1.6px),linear-gradient(150deg,var(--c1,#FFD24D),var(--c2,#F4A100));
+            background-size:15px 15px,100% 100%;
+            box-shadow:0 14px 34px -18px rgba(190,130,0,.6),inset 0 1px 0 rgba(255,255,255,.4)}
           .uh-bslider{flex:1 1 0;min-width:0;width:auto}
-          .uh-bpanel{flex:0 0 196px;border-radius:14px;text-decoration:none;color:#4a3200;position:relative;overflow:hidden;
-            background-image:radial-gradient(rgba(255,255,255,.5) 1px,transparent 1.5px),linear-gradient(150deg,var(--c1,#FFD24D),var(--c2,#F4A100));
-            background-size:13px 13px,100% 100%;
+          .uh-bwrap .uh-card{background:#fff;border:1px solid rgba(70,45,0,.08);box-shadow:0 8px 18px -12px rgba(120,80,0,.5)}
+          .uh-bpanel{flex:0 0 186px;border-radius:14px;text-decoration:none;color:#3f2a00;
+            border-inline-start:1px solid rgba(120,80,0,.18);
             display:flex;flex-direction:column;align-items:center;justify-content:center;
-            gap:6px;text-align:center;padding:18px 14px;transition:transform .15s,box-shadow .15s;
-            box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 10px 24px -12px rgba(190,130,0,.55)}
-          .uh-bpanel:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45),0 16px 30px -12px rgba(190,130,0,.65)}
-          .uh-bgift{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.85);
-            display:grid;place-items:center;font-size:28px;line-height:1;box-shadow:0 4px 12px -4px rgba(160,110,0,.5)}
-          .uh-btitle{font-size:15px;font-weight:900;line-height:1.25;color:#3f2a00}
-          .uh-bamt{font-size:12.5px;font-weight:700;color:#6b4a00;line-height:1.35}
-          .uh-bbtn{margin-top:4px;background:#3f2a00;color:#FFD24D;font-weight:800;
-            border-radius:999px;padding:8px 22px;font-size:12.5px;box-shadow:0 4px 10px -3px rgba(60,40,0,.5)}
-          @media (max-width:640px){.uh-bwrap{flex-direction:column}.uh-bpanel{flex:none;padding:16px}}
+            gap:9px;text-align:center;padding:14px 14px;transition:transform .15s}
+          .uh-bpanel:hover{transform:translateY(-1px)}
+          .uh-bpanel:hover .uh-bbtn{box-shadow:0 8px 18px -6px rgba(60,40,0,.6)}
+          .uh-btitle{font-size:17px;font-weight:900;line-height:1.25;color:#3a2600}
+          .uh-bamt{font-size:13px;font-weight:700;color:#5e4100;line-height:1.45}
+          .uh-bbtn{margin-top:6px;background:#3f2a00;color:#FFD24D;font-weight:800;
+            border-radius:999px;padding:9px 28px;font-size:13px;box-shadow:0 5px 12px -4px rgba(60,40,0,.5);transition:box-shadow .15s}
+          @media (max-width:640px){.uh-bwrap{flex-direction:column}.uh-bpanel{flex:none;padding:14px;border-inline-start:0;border-top:1px solid rgba(120,80,0,.18)}}
           /* Banggood hero: categories span full height (slider + bonus row) on the right */
           @media (min-width:992px){
             /* categories on the RIGHT (RTL first track), slider on the left; fixed
@@ -153,14 +182,13 @@
                 <t t-call="uellow_home_slider.uellow_home_slider_block"/>
                 <t t-if="sec.get('bonus')">
                   <t t-set="b" t-value="sec['bonus']"/>
-                  <div class="uh-bwrap uh-bwrap-hero">
+                  <div class="uh-bwrap uh-bwrap-hero" t-attf-style="--c1:#{b['color1']};--c2:#{b['color2']}">
                     <div class="uh-slider uh-bslider">
                       <button type="button" class="uh-fnav prev" aria-label="Previous">‹</button>
                       <div class="uh-frail"><t t-set="products" t-value="b['products']"/><t t-call="uellow_home_slider.home_cards"/></div>
                       <button type="button" class="uh-fnav next" aria-label="Next">›</button>
                     </div>
-                    <a class="uh-bpanel" t-att-href="b['panel_link']" t-attf-style="--c1:#{b['color1']};--c2:#{b['color2']}">
-                      <div class="uh-bgift" t-esc="b['icon']"/>
+                    <a class="uh-bpanel" t-att-href="b['panel_link']">
                       <div class="uh-btitle" t-esc="b['title'] or ('مكافأة المستخدم الجديد' if is_ar else 'New-user bonus')"/>
                       <div class="uh-bamt" t-esc="b['subtitle'] or ('يصل إلى 25 د.ك' if is_ar else 'Up to 25 KWD')"/>
                       <span class="uh-bbtn"><t t-esc="b['btn']"/> ›</span>
@@ -227,16 +255,54 @@
             </div>
           </section>
 
+          <section t-if="sec['type'] == 'category_grid'" class="uh-sec"
+                   t-att-style="('padding:%dpx 0;' % sec['pad_y']) + (('background:%s;' % sec['bg']) if sec['bg'] else '')">
+            <div class="container">
+              <div t-if="sec['show_title'] and sec['title']" class="uh-head">
+                <span class="uh-ttl"><t t-esc="sec['title']"/></span>
+              </div>
+              <div class="uh-catgrid">
+                <a t-foreach="sec['cats']" t-as="c" t-att-href="c['url']" class="uh-cat">
+                  <span class="uh-cat-ph"><img t-if="c['image']" t-att-src="c['image']" t-att-alt="c['name']" loading="lazy" decoding="async" width="120" height="120"/><span t-else="" class="uh-cat-emo">🛍️</span></span>
+                  <span class="uh-cat-nm" t-esc="c['name']"/>
+                </a>
+              </div>
+            </div>
+          </section>
+
+          <section t-if="sec['type'] == 'feature_bar'" class="uh-sec"
+                   t-att-style="('padding:%dpx 0;' % sec['pad_y']) + (('background:%s;' % sec['bg']) if sec['bg'] else '')">
+            <div class="container">
+              <div class="uh-feats">
+                <div class="uh-feat">
+                  <span class="uh-feat-ic c1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4h13v11H1z"/><path d="M14 8h4l3 3v4h-7z"/><circle cx="5.5" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/></svg></span>
+                  <span class="uh-feat-tx"><b t-esc="'شحن مجاني' if is_ar else 'Free shipping'"/><i t-esc="'على الطلبات المؤهلة' if is_ar else 'On qualifying orders'"/></span>
+                </div>
+                <div class="uh-feat">
+                  <span class="uh-feat-ic c2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z"/><path d="M9 12l2 2 4-4"/></svg></span>
+                  <span class="uh-feat-tx"><b t-esc="'دفع آمن' if is_ar else 'Secure payment'"/><i t-esc="'حماية كاملة للبيانات' if is_ar else 'Fully protected checkout'"/></span>
+                </div>
+                <div class="uh-feat">
+                  <span class="uh-feat-ic c3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></span>
+                  <span class="uh-feat-tx"><b t-esc="'استرجاع سهل' if is_ar else 'Easy returns'"/><i t-esc="'خلال 14 يومًا' if is_ar else 'Within 14 days'"/></span>
+                </div>
+                <div class="uh-feat">
+                  <span class="uh-feat-ic c4"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="14" width="4" height="6" rx="1.2"/><rect x="18" y="14" width="4" height="6" rx="1.2"/><path d="M20 18v1a3 3 0 0 1-3 3h-3"/></svg></span>
+                  <span class="uh-feat-tx"><b t-esc="'دعم متواصل' if is_ar else '24/7 support'"/><i t-esc="'فريق جاهز لمساعدتك' if is_ar else 'Real humans, always on'"/></span>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section t-if="sec['type'] == 'new_user_bonus' and not sec.get('_skip')" class="uh-sec" t-att-style="'padding:%dpx 0;' % sec['pad_y']">
             <div class="container">
-              <div class="uh-bwrap">
+              <div class="uh-bwrap" t-attf-style="--c1:#{sec['color1']};--c2:#{sec['color2']}">
                 <div class="uh-slider uh-bslider">
                   <button type="button" class="uh-fnav prev" aria-label="Previous">‹</button>
                   <div class="uh-frail"><t t-set="products" t-value="sec['products']"/><t t-call="uellow_home_slider.home_cards"/></div>
                   <button type="button" class="uh-fnav next" aria-label="Next">›</button>
                 </div>
-                <a class="uh-bpanel" t-att-href="sec['panel_link']" t-attf-style="--c1:#{sec['color1']};--c2:#{sec['color2']}">
-                  <div class="uh-bgift" t-esc="sec['icon']"/>
+                <a class="uh-bpanel" t-att-href="sec['panel_link']">
                   <div class="uh-btitle" t-esc="sec['title'] or ('مكافأة المستخدم الجديد' if is_ar else 'New-user bonus')"/>
                   <div class="uh-bamt" t-esc="sec['subtitle'] or ('يصل إلى 25 د.ك' if is_ar else 'Up to 25 KWD')"/>
                   <span class="uh-bbtn"><t t-esc="sec['btn']"/> ›</span>

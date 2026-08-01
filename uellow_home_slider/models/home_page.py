@@ -10,6 +10,8 @@ SECTION_TYPES = [
     ('banner',         'بانر · Banner (image + link)'),
     ('flash_deals',    'عروض فلاش · Flash deals'),
     ('infinite_products','منتجات لانهائية · Infinite products'),
+    ('category_grid',  'شبكة الأقسام · Categories grid'),
+    ('feature_bar',    'شريط المزايا · Feature/trust bar'),
     ('custom_html',    'HTML مخصّص · Custom HTML'),
 ]
 
