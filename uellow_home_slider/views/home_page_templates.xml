@@ -70,8 +70,10 @@
           .uh-flashbtn{margin-top:2px;background:#fff;color:var(--orange2);font-weight:800;border-radius:999px;
             padding:8px 20px;font-size:12.5px;text-decoration:none}
           .uh-flashbtn:hover{filter:brightness(.97)}
-          .uh-flashrail{flex:1 1 0;min-width:0}
-          @media (max-width:640px){.uh-flashwrap{flex-direction:column}.uh-flashpanel{flex:none;flex-direction:row;flex-wrap:wrap;justify-content:center;padding:12px 16px}}
+          .uh-flashgrid{flex:1 1 0;min-width:0;display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+          @media (max-width:1024px){.uh-flashgrid{grid-template-columns:repeat(4,1fr)}}
+          @media (max-width:640px){.uh-flashwrap{flex-direction:column}.uh-flashpanel{flex:none;flex-direction:row;flex-wrap:wrap;justify-content:center;padding:12px 16px}
+            .uh-flashgrid{grid-template-columns:repeat(3,1fr);gap:8px}}
           /* departments */
           .uh-depts{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:12px}
           .uh-dept{display:flex;flex-direction:column;align-items:center;gap:7px;text-decoration:none;color:inherit;
@@ -127,7 +129,7 @@
                   <div class="uh-timer" data-countdown="1"><b>00</b><i>:</i><b>00</b><i>:</i><b>00</b></div>
                   <a class="uh-flashbtn" t-att-href="sec['link_url']"><t t-esc="'عرض الكل' if is_ar else 'View all'"/></a>
                 </div>
-                <div class="uh-rail uh-flashrail">
+                <div class="uh-flashgrid">
                   <t t-set="products" t-value="sec['products']"/>
                   <t t-call="uellow_home_slider.home_cards"/>
                 </div>
