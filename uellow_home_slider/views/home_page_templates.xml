@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-  <!-- shared product-card fragment (used by sections AND the /more endpoint) -->
   <template id="home_cards" name="Uellow home product cards">
     <a t-foreach="products" t-as="pr" t-att-href="pr['url']" class="uh-card">
       <div class="uh-thumb">
@@ -25,15 +24,16 @@
             --orange:#F26A2E;--orange2:#d8500f;--sky:#22a7e0;--gold:#F5C320;--red:#E63946;
             background:var(--bg);color:var(--ink);font-family:'Segoe UI',Tahoma,system-ui,sans-serif;line-height:1.5}
           .uhome *{box-sizing:border-box}
-          .uh-w{max-width:1100px;margin:0 auto;padding:0 14px}
           .uh-hero{padding-top:10px}
           .uh-sec{position:relative}
-          .uh-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}
+          .uh-anim{opacity:0;transform:translateY(16px)}
+          .uh-anim.in{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease}
+          .uh-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px;flex-wrap:wrap}
           .uh-ttl{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:900;letter-spacing:.05em;
             text-transform:uppercase;color:var(--orange2)}
           .uh-ttl::before{content:'';width:16px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--orange),var(--orange2))}
           .uh-ttl small{font-weight:600;text-transform:none;letter-spacing:0;color:var(--muted);font-size:11px}
-          .uh-all{white-space:nowrap;font-size:11.5px;font-weight:800;color:var(--muted);text-decoration:none}
+          .uh-all{white-space:nowrap;font-size:11.5px;font-weight:800;color:var(--muted);text-decoration:none;margin-inline-start:auto}
           .uh-all:hover{color:var(--orange)}
           .uh-rail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(158px,1fr);gap:12px;
             overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;-webkit-overflow-scrolling:touch}
@@ -43,7 +43,8 @@
             overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:box-shadow .15s,transform .15s}
           .uh-card:hover{box-shadow:0 14px 28px -18px rgba(20,50,80,.45);transform:translateY(-3px)}
           .uh-thumb{position:relative;aspect-ratio:1;background:#f2f6f9;overflow:hidden}
-          .uh-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+          .uh-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s}
+          .uh-card:hover .uh-thumb img{transform:scale(1.05)}
           .uh-disc{position:absolute;inset-inline-start:8px;top:8px;background:var(--red);color:#fff;
             font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px}
           .uh-name{padding:9px 10px 2px;font-size:12.5px;font-weight:600;line-height:1.35;
@@ -51,48 +52,56 @@
           .uh-price{padding:2px 10px 11px;display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;margin-top:auto}
           .uh-now{font-size:14px;font-weight:800;color:var(--ink)}
           .uh-was{font-size:11.5px;color:#9aa7b2;text-decoration:line-through}
-          /* flash deals */
+          /* flash deals + countdown */
+          .uh-flash{background:linear-gradient(180deg,#fff4f1,transparent 62%)}
           .uh-flash .uh-ttl{color:var(--red)}
           .uh-flash .uh-ttl::before{background:linear-gradient(90deg,var(--red),#b12633)}
           .uh-flash .uh-ttl::after{content:' 🔥'}
-          .uh-flash{background:linear-gradient(180deg,#fff4f1,transparent 60%)}
+          .uh-timer{display:inline-flex;align-items:center;gap:5px;font-weight:900;font-size:12px;color:#fff}
+          .uh-timer b{background:#20313d;color:#fff;border-radius:6px;padding:3px 6px;min-width:26px;text-align:center;
+            font-variant-numeric:tabular-nums;letter-spacing:.5px}
+          .uh-timer i{color:var(--red);font-style:normal;font-weight:900}
+          .uh-timer .lbl{color:var(--red);font-weight:800;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
           /* departments */
           .uh-depts{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:12px}
           .uh-dept{display:flex;flex-direction:column;align-items:center;gap:7px;text-decoration:none;color:inherit;
             background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 8px;transition:.15s}
           .uh-dept:hover{border-color:var(--orange);box-shadow:0 10px 22px -16px rgba(20,50,80,.35);transform:translateY(-2px)}
-          .uh-dept .ic{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#fff2e9,#e7f5fc);
-            display:grid;place-items:center;overflow:hidden}
-          .uh-dept .ic img{width:100%;height:100%;object-fit:cover}
-          .uh-dept .ic span{font-size:22px}
+          .uh-dept .ic{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#fff2e9,#e7f5fc);display:grid;place-items:center;overflow:hidden}
+          .uh-dept .ic img{width:100%;height:100%;object-fit:cover}.uh-dept .ic span{font-size:22px}
           .uh-dept .nm{font-size:11.5px;font-weight:700;text-align:center;line-height:1.25;
             display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
           /* bonus */
           .uh-bonus{background:linear-gradient(120deg,#fff2e9,#e7f5fc);border:1px solid var(--line);border-radius:18px;
-            padding:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+            padding:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;overflow:hidden;position:relative}
+          .uh-bonus::after{content:'🎁';position:absolute;font-size:120px;opacity:.06;inset-inline-end:10px;top:-20px}
           .uh-bonus h3{margin:0;font-size:clamp(18px,2.4vw,24px);font-weight:800}
           .uh-bonus p{margin:4px 0 0;color:var(--muted);font-size:14px}
           .uh-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(120deg,var(--orange),var(--orange2));
             color:#fff;text-decoration:none;font-weight:800;border-radius:12px;padding:12px 22px;font-size:14px;border:0;cursor:pointer}
           .uh-btn:hover{filter:brightness(1.05)}
           .uh-banner img{width:100%;display:block;border-radius:16px}
-          /* infinite */
-          .uh-inf-sentinel{height:1px}
-          .uh-inf-more{text-align:center;margin-top:18px}
-          .uh-inf-btn{margin:0 auto}
+          .uh-inf-sentinel{height:1px}.uh-inf-more{text-align:center;margin-top:18px}.uh-inf-btn{margin:0 auto}
+          .uh-spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--orange);border-radius:50%;animation:uhspin .7s linear infinite;margin:14px auto}
+          @keyframes uhspin{to{transform:rotate(360deg)}}
+          @media (prefers-reduced-motion:reduce){.uh-anim{opacity:1;transform:none}.uh-card:hover .uh-thumb img{transform:none}}
         </style>
 
         <t t-foreach="sections" t-as="sec">
           <t t-if="sec['type'] == 'hero_slider'">
-            <div class="uh-w uh-hero"><t t-call="uellow_home_slider.uellow_home_slider_block"/></div>
+            <div class="container uh-hero"><t t-call="uellow_home_slider.uellow_home_slider_block"/></div>
           </t>
 
           <section t-if="sec['type'] in ('product_row','category_strip','flash_deals')"
                    t-att-class="'uh-sec ' + ('uh-flash' if sec['type']=='flash_deals' else '')"
                    t-att-style="('padding:%dpx 0;' % sec['pad_y']) + (('background:%s;' % sec['bg']) if sec['bg'] else '')">
-            <div class="uh-w">
+            <div class="container">
               <div t-if="sec['show_title'] and sec['title']" class="uh-head">
                 <span class="uh-ttl"><t t-esc="sec['title']"/><small t-if="sec['subtitle']" t-esc="sec['subtitle']"/></span>
+                <span t-if="sec['type']=='flash_deals'" class="uh-timer" data-countdown="1">
+                  <span class="lbl"><t t-esc="'ينتهي خلال' if is_ar else 'Ends in'"/></span>
+                  <b>00</b><i>:</i><b>00</b><i>:</i><b>00</b>
+                </span>
                 <a t-if="sec['show_link']" t-att-href="sec['link_url']" class="uh-all"><t t-esc="sec['link_label']"/> →</a>
               </div>
               <div t-att-class="'uh-grid' if sec['style']=='grid' else 'uh-rail'"
@@ -105,9 +114,9 @@
 
           <section t-if="sec['type'] == 'dept_spotlight'" class="uh-sec"
                    t-att-style="('padding:%dpx 0;' % sec['pad_y']) + (('background:%s;' % sec['bg']) if sec['bg'] else '')">
-            <div class="uh-w">
+            <div class="container">
               <div t-if="sec['show_title'] and sec['title']" class="uh-head">
-                <span class="uh-ttl"><t t-esc="sec['title']"/><small t-if="sec['subtitle']" t-esc="sec['subtitle']"/></span>
+                <span class="uh-ttl"><t t-esc="sec['title']"/></span>
               </div>
               <div class="uh-depts">
                 <a t-foreach="sec['cats']" t-as="c" t-att-href="c['url']" class="uh-dept">
@@ -119,7 +128,7 @@
           </section>
 
           <section t-if="sec['type'] == 'new_user_bonus'" class="uh-sec" t-att-style="'padding:%dpx 0;' % sec['pad_y']">
-            <div class="uh-w">
+            <div class="container">
               <div class="uh-bonus">
                 <div>
                   <h3 t-esc="sec['title'] or ('مكافأة الترحيب' if is_ar else 'Welcome bonus')"/>
@@ -131,18 +140,17 @@
           </section>
 
           <section t-if="sec['type'] == 'banner' and sec['image']" class="uh-sec" t-att-style="'padding:%dpx 0;' % sec['pad_y']">
-            <div class="uh-w uh-banner"><a t-att-href="sec['link_url']"><img t-att-src="sec['image']" t-att-alt="sec['title'] or 'banner'" loading="lazy" decoding="async"/></a></div>
+            <div class="container uh-banner"><a t-att-href="sec['link_url']"><img t-att-src="sec['image']" t-att-alt="sec['title'] or 'banner'" loading="lazy" decoding="async"/></a></div>
           </section>
 
           <section t-if="sec['type'] == 'custom_html' and sec['html']" class="uh-sec" t-att-style="'padding:%dpx 0;' % sec['pad_y']">
-            <div class="uh-w"><t t-out="sec['html']"/></div>
+            <div class="container"><t t-out="sec['html']"/></div>
           </section>
 
-          <!-- INFINITE random products -->
           <section t-if="sec['type'] == 'infinite_products'" class="uh-sec" t-att-style="'padding:%dpx 0;' % sec['pad_y']">
-            <div class="uh-w">
+            <div class="container">
               <div t-if="sec['show_title'] and sec['title']" class="uh-head">
-                <span class="uh-ttl"><t t-esc="sec['title']"/><small t-if="sec['subtitle']" t-esc="sec['subtitle']"/></span>
+                <span class="uh-ttl"><t t-esc="sec['title']"/></span>
               </div>
               <div class="uh-inf" data-infinite="1" t-att-data-seed="sec['seed']" t-att-data-limit="sec['limit']">
                 <div class="uh-grid uh-inf-grid">
@@ -162,26 +170,48 @@
 
         <script>
         (function(){
-          var w=document.querySelector('[data-infinite]'); if(!w) return;
-          var grid=w.querySelector('.uh-inf-grid'), sen=w.querySelector('.uh-inf-sentinel'),
-              btn=w.querySelector('.uh-inf-btn'), seed=w.getAttribute('data-seed'), limit=w.getAttribute('data-limit')||12;
-          var page=1, autoLeft=5, loading=false, done=false, obs=null;
-          function load(){
-            if(loading||done) return; loading=true;
-            fetch('/home-preview/more?seed='+seed+'&amp;page='+page+'&amp;limit='+limit,{credentials:'same-origin'})
-              .then(function(r){return r.text();})
-              .then(function(html){
-                if(!html || !html.trim()){ done=true; if(sen)sen.style.display='none'; if(btn)btn.style.display='none'; loading=false; return; }
-                grid.insertAdjacentHTML('beforeend', html); page++; loading=false;
-                if(autoLeft>0){ autoLeft--; if(autoLeft===0 &amp;&amp; obs){ obs.disconnect(); if(btn)btn.style.display='inline-flex'; } }
-              })
-              .catch(function(){ loading=false; });
-          }
+          /* scroll-reveal animations */
           if('IntersectionObserver' in window){
-            obs=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting) load(); }); }, {rootMargin:'400px'});
-            obs.observe(sen);
-          } else if(btn){ btn.style.display='inline-flex'; }
+            var secs=[].slice.call(document.querySelectorAll('.uhome .uh-sec'));
+            secs.forEach(function(s){ s.classList.add('uh-anim'); });
+            var ro=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); ro.unobserve(e.target); } }); }, {rootMargin:'0px 0px -6% 0px'});
+            secs.forEach(function(s){ ro.observe(s); });
+          }
+          /* flash countdown to midnight */
+          function pad(n){ return (''+n).padStart(2,'0'); }
+          [].slice.call(document.querySelectorAll('[data-countdown]')).forEach(function(el){
+            var b=el.querySelectorAll('b');
+            function tick(){
+              var now=new Date(), end=new Date(); end.setHours(24,0,0,0);
+              var s=Math.max(0,Math.floor((end-now)/1000));
+              if(b.length>=3){ b[0].textContent=pad(Math.floor(s/3600)); b[1].textContent=pad(Math.floor((s%3600)/60)); b[2].textContent=pad(s%60); }
+            }
+            tick(); setInterval(tick,1000);
+          });
+          /* infinite random feed — scroll-based, 5 auto batches then Load more */
+          var w=document.querySelector('[data-infinite]'); if(!w) return;
+          var grid=w.querySelector('.uh-inf-grid'), more=w.querySelector('.uh-inf-more'),
+              btn=w.querySelector('.uh-inf-btn'), seed=w.getAttribute('data-seed'), limit=w.getAttribute('data-limit')||12;
+          var page=1, autoLeft=5, loading=false, done=false;
+          function spin(on){ var s=w.querySelector('.uh-spin'); if(on){ if(!s){ s=document.createElement('div'); s.className='uh-spin'; more.insertBefore(s, btn); } } else if(s){ s.remove(); } }
+          function load(){
+            if(loading||done) return; loading=true; spin(true);
+            fetch('/home-preview/more?seed='+seed+'&amp;page='+page+'&amp;limit='+limit,{credentials:'same-origin'})
+              .then(function(r){ return r.text(); })
+              .then(function(html){
+                spin(false);
+                if(!html || !html.trim()){ done=true; if(btn)btn.style.display='none'; loading=false; return; }
+                grid.insertAdjacentHTML('beforeend', html); page++; loading=false;
+                if(autoLeft>0){ autoLeft--; if(autoLeft===0 &amp;&amp; btn){ btn.style.display='inline-flex'; } }
+              })
+              .catch(function(){ spin(false); loading=false; });
+          }
+          function nearBottom(){ return !(w.getBoundingClientRect().bottom > window.innerHeight + 700); }
+          function onScroll(){ if(autoLeft>0 &amp;&amp; !loading &amp;&amp; !done &amp;&amp; nearBottom()) load(); }
+          window.addEventListener('scroll', onScroll, {passive:true});
+          window.addEventListener('resize', onScroll, {passive:true});
           if(btn) btn.addEventListener('click', load);
+          onScroll();
         })();
         </script>
       </div>
