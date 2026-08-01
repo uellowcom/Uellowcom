@@ -40,6 +40,9 @@ class UellowHomePageController(http.Controller):
                     'flash_label': (sec.flash_label_en if lang == 'en' else sec.flash_label_ar) or ('Ends in' if lang == 'en' else 'تنتهي خلال'),
                     'fcolor1': sec.flash_color1 or '#E63946',
                     'fcolor2': sec.flash_color2 or '#F26A2E',
+                    'flash_btn': (sec.flash_btn_en if lang == 'en' else sec.flash_btn_ar) or ('View all' if lang == 'en' else 'عرض الكل'),
+                    'flash_end': (sec.flash_end.strftime('%Y-%m-%dT%H:%M:%SZ') if sec.flash_end else ''),
+                    'flash_daily': sec.flash_daily,
                 }
                 if sec.section_type in ('product_row', 'category_strip', 'flash_deals'):
                     d['products'] = self._home_products(sec, force='discounted' if sec.section_type == 'flash_deals' else None)
@@ -49,6 +52,14 @@ class UellowHomePageController(http.Controller):
                     d['products'] = self._cards(self._random_page(seed, 0, d['limit']))
                 elif sec.section_type == 'new_user_bonus':
                     d['products'] = self._home_products(sec, force=(sec.product_source or 'newest'))
+                if sec.section_type == 'flash_deals' and d.get('products'):
+                    fs = sec.flash_sort or 'disc_desc'
+                    if fs == 'disc_desc':
+                        d['products'].sort(key=lambda p: -(p.get('discount') or 0))
+                    elif fs == 'price_asc':
+                        d['products'].sort(key=lambda p: p.get('price') or 0)
+                    elif fs == 'price_desc':
+                        d['products'].sort(key=lambda p: -(p.get('price') or 0))
                 # category-scoped block: auto title + "view all" link from the chosen category
                 if sec.product_source == 'category' and sec.category_id:
                     if not d['title']:

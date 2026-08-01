@@ -107,8 +107,14 @@
                                            col="4">
                                         <field name="flash_label_ar"/>
                                         <field name="flash_label_en"/>
+                                        <field name="flash_btn_ar"/>
+                                        <field name="flash_btn_en"/>
                                         <field name="flash_color1" widget="color"/>
                                         <field name="flash_color2" widget="color"/>
+                                        <field name="flash_sort"/>
+                                        <field name="flash_daily"/>
+                                        <field name="flash_end" widget="datetime"/>
+                                        <field name="min_discount" string="أقل خصم %"/>
                                     </group>
 
                                     <group string="الأقسام · Categories" invisible="section_type not in ('dept_spotlight','category_grid')">

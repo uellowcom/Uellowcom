@@ -130,6 +130,17 @@ class UellowHomeSection(models.Model):
     flash_label_ar = fields.Char(string='نص العدّاد [ع]', default='تنتهي خلال')
     flash_color1   = fields.Char(string='لون الفلاش 1', default='#E63946')
     flash_color2   = fields.Char(string='لون الفلاش 2', default='#F26A2E')
+    flash_end      = fields.Datetime(string='نهاية العدّاد (اختياري)',
+                                     help='وقت انتهاء العرض. اتركه فارغًا للعدّ حتى منتصف الليل يوميًا.')
+    flash_daily    = fields.Boolean(string='تصفير يومي للعدّاد', default=True)
+    flash_sort     = fields.Selection([
+        ('disc_desc', 'الأعلى خصمًا · Biggest discount'),
+        ('newest',    'الأحدث · Newest'),
+        ('price_asc', 'الأرخص · Cheapest'),
+        ('price_desc','الأغلى · Most expensive'),
+    ], string='ترتيب المنتجات', default='disc_desc')
+    flash_btn_en   = fields.Char(string='زر الفلاش [EN]', default='View all')
+    flash_btn_ar   = fields.Char(string='زر الفلاش [ع]', default='عرض الكل')
 
     # ── cards / badges ──
     show_save_badge     = fields.Boolean(string='إظهار بادچ التوفير', default=True)
