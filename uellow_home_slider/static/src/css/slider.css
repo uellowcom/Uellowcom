@@ -234,7 +234,7 @@
 
 
 /* real-category departments flyout (subcategories) — header style */
-.uhs-dept { overflow: visible; }
+.uhs-dept { overflow: visible; position: relative; }
 .uhs-dept-h { border-radius: 14px 14px 0 0; }
 .uhs-dept-f { border-radius: 0 0 14px 14px; }
 .uhs-dept-img { width: 24px; height: 24px; border-radius: 6px; object-fit: cover; flex: none; background: #f6f0e4; }
