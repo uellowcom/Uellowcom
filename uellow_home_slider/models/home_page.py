@@ -8,6 +8,8 @@ SECTION_TYPES = [
     ('category_strip', 'شريط الأقسام · Categories strip'),
     ('new_user_bonus', 'مكافأة عضو جديد · New-user bonus'),
     ('banner',         'بانر · Banner (image + link)'),
+    ('flash_deals',    'عروض فلاش · Flash deals'),
+    ('infinite_products','منتجات لانهائية · Infinite products'),
     ('custom_html',    'HTML مخصّص · Custom HTML'),
 ]
 
