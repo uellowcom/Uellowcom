@@ -19,6 +19,7 @@
   <template id="home_preview_page" name="Uellow Homepage (preview)">
     <t t-call="website.layout">
       <t t-set="additional_title" t-value="(page and ((page.meta_title_ar if is_ar else page.meta_title_en) or page.name)) or 'Uellow'"/>
+      <link t-if="hero_preload" rel="preload" as="image" t-att-href="hero_preload" fetchpriority="high"/>
       <div class="uhome" t-att-dir="'rtl' if is_ar else 'ltr'">
         <h1 class="uh-seo-h1"><t t-esc="(page and (page.meta_title_ar if is_ar else page.meta_title_en)) or ('Uellow — تسوّق أونلاين في الكويت: جوّالات وإلكترونيات وعروض يومية' if is_ar else 'Uellow — Online Shopping in Kuwait: phones, electronics &amp; daily deals')"/></h1>
         <style>

@@ -98,6 +98,21 @@ class UellowHomePageController(http.Controller):
                 break
         ld = {'@context': 'https://schema.org', '@type': 'ItemList', 'itemListElement': items}
         structured = Markup(json.dumps(ld, ensure_ascii=False).replace('<', '\\u003c'))
+        # ── LCP: preload the first hero slide image (loads via JS otherwise) ──
+        hero_preload = ''
+        try:
+            hero_sec = page.section_ids.filtered(lambda s: s.section_type == 'hero_slider' and s.active)[:1] if page else None
+            sl = hero_sec.slider_id if hero_sec else False
+            if sl:
+                slides = sl.slide_ids.filtered(
+                    lambda s: s.active and s.device == 'desktop' and (s.language == lang or not s.language)
+                ).sorted('sequence')
+                if not slides:
+                    slides = sl.slide_ids.filtered(lambda s: s.active and s.device == 'desktop').sorted('sequence')
+                if slides:
+                    hero_preload = slides[0].get_src() or ''
+        except Exception:
+            hero_preload = ''
         meta_title = (page and ((page.meta_title_ar if lang == 'ar' else page.meta_title_en) or page.name)) or 'Uellow'
         meta_desc = (page and (page.meta_description_ar if lang == 'ar' else page.meta_description_en)) or (
             'تسوّق أونلاين في الكويت: جوّالات، إلكترونيات، أجهزة منزلية وأزياء وعروض يومية مع توصيل سريع وأقساط مريحة.'
@@ -107,6 +122,7 @@ class UellowHomePageController(http.Controller):
             'page': page, 'sections': sections, 'is_ar': lang == 'ar', 'lang': lang,
             'structured_data': structured, 'seo_desc': meta_desc, 'seo_title': meta_title,
             'website_meta_description': meta_desc, 'website_meta_title': meta_title,
+            'hero_preload': hero_preload,
         })
 
     @http.route(['/home-preview/more'], type='http', auth='public', website=True, sitemap=False)
