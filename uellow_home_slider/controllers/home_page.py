@@ -38,6 +38,14 @@ class UellowHomePageController(http.Controller):
                 elif sec.section_type == 'new_user_bonus':
                     d['products'] = self._home_products(sec, force=(sec.product_source or 'newest'))
                 sections.append(d)
+        # Banggood layout: fold the new-user bonus that follows the hero into the hero's left column
+        for i, d in enumerate(sections):
+            if d['type'] == 'hero_slider':
+                nxt = sections[i + 1] if i + 1 < len(sections) else None
+                if nxt and nxt['type'] == 'new_user_bonus':
+                    d['bonus'] = nxt
+                    nxt['_skip'] = True
+                break
         return request.render('uellow_home_slider.home_preview_page', {
             'page': page, 'sections': sections, 'is_ar': lang == 'ar', 'lang': lang,
         })

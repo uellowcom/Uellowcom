@@ -118,6 +118,19 @@
           .uh-bbtn{margin-top:5px;background:#fff;color:#d8500f;font-weight:800;
             border-radius:999px;padding:7px 20px;font-size:12.5px}
           @media (max-width:640px){.uh-bwrap{flex-direction:column}.uh-bpanel{flex:none;padding:14px}}
+          /* Banggood hero: categories span full height (slider + bonus row) on the right */
+          @media (min-width:992px){
+            .uhome .uh-bghero.has-bonus{display:grid;grid-template-columns:1fr 250px;grid-template-rows:auto auto;gap:12px;align-items:start}
+            .uhome .uh-bghero.has-bonus > .s_uellow_home_slider{display:contents}
+            .uhome .uh-bghero.has-bonus .uhs-desktop.uhs-v2{display:contents}
+            .uhome .uh-bghero.has-bonus .uhs-spot{grid-column:1;grid-row:1;height:360px;margin:0}
+            .uhome .uh-bghero.has-bonus .uhs-dept{grid-column:2;grid-row:1 / span 2;align-self:stretch;height:auto;max-height:none}
+            .uhome .uh-bghero.has-bonus .uh-bwrap-hero{grid-column:1;grid-row:2;margin:0}
+            .uhome .uh-bghero.has-bonus .uhs-mobile{display:none}
+            /* text-only compact category list, like banggood.com */
+            .uhome .uhs-dept-ic{display:none}
+            .uhome .uhs-dept-list li a{padding:9px 12px;gap:6px}
+          }
           .uh-banner img{width:100%;display:block;border-radius:16px}
           .uh-inf-sentinel{height:1px}.uh-inf-more{text-align:center;margin-top:18px}.uh-inf-btn{margin:0 auto}
           .uh-spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--orange);border-radius:50%;animation:uhspin .7s linear infinite;margin:14px auto}
@@ -127,7 +140,27 @@
 
         <t t-foreach="sections" t-as="sec">
           <t t-if="sec['type'] == 'hero_slider'">
-            <div class="container uh-hero"><t t-call="uellow_home_slider.uellow_home_slider_block"/></div>
+            <div class="container uh-hero">
+              <div t-attf-class="uh-bghero#{' has-bonus' if sec.get('bonus') else ''}">
+                <t t-call="uellow_home_slider.uellow_home_slider_block"/>
+                <t t-if="sec.get('bonus')">
+                  <t t-set="b" t-value="sec['bonus']"/>
+                  <div class="uh-bwrap uh-bwrap-hero">
+                    <div class="uh-slider uh-bslider">
+                      <button type="button" class="uh-fnav prev" aria-label="Previous">‹</button>
+                      <div class="uh-frail"><t t-set="products" t-value="b['products']"/><t t-call="uellow_home_slider.home_cards"/></div>
+                      <button type="button" class="uh-fnav next" aria-label="Next">›</button>
+                    </div>
+                    <a class="uh-bpanel" href="/web/signup">
+                      <div class="uh-bgift">🎁</div>
+                      <div class="uh-btitle" t-esc="b['title'] or ('مكافأة المستخدم الجديد' if is_ar else 'New-user bonus')"/>
+                      <div class="uh-bamt" t-esc="b['subtitle'] or ('يصل إلى 25 د.ك' if is_ar else 'Up to 25 KWD')"/>
+                      <span class="uh-bbtn"><t t-esc="'اذهب' if is_ar else 'Go'"/> ›</span>
+                    </a>
+                  </div>
+                </t>
+              </div>
+            </div>
           </t>
 
           <section t-if="sec['type'] in ('product_row','category_strip')" class="uh-sec"
@@ -186,7 +219,7 @@
             </div>
           </section>
 
-          <section t-if="sec['type'] == 'new_user_bonus'" class="uh-sec" t-att-style="'padding:%dpx 0;' % sec['pad_y']">
+          <section t-if="sec['type'] == 'new_user_bonus' and not sec.get('_skip')" class="uh-sec" t-att-style="'padding:%dpx 0;' % sec['pad_y']">
             <div class="container">
               <div class="uh-bwrap">
                 <div class="uh-slider uh-bslider">
