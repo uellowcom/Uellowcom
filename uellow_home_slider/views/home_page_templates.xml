@@ -184,6 +184,13 @@
             .uhome .uhs-dept-list li a:hover .uhs-dept-img{opacity:.62}
             .uhome .uhs-dept-list li a:hover .uhs-dept-ic{color:#9aa2ab !important}
             .uhome .uhs-dept-list li a{padding:9px 12px;gap:6px}
+            /* professional slim scrollbar for the slider category menu */
+            .uhome .uhs-dept-list{scrollbar-width:thin;scrollbar-color:#e4dccb transparent;scroll-behavior:smooth}
+            .uhome .uhs-dept-list::-webkit-scrollbar{width:6px}
+            .uhome .uhs-dept-list::-webkit-scrollbar-track{background:transparent;margin:6px 0}
+            .uhome .uhs-dept-list::-webkit-scrollbar-thumb{background:#e4dccb;border-radius:999px}
+            .uhome .uhs-dept-list:hover::-webkit-scrollbar-thumb{background:#d7cbb0}
+            .uhome .uhs-dept-list::-webkit-scrollbar-thumb:hover{background:#F5C320}
           }
           .uh-banner img{width:100%;display:block;border-radius:16px}
           .uh-inf-sentinel{height:1px}.uh-inf-more{text-align:center;margin-top:18px}.uh-inf-btn{margin:0 auto}
