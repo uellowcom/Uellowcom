@@ -82,7 +82,8 @@ class UellowHomeSliderController(http.Controller):
             parents = PC.search([('parent_id', '=', False),
                                  ('website_id', 'in', [False, wid])],
                                 order='sequence, name', limit=40)
-            for c in parents:
+            website = request.website
+            for _i, c in enumerate(parents):
                 kids = []
                 for ch in c.child_id.sorted(lambda x: (x.sequence, x.name or '')):
                     kids.append({
@@ -90,11 +91,31 @@ class UellowHomeSliderController(http.Controller):
                         'url': '/shop/category/%d' % ch.id,
                         'image': ('/web/image/product.public.category/%d/image_128' % ch.id) if ch.image_128 else '',
                     })
+                brands = []
+                if _i < 20:
+                    try:
+                        for b in website._uc_category_brands(c, limit=8):
+                            brands.append({
+                                'name': b.name,
+                                'url': '/shop?attribute_value=%d' % b.id,
+                                'image': ('/web/image/product.attribute.value/%d/dr_image' % b.id) if getattr(b, 'dr_image', False) else '',
+                            })
+                    except Exception:
+                        brands = []
+                mega_img = ''
+                if getattr(c, 'uc_mega_image', False):
+                    mega_img = '/web/image/product.public.category/%d/uc_mega_image' % c.id
+                elif c.image_128:
+                    mega_img = '/web/image/product.public.category/%d/image_512' % c.id
                 categories.append({
                     'id': c.id, 'name': c.name,
                     'url': '/shop/category/%d' % c.id,
                     'image': ('/web/image/product.public.category/%d/image_128' % c.id) if c.image_128 else '',
                     'children': kids,
+                    'brands': brands,
+                    'mega_image': mega_img,
+                    'mega_eyebrow': (getattr(c, 'uc_mega_eyebrow', '') or ''),
+                    'mega_tagline': (getattr(c, 'uc_mega_tagline', '') or ''),
                 })
             menu_total = len(parents)
 

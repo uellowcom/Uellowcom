@@ -133,9 +133,14 @@ function buildDept(section,data){
             li.addEventListener('mouseenter',function(){
                 var c=cats[+li.dataset.i];
                 lis.forEach(function(x){x.classList.remove('active');});
-                if(!c||!(c.children&&c.children.length)){ hideFly(); return; }
+                if(!c||!((c.children&&c.children.length)||(c.brands&&c.brands.length))){ hideFly(); return; }
                 li.classList.add('active');
-                fly.innerHTML='<div class="uhs-fly-head"><span class="uhs-fly-title">'+esc(c.name)+'</span><a class="uhs-fly-all" href="'+esc(c.url)+'">'+(rtl?'الكل':'View all')+' '+chev+'</a></div><div class="uhs-fly-grid">'+c.children.map(function(k){var ci=k.image?('<img src="'+esc(k.image)+'" alt="" loading="lazy"/>'):('<span class="uhs-fly-noimg">'+svg('tag')+'</span>');return '<a class="uhs-fly-sub" href="'+esc(k.url)+'">'+ci+'<span>'+esc(k.name)+'</span></a>';}).join('')+'</div>';
+                var kids=(c.children||[]), brands=(c.brands||[]);
+                var megaImg=c.mega_image||'', eyebrow=c.mega_eyebrow||(rtl?'مميّز':'Featured'), tagline=c.mega_tagline||'';
+                var subs=kids.length?('<div class="uhs-fly-grid">'+kids.map(function(k){var ci=k.image?('<img src="'+esc(k.image)+'" alt="" loading="lazy"/>'):('<span class="uhs-fly-noimg">'+svg('tag')+'</span>');return '<a class="uhs-fly-sub" href="'+esc(k.url)+'">'+ci+'<span>'+esc(k.name)+'</span></a>';}).join('')+'</div>'):'';
+                var brandBox=brands.length?('<div class="uhs-fly-brands"><div class="uhs-fly-bt">'+(rtl?'أبرز العلامات':'Top brands')+'</div><div class="uhs-fly-bstrip">'+brands.map(function(b){var bi=b.image?('<img src="'+esc(b.image)+'" alt="'+esc(b.name)+'" loading="lazy"/>'):('<span>'+esc(b.name)+'</span>');return '<a class="uhs-fly-brand" href="'+esc(b.url)+'">'+bi+'</a>';}).join('')+'</div></div>'):'';
+                var feat=megaImg?('<a class="uhs-fly-feat" href="'+esc(c.url)+'" style="background-image:linear-gradient(140deg,rgba(19,25,33,.82),rgba(245,195,32,.5)),url('+esc(megaImg)+')"><span class="uhs-fly-feat-eb">'+esc(eyebrow)+'</span><strong class="uhs-fly-feat-tt">'+esc(c.name)+'</strong>'+(tagline?('<span class="uhs-fly-feat-tx">'+esc(tagline)+'</span>'):'')+'<span class="uhs-fly-feat-cta">'+(rtl?'تسوّق الآن':'Shop now')+' '+chev+'</span></a>'):'';
+                fly.innerHTML='<div class="uhs-fly-head"><span class="uhs-fly-title">'+esc(c.name)+'</span><a class="uhs-fly-all" href="'+esc(c.url)+'">'+(rtl?'الكل':'View all')+' '+chev+'</a></div><div class="uhs-fly-body"><div class="uhs-fly-main">'+subs+brandBox+'</div>'+feat+'</div>';
                 fly.classList.add('on');
             });
         });

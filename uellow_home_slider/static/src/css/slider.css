@@ -249,33 +249,53 @@
 .uhs-dept-list li { position: relative; }
 .uhs-dept-list li.active > a { background: #fff6e2; color: #1a1206; }
 .uhs-dept-fly {
-    position: absolute; top: 0; inset-inline-start: calc(100% + 8px);
-    width: min(360px, 58vw); max-height: 100%;
-    background: #fff; border: 1px solid #ece1cf; border-radius: 14px;
-    box-shadow: 0 24px 60px -24px rgba(20,50,80,.45);
-    padding: 18px 20px; overflow: auto; z-index: 40;
+    position: absolute; top: 0; inset-inline-start: calc(100% + 12px);
+    width: min(820px, calc(100vw - 290px)); height: 100%;
+    display: flex; flex-direction: column;
+    background: #fff; border: 1px solid #ece1cf; border-radius: 16px;
+    box-shadow: 0 30px 70px -28px rgba(20,50,80,.5);
+    padding: 16px 18px; overflow: hidden; z-index: 40;
     opacity: 0; visibility: hidden; transform: translateY(6px);
-    transition: opacity .14s, transform .14s;
+    transition: opacity .16s, transform .16s;
 }
 .uhs-dept-fly.on { opacity: 1; visibility: visible; transform: none; }
 .uhs-fly-head { display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    padding-bottom: 9px; margin-bottom: 12px; border-bottom: 1px solid #eef0f3; }
-.uhs-fly-title { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800;
+    padding-bottom: 10px; margin-bottom: 12px; border-bottom: 1px solid #eef0f3; flex: none; }
+.uhs-fly-title { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800;
     color: #20190d; letter-spacing: .2px; }
-.uhs-fly-title::before { content: ''; width: 4px; height: 15px; border-radius: 3px; background: #F5C320; }
+.uhs-fly-title::before { content: ''; width: 4px; height: 17px; border-radius: 3px; background: #F5C320; }
 .uhs-fly-all { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700;
-    color: #20190d; padding: 4px 11px; border-radius: 999px; background: #fff7d6; text-decoration: none;
+    color: #20190d; padding: 5px 13px; border-radius: 999px; background: #fff7d6; text-decoration: none;
     transition: background .12s ease; white-space: nowrap; }
 .uhs-fly-all:hover { background: #ffeaa0; }
-.uhs-fly-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-.uhs-fly-sub { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+.uhs-fly-body { display: flex; gap: 16px; flex: 1 1 auto; min-height: 0; }
+.uhs-fly-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 12px; overflow: auto; }
+.uhs-fly-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-content: start; }
+.uhs-fly-sub { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px;
     color: #495057; font-size: 12.5px; line-height: 1.3; border: 1px solid transparent; background: #fff;
-    text-decoration: none; transition: background .12s ease, border-color .12s ease, color .12s ease, transform .12s ease; }
+    text-decoration: none; transition: background .12s, border-color .12s, color .12s, transform .12s; }
 .uhs-fly-sub:hover { background: #fffbe8; border-color: rgba(245,195,32,.5); color: #20190d; transform: translateY(-1px); }
-.uhs-fly-sub img, .uhs-fly-noimg { width: 34px; height: 34px; border-radius: 6px; object-fit: contain; flex: none;
+.uhs-fly-sub img, .uhs-fly-noimg { width: 36px; height: 36px; border-radius: 8px; object-fit: contain; flex: none;
     background: #f8f9fa; display: grid; place-items: center; }
 .uhs-fly-noimg { color: #E5A900; background: #fff7d6; }
 .uhs-fly-sub span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uhs-fly-brands { border-top: 1px dashed #eef0f3; padding-top: 10px; margin-top: auto; }
+.uhs-fly-bt { font-size: 12px; font-weight: 800; color: #6b6256; margin-bottom: 8px; }
+.uhs-fly-bstrip { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+.uhs-fly-brand { height: 42px; display: grid; place-items: center; padding: 6px 10px; border: 1px solid #eef0f3;
+    border-radius: 9px; background: #fff; text-decoration: none; color: #495057; font-size: 11.5px; font-weight: 700;
+    transition: border-color .12s, box-shadow .12s; overflow: hidden; text-align: center; }
+.uhs-fly-brand:hover { border-color: rgba(245,195,32,.6); box-shadow: 0 6px 14px -8px rgba(120,90,0,.4); }
+.uhs-fly-brand img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.uhs-fly-feat { flex: 0 0 240px; border-radius: 14px; overflow: hidden; position: relative;
+    background-size: cover; background-position: center; text-decoration: none;
+    display: flex; flex-direction: column; justify-content: flex-end; gap: 5px; padding: 18px; min-height: 0; }
+.uhs-fly-feat-eb { font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: #ffe9a6; }
+.uhs-fly-feat-tt { font-size: 20px; font-weight: 900; color: #fff; line-height: 1.15; }
+.uhs-fly-feat-tx { font-size: 12.5px; color: rgba(255,255,255,.9); line-height: 1.4; }
+.uhs-fly-feat-cta { margin-top: 8px; align-self: flex-start; background: #F5C320; color: #20190d;
+    font-weight: 800; font-size: 12px; padding: 7px 16px; border-radius: 999px; }
+@media (max-width: 1200px) { .uhs-fly-feat { flex-basis: 200px; } .uhs-fly-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 992px) { .uhs-dept-fly { display: none !important; } }
 
 
