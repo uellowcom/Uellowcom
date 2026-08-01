@@ -430,19 +430,8 @@ $uf-brand-dark  : #412402;
 }
 
 // ============================================================================
-//   Responsive — tablet & mobile (footer now visible on every device)
+//   Hide on mobile — entire footer (desktop-only by design)
 // ============================================================================
 @media (max-width: 991.98px) {
-    .uc-foot-inner { padding-inline: 16px; }
-    .uc-foot-trust-row { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 16px 0; }
-    .uc-foot-trust-card:nth-child(5) { grid-column: span 2; }
-    .uc-foot-main { padding: 30px 0 24px; }
-    .uc-foot-grid { grid-template-columns: 1fr 1fr; gap: 26px 20px; }
-    .uc-foot-brand, .uc-foot-cta { grid-column: span 2; }
-}
-@media (max-width: 479.98px) {
-    .uc-foot-trust-row { grid-template-columns: 1fr; }
-    .uc-foot-trust-card:nth-child(5) { grid-column: auto; }
-    .uc-foot-grid { grid-template-columns: 1fr; }
-    .uc-foot-app-row { grid-template-columns: 1fr 1fr; }
+    #footer.uc-footer-shell { display: none !important; }
 }

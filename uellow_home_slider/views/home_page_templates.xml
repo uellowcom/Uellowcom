@@ -142,7 +142,7 @@
             background-image:radial-gradient(rgba(255,255,255,.4) 1px,transparent 1.6px),linear-gradient(150deg,var(--c1,#FFD24D),var(--c2,#F4A100));
             background-size:15px 15px,100% 100%;
             box-shadow:0 14px 34px -18px rgba(190,130,0,.6),inset 0 1px 0 rgba(255,255,255,.4)}
-          .uh-bslider{flex:1 1 0;min-width:0;width:auto}
+          .uh-bslider{flex:1 1 0;min-width:0;width:auto;display:flex;flex-direction:column;justify-content:center}
           .uh-bwrap .uh-frail{align-items:start}
           .uh-bwrap .uh-card{background:#fff;border:1px solid rgba(70,45,0,.10);border-radius:14px;overflow:hidden;
             box-shadow:none;transition:transform .16s}
