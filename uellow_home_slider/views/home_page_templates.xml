@@ -120,12 +120,15 @@
           @media (max-width:640px){.uh-bwrap{flex-direction:column}.uh-bpanel{flex:none;padding:14px}}
           /* Banggood hero: categories span full height (slider + bonus row) on the right */
           @media (min-width:992px){
-            .uhome .uh-bghero.has-bonus{display:grid;grid-template-columns:1fr 250px;grid-template-rows:auto auto;gap:12px;align-items:start}
+            /* categories on the RIGHT (RTL first track), slider on the left; fixed
+               hero height so the tall category list scrolls instead of stretching it */
+            .uhome .uh-bghero.has-bonus{display:grid;grid-template-columns:250px minmax(0,1fr);grid-template-rows:360px 1fr;gap:12px;height:620px}
             .uhome .uh-bghero.has-bonus > .s_uellow_home_slider{display:contents !important}
             .uhome .uh-bghero.has-bonus .uhs-desktop.uhs-v2{display:contents !important}
-            .uhome .uh-bghero.has-bonus .uhs-spot{grid-column:1;grid-row:1;height:360px;margin:0}
-            .uhome .uh-bghero.has-bonus .uhs-dept{grid-column:2;grid-row:1 / span 2;align-self:stretch;height:auto;max-height:none}
-            .uhome .uh-bghero.has-bonus .uh-bwrap-hero{grid-column:1;grid-row:2;margin:0}
+            .uhome .uh-bghero.has-bonus .uhs-spot{grid-column:2;grid-row:1;height:auto;min-height:0;margin:0}
+            .uhome .uh-bghero.has-bonus .uh-bwrap-hero{grid-column:2;grid-row:2;min-height:0;margin:0}
+            .uhome .uh-bghero.has-bonus .uhs-dept{grid-column:1;grid-row:1 / span 2;align-self:stretch;height:auto;min-height:0;max-height:none;overflow:hidden}
+            .uhome .uh-bghero.has-bonus .uhs-dept-list{overflow-y:auto;min-height:0}
             .uhome .uh-bghero.has-bonus .uhs-mobile{display:none !important}
             /* text-only compact category list, like banggood.com */
             .uhome .uhs-dept-ic, .uhome .uhs-dept-img{display:none !important}
