@@ -580,7 +580,20 @@ def _bnpl_offer(product, lang='en_US'):
             return None
         fee = price * (cfg.bnpl_fee_pct or 0) / 100.0 + (cfg.bnpl_fee_fixed or 0)
         if cfg.bnpl_respect_guard and cfg.bnpl_fee_payer == 'merchant':
-            if not cfg.margin_ok(product, price, extra_fee=fee):
+            # BNPL guard (reworked 2026-08-01): the global margin red-line
+            # (margin_ok, default 15% AFTER the provider fee) was hiding
+            # installments on products that are still profitable once the fee
+            # is applied — and on products with unreliable cost data (cost >
+            # price, i.e. shown as selling below cost). Keep the guard ON but
+            # hide installments ONLY when the cost is RELIABLE (0 < cost <=
+            # price) AND the sale would actually LOSE money after the fee.
+            # Unknown cost (<=0) or over-price cost (bad data / loss-leader)
+            # never hides the offer.
+            try:
+                _cost = cfg._cost_of(product)
+            except Exception:
+                _cost = 0.0
+            if 0 < _cost <= price and (price - _cost - fee) <= 0:
                 return None
         n = max(int(cfg.bnpl_installments or 4), 2)
         per = round(price / n, 3)
