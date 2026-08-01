@@ -100,7 +100,8 @@ class UellowHomePageController(http.Controller):
             elif src == 'category' and sec.category_id:
                 recs = Tmpl.search(base + [('public_categ_ids', 'child_of', sec.category_id.id)], limit=limit, order='create_date desc')
             elif src == 'discounted':
-                cands = Tmpl.search(base, limit=limit * 5, order='create_date desc')
+                dom = base + ([('compare_list_price', '>', 0)] if 'compare_list_price' in Tmpl._fields else [])
+                cands = Tmpl.search(dom, limit=limit * 3, order='create_date desc')
                 recs = cands.filtered(lambda p: (getattr(p, 'compare_list_price', 0) or 0) > (p.list_price or 0))[:limit]
             elif src in ('bestsellers', 'trending'):
                 cands = Tmpl.search(base, limit=limit * 4, order='create_date desc')
