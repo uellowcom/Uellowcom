@@ -1057,6 +1057,19 @@
 </div>
 
 <!-- MODAL: products picker -->
+<div class="modal-bd" id="iconPickerBd">
+  <div class="modal">
+    <div class="modal-h">
+      <h3>😀 Pick an icon</h3>
+      <span class="x" onclick="closeModal('iconPickerBd')">✕</span>
+    </div>
+    <div class="modal-b">
+      <div class="icon-grid" id="iconPickerGrid"></div>
+      <div class="field" style="margin-top:10px"><label>Or paste any emoji</label>
+        <input id="iconPickerCustom" placeholder="🎁" style="max-width:120px;font-size:18px;text-align:center" oninput="if(this.value.trim())_applyIcon(this.value.trim())"/></div>
+    </div>
+  </div>
+</div>
 <div class="modal-bd" id="prodPickerBd">
   <div class="modal lg">
     <div class="modal-h"><h3>🛍 Pick products</h3><span class="x" onclick="closeModal('prodPickerBd')">✕</span></div>
@@ -3880,8 +3893,7 @@ function renderContent(b){
       return `<p class="hint">A sticky promo bar — pin at top, bottom, or render inline. Great for time-limited offers.</p>
         ${mlField(b,'label','Bar text')}
         ${mlField(b,'cta','Button text')}
-        <div class="field"><label>Icon (emoji)</label>
-          <input data-prop="icon" value="${p.icon||'🎁'}" placeholder="🎁" style="max-width:80px;font-size:18px;text-align:center"/></div>
+        ${iconPickerField(b, 'icon', 'Icon (emoji)')}
         <div class="field"><label>CTA target</label>
           ${linkFieldBtn(p.cta_link,'cta_link')}
         </div>
@@ -4391,6 +4403,38 @@ function renderContent(b){
     default:
       return `<p style="font-size:12px;color:var(--muted)">No content fields for ${b.kind}.</p>`;
   }
+}
+
+const ICON_PICKER_EMOJIS = '🎁 🛍️ 🛒 🔥 ⚡ 💥 ⭐ 🌟 ✨ 💫 🏆 🥇 🎉 🎊 🎈 🎀 💎 👑 💰 💵 💳 🏷️ 🔖 🎫 🎟️ 📣 📢 🔔 ⏰ ⏳ 🚀 ✅ ✔️ 🆕 🆓 🔝 💯 ❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🌈 ☀️ 🌙 ❄️ ▶️ ⏩ 👉 👍 🙌 🤝 🎯 \U0001fa84 🎮 🎧 📱 💻 ⌚ 📷 🎥 📺 🖥️ 🔌 🔋 💡 🔦 🧴 🧪 🌡️ 💊 💉 🩺 🚗 🏍️ 🚲 ✈️ 🚚 📦 🏠 🛋️ 🛏️ 🚿 🛁 🍔 🍕 🍟 🌮 🍣 🍰 🍩 ☕ 🥤 🍷 🍺 🥂 👕 👖 👗 👟 👜 🎒 🧢 🕶️ 💄 💍 🧸 ⚽ 🏀 🏈 ⚾ 🎾 🏐 🏓 🏸 🥊 🏋️ 🚴 🏊 ⛳ 🎣 📚 📖 ✏️ 🖊️ 🎨 🎭 🎬 🎤 🎸 🎹 🥁 🔒 🔐 🛡️ ⚙️ 🔧 🔨 🛠️ 🧰 🧯 📈 📉 📊 💹 🧮 🗓️ 📅 🌍 📍 🗺️ 🧭 🏁 🚩 💌 🎁'.split(/\s+/).filter(Boolean);
+let _iconPickerProp = 'icon';
+function _iconPickerBlock(){ return (typeof cur==='function' && cur() && selectedBlockId) ? cur().blocks.find(function(x){return x.id===selectedBlockId;}) : null; }
+function openIconPicker(propKey){
+  _iconPickerProp = propKey || 'icon';
+  renderIconPickerGrid();
+  var c=document.getElementById('iconPickerCustom'); if(c) c.value='';
+  document.getElementById('iconPickerBd').classList.add('on');
+}
+function renderIconPickerGrid(){
+  var grid=document.getElementById('iconPickerGrid'); if(!grid) return;
+  var b=_iconPickerBlock(); var curIcon=b?(b.props[_iconPickerProp]||''):'';
+  grid.innerHTML = ICON_PICKER_EMOJIS.map(function(e){ return '<div class="ic-pick '+(e===curIcon?'on':'')+'" onclick="_applyIcon(\''+e+'\')">'+e+'</div>'; }).join('');
+}
+function _applyIcon(emoji){
+  var b=_iconPickerBlock();
+  if(b){ b.props[_iconPickerProp]=emoji; renderRight(); renderCanvas(); scheduleSave(); }
+  closeModal('iconPickerBd');
+}
+function iconPickerField(b, key, label){
+  var cur=(b.props[key]||'🎁');
+  return '<div class="field"><label>'+(label||'Icon')+'</label>'+
+    '<div style="display:flex;gap:8px;align-items:center">'+
+      '<button class="link-field" style="flex:1" onclick="openIconPicker(\''+key+'\')">'+
+        '<div class="lk-ic" style="font-size:20px">'+cur+'</div>'+
+        '<div class="lk-info"><div class="lk-t">Choose an icon</div><div class="lk-s">180+ icons to pick from</div></div>'+
+        '<div class="lk-chev">›</div>'+
+      '</button>'+
+      '<input data-prop="'+key+'" value="'+(b.props[key]||'').replace(/"/g,'&quot;')+'" placeholder="🎁" style="width:64px;font-size:18px;text-align:center"/>'+
+    '</div></div>';
 }
 
 function linkFieldBtn(link, key){
