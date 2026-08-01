@@ -35,6 +35,8 @@ class UellowHomePageController(http.Controller):
                     d['cats'] = self._home_departments(lang)
                 elif sec.section_type == 'infinite_products':
                     d['products'] = self._cards(self._random_page(seed, 0, d['limit']))
+                elif sec.section_type == 'new_user_bonus':
+                    d['products'] = self._home_products(sec, force=(sec.product_source or 'newest'))
                 sections.append(d)
         return request.render('uellow_home_slider.home_preview_page', {
             'page': page, 'sections': sections, 'is_ar': lang == 'ar', 'lang': lang,

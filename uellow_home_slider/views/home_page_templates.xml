@@ -103,6 +103,21 @@
           .uh-btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(120deg,var(--orange),var(--orange2));
             color:#fff;text-decoration:none;font-weight:800;border-radius:12px;padding:12px 22px;font-size:14px;border:0;cursor:pointer}
           .uh-btn:hover{filter:brightness(1.05)}
+          /* Banggood-style under-hero row: products slider + new-user bonus panel */
+          .uh-bwrap{display:flex;gap:12px;align-items:stretch;border:1.5px solid #F5C320;
+            border-radius:16px;padding:12px;background:#fff;box-shadow:0 6px 22px rgba(20,20,40,.05)}
+          .uh-bslider{flex:1 1 0;min-width:0;width:auto}
+          .uh-bpanel{flex:0 0 190px;border-radius:12px;text-decoration:none;color:#fff;
+            background:linear-gradient(150deg,#FFB300,#F26A2E);
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            gap:5px;text-align:center;padding:16px 12px;transition:filter .15s}
+          .uh-bpanel:hover{filter:brightness(1.05)}
+          .uh-bgift{font-size:34px;line-height:1}
+          .uh-btitle{font-size:14px;font-weight:900;line-height:1.25}
+          .uh-bamt{font-size:13px;font-weight:800}
+          .uh-bbtn{margin-top:5px;background:#fff;color:#d8500f;font-weight:800;
+            border-radius:999px;padding:7px 20px;font-size:12.5px}
+          @media (max-width:640px){.uh-bwrap{flex-direction:column}.uh-bpanel{flex:none;padding:14px}}
           .uh-banner img{width:100%;display:block;border-radius:16px}
           .uh-inf-sentinel{height:1px}.uh-inf-more{text-align:center;margin-top:18px}.uh-inf-btn{margin:0 auto}
           .uh-spin{display:inline-block;width:22px;height:22px;border:3px solid var(--line);border-top-color:var(--orange);border-radius:50%;animation:uhspin .7s linear infinite;margin:14px auto}
@@ -173,12 +188,18 @@
 
           <section t-if="sec['type'] == 'new_user_bonus'" class="uh-sec" t-att-style="'padding:%dpx 0;' % sec['pad_y']">
             <div class="container">
-              <div class="uh-bonus">
-                <div>
-                  <h3 t-esc="sec['title'] or ('مكافأة الترحيب' if is_ar else 'Welcome bonus')"/>
-                  <p t-esc="sec['subtitle'] or ('سجّل الآن واحصل على خصم على أول طلب' if is_ar else 'Sign up and get a discount on your first order')"/>
+              <div class="uh-bwrap">
+                <div class="uh-slider uh-bslider">
+                  <button type="button" class="uh-fnav prev" aria-label="Previous">‹</button>
+                  <div class="uh-frail"><t t-set="products" t-value="sec['products']"/><t t-call="uellow_home_slider.home_cards"/></div>
+                  <button type="button" class="uh-fnav next" aria-label="Next">›</button>
                 </div>
-                <a class="uh-btn" href="/web/signup"><t t-esc="'انضم الآن' if is_ar else 'Join now'"/></a>
+                <a class="uh-bpanel" href="/web/signup">
+                  <div class="uh-bgift">🎁</div>
+                  <div class="uh-btitle" t-esc="sec['title'] or ('مكافأة المستخدم الجديد' if is_ar else 'New-user bonus')"/>
+                  <div class="uh-bamt" t-esc="sec['subtitle'] or ('يصل إلى 25 د.ك' if is_ar else 'Up to 25 KWD')"/>
+                  <span class="uh-bbtn"><t t-esc="'اذهب' if is_ar else 'Go'"/> ›</span>
+                </a>
               </div>
             </div>
           </section>
