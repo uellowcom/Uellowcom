@@ -7,6 +7,10 @@ SECTION_TYPES = [
     ('hero_slider',      'Hero slider'),
     ('product_row',      'Products row'),
     ('flash_deals',      'Flash deals'),
+    ('deal_of_day',      'Deal of the day'),
+    ('promo_banners',    'Promo banners (2-3)'),
+    ('category_tabs',    'Category tabs'),
+    ('recently_viewed',  'Recently viewed'),
     ('new_user_bonus',   'New-user bonus'),
     ('category_grid',    'Categories grid'),
     ('brand_strip',      'Brands strip'),
@@ -147,6 +151,14 @@ class UellowHomeSection(models.Model):
     image_url_ar = fields.Char(string='Image URL (Arabic)')
     html_en      = fields.Html(string='HTML (EN)', sanitize=False)
     html_ar      = fields.Html(string='HTML (AR)', sanitize=False)
+
+    # ── Promo banners (2nd & 3rd banner; 1st reuses image/image_url + link_url) ──
+    image2       = fields.Binary(string='Banner 2 image', attachment=True)
+    image2_url   = fields.Char(string='Banner 2 image URL')
+    link_url2    = fields.Char(string='Banner 2 link', default='/shop')
+    image3       = fields.Binary(string='Banner 3 image', attachment=True)
+    image3_url   = fields.Char(string='Banner 3 image URL')
+    link_url3    = fields.Char(string='Banner 3 link', default='/shop')
 
     # ── "View all" link ──
     link_url       = fields.Char(string='Link', default='/shop')

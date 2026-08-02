@@ -72,7 +72,7 @@
 
                                     <!-- Products (product_row / flash_deals / new_user_bonus / category_strip) -->
                                     <group string="Products"
-                                           invisible="section_type not in ('product_row','category_strip','flash_deals','new_user_bonus')">
+                                           invisible="section_type not in ('product_row','category_strip','flash_deals','new_user_bonus','deal_of_day')">
                                         <group>
                                             <field name="product_source"/>
                                             <field name="category_id"
@@ -102,8 +102,20 @@
                                         <field name="panel_color2" widget="color"/>
                                     </group>
 
-                                    <!-- Flash deals -->
-                                    <group string="Flash deals" invisible="section_type != 'flash_deals'" col="4">
+                                    <!-- Promo banners -->
+                                    <group string="Promo banners (2-3)" invisible="section_type != 'promo_banners'">
+                                        <group>
+                                            <field name="image" widget="image" string="Banner 1" options="{'size':[500,220]}"/>
+                                            <field name="link_url" string="Banner 1 link"/>
+                                            <field name="image2" widget="image" string="Banner 2" options="{'size':[500,220]}"/>
+                                            <field name="link_url2" string="Banner 2 link"/>
+                                            <field name="image3" widget="image" string="Banner 3" options="{'size':[500,220]}"/>
+                                            <field name="link_url3" string="Banner 3 link"/>
+                                        </group>
+                                    </group>
+
+                                    <!-- Flash deals / Deal of the day countdown -->
+                                    <group string="Countdown &amp; colours" invisible="section_type not in ('flash_deals','deal_of_day')" col="4">
                                         <field name="flash_end" widget="datetime"/>
                                         <field name="flash_daily"/>
                                         <field name="flash_sort"/>

@@ -52,6 +52,14 @@ class UellowHomePageController(http.Controller):
                     d['cats'] = self._home_departments(lang, limit=d['limit'])
                 elif sec.section_type == 'brand_strip':
                     d['brands'] = self._home_brands(d['limit'])
+                elif sec.section_type == 'deal_of_day':
+                    src = sec.product_source if sec.product_source and sec.product_source != 'newest' else 'discounted'
+                    prods = self._home_products(sec, force=src)
+                    d['deal'] = prods[0] if prods else None
+                elif sec.section_type == 'promo_banners':
+                    d['banners'] = self._promo_banners(sec)
+                elif sec.section_type == 'recently_viewed':
+                    d['seed'] = seed  # rendered client-side from localStorage
                 elif sec.section_type == 'infinite_products':
                     d['products'] = self._cards(self._random_page(seed, 0, d['limit']))
                 elif sec.section_type == 'new_user_bonus':
@@ -159,6 +167,17 @@ class UellowHomePageController(http.Controller):
                             order='sequence, name', limit=max(4, min(limit or 14, 30))):
             out.append({'name': c.name, 'url': '/shop/category/%d' % c.id,
                         'image': ('/web/image/product.public.category/%d/image_256' % c.id) if c.image_128 else ''})
+        return out
+
+    def _promo_banners(self, sec):
+        out = []
+        slots = [(sec.image, sec.image_url, sec.link_url, 'image'),
+                 (sec.image2, sec.image2_url, sec.link_url2, 'image2'),
+                 (sec.image3, sec.image3_url, sec.link_url3, 'image3')]
+        for img, url, link, field in slots:
+            src = ('/web/image/uellow.home.section/%d/%s' % (sec.id, field)) if img else (url or '')
+            if src:
+                out.append({'image': src, 'link': link or '/shop'})
         return out
 
     def _home_brands(self, limit=12):
