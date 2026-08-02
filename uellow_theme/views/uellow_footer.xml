@@ -174,8 +174,8 @@
                                         <li><a href="/blog"            t-out="website._uc_t('Blog')"/></li>
                                         <li><a href="/page/about-us"   t-out="website._uc_t('About Uellow')"/></li>
                                         <li><a href="/page/careers"    t-out="website._uc_t('Careers')"/></li>
+                                        <li><a href="/guides">أدلّة الشراء · Buying guides</a></li>
                                     </t>
-                                    <li><a href="/guides" t-out="website._uc_t('Buying guides')"/></li>
                                 </ul>
                             </div>
 
