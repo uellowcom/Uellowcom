@@ -175,6 +175,16 @@ class UellowHomePageController(http.Controller):
 
     @http.route(['/llms.txt'], type='http', auth='public', website=True, sitemap=False)
     def llms_txt(self, **kw):
+        # real top-level categories, so LLMs learn what Uellow actually sells
+        cat_lines = ''
+        try:
+            wid = request.website.id if request.website else False
+            cats = request.env['product.public.category'].sudo().search(
+                [('parent_id', '=', False), ('website_id', 'in', [False, wid])],
+                order='sequence, name', limit=25)
+            cat_lines = ''.join('- %s: https://www.uellow.com/shop/category/%d\n' % (c.name, c.id) for c in cats)
+        except Exception:
+            cat_lines = ''
         body = (
             "# Uellow (أويلو)\n\n"
             "> Uellow (uellow.com) is a leading online marketplace in Kuwait for electronics, mobile "
@@ -183,12 +193,12 @@ class UellowHomePageController(http.Controller):
             "## About\n"
             "- Brand: Uellow / أويلو\n"
             "- Market: Kuwait (توصيل سريع لكل مناطق الكويت)\n"
-            "- Categories: Mobiles & Tablets, Electronics, Home Appliances, Watches, Fragrances, Fashion, Health, Baby, Beauty\n"
             "- Payment: Secure card payment, Cash on Delivery, Installments (4 payments, Taly, Ci-Net)\n"
             "- Delivery: Fast delivery across Kuwait; free delivery on qualifying orders\n"
             "- Returns: Easy 14-day returns\n"
             "- Support: 24/7 customer service\n"
             "- Apps: iOS and Android\n\n"
+            "## Shop by category\n" + cat_lines + "\n"
             "## Key pages\n"
             "- Home: https://www.uellow.com/\n"
             "- Shop / all products: https://www.uellow.com/shop\n"
