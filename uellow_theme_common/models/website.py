@@ -310,6 +310,7 @@ class Website(models.Model):
             'Track my order':      'تتبع طلبي',
             'Discover':            'اكتشف',
             'All categories':      'كل الأقسام',
+            'Buying guides':       'أدلّة الشراء',
             'New arrivals':        'الجديد',
             'Blog':                'المدوّنة',
             'About Uellow':        'عن Uellow',

@@ -175,6 +175,7 @@
                                         <li><a href="/page/about-us"   t-out="website._uc_t('About Uellow')"/></li>
                                         <li><a href="/page/careers"    t-out="website._uc_t('Careers')"/></li>
                                     </t>
+                                    <li><a href="/guides" t-out="website._uc_t('Buying guides')"/></li>
                                 </ul>
                             </div>
 
