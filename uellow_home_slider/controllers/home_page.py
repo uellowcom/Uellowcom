@@ -19,6 +19,16 @@ GUIDES = [
     ('baby-products-kuwait', 410, 'مستلزمات الأطفال في الكويت', 'Baby products in Kuwait', 'منتج', 'product'),
     ('jewellery-kuwait', 421, 'المجوهرات والإكسسوارات في الكويت', 'Jewellery and accessories in Kuwait', 'قطعة', 'piece'),
     ('best-online-store-kuwait', 0, 'أفضل متجر تسوّق أونلاين في الكويت', 'Best online shopping store in Kuwait', 'منتج', 'product'),
+    ('iphone-installments-kuwait', 855, 'آيفون بالتقسيط في الكويت', 'iPhone on installments in Kuwait', 'آيفون', 'iPhone'),
+    ('samsung-phones-kuwait', 855, 'جوالات سامسونج في الكويت', 'Samsung phones in Kuwait', 'جوال سامسونج', 'Samsung phone'),
+    ('tablets-kuwait', 603, 'الأجهزة اللوحية (تابلت) في الكويت', 'Tablets in Kuwait', 'تابلت', 'tablet'),
+    ('cash-on-delivery-shopping-kuwait', 0, 'التسوّق بالدفع عند الاستلام في الكويت', 'Cash-on-delivery shopping in Kuwait', 'منتج', 'product'),
+    ('installments-shopping-kuwait', 0, 'التسوّق بالتقسيط في الكويت', 'Installment shopping in Kuwait', 'منتج', 'product'),
+    ('free-shipping-kuwait', 0, 'التسوّق بتوصيل مجاني في الكويت', 'Free-shipping shopping in Kuwait', 'منتج', 'product'),
+    ('gaming-kuwait', 412, 'أجهزة وملحقات الألعاب في الكويت', 'Gaming gear in Kuwait', 'جهاز ألعاب', 'gaming item'),
+    ('security-cameras-kuwait', 406, 'كاميرات المراقبة وأنظمة الأمان في الكويت', 'Security cameras in Kuwait', 'كاميرا مراقبة', 'security camera'),
+    ('electronics-installments-kuwait', 412, 'الإلكترونيات بالتقسيط في الكويت', 'Electronics on installments in Kuwait', 'جهاز', 'device'),
+    ('watches-installments-kuwait', 1, 'الساعات بالتقسيط في الكويت', 'Watches on installments in Kuwait', 'ساعة', 'watch'),
 ]
 
 
