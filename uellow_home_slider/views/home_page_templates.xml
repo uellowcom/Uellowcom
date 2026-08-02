@@ -579,6 +579,7 @@
         </t>
 
         <script type="application/ld+json" t-out="structured_data"/>
+        <script t-if="faq_ld" type="application/ld+json" t-out="faq_ld"/>
 
         <script>
         (function(){

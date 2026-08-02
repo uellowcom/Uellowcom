@@ -114,6 +114,26 @@ class UellowHomePageController(http.Controller):
                 break
         ld = {'@context': 'https://schema.org', '@type': 'ItemList', 'itemListElement': items}
         structured = Markup(json.dumps(ld, ensure_ascii=False).replace('<', '\\u003c'))
+        # ── FAQ structured data (helps AI answer engines cite Uellow) ──
+        faqs_ar = [
+            ('هل توصّلون لكل مناطق الكويت؟', 'نعم، Uellow (أويلو) توفّر توصيلًا سريعًا لجميع مناطق الكويت، مع توصيل مجاني على الطلبات المؤهلة.'),
+            ('هل الدفع عند الاستلام متاح؟', 'نعم، يمكنك الدفع نقدًا عند الاستلام أو الدفع الإلكتروني الآمن عبر البطاقة.'),
+            ('هل يوجد تقسيط على المنتجات؟', 'نعم، يمكنك التقسيط على 4 دفعات وعبر Taly و Ci-Net على المنتجات المؤهلة.'),
+            ('ما هي سياسة الإرجاع؟', 'إرجاع سهل خلال 14 يومًا من الاستلام.'),
+            ('هل عملية الدفع آمنة؟', 'نعم، جميع المدفوعات تتم عبر اتصال مشفّر SSL وحماية كاملة للبيانات.'),
+        ]
+        faqs_en = [
+            ('Do you deliver across Kuwait?', 'Yes. Uellow offers fast delivery to all areas of Kuwait, with free delivery on qualifying orders.'),
+            ('Is cash on delivery available?', 'Yes, you can pay cash on delivery or use secure online card payment.'),
+            ('Do you offer installments?', 'Yes — pay in 4 instalments and via Taly and Ci-Net on eligible products.'),
+            ('What is the return policy?', 'Easy returns within 14 days of delivery.'),
+            ('Is payment secure?', 'Yes, all payments use an SSL-encrypted, fully protected checkout.'),
+        ]
+        faqs = faqs_ar if lang == 'ar' else faqs_en
+        faq = {'@context': 'https://schema.org', '@type': 'FAQPage',
+               'mainEntity': [{'@type': 'Question', 'name': q,
+                               'acceptedAnswer': {'@type': 'Answer', 'text': a}} for q, a in faqs]}
+        faq_ld = Markup(json.dumps(faq, ensure_ascii=False).replace('<', '\\u003c'))
         # ── LCP: preload the first hero slide image (loads via JS otherwise) ──
         hero_preload = ''
         try:
@@ -136,7 +156,7 @@ class UellowHomePageController(http.Controller):
             'Shop online in Kuwait: phones, electronics, home appliances, fashion and daily deals with fast delivery and easy installments.')
         return request.render('uellow_home_slider.home_preview_page', {
             'page': page, 'sections': sections, 'is_ar': lang == 'ar', 'lang': lang,
-            'structured_data': structured, 'seo_desc': meta_desc, 'seo_title': meta_title,
+            'structured_data': structured, 'faq_ld': faq_ld, 'seo_desc': meta_desc, 'seo_title': meta_title,
             'website_meta_description': meta_desc, 'website_meta_title': meta_title,
             'hero_preload': hero_preload,
         })
@@ -152,6 +172,31 @@ class UellowHomePageController(http.Controller):
         return request.render('uellow_home_slider.home_cards',
                               {'products': self._cards(recs), 'is_ar': lang == 'ar',
                                'show_save': True, 'show_disc': True})
+
+    @http.route(['/llms.txt'], type='http', auth='public', website=True, sitemap=False)
+    def llms_txt(self, **kw):
+        body = (
+            "# Uellow (أويلو)\n\n"
+            "> Uellow (uellow.com) is a leading online marketplace in Kuwait for electronics, mobile "
+            "phones, home appliances, watches, fragrances, fashion, beauty, baby products and more, "
+            "with fast delivery across Kuwait, cash on delivery, secure payment and installment plans.\n\n"
+            "## About\n"
+            "- Brand: Uellow / أويلو\n"
+            "- Market: Kuwait (توصيل سريع لكل مناطق الكويت)\n"
+            "- Categories: Mobiles & Tablets, Electronics, Home Appliances, Watches, Fragrances, Fashion, Health, Baby, Beauty\n"
+            "- Payment: Secure card payment, Cash on Delivery, Installments (4 payments, Taly, Ci-Net)\n"
+            "- Delivery: Fast delivery across Kuwait; free delivery on qualifying orders\n"
+            "- Returns: Easy 14-day returns\n"
+            "- Support: 24/7 customer service\n"
+            "- Apps: iOS and Android\n\n"
+            "## Key pages\n"
+            "- Home: https://www.uellow.com/\n"
+            "- Shop / all products: https://www.uellow.com/shop\n"
+            "- Sitemap: https://www.uellow.com/sitemap.xml\n"
+        )
+        return request.make_response(body, headers=[
+            ('Content-Type', 'text/plain; charset=utf-8'),
+            ('Cache-Control', 'public, max-age=86400')])
 
     # ── helpers ───────────────────────────────────────────────
     def _base_dom(self):
