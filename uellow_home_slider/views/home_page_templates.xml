@@ -127,34 +127,50 @@
           .uh-feat-tx b{font-size:13.5px;font-weight:800;color:var(--ink)}
           .uh-feat-tx i{font-size:11.5px;font-style:normal;color:var(--muted)}
           @media (max-width:860px){.uh-feats{grid-template-columns:repeat(2,1fr)}.uh-feat:nth-child(2n){border-inline-start:0}}
-          /* brands strip — premium logo grid (grayscale -> colour on hover) */
-          .uh-brands{display:grid;grid-template-columns:repeat(auto-fill,minmax(122px,1fr));gap:12px}
-          .uh-brand{height:72px;display:grid;place-items:center;padding:10px 16px;background:#fff;
-            border:1px solid var(--line);border-radius:14px;text-decoration:none;
+          /* brands strip — single-row auto-scrolling marquee with edge fade */
+          .uh-brands-marquee{overflow:hidden;position:relative;
+            -webkit-mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent);
+            mask-image:linear-gradient(90deg,transparent,#000 5%,#000 95%,transparent)}
+          .uh-brands-track{display:flex;gap:14px;width:max-content;animation:uh-marq 45s linear infinite}
+          .uh-brands-marquee:hover .uh-brands-track{animation-play-state:paused}
+          @keyframes uh-marq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+          .uh-brand{flex:0 0 auto;width:132px;height:76px;display:grid;place-items:center;padding:10px 18px;background:#fff;
+            border:1px solid var(--line);border-radius:16px;text-decoration:none;
             transition:transform .16s,box-shadow .16s,border-color .16s}
-          .uh-brand:hover{transform:translateY(-3px);box-shadow:0 12px 24px -16px rgba(20,40,60,.35);border-color:#ffe08a}
-          .uh-brand img{max-width:100%;max-height:46px;object-fit:contain;filter:grayscale(.55) opacity(.8);transition:filter .16s}
+          .uh-brand:hover{transform:translateY(-4px);box-shadow:0 14px 26px -16px rgba(20,40,60,.4);border-color:#ffe08a}
+          .uh-brand img{max-width:100%;max-height:46px;object-fit:contain;filter:grayscale(.6) opacity(.85);transition:filter .16s}
           .uh-brand:hover img{filter:none}
           .uh-brand-tx{font-weight:800;font-size:13px;color:var(--muted);text-align:center;line-height:1.2}
           .uh-brand:hover .uh-brand-tx{color:var(--ink)}
-          @media (max-width:480px){.uh-brands{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}.uh-brand{height:64px}}
-          /* deal of the day — big featured deal */
-          .uh-deal{display:grid;grid-template-columns:minmax(0,1fr) 1fr;text-decoration:none;color:var(--ink);
-            border-radius:20px;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:0 18px 40px -24px rgba(20,40,60,.4)}
-          .uh-deal-media{position:relative;background:#f6f9fb;display:grid;place-items:center;min-height:260px}
-          .uh-deal-media img{width:100%;height:100%;max-height:340px;object-fit:contain;padding:24px}
-          .uh-deal-pct{position:absolute;top:14px;inset-inline-start:14px;background:var(--red);color:#fff;font-weight:800;font-size:14px;padding:5px 12px;border-radius:999px}
-          .uh-deal-info{padding:28px 30px;display:flex;flex-direction:column;gap:10px;justify-content:center;background:linear-gradient(160deg,#fff,#fffaf0)}
-          .uh-deal-eyebrow{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--orange)}
-          .uh-deal-name{font-size:clamp(18px,2.4vw,26px);font-weight:900;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-          .uh-deal-price{display:flex;align-items:baseline;gap:10px}
-          .uh-deal-now{font-size:26px;font-weight:900;color:var(--ink)}
-          .uh-deal-was{font-size:15px;color:#9aa7b2;text-decoration:line-through}
-          .uh-deal-save{font-size:13px;font-weight:800;color:#1f9d55}
-          .uh-deal-timer{margin-top:4px;align-self:flex-start}
-          .uh-deal-timer b{background:#14202b;color:#fff}.uh-deal-timer i{color:var(--muted)}
-          .uh-deal-btn{margin-top:8px;align-self:flex-start;background:linear-gradient(120deg,var(--orange),var(--orange2));color:#fff;font-weight:800;border-radius:999px;padding:11px 28px;font-size:14px}
-          @media (max-width:768px){.uh-deal{grid-template-columns:1fr}.uh-deal-media{min-height:200px}}
+          @media (prefers-reduced-motion:reduce){.uh-brands-track{animation:none;flex-wrap:wrap;justify-content:center}}
+          /* deal of the day — premium dark spotlight */
+          .uh-deal{position:relative;display:grid;grid-template-columns:1fr 1.05fr;text-decoration:none;color:#fff;
+            border-radius:22px;overflow:hidden;isolation:isolate;
+            background:radial-gradient(120% 130% at 12% 20%, #2a3746 0%, #16202b 55%, #0e1620 100%)}
+          .uh-deal::after{content:'';position:absolute;inset:0;z-index:-1;
+            background:radial-gradient(60% 80% at 86% 28%, rgba(242,106,46,.38), transparent 60%)}
+          .uh-deal-media{position:relative;display:grid;place-items:center;min-height:300px;padding:26px}
+          .uh-deal-media::before{content:'';position:absolute;width:72%;aspect-ratio:1;border-radius:50%;
+            background:radial-gradient(closest-side, rgba(255,255,255,.16), transparent);filter:blur(6px)}
+          .uh-deal-media img{position:relative;max-width:100%;max-height:320px;object-fit:contain;filter:drop-shadow(0 26px 42px rgba(0,0,0,.55))}
+          .uh-deal-pct{position:absolute;top:0;inset-inline-start:0;background:linear-gradient(120deg,#E63946,#F26A2E);color:#fff;
+            font-weight:900;font-size:15px;padding:8px 18px;border-end-end-radius:16px;box-shadow:0 8px 18px -8px rgba(230,57,70,.6);z-index:2}
+          .uh-deal-info{padding:34px 36px;display:flex;flex-direction:column;gap:12px;justify-content:center}
+          .uh-deal-eyebrow{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;font-size:11.5px;font-weight:900;
+            letter-spacing:1.4px;text-transform:uppercase;color:#14202b;background:linear-gradient(120deg,#FFC93C,#F5A623);padding:6px 14px;border-radius:999px}
+          .uh-deal-name{font-size:clamp(20px,2.6vw,30px);font-weight:900;line-height:1.2;color:#fff;
+            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+          .uh-deal-price{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+          .uh-deal-now{font-size:32px;font-weight:900;color:#FFC93C}
+          .uh-deal-was{font-size:16px;color:rgba(255,255,255,.5);text-decoration:line-through}
+          .uh-deal-save{font-size:13px;font-weight:800;color:#7ee0a0}
+          .uh-deal-timer{margin-top:6px;align-self:flex-start}
+          .uh-deal-timer b{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.18)}
+          .uh-deal-timer i{color:rgba(255,255,255,.5)}
+          .uh-deal-btn{margin-top:10px;align-self:flex-start;background:linear-gradient(120deg,#FF8A3D,#F26A2E);color:#fff;font-weight:800;
+            border-radius:999px;padding:13px 34px;font-size:15px;box-shadow:0 12px 26px -10px rgba(242,106,46,.7);transition:transform .15s,box-shadow .15s}
+          .uh-deal:hover .uh-deal-btn{transform:translateY(-2px);box-shadow:0 18px 32px -10px rgba(242,106,46,.85)}
+          @media (max-width:768px){.uh-deal{grid-template-columns:1fr}.uh-deal-media{min-height:220px}}
           /* promo banners */
           .uh-promos{display:grid;gap:12px}
           .uh-promos.n1{grid-template-columns:1fr}.uh-promos.n2{grid-template-columns:1fr 1fr}.uh-promos.n3{grid-template-columns:1fr 1fr 1fr}
@@ -392,7 +408,7 @@
                   <span t-if="sec['deal']['discount']" class="uh-deal-pct">-<t t-esc="sec['deal']['discount']"/>%</span>
                 </div>
                 <div class="uh-deal-info">
-                  <div class="uh-deal-eyebrow"><t t-esc="'صفقة اليوم' if is_ar else 'Deal of the day'"/></div>
+                  <div class="uh-deal-eyebrow">⚡ <t t-esc="'صفقة اليوم' if is_ar else 'Deal of the day'"/></div>
                   <div class="uh-deal-name" t-esc="sec['deal']['name']"/>
                   <div class="uh-deal-price">
                     <span class="uh-deal-now"><t t-esc="'%.3f' % sec['deal']['price']"/> <t t-esc="sec['deal']['currency']"/></span>
@@ -426,11 +442,17 @@
               <div t-if="sec['show_title'] and sec['title']" class="uh-head">
                 <span class="uh-ttl"><t t-esc="sec['title']"/></span>
               </div>
-              <div class="uh-brands">
-                <a t-foreach="sec['brands']" t-as="b" t-att-href="b['url']" class="uh-brand" t-att-title="b['name']">
-                  <img t-if="b['image']" t-att-src="b['image']" t-att-alt="b['name']" loading="lazy" decoding="async"/>
-                  <span t-else="" class="uh-brand-tx" t-esc="b['name']"/>
-                </a>
+              <div class="uh-brands-marquee">
+                <div class="uh-brands-track">
+                  <a t-foreach="sec['brands']" t-as="b" t-att-href="b['url']" class="uh-brand" t-att-title="b['name']">
+                    <img t-if="b['image']" t-att-src="b['image']" t-att-alt="b['name']" loading="lazy" decoding="async"/>
+                    <span t-else="" class="uh-brand-tx" t-esc="b['name']"/>
+                  </a>
+                  <a t-foreach="sec['brands']" t-as="b" t-att-href="b['url']" class="uh-brand" aria-hidden="true" tabindex="-1">
+                    <img t-if="b['image']" t-att-src="b['image']" alt="" loading="lazy" decoding="async"/>
+                    <span t-else="" class="uh-brand-tx" t-esc="b['name']"/>
+                  </a>
+                </div>
               </div>
             </div>
           </section>
