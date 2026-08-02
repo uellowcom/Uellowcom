@@ -128,7 +128,7 @@
                                     </group>
 
                                     <!-- Categories grid / spotlight / brands strip -->
-                                    <group string="Items" invisible="section_type not in ('dept_spotlight','category_grid','brand_strip')">
+                                    <group string="Items" invisible="section_type not in ('dept_spotlight','category_grid','brand_strip','category_tabs')">
                                         <field name="limit" string="How many"/>
                                     </group>
 

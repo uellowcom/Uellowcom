@@ -58,6 +58,8 @@ class UellowHomePageController(http.Controller):
                     d['deal'] = prods[0] if prods else None
                 elif sec.section_type == 'promo_banners':
                     d['banners'] = self._promo_banners(sec)
+                elif sec.section_type == 'category_tabs':
+                    d['tabs'] = self._home_tabs(max(2, min(sec.limit or 5, 8)))
                 elif sec.section_type == 'recently_viewed':
                     d['seed'] = seed  # rendered client-side from localStorage
                 elif sec.section_type == 'infinite_products':
@@ -167,6 +169,23 @@ class UellowHomePageController(http.Controller):
                             order='sequence, name', limit=max(4, min(limit or 14, 30))):
             out.append({'name': c.name, 'url': '/shop/category/%d' % c.id,
                         'image': ('/web/image/product.public.category/%d/image_256' % c.id) if c.image_128 else ''})
+        return out
+
+    def _home_tabs(self, ncats=5, nprods=8):
+        """Top categories, each with a few products, for a tabbed block."""
+        PC = request.env['product.public.category'].sudo()
+        Tmpl = request.env['product.template'].sudo()
+        base = self._base_dom()
+        wid = request.website.id if request.website else False
+        out = []
+        cats = PC.search([('parent_id', '=', False), ('website_id', 'in', [False, wid])],
+                         order='sequence, name', limit=ncats)
+        for c in cats:
+            recs = Tmpl.search(base + [('public_categ_ids', 'child_of', c.id)],
+                               limit=nprods, order='create_date desc')
+            if recs:
+                out.append({'name': c.name, 'url': '/shop/category/%d' % c.id,
+                            'products': self._cards(recs)})
         return out
 
     def _promo_banners(self, sec):

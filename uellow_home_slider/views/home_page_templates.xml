@@ -162,6 +162,15 @@
           .uh-promo:hover{transform:translateY(-3px);box-shadow:0 16px 30px -18px rgba(20,40,60,.4)}
           .uh-promo img{width:100%;height:100%;object-fit:cover;display:block;aspect-ratio:16/7}
           @media (max-width:768px){.uh-promos.n2,.uh-promos.n3{grid-template-columns:1fr}}
+          /* category tabs */
+          .uh-tabs-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+          .uh-tabnav{display:flex;gap:8px;flex-wrap:wrap;overflow-x:auto;scrollbar-width:none}
+          .uh-tabnav::-webkit-scrollbar{display:none}
+          .uh-tab{background:#fff;border:1px solid var(--line);color:var(--muted);font-weight:700;font-size:13px;
+            padding:8px 16px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:.15s}
+          .uh-tab:hover{border-color:#ffe08a;color:var(--ink)}
+          .uh-tab.on{background:linear-gradient(120deg,var(--orange),var(--orange2));color:#fff;border-color:transparent}
+          .uh-tabpanel{display:none}.uh-tabpanel.on{display:block}
           /* bonus */
           .uh-bonus{background:linear-gradient(120deg,#fff2e9,#e7f5fc);border:1px solid var(--line);border-radius:18px;
             padding:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;overflow:hidden;position:relative}
@@ -338,6 +347,39 @@
             </div>
           </section>
 
+          <section t-if="sec['type'] == 'category_tabs' and sec.get('tabs')" class="uh-sec"
+                   t-att-style="('padding:%dpx 0;' % sec['pad_y']) + (('background:%s;' % sec['bg']) if sec['bg'] else '')">
+            <div class="container">
+              <div class="uh-tabs-head">
+                <div t-if="sec['show_title'] and sec['title']" class="uh-head" style="margin:0"><span class="uh-ttl"><t t-esc="sec['title']"/></span></div>
+                <div class="uh-tabnav">
+                  <button t-foreach="sec['tabs']" t-as="tb" type="button" t-attf-class="uh-tab#{' on' if tb_index == 0 else ''}" t-att-data-tab="str(tb_index)"><t t-esc="tb['name']"/></button>
+                </div>
+              </div>
+              <div class="uh-tabpanels">
+                <div t-foreach="sec['tabs']" t-as="tb" t-attf-class="uh-tabpanel#{' on' if tb_index == 0 else ''}" t-att-data-panel="str(tb_index)">
+                  <div class="uh-slider">
+                    <button type="button" class="uh-fnav prev" aria-label="Previous">‹</button>
+                    <div class="uh-frail"><t t-set="products" t-value="tb['products']"/><t t-call="uellow_home_slider.home_cards"/></div>
+                    <button type="button" class="uh-fnav next" aria-label="Next">›</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section t-if="sec['type'] == 'recently_viewed'" class="uh-sec uh-rv-sec" style="display:none"
+                   t-att-style="'display:none;' + ('padding:%dpx 0;' % sec['pad_y'])">
+            <div class="container">
+              <div class="uh-head"><span class="uh-ttl"><t t-esc="sec['title'] or ('شوهدت مؤخرًا' if is_ar else 'Recently viewed')"/></span></div>
+              <div class="uh-slider">
+                <button type="button" class="uh-fnav prev" aria-label="Previous">‹</button>
+                <div class="uh-frail uh-rv-rail" data-rv="1"></div>
+                <button type="button" class="uh-fnav next" aria-label="Next">›</button>
+              </div>
+            </div>
+          </section>
+
           <section t-if="sec['type'] == 'deal_of_day' and sec.get('deal')" class="uh-sec"
                    t-att-style="('padding:%dpx 0;' % sec['pad_y']) + (('background:%s;' % sec['bg']) if sec['bg'] else '')">
             <div class="container">
@@ -500,6 +542,41 @@
             if(next) next.addEventListener('click', function(){ step(false); });
             refresh(); window.addEventListener('resize', refresh);
           });
+          /* category tabs — switch panels */
+          [].slice.call(document.querySelectorAll('.uh-tabnav')).forEach(function(nav){
+            var sec=nav.closest('.uh-sec'); if(!sec) return;
+            var tabs=[].slice.call(nav.querySelectorAll('.uh-tab'));
+            var panels=[].slice.call(sec.querySelectorAll('.uh-tabpanel'));
+            tabs.forEach(function(btn){
+              btn.addEventListener('click', function(){
+                var i=btn.getAttribute('data-tab');
+                tabs.forEach(function(t){ t.classList.toggle('on', t===btn); });
+                panels.forEach(function(p){ p.classList.toggle('on', p.getAttribute('data-panel')===i); });
+                window.dispatchEvent(new Event('resize'));
+              });
+            });
+          });
+          /* recently viewed — remember clicked product cards + render */
+          document.addEventListener('click', function(e){
+            var card=e.target.closest?e.target.closest('.uh-card'):null;
+            if(!card || (card.closest &amp;&amp; card.closest('.uh-rv-rail'))) return;
+            var href=card.getAttribute('href'); if(!href) return;
+            try{
+              var list=JSON.parse(localStorage.getItem('uh_rv')||'[]');
+              list=list.filter(function(x){ return x.href!==href; });
+              list.unshift({href:href, html:card.outerHTML});
+              localStorage.setItem('uh_rv', JSON.stringify(list.slice(0,12)));
+            }catch(_){}
+          }, true);
+          (function(){
+            var sec=document.querySelector('.uh-rv-sec'); if(!sec) return;
+            var rail=sec.querySelector('.uh-rv-rail'); if(!rail) return;
+            var list=[]; try{ list=JSON.parse(localStorage.getItem('uh_rv')||'[]'); }catch(_){}
+            if(!list.length){ sec.style.display='none'; return; }
+            rail.innerHTML=list.map(function(x){ return x.html; }).join('');
+            sec.style.display='';
+            window.dispatchEvent(new Event('resize'));
+          })();
           /* infinite random feed — scroll-based, 5 auto batches then Load more */
           var w=document.querySelector('[data-infinite]'); if(!w) return;
           var grid=w.querySelector('.uh-inf-grid'), more=w.querySelector('.uh-inf-more'),
