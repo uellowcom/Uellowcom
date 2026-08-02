@@ -198,7 +198,7 @@
           .uh-btn:hover{filter:brightness(1.05)}
           /* Banggood-style under-hero row: products slider + new-user bonus panel */
           .uh-bwrap{display:flex;gap:14px;align-items:stretch;border:0;
-            border-radius:18px;padding:16px;color:#3f2a00;position:relative;overflow:hidden;
+            border-radius:18px;padding:12px;color:#3f2a00;position:relative;overflow:hidden;
             background-image:radial-gradient(rgba(255,255,255,.4) 1px,transparent 1.6px),linear-gradient(150deg,var(--c1,#FFD24D),var(--c2,#F4A100));
             background-size:15px 15px,100% 100%;
             box-shadow:0 14px 34px -18px rgba(190,130,0,.6),inset 0 1px 0 rgba(255,255,255,.4)}
@@ -207,7 +207,7 @@
           .uh-bwrap .uh-card{background:#fff;border:1px solid rgba(70,45,0,.10);border-radius:14px;overflow:hidden;
             box-shadow:none;transition:transform .16s}
           .uh-bwrap .uh-card:hover{transform:translateY(-2px)}
-          .uh-bwrap .uh-thumb{aspect-ratio:auto;height:118px;background:#fff;border-bottom:1px solid #f4f1ea}
+          .uh-bwrap .uh-thumb{aspect-ratio:auto;height:94px;background:#fff;border-bottom:1px solid #f4f1ea}
           .uh-bwrap .uh-thumb img{object-fit:contain;padding:9px}
           .uh-bwrap .uh-card:hover .uh-thumb img{transform:none}
           .uh-bwrap .uh-save{inset-inline-start:8px;top:8px;font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:999px;
