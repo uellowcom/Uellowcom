@@ -6,6 +6,30 @@ from odoo import http
 from odoo.http import request
 
 
+# Buying guides — answer-ready content pages optimised for AI search engines.
+# (slug, category_id [0 = whole store], title_ar, title_en, noun_ar, noun_en)
+GUIDES = [
+    ('mobiles-installments-kuwait', 855, 'الجوالات بالتقسيط في الكويت', 'Phones on installments in Kuwait', 'جوال', 'phone'),
+    ('laptops-installments-kuwait', 625, 'اللابتوبات بالتقسيط في الكويت', 'Laptops on installments in Kuwait', 'لابتوب', 'laptop'),
+    ('smartwatches-kuwait', 1, 'الساعات الذكية في الكويت', 'Smartwatches in Kuwait', 'ساعة ذكية', 'smartwatch'),
+    ('home-appliances-installments-kuwait', 436, 'الأجهزة المنزلية بالتقسيط في الكويت', 'Home appliances on installments in Kuwait', 'جهاز منزلي', 'home appliance'),
+    ('perfumes-kuwait', 645, 'العطور الأصلية في الكويت', 'Original perfumes in Kuwait', 'عطر', 'perfume'),
+    ('electronics-kuwait', 412, 'الإلكترونيات في الكويت', 'Electronics in Kuwait', 'جهاز إلكتروني', 'electronics item'),
+    ('mobile-accessories-kuwait', 418, 'ملحقات الجوال في الكويت', 'Mobile accessories in Kuwait', 'ملحق', 'accessory'),
+    ('baby-products-kuwait', 410, 'مستلزمات الأطفال في الكويت', 'Baby products in Kuwait', 'منتج', 'product'),
+    ('jewellery-kuwait', 421, 'المجوهرات والإكسسوارات في الكويت', 'Jewellery and accessories in Kuwait', 'قطعة', 'piece'),
+    ('best-online-store-kuwait', 0, 'أفضل متجر تسوّق أونلاين في الكويت', 'Best online shopping store in Kuwait', 'منتج', 'product'),
+]
+
+
+def sitemap_guides(env, rule, qs):
+    """Expose every buying guide in the sitemap (dynamic route)."""
+    for g in GUIDES:
+        loc = '/guide/%s' % g[0]
+        if not qs or qs.lower() in loc.lower():
+            yield {'loc': loc}
+
+
 class UellowHomePageController(http.Controller):
 
     @http.route(['/home-preview'], type='http', auth='public', website=True, sitemap=False)
@@ -208,51 +232,71 @@ class UellowHomePageController(http.Controller):
             ('Content-Type', 'text/plain; charset=utf-8'),
             ('Cache-Control', 'public, max-age=86400')])
 
-    @http.route(['/guide/mobiles-installments-kuwait'], type='http', auth='public', website=True, sitemap=True)
-    def guide_mobiles(self, **kw):
+    @http.route(['/guides'], type='http', auth='public', website=True, sitemap=True)
+    def guides_index(self, **kw):
+        lang = 'en' if (request.env.lang or '').lower().startswith('en') else 'ar'
+        guides = [{'slug': g[0], 'title': (g[2] if lang == 'ar' else g[3])} for g in GUIDES]
+        return request.render('uellow_home_slider.guides_index', {'guides': guides, 'is_ar': lang == 'ar'})
+
+    @http.route(['/guide/<string:slug>'], type='http', auth='public', website=True, sitemap=sitemap_guides)
+    def guide_page(self, slug, **kw):
+        g = next((x for x in GUIDES if x[0] == slug), None)
+        if not g:
+            return request.not_found()
+        _slug, cat_id, ar_t, en_t, ar_n, en_n = g
         lang = 'en' if (request.env.lang or '').lower().startswith('en') else 'ar'
         Tmpl = request.env['product.template'].sudo()
-        recs = Tmpl.search(self._base_dom() + [('public_categ_ids', 'child_of', 855)],
-                           limit=12, order='website_sequence, create_date desc')
+        dom = self._base_dom()
+        recs = Tmpl.browse([])
+        if cat_id:
+            recs = Tmpl.search(dom + [('public_categ_ids', 'child_of', cat_id)],
+                               limit=12, order='website_sequence, create_date desc')
         if not recs:
-            recs = Tmpl.search(self._base_dom(), limit=12, order='create_date desc')
+            recs = Tmpl.search(dom, limit=12, order='create_date desc')
         products = self._cards(recs)
+        topic = ar_t if lang == 'ar' else en_t
+        noun = ar_n if lang == 'ar' else en_n
+        cat_url = ('/shop/category/%d' % cat_id) if cat_id else '/shop'
         base_url = 'https://www.uellow.com'
-        item_els = [{'@type': 'ListItem', 'position': i + 1,
-                     'url': base_url + (p['url'] or '/'), 'name': p['name']}
-                    for i, p in enumerate(products)]
         if lang == 'ar':
+            lead = ('يقدّم Uellow (أويلو) أفضل خيارات %s: منتجات أصلية 100%%، تقسيط مريح على 4 دفعات أو عبر Taly و Ci-Net، '
+                    'دفع عند الاستلام، توصيل سريع لكل مناطق الكويت، وضمان وإرجاع سهل خلال 14 يومًا. تحت أبرز المنتجات المتاحة وأكثر الأسئلة شيوعًا.') % topic
             faqs = [
-                ('كيف أشتري جوال بالتقسيط في الكويت من Uellow؟',
-                 'اختر الجوال، ثم في صفحة الدفع اختر التقسيط: على 4 دفعات أو عبر Taly أو Ci-Net على المنتجات المؤهلة، وأكمل الطلب في دقائق.'),
-                ('هل يوجد دفع عند الاستلام للجوالات؟', 'نعم، يمكنك الدفع نقدًا عند الاستلام أو الدفع الإلكتروني الآمن.'),
-                ('كم مدة التوصيل داخل الكويت؟', 'توصيل سريع لجميع مناطق الكويت، مع توصيل مجاني على الطلبات المؤهلة.'),
-                ('هل الجوالات أصلية وعليها ضمان؟', 'نعم، جميع الجوالات أصلية 100% مع ضمان، وإرجاع سهل خلال 14 يومًا.'),
+                ('كيف أشتري %s بالتقسيط في الكويت من Uellow؟' % noun,
+                 'اختر المنتج، وفي صفحة الدفع اختر التقسيط: 4 دفعات أو عبر Taly أو Ci-Net على المنتجات المؤهلة، وأكمل الطلب في دقائق.'),
+                ('هل يوجد دفع عند الاستلام؟', 'نعم، ادفع نقدًا عند الاستلام أو إلكترونيًا بأمان.'),
+                ('كم مدة التوصيل داخل الكويت؟', 'توصيل سريع لكل المناطق، مع توصيل مجاني على الطلبات المؤهلة.'),
+                ('هل المنتجات أصلية وعليها ضمان؟', 'نعم، أصلية 100% مع ضمان وإرجاع سهل خلال 14 يومًا.'),
             ]
+            headline = topic + ' — دليل 2026'
         else:
+            lead = ('Uellow offers the best %s: 100%% genuine products, easy installments (4 payments or via Taly and Ci-Net), '
+                    'cash on delivery, fast delivery to all areas of Kuwait, warranty and easy 14-day returns. Below are top products and common questions.') % topic
             faqs = [
-                ('How do I buy a phone on installments in Kuwait from Uellow?',
-                 'Pick your phone, then at checkout choose installments: 4 payments, or via Taly or Ci-Net on eligible products, and finish in minutes.'),
-                ('Is cash on delivery available for phones?', 'Yes, pay cash on delivery or use secure online payment.'),
-                ('How fast is delivery in Kuwait?', 'Fast delivery to all areas of Kuwait, with free delivery on qualifying orders.'),
-                ('Are the phones genuine and under warranty?', 'Yes, all phones are 100% genuine with warranty and easy 14-day returns.'),
+                ('How do I buy a %s on installments in Kuwait from Uellow?' % noun,
+                 'Pick the product, then at checkout choose installments: 4 payments or via Taly or Ci-Net on eligible products, and finish in minutes.'),
+                ('Is cash on delivery available?', 'Yes, pay cash on delivery or securely online.'),
+                ('How fast is delivery in Kuwait?', 'Fast delivery to all areas, with free delivery on qualifying orders.'),
+                ('Are products genuine and under warranty?', 'Yes, 100% genuine with warranty and easy 14-day returns.'),
             ]
+            headline = topic + ' — 2026 guide'
+        item_els = [{'@type': 'ListItem', 'position': i + 1, 'url': base_url + (p['url'] or '/'), 'name': p['name']}
+                    for i, p in enumerate(products)]
         graph = [
-            {'@context': 'https://schema.org', '@type': 'Article',
-             'headline': ('دليل شراء الجوالات بالتقسيط في الكويت 2026' if lang == 'ar'
-                          else 'Buying phones on installments in Kuwait — 2026 guide'),
+            {'@context': 'https://schema.org', '@type': 'Article', 'headline': headline,
              'author': {'@type': 'Organization', 'name': 'Uellow'},
              'publisher': {'@type': 'Organization', 'name': 'Uellow'},
-             'mainEntityOfPage': base_url + '/guide/mobiles-installments-kuwait'},
+             'mainEntityOfPage': base_url + '/guide/' + _slug},
             {'@context': 'https://schema.org', '@type': 'FAQPage',
              'mainEntity': [{'@type': 'Question', 'name': q,
                              'acceptedAnswer': {'@type': 'Answer', 'text': a}} for q, a in faqs]},
             {'@context': 'https://schema.org', '@type': 'ItemList', 'itemListElement': item_els},
         ]
         schema = Markup(json.dumps(graph, ensure_ascii=False).replace('<', '\\u003c'))
-        return request.render('uellow_home_slider.guide_mobiles', {
-            'products': products, 'is_ar': lang == 'ar', 'faqs': faqs,
-            'schema': schema, 'show_save': True, 'show_disc': True,
+        return request.render('uellow_home_slider.guide_page', {
+            'products': products, 'is_ar': lang == 'ar', 'faqs': faqs, 'schema': schema,
+            'g_title': topic, 'g_lead': lead, 'g_cat_url': cat_url,
+            'show_save': True, 'show_disc': True,
         })
 
     # ── helpers ───────────────────────────────────────────────

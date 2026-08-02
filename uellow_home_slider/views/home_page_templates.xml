@@ -16,10 +16,10 @@
     </a>
   </template>
 
-  <template id="guide_mobiles" name="Uellow Guide — Mobiles Installments Kuwait">
+  <template id="guide_page" name="Uellow Buying Guide">
     <t t-call="website.layout">
-      <t t-set="additional_title" t-value="('دليل شراء الجوالات بالتقسيط في الكويت — Uellow' if is_ar else 'Buy phones on installments in Kuwait — Uellow')"/>
-      <t t-set="website_meta_description" t-value="('دليل 2026: أفضل الجوالات وطرق الشراء بالتقسيط عبر Taly و Ci-Net والدفع عند الاستلام مع توصيل سريع لكل مناطق الكويت من Uellow.' if is_ar else '2026 guide: the best phones and how to buy them on installments (Taly, Ci-Net) with cash on delivery and fast Kuwait-wide delivery from Uellow.')"/>
+      <t t-set="additional_title" t-value="g_title + ' — Uellow'"/>
+      <t t-set="website_meta_description" t-value="g_lead"/>
       <script type="application/ld+json" t-out="schema"/>
       <div class="uguide" t-att-dir="'rtl' if is_ar else 'ltr'">
         <style>
@@ -56,16 +56,16 @@
           @media (max-width:560px){.uguide-grid{grid-template-columns:repeat(2,1fr)}}
         </style>
         <div class="container">
-          <nav class="uguide-crumbs"><a href="/">Uellow</a> › <a href="/shop">المتجر</a> › <span t-esc="'الجوالات بالتقسيط' if is_ar else 'Phones on installments'"/></nav>
-          <h1 class="uguide-h1" t-esc="'دليل شراء الجوالات بالتقسيط في الكويت (2026)' if is_ar else 'Buying phones on installments in Kuwait (2026)'"/>
-          <p class="uguide-lead" t-esc="'في Uellow تقدر تشتري أحدث الجوالات الأصلية بالتقسيط المريح في الكويت — على 4 دفعات أو عبر Taly و Ci-Net — مع الدفع عند الاستلام، توصيل سريع لكل المناطق، وضمان وإرجاع سهل خلال 14 يومًا. تحت هتلاقي أبرز الجوالات المتاحة وإجابات لأكثر الأسئلة شيوعًا.' if is_ar else 'At Uellow you can buy the latest genuine phones on easy installments in Kuwait — pay in 4, or via Taly and Ci-Net — with cash on delivery, fast delivery to all areas, warranty and easy 14-day returns. Below are top available phones and answers to the most common questions.'"/>
+          <nav class="uguide-crumbs"><a href="/">Uellow</a> › <a href="/guides"><t t-esc="'الأدلّة' if is_ar else 'Guides'"/></a> › <span t-esc="g_title"/></nav>
+          <h1 class="uguide-h1" t-esc="g_title"/>
+          <p class="uguide-lead" t-esc="g_lead"/>
           <div class="uguide-why">
             <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#fff1e8;color:#F26A2E">💳</div><div class="uguide-why-t" t-esc="'تقسيط مريح' if is_ar else 'Easy installments'"/><div class="uguide-why-x" t-esc="'4 دفعات أو Taly و Ci-Net' if is_ar else '4 payments or Taly &amp; Ci-Net'"/></div>
             <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#e9f8ee;color:#1f9d55">💵</div><div class="uguide-why-t" t-esc="'دفع عند الاستلام' if is_ar else 'Cash on delivery'"/><div class="uguide-why-x" t-esc="'أو دفع إلكتروني آمن' if is_ar else 'or secure online payment'"/></div>
             <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#e7f5fc;color:#1a90c9">🚚</div><div class="uguide-why-t" t-esc="'توصيل سريع' if is_ar else 'Fast delivery'"/><div class="uguide-why-x" t-esc="'لكل مناطق الكويت' if is_ar else 'to all areas of Kuwait'"/></div>
             <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#fff6da;color:#C79200">🛡️</div><div class="uguide-why-t" t-esc="'أصلي وبضمان' if is_ar else 'Genuine + warranty'"/><div class="uguide-why-x" t-esc="'إرجاع سهل خلال 14 يومًا' if is_ar else 'easy 14-day returns'"/></div>
           </div>
-          <h2 class="uguide-h2" t-esc="'أبرز الجوالات المتاحة الآن' if is_ar else 'Top phones available now'"/>
+          <h2 class="uguide-h2" t-esc="'أبرز المنتجات المتاحة الآن' if is_ar else 'Top products available now'"/>
           <div class="uguide-grid"><t t-set="products" t-value="products"/><t t-call="uellow_home_slider.home_cards"/></div>
           <h2 class="uguide-h2" t-esc="'أسئلة شائعة' if is_ar else 'Frequently asked questions'"/>
           <div class="uguide-faq">
@@ -74,7 +74,36 @@
               <p t-esc="f[1]"/>
             </details>
           </div>
-          <a class="uguide-cta" href="/shop/category/855" t-esc="'تسوّق كل الجوالات ›' if is_ar else 'Shop all phones ›'"/>
+          <a class="uguide-cta" t-att-href="g_cat_url" t-esc="'تسوّق الآن ›' if is_ar else 'Shop now ›'"/>
+        </div>
+      </div>
+    </t>
+  </template>
+
+  <template id="guides_index" name="Uellow Buying Guides index">
+    <t t-call="website.layout">
+      <t t-set="additional_title" t-value="('أدلّة الشراء — Uellow' if is_ar else 'Buying guides — Uellow')"/>
+      <t t-set="website_meta_description" t-value="('أدلّة شراء Uellow في الكويت: جوالات، لابتوبات، ساعات، أجهزة منزلية وعطور بالتقسيط والدفع عند الاستلام.' if is_ar else 'Uellow buying guides in Kuwait: phones, laptops, watches, home appliances and perfumes on installments and cash on delivery.')"/>
+      <div class="uguide" t-att-dir="'rtl' if is_ar else 'ltr'">
+        <style>
+          .uguide{--ink:#14202b;--muted:#5d6b78;--line:#e7eef3;--orange:#F26A2E;--orange2:#F5A623;background:#f6fafd;padding:28px 0 48px}
+          .uguide .container{max-width:1100px}
+          .ugx-h1{font-size:clamp(24px,3.4vw,34px);font-weight:900;color:var(--ink);margin:0 0 8px}
+          .ugx-lead{font-size:15px;color:#3a4652;margin:0 0 22px;max-width:760px;line-height:1.6}
+          .ugx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+          .ugx-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px 18px;text-decoration:none;color:var(--ink);
+            font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:space-between;gap:10px;transition:transform .15s,box-shadow .15s,border-color .15s}
+          .ugx-card:hover{transform:translateY(-3px);box-shadow:0 14px 26px -16px rgba(20,40,60,.35);border-color:#ffe08a}
+          .ugx-card span{color:var(--orange);font-weight:900}
+          @media (max-width:860px){.ugx-grid{grid-template-columns:1fr 1fr}}
+          @media (max-width:520px){.ugx-grid{grid-template-columns:1fr}}
+        </style>
+        <div class="container">
+          <h1 class="ugx-h1" t-esc="'أدلّة الشراء في الكويت' if is_ar else 'Buying guides in Kuwait'"/>
+          <p class="ugx-lead" t-esc="'أدلّة Uellow لاختيار أفضل المنتجات وشرائها بالتقسيط والدفع عند الاستلام مع توصيل سريع لكل مناطق الكويت.' if is_ar else 'Uellow guides to choosing and buying the best products on installments and cash on delivery, with fast delivery across Kuwait.'"/>
+          <div class="ugx-grid">
+            <a t-foreach="guides" t-as="gd" t-attf-href="/guide/#{gd['slug']}" class="ugx-card"><t t-esc="gd['title']"/> <span>›</span></a>
+          </div>
         </div>
       </div>
     </t>
