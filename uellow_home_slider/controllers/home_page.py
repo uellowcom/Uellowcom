@@ -216,7 +216,9 @@ class UellowHomePageController(http.Controller):
         except Exception:
             cats = 0
         try:
-            brands = len(request.website._uc_category_brands(False, limit=999))
+            battrs = request.website._get_brand_attributes()
+            brands = env['product.attribute.value'].sudo().search_count(
+                [('attribute_id', 'in', battrs.ids)]) if battrs else 0
         except Exception:
             brands = 0
         L = (lambda ar, en: ar if lang == 'ar' else en)
@@ -316,7 +318,8 @@ class UellowHomePageController(http.Controller):
 
     def _random_page(self, seed, page, limit):
         Tmpl = request.env['product.template'].sudo()
-        ids = Tmpl.search(self._base_dom()).ids
+        # cap the pool (a large catalogue's full id list is slow to fetch/shuffle)
+        ids = Tmpl.search(self._base_dom(), limit=500).ids
         random.Random(seed or 1).shuffle(ids)
         chunk = ids[page * limit:(page + 1) * limit]
         # keep DB order stable but preserve our shuffled order

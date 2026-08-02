@@ -32,6 +32,8 @@
           .uh-sec{position:relative}
           .uh-anim{opacity:0;transform:translateY(16px)}
           .uh-anim.in{opacity:1;transform:none;transition:opacity .5s ease,transform .5s ease}
+          /* perf: skip painting off-screen blocks until they are scrolled near */
+          .uhome .uh-sec{content-visibility:auto;contain-intrinsic-size:auto 520px}
           .uh-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px;flex-wrap:wrap}
           .uh-ttl{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:900;letter-spacing:.05em;
             text-transform:uppercase;color:var(--orange2)}
@@ -584,7 +586,7 @@
           if('IntersectionObserver' in window){
             var secs=[].slice.call(document.querySelectorAll('.uhome .uh-sec'));
             secs.forEach(function(s){ s.classList.add('uh-anim'); });
-            var ro=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); ro.unobserve(e.target); } }); }, {rootMargin:'0px 0px -6% 0px'});
+            var ro=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); ro.unobserve(e.target); window.dispatchEvent(new Event('resize')); } }); }, {rootMargin:'200px 0px -6% 0px'});
             secs.forEach(function(s){ ro.observe(s); });
           }
           /* flash countdown — fixed end date, else daily midnight */
