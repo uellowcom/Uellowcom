@@ -50,6 +50,8 @@ class UellowHomePageController(http.Controller):
                     d['products'] = self._home_products(sec, force='discounted' if sec.section_type == 'flash_deals' else None)
                 elif sec.section_type in ('dept_spotlight', 'category_grid'):
                     d['cats'] = self._home_departments(lang, limit=d['limit'])
+                elif sec.section_type == 'brand_strip':
+                    d['brands'] = self._home_brands(d['limit'])
                 elif sec.section_type == 'infinite_products':
                     d['products'] = self._cards(self._random_page(seed, 0, d['limit']))
                 elif sec.section_type == 'new_user_bonus':
@@ -157,6 +159,21 @@ class UellowHomePageController(http.Controller):
                             order='sequence, name', limit=max(4, min(limit or 14, 30))):
             out.append({'name': c.name, 'url': '/shop/category/%d' % c.id,
                         'image': ('/web/image/product.public.category/%d/image_256' % c.id) if c.image_128 else ''})
+        return out
+
+    def _home_brands(self, limit=12):
+        """Top storefront brands (product.attribute.value) with their logos."""
+        out = []
+        try:
+            brands = request.website._uc_category_brands(False, limit=max(4, min(limit or 12, 30)))
+            for b in brands:
+                out.append({
+                    'name': b.name,
+                    'url': '/shop?attribute_value=%d' % b.id,
+                    'image': ('/web/image/product.attribute.value/%d/dr_image' % b.id) if getattr(b, 'dr_image', False) else '',
+                })
+        except Exception:
+            out = []
         return out
 
     def _cards(self, recs):

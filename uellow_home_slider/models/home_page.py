@@ -9,6 +9,7 @@ SECTION_TYPES = [
     ('flash_deals',      'Flash deals'),
     ('new_user_bonus',   'New-user bonus'),
     ('category_grid',    'Categories grid'),
+    ('brand_strip',      'Brands strip'),
     ('feature_bar',      'Feature / trust bar'),
     ('banner',           'Banner (image + link)'),
     ('infinite_products', 'Infinite products feed'),

@@ -115,9 +115,9 @@
                                         <field name="flash_color2" widget="color"/>
                                     </group>
 
-                                    <!-- Categories grid / spotlight -->
-                                    <group string="Categories" invisible="section_type not in ('dept_spotlight','category_grid')">
-                                        <field name="limit" string="How many categories"/>
+                                    <!-- Categories grid / spotlight / brands strip -->
+                                    <group string="Items" invisible="section_type not in ('dept_spotlight','category_grid','brand_strip')">
+                                        <field name="limit" string="How many"/>
                                     </group>
 
                                     <!-- Banner -->
