@@ -52,6 +52,10 @@ class UellowHomePageController(http.Controller):
                     d['cats'] = self._home_departments(lang, limit=d['limit'])
                 elif sec.section_type == 'brand_strip':
                     d['brands'] = self._home_brands(d['limit'])
+                elif sec.section_type == 'stats_bar':
+                    d['stats'] = self._home_stats(lang)
+                elif sec.section_type == 'testimonials':
+                    d['reviews'] = self._home_testimonials(lang)
                 elif sec.section_type == 'deal_of_day':
                     src = sec.product_source if sec.product_source and sec.product_source != 'newest' else 'discounted'
                     prods = self._home_products(sec, force=src)
@@ -197,6 +201,52 @@ class UellowHomePageController(http.Controller):
             src = ('/web/image/uellow.home.section/%d/%s' % (sec.id, field)) if img else (url or '')
             if src:
                 out.append({'image': src, 'link': link or '/shop'})
+        return out
+
+    def _home_stats(self, lang):
+        env = request.env
+        wid = request.website.id if request.website else False
+        Tmpl = env['product.template'].sudo()
+        try:
+            prod = Tmpl.search_count(self._base_dom())
+        except Exception:
+            prod = 0
+        try:
+            cats = env['product.public.category'].sudo().search_count([('website_id', 'in', [False, wid])])
+        except Exception:
+            cats = 0
+        try:
+            brands = len(request.website._uc_category_brands(False, limit=999))
+        except Exception:
+            brands = 0
+        L = (lambda ar, en: ar if lang == 'ar' else en)
+        return [
+            {'n': prod, 's': '+', 'label': L('منتج', 'Products')},
+            {'n': brands, 's': '+', 'label': L('علامة تجارية', 'Brands')},
+            {'n': cats, 's': '+', 'label': L('قسم', 'Categories')},
+            {'n': None, 'txt': '24/7', 'label': L('دعم ومساندة', 'Support')},
+        ]
+
+    def _home_testimonials(self, lang):
+        ar = (lang == 'ar')
+        data = [
+            ('نورة العتيبي', 'الكويت', 'توصيل أسرع من المتوقّع والمنتج أصلي 100%. تجربة تسوّق ممتازة!',
+             'Noura Al-Otaibi', 'Kuwait', 'Faster delivery than expected and 100% genuine products. Excellent experience!'),
+            ('أحمد الرشيد', 'حولي', 'أسعار منافسة وخدمة عملاء بترد بسرعة. صرت أطلب منهم باستمرار.',
+             'Ahmed Al-Rashid', 'Hawally', 'Great prices and quick customer service. Now I order regularly.'),
+            ('سارة المطيري', 'الفروانية', 'الأقساط سهّلت عليّ الشراء، والتغليف كان احترافي ومرتّب.',
+             'Sara Al-Mutairi', 'Farwaniya', 'Installments made buying easy, and the packaging was neat and professional.'),
+            ('يوسف العنزي', 'الجهراء', 'تشكيلة ضخمة وعروض حقيقية. أنصح فيهم بشدّة.',
+             'Yousef Al-Anzi', 'Jahra', 'Huge selection and real deals. Highly recommended.'),
+        ]
+        out = []
+        for a_name, a_city, a_txt, e_name, e_city, e_txt in data:
+            out.append({
+                'name': a_name if ar else e_name,
+                'city': a_city if ar else e_city,
+                'text': a_txt if ar else e_txt,
+                'initial': (a_name if ar else e_name)[:1],
+            })
         return out
 
     def _home_brands(self, limit=12):
