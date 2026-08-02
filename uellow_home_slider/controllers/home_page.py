@@ -208,6 +208,53 @@ class UellowHomePageController(http.Controller):
             ('Content-Type', 'text/plain; charset=utf-8'),
             ('Cache-Control', 'public, max-age=86400')])
 
+    @http.route(['/guide/mobiles-installments-kuwait'], type='http', auth='public', website=True, sitemap=True)
+    def guide_mobiles(self, **kw):
+        lang = 'en' if (request.env.lang or '').lower().startswith('en') else 'ar'
+        Tmpl = request.env['product.template'].sudo()
+        recs = Tmpl.search(self._base_dom() + [('public_categ_ids', 'child_of', 855)],
+                           limit=12, order='website_sequence, create_date desc')
+        if not recs:
+            recs = Tmpl.search(self._base_dom(), limit=12, order='create_date desc')
+        products = self._cards(recs)
+        base_url = 'https://www.uellow.com'
+        item_els = [{'@type': 'ListItem', 'position': i + 1,
+                     'url': base_url + (p['url'] or '/'), 'name': p['name']}
+                    for i, p in enumerate(products)]
+        if lang == 'ar':
+            faqs = [
+                ('كيف أشتري جوال بالتقسيط في الكويت من Uellow؟',
+                 'اختر الجوال، ثم في صفحة الدفع اختر التقسيط: على 4 دفعات أو عبر Taly أو Ci-Net على المنتجات المؤهلة، وأكمل الطلب في دقائق.'),
+                ('هل يوجد دفع عند الاستلام للجوالات؟', 'نعم، يمكنك الدفع نقدًا عند الاستلام أو الدفع الإلكتروني الآمن.'),
+                ('كم مدة التوصيل داخل الكويت؟', 'توصيل سريع لجميع مناطق الكويت، مع توصيل مجاني على الطلبات المؤهلة.'),
+                ('هل الجوالات أصلية وعليها ضمان؟', 'نعم، جميع الجوالات أصلية 100% مع ضمان، وإرجاع سهل خلال 14 يومًا.'),
+            ]
+        else:
+            faqs = [
+                ('How do I buy a phone on installments in Kuwait from Uellow?',
+                 'Pick your phone, then at checkout choose installments: 4 payments, or via Taly or Ci-Net on eligible products, and finish in minutes.'),
+                ('Is cash on delivery available for phones?', 'Yes, pay cash on delivery or use secure online payment.'),
+                ('How fast is delivery in Kuwait?', 'Fast delivery to all areas of Kuwait, with free delivery on qualifying orders.'),
+                ('Are the phones genuine and under warranty?', 'Yes, all phones are 100% genuine with warranty and easy 14-day returns.'),
+            ]
+        graph = [
+            {'@context': 'https://schema.org', '@type': 'Article',
+             'headline': ('دليل شراء الجوالات بالتقسيط في الكويت 2026' if lang == 'ar'
+                          else 'Buying phones on installments in Kuwait — 2026 guide'),
+             'author': {'@type': 'Organization', 'name': 'Uellow'},
+             'publisher': {'@type': 'Organization', 'name': 'Uellow'},
+             'mainEntityOfPage': base_url + '/guide/mobiles-installments-kuwait'},
+            {'@context': 'https://schema.org', '@type': 'FAQPage',
+             'mainEntity': [{'@type': 'Question', 'name': q,
+                             'acceptedAnswer': {'@type': 'Answer', 'text': a}} for q, a in faqs]},
+            {'@context': 'https://schema.org', '@type': 'ItemList', 'itemListElement': item_els},
+        ]
+        schema = Markup(json.dumps(graph, ensure_ascii=False).replace('<', '\\u003c'))
+        return request.render('uellow_home_slider.guide_mobiles', {
+            'products': products, 'is_ar': lang == 'ar', 'faqs': faqs,
+            'schema': schema, 'show_save': True, 'show_disc': True,
+        })
+
     # ── helpers ───────────────────────────────────────────────
     def _base_dom(self):
         wid = request.website.id if request.website else False

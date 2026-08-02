@@ -16,6 +16,70 @@
     </a>
   </template>
 
+  <template id="guide_mobiles" name="Uellow Guide — Mobiles Installments Kuwait">
+    <t t-call="website.layout">
+      <t t-set="additional_title" t-value="('دليل شراء الجوالات بالتقسيط في الكويت — Uellow' if is_ar else 'Buy phones on installments in Kuwait — Uellow')"/>
+      <t t-set="website_meta_description" t-value="('دليل 2026: أفضل الجوالات وطرق الشراء بالتقسيط عبر Taly و Ci-Net والدفع عند الاستلام مع توصيل سريع لكل مناطق الكويت من Uellow.' if is_ar else '2026 guide: the best phones and how to buy them on installments (Taly, Ci-Net) with cash on delivery and fast Kuwait-wide delivery from Uellow.')"/>
+      <script type="application/ld+json" t-out="schema"/>
+      <div class="uguide" t-att-dir="'rtl' if is_ar else 'ltr'">
+        <style>
+          .uguide{--ink:#14202b;--muted:#5d6b78;--line:#e7eef3;--card:#fff;--orange:#F26A2E;--orange2:#F5A623;background:#f6fafd;padding:24px 0 48px}
+          .uguide .container{max-width:1100px}
+          .uguide-crumbs{font-size:12.5px;color:var(--muted);margin-bottom:10px}
+          .uguide-crumbs a{color:var(--muted);text-decoration:none}
+          .uguide-h1{font-size:clamp(24px,3.4vw,36px);font-weight:900;line-height:1.2;color:var(--ink);margin:0 0 10px}
+          .uguide-lead{font-size:15.5px;line-height:1.7;color:#3a4652;max-width:820px;margin:0 0 22px}
+          .uguide-why{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 30px}
+          .uguide-why-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+          .uguide-why-ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;font-size:20px;margin-bottom:8px}
+          .uguide-why-t{font-weight:800;font-size:14px;color:var(--ink)}
+          .uguide-why-x{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:2px}
+          .uguide-h2{font-size:clamp(18px,2.4vw,24px);font-weight:900;color:var(--ink);margin:28px 0 14px}
+          .uguide-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+          .uh-card{scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;overflow:hidden;text-decoration:none;color:var(--ink);transition:transform .16s,box-shadow .16s}
+          .uh-card:hover{transform:translateY(-3px);box-shadow:0 14px 28px -18px rgba(20,50,80,.45)}
+          .uh-thumb{position:relative;height:130px;background:#fff;display:grid;place-items:center;border-bottom:1px solid #f4f1ea;overflow:hidden}
+          .uh-thumb img{max-width:100%;max-height:100%;object-fit:contain;padding:10px}
+          .uh-save{position:absolute;inset-inline-start:8px;top:8px;background:#fff;color:#E63946;font-size:9.5px;font-weight:800;padding:3px 8px;border-radius:999px;box-shadow:0 3px 8px -3px rgba(200,60,40,.4)}
+          .uh-name{padding:9px 11px 0;font-size:12px;font-weight:600;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+          .uh-price{padding:2px 11px 11px;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-top:auto}
+          .uh-now{font-size:13px;font-weight:800;color:var(--ink)}
+          .uh-was{font-size:10.5px;color:#9aa7b2;text-decoration:line-through}
+          .uh-pct{background:#E63946;color:#fff;font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px}
+          .uguide-faq{display:flex;flex-direction:column;gap:8px;max-width:860px}
+          .uguide-faq details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+          .uguide-faq summary{font-weight:800;font-size:14px;color:var(--ink);cursor:pointer;list-style:none}
+          .uguide-faq summary::-webkit-details-marker{display:none}
+          .uguide-faq p{margin:10px 0 0;font-size:13.5px;line-height:1.6;color:var(--muted)}
+          .uguide-cta{display:inline-flex;margin-top:24px;background:linear-gradient(120deg,var(--orange),var(--orange2));color:#fff;font-weight:800;border-radius:999px;padding:13px 32px;text-decoration:none}
+          @media (max-width:1024px){.uguide-grid{grid-template-columns:repeat(4,1fr)}.uguide-why{grid-template-columns:repeat(2,1fr)}}
+          @media (max-width:560px){.uguide-grid{grid-template-columns:repeat(2,1fr)}}
+        </style>
+        <div class="container">
+          <nav class="uguide-crumbs"><a href="/">Uellow</a> › <a href="/shop">المتجر</a> › <span t-esc="'الجوالات بالتقسيط' if is_ar else 'Phones on installments'"/></nav>
+          <h1 class="uguide-h1" t-esc="'دليل شراء الجوالات بالتقسيط في الكويت (2026)' if is_ar else 'Buying phones on installments in Kuwait (2026)'"/>
+          <p class="uguide-lead" t-esc="'في Uellow تقدر تشتري أحدث الجوالات الأصلية بالتقسيط المريح في الكويت — على 4 دفعات أو عبر Taly و Ci-Net — مع الدفع عند الاستلام، توصيل سريع لكل المناطق، وضمان وإرجاع سهل خلال 14 يومًا. تحت هتلاقي أبرز الجوالات المتاحة وإجابات لأكثر الأسئلة شيوعًا.' if is_ar else 'At Uellow you can buy the latest genuine phones on easy installments in Kuwait — pay in 4, or via Taly and Ci-Net — with cash on delivery, fast delivery to all areas, warranty and easy 14-day returns. Below are top available phones and answers to the most common questions.'"/>
+          <div class="uguide-why">
+            <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#fff1e8;color:#F26A2E">💳</div><div class="uguide-why-t" t-esc="'تقسيط مريح' if is_ar else 'Easy installments'"/><div class="uguide-why-x" t-esc="'4 دفعات أو Taly و Ci-Net' if is_ar else '4 payments or Taly &amp; Ci-Net'"/></div>
+            <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#e9f8ee;color:#1f9d55">💵</div><div class="uguide-why-t" t-esc="'دفع عند الاستلام' if is_ar else 'Cash on delivery'"/><div class="uguide-why-x" t-esc="'أو دفع إلكتروني آمن' if is_ar else 'or secure online payment'"/></div>
+            <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#e7f5fc;color:#1a90c9">🚚</div><div class="uguide-why-t" t-esc="'توصيل سريع' if is_ar else 'Fast delivery'"/><div class="uguide-why-x" t-esc="'لكل مناطق الكويت' if is_ar else 'to all areas of Kuwait'"/></div>
+            <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#fff6da;color:#C79200">🛡️</div><div class="uguide-why-t" t-esc="'أصلي وبضمان' if is_ar else 'Genuine + warranty'"/><div class="uguide-why-x" t-esc="'إرجاع سهل خلال 14 يومًا' if is_ar else 'easy 14-day returns'"/></div>
+          </div>
+          <h2 class="uguide-h2" t-esc="'أبرز الجوالات المتاحة الآن' if is_ar else 'Top phones available now'"/>
+          <div class="uguide-grid"><t t-set="products" t-value="products"/><t t-call="uellow_home_slider.home_cards"/></div>
+          <h2 class="uguide-h2" t-esc="'أسئلة شائعة' if is_ar else 'Frequently asked questions'"/>
+          <div class="uguide-faq">
+            <details t-foreach="faqs" t-as="f" t-att-open="'open' if f_index == 0 else None">
+              <summary t-esc="f[0]"/>
+              <p t-esc="f[1]"/>
+            </details>
+          </div>
+          <a class="uguide-cta" href="/shop/category/855" t-esc="'تسوّق كل الجوالات ›' if is_ar else 'Shop all phones ›'"/>
+        </div>
+      </div>
+    </t>
+  </template>
+
   <template id="home_preview_page" name="Uellow Homepage (preview)">
     <t t-call="website.layout">
       <t t-set="additional_title" t-value="(page and ((page.meta_title_ar if is_ar else page.meta_title_en) or page.name)) or 'Uellow'"/>
