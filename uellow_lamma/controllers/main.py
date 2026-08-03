@@ -49,7 +49,15 @@ def lamma_summary():
     q['installment_min_amount'] = cfg.installment_min_amount
     q['currency'] = (request.env.company.currency_id.symbol
                      or request.env.company.currency_id.name or 'KD')
+    q['_country'] = country_code()
     return q
+
+
+def _log(action, product_id=None, summary=None, source='web'):
+    try:
+        request.env['uellow.lamma.activity'].sudo().log(action, product_id, summary, source)
+    except Exception:
+        pass
 
 
 class LammaWeb(http.Controller):
@@ -67,9 +75,12 @@ class LammaWeb(http.Controller):
         if pid not in ids:
             ids.append(pid)
         request.session['lamma_ids'] = ids
+        started = len(ids) == 1
         if lamma_type in ('normal', 'installment'):
             request.session['lamma_type'] = lamma_type
-        return lamma_summary()
+        s = lamma_summary()
+        _log('start' if started else 'add', pid, s)
+        return s
 
     @http.route('/lamma/remove', type='json', auth='public', website=True)
     def remove(self, product_id, **kw):
@@ -78,17 +89,23 @@ class LammaWeb(http.Controller):
         if pid in ids:
             ids.remove(pid)
         request.session['lamma_ids'] = ids
-        return lamma_summary()
+        s = lamma_summary()
+        _log('remove', pid, s)
+        return s
 
     @http.route('/lamma/type', type='json', auth='public', website=True)
     def set_type(self, lamma_type, **kw):
         request.session['lamma_type'] = 'installment' if lamma_type == 'installment' else 'normal'
-        return lamma_summary()
+        s = lamma_summary()
+        _log('type', None, s)
+        return s
 
     @http.route('/lamma/clear', type='json', auth='public', website=True)
     def clear(self, **kw):
         request.session['lamma_ids'] = []
-        return lamma_summary()
+        s = lamma_summary()
+        _log('clear', None, s)
+        return s
 
     @http.route('/lamma/checkout', type='json', auth='public', website=True)
     def checkout(self, **kw):
@@ -113,5 +130,7 @@ class LammaWeb(http.Controller):
             if variant:
                 order._cart_update(product_id=variant.id, add_qty=1)
         cfg._issue_coupon(order, q['saved'])
+        _log('checkout', None, {'type': ltype, 'n': q['n'], 'subtotal': q['subtotal'],
+                                'saved': q['saved'], '_country': country_code()})
         request.session['lamma_ids'] = []
         return {'redirect': '/shop/cart'}

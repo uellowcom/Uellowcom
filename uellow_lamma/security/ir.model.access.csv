@@ -3,3 +3,5 @@ access_lamma_config_user,lamma.config.user,model_uellow_lamma_config,base.group_
 access_lamma_config_mgr,lamma.config.mgr,model_uellow_lamma_config,base.group_system,1,1,1,1
 access_lamma_tier_user,lamma.tier.user,model_uellow_lamma_tier,base.group_user,1,0,0,0
 access_lamma_tier_mgr,lamma.tier.mgr,model_uellow_lamma_tier,base.group_system,1,1,1,1
+access_lamma_activity_user,lamma.activity.user,model_uellow_lamma_activity,base.group_user,1,0,0,0
+access_lamma_activity_mgr,lamma.activity.mgr,model_uellow_lamma_activity,base.group_system,1,1,1,1

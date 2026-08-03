@@ -107,4 +107,10 @@ class LammaMobile(http.Controller):
                              'product_uom_qty': 1})
         # one-time discount coupon on the whole order (consumed on payment)
         cfg._issue_coupon(order, q['saved'])
+        try:
+            request.env['uellow.lamma.activity'].sudo().log('checkout', None, {
+                'type': ltype, 'n': q['n'], 'subtotal': q['subtotal'],
+                'saved': q['saved'], '_country': request.env.company.country_id.code or ''}, 'app')
+        except Exception:
+            pass
         return _json({'ok': True, 'order_id': order.id})
