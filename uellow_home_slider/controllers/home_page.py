@@ -29,6 +29,23 @@ GUIDES = [
     ('security-cameras-kuwait', 406, 'كاميرات المراقبة وأنظمة الأمان في الكويت', 'Security cameras in Kuwait', 'كاميرا مراقبة', 'security camera'),
     ('electronics-installments-kuwait', 412, 'الإلكترونيات بالتقسيط في الكويت', 'Electronics on installments in Kuwait', 'جهاز', 'device'),
     ('watches-installments-kuwait', 1, 'الساعات بالتقسيط في الكويت', 'Watches on installments in Kuwait', 'ساعة', 'watch'),
+    ('earbuds-kuwait', 861, 'السماعات اللاسلكية (EarBuds) في الكويت', 'Wireless earbuds in Kuwait', 'سماعة', 'earbuds'),
+    ('speakers-kuwait', 770, 'السماعات ومكبرات الصوت في الكويت', 'Speakers in Kuwait', 'سماعة', 'speaker'),
+    ('power-bank-kuwait', 728, 'باور بانك (بطاريات متنقلة) في الكويت', 'Power banks in Kuwait', 'باور بانك', 'power bank'),
+    ('chargers-kuwait', 500, 'شواحن الجوال في الكويت', 'Phone chargers in Kuwait', 'شاحن', 'charger'),
+    ('cables-kuwait', 481, 'كابلات الشحن والبيانات في الكويت', 'Charging & data cables in Kuwait', 'كابل', 'cable'),
+    ('phone-holders-kuwait', 598, 'حاملات الجوال والاستاند في الكويت', 'Phone holders and stands in Kuwait', 'حامل', 'holder'),
+    ('wireless-chargers-kuwait', 819, 'الشواحن اللاسلكية في الكويت', 'Wireless chargers in Kuwait', 'شاحن لاسلكي', 'wireless charger'),
+    ('car-chargers-kuwait', 488, 'شواحن السيارة في الكويت', 'Car chargers in Kuwait', 'شاحن سيارة', 'car charger'),
+    ('headphones-kuwait', 587, 'سماعات الرأس في الكويت', 'Headphones in Kuwait', 'سماعة رأس', 'headphone'),
+    ('televisions-kuwait', 738, 'الشاشات والتلفزيونات في الكويت', 'Televisions in Kuwait', 'تلفزيون', 'TV'),
+    ('kitchen-appliances-kuwait', 619, 'أجهزة المطبخ في الكويت', 'Kitchen appliances in Kuwait', 'جهاز مطبخ', 'kitchen appliance'),
+    ('cameras-kuwait', 416, 'الكاميرات في الكويت', 'Cameras in Kuwait', 'كاميرا', 'camera'),
+    ('health-care-kuwait', 451, 'منتجات العناية والصحة في الكويت', 'Health & personal care in Kuwait', 'منتج', 'product'),
+    ('car-accessories-kuwait', 425, 'إكسسوارات وقطع السيارات في الكويت', 'Car accessories in Kuwait', 'قطعة', 'accessory'),
+    ('phone-cases-kuwait', 495, 'جرابات وكفرات الجوال في الكويت', 'Phone cases and covers in Kuwait', 'كفر', 'case'),
+    ('men-perfumes-kuwait', 646, 'العطور الرجالية في الكويت', 'Men fragrances in Kuwait', 'عطر رجالي', "men's perfume"),
+    ('sports-outdoor-kuwait', 485, 'مستلزمات الرياضة والأنشطة الخارجية في الكويت', 'Sports & outdoor gear in Kuwait', 'منتج رياضي', 'sports item'),
 ]
 
 
