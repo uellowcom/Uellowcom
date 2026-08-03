@@ -133,7 +133,7 @@ class SEOProduct(models.Model):
         self.env.cr.execute("""
             SELECT pt.id
               FROM product_template pt
-             WHERE pt.website_published = TRUE
+             WHERE pt.is_published = TRUE
                AND NOT EXISTS (
                    SELECT 1 FROM uellow_seo_product sp
                     WHERE sp.product_id = pt.id
