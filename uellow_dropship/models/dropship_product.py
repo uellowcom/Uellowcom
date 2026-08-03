@@ -1417,12 +1417,15 @@ class DropshipProduct(models.Model):
             'standard_price': self.base_cost,
             'website_published': bool(ICP.get_param('uellow_dropship.auto_publish')),
             'website_id': int(website_id) if website_id else False,
-            # company_id=False (multi-company shared) on purpose: the World website
-            # is on its own company (accounting isolated at order level via the
-            # website's company), but the SAME products must also render on the
-            # mobile-app websites (a different company). Shared avoids a
-            # cross-company 403 while orders still book under the World company.
-            'company_id': False,
+            # company_id = the World website's OWN company, so World (dropship)
+            # products stay isolated to that company and never leak into other
+            # companies' backend views (smart connector, product lists, etc.).
+            # This does NOT break app rendering: the mobile-app World APIs read
+            # these products via sudo() (app_bridge World* controllers), which
+            # bypasses multi-company record rules. Falls back to False only when
+            # the World website / its company can't be resolved.
+            'company_id': (self.env['website'].sudo().browse(int(website_id)).company_id.id
+                           if website_id else False),
             'description_sale': self.description_html or False,
         }
         if 'is_storable' in self.env['product.template']._fields:
