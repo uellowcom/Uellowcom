@@ -60,7 +60,7 @@
           <h1 class="uguide-h1" t-esc="g_title"/>
           <p class="uguide-lead" t-esc="g_lead"/>
           <div class="uguide-why">
-            <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#fff1e8;color:#F26A2E">💳</div><div class="uguide-why-t" t-esc="'تقسيط مريح' if is_ar else 'Easy installments'"/><div class="uguide-why-x" t-esc="'4 دفعات أو Taly و Ci-Net' if is_ar else '4 payments or Taly &amp; Ci-Net'"/></div>
+            <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#fff1e8;color:#F26A2E">💳</div><div class="uguide-why-t" t-esc="'تقسيط مريح' if is_ar else 'Easy installments'"/><div class="uguide-why-x" t-esc="'4 دفعات أو Taly و CINET' if is_ar else '4 payments or Taly &amp; CINET'"/></div>
             <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#e9f8ee;color:#1f9d55">💵</div><div class="uguide-why-t" t-esc="'دفع عند الاستلام' if is_ar else 'Cash on delivery'"/><div class="uguide-why-x" t-esc="'أو دفع إلكتروني آمن' if is_ar else 'or secure online payment'"/></div>
             <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#e7f5fc;color:#1a90c9">🚚</div><div class="uguide-why-t" t-esc="'توصيل سريع' if is_ar else 'Fast delivery'"/><div class="uguide-why-x" t-esc="'لكل مناطق الكويت' if is_ar else 'to all areas of Kuwait'"/></div>
             <div class="uguide-why-card"><div class="uguide-why-ic" style="background:#fff6da;color:#C79200">🛡️</div><div class="uguide-why-t" t-esc="'أصلي وبضمان' if is_ar else 'Genuine + warranty'"/><div class="uguide-why-x" t-esc="'إرجاع سهل خلال 14 يومًا' if is_ar else 'easy 14-day returns'"/></div>

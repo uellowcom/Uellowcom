@@ -47,9 +47,11 @@
             var b = this; b.disabled = true; b.textContent = "جارٍ التجهيز…";
             rpc("/lamma/checkout").then(function (r) {
                 if (r && r.redirect) { window.location.href = r.redirect; return; }
-                b.disabled = false; b.textContent = "إتمام اللمّة";
-                if (r && r.error === "need_more") { alert("أضف " + (r.min_items || 2) + " منتجات على الأقل للّمّة"); }
-            }).catch(function () { b.disabled = false; b.textContent = "إتمام اللمّة"; });
+                if (r && r.error === "need_more") { b.disabled = false; b.textContent = "إتمام اللمّة"; alert("أضف " + (r.min_items || 2) + " منتجات على الأقل للّمّة"); return; }
+                if (r && r.error === "disabled") { b.disabled = false; b.textContent = "إتمام اللمّة"; alert("خدمة اللمّة غير متاحة في منطقتك حالياً"); return; }
+                // otherwise: go to cart anyway
+                window.location.href = "/shop/cart";
+            }).catch(function () { window.location.href = "/shop/cart"; });
         });
     }
     function renderBar() {
@@ -144,7 +146,7 @@
             ' — كوّن باقتك ووفّر</div><div class="ul-sub">اختر النوع ثم أضف هذا المنتج</div></div>');
         seg = el('<div class="ul-seg"><button type="button" data-t="normal" class="on">عادي</button>' +
             '<button type="button" data-t="installment">أقساط</button></div>');
-        var instNote = el('<div class="ul-inst" id="ul-inst">💳 <b>الأقساط:</b> قسّم طلبك على دفعات مريحة عبر Taly / Ci-Net · موافقة سريعة · بدون تعقيد. اختر «الأقساط» ثم أضف منتجاتك، وأكمل الدفع بالتقسيط من السلة.</div>');
+        var instNote = el('<div class="ul-inst" id="ul-inst">💳 <b>الأقساط:</b> قسّم طلبك على دفعات مريحة عبر Taly / CINET · موافقة سريعة · بدون تعقيد. اختر «الأقساط» ثم أضف منتجاتك، وأكمل الدفع بالتقسيط من السلة.</div>');
         btn = el('<button type="button" class="ul-btn">🧺 أضف للّمّة</button>');
         if (!S.installment_enabled) { seg.querySelector('[data-t="installment"]').style.display = "none"; }
         seg.querySelectorAll("button").forEach(function (b) {

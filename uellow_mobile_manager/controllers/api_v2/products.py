@@ -611,14 +611,14 @@ def _bnpl_offer(product, lang='en_US'):
                 'ar': 'قسّمها على %d دفعات بدون فوائد، %.3f لكل دفعة' % (n, per),
             },
             # v2.2.x — app-download links for the installments dialog (Taly +
-            # Ci-Net, the CBK credit network Taly verifies eligibility against).
+            # CINET, the CBK credit network Taly verifies eligibility against).
             'apps': [
                 {'name': 'Taly',
                  'subtitle': {'en': 'Pay in 4 — installments',
                               'ar': 'قسّم على 4 دفعات'},
                  'ios': 'https://apps.apple.com/kw/app/taly-split-your-payments/id6467709774',
                  'android': 'https://play.google.com/store/apps/details?id=io.taly.consumer'},
-                {'name': 'Ci-Net',
+                {'name': 'CINET',
                  'subtitle': {'en': 'Central Bank credit check',
                               'ar': 'التحقق الائتماني — البنك المركزي'},
                  'ios': 'https://apps.apple.com/kw/app/cinet-kuwait/id1542150777',

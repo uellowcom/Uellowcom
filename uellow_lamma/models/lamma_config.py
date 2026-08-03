@@ -45,7 +45,7 @@ class LammaConfig(models.Model):
         'Installment guaranteed extra margin %', default=6.5,
         help='Reserved ON TOP of the normal min margin for installment bundles '
              '(covers installment provider fees).')
-    installment_provider = fields.Char('Installment provider', default='Tabby / Ci-Net')
+    installment_provider = fields.Char('Installment provider', default='Tabby / CINET')
     installment_max_months = fields.Integer('Max installments', default=4)
     installment_min_amount = fields.Float('Min bundle amount for installments', default=15.0)
 

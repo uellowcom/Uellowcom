@@ -169,14 +169,14 @@ class UellowHomePageController(http.Controller):
         faqs_ar = [
             ('هل توصّلون لكل مناطق الكويت؟', 'نعم، Uellow (أويلو) توفّر توصيلًا سريعًا لجميع مناطق الكويت، مع توصيل مجاني على الطلبات المؤهلة.'),
             ('هل الدفع عند الاستلام متاح؟', 'نعم، يمكنك الدفع نقدًا عند الاستلام أو الدفع الإلكتروني الآمن عبر البطاقة.'),
-            ('هل يوجد تقسيط على المنتجات؟', 'نعم، يمكنك التقسيط على 4 دفعات وعبر Taly و Ci-Net على المنتجات المؤهلة.'),
+            ('هل يوجد تقسيط على المنتجات؟', 'نعم، يمكنك التقسيط على 4 دفعات وعبر Taly و CINET على المنتجات المؤهلة.'),
             ('ما هي سياسة الإرجاع؟', 'إرجاع سهل خلال 14 يومًا من الاستلام.'),
             ('هل عملية الدفع آمنة؟', 'نعم، جميع المدفوعات تتم عبر اتصال مشفّر SSL وحماية كاملة للبيانات.'),
         ]
         faqs_en = [
             ('Do you deliver across Kuwait?', 'Yes. Uellow offers fast delivery to all areas of Kuwait, with free delivery on qualifying orders.'),
             ('Is cash on delivery available?', 'Yes, you can pay cash on delivery or use secure online card payment.'),
-            ('Do you offer installments?', 'Yes — pay in 4 instalments and via Taly and Ci-Net on eligible products.'),
+            ('Do you offer installments?', 'Yes — pay in 4 instalments and via Taly and CINET on eligible products.'),
             ('What is the return policy?', 'Easy returns within 14 days of delivery.'),
             ('Is payment secure?', 'Yes, all payments use an SSL-encrypted, fully protected checkout.'),
         ]
@@ -244,7 +244,7 @@ class UellowHomePageController(http.Controller):
             "## About\n"
             "- Brand: Uellow / أويلو\n"
             "- Market: Kuwait (توصيل سريع لكل مناطق الكويت)\n"
-            "- Payment: Secure card payment, Cash on Delivery, Installments (4 payments, Taly, Ci-Net)\n"
+            "- Payment: Secure card payment, Cash on Delivery, Installments (4 payments, Taly, CINET)\n"
             "- Delivery: Fast delivery across Kuwait; free delivery on qualifying orders\n"
             "- Returns: Easy 14-day returns\n"
             "- Support: 24/7 customer service\n"
@@ -286,22 +286,22 @@ class UellowHomePageController(http.Controller):
         cat_url = ('/shop/category/%d' % cat_id) if cat_id else '/shop'
         base_url = 'https://www.uellow.com'
         if lang == 'ar':
-            lead = ('يقدّم Uellow (أويلو) أفضل خيارات %s: منتجات أصلية 100%%، تقسيط مريح على 4 دفعات أو عبر Taly و Ci-Net، '
+            lead = ('يقدّم Uellow (أويلو) أفضل خيارات %s: منتجات أصلية 100%%، تقسيط مريح على 4 دفعات أو عبر Taly و CINET، '
                     'دفع عند الاستلام، توصيل سريع لكل مناطق الكويت، وضمان وإرجاع سهل خلال 14 يومًا. تحت أبرز المنتجات المتاحة وأكثر الأسئلة شيوعًا.') % topic
             faqs = [
                 ('كيف أشتري %s بالتقسيط في الكويت من Uellow؟' % noun,
-                 'اختر المنتج، وفي صفحة الدفع اختر التقسيط: 4 دفعات أو عبر Taly أو Ci-Net على المنتجات المؤهلة، وأكمل الطلب في دقائق.'),
+                 'اختر المنتج، وفي صفحة الدفع اختر التقسيط: 4 دفعات أو عبر Taly أو CINET على المنتجات المؤهلة، وأكمل الطلب في دقائق.'),
                 ('هل يوجد دفع عند الاستلام؟', 'نعم، ادفع نقدًا عند الاستلام أو إلكترونيًا بأمان.'),
                 ('كم مدة التوصيل داخل الكويت؟', 'توصيل سريع لكل المناطق، مع توصيل مجاني على الطلبات المؤهلة.'),
                 ('هل المنتجات أصلية وعليها ضمان؟', 'نعم، أصلية 100% مع ضمان وإرجاع سهل خلال 14 يومًا.'),
             ]
             headline = topic + ' — دليل 2026'
         else:
-            lead = ('Uellow offers the best %s: 100%% genuine products, easy installments (4 payments or via Taly and Ci-Net), '
+            lead = ('Uellow offers the best %s: 100%% genuine products, easy installments (4 payments or via Taly and CINET), '
                     'cash on delivery, fast delivery to all areas of Kuwait, warranty and easy 14-day returns. Below are top products and common questions.') % topic
             faqs = [
                 ('How do I buy a %s on installments in Kuwait from Uellow?' % noun,
-                 'Pick the product, then at checkout choose installments: 4 payments or via Taly or Ci-Net on eligible products, and finish in minutes.'),
+                 'Pick the product, then at checkout choose installments: 4 payments or via Taly or CINET on eligible products, and finish in minutes.'),
                 ('Is cash on delivery available?', 'Yes, pay cash on delivery or securely online.'),
                 ('How fast is delivery in Kuwait?', 'Fast delivery to all areas, with free delivery on qualifying orders.'),
                 ('Are products genuine and under warranty?', 'Yes, 100% genuine with warranty and easy 14-day returns.'),
