@@ -17,7 +17,7 @@
              than crashing the page. -->
         <xpath expr="//*[@id='wrap']" position="after">
             <t t-if="product">
-                <script type="application/ld+json" t-esc="json.dumps({
+                <t t-set="_pd" t-value="{
                     '@context':    'https://schema.org/',
                     '@type':       'Product',
                     'name':        product.name or '',
@@ -32,7 +32,14 @@
                         'price':         '%.3f' % (product.list_price or 0.0),
                         'availability':  'https://schema.org/InStock',
                     },
-                })"/>
+                }"/>
+                <t t-if="(product.rating_count or 0) &gt; 0 and (product.rating_avg or 0) &gt; 0"
+                   t-set="_pd" t-value="dict(_pd, aggregateRating={
+                       '@type':       'AggregateRating',
+                       'ratingValue': round(product.rating_avg, 1),
+                       'reviewCount': int(product.rating_count),
+                   })"/>
+                <script type="application/ld+json" t-esc="json.dumps(_pd)"/>
             </t>
         </xpath>
     </template>

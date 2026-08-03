@@ -42,6 +42,32 @@ class ProductTemplate(models.Model):
              'Yes, pay cash on delivery or securely online, with fast delivery across Kuwait.'),
         ]
 
+    def _default_website_meta(self):
+        """Auto meta/OG/Twitter description for products missing one."""
+        res = super()._default_website_meta()
+        try:
+            self.ensure_one()
+            if not self.website_meta_description:
+                ar = self._seo_is_ar()
+                name = (self.name or '').strip()
+                cur = self.currency_id.symbol or 'KD'
+                price = '%.3f %s' % (self.list_price or 0.0, cur)
+                if ar:
+                    desc = ('اشترِ %s في الكويت من Uellow بسعر %s — أصلي بضمان، تقسيط عبر Taly و Ci-Net، '
+                            'دفع عند الاستلام وتوصيل سريع لكل المناطق.') % (name, price)
+                else:
+                    desc = ('Buy %s in Kuwait from Uellow for %s — genuine with warranty, installments via Taly and Ci-Net, '
+                            'cash on delivery and fast delivery.') % (name, price)
+                desc = desc[:300]
+                res['default_meta_description'] = desc
+                if isinstance(res.get('default_opengraph'), dict):
+                    res['default_opengraph']['og:description'] = desc
+                if isinstance(res.get('default_twitter'), dict):
+                    res['default_twitter']['twitter:description'] = desc
+        except Exception:
+            pass
+        return res
+
     def _seo_faq_jsonld(self):
         """Standalone FAQPage JSON-LD (no Product duplication)."""
         self.ensure_one()
