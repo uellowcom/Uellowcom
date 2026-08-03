@@ -58,8 +58,11 @@
         var has = (S.n || 0) > 0;
         bar.classList.toggle("show", has);
         bar.querySelector(".ul-cnt").textContent = S.n || 0;
-        bar.querySelector(".ul-inf").innerHTML = (S.label || "لمّة يلو") + " · خصم <b>" +
-            (S.discount_pct || 0).toFixed(0) + "%</b> · " + fmt(S.pays) + " " + CUR;
+        var _pct = (S.discount_pct || 0);
+        var _before = _pct > 0 ? ('<s style="color:#8b97a8">' + fmt(S.subtotal) + '</s> ') : "";
+        var _off = _pct > 0 ? (' <span style="color:#4ade80">-' + _pct.toFixed(0) + "%</span>") : "";
+        bar.querySelector(".ul-inf").innerHTML = (S.label || "لمّة يلو") + " · " + _before +
+            '<b style="color:#FBBF00">' + fmt(S.pays) + " " + CUR + "</b>" + _off;
         bar.querySelector(".ul-meter i").style.width = Math.min((S.subtotal || 0) / 30 * 100, 100) + "%";
         var th = bar.querySelector(".ul-thumbs"); th.innerHTML = "";
         (S.items || []).slice(0, 4).forEach(function (it) {
@@ -85,7 +88,8 @@
         sheet.querySelector(".ul-tier").textContent = (S.n < (S.min_items || 2))
             ? "أضف منتجاً آخر لبدء الخصم"
             : ((S.type === "installment") ? ("💳 على أقساط · " + fmt(S.monthly) + " " + CUR + "/شهر") : ("💰 وفّرت " + fmt(S.saved) + " " + CUR));
-        sheet.querySelector(".ul-tot").innerHTML = "<span>الإجمالي بعد الخصم</span><b>" + fmt(S.pays) + " " + CUR + "</b>";
+        var tBefore = (S.discount_pct || 0) > 0 ? ('<s style="color:#98a2b3;font-weight:600;margin-inline-end:8px">' + fmt(S.subtotal) + '</s>') : "";
+        sheet.querySelector(".ul-tot").innerHTML = "<span>الإجمالي</span><span>" + tBefore + "<b>" + fmt(S.pays) + " " + CUR + "</b></span>";
         mask.classList.add("show"); sheet.classList.add("show");
     }
     function closeSheet() { mask.classList.remove("show"); sheet.classList.remove("show"); }
