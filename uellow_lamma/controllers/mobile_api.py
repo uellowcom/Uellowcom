@@ -2,7 +2,7 @@
 import json
 from odoo import http
 from odoo.http import request
-from .main import _lines_from_ids
+from .main import _lines_from_ids, country_code
 
 
 def _json(data, status=200):
@@ -19,7 +19,8 @@ class LammaMobile(http.Controller):
         cfg = request.env['uellow.lamma.config'].sudo().get_config()
         cur = request.env.company.currency_id
         return _json({
-            'enabled': cfg.active,
+            'enabled': bool(cfg.active and cfg.enable_all_products
+                            and cfg._country_enabled(kw.get('country') or country_code())),
             'label': cfg.brand_label,
             'badge': cfg.badge_text,
             'enable_all_products': cfg.enable_all_products,
@@ -88,6 +89,9 @@ class LammaMobile(http.Controller):
             from odoo.addons.uellow_mobile_manager.controllers.api_v2.cart import _get_or_create_order
         except Exception:
             return _json({'ok': False, 'error': 'cart_unavailable'}, status=500)
+        if not cfg._country_enabled(request.env.company.country_id.code or country_code()):
+            return _json({'ok': False, 'error': 'disabled'}, status=403)
+        q = cfg.compute_lamma(_lines, ltype)
         order = _get_or_create_order(create=True)
         if not order:
             return _json({'ok': False, 'error': 'no_order'}, status=500)
@@ -98,11 +102,9 @@ class LammaMobile(http.Controller):
                 continue
             existing = order.order_line.filtered(
                 lambda l: l.product_id == variant and not getattr(l, 'is_reward_line', False))
-            if existing:
-                line = existing[0]
-            else:
-                line = Line.create({'order_id': order.id, 'product_id': variant.id,
-                                    'product_uom_qty': 1})
-            line.write({'is_lamma': True, 'lamma_type': ltype})
-        order._recompute_lamma()
+            if not existing:
+                Line.create({'order_id': order.id, 'product_id': variant.id,
+                             'product_uom_qty': 1})
+        # one-time discount coupon on the whole order (consumed on payment)
+        cfg._issue_coupon(order, q['saved'])
         return _json({'ok': True, 'order_id': order.id})

@@ -18,6 +18,8 @@
                             <field name="min_items"/>
                             <field name="rounding"/>
                             <field name="badge_text"/>
+                            <field name="country_ids" widget="many2many_tags"
+                                   placeholder="اتركه فارغاً = كل الدول"/>
                         </group>
                         <group string="الخصم والحماية / Discount &amp; protection">
                             <field name="discount_mode"/>

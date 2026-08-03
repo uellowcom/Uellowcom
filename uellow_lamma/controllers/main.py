@@ -12,6 +12,20 @@ def _lines_from_ids(ids):
     return prods, lines
 
 
+def country_code():
+    """Best-effort ISO country code for the current visitor."""
+    code = ''
+    try:
+        gc = request.geoip
+        code = (gc.get('country_code') if isinstance(gc, dict)
+                else getattr(gc, 'country_code', None)) or ''
+    except Exception:
+        code = ''
+    if not code and getattr(request, 'website', None) and request.website.company_id.country_id:
+        code = request.website.company_id.country_id.code or ''
+    return code
+
+
 def lamma_summary():
     """Compute the current session Lamma (used by web routes)."""
     ids = request.session.get('lamma_ids') or []
@@ -27,7 +41,8 @@ def lamma_summary():
     } for p in prods]
     q['label'] = cfg.brand_label
     q['badge'] = cfg.badge_text
-    q['enabled'] = cfg.active and cfg.enable_all_products
+    q['enabled'] = bool(cfg.active and cfg.enable_all_products
+                        and cfg._country_enabled(country_code()))
     q['replace_add_to_cart'] = cfg.replace_add_to_cart
     q['min_items'] = cfg.min_items
     q['installment_enabled'] = cfg.installment_enabled
@@ -83,22 +98,20 @@ class LammaWeb(http.Controller):
         ids = request.session.get('lamma_ids') or []
         ltype = request.session.get('lamma_type') or 'normal'
         cfg = request.env['uellow.lamma.config'].sudo().get_config()
+        if not cfg._country_enabled(country_code()):
+            return {'error': 'disabled'}
         prods, lines = _lines_from_ids(ids)
         if len(prods) < max(1, cfg.min_items):
             return {'error': 'need_more', 'min_items': cfg.min_items}
+        q = cfg.compute_lamma(lines, ltype)
+        # Add the Lamma products at FULL price, then issue a one-time discount
+        # coupon worth the Lamma savings and apply it to the whole order — it
+        # shows as a single discount line on the total and is consumed on payment.
         order = request.website.sale_get_order(force_create=True)
-        line_ids = []
         for p in prods:
             variant = p.product_variant_id
-            if not variant:
-                continue
-            # while adding, no line is tagged is_lamma yet, so the _cart_update
-            # recompute hook is a no-op; we tag + recompute once at the end.
-            res = order._cart_update(product_id=variant.id, add_qty=1)
-            if res.get('line_id'):
-                line_ids.append(res['line_id'])
-        tagged = request.env['sale.order.line'].sudo().browse(line_ids).exists()
-        tagged.write({'is_lamma': True, 'lamma_type': ltype})
-        order._recompute_lamma()  # single source of truth for the discount
+            if variant:
+                order._cart_update(product_id=variant.id, add_qty=1)
+        cfg._issue_coupon(order, q['saved'])
         request.session['lamma_ids'] = []
         return {'redirect': '/shop/cart'}

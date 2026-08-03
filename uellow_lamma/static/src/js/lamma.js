@@ -82,8 +82,7 @@
         var sh = sheet.querySelector(".ul-shield");
         if (S.capped) {
             sh.classList.add("show");
-            sh.textContent = "🛡️ الخصم موقوف عند " + (S.discount_pct || 0).toFixed(1) +
-                "% لحماية هامش ربحك (≥ " + (S.floor_margin_pct || 0) + "%).";
+            sh.textContent = "✔️ خصم اللمّة وصل حده الأقصى لهذه الباقة.";
         } else { sh.classList.remove("show"); }
         sheet.querySelector(".ul-tier").textContent = (S.n < (S.min_items || 2))
             ? "أضف منتجاً آخر لبدء الخصم" : "";
@@ -125,6 +124,17 @@
         if (inProduct()) { btn.classList.add("in"); btn.innerHTML = "✓ في لمّتك"; }
         else { btn.classList.remove("in"); btn.innerHTML = "🧺 أضف للّمّة"; }
     }
+    function hideBuyNow() {
+        // hide any "Buy now / اشترِ الآن" button so Lamma is the primary CTA
+        var sel = ".js_buy_now, #buy_now, [id*='buy_now'], a.btn-buy-now, .o_we_buy_now";
+        document.querySelectorAll(sel).forEach(function (b) { b.style.display = "none"; });
+        var scope = document.querySelectorAll("#product_detail a, #product_detail button, #o_wsale_cta_wrapper a, #o_wsale_cta_wrapper button");
+        Array.prototype.forEach.call(scope, function (b) {
+            var t = (b.textContent || "").trim();
+            if (t === "اشترِ الآن" || t === "اشتر الآن" || /buy\s*now/i.test(t)) { b.style.display = "none"; }
+        });
+    }
+
     function injectButton() {
         if (!onProductPage() || !S || !S.enabled) { return; }
         var pid = productId();
@@ -133,8 +143,8 @@
         var box = el('<div class="ul-box"><div class="ul-h">🧺 ' + (S.label || "لمّة يلو") +
             ' — كوّن باقتك ووفّر</div><div class="ul-sub">اختر النوع ثم أضف هذا المنتج</div></div>');
         seg = el('<div class="ul-seg"><button type="button" data-t="normal" class="on">عادي</button>' +
-            '<button type="button" data-t="installment">أقساط · +٦.٥٪</button></div>');
-        var instNote = el('<div class="ul-inst" id="ul-inst">💳 لمّة أقساط: تُقسّم على دفعات وتضمن ربحاً إضافياً +٦.٥٪.</div>');
+            '<button type="button" data-t="installment">أقساط</button></div>');
+        var instNote = el('<div class="ul-inst" id="ul-inst">💳 <b>الأقساط:</b> قسّم طلبك على دفعات مريحة عبر Taly / Ci-Net · موافقة سريعة · بدون تعقيد. اختر «الأقساط» ثم أضف منتجاتك، وأكمل الدفع بالتقسيط من السلة.</div>');
         btn = el('<button type="button" class="ul-btn">🧺 أضف للّمّة</button>');
         if (!S.installment_enabled) { seg.querySelector('[data-t="installment"]').style.display = "none"; }
         seg.querySelectorAll("button").forEach(function (b) {
@@ -154,10 +164,11 @@
         box.appendChild(seg); box.appendChild(btn); box.appendChild(instNote);
         if (anchor && anchor.parentNode) {
             anchor.parentNode.insertBefore(box, anchor);
-            if (S.replace_add_to_cart) { anchor.style.display = "none"; }
+            if (S.replace_add_to_cart) { anchor.style.display = "none"; hideBuyNow(); }
         } else {
             var pd = document.querySelector("#product_detail") || document.body;
             pd.insertBefore(box, pd.firstChild);
+            if (S.replace_add_to_cart) { hideBuyNow(); }
         }
         syncButton();
     }

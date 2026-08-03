@@ -53,6 +53,74 @@ class LammaConfig(models.Model):
     suggest_fbt = fields.Boolean('Auto-suggest "frequently bought together"', default=True)
     free_shipping_items = fields.Integer('Free shipping when items >=', default=4)
 
+    # --- availability by country/location ---
+    country_ids = fields.Many2many(
+        'res.country', string='Enabled countries',
+        help='If set, Lamma is offered ONLY in these countries (by the visitor / '
+             'website country). Empty = available everywhere.')
+
+    def _country_enabled(self, code):
+        """True if Lamma is active for the given ISO country code."""
+        self.ensure_one()
+        if not self.active:
+            return False
+        if not self.country_ids:
+            return True
+        code = (code or '').upper()
+        return any((c.code or '').upper() == code for c in self.country_ids)
+
+    # --- coupon program (auto discount on the order total) ---
+    def _coupon_program(self):
+        """Get/create the 'خصم لمّة يلو' coupons program. A discount reward of
+        0.001 currency per point lets each coupon carry an EXACT amount: the
+        card's points = the discount in fils (amount × 1000)."""
+        LP = self.env['loyalty.program'].sudo()
+        prog = LP.search([('name', '=', 'خصم لمّة يلو'),
+                          ('program_type', '=', 'coupons')], limit=1)
+        if not prog:
+            prog = LP.create({
+                'name': 'خصم لمّة يلو',
+                'program_type': 'coupons',
+                'applies_on': 'current',
+                'trigger': 'with_code',
+                'rule_ids': [(0, 0, {'minimum_amount': 0.0, 'minimum_qty': 0})],
+                'reward_ids': [(0, 0, {
+                    'reward_type': 'discount',
+                    'discount': 0.001,
+                    'discount_mode': 'per_point',
+                    'discount_applicability': 'order',
+                    'description': 'خصم لمّة يلو',
+                })],
+            })
+        return prog
+
+    def _issue_coupon(self, order, amount, partner=None):
+        """Create a one-time discount coupon worth `amount` and apply it to
+        `order` (single discount line 'خصم لمّة يلو' on the total, consumed on
+        payment). Returns the created loyalty.card (or False)."""
+        from datetime import date, timedelta
+        amount = round(float(amount or 0.0), 3)
+        if amount <= 0:
+            return False
+        prog = self._coupon_program()
+        if not prog:
+            return False
+        card = self.env['loyalty.card'].sudo().create({
+            'program_id': prog.id,
+            'points': round(amount * 1000),  # fils → 0.001/point = exact amount
+            'partner_id': (partner or order.partner_id).id,
+            'expiration_date': date.today() + timedelta(days=2),
+        })
+        try:
+            res = order._try_apply_code(card.code)
+            if isinstance(res, dict) and 'error' not in str(res).lower():
+                for coupon, rewards in res.items():
+                    for reward in rewards:
+                        order._apply_program_reward(reward, coupon)
+        except Exception:
+            pass
+        return card
+
     @api.model
     def get_config(self):
         cfg = self.search([], limit=1)
