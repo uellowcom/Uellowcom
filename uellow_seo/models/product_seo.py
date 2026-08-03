@@ -50,14 +50,12 @@ class ProductTemplate(models.Model):
             if not self.website_meta_description:
                 ar = self._seo_is_ar()
                 name = (self.name or '').strip()
-                cur = self.currency_id.symbol or 'KD'
-                price = '%.3f %s' % (self.list_price or 0.0, cur)
                 if ar:
-                    desc = ('اشترِ %s في الكويت من Uellow بسعر %s — أصلي بضمان، تقسيط عبر Taly و Ci-Net، '
-                            'دفع عند الاستلام وتوصيل سريع لكل المناطق.') % (name, price)
+                    desc = ('اشترِ %s في الكويت من Uellow — أصلي بضمان، تقسيط عبر Taly و Ci-Net، '
+                            'دفع عند الاستلام وتوصيل سريع لكل المناطق.') % name
                 else:
-                    desc = ('Buy %s in Kuwait from Uellow for %s — genuine with warranty, installments via Taly and Ci-Net, '
-                            'cash on delivery and fast delivery.') % (name, price)
+                    desc = ('Buy %s in Kuwait from Uellow — genuine with warranty, installments via Taly and Ci-Net, '
+                            'cash on delivery and fast delivery.') % name
                 desc = desc[:300]
                 res['default_meta_description'] = desc
                 if isinstance(res.get('default_opengraph'), dict):
