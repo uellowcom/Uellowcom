@@ -27,6 +27,9 @@ def lamma_summary():
     } for p in prods]
     q['label'] = cfg.brand_label
     q['badge'] = cfg.badge_text
+    q['enabled'] = cfg.active and cfg.enable_all_products
+    q['replace_add_to_cart'] = cfg.replace_add_to_cart
+    q['min_items'] = cfg.min_items
     q['installment_enabled'] = cfg.installment_enabled
     q['installment_min_amount'] = cfg.installment_min_amount
     q['currency'] = (request.env.company.currency_id.symbol

@@ -27,6 +27,12 @@ Storefront button / cart / mobile API are wired in later phases.
         'security/ir.model.access.csv',
         'views/lamma_config_views.xml',
     ],
+    'assets': {
+        'web.assets_frontend': [
+            'uellow_lamma/static/src/css/lamma.css',
+            'uellow_lamma/static/src/js/lamma.js',
+        ],
+    },
     'installable': True,
     'application': True,
 }

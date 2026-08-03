@@ -1,0 +1,51 @@
+/* لمّة يلو — storefront widget (dark bar + product-page button) */
+.ul-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  border:none;border-radius:14px;padding:13px 16px;font-weight:800;font-size:1rem;cursor:pointer;
+  background:linear-gradient(135deg,#FBBF00,#F26A2E);color:#1a1200;box-shadow:0 8px 20px rgba(242,106,46,.25);
+  font-family:inherit;margin:6px 0}
+.ul-btn.in{background:#12241b;color:#4ade80;border:1px solid #1c4d34;box-shadow:none}
+.ul-seg{display:flex;background:#0b0e13;border-radius:11px;padding:3px;margin:8px 0}
+.ul-seg button{flex:1;border:none;background:transparent;color:#9aa7b8;font-weight:800;font-size:.82rem;padding:8px;border-radius:9px;cursor:pointer;font-family:inherit}
+.ul-seg button.on{background:linear-gradient(135deg,#FBBF00,#F26A2E);color:#1a1200}
+.ul-box{border:1px solid #e6eaf0;border-radius:16px;padding:12px;margin:10px 0;background:linear-gradient(135deg,#fff6ef,#fff)}
+.ul-box .ul-h{display:flex;align-items:center;gap:7px;font-weight:800;font-size:.92rem;color:#101828}
+.ul-box .ul-sub{font-size:.76rem;color:#667085;margin:4px 0 8px}
+.ul-inst{display:none;background:#f4f0ff;border:1px solid #e6dcff;color:#6b4ec7;border-radius:10px;padding:8px 10px;font-size:.72rem;margin-top:8px}
+.ul-inst.show{display:block}
+
+/* persistent bar */
+#ul-bar{position:fixed;left:12px;right:12px;bottom:12px;z-index:2147483000;max-width:520px;margin:0 auto;
+  background:#101828;color:#fff;border-radius:16px;padding:11px 13px;border:1px solid #2a3444;
+  box-shadow:0 16px 40px rgba(0,0,0,.35);transform:translateY(160%);transition:transform .38s cubic-bezier(.2,.8,.2,1);
+  direction:rtl;font-family:inherit;cursor:pointer}
+#ul-bar.show{transform:translateY(0)}
+#ul-bar .ul-top{display:flex;align-items:center;gap:9px}
+#ul-bar .ul-thumbs{display:flex;flex-direction:row-reverse}
+#ul-bar .ul-thumbs img{width:28px;height:28px;border-radius:7px;object-fit:cover;border:2px solid #101828;margin-right:-9px;background:#333}
+#ul-bar .ul-cnt{background:linear-gradient(135deg,#FBBF00,#F26A2E);color:#1a1200;font-weight:900;font-size:.68rem;min-width:20px;height:20px;border-radius:50%;display:grid;place-items:center;margin-right:-9px;border:2px solid #101828;z-index:2}
+#ul-bar .ul-inf{flex:1;min-width:0;font-size:.74rem;color:#c3cad6}
+#ul-bar .ul-inf b{color:#FBBF00}
+#ul-bar .ul-go{background:linear-gradient(135deg,#FBBF00,#F26A2E);color:#1a1200;border:none;font-weight:800;font-size:.76rem;padding:8px 12px;border-radius:10px;cursor:pointer;font-family:inherit}
+#ul-bar .ul-meter{height:6px;background:#26303e;border-radius:999px;margin-top:8px;overflow:hidden}
+#ul-bar .ul-meter i{display:block;height:100%;width:0;background:linear-gradient(135deg,#FBBF00,#F26A2E);transition:width .4s}
+
+/* sheet */
+#ul-mask{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2147483001;opacity:0;pointer-events:none;transition:.3s}
+#ul-mask.show{opacity:1;pointer-events:auto}
+#ul-sheet{position:fixed;left:0;right:0;bottom:0;z-index:2147483002;background:#fff;color:#101828;border-radius:22px 22px 0 0;
+  padding:16px;transform:translateY(100%);transition:transform .35s cubic-bezier(.2,.8,.2,1);max-height:80vh;overflow:auto;
+  direction:rtl;font-family:inherit;max-width:560px;margin:0 auto}
+#ul-sheet.show{transform:translateY(0)}
+#ul-sheet .ul-grip{width:40px;height:4px;background:#e2e6ec;border-radius:9px;margin:0 auto 12px}
+#ul-sheet h4{margin:2px 0 10px;text-align:center;font-size:1.1rem}
+#ul-sheet .ul-si{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #eceff3}
+#ul-sheet .ul-si img{width:46px;height:46px;border-radius:10px;object-fit:cover}
+#ul-sheet .ul-si .n{flex:1;font-size:.82rem;font-weight:600;line-height:1.3}
+#ul-sheet .ul-si .p{font-weight:800;color:#F26A2E}
+#ul-sheet .ul-si .rm{background:#fff0f0;color:#f04438;border:none;width:26px;height:26px;border-radius:8px;cursor:pointer;font-weight:800}
+#ul-sheet .ul-tier{background:#e9fbf1;color:#067647;text-align:center;font-weight:800;font-size:.84rem;padding:9px;border-radius:12px;margin:12px 0}
+#ul-sheet .ul-tot{display:flex;justify-content:space-between;align-items:baseline;margin:10px 2px}
+#ul-sheet .ul-tot b{font-size:1.3rem}
+#ul-sheet .ul-checkout{width:100%;border:none;border-radius:12px;padding:13px;font-weight:800;background:linear-gradient(135deg,#FBBF00,#F26A2E);color:#1a1200;cursor:pointer;font-family:inherit}
+.ul-shield{background:#12241b;color:#4ade80;border-radius:10px;padding:8px 10px;font-size:.78rem;font-weight:700;margin:8px 0;display:none}
+.ul-shield.show{display:block}
