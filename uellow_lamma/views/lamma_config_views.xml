@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_lamma_config_form" model="ir.ui.view">
+        <field name="name">uellow.lamma.config.form</field>
+        <field name="model">uellow.lamma.config</field>
+        <field name="arch" type="xml">
+            <form string="لمّة يلو">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="brand_label" placeholder="لمّة يلو"/></h1>
+                    </div>
+                    <group>
+                        <group string="عام / General">
+                            <field name="active"/>
+                            <field name="enable_all_products"/>
+                            <field name="replace_add_to_cart"/>
+                            <field name="min_items"/>
+                            <field name="rounding"/>
+                            <field name="badge_text"/>
+                        </group>
+                        <group string="الخصم والحماية / Discount &amp; protection">
+                            <field name="discount_mode"/>
+                            <field name="max_discount_pct"/>
+                            <field name="min_margin_pct"/>
+                            <field name="suggest_fbt"/>
+                            <field name="free_shipping_items"/>
+                        </group>
+                    </group>
+                    <group string="شرائح الخصم / Tiers">
+                        <field name="tier_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="min_qty"/>
+                                <field name="min_amount"/>
+                                <field name="discount_pct"/>
+                            </list>
+                        </field>
+                    </group>
+                    <group string="لمّة الأقساط / Installment Lamma">
+                        <group>
+                            <field name="installment_enabled"/>
+                            <field name="installment_extra_margin"/>
+                            <field name="installment_provider"/>
+                        </group>
+                        <group>
+                            <field name="installment_max_months"/>
+                            <field name="installment_min_amount"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lamma_config" model="ir.actions.act_window">
+        <field name="name">إعدادات لمّة يلو</field>
+        <field name="res_model">uellow.lamma.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{}</field>
+    </record>
+
+    <!-- Open the singleton directly -->
+    <record id="action_lamma_config_open" model="ir.actions.server">
+        <field name="name">لمّة يلو</field>
+        <field name="model_id" ref="model_uellow_lamma_config"/>
+        <field name="state">code</field>
+        <field name="code">action = model.get_config().get_formview_action()</field>
+    </record>
+
+    <menuitem id="menu_lamma_root" name="لمّة يلو" sequence="55"/>
+    <menuitem id="menu_lamma_config" name="الإعدادات" parent="menu_lamma_root"
+              action="action_lamma_config_open" sequence="10"/>
+
+</odoo>
