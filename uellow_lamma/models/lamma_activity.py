@@ -86,7 +86,7 @@ class LammaActivity(models.Model):
             'checkouts': r.get('checkouts') or 0,
             'bundles': bundles,
             'converted': conv,
-            'conversion_rate': round(conv / bundles * 100, 1) if bundles else 0.0,
+            'conversion_rate': round(min(100.0, conv / bundles * 100), 1) if bundles else 0.0,
             'discount_sum': round(r.get('discount_sum') or 0.0, 3),
             'avg_items': round(r.get('avg_items') or 0.0, 1),
             'inst_checkouts': r.get('inst_checkouts') or 0,

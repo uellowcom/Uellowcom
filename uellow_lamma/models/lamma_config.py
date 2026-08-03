@@ -121,6 +121,48 @@ class LammaConfig(models.Model):
             pass
         return card
 
+    # --- KPIs (last 30 days) surfaced on the settings dashboard ---
+    kpi_bundles = fields.Integer('Bundles', compute='_compute_kpis')
+    kpi_checkouts = fields.Integer('Checkouts', compute='_compute_kpis')
+    kpi_conversion = fields.Float('Conversion %', compute='_compute_kpis')
+    kpi_discount = fields.Float('Discount issued', compute='_compute_kpis')
+    kpi_avg_items = fields.Float('Avg items', compute='_compute_kpis')
+    kpi_inst_share = fields.Float('Installment %', compute='_compute_kpis')
+    kpi_activity_count = fields.Integer('Activity events', compute='_compute_kpis')
+
+    def _compute_kpis(self):
+        A = self.env['uellow.lamma.activity'].sudo()
+        for rec in self:
+            try:
+                s = A.dashboard_stats()
+                rec.kpi_bundles = s['bundles']
+                rec.kpi_checkouts = s['checkouts']
+                rec.kpi_conversion = s['conversion_rate']
+                rec.kpi_discount = s['discount_sum']
+                rec.kpi_avg_items = s['avg_items']
+                rec.kpi_inst_share = round(s['inst_checkouts'] / s['checkouts'] * 100, 1) if s['checkouts'] else 0.0
+                rec.kpi_activity_count = A.search_count([])
+            except Exception:
+                rec.kpi_bundles = rec.kpi_checkouts = rec.kpi_activity_count = 0
+                rec.kpi_conversion = rec.kpi_discount = rec.kpi_avg_items = rec.kpi_inst_share = 0.0
+
+    def action_open_activity(self):
+        return self.env['ir.actions.act_window']._for_xml_id('uellow_lamma.action_lamma_activity')
+
+    def action_open_stats(self):
+        return self.env['ir.actions.act_window']._for_xml_id('uellow_lamma.action_lamma_stats')
+
+    def action_open_coupons(self):
+        self.ensure_one()
+        prog = self._coupon_program()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'كوبونات لمّة يلو',
+            'res_model': 'loyalty.card',
+            'view_mode': 'list,form',
+            'domain': [('program_id', '=', prog.id)] if prog else [('id', '=', 0)],
+        }
+
     @api.model
     def get_config(self):
         cfg = self.search([], limit=1)
