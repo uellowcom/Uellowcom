@@ -162,9 +162,29 @@
         syncButton();
     }
 
+    /* ---------- homepage promo banner ---------- */
+    function injectHomePromo() {
+        // The home page carries `.uhome` (uellow_home_slider). Robust + avoids
+        // showing the promo on any other page.
+        var home = document.querySelector(".uhome");
+        if (!home || document.getElementById("ul-home-promo")) return;
+        var label = (S && S.label) || "لمّة يلو";
+        var b = el(
+            '<div class="ul-home-promo" id="ul-home-promo">' +
+            '<div class="ul-ic">🧺</div>' +
+            '<div class="ul-txt"><h3>' + label + ' — كوّن باقتك ووفّر</h3>' +
+            '<p>أضِف منتجاتك من أي صفحة والخصم يكبر معاك — محمي بهامش ربح.</p>' +
+            '<div class="ul-pills"><span class="ul-pill">خصم حتى 20%</span>' +
+            '<span class="ul-pill">أقساط بربح مضمون</span>' +
+            '<span class="ul-pill">دفع عند الاستلام</span></div></div>' +
+            '<a class="ul-cta" href="/shop">ابدأ التسوّق 🛒</a></div>'
+        );
+        home.parentNode.insertBefore(b, home);
+    }
+
     function init() {
         buildChrome();
-        refresh().then(injectButton);
+        refresh().then(function () { injectButton(); injectHomePromo(); });
     }
     if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", init); }
     else { init(); }
