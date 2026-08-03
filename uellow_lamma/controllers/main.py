@@ -86,16 +86,19 @@ class LammaWeb(http.Controller):
         prods, lines = _lines_from_ids(ids)
         if len(prods) < max(1, cfg.min_items):
             return {'error': 'need_more', 'min_items': cfg.min_items}
-        q = cfg.compute_lamma(lines, ltype)
-        pct = q['discount_pct']
         order = request.website.sale_get_order(force_create=True)
+        line_ids = []
         for p in prods:
             variant = p.product_variant_id
             if not variant:
                 continue
+            # while adding, no line is tagged is_lamma yet, so the _cart_update
+            # recompute hook is a no-op; we tag + recompute once at the end.
             res = order._cart_update(product_id=variant.id, add_qty=1)
-            line = request.env['sale.order.line'].sudo().browse(res.get('line_id'))
-            if line.exists():
-                line.write({'discount': pct, 'is_lamma': True, 'lamma_type': ltype})
+            if res.get('line_id'):
+                line_ids.append(res['line_id'])
+        tagged = request.env['sale.order.line'].sudo().browse(line_ids).exists()
+        tagged.write({'is_lamma': True, 'lamma_type': ltype})
+        order._recompute_lamma()  # single source of truth for the discount
         request.session['lamma_ids'] = []
         return {'redirect': '/shop/cart'}

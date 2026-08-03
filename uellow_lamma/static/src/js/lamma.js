@@ -31,12 +31,12 @@
     function buildChrome() {
         bar = el('<div id="ul-bar"><div class="ul-top"><div class="ul-thumbs"></div>' +
             '<div class="ul-cnt">0</div><div class="ul-inf"></div>' +
-            '<button class="ul-go">إتمام</button></div><div class="ul-meter"><i></i></div></div>');
+            '<button type="button" class="ul-go">إتمام</button></div><div class="ul-meter"><i></i></div></div>');
         mask = el('<div id="ul-mask"></div>');
         sheet = el('<div id="ul-sheet"><div class="ul-grip"></div><h4></h4>' +
             '<div class="ul-shield"></div><div class="ul-items"></div>' +
             '<div class="ul-tier"></div><div class="ul-tot"></div>' +
-            '<button class="ul-checkout">إتمام اللمّة</button></div>');
+            '<button type="button" class="ul-checkout">إتمام اللمّة</button></div>');
         document.body.appendChild(bar);
         document.body.appendChild(mask);
         document.body.appendChild(sheet);
@@ -72,7 +72,7 @@
         var box = sheet.querySelector(".ul-items"); box.innerHTML = "";
         (S.items || []).forEach(function (it) {
             var row = el('<div class="ul-si"><img src="' + it.image + '"><div class="n">' + it.name +
-                '</div><div class="p">' + fmt(it.price) + '</div><button class="rm">✕</button></div>');
+                '</div><div class="p">' + fmt(it.price) + '</div><button type="button" class="rm">✕</button></div>');
             row.querySelector(".rm").addEventListener("click", function () { removeItem(it.id); });
             box.appendChild(row);
         });
@@ -120,10 +120,10 @@
             document.querySelector("#add_to_cart, [id*='add_to_cart'], .js_add_cart") ;
         var box = el('<div class="ul-box"><div class="ul-h">🧺 ' + (S.label || "لمّة يلو") +
             ' — كوّن باقتك ووفّر</div><div class="ul-sub">اختر النوع ثم أضف هذا المنتج</div></div>');
-        seg = el('<div class="ul-seg"><button data-t="normal" class="on">عادي</button>' +
-            '<button data-t="installment">أقساط · +٦.٥٪</button></div>');
+        seg = el('<div class="ul-seg"><button type="button" data-t="normal" class="on">عادي</button>' +
+            '<button type="button" data-t="installment">أقساط · +٦.٥٪</button></div>');
         var instNote = el('<div class="ul-inst" id="ul-inst">💳 لمّة أقساط: تُقسّم على دفعات وتضمن ربحاً إضافياً +٦.٥٪.</div>');
-        btn = el('<button class="ul-btn">🧺 أضف للّمّة</button>');
+        btn = el('<button type="button" class="ul-btn">🧺 أضف للّمّة</button>');
         if (!S.installment_enabled) { seg.querySelector('[data-t="installment"]').style.display = "none"; }
         seg.querySelectorAll("button").forEach(function (b) {
             b.addEventListener("click", function () {
@@ -133,8 +133,10 @@
                 setType(b.dataset.t);
             });
         });
-        btn.addEventListener("click", function () {
-            var t = (seg.querySelector("button.on") || {}).dataset ? seg.querySelector("button.on").dataset.t : "normal";
+        btn.addEventListener("click", function (e) {
+            e.preventDefault(); e.stopPropagation();
+            var on = seg.querySelector("button.on");
+            var t = on && on.dataset ? on.dataset.t : "normal";
             addProduct(pid, t);
         });
         box.appendChild(seg); box.appendChild(btn); box.appendChild(instNote);
