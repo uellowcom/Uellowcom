@@ -105,7 +105,7 @@ class UellowStorefrontController(http.Controller):
                     ids_seen.add(rp.id)
                     result.append(fmt(rp))
 
-        base = [('id','!=',product_id),('is_published','=',True)]
+        base = [('id','!=',product_id),('is_published','=',True),('is_dropship','=',False)]
 
         # Same category + similar name keywords first
         if product.categ_id:
@@ -140,7 +140,7 @@ class UellowStorefrontController(http.Controller):
                     'url':rp.website_url or '/shop/%d'%rp.id,
                     'price':price,'orig':orig,'disc':disc,'cur':cur}
 
-        base = [('id','!=',product_id),('is_published','=',True)]
+        base = [('id','!=',product_id),('is_published','=',True),('is_dropship','=',False)]
 
         # Explore More: same category only
         if product.categ_id:
