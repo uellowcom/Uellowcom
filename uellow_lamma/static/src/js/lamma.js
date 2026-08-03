@@ -86,10 +86,18 @@
                 "% لحماية هامش ربحك (≥ " + (S.floor_margin_pct || 0) + "%).";
         } else { sh.classList.remove("show"); }
         sheet.querySelector(".ul-tier").textContent = (S.n < (S.min_items || 2))
-            ? "أضف منتجاً آخر لبدء الخصم"
-            : ((S.type === "installment") ? ("💳 على أقساط · " + fmt(S.monthly) + " " + CUR + "/شهر") : ("💰 وفّرت " + fmt(S.saved) + " " + CUR));
-        var tBefore = (S.discount_pct || 0) > 0 ? ('<s style="color:#98a2b3;font-weight:600;margin-inline-end:8px">' + fmt(S.subtotal) + '</s>') : "";
-        sheet.querySelector(".ul-tot").innerHTML = "<span>الإجمالي</span><span>" + tBefore + "<b>" + fmt(S.pays) + " " + CUR + "</b></span>";
+            ? "أضف منتجاً آخر لبدء الخصم" : "";
+        sheet.querySelector(".ul-tier").style.display = (S.n < (S.min_items || 2)) ? "block" : "none";
+        // professional breakdown: subtotal / discount / [installment] / net
+        var pctTxt = (S.discount_pct || 0) > 0 ? (" (-" + (S.discount_pct).toFixed(0) + "%)") : "";
+        var rows = "";
+        rows += '<div class="ul-brk-r"><span>الإجمالي قبل الخصم</span><span>' + fmt(S.subtotal) + " " + CUR + "</span></div>";
+        rows += '<div class="ul-brk-r disc"><span>الخصم' + pctTxt + '</span><span>− ' + fmt(S.saved) + " " + CUR + "</span></div>";
+        if (S.type === "installment") {
+            rows += '<div class="ul-brk-r inst"><span>التقسيط</span><span>' + fmt(S.monthly) + " " + CUR + "/شهر</span></div>";
+        }
+        rows += '<div class="ul-brk-r net"><span>الصافي</span><span>' + fmt(S.pays) + " " + CUR + "</span></div>";
+        sheet.querySelector(".ul-tot").innerHTML = '<div class="ul-brk">' + rows + "</div>";
         mask.classList.add("show"); sheet.classList.add("show");
     }
     function closeSheet() { mask.classList.remove("show"); sheet.classList.remove("show"); }

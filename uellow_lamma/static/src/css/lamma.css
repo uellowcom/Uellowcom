@@ -44,8 +44,17 @@
 #ul-sheet .ul-si .p{font-weight:800;color:#F26A2E}
 #ul-sheet .ul-si .rm{background:#fff0f0;color:#f04438;border:none;width:26px;height:26px;border-radius:8px;cursor:pointer;font-weight:800}
 #ul-sheet .ul-tier{background:#e9fbf1;color:#067647;text-align:center;font-weight:800;font-size:.84rem;padding:9px;border-radius:12px;margin:12px 0}
-#ul-sheet .ul-tot{display:flex;justify-content:space-between;align-items:baseline;margin:10px 2px}
-#ul-sheet .ul-tot b{font-size:1.3rem}
+#ul-sheet .ul-tot{margin:10px 0}
+#ul-sheet .ul-brk{background:#f7f8fa;border:1px solid #eceff3;border-radius:12px;padding:12px 14px}
+#ul-sheet .ul-brk-r{display:flex;justify-content:space-between;align-items:center;font-size:.9rem;color:#475467;padding:5px 0}
+#ul-sheet .ul-brk-r span:last-child{font-weight:700;font-variant-numeric:tabular-nums}
+#ul-sheet .ul-brk-r.disc{color:#12b76a}
+#ul-sheet .ul-brk-r.disc span:last-child{color:#12b76a}
+#ul-sheet .ul-brk-r.inst{color:#7a5af8}
+#ul-sheet .ul-brk-r.inst span:last-child{color:#7a5af8}
+#ul-sheet .ul-brk-r.net{border-top:1px solid #e6eaf0;margin-top:6px;padding-top:11px;color:#101828;font-weight:800}
+#ul-sheet .ul-brk-r.net span{font-size:1.05rem}
+#ul-sheet .ul-brk-r.net span:last-child{font-size:1.35rem;font-weight:900;color:#101828}
 #ul-sheet .ul-checkout{width:100%;border:none;border-radius:12px;padding:13px;font-weight:800;background:linear-gradient(135deg,#FBBF00,#F26A2E);color:#1a1200;cursor:pointer;font-family:inherit}
 .ul-shield{background:#12241b;color:#4ade80;border-radius:10px;padding:8px 10px;font-size:.78rem;font-weight:700;margin:8px 0;display:none}
 .ul-shield.show{display:block}
