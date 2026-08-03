@@ -113,7 +113,10 @@ class LammaConfig(models.Model):
         pct = min(self._tier_pct(n, subtotal), self.max_discount_pct) if eligible else 0.0
         capped = False
         if eligible and subtotal > 0:
-            floor = cost * (1 + floor_margin / 100.0)
+            # Floor is expressed as a margin ON THE SELLING PRICE so it matches the
+            # reported margin_pct exactly: at the floor, (pays-cost)/pays == floor_margin.
+            fm = min(floor_margin, 99.0)
+            floor = cost / (1 - fm / 100.0) if fm < 100 else float('inf')
             if subtotal * (1 - pct / 100.0) < floor:
                 allowed = max(0.0, (1 - floor / subtotal) * 100.0)
                 if allowed < pct:
