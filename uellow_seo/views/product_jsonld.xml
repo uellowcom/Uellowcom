@@ -16,7 +16,11 @@
              in a t-if so a missing product silently emits nothing rather
              than crashing the page. -->
         <xpath expr="//*[@id='wrap']" position="after">
-            <t t-if="product">
+            <!-- Fallback Product JSON-LD: only emit when uellow_seo_auto has NOT
+                 generated a (richer) schema for this product, so the two SEO
+                 modules never emit a DUPLICATE Product block on the same page. -->
+            <t t-set="_uc_has_auto" t-value="('uellow.seo.product' in env) and env['uellow.seo.product'].sudo().search_count([('product_id', '=', product.id), ('schema_json', '!=', False)]) or 0" t-if="product"/>
+            <t t-if="product and not _uc_has_auto">
                 <t t-set="_pd" t-value="{
                     '@context':    'https://schema.org/',
                     '@type':       'Product',
