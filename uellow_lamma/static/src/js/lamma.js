@@ -44,7 +44,12 @@
         bar.querySelector(".ul-go").addEventListener("click", function (e) { e.stopPropagation(); openSheet(); });
         mask.addEventListener("click", closeSheet);
         sheet.querySelector(".ul-checkout").addEventListener("click", function () {
-            alert("إتمام اللمّة — تحويلها لطلب واحد بالخصم (المرحلة القادمة). خصمك الحالي: " + fmt(S.saved) + " " + CUR);
+            var b = this; b.disabled = true; b.textContent = "جارٍ التجهيز…";
+            rpc("/lamma/checkout").then(function (r) {
+                if (r && r.redirect) { window.location.href = r.redirect; return; }
+                b.disabled = false; b.textContent = "إتمام اللمّة";
+                if (r && r.error === "need_more") { alert("أضف " + (r.min_items || 2) + " منتجات على الأقل للّمّة"); }
+            }).catch(function () { b.disabled = false; b.textContent = "إتمام اللمّة"; });
         });
     }
     function renderBar() {

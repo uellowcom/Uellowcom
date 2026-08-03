@@ -22,7 +22,7 @@ Storefront button / cart / mobile API are wired in later phases.
     'website': 'https://uellow.com',
     'category': 'Sales',
     'license': 'LGPL-3',
-    'depends': ['product', 'website'],
+    'depends': ['product', 'website', 'website_sale'],
     'data': [
         'security/ir.model.access.csv',
         'views/lamma_config_views.xml',

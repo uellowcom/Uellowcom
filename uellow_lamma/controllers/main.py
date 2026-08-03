@@ -74,3 +74,28 @@ class LammaWeb(http.Controller):
     def clear(self, **kw):
         request.session['lamma_ids'] = []
         return lamma_summary()
+
+    @http.route('/lamma/checkout', type='json', auth='public', website=True)
+    def checkout(self, **kw):
+        """Turn the session Lamma into cart lines with the server-recomputed,
+        margin-protected discount applied per line (native sale.order.line.discount).
+        The price is re-derived here — the client value is never trusted."""
+        ids = request.session.get('lamma_ids') or []
+        ltype = request.session.get('lamma_type') or 'normal'
+        cfg = request.env['uellow.lamma.config'].sudo().get_config()
+        prods, lines = _lines_from_ids(ids)
+        if len(prods) < max(1, cfg.min_items):
+            return {'error': 'need_more', 'min_items': cfg.min_items}
+        q = cfg.compute_lamma(lines, ltype)
+        pct = q['discount_pct']
+        order = request.website.sale_get_order(force_create=True)
+        for p in prods:
+            variant = p.product_variant_id
+            if not variant:
+                continue
+            res = order._cart_update(product_id=variant.id, add_qty=1)
+            line = request.env['sale.order.line'].sudo().browse(res.get('line_id'))
+            if line.exists():
+                line.write({'discount': pct, 'is_lamma': True, 'lamma_type': ltype})
+        request.session['lamma_ids'] = []
+        return {'redirect': '/shop/cart'}

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="lamma_assets" inherit_id="web.assets_frontend" name="Lamma storefront assets">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" type="text/css" href="/uellow_lamma/static/src/css/lamma.css"/>
+            <script type="text/javascript" src="/uellow_lamma/static/src/js/lamma.js"/>
+        </xpath>
+    </template>
+</odoo>
