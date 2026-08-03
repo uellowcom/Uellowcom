@@ -93,7 +93,8 @@ class UellowPriceHistory(models.Model):
             return
         Tmpl = self.env['product.template'].sudo()
         for p in Tmpl.search([('is_published', '=', True),
-                              ('active', '=', True)]):
+                              ('active', '=', True),
+                              ('is_dropship', '=', False)]):  # skip World products
             self.log_change(p, source='snapshot')
 
     # ── indicators (mobile API + builder) ──────────────────────────────

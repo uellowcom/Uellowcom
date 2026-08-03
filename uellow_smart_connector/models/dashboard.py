@@ -77,7 +77,8 @@ class SmartConnectorDashboard(models.TransientModel):
         profit = {'count': 0, 'avg_margin': 0.0, 'negative': 0}
         try:
             prof_recs = env['product.template'].sudo().search_read(
-                [('active', '=', True), ('sale_ok', '=', True)],
+                [('active', '=', True), ('sale_ok', '=', True),
+                 ('is_dropship', '=', False)],  # exclude Uellow World products
                 ['list_price', 'standard_price'], limit=20000)
             margins, neg = [], 0
             for r in prof_recs:

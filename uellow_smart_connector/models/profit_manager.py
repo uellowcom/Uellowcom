@@ -40,8 +40,10 @@ class ProfitManager(models.TransientModel):
         Product = self.env['product.template'].sudo()
         bnpl_on, bnpl_min = self._bnpl_ctx()
 
-        # base domain — real, sellable, active products
-        domain = [('active', '=', True), ('sale_ok', '=', True)]
+        # base domain — real, sellable, active products (exclude Uellow World
+        # dropship products, which are managed by the World module)
+        domain = [('active', '=', True), ('sale_ok', '=', True),
+                  ('is_dropship', '=', False)]
         s = (search or '').strip()
         if s:
             domain += ['|', ('name', 'ilike', s), ('default_code', 'ilike', s)]

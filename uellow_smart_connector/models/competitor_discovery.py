@@ -75,7 +75,8 @@ class CompetitorSource(models.Model):
 
         # candidate catalog names for fuzzy matching
         our = self.env['product.template'].search(
-            [('sale_ok', '=', True), ('active', '=', True)])
+            [('sale_ok', '=', True), ('active', '=', True),
+             ('is_dropship', '=', False)])  # exclude Uellow World products
         names = our.mapped('name')
         try:
             from thefuzz import process, fuzz

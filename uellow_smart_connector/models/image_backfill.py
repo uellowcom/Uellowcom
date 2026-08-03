@@ -61,7 +61,8 @@ class ImageBackfill(models.TransientModel):
     # ── helpers ───────────────────────────────────────────────────────
     def _target_products(self):
         Tmpl = self.env['product.template']
-        domain = [('sale_ok', '=', True)]
+        # Exclude Uellow World (dropship) products — managed by the World module.
+        domain = [('sale_ok', '=', True), ('is_dropship', '=', False)]
         if self.published_only:
             domain.append(('is_published', '=', True))
         if self.scope_categ_id:

@@ -1175,7 +1175,8 @@ class ImportJob(models.Model):
             return
 
         prods = self.env['product.template'].search(
-            [('active', '=', True), ('is_published', '=', True)])
+            [('active', '=', True), ('is_published', '=', True),
+             ('is_dropship', '=', False)])  # exclude Uellow World products
         todo = prods.filtered(
             lambda p: not (p.with_context(lang='ar_001').name or '').strip()
             or p.with_context(lang='ar_001').name == p.with_context(lang='en_US').name)[:limit]
@@ -1251,7 +1252,8 @@ class ImportJob(models.Model):
             return
 
         prods = self.env['product.template'].search(
-            [('active', '=', True), ('is_published', '=', True)])
+            [('active', '=', True), ('is_published', '=', True),
+             ('is_dropship', '=', False)])  # exclude Uellow World products
         todo = prods.filtered(
             lambda p: not self._clean_html_text(
                 p.with_context(lang='ar_001').website_description))[:limit]

@@ -125,7 +125,9 @@ class CategoryAssignWizard(models.TransientModel):
 
     def _targets(self):
         T = self.env['product.template']
-        domain = [('sale_ok', '=', True)]
+        # Exclude Uellow World (dropship) products — they are managed by the
+        # World module, not the main-store connector.
+        domain = [('sale_ok', '=', True), ('is_dropship', '=', False)]
         if self.published_only:
             domain.append(('is_published', '=', True))
         if self.only_uncategorized:
