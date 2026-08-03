@@ -29,6 +29,7 @@
         'views/seo_meta.xml',
         'views/product_jsonld.xml',
         'views/lazy_images.xml',
+        'views/product_seo.xml',
     ],
     'installable': True,
     'application': False,

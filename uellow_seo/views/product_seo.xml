@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="product_seo_faq" inherit_id="website_sale.product" name="Uellow SEO: Product FAQ">
+        <xpath expr="//section[@id='product_detail']" position="after">
+            <t t-if="product">
+                <script type="application/ld+json" t-out="product._seo_faq_jsonld()"/>
+                <section class="container my-4 useo-faq">
+                    <style>
+                        .useo-faq h2{font-size:1.35rem;font-weight:800;margin-bottom:14px}
+                        .useo-faq-item{background:#fff;border:1px solid #e7eef3;border-radius:12px;padding:14px 16px;margin-bottom:8px}
+                        .useo-faq-item summary{font-weight:700;font-size:.98rem;cursor:pointer;list-style:none;color:#14202b}
+                        .useo-faq-item summary::-webkit-details-marker{display:none}
+                        .useo-faq-item summary::after{content:'+';float:inline-end;color:#F26A2E;font-weight:900}
+                        .useo-faq-item[open] summary::after{content:'\2212'}
+                        .useo-faq-a{margin-top:10px;font-size:.9rem;line-height:1.6;color:#5d6b78}
+                    </style>
+                    <h2 t-out="product._seo_heading()"/>
+                    <div class="useo-faq-list">
+                        <details t-foreach="product._seo_faqs()" t-as="f" class="useo-faq-item" t-att-open="'open' if f_index == 0 else None">
+                            <summary t-out="f[0]"/>
+                            <div class="useo-faq-a" t-out="f[1]"/>
+                        </details>
+                    </div>
+                </section>
+            </t>
+        </xpath>
+    </template>
+
+</odoo>
