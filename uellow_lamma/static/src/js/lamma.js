@@ -36,6 +36,7 @@
         sheet = el('<div id="ul-sheet"><div class="ul-grip"></div><h4></h4>' +
             '<div class="ul-shield"></div><div class="ul-items"></div>' +
             '<div class="ul-tier"></div><div class="ul-tot"></div>' +
+            '<div class="ul-msg" id="ul-msg" style="display:none"></div>' +
             '<button type="button" class="ul-checkout">إتمام اللمّة</button></div>');
         document.body.appendChild(bar);
         document.body.appendChild(mask);
@@ -47,9 +48,9 @@
             var b = this; b.disabled = true; b.textContent = "جارٍ التجهيز…";
             rpc("/lamma/checkout").then(function (r) {
                 if (r && r.redirect) { window.location.href = r.redirect; return; }
-                if (r && r.error === "need_more") { b.disabled = false; b.textContent = "إتمام اللمّة"; alert("أضف " + (r.min_items || 2) + " منتجات على الأقل للّمّة"); return; }
-                if (r && r.error === "disabled") { b.disabled = false; b.textContent = "إتمام اللمّة"; alert("خدمة اللمّة غير متاحة في منطقتك حالياً"); return; }
-                // otherwise: go to cart anyway
+                b.disabled = false; b.textContent = "إتمام اللمّة";
+                if (r && r.error === "need_more") { sheetMsg("أضف " + (r.min_items || 2) + " منتجات على الأقل للّمّة"); return; }
+                if (r && r.error === "disabled") { sheetMsg("خدمة اللمّة غير متاحة في منطقتك حالياً"); return; }
                 window.location.href = "/shop/cart";
             }).catch(function () { window.location.href = "/shop/cart"; });
         });
@@ -71,8 +72,16 @@
             var im = document.createElement("img"); im.src = it.image; th.appendChild(im);
         });
     }
+    function sheetMsg(t) {
+        var m = sheet && sheet.querySelector(".ul-msg");
+        if (!m) { return; }
+        m.textContent = t || "";
+        m.style.display = t ? "block" : "none";
+    }
+
     function openSheet() {
         if (!S || !(S.n > 0)) { return; }
+        sheetMsg("");
         sheet.querySelector("h4").textContent = (S.label || "لمّة يلو") + " 🧺";
         var box = sheet.querySelector(".ul-items"); box.innerHTML = "";
         (S.items || []).forEach(function (it) {
