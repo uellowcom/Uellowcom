@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 from odoo import http
 from odoo.http import request
 from .main import _lines_from_ids, country_code
+
+_logger = logging.getLogger(__name__)
 
 
 def _json(data, status=200):
@@ -84,33 +87,33 @@ class LammaMobile(http.Controller):
         cfg = request.env['uellow.lamma.config'].sudo().get_config()
         prods, _lines = _lines_from_ids(ids)
         if len(prods) < max(1, cfg.min_items):
+            _logger.info('lamma app checkout need_more: sent=%s resolved=%s min=%s',
+                         ids, len(prods), cfg.min_items)
             return _json({'ok': False, 'error': 'need_more', 'min_items': cfg.min_items}, status=400)
-        try:
-            from odoo.addons.uellow_mobile_manager.controllers.api_v2.cart import _get_or_create_order
-        except Exception:
-            return _json({'ok': False, 'error': 'cart_unavailable'}, status=500)
         if not cfg._country_enabled(request.env.company.country_id.code or country_code()):
             return _json({'ok': False, 'error': 'disabled'}, status=403)
-        q = cfg.compute_lamma(_lines, ltype)
-        order = _get_or_create_order(create=True)
-        if not order:
-            return _json({'ok': False, 'error': 'no_order'}, status=500)
-        Line = request.env['sale.order.line'].sudo()
-        for p in prods:
-            variant = p.product_variant_id
-            if not variant:
-                continue
-            existing = order.order_line.filtered(
-                lambda l: l.product_id == variant and not getattr(l, 'is_reward_line', False))
-            if not existing:
-                Line.create({'order_id': order.id, 'product_id': variant.id,
-                             'product_uom_qty': 1})
-        # one-time discount coupon on the whole order (consumed on payment)
-        cfg._issue_coupon(order, q['saved'])
         try:
+            from odoo.addons.uellow_mobile_manager.controllers.api_v2.cart import _get_or_create_order
+            q = cfg.compute_lamma(_lines, ltype)
+            order = _get_or_create_order(create=True)
+            if not order:
+                return _json({'ok': False, 'error': 'no_order'}, status=500)
+            Line = request.env['sale.order.line'].sudo()
+            for p in prods:
+                variant = p.product_variant_id
+                if not variant:
+                    continue
+                existing = order.order_line.filtered(
+                    lambda l: l.product_id == variant and not getattr(l, 'is_reward_line', False))
+                if not existing:
+                    Line.create({'order_id': order.id, 'product_id': variant.id,
+                                 'product_uom_qty': 1})
+            # one-time discount coupon on the whole order (consumed on payment)
+            cfg._issue_coupon(order, q['saved'])
             request.env['uellow.lamma.activity'].sudo().log('checkout', None, {
                 'type': ltype, 'n': q['n'], 'subtotal': q['subtotal'],
                 'saved': q['saved'], '_country': request.env.company.country_id.code or ''}, 'app')
-        except Exception:
-            pass
-        return _json({'ok': True, 'order_id': order.id})
+            return _json({'ok': True, 'order_id': order.id})
+        except Exception as e:
+            _logger.exception('lamma app checkout failed: %s', e)
+            return _json({'ok': False, 'error': 'server', 'detail': str(e)[:120]}, status=500)
