@@ -91,3 +91,61 @@ class LammaActivity(models.Model):
             'avg_items': round(r.get('avg_items') or 0.0, 1),
             'inst_checkouts': r.get('inst_checkouts') or 0,
         }
+
+    @api.model
+    def dashboard_data(self, days=30):
+        """Full dataset for the لمّة يلو dashboard."""
+        days = int(days) if str(days).isdigit() else 30
+        cr = self.env.cr
+        kpis = self.dashboard_stats()
+
+        def rows(sql, params=()):
+            cr.execute(sql, params)
+            return cr.dictfetchall()
+
+        # activity per day (last 14 days) — trend
+        trend = rows("""
+            SELECT to_char(date_trunc('day', create_date), 'MM-DD') AS d,
+                   count(*) FILTER (WHERE action IN ('start','add')) AS adds,
+                   count(*) FILTER (WHERE action='checkout')         AS checkouts
+              FROM uellow_lamma_activity
+             WHERE create_date >= (now() - interval '14 days')
+             GROUP BY 1 ORDER BY min(create_date)
+        """)
+        # source + type splits (period)
+        sources = rows("""SELECT COALESCE(source,'web') s, count(*) c FROM uellow_lamma_activity
+                          WHERE create_date >= (now() - interval '%s days') GROUP BY 1""" % days)
+        types = rows("""SELECT COALESCE(lamma_type,'normal') t, count(*) c FROM uellow_lamma_activity
+                        WHERE action='checkout' AND create_date >= (now() - interval '%s days') GROUP BY 1""" % days)
+
+        def top(action):
+            cr.execute("""
+                SELECT a.product_id, count(*) c FROM uellow_lamma_activity a
+                 WHERE a.action=%s AND a.product_id IS NOT NULL
+                   AND a.create_date >= (now() - interval '%s days')
+                 GROUP BY a.product_id ORDER BY c DESC LIMIT 8""" % ('%s', days), (action,))
+            out = []
+            for pid, c in cr.fetchall():
+                p = self.env['product.template'].browse(pid)
+                out.append({'name': (p.name or '#%s' % pid)[:40], 'count': c,
+                            'image': '/web/image/product.template/%s/image_128' % pid})
+            return out
+
+        recent = self.search([], limit=15)
+        amap = dict(self._fields['action'].selection)
+        recent_data = [{
+            'action': amap.get(a.action, a.action), 'code': a.action,
+            'product': a.product_id.name or '', 'items': a.items,
+            'discount': round(a.discount, 3), 'source': a.source or 'web',
+            'country': a.country_code or '', 'when': str(a.create_date)[11:16],
+            'date': str(a.create_date)[:10],
+        } for a in recent]
+
+        return {
+            'kpis': kpis, 'days': days, 'trend': trend,
+            'sources': sources, 'types': types,
+            'top_added': top('add'), 'top_removed': top('remove'),
+            'recent': recent_data,
+            'currency': (self.env.company.currency_id.symbol
+                         or self.env.company.currency_id.name or 'KD'),
+        }

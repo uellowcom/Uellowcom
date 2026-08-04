@@ -104,8 +104,16 @@
         <field name="code">action = model.get_config().get_formview_action()</field>
     </record>
 
+    <record id="action_lamma_dashboard" model="ir.actions.act_url">
+        <field name="name">لوحة التحكّم</field>
+        <field name="url">/lamma/dashboard</field>
+        <field name="target">new</field>
+    </record>
+
     <menuitem id="menu_lamma_root" name="لمّة يلو" sequence="55"/>
-    <menuitem id="menu_lamma_config" name="الإعدادات ولوحة المؤشرات" parent="menu_lamma_root"
+    <menuitem id="menu_lamma_dashboard" name="🧺 لوحة التحكّم" parent="menu_lamma_root"
+              action="action_lamma_dashboard" sequence="5"/>
+    <menuitem id="menu_lamma_config" name="الإعدادات" parent="menu_lamma_root"
               action="action_lamma_config_open" sequence="10"/>
 
 </odoo>
