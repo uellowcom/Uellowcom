@@ -131,6 +131,17 @@ class LammaActivity(models.Model):
                             'image': '/web/image/product.template/%s/image_128' % pid})
             return out
 
+        # Lamma value (from checkout events) + abandoned + top countries
+        val = rows("""SELECT COALESCE(sum(subtotal),0) tot, COALESCE(avg(subtotal),0) avg
+                        FROM uellow_lamma_activity
+                       WHERE action='checkout' AND create_date >= (now() - interval '%s days')""" % days)
+        v = val[0] if val else {'tot': 0, 'avg': 0}
+        countries = rows("""SELECT COALESCE(NULLIF(country_code,''),'—') cc, count(*) c
+                              FROM uellow_lamma_activity
+                             WHERE create_date >= (now() - interval '%s days')
+                             GROUP BY 1 ORDER BY c DESC LIMIT 6""" % days)
+        abandoned = max(0, (kpis['bundles'] or 0) - (kpis['converted'] or 0))
+
         recent = self.search([], limit=15)
         amap = dict(self._fields['action'].selection)
         recent_data = [{
@@ -145,6 +156,10 @@ class LammaActivity(models.Model):
             'kpis': kpis, 'days': days, 'trend': trend,
             'sources': sources, 'types': types,
             'top_added': top('add'), 'top_removed': top('remove'),
+            'top_countries': countries,
+            'total_value': round(v['tot'] or 0.0, 3),
+            'avg_value': round(v['avg'] or 0.0, 3),
+            'abandoned': abandoned,
             'recent': recent_data,
             'currency': (self.env.company.currency_id.symbol
                          or self.env.company.currency_id.name or 'KD'),

@@ -87,9 +87,21 @@ def _recent(recent):
     return out
 
 
+def _period(active):
+    out = ''
+    for n in (7, 30, 90):
+        out += ('<a class="pb%s" href="/lamma/dashboard?days=%d">%d يوم</a>'
+                % (' on' if n == active else '', n, n))
+    return out
+
+
 def render_dashboard(d):
     k = d['kpis']
     cur = d['currency']
+    pbtns = _period(d['days'])
+    countries = _split(
+        [{'v': r['cc'], 'c': r['c']} for r in d.get('top_countries', [])],
+        {}) if d.get('top_countries') else '<div class="empty">—</div>'
     cards = ''.join([
         _kpi('لمّة بدأت (30ي)', k['bundles'], accent='o'),
         _kpi('أتمّوا اللمّة', k['checkouts'], accent='ok'),
@@ -97,6 +109,9 @@ def render_dashboard(d):
         _kpi('الخصم المصروف', '%s %s' % (k['discount_sum'], cur), accent='o'),
         _kpi('متوسط المنتجات', k['avg_items'], accent='vio'),
         _kpi('حصة الأقساط', ('%.0f%%' % (k['inst_checkouts'] / k['checkouts'] * 100)) if k['checkouts'] else '0%', accent='vio'),
+        _kpi('قيمة اللمّات', '%s %s' % (d.get('total_value', 0), cur), accent='ok'),
+        _kpi('متوسط قيمة اللمّة', '%s %s' % (d.get('avg_value', 0), cur), accent='blue'),
+        _kpi('لمّات مهجورة', d.get('abandoned', 0), 'بدأت ولم تُتمّ', accent='warn'),
         _kpi('إضافات', k['adds'], accent='ok'),
         _kpi('إزالات', k['removes'], accent='warn'),
     ])
@@ -104,7 +119,7 @@ def render_dashboard(d):
         '<div class="wrap">'
         '<div class="hd"><div><h1>🧺 لوحة تحكّم لمّة يلو</h1>'
         '<p>ملخّص آخر %d يوم — تحديث لحظي</p></div>'
-        '<a class="ref" href="/lamma/dashboard">↻ تحديث</a></div>'
+        '<div class="hd-actions">%s<a class="ref" href="/lamma/dashboard?days=%d">↻ تحديث</a></div></div>'
         '<div class="kpis">%s</div>'
         '<div class="grid2">'
         '<div class="card"><h3>النشاط اليومي (14 يوم)</h3>%s</div>'
@@ -118,18 +133,24 @@ def render_dashboard(d):
         '<div class="card"><h3>🔝 الأكثر إضافةً للّمّة</h3><div class="hbs">%s</div></div>'
         '<div class="card"><h3>🗑️ الأكثر إزالةً</h3><div class="hbs">%s</div></div>'
         '</div>'
+        '<div class="grid2">'
+        '<div class="card"><h3>🌍 أكثر الدول تفاعلاً</h3>%s</div>'
+        '<div class="card"><h3>💡 فرصة إعادة استهداف</h3>'
+        '<div class="note">اللمّات المهجورة (بدأت ولم تُتمّ) عملاء أبدوا اهتماماً — تابعهم من «نشاط العملاء» لإعادة استهدافهم.</div></div>'
+        '</div>'
         '<div class="card"><h3>🕒 نشاط مباشر</h3>'
         '<table class="rt"><thead><tr><th>الوقت</th><th>الحدث</th><th>المنتج</th><th>عدد</th><th>المصدر/الدولة</th><th></th></tr></thead>'
         '<tbody>%s</tbody></table></div>'
         '<div class="foot">لمّة يلو · Uellow 🐝</div>'
         '</div>'
-        % (d['days'], cards,
+        % (d['days'], pbtns, d['days'], cards,
            _trend_svg(d['trend']),
            _funnel(k),
            _split(d['sources'], {'web': 'الموقع', 'app': 'التطبيق'}),
            _split(d['types'], {'normal': 'عادي', 'installment': 'أقساط'}),
            _hbars(d['top_added'], 'name', 'count', '#12b76a'),
            _hbars(d['top_removed'], 'name', 'count', '#f04438'),
+           countries,
            _recent(d['recent'])))
 
 
@@ -154,6 +175,10 @@ CSS = '''<meta charset="utf-8"/><meta name="viewport" content="width=device-widt
 .hd h1{margin:0;font-size:1.5rem;font-weight:900}
 .hd p{margin:3px 0 0;color:#667085;font-size:.9rem}
 .ref{background:linear-gradient(135deg,#FBBF00,#F26A2E);color:#1a1200;text-decoration:none;font-weight:800;padding:9px 16px;border-radius:11px;font-size:.9rem}
+.hd-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pb{background:#fff;border:1px solid #eceff3;color:#667085;text-decoration:none;font-weight:700;padding:8px 12px;border-radius:10px;font-size:.82rem}
+.pb.on{background:#101828;color:#fff;border-color:#101828}
+.note{color:#8a6d1a;font-size:.9rem;line-height:1.7;background:#fffaeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
 .kpi{background:#fff;border:1px solid #eceff3;border-radius:16px;padding:15px 16px;box-shadow:0 1px 3px rgba(16,24,40,.05);position:relative;overflow:hidden}
 .kpi::before{content:"";position:absolute;top:0;right:0;width:5px;height:100%;background:#F26A2E}
