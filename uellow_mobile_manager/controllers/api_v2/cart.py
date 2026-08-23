@@ -58,12 +58,17 @@ def _caller_owns_line(line):
 
 def _pricelist_for_currency(cur):
     """First pricelist in the website's display currency (prefer one
-    scoped to the current website)."""
+    scoped to the current website). Never returns a pricelist owned by
+    ANOTHER company — that raises 'Incompatible companies' at order
+    create time (the company-7 'Uellow World (KWD)' list was leaking onto
+    company-1 carts and killing checkout)."""
     Pl = request.env['product.pricelist'].sudo()
     w = get_website()
-    return (Pl.search([('currency_id', '=', cur.id),
-                       ('website_id', '=', w.id)], limit=1)
-            or Pl.search([('currency_id', '=', cur.id)], limit=1))
+    cid = request.env.company.id
+    comp = ['|', ('company_id', '=', False), ('company_id', '=', cid)]
+    return (Pl.search([('currency_id', '=', cur.id), ('website_id', '=', w.id)] + comp, limit=1)
+            or Pl.search([('currency_id', '=', cur.id), ('website_id', '=', False)] + comp, limit=1)
+            or Pl.search([('currency_id', '=', cur.id)] + comp, limit=1))
 
 
 def _ensure_order_currency(order):
@@ -171,7 +176,11 @@ def _get_or_create_order(create=True):
     website = get_website()
     public_user = website.user_id or request.env.ref('base.public_user')
     import secrets
-    new_token = secrets.token_urlsafe(24)
+    # Reuse the client's incoming X-Cart-Token when it has one but no server
+    # order exists yet — so the order the client will read back (by that same
+    # token) IS the one we just created. Otherwise the client's cart looks
+    # empty right after a Lamma checkout.
+    new_token = _cart_token() or secrets.token_urlsafe(24)
     vals = {
         'partner_id': public_user.partner_id.id,
         'website_id': website.id,
@@ -776,12 +785,20 @@ def serialize_cart(order):
         return _empty_cart()
     # v2.2.48 — sync the mandatory promo free-gift line before rendering.
     _sync_promo_rewards(order)
+    # Keep the لمّة يلو per-line discount in sync with the CURRENT cart on every
+    # view (web + app) so it self-corrects after any line change / removal.
+    try:
+        if getattr(order, 'has_lamma', False):
+            order._recompute_lamma()
+    except Exception:
+        pass
     cur = order.currency_id or request.env.company.currency_id
     lines = []
     # Exclude delivery (shipping) lines — they are NOT cart products and must
     # never show as an item or inflate the subtotal.
     for line in order.order_line.filtered(
-            lambda l: not l.display_type and not getattr(l, 'is_delivery', False)):
+            lambda l: not l.display_type and not getattr(l, 'is_delivery', False)
+            and not getattr(l, 'is_reward_line', False)):
         product = line.product_id
         lines.append({
             'id':           line.id,

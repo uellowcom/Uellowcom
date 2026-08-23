@@ -32,6 +32,23 @@
                         </page>
 
                         <!-- TAB: Checkout (v2.1.21) -->
+                        <page string="🛍️ Shop Home" name="shop_home">
+                            <group>
+                                <group string="Sections">
+                                    <field name="shop_show_recent"/>
+                                    <field name="shop_show_products"/>
+                                    <field name="shop_show_brands"/>
+                                    <field name="shop_foryou_enabled"/>
+                                </group>
+                                <group string="🔥 Best sellers rail">
+                                    <field name="shop_bestseller_manual"/>
+                                </group>
+                            </group>
+                            <field name="shop_bestseller_product_ids" widget="many2many_tags"
+                                   invisible="not shop_bestseller_manual"
+                                   options="{'no_create': True}"
+                                   placeholder="Pick the products to show in Best sellers (in order)…"/>
+                        </page>
                         <page string="🛒 Checkout" name="checkout">
                             <group>
                                 <group string="Guest Checkout">

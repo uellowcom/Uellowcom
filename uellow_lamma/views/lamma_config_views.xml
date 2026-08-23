@@ -46,6 +46,7 @@
                                 <group string="التفعيل">
                                     <field name="enable_all_products"/>
                                     <field name="replace_add_to_cart"/>
+                                    <field name="auto_start"/>
                                     <field name="min_items"/>
                                     <field name="badge_text"/>
                                     <field name="rounding"/>
@@ -64,6 +65,12 @@
                                     <field name="discount_mode"/>
                                     <field name="max_discount_pct"/>
                                     <field name="min_margin_pct"/>
+                                    <field name="min_profit_amount"/>
+                                    <field name="max_margin_pct"/>
+                                    <field name="max_profit_amount"/>
+                                    <field name="order_max_profit_amount"/>
+                                    <field name="partial_discount"/>
+                                    <field name="discount_zero_cost"/>
                                 </group>
                             </group>
                             <separator string="شرائح الخصم — كل ما يزوّد العميل يكبر الخصم"/>
@@ -104,15 +111,14 @@
         <field name="code">action = model.get_config().get_formview_action()</field>
     </record>
 
-    <record id="action_lamma_dashboard" model="ir.actions.act_url">
-        <field name="name">لوحة التحكّم</field>
-        <field name="url">/lamma/dashboard</field>
-        <field name="target">new</field>
+    <record id="action_lamma_dashboard_ui" model="ir.actions.client">
+        <field name="name">لوحة تحكّم لمّة يلو</field>
+        <field name="tag">lamma_dashboard_action</field>
     </record>
 
-    <menuitem id="menu_lamma_root" name="لمّة يلو" sequence="55"/>
+    <menuitem id="menu_lamma_root" name="لمّة يلو" sequence="55" web_icon="uellow_lamma,static/description/icon.png"/>
     <menuitem id="menu_lamma_dashboard" name="🧺 لوحة التحكّم" parent="menu_lamma_root"
-              action="action_lamma_dashboard" sequence="5"/>
+              action="action_lamma_dashboard_ui" sequence="5"/>
     <menuitem id="menu_lamma_config" name="الإعدادات" parent="menu_lamma_root"
               action="action_lamma_config_open" sequence="10"/>
 

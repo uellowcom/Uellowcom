@@ -5,3 +5,9 @@ access_lamma_tier_user,lamma.tier.user,model_uellow_lamma_tier,base.group_user,1
 access_lamma_tier_mgr,lamma.tier.mgr,model_uellow_lamma_tier,base.group_system,1,1,1,1
 access_lamma_activity_user,lamma.activity.user,model_uellow_lamma_activity,base.group_user,1,0,0,0
 access_lamma_activity_mgr,lamma.activity.mgr,model_uellow_lamma_activity,base.group_system,1,1,1,1
+access_lamma_group_user,lamma.group.user,model_uellow_lamma_group,base.group_user,1,1,1,1
+access_lamma_group_mgr,lamma.group.mgr,model_uellow_lamma_group,base.group_system,1,1,1,1
+access_lamma_group_member_user,lamma.group.member.user,model_uellow_lamma_group_member,base.group_user,1,1,1,1
+access_lamma_group_member_mgr,lamma.group.member.mgr,model_uellow_lamma_group_member,base.group_system,1,1,1,1
+access_lamma_group_line_user,lamma.group.line.user,model_uellow_lamma_group_line,base.group_user,1,1,1,1
+access_lamma_group_line_mgr,lamma.group.line.mgr,model_uellow_lamma_group_line,base.group_system,1,1,1,1

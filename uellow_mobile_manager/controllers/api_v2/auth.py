@@ -26,6 +26,30 @@ from ._common import (
 _logger = logging.getLogger(__name__)
 
 
+def _find_existing_customer(env, email='', phone=''):
+    """Pre-existing CUSTOMER partner (POS / past web order) matching by phone or
+    email with NO linked user yet — so a new email signup inherits their history
+    (orders, loyalty) instead of duplicating. Matches by phone/email ONLY (never
+    name) to avoid mislinking two different people."""
+    Partner = env['res.partner'].sudo()
+    digits = ''.join(c for c in (phone or '') if c.isdigit())
+    cand = Partner.browse()
+    if len(digits) >= 8:
+        cand = Partner.search(['|', ('phone', 'like', digits[-8:]),
+                               ('mobile', 'like', digits[-8:])], limit=25)
+    if not cand and email:
+        cand = Partner.search([('email', '=ilike', email)], limit=25)
+
+    def _ok(pt):
+        if pt.user_ids:                      # never hijack an existing account
+            return False
+        try:
+            return (pt.customer_rank or 0) > 0 or (pt.sale_order_count or 0) > 0
+        except Exception:
+            return (pt.customer_rank or 0) > 0
+    return cand.filtered(_ok)[:1]
+
+
 def _serialize_user(partner):
     if not partner:
         return None
@@ -157,18 +181,24 @@ class MobileAuthAPI(http.Controller):
             return fail('EMAIL_TAKEN', 'Email already registered', 409)
 
         website = get_website()
+        existing = _find_existing_customer(request.env, email, phone)
         try:
-            new_user = Users.with_context(no_reset_password=True).create({
-                'name':  name,
+            _vals = {
                 'login': email,
                 'email': email,
-                'phone': phone,
                 'password': password,
-                'groups_id': [(6, 0, [
-                    request.env.ref('base.group_portal').id,
-                ])],
+                'groups_id': [(6, 0, [request.env.ref('base.group_portal').id])],
                 'website_id': website.id,
-            })
+            }
+            if existing:
+                # returning customer → inherit their partner (orders + points)
+                _vals['partner_id'] = existing.id
+                if phone and not existing.phone:
+                    existing.sudo().phone = phone
+            else:
+                _vals['name'] = name
+                _vals['phone'] = phone
+            new_user = Users.with_context(no_reset_password=True).create(_vals)
         except Exception as e:
             return fail('REGISTER_FAILED', str(e), 400)
 
@@ -182,6 +212,7 @@ class MobileAuthAPI(http.Controller):
         return ok({
             'token': token,
             'user':  _serialize_user(new_user.partner_id),
+            'returning_customer': bool(existing),
         })
 
     # ─── OTP via SMS (Firebase phone auth — verify on Odoo side) ──────

@@ -630,7 +630,179 @@ def _order_timeline(order):
     return out
 
 
+def _p_esc(t):
+    return (t or '').replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+
+
+def _p_money(env, amount):
+    c = env.company.currency_id
+    dp = c.decimal_places or 3
+    return {'amount': round(amount or 0.0, dp), 'symbol': c.symbol or c.name or '',
+            'digits': dp, 'currency': c.name}
+
+
+_RC_CSS = '''
+*{box-sizing:border-box}
+body{background:#e9e9e9;margin:0;padding:12px;font-family:'Tajawal','Courier New',monospace}
+.uellow-receipt{max-width:320px;margin:0 auto;background:#fff;color:#111;padding:0 0 8px;box-shadow:0 2px 12px rgba(0,0,0,.15);font-size:10px}
+.uellow-receipt .u-bar{height:4px;background:#333;width:100%}
+.uellow-receipt .u-header{text-align:center;padding:10px 8px 6px}
+.uellow-receipt .u-logo{max-width:120px;max-height:56px;object-fit:contain;margin:0 auto 5px;display:block}
+.uellow-receipt .u-company-name{font-size:11px;font-weight:700;color:#111;margin-bottom:3px}
+.uellow-receipt .u-company-contact{font-size:9px;color:#444;line-height:1.8}
+.uellow-receipt .u-invoice-title{background:#e0e0e0;text-align:center;padding:9px 0;border-top:1px solid #bbb;border-bottom:1px solid #bbb}
+.uellow-receipt .u-title-text{font-size:14px;font-weight:700;color:#111;letter-spacing:2px;line-height:1.3}
+.uellow-receipt .u-invoice-num{font-size:9px;color:#555;margin-top:2px;letter-spacing:1px}
+.uellow-receipt .u-meta{display:flex;justify-content:space-between;padding:6px 10px;background:#e8e8e8;border-bottom:1px solid #ccc}
+.uellow-receipt .u-meta-item{display:flex;flex-direction:column;align-items:center}
+.uellow-receipt .u-meta-label{font-size:7px;color:#555;margin-bottom:1px}
+.uellow-receipt .u-meta-value{font-size:9px;font-weight:700;color:#111}
+.uellow-receipt .u-section-header{padding:5px 12px;background:#d8d8d8;border-bottom:1px solid #bbb;display:flex;justify-content:space-between;align-items:center}
+.uellow-receipt .u-sec-en{font-size:8px;font-weight:700;letter-spacing:1px;color:#222;text-transform:uppercase}
+.uellow-receipt .u-sec-ar{font-size:9px;font-weight:700;color:#222;direction:rtl}
+.uellow-receipt .u-customer{padding:8px 12px;background:#f5f5f5;border-bottom:1px dashed #bbb}
+.uellow-receipt .u-customer-row{display:flex;justify-content:space-between;margin-bottom:3px;font-size:9px}
+.uellow-receipt .u-cust-key{color:#555}
+.uellow-receipt .u-cust-val{font-weight:700;color:#111;text-align:right;max-width:165px}
+.uellow-receipt .u-items{padding:4px 12px}
+.uellow-receipt .orderline{font-size:9px;padding:3px 0;border-bottom:.5px solid #eee;line-height:1.4}
+.uellow-receipt .orderline .rowx{display:flex;justify-content:space-between}
+.uellow-receipt .orderline .product-name{font-size:9px;font-weight:700;line-height:1.3}
+.uellow-receipt .orderline .price{font-size:9px;font-weight:700}
+.uellow-receipt .orderline .qty{font-size:8.5px;color:#555}
+.uellow-receipt .u-line-discount{font-size:8px;color:#555;padding:1px 0 0;text-align:right}
+.uellow-receipt .u-tot{padding:2px 12px}
+.uellow-receipt .u-dashed-center{text-align:center;color:#bbb;font-size:9px;margin:4px 0}
+.uellow-receipt .u-discount-total{display:flex;justify-content:space-between;font-size:9.5px;color:#444;margin-bottom:3px;padding:2px 0}
+.uellow-receipt .u-grand-total{display:flex;justify-content:space-between;font-size:13px;font-weight:900;color:#111;padding:4px 0;border-top:2px solid #222;margin-bottom:4px}
+.uellow-receipt .u-grand-ar{font-size:10px;font-weight:700;color:#444}
+.uellow-receipt .u-payment-row{display:flex;justify-content:space-between;font-size:9.5px;color:#444;margin-bottom:3px}
+.uellow-receipt .u-pay-name{color:#555}
+.uellow-receipt .u-pay-ar{font-size:8px;color:#777}
+.uellow-receipt .u-order-footer{text-align:center;font-size:9px;color:#666;padding:8px 0 4px;border-top:1px dashed #bbb;margin-top:6px}
+.u-print{display:block;max-width:320px;margin:12px auto 0;padding:12px;border:0;border-radius:10px;background:#F5C320;color:#412402;font-weight:900;font-size:14px;cursor:pointer;font-family:inherit}
+@media print{body{background:#fff;padding:0}.uellow-receipt{box-shadow:none}.u-print{display:none}}
+'''
+
+
+def _pos_receipt_html(o):
+    """User-facing POS receipt — mirrors the layout printed from the POS in Odoo."""
+    comp = o.company_id or o.env.company
+    cur = o.currency_id or comp.currency_id
+    dp = cur.decimal_places or 3
+    sym = cur.symbol or cur.name or ''
+    fmn = '%.' + str(dp) + 'f'
+
+    def m(v):
+        return (fmn % (v or 0.0)) + ' ' + sym
+    date = str(o.date_order or '')[:16]
+    try:
+        cashier = (o.employee_id.name if getattr(o, 'employee_id', False) else '') or (o.user_id.name if o.user_id else '')
+    except Exception:
+        cashier = o.user_id.name if o.user_id else ''
+    pos_name = (o.config_id.name if o.config_id else (o.session_id.config_id.name if o.session_id else '')) or ''
+    name = _p_esc(o.pos_reference or o.name or '')
+
+    items = ''
+    for l in o.lines:
+        disc = ('<div class="u-line-discount">' + ('خصم %g%%' % l.discount) + '</div>') if l.discount else ''
+        items += ('<div class="orderline"><div class="rowx"><span class="product-name">'
+                  + _p_esc(l.product_id.name or '') + '</span><span class="price">' + m(l.price_subtotal_incl)
+                  + '</span></div><div class="qty">' + ('%g' % (l.qty or 0)) + ' x ' + (fmn % (l.price_unit or 0))
+                  + ' ' + sym + '</div>' + disc + '</div>')
+
+    cust = ''
+    p = o.partner_id
+    if p:
+        rows = '<div class="u-customer-row"><span class="u-cust-key">Name / الاسم</span><span class="u-cust-val">' + _p_esc(p.name or '') + '</span></div>'
+        if p.phone:
+            rows += '<div class="u-customer-row"><span class="u-cust-key">Phone / الهاتف</span><span class="u-cust-val">' + _p_esc(p.phone) + '</span></div>'
+        if getattr(p, 'mobile', False):
+            rows += '<div class="u-customer-row"><span class="u-cust-key">Mobile / الجوال</span><span class="u-cust-val">' + _p_esc(p.mobile) + '</span></div>'
+        if p.street:
+            addr = _p_esc((p.street or '') + ((', ' + p.city) if p.city else ''))
+            rows += '<div class="u-customer-row"><span class="u-cust-key">Address / العنوان</span><span class="u-cust-val">' + addr + '</span></div>'
+        cust = '<div class="u-section-header"><span class="u-sec-en">Customer Info</span><span class="u-sec-ar">بيانات العميل</span></div><div class="u-customer">' + rows + '</div>'
+
+    try:
+        td = sum((l.price_unit * l.qty) - l.price_subtotal_incl for l in o.lines if l.discount)
+    except Exception:
+        td = 0.0
+    disc_total = ('<div class="u-discount-total"><span>Discount <span class="u-pay-ar">إجمالي الخصم</span></span><span>-' + m(td) + '</span></div>') if (td and td > 0) else ''
+
+    pays = ''
+    for pay in o.payment_ids:
+        pays += '<div class="u-payment-row"><span class="u-pay-name">' + _p_esc(pay.payment_method_id.name or '') + ' <span class="u-pay-ar">طريقة الدفع</span></span><span>' + m(pay.amount) + '</span></div>'
+
+    logo = '/web/image/res.company/' + str(comp.id) + '/logo'
+    contact = ('<div class="u-company-contact">Tel: ' + _p_esc(comp.phone) + ' &nbsp;|&nbsp; هاتف</div>') if comp.phone else ''
+    return ('<!doctype html><html lang="ar" dir="ltr"><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<title>إيصال ' + name + '</title><style>' + _RC_CSS + '</style></head><body>'
+            '<div class="uellow-receipt"><div class="u-bar"></div>'
+            '<div class="u-header"><img class="u-logo" src="' + logo + '" alt="Uellow" '
+            'onerror="this.style.display=&#39;none&#39;">'
+            '<div class="u-company-name">Uellow W.L.L &nbsp;|&nbsp; شركة يلو دوت كوم</div>' + contact + '</div>'
+            '<div class="u-invoice-title"><div class="u-title-text">INVOICE &nbsp;/&nbsp; فاتورة</div>'
+            '<div class="u-invoice-num">#' + name + '</div></div>'
+            '<div class="u-meta">'
+            '<div class="u-meta-item"><span class="u-meta-label">Date / التاريخ</span><span class="u-meta-value">' + _p_esc(date) + '</span></div>'
+            '<div class="u-meta-item"><span class="u-meta-label">Cashier / الكاشير</span><span class="u-meta-value">' + _p_esc(cashier) + '</span></div>'
+            '<div class="u-meta-item"><span class="u-meta-label">POS / نقطة البيع</span><span class="u-meta-value">' + _p_esc(pos_name) + '</span></div>'
+            '</div>' + cust +
+            '<div class="u-section-header"><span class="u-sec-en">Items</span><span class="u-sec-ar">المنتجات</span></div>'
+            '<div class="u-items">' + items + '</div>'
+            '<div class="u-tot"><div class="u-dashed-center">--------------------------------</div>' + disc_total +
+            '<div class="u-grand-total"><span>TOTAL <span class="u-grand-ar">الإجمالي</span></span><span>' + m(o.amount_total) + '</span></div>' + pays + '</div>'
+            '<div class="u-order-footer">شكراً لتسوّقك في يلو 🐝<br>Thank you for shopping at Uellow</div>'
+            '</div><button class="u-print" onclick="window.print()">🖨️ طباعة الإيصال</button>'
+            '</body></html>')
+
+
 class MobileOrdersAPI(http.Controller):
+
+    @http.route('/api/mobile/v2/purchases', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def my_purchases(self, **kw):
+        partner = current_partner()
+        env = request.env
+        out = []
+        SO = env['sale.order'].sudo()
+        for o in SO.search([('partner_id', '=', partner.id),
+                            ('state', 'in', ['sale', 'done'])],
+                           order='date_order desc', limit=120):
+            out.append({'id': o.id, 'source': 'web', 'name': o.name,
+                        'date': str(o.date_order or ''),
+                        'amount': _p_money(env, o.amount_total),
+                        'state': o.state, 'items': int(sum(o.order_line.mapped('product_uom_qty'))),
+                        'receipt': '/api/mobile/v2/orders/%d/invoice' % o.id})
+        if 'pos.order' in env:
+            for o in env['pos.order'].sudo().search(
+                    [('partner_id', '=', partner.id),
+                     ('state', 'in', ['paid', 'done', 'invoiced'])],
+                    order='date_order desc', limit=120):
+                out.append({'id': o.id, 'source': 'pos',
+                            'name': o.pos_reference or o.name,
+                            'date': str(o.date_order or ''),
+                            'amount': _p_money(env, o.amount_total),
+                            'state': o.state, 'items': int(sum(o.lines.mapped('qty'))),
+                            'receipt': '/api/mobile/v2/pos/order/%d/receipt' % o.id})
+        out.sort(key=lambda x: x['date'], reverse=True)
+        return ok({'purchases': out, 'count': len(out)})
+
+    @http.route('/api/mobile/v2/pos/order/<int:order_id>/receipt', type='http',
+                auth='public', methods=['GET'], csrf=False)
+    @safe_endpoint
+    @require_auth
+    def my_pos_receipt(self, order_id, **kw):
+        partner = current_partner()
+        o = request.env['pos.order'].sudo().browse(order_id).exists()
+        if not o or (o.partner_id and o.partner_id.id != partner.id):
+            return fail('NOT_FOUND', 'Order not found', 404)
+        return request.make_response(_pos_receipt_html(o), headers=[
+            ('Content-Type', 'text/html; charset=utf-8')])
 
     @http.route('/api/mobile/v2/orders', type='http', auth='public',
                 methods=['GET', 'OPTIONS'], csrf=False)

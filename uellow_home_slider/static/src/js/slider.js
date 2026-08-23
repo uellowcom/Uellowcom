@@ -84,7 +84,7 @@ function runSpot(cfg){
         setText(kickerEl, s.kicker);
         setText(titleEl, (s.overlay&&s.title)?s.title:'');
         setText(subEl, (s.overlay&&s.sub)?s.sub:'');
-        if(ctaEl){ ctaEl.textContent=((s.overlay&&s.btn)?s.btn:ctaLabel)+' →'; ctaEl.href=(s.overlay&&s.btn_url)?s.btn_url:(s.href||'/shop'); }
+        if(ctaEl){ if(showText){ ctaEl.textContent=((s.overlay&&s.btn)?s.btn:ctaLabel)+' →'; ctaEl.href=(s.overlay&&s.btn_url)?s.btn_url:(s.href||'/shop'); ctaEl.style.display=''; } else { ctaEl.style.display='none'; } }
         // per-slide coupon + features (override the slider defaults)
         if(cfg.couponWrap&&s.coupon_show!==undefined){ cfg.couponWrap.style.display=(s.coupon_show===false)?'none':''; }
         if(cfg.couponCode&&s.coupon_code){ cfg.couponCode.textContent=s.coupon_code; if(cfg.copyBtn)cfg.copyBtn.dataset.code=s.coupon_code; }

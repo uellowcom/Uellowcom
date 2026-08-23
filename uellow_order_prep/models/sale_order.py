@@ -3,6 +3,21 @@ from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
 
+class SaleOrderLine(models.Model):
+    _inherit = 'sale.order.line'
+
+    # thumbnail shown in the SO order-line list
+    uc_product_image = fields.Binary(
+        related='product_id.image_128', string='Image', store=False)
+
+    def _get_sale_order_line_multiline_description_sale(self):
+        # Show ONLY the product name on the order line — strip the sales
+        # description and the multiline variant block (per request).
+        if self.product_id and not self.display_type:
+            return self.product_id.with_context(display_default_code=False).display_name
+        return super()._get_sale_order_line_multiline_description_sale()
+
+
 class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
@@ -115,6 +130,12 @@ class SaleOrder(models.Model):
         return self._prep_report(
             'delivery_label.action_report_delivery_label', self.picking_ids,
             _('This order has no delivery to label yet / لا يوجد شحن لطباعة الليبل.'))
+
+    def action_prep_print_receipt(self):
+        self.ensure_one()
+        return self._prep_report(
+            'uellow_order_prep.action_report_sale_receipt', self,
+            _('Sales receipt not available.'))
 
     def action_prep_print_warranty(self):
         self.ensure_one()

@@ -3,3 +3,4 @@ from . import seo_product
 from . import seo_redirect
 from . import website_inherit
 from . import hreflang_country
+from . import product_publish_guard

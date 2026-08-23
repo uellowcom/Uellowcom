@@ -8,3 +8,7 @@ from . import theme_settings
 from . import theme_dashboard_settings
 from . import ir_http
 from . import product_template
+from . import home_warm
+from . import ir_binary
+from . import gmc_feed
+from . import stock_notify

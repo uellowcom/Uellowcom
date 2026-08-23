@@ -8,12 +8,25 @@
         var panels = root.querySelector(".uc-catmega-panels");
         if (!rail || !panels) return;
 
+        function loadPanel(p) {
+            if (!p || p.dataset.loaded === "1" || p.dataset.lazy !== "1") return;
+            p.dataset.loaded = "1";
+            fetch("/uc/megapanel?cat=" + encodeURIComponent(p.dataset.cat || ""),
+                  { credentials: "same-origin" })
+                .then(function (r) { return r.ok ? r.text() : ""; })
+                .then(function (html) {
+                    if (html) { p.innerHTML = html; } else { p.dataset.loaded = "0"; }
+                })
+                .catch(function () { p.dataset.loaded = "0"; });
+        }
         function activate(catId) {
             rail.querySelectorAll(".uc-catmega-parent").forEach(function (li) {
                 li.classList.toggle("is-active", li.dataset.cat === catId);
             });
             panels.querySelectorAll(".uc-catmega-panel").forEach(function (p) {
-                p.classList.toggle("is-active", p.dataset.cat === catId);
+                var on = p.dataset.cat === catId;
+                if (on) { loadPanel(p); }
+                p.classList.toggle("is-active", on);
             });
         }
         rail.querySelectorAll(".uc-catmega-parent").forEach(function (li) {

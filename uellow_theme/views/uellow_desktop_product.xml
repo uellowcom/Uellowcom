@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- Desktop product page: the new data-driven design rendered INSIDE the real
+       website.layout so it inherits the real header, footer, menus, search and cart.
+       The scoped design fragment (#uc-dpd) is injected via the controller. -->
+  <template id="uc_desktop_product_layout" name="Uellow Desktop Product Page">
+    <t t-call="website.layout">
+      <div id="wrap">
+        <t t-out="uc_fragment"/>
+      </div>
+    </t>
+  </template>
+</odoo>

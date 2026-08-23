@@ -141,7 +141,11 @@ class UellowHomeSlide(models.Model):
     def get_src(self):
         self.ensure_one()
         if self.image:
-            return '/web/image/uellow.home.slide/%d/image' % self.id
+            # ?unique busts the browser/Cloudflare edge cache whenever the
+            # banner is re-uploaded (write_date changes) — otherwise a stale
+            # image (or placeholder) can be served from the CDN indefinitely.
+            _u = int(self.write_date.timestamp()) if self.write_date else 0
+            return '/web/image/uellow.home.slide/%d/image?unique=%s' % (self.id, _u)
         return self.image_url or ''
 
     def get_target(self):

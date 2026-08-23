@@ -188,7 +188,8 @@ def resolve_products(env, props, lang, block=None):
         bool((props.get('_brain_ctx') or {}).get('cfg').div_no_repeat) \
         if props.get('_brain_ctx') else False
     _has_pers = bool((props.get('personalize') or 'none') not in ('', 'none'))
-    limit = (min(want_limit * 6, 240) if (_has_refine or _has_div or _has_pers)
+    _has_feat = bool(props.get('featured_ids'))
+    limit = (min(want_limit * 6, 240) if (_has_refine or _has_div or _has_pers or _has_feat)
              else want_limit)
     Tmpl = env['product.template'].sudo()
     base_dom = [('is_published', '=', True),
@@ -395,6 +396,8 @@ def resolve_products(env, props, lang, block=None):
             if pids and Line is not None:
                 lines = Line.sudo().search([
                     ('promotion_id', 'in', pids),
+                    ('promotion_id.state', '=', 'running'),
+                    ('promotion_id.active', '=', True),
                     ('state', '=', 'approved')], limit=limit * 2)
                 recs = lines.mapped('product_tmpl_id').filtered(
                     lambda p: p.active and p.is_published
@@ -417,8 +420,9 @@ def resolve_products(env, props, lang, block=None):
                 },
                 'flash_count': len(promos),
             }
-        if not recs:
-            recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
+        # v2.2.x — promotion source: NO random fallback. An empty or
+        # not-running campaign shows nothing rather than leaking unrelated
+        # newest products into the flash/promotion block.
 
     elif source == 'price_drops':
         # v2.1.25 — products whose price recently DROPPED (internal price
@@ -577,6 +581,35 @@ def resolve_products(env, props, lang, block=None):
     # page + per-brand/category caps). Applied only when a page ctx is
     # present and the engine's diversity service is on. Fully guarded.
     items = _brain_diversify(env, items, props, want_limit)
+    # v2.2.9x — FEATURED/PINNED products lead the block in the chosen order;
+    # the rest fill the remaining slots (optionally shuffled). Lets a merchant
+    # set item #1 (the hero), #2, #3 … and let the rest come automatically.
+    # No-op unless featured_ids is set (only the promo editor exposes it).
+    _feat = props.get('featured_ids') or []
+    try:
+        _feat = [int(x) for x in _feat]
+    except Exception:
+        _feat = []
+    if _feat:
+        _by_id = {x.get('id'): x for x in items}
+        _missing = [fid for fid in _feat if fid not in _by_id]
+        if _missing:
+            try:
+                _extra = Tmpl.browse(_missing).exists().filtered(
+                    lambda p: p.is_published and p.sale_ok)
+                for _p in _extra:
+                    _b = _product_brief(env, _p, lang)
+                    if _b and _b.get('id'):
+                        _by_id[_b['id']] = _b
+            except Exception:
+                pass
+        _pinned = [_by_id[fid] for fid in _feat if fid in _by_id]
+        _pset = set(_feat)
+        _rest = [x for x in items if x.get('id') not in _pset]
+        if props.get('featured_rest_random', True):
+            import random as _rnd
+            _rnd.shuffle(_rest)
+        items = _pinned + _rest
     # trim back to the block's requested limit (pools widened upstream).
     items = items[:want_limit]
     return {'items': items}

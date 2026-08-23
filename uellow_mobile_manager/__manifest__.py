@@ -30,6 +30,7 @@
         'views/sale_order_website_views.xml',
         'views/sale_order_kanban_views.xml',
         'views/menu_views.xml',
+        'views/search_log_views.xml',
         'views/uellow_delivery_zone_views.xml',
         'views/sale_order_cancel_views.xml',
         'views/mobile_category_slide_views.xml',

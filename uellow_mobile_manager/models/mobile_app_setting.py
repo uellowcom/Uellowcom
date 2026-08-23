@@ -138,6 +138,14 @@ class MobileAppSetting(models.Model):
         'setting_id', 'value_id', string='For You: Brands',
         domain="[('attribute_id.name', 'ilike', 'brand')]")
 
+    shop_bestseller_manual = fields.Boolean(
+        string='Shop: manual "Best sellers"', default=False,
+        help='When ON, the "Best sellers" rail on the mobile shop shows the '
+             'products you pick below (in order) instead of the auto list.')
+    shop_bestseller_product_ids = fields.Many2many(
+        'product.template', 'mobile_setting_bestseller_rel',
+        'setting_id', 'product_id', string='Best sellers: Products')
+
     facebook_url = fields.Char(string='Facebook URL')
     instagram_url = fields.Char(string='Instagram URL')
     youtube_url = fields.Char(string='YouTube URL')

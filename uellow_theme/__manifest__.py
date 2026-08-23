@@ -10,7 +10,7 @@
     'summary': 'Premium storefront theme for Uellow — branded, fast, SEO-tuned.',
     'category': 'Theme/eCommerce',
     'version': '18.0.1.0.0',
-    'depends': ['uellow_theme_common'],
+    'depends': ['uellow_theme_common', 'uellow_home_slider', 'uellow_mobile_pages'],
 
     'license': 'OPL-1',
     'author': 'Uellow',
@@ -23,6 +23,7 @@
     ],
     'data': [
         'security/ir.model.access.csv',
+        'views/stock_notify_views.xml',
         'data/theme.ir.attachment.csv',
         'views/theme_dashboard_settings_views.xml',
 
@@ -47,6 +48,7 @@
         # 'views/uellow_product_page.xml' — disabled; revert to original product page
         'views/footers.xml',
         'views/uellow_footer.xml',      # Uellow Marketplace footer (style 9)
+        'views/uellow_desktop_product.xml',  # Desktop PDP inside website.layout
 
         # Snippets
         'views/snippets/dynamic_snippets.xml',
@@ -89,6 +91,7 @@
             'uellow_theme/static/lib/OwlCarousel2-2.3.4/assets/owl.theme.default.css',
             # Frontend
             'uellow_theme/static/src/js/website.js',
+            'uellow_theme/static/src/js/frontend/uc_app_banner.js',  # persistent Get-the-app banner
             'uellow_theme/static/src/js/website_sale.js',
             'uellow_theme/static/src/js/website_sale_wishlist.js',
 

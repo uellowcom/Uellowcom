@@ -94,6 +94,22 @@ class StockPicking(models.Model):
             return False
         if getattr(so, 'upayments_paid', False):
             return True
+        # An online (non-COD) payment transaction that reached done/authorized
+        # means the customer already paid (Taly, UPayments, cards ...), even
+        # when no invoice exists yet to reconcile against. This is the reliable
+        # signal at picking-creation time (the tx is 'done' before the SO is
+        # confirmed), and it prevents a driver collecting cash for a paid order.
+        try:
+            cod_provider = self.env.ref('ms_payment_cod.payment_provider_cod',
+                                        raise_if_not_found=False)
+            cod_pid = cod_provider.id if cod_provider else 0
+            if so.transaction_ids.filtered(
+                    lambda t: t.state in ('done', 'authorized')
+                    and t.provider_id.id != cod_pid
+                    and (t.provider_id.code or '') != 'cod'):
+                return True
+        except Exception:
+            pass
         try:
             if so.amount_total > 0 and getattr(so, 'amount_unpaid', so.amount_total) <= 0.001:
                 return True

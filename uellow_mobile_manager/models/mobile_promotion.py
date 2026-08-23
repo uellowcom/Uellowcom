@@ -582,7 +582,8 @@ class MobileAppPromotion(models.Model):
 
     def _apply_prices(self):
         for l in self.line_ids.filtered(
-                lambda l: l.state == 'approved' and l.discount_pct > 0):
+                lambda l: l.state == 'approved' and l.discount_pct > 0
+                and not l.price_applied):
             try:
                 tmpl = l.product_tmpl_id
                 l.old_list_price = tmpl.list_price
@@ -791,13 +792,49 @@ class MobilePromotionLine(models.Model):
             l.net_profit_pct = round((after - cost - reserve) / after * 100.0, 2) \
                 if after else 0.0
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        lines = super().create(vals_list)
+        for l in lines:
+            # Admin-added line (no vendor) auto-approves so it goes live at
+            # once — including when dropped into an already-RUNNING campaign.
+            # Vendor submissions still start 'pending' for admin review.
+            if not l.vendor_id and l.state == 'pending':
+                l.state = 'approved'
+                if (l.promotion_id.state == 'running'
+                        and l.promotion_id.apply_discounts
+                        and l.discount_pct > 0):
+                    l._apply_single_price()
+        return lines
+
+    def _apply_single_price(self):
+        """Apply THIS line's discount to its product (idempotent — skips a
+        line whose price is already applied, so it never double-discounts)."""
+        for l in self:
+            if (l.price_applied or l.state != 'approved'
+                    or l.discount_pct <= 0):
+                continue
+            try:
+                tmpl = l.product_tmpl_id
+                l.old_list_price = tmpl.list_price
+                l.old_compare_price = tmpl.compare_list_price or 0.0
+                tmpl.write({
+                    'compare_list_price': tmpl.list_price,
+                    'list_price': round(
+                        tmpl.list_price * (1 - l.discount_pct / 100.0), 3),
+                })
+                l.price_applied = True
+            except Exception:
+                _logger.exception(
+                    'promo single price apply failed line %s', l.id)
+
     def action_approve(self):
         self.write({'state': 'approved'})
         for l in self:
             if (l.promotion_id.state == 'running'
                     and l.promotion_id.apply_discounts
                     and not l.price_applied):
-                l.promotion_id._apply_prices()
+                l._apply_single_price()
 
     def action_reject(self):
         self.write({'state': 'rejected'})

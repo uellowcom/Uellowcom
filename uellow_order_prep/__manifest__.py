@@ -9,6 +9,7 @@
     'author': 'Uellow',
     'license': 'LGPL-3',
     'depends': [
+        'purchase',
         'sale_stock',
         'account',
         'delivery_carrier_portal',
@@ -16,6 +17,9 @@
         'delivery_label',
     ],
     'data': [
+        'views/sale_order_line_views.xml',
+        'views/purchase_order_line_views.xml',
+        'report/sale_receipt_report.xml',
         'views/order_prep_views.xml',
     ],
     'post_init_hook': 'post_init_hook',

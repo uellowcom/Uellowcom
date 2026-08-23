@@ -544,8 +544,21 @@ class UellowAdminAppController(http.Controller):
         page = max(1, int(kw.get('page', 1) or 1))
         per = min(40, max(5, int(kw.get('per_page', 20) or 20)))
         Sess = env['pos.session'].sudo()
-        total = Sess.search_count([])
-        sessions = Sess.search([], order='id desc', limit=per,
+        dom = []
+        if kw.get('state'):
+            dom.append(('state', '=', kw.get('state')))
+        for _f, _k in (('config_id', 'config_id'), ('user_id', 'user_id')):
+            if kw.get('_k' if False else _k):
+                try:
+                    dom.append((_f, '=', int(kw.get(_k))))
+                except Exception:
+                    pass
+        if kw.get('date_from'):
+            dom.append(('start_at', '>=', kw.get('date_from')))
+        if kw.get('date_to'):
+            dom.append(('start_at', '<=', kw.get('date_to') + ' 23:59:59'))
+        total = Sess.search_count(dom)
+        sessions = Sess.search(dom, order='id desc', limit=per,
                                offset=(page - 1) * per)
         Po = env['pos.order'].sudo()
         rows = []
@@ -590,6 +603,271 @@ class UellowAdminAppController(http.Controller):
         return ok({'sessions': rows, 'available': True, 'page': page,
                    'total': total,
                    'pages': (total + per - 1) // per if per else 1})
+
+    # ─── POS session DETAIL: payments (cash/knet) + products sold ──────
+    @http.route('/api/mobile/v2/admin/pos/session/<int:session_id>',
+                type='http', auth='public', methods=['GET', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_pos_session_detail(self, session_id, **kw):
+        env = request.env
+        if 'pos.session' not in env:
+            return ok({'available': False})
+        s = env['pos.session'].sudo().browse(session_id)
+        if not s.exists():
+            return fail('NOT_FOUND', 'Session not found', 404)
+        Po = env['pos.order'].sudo()
+        orders = Po.search([('session_id', '=', s.id)])
+        from collections import defaultdict
+        # ── payments by method (Cash / Card=KNET / installments / ...) ──
+        pm = defaultdict(lambda: {'amount': 0.0, 'count': 0})
+        try:
+            for p in env['pos.payment'].sudo().search([('session_id', '=', s.id)]):
+                k = (p.payment_method_id.name or 'Other')
+                pm[k]['amount'] += p.amount
+                pm[k]['count'] += 1
+        except Exception:
+            pass
+        payments = [{'method': k,
+                     'amount': _money(env, v['amount']),
+                     'amount_raw': round(v['amount'], 3),
+                     'count': v['count']}
+                    for k, v in sorted(pm.items(), key=lambda x: -x[1]['amount'])]
+
+        def _sum_like(subs):
+            return round(sum(v['amount'] for k, v in pm.items()
+                             if any(n in (k or '').lower() for n in subs)), 3)
+        cash_total = _sum_like(['cash', 'نقد', 'كاش'])
+        knet_total = _sum_like(['card', 'knet', 'k-net', 'كي', 'بطاق', 'شبك'])
+        # ── products sold (aggregate by variant) ──
+        prod = {}
+        sales = 0.0
+        refunds = 0.0
+        items = 0
+        cost = 0.0
+        for o in orders:
+            sales += o.amount_total
+            if o.amount_total < 0:
+                refunds += o.amount_total
+            for l in o.lines:
+                pv = l.product_id
+                e = prod.setdefault(pv.id, {
+                    'id': pv.product_tmpl_id.id, 'name': (pv.name or ''),
+                    'qty': 0.0, 'total': 0.0, 'cost': 0.0,
+                    'barcode': pv.barcode or ''})
+                q = l.qty or 0
+                e['qty'] += q
+                e['total'] += (l.price_subtotal_incl or 0)
+                lc = _pos_line_cost(l)
+                e['cost'] += lc
+                items += abs(int(q))
+                cost += lc
+        products = sorted(prod.values(), key=lambda x: -x['total'])
+        products = [{'id': p['id'], 'name': p['name'], 'barcode': p['barcode'],
+                     'qty': round(p['qty'], 2),
+                     'total': _money(env, p['total']),
+                     'total_raw': round(p['total'], 3),
+                     'profit': _money(env, p['total'] - p['cost'])}
+                    for p in products]
+        profit = round(sales - cost, 3)
+        session = {
+            'id': s.id, 'name': s.name,
+            'config': s.config_id.name or '',
+            'user': s.user_id.name or '',
+            'state': s.state,
+            'start_at': s.start_at and (s.start_at + timedelta(hours=3))
+            .strftime('%Y-%m-%d %H:%M') or '',
+            'stop_at': s.stop_at and (s.stop_at + timedelta(hours=3))
+            .strftime('%Y-%m-%d %H:%M') or '',
+            'orders': len(orders),
+            'items': items,
+            'total': _money(env, sales),
+            'cost': _money(env, cost),
+            'profit': _money(env, profit),
+            'margin_pct': round((profit / sales * 100), 1) if sales else 0,
+            'refunds': _money(env, refunds),
+            'cash_open': round(s.cash_register_balance_start or 0, 3)
+            if 'cash_register_balance_start' in s._fields else 0,
+            'cash_close': round(s.cash_register_balance_end_real or 0, 3)
+            if 'cash_register_balance_end_real' in s._fields else 0,
+        }
+        return ok({'available': True, 'session': session,
+                   'payments': payments,
+                   'cash_total': _money(env, cash_total),
+                   'cash_total_raw': cash_total,
+                   'knet_total': _money(env, knet_total),
+                   'knet_total_raw': knet_total,
+                   'products': products,
+                   'products_count': len(products)})
+
+    # ─── Purchase order PDF print ─────────────────────────────────────
+    @http.route('/api/mobile/v2/admin/purchase/<int:po_id>/print',
+                type='http', auth='public', methods=['GET', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_purchase_print(self, po_id, **kw):
+        env = request.env
+        po = env['purchase.order'].sudo().browse(po_id).exists()
+        if not po:
+            return fail('NOT_FOUND', 'Purchase order not found', 404)
+        ref = ('uellow_documents.uellow_purchaseorder'
+               if env.ref('uellow_documents.uellow_purchaseorder', raise_if_not_found=False)
+               else 'purchase.report_purchasequotation')
+        pdf, _ct = env['ir.actions.report'].sudo()._render_qweb_pdf(ref, [po.id])
+        fn = (po.name or ('PO-%s' % po.id)).replace('/', '-')
+        return request.make_response(pdf, headers=[
+            ('Content-Type', 'application/pdf'),
+            ('Content-Disposition', 'inline; filename="%s.pdf"' % fn)])
+
+    # ─── POS order 80mm thermal receipt (HTML, same as the POS receipt) ─
+    @http.route('/api/mobile/v2/admin/pos/order/<int:order_id>/receipt',
+                type='http', auth='public', methods=['GET', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_pos_order_receipt(self, order_id, **kw):
+        env = request.env
+        o = env['pos.order'].sudo().browse(order_id).exists()
+        if not o:
+            return fail('NOT_FOUND', 'POS order not found', 404)
+        from odoo.tools import html_escape as _e
+        cur = o.currency_id or env.company.currency_id
+        sym = cur.symbol or cur.name
+
+        def _m(a):
+            return '%s %s' % (('%.3f' % (a or 0)), sym)
+        shop = _e(o.config_id.name or (o.company_id.name if o.company_id else 'Uellow'))
+        when = (o.date_order + timedelta(hours=3)).strftime('%Y-%m-%d %H:%M') if o.date_order else ''
+        rows = ''
+        for l in o.lines:
+            rows += (
+                '<tr><td class="n">%s</td><td class="q">%sx</td>'
+                '<td class="p">%s</td></tr>'
+                '<tr><td colspan="2" class="u">%s</td><td class="p">%s</td></tr>' % (
+                    _e(l.product_id.name or ''), ('%g' % (l.qty or 0)),
+                    _e(_m(l.price_subtotal_incl or 0)),
+                    _e('@ ' + _m(l.price_unit or 0)),
+                    ''))
+        pays = ''
+        for p in o.payment_ids:
+            pays += '<tr><td class="n">%s</td><td class="p">%s</td></tr>' % (
+                _e(p.payment_method_id.name or ''), _e(_m(p.amount or 0)))
+        html = (
+            '<!doctype html><html><head><meta charset="utf-8">'
+            '<meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<meta name="robots" content="noindex"><title>Receipt %s</title>'
+            '<style>@page{size:80mm auto;margin:0}'
+            'body{width:80mm;margin:0 auto;padding:8px 10px;font-family:'
+            '\'Tajawal\',monospace,sans-serif;font-size:12px;color:#000}'
+            '.c{text-align:center}.b{font-weight:800}.big{font-size:16px}'
+            'hr{border:0;border-top:1px dashed #000;margin:6px 0}'
+            'table{width:100%%;border-collapse:collapse}'
+            'td.q{text-align:center;width:34px}td.p{text-align:right;white-space:nowrap}'
+            'td.u{color:#555;font-size:10px;padding-bottom:3px}'
+            'td.n{word-break:break-word}.tot{font-size:14px;font-weight:800}'
+            '.pay{font-weight:700}@media print{button{display:none}}'
+            'button{width:100%%;padding:10px;margin-top:10px;font-size:14px;'
+            'font-weight:800;border:0;background:#111;color:#fff;border-radius:8px}'
+            '</style></head><body>'
+            '<div class="c b big">%s</div>'
+            '<div class="c">%s</div><div class="c">%s</div>'
+            '<hr><table>%s</table><hr>'
+            '<table>'
+            '<tr><td class="n">\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a</td><td class="p tot">%s</td></tr>'
+            '<tr><td class="n">\u0627\u0644\u0636\u0631\u064a\u0628\u0629</td><td class="p">%s</td></tr>'
+            '</table><hr><div class="pay">\u0627\u0644\u062f\u0641\u0639:</div>'
+            '<table>%s</table><hr>'
+            '<div class="c">\u0634\u0643\u0631\u0627\u064b \u0644\u0632\u064a\u0627\u0631\u062a\u0643\u0645 \ud83d\udc1d</div>'
+            '<button onclick="window.print()">\u0637\u0628\u0627\u0639\u0629 \ud83d\udda8\ufe0f</button>'
+            '</body></html>') % (
+                _e(o.name or str(o.id)), shop, _e(o.name or ''), _e(when),
+                rows, _e(_m(o.amount_total or 0)), _e(_m(o.amount_tax or 0)), pays)
+        return request.make_response(html, headers=[
+            ('Content-Type', 'text/html; charset=utf-8'),
+            ('X-Robots-Tag', 'noindex')])
+
+    # ─── POS summary / analytics (date-range professional report) ─────
+    @http.route('/api/mobile/v2/admin/pos/summary', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_pos_summary(self, **kw):
+        env = request.env
+        if 'pos.order' not in env:
+            return ok({'available': False})
+        Po = env['pos.order'].sudo()
+        dom = [('state', 'in', ['paid', 'done', 'invoiced'])]
+        if kw.get('date_from'):
+            dom.append(('date_order', '>=', kw.get('date_from')))
+        if kw.get('date_to'):
+            dom.append(('date_order', '<=', kw.get('date_to') + ' 23:59:59'))
+        for _f in ('config_id', 'user_id', 'session_id'):
+            if kw.get(_f):
+                try:
+                    dom.append((_f, '=', int(kw.get(_f))))
+                except Exception:
+                    pass
+        orders = Po.search(dom)
+        sales = 0.0
+        cost = 0.0
+        items = 0
+        refunds = 0.0
+        prod = {}
+        byshop = {}
+        bycashier = {}
+        for o in orders:
+            sales += o.amount_total
+            if o.amount_total < 0:
+                refunds += o.amount_total
+            _sh = o.config_id.name or '-'
+            _ca = o.user_id.name or '-'
+            byshop[_sh] = byshop.get(_sh, 0) + o.amount_total
+            bycashier[_ca] = bycashier.get(_ca, 0) + o.amount_total
+            for l in o.lines:
+                pv = l.product_id
+                e = prod.setdefault(pv.id, {
+                    'id': pv.product_tmpl_id.id, 'name': pv.name or '',
+                    'qty': 0.0, 'total': 0.0})
+                e['qty'] += (l.qty or 0)
+                e['total'] += (l.price_subtotal_incl or 0)
+                items += abs(int(l.qty or 0))
+                cost += _pos_line_cost(l)
+        pm = {}
+        try:
+            pdom = [('pos_order_id', 'in', orders.ids)] if orders else [('id', '=', 0)]
+            for p in env['pos.payment'].sudo().search(pdom):
+                _k = p.payment_method_id.name or 'Other'
+                pm[_k] = pm.get(_k, 0) + p.amount
+        except Exception:
+            pass
+
+        def _like(subs):
+            return round(sum(v for k, v in pm.items()
+                             if any(n in (k or '').lower() for n in subs)), 3)
+        profit = round(sales - cost, 3)
+        top = sorted(prod.values(), key=lambda x: -x['total'])[:20]
+        return ok({
+            'available': True,
+            'orders': len(orders), 'items': items,
+            'sales': _money(env, sales), 'sales_raw': round(sales, 3),
+            'cost': _money(env, cost), 'profit': _money(env, profit),
+            'margin_pct': round((profit / sales * 100), 1) if sales else 0,
+            'refunds': _money(env, refunds),
+            'cash_total': _money(env, _like(['cash', 'نقد', 'كاش'])),
+            'knet_total': _money(env, _like(['card', 'knet', 'k-net', 'كي', 'بطاق', 'شبك'])),
+            'payments': [{'method': k, 'amount': _money(env, v),
+                          'amount_raw': round(v, 3)}
+                         for k, v in sorted(pm.items(), key=lambda x: -x[1])],
+            'top_products': [{'id': p['id'], 'name': p['name'],
+                              'qty': round(p['qty'], 2),
+                              'total': _money(env, p['total'])} for p in top],
+            'by_shop': [{'name': k, 'total': _money(env, v)}
+                        for k, v in sorted(byshop.items(), key=lambda x: -x[1])],
+            'by_cashier': [{'name': k, 'total': _money(env, v)}
+                           for k, v in sorted(bycashier.items(), key=lambda x: -x[1])],
+        })
 
     # ─── POS orders ───────────────────────────────────────────────────
     @http.route('/api/mobile/v2/admin/pos/orders', type='http',
@@ -762,6 +1040,14 @@ class UellowAdminAppController(http.Controller):
         page = max(1, int(kw.get('page', 1) or 1))
         per = min(40, max(5, int(kw.get('per_page', 20) or 20)))
         dom = [('sale_ok', '=', True)]
+        # Hide Uellow World (dropship/China) products from admin search unless
+        # the admin explicitly picks the China market (country=cn / world=1).
+        _ctry = (kw.get('country') or kw.get('market') or '').strip().lower()
+        _show_world = (_ctry in ('cn', 'china', 'الصين', 'صين', 'world')
+                       or str(kw.get('world') or '').lower() in ('1', 'true', 'yes')
+                       or str(kw.get('dropship') or '').lower() in ('1', 'true', 'yes'))
+        if not _show_world and 'is_dropship' in env['product.template']._fields:
+            dom.append(('is_dropship', '=', False))
         q = (kw.get('q') or '').strip()
         if q:
             dom += ['|', '|', ('name', 'ilike', q),

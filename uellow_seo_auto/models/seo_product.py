@@ -309,16 +309,35 @@ class SEOProduct(models.Model):
         if qty > 0:
             return 'https://schema.org/InStock'
         if cont:
-            return 'https://schema.org/PreOrder'
+            # Continue-selling products (dropship / always-available) are
+            # purchasable and shipped immediately -> InStock, not PreOrder
+            # (PreOrder read as "not yet released" and is less eligible/CTR).
+            return 'https://schema.org/InStock'
         return 'https://schema.org/OutOfStock'
 
+    @staticmethod
+    def _valid_gtin(code):
+        """Digits of a checksum-valid GTIN-8/12/13/14, else None."""
+        c = ''.join(ch for ch in str(code or '') if ch.isdigit())
+        if len(c) not in (8, 12, 13, 14):
+            return None
+        digits = [int(x) for x in c]
+        body, check = digits[:-1], digits[-1]
+        s = 0
+        for i, d in enumerate(reversed(body)):
+            s += d * (3 if i % 2 == 0 else 1)
+        return c if (10 - (s % 10)) % 10 == check else None
+
     def _build_product_jsonld(self, product, prod_en):
-        """Construct a Product JSON-LD object eligible for Google Rich Results."""
+        """Construct a COMPLETE Product JSON-LD (Rich Results + Merchant
+        listings): image, brand, validated gtin, offers with shipping +
+        return policy + validity. Single source of truth (desktop + mobile)."""
         base = (self.env['ir.config_parameter'].sudo()
                 .get_param('web.base.url') or '').rstrip('/')
-        img_url = ''
-        if product.image_1920:
-            img_url = f"{base}/web/image/product.template/{product.id}/image_1920"
+        # ALWAYS a valid image URL — Odoo serves a placeholder for empty
+        # image fields, so /web/image is always a 200 image (fixes the
+        # critical "Missing field image").
+        img_url = f"{base}/web/image/product.template/{product.id}/image_1920"
         sku = product.default_code or ''
         brand_name = ''
         # Discover brand if the catalog has one (theme_prime uses dr_brand_value_id)
@@ -334,18 +353,41 @@ class SEOProduct(models.Model):
             'description': (prod_en.description_sale or prod_en.name or '').strip()[:5000],
             'url':   f"{base}{product.website_url}" if getattr(product, 'website_url', None) else '',
             'sku':   sku,
-            'image': img_url,
+            'image': [img_url],
             'offers': {
                 '@type':       'Offer',
                 'price':       f"{float(product.list_price or 0):.3f}",
                 'priceCurrency': (self.env.company.currency_id.name or 'KWD'),
                 'availability': self._availability_url(product),
+                'itemCondition': 'https://schema.org/NewCondition',
                 'priceValidUntil': valid_until,
+                'validFrom': date.today().isoformat(),
                 'url': f"{base}{product.website_url}" if getattr(product, 'website_url', None) else '',
+                'seller': {'@type': 'Organization', 'name': (self.env.company.name or 'Uellow')},
+                'shippingDetails': {
+                    '@type': 'OfferShippingDetails',
+                    'shippingRate': {'@type': 'MonetaryAmount',
+                        'value': '%.3f' % float(self.env['ir.config_parameter'].sudo().get_param('uellow_seo.jsonld_ship_rate', '0') or 0),
+                        'currency': (self.env.company.currency_id.name or 'KWD')},
+                    'shippingDestination': {'@type': 'DefinedRegion', 'addressCountry': 'KW'},
+                    'deliveryTime': {'@type': 'ShippingDeliveryTime',
+                        'handlingTime': {'@type': 'QuantitativeValue', 'minValue': 0, 'maxValue': 1, 'unitCode': 'DAY'},
+                        'transitTime': {'@type': 'QuantitativeValue', 'minValue': 1, 'maxValue': 3, 'unitCode': 'DAY'}}},
+                'hasMerchantReturnPolicy': {
+                    '@type': 'MerchantReturnPolicy', 'applicableCountry': 'KW',
+                    'returnPolicyCategory': 'https://schema.org/MerchantReturnFiniteReturnWindow',
+                    'merchantReturnDays': 14,
+                    'returnMethod': 'https://schema.org/ReturnByMail',
+                    'returnFees': 'https://schema.org/FreeReturn'},
             },
         }
         if brand_name:
             schema['brand'] = {'@type': 'Brand', 'name': brand_name}
+        if sku:
+            schema['mpn'] = sku
+        _g = self._valid_gtin(getattr(product, 'barcode', ''))
+        if _g:
+            schema['gtin%d' % len(_g)] = _g
         # Aggregate rating, if the reviews module is installed.
         rc = getattr(product, 'pr_total', 0) or 0
         if rc:

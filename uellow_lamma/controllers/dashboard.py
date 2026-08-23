@@ -90,7 +90,7 @@ def _recent(recent):
 def _period(active):
     out = ''
     for n in (7, 30, 90):
-        out += ('<a class="pb%s" href="/lamma/dashboard?days=%d">%d يوم</a>'
+        out += ('<a class="pb%s" href="/lamma/dashboard?days=%d&embed=1">%d يوم</a>'
                 % (' on' if n == active else '', n, n))
     return out
 
@@ -119,7 +119,7 @@ def render_dashboard(d):
         '<div class="wrap">'
         '<div class="hd"><div><h1>🧺 لوحة تحكّم لمّة يلو</h1>'
         '<p>ملخّص آخر %d يوم — تحديث لحظي</p></div>'
-        '<div class="hd-actions">%s<a class="ref" href="/lamma/dashboard?days=%d">↻ تحديث</a></div></div>'
+        '<div class="hd-actions">%s<a class="ref" href="/lamma/dashboard?days=%d&embed=1">↻ تحديث</a></div></div>'
         '<div class="kpis">%s</div>'
         '<div class="grid2">'
         '<div class="card"><h3>النشاط اليومي (14 يوم)</h3>%s</div>'
@@ -219,6 +219,22 @@ class LammaDashboardController(http.Controller):
 
     @http.route('/lamma/dashboard', type='http', auth='user')
     def dashboard(self, days=30, **kw):
+        # Keep the Odoo top navbar: a TOP-LEVEL direct hit is bounced into the
+        # backend action; a hit that is already inside a frame (the embed iframe,
+        # even if an old cached asset dropped the embed flag) just renders with
+        # embed=1 — so there is never a redirect loop / flashing navbar.
+        if not kw.get('embed'):
+            _d = int(days) if str(days).isdigit() else 30
+            html = (
+                '<!DOCTYPE html><meta charset="utf-8">'
+                '<body style="margin:0;background:#f6f3ec"><script>'
+                'if(window.top===window.self){'
+                'location.replace("/odoo/action-uellow_lamma.action_lamma_dashboard_ui");'
+                '}else{location.replace("/lamma/dashboard?embed=1&days=' + str(_d) + '");}'
+                '</script></body>')
+            return request.make_response(html, headers=[
+                ('Content-Type', 'text/html; charset=utf-8'),
+                ('Cache-Control', 'no-store')])
         data = request.env['uellow.lamma.activity'].sudo().dashboard_data(days)
         body = render_dashboard(data)
         return request.make_response(body, headers=[('Content-Type', 'text/html; charset=utf-8')])

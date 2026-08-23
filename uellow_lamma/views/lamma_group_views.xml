@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_lamma_group_list" model="ir.ui.view">
+        <field name="name">uellow.lamma.group.list</field>
+        <field name="model">uellow.lamma.group</field>
+        <field name="arch" type="xml">
+            <list string="اللمّات الجماعية" create="false">
+                <field name="code"/>
+                <field name="name"/>
+                <field name="host_partner_id"/>
+                <field name="lamma_type"/>
+                <field name="member_count" string="أعضاء"/>
+                <field name="item_count" string="منتجات"/>
+                <field name="saved_total" string="التوفير"/>
+                <field name="state" widget="badge"
+                       decoration-success="state=='done'" decoration-info="state=='open'"
+                       decoration-warning="state=='locked'" decoration-muted="state=='expired'"/>
+                <field name="expiry"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_lamma_group_form" model="ir.ui.view">
+        <field name="name">uellow.lamma.group.form</field>
+        <field name="model">uellow.lamma.group</field>
+        <field name="arch" type="xml">
+            <form string="لمّة جماعية" create="false">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="code" readonly="1"/></h1>
+                        <field name="name" readonly="1"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="host_partner_id" readonly="1"/>
+                            <field name="lamma_type" readonly="1"/>
+                            <field name="state"/>
+                        </group>
+                        <group>
+                            <field name="member_count" string="عدد الأعضاء"/>
+                            <field name="item_count" string="عدد المنتجات"/>
+                            <field name="saved_total" string="إجمالي التوفير"/>
+                            <field name="expiry"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="الأعضاء">
+                            <field name="member_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="is_host"/>
+                                    <field name="paid"/>
+                                    <field name="paid_amount"/>
+                                    <field name="sale_order_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="المنتجات">
+                            <field name="line_ids" readonly="1">
+                                <list>
+                                    <field name="member_id"/>
+                                    <field name="product_tmpl_id"/>
+                                    <field name="product_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_lamma_group" model="ir.actions.act_window">
+        <field name="name">اللمّات الجماعية</field>
+        <field name="res_model">uellow.lamma.group</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_lamma_group" name="🧺 اللمّات الجماعية" parent="menu_lamma_root"
+              action="action_lamma_group" sequence="30"/>
+</odoo>

@@ -59,6 +59,23 @@ def serialize_product_card(product, lang='en_US'):
                 discount = int(round(_d))
         except Exception:
             pass
+    # Localize card price to the website pricelist currency for country WEB
+    # subdomains (ae->AED, sa->SAR ...). Skip mobile-app subdomains so the app
+    # is untouched. Convert the FINAL (promo-applied) price to preserve promos.
+    try:
+        _host = (request.httprequest.host or '').split(':')[0].split('.')[0].lower()
+        _is_app = _host in ('app', 'world') or _host.endswith('app')
+        _gw = get_website()
+        _pl = _gw.pricelist_id if _gw else None
+        if _pl and _pl.currency_id and not _is_app and _pl.currency_id.id != cur.id:
+            from odoo import fields as _flds
+            _co = request.env.company; _dt = _flds.Date.today()
+            list_price = round(float(cur._convert(list_price, _pl.currency_id, _co, _dt)), 3)
+            if compare:
+                compare = round(float(cur._convert(compare, _pl.currency_id, _co, _dt)), 3)
+            cur = _pl.currency_id
+    except Exception:
+        pass
     rating_avg = float(getattr(product, 'rating_avg', 0) or 0)
     rating_count = int(getattr(product, 'rating_count', 0) or 0)
     allow_oos = bool(getattr(product, 'allow_out_of_stock_order', True))
@@ -694,6 +711,148 @@ def _serialize_product_videos(product):
     return out
 
 
+import re as _re_srch
+_AR_DIAC_RE = _re_srch.compile('[\u064B-\u0652\u0670\u0640]')
+
+
+def _norm_light(s):
+    s = (s or '').strip().lower()
+    return _re_srch.sub(r'\s+', ' ', _AR_DIAC_RE.sub('', s))
+
+
+def _norm_full(s):
+    s = _norm_light(s)
+    for a, b in (('أ', 'ا'), ('إ', 'ا'), ('آ', 'ا'),
+                 ('ة', 'ه'), ('ى', 'ي'), ('ؤ', 'و'),
+                 ('ئ', 'ي')):
+        s = s.replace(a, b)
+    return s
+
+
+# Synonym groups — bridge Arabic ⇄ dialect ⇄ English so a search for one
+# term also finds catalog items named with a sibling term. Expanded ONLY via
+# the normalized index (x_search_norm), so precision on raw fields is preserved
+# and recall only ever grows. Pure-synonym hits rank below exact-term hits
+# (see _rank_by_relevance). Members are normalized at load with _norm_full.
+_SYN_GROUPS = [
+    ['جوال', 'موبايل', 'هاتف', 'تلفون', 'تليفون', 'phone', 'mobile', 'smartphone'],
+    ['سماعة', 'سماعات', 'ايربودز', 'ايربود', 'هيدفون', 'هدفون',
+     'headphone', 'earphone', 'earbuds', 'earbud', 'airpods', 'headset'],
+    ['شاحن', 'شاحنة', 'تشارجر', 'ادابتر', 'charger', 'adapter'],
+    ['كيبل', 'كابل', 'وصلة', 'cable', 'cord', 'wire'],
+    ['باوربانك', 'باور بانك', 'بطارية متنقلة', 'powerbank', 'power bank'],
+    ['ساعة', 'ساعات', 'سمارت واتش', 'smartwatch', 'watch'],
+    ['لابتوب', 'حاسوب', 'كمبيوتر', 'حاسب', 'laptop', 'notebook'],
+    ['مكبر صوت', 'سبيكر', 'سماعة بلوتوث', 'speaker'],
+    ['كفر', 'جراب', 'غطاء', 'حافظة', 'كاور', 'case', 'cover'],
+    ['ماوس', 'فارة', 'mouse'],
+    ['كيبورد', 'لوحة مفاتيح', 'keyboard'],
+    ['ميموري', 'ذاكرة', 'فلاشة', 'فلاش ميموري', 'memory', 'flash', 'sdcard'],
+    ['حماية شاشة', 'واقي شاشة', 'جلاس', 'screen protector', 'glass'],
+    ['شاشة', 'تلفزيون', 'تلفاز', 'screen', 'tv', 'television', 'display'],
+    ['مروحة', 'مكيف', 'fan', 'cooler'],
+]
+_SYN_MAP = {}
+for _grp in _SYN_GROUPS:
+    _ng = sorted({_norm_full(w) for w in _grp if w})
+    for _w in _ng:
+        _SYN_MAP.setdefault(_w, set()).update(_ng)
+
+
+def _syn_expand(tok):
+    """Other normalized synonyms of tok (its own normal form is already a leaf);
+    empty when the word has no synonym group."""
+    base = _norm_full(tok)
+    grp = _SYN_MAP.get(base)
+    if not grp:
+        return []
+    return [w for w in grp if w != base]
+
+
+def _word_in(syn, text):
+    """Whole-word presence for Latin synonyms (so 'phone' does NOT match inside
+    'headphone'), plain substring for Arabic/multiword (Arabic glues prefixes
+    like ال/و so a boundary match would miss «السماعه»)."""
+    if syn and syn.isascii():
+        return _re_srch.search(r'(?<![a-z0-9])' + _re_srch.escape(syn) +
+                               r'(?![a-z0-9])', text) is not None
+    return syn in text
+
+
+def _rank_by_relevance(recs, tokens, nq):
+    ntoks = [t for t in (_norm_full(x) for x in tokens) if t]
+    tok_syns = []
+    for t in ntoks:
+        grp = _SYN_MAP.get(t)
+        tok_syns.append(sorted(grp) if grp else [t])
+    scored = []
+    for r in recs:
+        nm = _norm_full(r.name or '')
+        try:
+            brand = _norm_full(r.brand_id.name or '') if getattr(r, 'brand_id', False) else ''
+        except Exception:
+            brand = ''
+        try:
+            xn = r.x_search_norm or nm
+        except Exception:
+            xn = nm
+        sc = 0.0
+        if nq and nm.startswith(nq):
+            sc += 90
+        elif nq and nq in nm:
+            sc += 75
+        if ntoks and all(t in nm for t in ntoks):
+            sc += 60
+        elif ntoks and all((t in nm or t in brand) for t in ntoks):
+            sc += 45
+        # Synonym-aware coverage over the normalized index. A whole-word hit
+        # (real «Phone») scores full; a substring-only hit («iPhone»,
+        # «Headphone») scores partial — so exact/near matches float to the top
+        # while synonym-only matches still appear, just lower.
+        if ntoks:
+            cov = 0.0
+            for syns in tok_syns:
+                best = 0.0
+                for sv in syns:
+                    if _word_in(sv, xn):
+                        best = 1.0
+                        break
+                    if sv in xn:
+                        best = max(best, 0.35)
+                cov += best
+            sc += 40.0 * (cov / len(ntoks))
+        scored.append((sc, r.id))
+    scored.sort(key=lambda x: (-x[0], -x[1]))
+    return recs.browse([i for _sc, i in scored])
+
+
+def _fuzzy_search(env, base_dom, nq, limit=120):
+    """pg_trgm similarity fallback — typo tolerance, ordered by closeness."""
+    if not nq:
+        return env['product.template'].sudo().browse()
+    try:
+        # word_similarity (<%) matches the query against the CLOSEST WORD in
+        # the (long) index string, not the whole string — the right metric
+        # for a short typo'd query vs a multi-word product name.
+        env.cr.execute("SET LOCAL pg_trgm.word_similarity_threshold = 0.4")
+        env.cr.execute(
+            "SELECT id FROM product_template WHERE %s <%% x_search_norm "
+            "ORDER BY word_similarity(%s, x_search_norm) DESC LIMIT %s",
+            (nq, nq, limit))
+        ids = [r[0] for r in env.cr.fetchall()]
+    except Exception:
+        try:
+            env.cr.rollback()
+        except Exception:
+            pass
+        ids = []
+    if not ids:
+        return env['product.template'].sudo().browse()
+    valid = set(env['product.template'].sudo().search(
+        [('id', 'in', ids)] + base_dom).ids)
+    return env['product.template'].sudo().browse([i for i in ids if i in valid])
+
+
 def _domain_published_for_app(include_oos=False):
     """Use this on every public-facing query — keeps unpublished /
     archived items out of the app and only shows what's available
@@ -748,16 +907,37 @@ class MobileProductsAPI(http.Controller):
             except Exception:
                 pass
 
-        # Search query — search across name + description
+        # Search query — tokenized, expanded-scope, relevance-ranked (Phase 1)
         search = (p.get('search') or p.get('q') or '').strip()
+        _search_tokens = []
+        _or_fallback = None
         if search:
-            sors = [('name', 'ilike', search),
-                    ('description_sale', 'ilike', search)]
-            # v2.2.16 — digit-only query also matches ID / exact barcode.
+            _tf = request.env['product.template']._fields
             if search.isdigit():
-                sors = [('id', '=', int(search)),
-                        ('barcode', '=', search)] + sors
-            domain += ['|'] * (len(sors) - 1) + sors
+                sors = [('id', '=', int(search)), ('barcode', 'ilike', search),
+                        ('default_code', 'ilike', search), ('name', 'ilike', search)]
+                domain += ['|'] * (len(sors) - 1) + sors
+            else:
+                _search_tokens = [t for t in _norm_light(search).split(' ')
+                                  if len(t) >= 2] or [_norm_light(search)]
+                _base_dom = list(domain)
+                _or_leaves = []
+                for _tok in _search_tokens:
+                    _lv = [('x_search_norm', 'ilike', _norm_full(_tok)),
+                           ('name', 'ilike', _tok),
+                           ('description_sale', 'ilike', _tok),
+                           ('default_code', 'ilike', _tok),
+                           ('public_categ_ids.name', 'ilike', _tok)]
+                    for _sy in _syn_expand(_tok):
+                        _lv.append(('x_search_norm', 'ilike', _sy))
+                    if 'brand_id' in _tf:
+                        _lv.append(('brand_id.name', 'ilike', _tok))
+                    if 'product_tag_ids' in _tf:
+                        _lv.append(('product_tag_ids.name', 'ilike', _tok))
+                    domain += ['|'] * (len(_lv) - 1) + _lv
+                    _or_leaves += _lv
+                if len(_or_leaves) > 1:
+                    _or_fallback = _base_dom + ['|'] * (len(_or_leaves) - 1) + _or_leaves
 
         # Brand filter — this DB links brands via the product.brand m2o
         # (product.template.brand_id); older installs used a "Brand"
@@ -942,7 +1122,10 @@ class MobileProductsAPI(http.Controller):
         except Exception:
             _min_disc_q = 0
         _brain_rerank = bool(brain_on and (req_sort or p.get('sort')) == 'best_match')
-        _full_scan = (p.get('sort') == 'popular') or (_min_disc_q > 0) or _brain_rerank
+        _search_rerank = bool(_search_tokens) and (
+            p.get('sort') in (None, '', 'newest', 'best_match', 'relevance'))
+        _full_scan = ((p.get('sort') == 'popular') or (_min_disc_q > 0)
+                      or _brain_rerank or _search_rerank)
 
         Tmpl = request.env['product.template'].sudo()
         if not _full_scan:
@@ -966,6 +1149,14 @@ class MobileProductsAPI(http.Controller):
 
         if p.get('sort') == 'popular':
             all_recs = Tmpl.browse(_top_selling_ids(domain, limit=1000))
+        elif _search_tokens:
+            all_recs = Tmpl.search(domain, order=order, limit=600)
+            if not all_recs and _or_fallback:
+                all_recs = Tmpl.search(_or_fallback, order=order, limit=300)
+            if all_recs:
+                all_recs = _rank_by_relevance(all_recs, _search_tokens, _norm_full(search))
+            else:
+                all_recs = _fuzzy_search(request.env, _base_dom, _norm_full(search))
         else:
             all_recs = Tmpl.search(domain, order=order)
         # v2.2.25 — Brain Phase 2: personalized re-rank for Best Match.
@@ -1015,7 +1206,71 @@ class MobileProductsAPI(http.Controller):
             per_page=p.get('per_page', 20),
             serializer=lambda r: serialize_product_card(r, lang),
         )
+        # Analytics — fire-and-forget record of the search (esp. zero-result
+        # queries → a merchandising to-do list). Never blocks the response.
+        if search and not search.isdigit():
+            try:
+                _sp = current_partner()
+            except Exception:
+                _sp = None
+            try:
+                request.env['uellow.search.log'].sudo().log_search(
+                    search, _norm_full(search), (meta or {}).get('total') or 0,
+                    source=(request.httprequest.headers.get('X-Client') or 'app'),
+                    partner_id=(_sp.id if _sp else False),
+                    session=(request.session.sid if request.session else ''))
+            except Exception:
+                pass
         return ok(items, meta)
+
+    # ─── Autocomplete / as-you-type suggestions ──────────────────────
+    @http.route('/api/mobile/v2/products/suggest', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    def products_suggest(self, **kw):
+        """As-you-type autocomplete: closest products + categories.
+        Normalized + synonym-aware, with a pg_trgm fuzzy top-up for typos so
+        even a misspelling yields tappable suggestions."""
+        p = get_payload()
+        lang = get_lang()
+        q = (p.get('q') or p.get('search') or '').strip()
+        if len(q) < 2:
+            return ok({'products': [], 'categories': []}, {})
+        try:
+            _lim = min(12, max(1, int(p.get('limit', 8))))
+        except Exception:
+            _lim = 8
+        Tmpl = request.env['product.template'].sudo()
+        nq = _norm_full(q)
+        toks = [t for t in _norm_light(q).split(' ') if len(t) >= 2] or [_norm_light(q)]
+        base = _domain_published_for_app(include_oos=True)
+        dom = list(base)
+        for _tok in toks:
+            leaves = [('x_search_norm', 'ilike', _norm_full(_tok)),
+                      ('name', 'ilike', _tok)]
+            for _sy in _syn_expand(_tok):
+                leaves.append(('x_search_norm', 'ilike', _sy))
+            dom += ['|'] * (len(leaves) - 1) + leaves
+        recs = Tmpl.search(dom, limit=60)
+        if recs:
+            recs = _rank_by_relevance(recs, toks, nq)[:_lim]
+        else:
+            recs = _fuzzy_search(request.env, base, nq, limit=_lim)[:_lim]
+        products = [{
+            'id': r.id,
+            'name': r.name or '',
+            'image': img_url('product.template', r.id, 'image_128',
+                             unique=r.write_date),
+            'price': r.list_price,
+        } for r in recs]
+        cats = []
+        try:
+            Cat = request.env['product.public.category'].sudo()
+            for c in Cat.search([('name', 'ilike', q)], limit=4):
+                cats.append({'id': c.id, 'name': c.display_name})
+        except Exception:
+            cats = []
+        return ok({'products': products, 'categories': cats}, {})
 
     # ─── Brand info (header + product list) ───────────────────────────
     @http.route('/api/mobile/v2/products/brand/<int:value_id>', type='http',

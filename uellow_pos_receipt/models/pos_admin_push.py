@@ -60,12 +60,40 @@ class PosOrderAdminPush(models.Model):
             except Exception:
                 _logger.debug('admin pos order push failed', exc_info=True)
 
+    def _customer_push_sale(self):
+        """Push a friendly 'thank you for your purchase' to the CUSTOMER's app
+        the moment their POS sale is paid (reuses the order-update gate)."""
+        eng = _engine(self.env)
+        if eng is None:
+            return
+        for o in self:
+            partner = o.partner_id
+            if not partner:
+                continue
+            try:
+                amt = _fmt_amt(o.amount_total,
+                               o.currency_id or self.env.company.currency_id)
+                items = int(sum(l.qty for l in o.lines))
+                ref = o.pos_reference or o.name or ''
+                eng.push_event(
+                    partner,
+                    'order_confirmed',
+                    '\U0001F41D Thank you for your purchase!',
+                    '\U0001F41D شكراً لتسوّقك في يلو!',
+                    'Your purchase of %s is complete — see you again!' % amt,
+                    'تمّت عملية شرائك بمبلغ %s. شكراً لك، بانتظار عودتك! \U0001F9E1' % amt,
+                    {'type': 'pos_purchase', 'id': str(o.id), 'order': ref,
+                     'amount': o.amount_total, 'items': items})
+            except Exception:
+                _logger.debug('pos customer push failed', exc_info=True)
+
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
         try:
-            records.filtered(
-                lambda o: o.state in _PAID_STATES)._admin_push_sale()
+            _paid = records.filtered(lambda o: o.state in _PAID_STATES)
+            _paid._admin_push_sale()
+            _paid._customer_push_sale()
         except Exception:
             _logger.debug('pos create admin push failed', exc_info=True)
         return records
@@ -77,9 +105,11 @@ class PosOrderAdminPush(models.Model):
         res = super().write(vals)
         if prev:
             try:
-                self.filtered(
+                _paid = self.filtered(
                     lambda o: prev.get(o.id) not in _PAID_STATES
-                    and o.state in _PAID_STATES)._admin_push_sale()
+                    and o.state in _PAID_STATES)
+                _paid._admin_push_sale()
+                _paid._customer_push_sale()
             except Exception:
                 _logger.debug('pos write admin push failed', exc_info=True)
         return res

@@ -425,6 +425,7 @@ class UellowCheckout(_WSBase):
             'selected_cid':    sel_cid,
             'carriers':        carriers,
             'saved_addresses': [],
+            'err':             request.params.get('e') or '',
         })
 
     # ── Save address ─────────────────────────────────────────────────────────
@@ -445,6 +446,14 @@ class UellowCheckout(_WSBase):
         lng        = (post.get('map_lng')    or '').strip()
         full_addr  = (post.get('full_address') or '').strip()
         notes      = (post.get('order_notes')  or '').strip()
+        # HARD server-side guard — never accept an order without a real
+        # phone + address (client 'required' is bypassable via direct POST
+        # / app / BNPL). Prevents phoneless, undeliverable confirmed orders.
+        import re as _re
+        if len(_re.sub(r'\D', '', phone)) < 7:
+            return request.redirect('/shop/checkout/address?e=phone')
+        if not (street or full_addr):
+            return request.redirect('/shop/checkout/address?e=addr')
         penv  = request.env['res.partner'].sudo()
         pvals = {'name': name or 'Customer', 'phone': phone, 'customer_rank': 1,
                  'street': street, 'city': city}

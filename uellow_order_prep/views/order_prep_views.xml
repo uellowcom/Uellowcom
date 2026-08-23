@@ -29,6 +29,8 @@
                         string="🧾 Invoice / الفاتورة" invisible="state == 'draft'"/>
                 <button name="action_prep_print_label" type="object"
                         string="🏷️ Label / الليبل" invisible="state == 'draft'"/>
+                <button name="action_prep_print_receipt" type="object"
+                        string="🧾 Receipt / إيصال" invisible="state == 'draft'"/>
                 <button name="action_prep_print_warranty" type="object"
                         string="🛡️ Warranty / الضمان" invisible="state == 'draft'"/>
                 <!-- Preparation status bar -->

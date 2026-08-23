@@ -460,6 +460,12 @@
                                 <span t-out="website._uc_t('All Categories')"/>
                                 <i class="fa fa-angle-down ms-1"/>
                             </button>
+                            <!-- perf: the category mega-menu is identical across every page; cache the -->
+                            <!-- rendered fragment (40 category panels + brand queries + ~199 imgs) and -->
+                            <!-- invalidate it automatically when any category changes. already-cached -->
+                            <t t-set="_uc_menu_ver" t-value="request.env['product.public.category'].sudo().search([], order='write_date desc', limit=1).write_date"/>
+                            <t t-set="_uc_menu_lang" t-value="request.env.context.get('lang') or 'en'"/>
+                            <t t-cache="website.id, _uc_menu_lang, _uc_menu_ver">
                             <t t-set="uc_parents" t-value="request.env['product.public.category'].sudo().search([('parent_id','=',False),('website_id','in',[False,website.id])], order='sequence, name', limit=40)"/>
                             <!--
                                 The mega menu is split into TWO SIBLING columns so
@@ -487,87 +493,13 @@
                                 <div class="uc-catmega-panels">
                                     <div t-foreach="uc_parents" t-as="_cat"
                                          t-attf-class="uc-catmega-panel #{_cat_index == 0 and 'is-active' or ''}"
-                                         t-att-data-cat="_cat.id">
-                                        <!-- Brands and image override are resolved per-category. -->
-                                        <t t-set="_cat_brands"  t-value="website._uc_category_brands(_cat, limit=8)"/>
-                                        <t t-set="_mega_image"  t-value="_cat.uc_mega_image and ('/web/image/product.public.category/%s/uc_mega_image' % _cat.id) or (_cat.image_1024 and ('/web/image/product.public.category/%s/image_1024' % _cat.id))"/>
-                                        <t t-set="_mega_link"   t-value="_cat.uc_mega_link or ('/shop/category/%s' % _cat.id)"/>
-                                        <t t-set="_mega_eyebrow" t-value="_cat.uc_mega_eyebrow or website._uc_t('Featured')"/>
-                                        <t t-set="_mega_tagline" t-value="_cat.uc_mega_tagline"/>
-
-                                        <div class="uc-catmega-body">
-                                            <div class="uc-catmega-section">
-                                                <div class="uc-catmega-section-head">
-                                                    <span class="uc-catmega-section-title">
-                                                        <i class="fa fa-th"/>
-                                                        <t t-out="website._uc_t('Shop')"/>
-                                                        <strong t-out="_cat.name"/>
-                                                    </span>
-                                                    <a t-attf-href="/shop/category/#{_cat.id}" class="uc-catmega-viewall">
-                                                        <t t-out="website._uc_t('View all')"/>
-                                                        <i class="fa fa-arrow-right"/>
-                                                    </a>
-                                                </div>
-                                                <div class="uc-catmega-grid" t-if="_cat.child_id">
-                                                    <a t-foreach="_cat.child_id[:12]" t-as="_sub"
-                                                       t-attf-href="/shop/category/#{_sub.id}"
-                                                       class="uc-catmega-sub"
-                                                       t-attf-style="animation-delay:#{_sub_index * 30}ms">
-                                                        <img t-if="_sub.image_128" loading="lazy"
-                                                             t-attf-src="/web/image/product.public.category/#{_sub.id}/image_128"
-                                                             class="uc-catmega-sub-img"/>
-                                                        <span t-else="" class="uc-catmega-sub-img uc-catmega-sub-img-empty">
-                                                            <i class="fa fa-tag"/>
-                                                        </span>
-                                                        <span class="uc-catmega-sub-name" t-out="_sub.name"/>
-                                                    </a>
-                                                </div>
-                                                <div class="uc-catmega-empty" t-else="">
-                                                    <i class="fa fa-th-large"/>
-                                                    <span t-out="website._uc_t('Browse the full collection')"/>
-                                                </div>
-                                            </div>
-
-                                            <div class="uc-catmega-brands" t-if="_cat_brands">
-                                                <div class="uc-catmega-section-head">
-                                                    <span class="uc-catmega-section-title">
-                                                        <i class="fa fa-bookmark"/>
-                                                        <t t-out="website._uc_t('Top brands')"/>
-                                                    </span>
-                                                </div>
-                                                <div class="uc-catmega-brand-strip">
-                                                    <a t-foreach="_cat_brands" t-as="_brand"
-                                                       t-attf-href="/shop?attribute_value=#{_brand.id}"
-                                                       class="uc-catmega-brand">
-                                                        <img t-if="_brand.dr_image" loading="lazy"
-                                                             t-attf-src="/web/image/product.attribute.value/#{_brand.id}/dr_image"
-                                                             t-att-alt="_brand.name"/>
-                                                        <span t-else="" t-out="_brand.name"/>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <a t-att-href="_mega_link"
-                                           class="uc-catmega-feature"
-                                           t-attf-style="#{_mega_image and 'background-image:linear-gradient(135deg, rgba(19,25,33,.88), rgba(245,195,32,.55)),url(' + _mega_image + ');' or ''}">
-                                            <span class="uc-catmega-feature-eyebrow" t-out="_mega_eyebrow"/>
-                                            <strong class="uc-catmega-feature-title" t-out="_cat.name"/>
-                                            <span class="uc-catmega-feature-text">
-                                                <t t-if="_mega_tagline" t-out="_mega_tagline"/>
-                                                <t t-else="">
-                                                    <t t-out="website._uc_t('Discover handpicked deals on')"/>
-                                                    <t t-out="_cat.name"/>.
-                                                </t>
-                                            </span>
-                                            <span class="uc-catmega-feature-cta">
-                                                <t t-out="website._uc_t('Shop now')"/>
-                                                <i class="fa fa-arrow-right"/>
-                                            </span>
-                                        </a>
+                                         t-att-data-cat="_cat.id"
+                                         t-att-data-lazy="_cat_index != 0 and '1' or None">
+                                        <t t-if="_cat_index == 0" t-call="uellow_theme.uc_catmega_panel"/>
                                     </div>
                                 </div>
                             </div>
+                            </t>
                         </div>
 
                         <!-- Inline horizontal menu — every top-level item shows
@@ -721,6 +653,87 @@
             </div>
 
         </xpath>
+    </template>
+
+    <!-- one category mega-panel (lazy-loaded on hover via /uc/megapanel) -->
+    <template id="uc_catmega_panel">
+                                        <!-- Brands and image override are resolved per-category. -->
+                                        <t t-set="_cat_brands"  t-value="website._uc_category_brands(_cat, limit=8)"/>
+                                        <t t-set="_mega_image"  t-value="_cat.uc_mega_image and ('/web/image/product.public.category/%s/uc_mega_image' % _cat.id) or (_cat.image_1024 and ('/web/image/product.public.category/%s/image_1024' % _cat.id))"/>
+                                        <t t-set="_mega_link"   t-value="_cat.uc_mega_link or ('/shop/category/%s' % _cat.id)"/>
+                                        <t t-set="_mega_eyebrow" t-value="_cat.uc_mega_eyebrow or website._uc_t('Featured')"/>
+                                        <t t-set="_mega_tagline" t-value="_cat.uc_mega_tagline"/>
+
+                                        <div class="uc-catmega-body">
+                                            <div class="uc-catmega-section">
+                                                <div class="uc-catmega-section-head">
+                                                    <span class="uc-catmega-section-title">
+                                                        <i class="fa fa-th"/>
+                                                        <t t-out="website._uc_t('Shop')"/>
+                                                        <strong t-out="_cat.name"/>
+                                                    </span>
+                                                    <a t-attf-href="/shop/category/#{_cat.id}" class="uc-catmega-viewall">
+                                                        <t t-out="website._uc_t('View all')"/>
+                                                        <i class="fa fa-arrow-right"/>
+                                                    </a>
+                                                </div>
+                                                <div class="uc-catmega-grid" t-if="_cat.child_id">
+                                                    <a t-foreach="_cat.child_id[:12]" t-as="_sub"
+                                                       t-attf-href="/shop/category/#{_sub.id}"
+                                                       class="uc-catmega-sub"
+                                                       t-attf-style="animation-delay:#{_sub_index * 30}ms">
+                                                        <img t-if="_sub.image_128" loading="lazy"
+                                                             t-attf-src="/web/image/product.public.category/#{_sub.id}/image_128"
+                                                             class="uc-catmega-sub-img"/>
+                                                        <span t-else="" class="uc-catmega-sub-img uc-catmega-sub-img-empty">
+                                                            <i class="fa fa-tag"/>
+                                                        </span>
+                                                        <span class="uc-catmega-sub-name" t-out="_sub.name"/>
+                                                    </a>
+                                                </div>
+                                                <div class="uc-catmega-empty" t-else="">
+                                                    <i class="fa fa-th-large"/>
+                                                    <span t-out="website._uc_t('Browse the full collection')"/>
+                                                </div>
+                                            </div>
+
+                                            <div class="uc-catmega-brands" t-if="_cat_brands">
+                                                <div class="uc-catmega-section-head">
+                                                    <span class="uc-catmega-section-title">
+                                                        <i class="fa fa-bookmark"/>
+                                                        <t t-out="website._uc_t('Top brands')"/>
+                                                    </span>
+                                                </div>
+                                                <div class="uc-catmega-brand-strip">
+                                                    <a t-foreach="_cat_brands" t-as="_brand"
+                                                       t-attf-href="/shop?attribute_value=#{_brand.id}"
+                                                       class="uc-catmega-brand">
+                                                        <img t-if="_brand.dr_image" loading="lazy"
+                                                             t-attf-src="/web/image/product.attribute.value/#{_brand.id}/dr_image"
+                                                             t-att-alt="_brand.name"/>
+                                                        <span t-else="" t-out="_brand.name"/>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <a t-att-href="_mega_link"
+                                           class="uc-catmega-feature"
+                                           t-attf-style="#{_mega_image and 'background-image:linear-gradient(135deg, rgba(19,25,33,.88), rgba(245,195,32,.55)),url(' + _mega_image + ');' or ''}">
+                                            <span class="uc-catmega-feature-eyebrow" t-out="_mega_eyebrow"/>
+                                            <strong class="uc-catmega-feature-title" t-out="_cat.name"/>
+                                            <span class="uc-catmega-feature-text">
+                                                <t t-if="_mega_tagline" t-out="_mega_tagline"/>
+                                                <t t-else="">
+                                                    <t t-out="website._uc_t('Discover handpicked deals on')"/>
+                                                    <t t-out="_cat.name"/>.
+                                                </t>
+                                            </span>
+                                            <span class="uc-catmega-feature-cta">
+                                                <t t-out="website._uc_t('Shop now')"/>
+                                                <i class="fa fa-arrow-right"/>
+                                            </span>
+                                        </a>
     </template>
 
 </odoo>

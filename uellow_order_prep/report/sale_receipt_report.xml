@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 80mm thermal, exactly like the POS receipt -->
+    <record id="paperformat_uellow_receipt" model="report.paperformat">
+        <field name="name">Uellow POS Receipt 80mm</field>
+        <field name="format">custom</field>
+        <field name="page_width">80</field>
+        <field name="page_height">92</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">2</field>
+        <field name="margin_bottom">2</field>
+        <field name="margin_left">2</field>
+        <field name="margin_right">2</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">0</field>
+        <field name="dpi">203</field>
+    </record>
+
+    <record id="action_report_sale_receipt" model="ir.actions.report">
+        <field name="name">إيصال المبيعات / Sales Receipt</field>
+        <field name="model">sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">uellow_order_prep.report_sale_receipt</field>
+        <field name="report_file">uellow_order_prep.report_sale_receipt</field>
+        <field name="paperformat_id" ref="paperformat_uellow_receipt"/>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_sale_receipt">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-set="company" t-value="o.company_id"/>
+                <t t-set="plines" t-value="o.order_line.filtered(lambda l: not l.display_type and not l.is_reward_line and l.product_id)"/>
+                <t t-set="gross" t-value="sum((l.price_unit or 0.0) * (l.product_uom_qty or 0.0) for l in plines)"/>
+                <t t-set="net" t-value="sum(l.price_subtotal for l in plines)"/>
+                <t t-set="disc" t-value="gross - net"/>
+                <t t-set="has_lamma" t-value="plines.filtered(lambda l: l.is_lamma)"/>
+                <t t-set="sym" t-value="o.currency_id.symbol or o.currency_id.name or 'KD'"/>
+                <t t-set="paid" t-value="sum(o.transaction_ids.filtered(lambda t: t.state in ('done','authorized')).mapped('amount'))"/>
+                <t t-set="pay_names" t-value="', '.join(o.transaction_ids.mapped('provider_id.name'))"/>
+
+                <style>
+                    @page { margin: 0; }
+                    html, body { margin:0 !important; padding:0 !important; width:100%; background:#fff; }
+                    .rc, .rc * { font-family:'Tajawal','DejaVu Sans',sans-serif !important; color:#000; }
+                    .rc { width:100%; padding:2mm 3mm; direction:rtl; }
+                    .rc .c { text-align:center; }
+                    .rc .b { font-weight:800; }
+                    .rc .bb { font-weight:900; }
+                    .rc .sep { border-top:1.5px solid #000; margin:7px 0; }
+                    .rc .dash { border-top:1.5px dashed #000; margin:7px 0; }
+                    .rc table { width:100%; border-collapse:collapse; }
+                    .rc .row td { font-size:12px; font-weight:800; padding:1px 0; vertical-align:top; }
+                    .rc .row td.v { text-align:left; white-space:nowrap; }
+                    .rc .muted { color:#000; font-weight:700; font-size:10.5px; }
+                </style>
+
+                <div class="rc">
+                    <!-- header -->
+                    <div class="c" t-if="company.logo">
+                        <img t-att-src="image_data_uri(company.logo)" style="max-height:15mm;max-width:52mm;object-fit:contain;"/>
+                    </div>
+                    <div class="c bb" style="font-size:15px;margin-top:2px;" t-esc="company.name or 'Uellow'"/>
+                    <div class="c muted" style="line-height:1.5;margin-top:2px;">
+                        <t t-if="company.partner_id.contact_address_complete" t-esc="company.partner_id.contact_address_complete"/>
+                        <div t-if="company.phone">هاتف: <t t-esc="company.phone"/></div>
+                        <div t-if="company.vat">الرقم الضريبي: <t t-esc="company.vat"/></div>
+                    </div>
+
+                    <div class="sep"/>
+                    <div class="c bb" style="font-size:14px;letter-spacing:1px;">فاتورة مبيعات</div>
+                    <div class="c muted" style="letter-spacing:3px;">SALES RECEIPT</div>
+                    <div class="dash"/>
+
+                    <!-- meta -->
+                    <table>
+                        <tr class="row"><td class="muted" style="font-weight:700;">رقم الفاتورة</td><td class="v" t-esc="o.name"/></tr>
+                        <tr class="row"><td class="muted" style="font-weight:700;">التاريخ</td>
+                            <td class="v" t-esc="o.date_order and o.date_order.strftime('%Y/%m/%d  %H:%M') or ''"/></tr>
+                        <tr class="row" t-if="o.user_id"><td class="muted" style="font-weight:700;">البائع</td><td class="v" t-esc="o.user_id.name"/></tr>
+                        <tr class="row"><td class="muted" style="font-weight:700;">العميل</td><td class="v" t-esc="o.partner_id.name"/></tr>
+                        <tr class="row" t-if="o.partner_id.phone"><td class="muted" style="font-weight:700;">الهاتف</td><td class="v" t-esc="o.partner_id.phone"/></tr>
+                    </table>
+
+                    <div class="dash"/>
+
+                    <!-- items -->
+                    <t t-foreach="plines" t-as="l">
+                        <div class="b" style="font-size:12.5px;line-height:1.3;margin-top:4px;" t-esc="l.name or l.product_id.display_name"/>
+                        <table>
+                            <tr class="row">
+                                <td>
+                                    <t t-esc="'%g' % (l.product_uom_qty or 0)"/> × <t t-esc="'%.3f' % (l.price_unit or 0)"/>
+                                    <t t-if="l.discount"> <span style="color:#000;">(خصم <t t-esc="'%g' % l.discount"/>%)</span></t>
+                                </td>
+                                <td class="v bb" t-esc="'%.3f' % l.price_subtotal"/>
+                            </tr>
+                        </table>
+                    </t>
+
+                    <div class="dash"/>
+
+                    <!-- totals -->
+                    <table>
+                        <tr class="row"><td class="muted" style="font-weight:700;">الإجمالي الفرعي</td><td class="v" t-esc="'%.3f' % gross"/></tr>
+                        <tr class="row" t-if="disc &gt; 0.0005">
+                            <td class="muted" style="font-weight:700;"><t t-if="has_lamma">خصم لمّة يلو</t><t t-else="">الخصم</t></td>
+                            <td class="v" t-esc="'- %.3f' % disc"/></tr>
+                        <tr class="row" t-if="o.amount_tax"><td class="muted" style="font-weight:700;">الضريبة</td><td class="v" t-esc="'%.3f' % o.amount_tax"/></tr>
+                    </table>
+                    <div class="sep"/>
+                    <table>
+                        <tr>
+                            <td class="bb" style="font-size:17px;">الإجمالي</td>
+                            <td class="bb" style="font-size:17px;text-align:left;white-space:nowrap;">
+                                <t t-esc="'%.3f' % o.amount_total"/> <t t-esc="sym"/></td>
+                        </tr>
+                    </table>
+                    <div class="sep"/>
+
+                    <!-- payment -->
+                    <table>
+                        <tr class="row"><td class="muted" style="font-weight:700;">طريقة الدفع</td>
+                            <td class="v"><t t-esc="pay_names or (o.payment_term_id.name or '—')"/></td></tr>
+                        <tr class="row" t-if="paid"><td class="muted" style="font-weight:700;">المدفوع</td><td class="v" t-esc="'%.3f' % paid"/></tr>
+                        <tr class="row"><td class="muted" style="font-weight:700;">الحالة</td>
+                            <td class="v"><t t-if="o.state in ('sale','done')">مؤكّد</t><t t-else="">عرض سعر</t></td></tr>
+                    </table>
+
+                    <div t-if="disc &gt; 0.0005" class="c" style="margin-top:8px;">
+                        <span class="bb" style="border:1.5px solid #000;border-radius:5px;padding:2px 10px;font-size:11.5px;display:inline-block;">
+                            وفّرت <t t-esc="'%.3f' % disc"/> <t t-esc="sym"/></span>
+                    </div>
+
+                    <div class="dash"/>
+
+                    <!-- barcode + footer -->
+                    <div class="c" t-if="barcodes.get(o.id)">
+                        <img t-att-src="barcodes.get(o.id)" style="height:13mm;width:64mm;object-fit:contain;"/>
+                        <div class="b" style="font-size:10px;letter-spacing:2px;" t-esc="o.name"/>
+                    </div>
+                    <div class="c" style="margin-top:9px;">
+                        <div class="bb" style="font-size:13px;">شكراً لتسوّقك من يلو</div>
+                        <div class="muted" style="line-height:1.6;margin-top:3px;">
+                            للاستبدال خلال 14 يوماً مع الفاتورة<br/>www.uellow.com · @uellow
+                        </div>
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+</odoo>

@@ -32,3 +32,5 @@ from . import sale_order_kanban
 from . import live_activity
 from . import customer_activity
 from . import stock_adjust
+from . import product_search_index
+from . import product_search_log

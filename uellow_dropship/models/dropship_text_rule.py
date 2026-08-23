@@ -52,7 +52,17 @@ class DropshipTextRule(models.Model):
                     text, n = re.subn(pattern, rule.replace or '', text,
                                       flags=flags)
                     if n:
-                        rule.sudo().hit_count += n
+                        # Atomic SQL increment (not ORM read-modify-write) so
+                        # concurrent dropship enrichment never hits "could not
+                        # serialize access due to concurrent update" on the same
+                        # rule row. Best-effort — a counter must never break sync.
+                        try:
+                            self.env.cr.execute(
+                                "UPDATE dropship_text_rule "
+                                "SET hit_count = COALESCE(hit_count, 0) + %s "
+                                "WHERE id = %s", (n, rule.id))
+                        except Exception:
+                            pass
                 else:
                     text = re.sub(pattern, rule.replace or '', text,
                                   flags=flags)

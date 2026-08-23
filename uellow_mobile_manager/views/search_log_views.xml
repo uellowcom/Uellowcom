@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_search_log_list" model="ir.ui.view">
+        <field name="name">uellow.search.log.list</field>
+        <field name="model">uellow.search.log</field>
+        <field name="arch" type="xml">
+            <list string="عمليات البحث" create="false">
+                <field name="create_date" string="الوقت"/>
+                <field name="query"/>
+                <field name="result_count"/>
+                <field name="has_results" widget="boolean_toggle"/>
+                <field name="source"/>
+                <field name="partner_id"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_search_log_search" model="ir.ui.view">
+        <field name="name">uellow.search.log.search</field>
+        <field name="model">uellow.search.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="query"/>
+                <field name="partner_id"/>
+                <filter name="no_results" string="بلا نتائج" domain="[('has_results','=',False)]"/>
+                <filter name="has_res" string="بنتائج" domain="[('has_results','=',True)]"/>
+                <group expand="0" string="تجميع">
+                    <filter name="g_query" string="كلمة البحث" context="{'group_by':'query'}"/>
+                    <filter name="g_hasres" string="وُجدت نتائج" context="{'group_by':'has_results'}"/>
+                    <filter name="g_source" string="المصدر" context="{'group_by':'source'}"/>
+                    <filter name="g_day" string="اليوم" context="{'group_by':'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_search_log_pivot" model="ir.ui.view">
+        <field name="name">uellow.search.log.pivot</field>
+        <field name="model">uellow.search.log</field>
+        <field name="arch" type="xml">
+            <pivot string="تحليل البحث">
+                <field name="query" type="row"/>
+                <field name="has_results" type="col"/>
+                <field name="result_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_search_log_graph" model="ir.ui.view">
+        <field name="name">uellow.search.log.graph</field>
+        <field name="model">uellow.search.log</field>
+        <field name="arch" type="xml">
+            <graph string="أكثر عمليات البحث" type="bar">
+                <field name="query"/>
+            </graph>
+        </field>
+    </record>
+    <record id="action_search_log" model="ir.actions.act_window">
+        <field name="name">تحليلات البحث</field>
+        <field name="res_model">uellow.search.log</field>
+        <field name="view_mode">list,graph,pivot</field>
+        <field name="context">{'search_default_g_query': 1}</field>
+    </record>
+    <record id="action_search_log_zero" model="ir.actions.act_window">
+        <field name="name">بحث بلا نتائج</field>
+        <field name="res_model">uellow.search.log</field>
+        <field name="view_mode">list,graph,pivot</field>
+        <field name="domain">[('has_results','=',False)]</field>
+        <field name="context">{'search_default_g_query': 1}</field>
+    </record>
+    <menuitem id="menu_search_analytics_root" name="تحليلات البحث"
+              parent="menu_mobile_root" sequence="60"/>
+    <menuitem id="menu_search_log_all" name="كل عمليات البحث"
+              parent="menu_search_analytics_root" action="action_search_log" sequence="10"/>
+    <menuitem id="menu_search_log_zero" name="بحث بلا نتائج ⚠️"
+              parent="menu_search_analytics_root" action="action_search_log_zero" sequence="20"/>
+</odoo>

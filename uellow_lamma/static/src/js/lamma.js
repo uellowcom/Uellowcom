@@ -25,24 +25,41 @@
     function onProductPage() {
         return !!(document.querySelector("#product_detail, .js_product, form.js_add_cart_variants") && productId());
     }
+    /* current selected variant (colour/size) from the product form — Odoo keeps
+       input[name="product_id"] in sync with the chosen combination. */
+    function variantId() {
+        var i = document.querySelector('#product_detail input[name="product_id"], .js_product input[name="product_id"], input.product_id[name="product_id"]');
+        return i && i.value ? parseInt(i.value, 10) : 0;
+    }
 
     /* ---------- persistent bar + sheet ---------- */
     var bar, mask, sheet;
+    var barHidden = false;
     function buildChrome() {
-        bar = el('<div id="ul-bar"><div class="ul-top"><div class="ul-thumbs"></div>' +
-            '<div class="ul-cnt">0</div><div class="ul-inf"></div>' +
-            '<button type="button" class="ul-go">إتمام</button></div><div class="ul-meter"><i></i></div></div>');
+        bar = el('<div id="ul-bar">' +
+            '<div class="ul-thumbs"></div>' +
+            '<div class="ul-pcol"><div class="ul-net"></div><div class="ul-was"></div></div>' +
+            '<button type="button" class="ul-go">أكمل اللمّة</button>' +
+            '<span class="ul-x" title="إخفاء">✕</span>' +
+            '</div>');
         mask = el('<div id="ul-mask"></div>');
         sheet = el('<div id="ul-sheet"><div class="ul-grip"></div><h4></h4>' +
             '<div class="ul-shield"></div><div class="ul-items"></div>' +
-            '<div class="ul-tier"></div><div class="ul-tot"></div>' +
+            '<div class="ul-tier"></div><div class="ul-prog"></div><div class="ul-tot"></div>' +
             '<div class="ul-msg" id="ul-msg" style="display:none"></div>' +
+            '<button type="button" class="ul-group" style="width:100%;margin-bottom:8px;padding:14px;border:0;border-radius:12px;font-weight:800;font-size:15px;color:#fff;background:linear-gradient(135deg,#FF7A1A,#FF9E45);cursor:pointer">🧺 ابدأ لمّة جماعية — شارك التوفير</button>' +
             '<button type="button" class="ul-checkout">إتمام اللمّة</button></div>');
         document.body.appendChild(bar);
         document.body.appendChild(mask);
         document.body.appendChild(sheet);
-        bar.addEventListener("click", function (e) { if (!e.target.classList.contains("ul-go")) { openSheet(); } });
+        bar.addEventListener("click", function (e) {
+            if (e.target.classList.contains("ul-x")) { return; }
+            openSheet();
+        });
         bar.querySelector(".ul-go").addEventListener("click", function (e) { e.stopPropagation(); openSheet(); });
+        bar.querySelector(".ul-x").addEventListener("click", function (e) {
+            e.stopPropagation(); barHidden = true; bar.classList.remove("show");
+        });
         mask.addEventListener("click", closeSheet);
         sheet.querySelector(".ul-checkout").addEventListener("click", function () {
             var b = this; b.disabled = true; b.textContent = "جارٍ التجهيز…";
@@ -54,23 +71,43 @@
                 window.location.href = "/shop/cart";
             }).catch(function () { window.location.href = "/shop/cart"; });
         });
+        var gb = sheet.querySelector(".ul-group");
+        if (gb) { gb.addEventListener("click", function () {
+            var b = this; b.disabled = true; b.textContent = "جارٍ إنشاء اللمّة…";
+            rpc("/lamma/group/create", {}).then(function (r) {
+                if (r && r.code) { window.location.href = r.share_url || ("/lamma/g/" + r.code); return; }
+                b.disabled = false; b.textContent = "🧺 ابدأ لمّة جماعية — شارك التوفير";
+                sheetMsg("تعذّر إنشاء اللمّة، حاول مجددًا");
+            }).catch(function () { b.disabled = false; b.textContent = "🧺 ابدأ لمّة جماعية — شارك التوفير"; sheetMsg("تعذّر إنشاء اللمّة"); });
+        }); }
     }
     function renderBar() {
         if (!S) { return; }
         CUR = S.currency || CUR;
-        var has = (S.n || 0) > 0;
-        bar.classList.toggle("show", has);
-        bar.querySelector(".ul-cnt").textContent = S.n || 0;
-        var _pct = (S.discount_pct || 0);
-        var _before = _pct > 0 ? ('<s style="color:#8b97a8">' + fmt(S.subtotal) + '</s> ') : "";
-        var _off = _pct > 0 ? (' <span style="color:#4ade80">-' + _pct.toFixed(0) + "%</span>") : "";
-        bar.querySelector(".ul-inf").innerHTML = (S.label || "لمّة يلو") + " · " + _before +
-            '<b style="color:#FBBF00">' + fmt(S.pays) + " " + CUR + "</b>" + _off;
-        bar.querySelector(".ul-meter i").style.width = Math.min((S.subtotal || 0) / 30 * 100, 100) + "%";
+        var n = S.n || 0;
+        var has = n > 0;
+        var onCheckout = /^\/shop\/(cart|checkout|address|payment|confirmation|extra_info)/.test(location.pathname || "");
+        bar.classList.toggle("show", has && !barHidden && !onCheckout);
+        // net price
+        bar.querySelector(".ul-net").innerHTML =
+            '<b>' + fmt(S.pays) + '</b><span class="u">' + CUR + '</span>';
+        // pre-discount "كان" pill (emphasised) — else a plain item count
+        var pct = (S.discount_pct || 0);
+        var was = bar.querySelector(".ul-was");
+        if (pct > 0 && (S.subtotal || 0) > (S.pays || 0) + 0.0005) {
+            var savedAmt = (S.subtotal || 0) - (S.pays || 0);
+            was.innerHTML = '<span class="ul-oldpill">كان <s>' + fmt(S.subtotal) + '</s></span>' +
+                '<span class="ul-savepill">وفّرت ' + fmt(savedAmt) + '</span>';
+        } else {
+            was.innerHTML = '<span class="ul-cntlbl">' + n + ' منتجات في لمّتك</span>';
+        }
+        // thumbnails + count chip
         var th = bar.querySelector(".ul-thumbs"); th.innerHTML = "";
-        (S.items || []).slice(0, 4).forEach(function (it) {
+        (S.items || []).slice(0, 3).forEach(function (it) {
             var im = document.createElement("img"); im.src = it.image; th.appendChild(im);
         });
+        var c = document.createElement("div"); c.className = "ul-cnt"; c.textContent = n;
+        th.appendChild(c);
     }
     function sheetMsg(t) {
         var m = sheet && sheet.querySelector(".ul-msg");
@@ -85,19 +122,47 @@
         sheet.querySelector("h4").textContent = (S.label || "لمّة يلو") + " 🧺";
         var box = sheet.querySelector(".ul-items"); box.innerHTML = "";
         (S.items || []).forEach(function (it) {
+            var q = it.qty || 1;
             var row = el('<div class="ul-si"><img src="' + it.image + '"><div class="n">' + it.name +
-                '</div><div class="p">' + fmt(it.price) + '</div><button type="button" class="rm">✕</button></div>');
+                '<div class="ul-qs"><button type="button" class="qm">−</button><span class="qv">' + q +
+                '</span><button type="button" class="qp">+</button></div></div>' +
+                '<div class="p">' + fmt(it.line_total != null ? it.line_total : it.price) +
+                '</div><button type="button" class="rm">✕</button></div>');
             row.querySelector(".rm").addEventListener("click", function () { removeItem(it.id); });
+            row.querySelector(".qm").addEventListener("click", function () { setQty(it.id, q - 1); });
+            row.querySelector(".qp").addEventListener("click", function () { setQty(it.id, q + 1); });
             box.appendChild(row);
         });
         var sh = sheet.querySelector(".ul-shield");
-        if (S.capped) {
+        var exc = S.excluded || 0, sv = S.saved || 0;
+        if (exc > 0 && sv > 0) {
+            sh.classList.add("show");
+            sh.textContent = "✔️ طُبّق خصم اللمّة على المنتجات المؤهّلة، و" + exc +
+                (exc === 1 ? " منتج" : " منتجات") + " عند حد الربح فبقيت بسعرها.";
+        } else if (sv <= 0 && S.n >= 2) {
+            sh.classList.add("show");
+            sh.textContent = "ℹ️ منتجات هذه الباقة عند حد الربح حالياً، فلا يمكن تطبيق خصم اللمّة عليها.";
+        } else if (S.capped) {
             sh.classList.add("show");
             sh.textContent = "✔️ خصم اللمّة وصل حده الأقصى لهذه الباقة.";
         } else { sh.classList.remove("show"); }
         sheet.querySelector(".ul-tier").textContent = (S.n < (S.min_items || 2))
             ? "أضف منتجاً آخر لبدء الخصم" : "";
         sheet.querySelector(".ul-tier").style.display = (S.n < (S.min_items || 2)) ? "block" : "none";
+        (function(){
+            var pr = sheet.querySelector(".ul-prog"); if (!pr) return;
+            if (S.next_tier && (S.n || 0) >= 1) {
+                var need = S.next_tier.need_items ? (S.next_tier.need_items + " منتج") : (fmt(S.next_tier.need_amount) + " " + CUR);
+                pr.style.display = "block";
+                pr.innerHTML = '<div class="ul-pg-top"><b>خصمك ' + Math.round(S.tier_pct||0) + '٪</b>'
+                    + '<span>أضف ' + need + ' ← ' + Math.round(S.next_tier.pct) + '٪ 🔥</span></div>'
+                    + '<div class="ul-pg-bar"><i style="width:' + Math.round((S.progress||0)*100) + '%"></i></div>';
+            } else if (S.tier_pct) {
+                pr.style.display = "block";
+                pr.innerHTML = '<div class="ul-pg-top"><b>🎉 وصلت أقصى خصم ' + Math.round(S.tier_pct) + '٪</b></div>'
+                    + '<div class="ul-pg-bar full"><i style="width:100%"></i></div>';
+            } else { pr.style.display = "none"; }
+        })();
         // professional breakdown: subtotal / discount / [installment] / net
         var pctTxt = (S.discount_pct || 0) > 0 ? (" (-" + (S.discount_pct).toFixed(0) + "%)") : "";
         var rows = "";
@@ -114,9 +179,43 @@
 
     /* ---------- actions ---------- */
     function refresh() { return rpc("/lamma/get").then(apply); }
-    function apply(s) { S = s; renderBar(); syncButton(); }
+    var _lastPct = -1;
+    function celebrate(pct) {
+        try {
+            var host = document.createElement("div"); host.className = "ul-cel";
+            var cols = ["#F5C320","#FF7A1A","#0A8A3F","#5B54E0","#D92D2D","#E7A400"];
+            var cf = "";
+            for (var i = 0; i < 18; i++) {
+                cf += '<span class="ul-cf" style="left:' + Math.round((i * 5.5) % 100)
+                    + '%;background:' + cols[i % 6] + ';animation-delay:' + ((i % 9) * 55) + 'ms"></span>';
+            }
+            host.innerHTML = cf + '<div class="ul-cel-card">🎉'
+                + '<div class="ul-cel-t">فتحت خصم ' + Math.round(pct) + '٪!</div>'
+                + '<div class="ul-cel-s">استمر في لمّتك ووفّر أكثر 🧺</div></div>';
+            document.body.appendChild(host);
+            if (navigator.vibrate) { try { navigator.vibrate(60); } catch (e) {} }
+            setTimeout(function () { host.style.opacity = 0; }, 1700);
+            setTimeout(function () { host.remove(); }, 2200);
+        } catch (e) {}
+    }
+    function apply(s) {
+        var np = (s && s.tier_pct) || 0;
+        if (_lastPct >= 0 && np > _lastPct) { celebrate(np); }
+        _lastPct = np;
+        S = s; renderBar(); syncButton();
+    }
     function addProduct(pid, type) {
-        return rpc("/lamma/add", { product_id: pid, lamma_type: type }).then(function (s) {
+        barHidden = false; // a fresh add always re-shows the bar
+        var payload = { product_id: pid, lamma_type: type };
+        var vid = variantId();
+        if (vid) { payload.variant_id = vid; }
+        return rpc("/lamma/add", payload).then(function (s) {
+            apply(s); if (sheet.classList.contains("show")) { openSheet(); }
+        });
+    }
+    function setQty(pid, q) {
+        if (q < 1) return;
+        return rpc("/lamma/qty", { product_id: pid, qty: q }).then(function (s) {
             apply(s); if (sheet.classList.contains("show")) { openSheet(); }
         });
     }
@@ -206,7 +305,7 @@
 
     function init() {
         buildChrome();
-        refresh().then(function () { injectButton(); injectHomePromo(); });
+        refresh().then(function () { injectButton(); /* home promo banner removed per request */ });
     }
     if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", init); }
     else { init(); }

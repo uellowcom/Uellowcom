@@ -1432,7 +1432,7 @@ const KIND_DEFAULTS = {
     badgeEn:'New User Bonus', badgeAr:'مكافأة العميل الجديد',
   }),
   'promo-spotlight': () => ({ titleEn:'Spotlight Offer', titleAr:'عرض مميّز', subEn:'Hand-picked deals you will love', subAr:'صفقات مختارة بعناية', logo:'✨', c1:'#7B2FF7', c2:'#B86CFF', cta_color:'#F5C320', header_style:'gradient', shape:'hero', ctaEn:'See all', ctaAr:'الكل', badgeEn:'Featured', badgeAr:'مميّز', source:'discounted', limit:10, layout:'rail' }),
-  'promo-category': () => ({ titleEn:'Shop the Category', titleAr:'تسوّق القسم', subEn:'Top picks from this section', subAr:'أفضل المنتجات من هذا القسم', logo:'🛍', c1:'#2F6E62', c2:'#3E9C88', cta_color:'#F5C320', header_style:'gradient', shape:'grid', ctaEn:'Browse', ctaAr:'تصفّح', badgeEn:'Shop', badgeAr:'تسوّق', source:'collection', category_id:0, limit:8, layout:'grid' }),
+  'promo-category': () => ({ titleEn:'Shop the Category', titleAr:'تسوّق القسم', subEn:'Top picks from this section', subAr:'أفضل المنتجات من هذا القسم', logo:'🛍', c1:'#2F6E62', c2:'#3E9C88', cta_color:'#F5C320', header_style:'gradient', shape:'grid', ctaEn:'Browse', ctaAr:'تصفّح', badgeEn:'Shop', badgeAr:'تسوّق', source:'collection', category_id:0, limit:8, layout:'grid', featured_ids:[], featured_labels:[], featured_rest_random:true }),
   'promo-rank': () => ({ titleEn:'Best Sellers', titleAr:'الأكثر مبيعاً', subEn:'What everyone is buying now', subAr:'الأكثر طلباً الآن', logo:'🏆', c1:'#C19A2E', c2:'#E8C45A', cta_color:'#F5C320', header_style:'gradient', shape:'leaderboard', ctaEn:'See ranking', ctaAr:'الترتيب', badgeEn:'Best Seller', badgeAr:'الأكثر مبيعاً', source:'bestsellers', limit:10, layout:'rail' }),
   'promo-arrivals': () => ({ titleEn:'New Arrivals', titleAr:'وصل حديثاً', subEn:'Fresh in store', subAr:'أحدث ما وصل', logo:'🆕', c1:'#1E88A8', c2:'#43C0D6', cta_color:'#F5C320', header_style:'gradient', shape:'arrivals', ctaEn:'See all', ctaAr:'الكل', badgeEn:'New', badgeAr:'جديد', source:'newest', limit:10, layout:'rail' }),
   'promo-mega': () => ({ titleEn:'Mega Sale', titleAr:'تخفيضات كبرى', subEn:'Limited-time offers — grab them fast', subAr:'عروض لوقت محدود', logo:'🔥', c1:'#E63946', c2:'#FF7A85', cta_color:'#F5C320', header_style:'gradient', shape:'mega', ctaEn:'Shop sale', ctaAr:'تسوّق العروض', badgeEn:'SALE', badgeAr:'تخفيض', source:'discounted', limit:10, layout:'rail' }),
@@ -3508,6 +3508,7 @@ function renderContent(b){
         ${(p.source==='tag') ? tagPickerBtn(b) : ''}
         ${(p.source==='filter') ? filterSourcePanel(b) : ''}
         ${promoSourcePicker(b)}
+        ${(p.source && p.source!=='manual' && p.source!=='promotion' && p.source!=='bundles') ? featuredBlock(b) : ''}
         <div class="field"><label>Maximum products</label><input type="number" min="2" max="20" data-prop-num="limit" value="${p.limit||10}"/></div>
         ${cardDisplayToggles(b)}`;
     }
@@ -4621,6 +4622,52 @@ function productsPickerBtn(b){
       </div>
       <div class="lk-chev">✏</div>
     </button></div>`;
+}
+
+/* ⭐ Featured / pinned products — ordered, lead this block (hero first). */
+function featuredPickerBtn(b){
+  const ids = b.props.featured_ids || [];
+  const labels = b.props.featured_labels || [];
+  const rows = ids.map((id,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:#fff;margin-top:6px">
+      <span style="width:22px;height:22px;flex:none;border-radius:50%;background:${i===0?'#F5C320':'var(--yellow-soft)'};color:var(--dark);font-weight:900;font-size:11px;display:grid;place-items:center">${i+1}</span>
+      <div style="flex:1;min-width:0;font-size:11.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${labels[i]||('#'+id)}${i===0?' <span style=\"color:#C99000;font-weight:800\">— top / hero</span>':''}</div>
+      <button onclick="moveFeatured(${i},-1)" ${i===0?'disabled':''} style="border:0;background:var(--bg-2);border-radius:6px;width:24px;height:24px;cursor:pointer">↑</button>
+      <button onclick="moveFeatured(${i},1)" ${i===ids.length-1?'disabled':''} style="border:0;background:var(--bg-2);border-radius:6px;width:24px;height:24px;cursor:pointer">↓</button>
+      <button onclick="removeFeatured(${i})" style="border:0;background:#fff;color:var(--danger);border-radius:6px;width:24px;height:24px;cursor:pointer">✕</button>
+    </div>`).join('');
+  return `<div class="field"><label>⭐ Featured products (shown first, in order)</label>
+    <p class="hint">Pick which products lead this block. #1 shows at the very top (the hero), then #2, #3 … The rest fill automatically.</p>
+    ${rows || '<div style="color:var(--muted);font-size:11.5px;padding:4px 2px">No pinned products yet — the whole block is automatic.</div>'}
+    <button class="link-field" style="margin-top:6px" onclick="openProductsPicker('featured_ids')">
+      <div class="lk-ic">⭐</div>
+      <div class="lk-info"><div class="lk-t">${ids.length? ('Add / edit — '+ids.length+' pinned'):'Click to pin products'}</div><div class="lk-s">search by name or SKU · tap to add in order</div></div>
+      <div class="lk-chev">✏</div>
+    </button></div>`;
+}
+function moveFeatured(i, dir){
+  const b = cur().blocks.find(x => x.id === selectedBlockId);
+  if(!b) return;
+  const ids=b.props.featured_ids||[], labels=b.props.featured_labels||[];
+  const j=i+dir; if(j<0||j>=ids.length) return;
+  [ids[i],ids[j]]=[ids[j],ids[i]]; [labels[i],labels[j]]=[labels[j],labels[i]];
+  b.props.featured_ids=ids; b.props.featured_labels=labels;
+  renderRight(); renderCanvas(); scheduleSave();
+}
+function removeFeatured(i){
+  const b = cur().blocks.find(x => x.id === selectedBlockId);
+  if(!b) return;
+  const ids=b.props.featured_ids||[], labels=b.props.featured_labels||[];
+  ids.splice(i,1); labels.splice(i,1);
+  b.props.featured_ids=ids; b.props.featured_labels=labels;
+  renderRight(); renderCanvas(); scheduleSave();
+}
+function featuredBlock(b){
+  const rr = (b.props.featured_rest_random !== false);
+  return `<div class="sub-h">⭐ Featured order</div>
+    ${featuredPickerBtn(b)}
+    <div class="toggle"><div class="nm">🎲 Shuffle the rest<small>Pinned products stay on top in your order; the remaining products appear in a random order each load</small></div>
+      <div class="switch ${rr?'on':''}" data-toggle-prop="featured_rest_random"></div></div>`;
 }
 
 function vendorPickerBtn(b){
@@ -6551,7 +6598,11 @@ function pickCategoryItem(id, name){
    PRODUCTS PICKER
    ============================================================ */
 let _prodPickerTimer = null;
-function openProductsPicker(){
+let _prodPickerProp = 'product_ids';
+let _prodPickerLabelsProp = 'product_labels';
+function openProductsPicker(prop){
+  _prodPickerProp = prop || 'product_ids';
+  _prodPickerLabelsProp = (_prodPickerProp === 'featured_ids') ? 'featured_labels' : 'product_labels';
   document.getElementById('prodPickerQ').value = '';
   document.getElementById('prodPickerBd').classList.add('on');
   loadProductsPicker();
@@ -6569,7 +6620,7 @@ async function _doLoadProducts(){
     const items = d.products || [];
     if (!items.length) { host.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);padding:14px;text-align:center">No products match</div>'; return; }
     const b = cur().blocks.find(x => x.id === selectedBlockId);
-    const chosen = new Set(b?.props?.product_ids||[]);
+    const chosen = new Set(b?.props?.[_prodPickerProp]||[]);
     host.innerHTML = items.map(p => {
       const on = chosen.has(p.id);
       return `<div data-pid="${p.id}" data-pname="${(p.name||'').replace(/"/g,'&quot;')}"
@@ -6593,13 +6644,13 @@ async function _doLoadProducts(){
 function pickProductItem(id, name){
   const b = cur().blocks.find(x => x.id === selectedBlockId);
   if (!b) return;
-  const ids = b.props.product_ids || [];
-  const labels = b.props.product_labels || [];
+  const ids = b.props[_prodPickerProp] || [];
+  const labels = b.props[_prodPickerLabelsProp] || [];
   const i = ids.indexOf(id);
   if (i >= 0) { ids.splice(i,1); labels.splice(i,1); }
   else { ids.push(id); labels.push(name); }
-  b.props.product_ids = ids;
-  b.props.product_labels = labels;
+  b.props[_prodPickerProp] = ids;
+  b.props[_prodPickerLabelsProp] = labels;
   _doLoadProducts();
   renderCanvas(); renderRight(); scheduleSave();
 }

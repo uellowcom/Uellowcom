@@ -14,7 +14,11 @@ from ._common import (
     safe_endpoint, get_payload, ok, get_lang, paginate, current_session,
     img_url, bilingual,
 )
-from .products import serialize_product_card, _domain_published_for_app
+from .products import (
+    serialize_product_card, _domain_published_for_app,
+    _norm_light, _norm_full, _syn_expand,
+    _rank_by_relevance, _fuzzy_search,
+)
 
 
 def _norm_lang(lang):
@@ -128,15 +132,68 @@ def _fold_incomplete(rows, limit):
     return [{'query': k, 'count': c} for k, c in out[:limit]]
 
 
-def _search_brands(q, limit=6):
+def _norm_hit(name, ntoks, nq):
+    """Relevance of a name to the query, normalized (ة/ه, hamza, tashkeel) and
+    tokenized: exact-phrase (3) > all-tokens (2) > any-token (1) > none (0)."""
+    n = _norm_full(name or '')
+    if not n:
+        return 0
+    if nq and nq in n:
+        return 3
+    if ntoks and all(t in n for t in ntoks):
+        return 2
+    if ntoks and any(t in n for t in ntoks):
+        return 1
+    return 0
+
+
+def _search_categories(ntoks, nq, ctx_lang, limit=8):
+    """Categories matching the query — normalized + tokenized (so «سماعه»
+    matches «سماعة …») and ranked. The catalogue has only a few hundred
+    categories, so a scan + Python score is cheap and index-free."""
+    Cat = request.env['product.public.category'].sudo() \
+        .with_context(lang=ctx_lang)
+    recs = Cat.search([], limit=2000)
+    scored = []
+    for c in recs:
+        h = _norm_hit(c.name, ntoks, nq)
+        if h:
+            scored.append((h, c.id))
+    if scored:
+        scored.sort(key=lambda x: (-x[0], -x[1]))
+        return Cat.browse([cid for _h, cid in scored[:limit]])
+    # Fuzzy fallback (pg_trgm word-similarity) for Arabic singular/broken-plural
+    # & typos a plain substring misses (سماعه↔سماعات).
+    try:
+        cr = request.env.cr
+        cr.execute("SET LOCAL pg_trgm.word_similarity_threshold = 0.4")
+        cr.execute(
+            "SELECT id FROM product_public_category "
+            "WHERE %s <%% coalesce(name->>%s, name->>'en_US', '') "
+            "ORDER BY word_similarity("
+            "  %s, coalesce(name->>%s, name->>'en_US', '')) DESC LIMIT %s",
+            (nq, ctx_lang, nq, ctx_lang, limit))
+        ids = [r[0] for r in cr.fetchall()]
+        if ids:
+            return Cat.browse(ids)
+    except Exception:
+        try:
+            request.env.cr.rollback()
+        except Exception:
+            pass
+    return Cat.browse()
+
+
+def _search_brands(q, ntoks=None, limit=6):
     """Brand attribute values matching q → [{id, name, image,
     product_count}]. id is the attribute VALUE id (what the collection
     screen filters by)."""
     out = []
     try:
         Val = request.env['product.attribute.value'].sudo()
-        vals = Val.search([
-            ('name', 'ilike', q),
+        _nl = [('name', 'ilike', t) for t in (ntoks or [q])]
+        _name_dom = (['|'] * (len(_nl) - 1) + _nl) if len(_nl) > 1 else _nl
+        vals = Val.search(_name_dom + [
             '|', '|',
             ('attribute_id.name', 'ilike', 'brand'),
             ('attribute_id.name', 'ilike', 'ماركة'),
@@ -162,7 +219,7 @@ def _search_brands(q, limit=6):
     return out
 
 
-def _search_vendors(q, limit=6):
+def _search_vendors(q, ntoks=None, limit=6):
     """Marketplace sellers matching q → [{id, name{en,ar}, logo,
     product_count}]."""
     out = []
@@ -170,12 +227,13 @@ def _search_vendors(q, limit=6):
         if 'uellow.vendor' not in request.env:
             return out
         Vendor = request.env['uellow.vendor'].sudo()
-        vs = Vendor.search([
-            '|', '|',
-            ('store_name_en', 'ilike', q),
-            ('store_name_ar', 'ilike', q),
-            ('name', 'ilike', q),
-        ], limit=limit)
+        _vd = []
+        for _t in (ntoks or [q]):
+            _vd += ['|', '|',
+                    ('store_name_en', 'ilike', _t),
+                    ('store_name_ar', 'ilike', _t),
+                    ('name', 'ilike', _t)]
+        vs = Vendor.search(_vd, limit=limit)
         Tmpl = request.env['product.template'].sudo()
         for v in vs:
             n = 0
@@ -225,18 +283,49 @@ class MobileSearchAPI(http.Controller):
         # Search surfaces out-of-stock items so the user can still find
         # a specific product they're looking for, even when it's not
         # listed elsewhere in the app.
-        ors = [
-            ('name', 'ilike', q),
-            ('default_code', 'ilike', q),
-            ('description_sale', 'ilike', q),
-        ]
         # v2.2.16 — digit-only query also matches the product ID and the
         # exact barcode (admins/support paste IDs straight into search).
         if q.isdigit():
-            ors = [('id', '=', int(q)), ('barcode', '=', q)] + ors
-        domain = _domain_published_for_app(include_oos=True) + \
-            ['|'] * (len(ors) - 1) + ors
-        records = Tmpl.search(domain, order='create_date desc', limit=100)
+            ors = [('id', '=', int(q)), ('barcode', '=', q),
+                   ('default_code', 'ilike', q), ('name', 'ilike', q)]
+            domain = _domain_published_for_app(include_oos=True) + \
+                ['|'] * (len(ors) - 1) + ors
+            records = Tmpl.search(domain, order='create_date desc', limit=100)
+        else:
+            # v2.2.116 — SAME engine as /products: tokenized + Arabic-normalized
+            # (stored x_search_norm index) + synonym expansion + relevance rank,
+            # with a pg_trgm word-similarity fuzzy fallback. This is the endpoint
+            # the app's live search bar hits, so the whole app search benefits.
+            _toks = [t for t in _norm_light(q).split(' ') if len(t) >= 2] \
+                or [_norm_light(q)]
+            _nq = _norm_full(q)
+            _base = _domain_published_for_app(include_oos=True)
+            domain = list(_base)
+            _fields = Tmpl._fields
+            _or_leaves = []
+            for _tok in _toks:
+                _lv = [('x_search_norm', 'ilike', _norm_full(_tok)),
+                       ('name', 'ilike', _tok),
+                       ('description_sale', 'ilike', _tok),
+                       ('default_code', 'ilike', _tok),
+                       ('public_categ_ids.name', 'ilike', _tok)]
+                for _sy in _syn_expand(_tok):
+                    _lv.append(('x_search_norm', 'ilike', _sy))
+                if 'brand_id' in _fields:
+                    _lv.append(('brand_id.name', 'ilike', _tok))
+                if 'product_tag_ids' in _fields:
+                    _lv.append(('product_tag_ids.name', 'ilike', _tok))
+                domain += ['|'] * (len(_lv) - 1) + _lv
+                _or_leaves += _lv
+            records = Tmpl.search(domain, order='create_date desc', limit=300)
+            if not records and len(_or_leaves) > 1:
+                records = Tmpl.search(
+                    _base + ['|'] * (len(_or_leaves) - 1) + _or_leaves,
+                    order='create_date desc', limit=200)
+            if records:
+                records = _rank_by_relevance(records, _toks, _nq)
+            else:
+                records = _fuzzy_search(request.env, _base, _nq, limit=100)
 
         # v2.1.56 — the app passes log=0 for as-you-type suggestion calls
         # so half-typed words no longer pollute recent/trending. Only the
@@ -252,12 +341,13 @@ class MobileSearchAPI(http.Controller):
             serializer=lambda r: serialize_product_card(r, lang),
         )
 
-        # Matched categories (with image) + brands + sellers + suggestions
-        categories = request.env['product.public.category'].sudo() \
-            .with_context(lang=ctx_lang).search(
-            [('name', 'ilike', q)], limit=8)
-        brands = _search_brands(q)
-        vendors = _search_vendors(q)
+        # Matched categories (normalized + tokenized) + brands + sellers
+        _cntoks = [t for t in _norm_light(q).split(' ') if len(t) >= 2] \
+            or [_norm_light(q)]
+        _cnq = _norm_full(q)
+        categories = _search_categories(_cntoks, _cnq, ctx_lang, limit=8)
+        brands = _search_brands(q, _cntoks)
+        vendors = _search_vendors(q, _cntoks)
         suggestions = [r.name for r in records[:8]] + [c.name for c in categories]
 
         return ok({

@@ -77,3 +77,5 @@ access_uellow_customer_activity_mgr,uellow.customer.activity manager,model_uello
 access_uellow_customer_activity_usr,uellow.customer.activity user,model_uellow_customer_activity,base.group_user,1,0,0,0
 access_uellow_stock_adjust_mgr,uellow.stock.adjust manager,model_uellow_stock_adjust,base.group_system,1,1,1,1
 access_uellow_stock_adjust_usr,uellow.stock.adjust user,model_uellow_stock_adjust,base.group_user,1,1,1,0
+access_uellow_search_log_mgr,uellow.search.log manager,model_uellow_search_log,base.group_system,1,1,1,1
+access_uellow_search_log_usr,uellow.search.log user,model_uellow_search_log,base.group_user,1,0,0,0

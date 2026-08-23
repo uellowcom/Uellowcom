@@ -110,7 +110,9 @@ class UellowHomePageController(http.Controller):
                 elif sec.section_type == 'deal_of_day':
                     src = sec.product_source if sec.product_source and sec.product_source != 'newest' else 'discounted'
                     prods = self._home_products(sec, force=src)
-                    d['deal'] = prods[0] if prods else None
+                    random.Random(seed).shuffle(prods)
+                    d['deals'] = prods[:8]
+                    d['deal'] = d['deals'][0] if d['deals'] else None
                 elif sec.section_type == 'promo_banners':
                     d['banners'] = self._promo_banners(sec)
                 elif sec.section_type == 'category_tabs':
@@ -233,7 +235,7 @@ class UellowHomePageController(http.Controller):
             cats = request.env['product.public.category'].sudo().search(
                 [('parent_id', '=', False), ('website_id', 'in', [False, wid])],
                 order='sequence, name', limit=25)
-            cat_lines = ''.join('- %s: https://www.uellow.com/shop/category/%d\n' % (c.name, c.id) for c in cats)
+            cat_lines = ''.join('- [%s](https://www.uellow.com/shop/category/%d): %s\n' % (c.name, c.id, c.name) for c in cats)
         except Exception:
             cat_lines = ''
         body = (
@@ -251,12 +253,12 @@ class UellowHomePageController(http.Controller):
             "- Apps: iOS and Android\n\n"
             "## Shop by category\n" + cat_lines + "\n"
             "## Key pages\n"
-            "- Home: https://www.uellow.com/\n"
-            "- Shop / all products: https://www.uellow.com/shop\n"
-            "- Sitemap: https://www.uellow.com/sitemap.xml\n"
+            "- [Home](https://www.uellow.com/): Uellow homepage\n"
+            "- [Shop \u2014 all products](https://www.uellow.com/shop): Browse the full catalog\n"
+            "- [Sitemap](https://www.uellow.com/sitemap.xml): All indexable pages\n"
         )
         return request.make_response(body, headers=[
-            ('Content-Type', 'text/plain; charset=utf-8'),
+            ('Content-Type', 'text/markdown; charset=utf-8'),
             ('Cache-Control', 'public, max-age=86400')])
 
     @http.route(['/guides'], type='http', auth='public', website=True, sitemap=True)

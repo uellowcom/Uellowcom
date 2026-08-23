@@ -11,6 +11,9 @@ class LammaActivity(models.Model):
 
     session_key = fields.Char('Session', index=True)
     partner_id = fields.Many2one('res.partner', string='Customer', index=True, ondelete='set null')
+    partner_phone = fields.Char(related='partner_id.phone', string='هاتف العميل', readonly=True)
+    partner_email = fields.Char(related='partner_id.email', string='بريد العميل', readonly=True)
+    partner_since = fields.Datetime(related='partner_id.create_date', string='عميل منذ', readonly=True)
     action = fields.Selection([
         ('start', 'بدء لمّة'), ('add', 'أضاف منتج'), ('remove', 'أزال منتج'),
         ('type', 'غيّر النوع'), ('checkout', 'أتمّ اللمّة'), ('clear', 'أفرغ اللمّة'),

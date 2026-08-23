@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uellow — POS Closing Report Mockup · موكاب تقرير إغلاق الكاشير</title>
+<style>
+  :root{
+    --teal:#2F6E62; --teal-d:#1f4d44; --ink:#1f3a35; --muted:#6b7c78;
+    --line:#e5e9e8; --soft:#f4f7f6; --pos:#e8f3ef; --amber:#C99A2E;
+    --red:#c0392b; --green:#2E9E6B;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',Tahoma,Arial,Helvetica,sans-serif;
+    background:#c7ccd1;color:var(--ink);
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .topbar{
+    position:sticky;top:0;z-index:10;background:var(--teal);color:#fff;
+    padding:14px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+    box-shadow:0 2px 10px rgba(0,0,0,.2);
+  }
+  .topbar h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.2px}
+  .topbar .sub{font-size:12px;opacity:.85;margin-top:2px}
+  .brandmark{
+    width:38px;height:38px;border-radius:10px;background:#fff;color:var(--teal);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px;
+  }
+  .seg{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .seg button{
+    border:0;border-radius:9px;padding:9px 15px;font-size:13px;font-weight:600;
+    cursor:pointer;background:rgba(255,255,255,.15);color:#fff;transition:.15s;
+  }
+  .seg button:hover{background:rgba(255,255,255,.28)}
+  .seg button.active{background:#fff;color:var(--teal)}
+  .seg button.print{background:var(--amber);color:#3a2c05}
+  .hint{
+    text-align:center;font-size:12px;color:#4a5a56;padding:10px;
+    background:#eef2f1;border-bottom:1px solid #dbe2e0;
+  }
+  .stage{display:flex;gap:34px;justify-content:center;align-items:flex-start;
+    flex-wrap:wrap;padding:34px 20px 70px}
+
+  /* ---------------- A4 SHEET ---------------- */
+  .a4{
+    width:210mm;min-height:297mm;background:#fff;padding:16mm 15mm;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);border-radius:2px;
+  }
+  .a4 .rhead{display:flex;justify-content:space-between;align-items:flex-start;
+    border-bottom:3px solid var(--teal);padding-bottom:14px}
+  .a4 .co{display:flex;gap:12px;align-items:center}
+  .a4 .co .logo{width:52px;height:52px;border-radius:12px;background:var(--teal);
+    color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px}
+  .a4 .co h2{margin:0;font-size:20px;color:var(--teal-d)}
+  .a4 .co .ct{font-size:12px;color:var(--muted);margin-top:3px}
+  .a4 .rtitle{text-align:right}
+  .a4 .rtitle .big{font-size:19px;font-weight:800;color:var(--ink)}
+  .a4 .rtitle .ar{font-size:15px;color:var(--teal);font-weight:700;margin-top:2px}
+  .a4 .rtitle .rid{font-size:12px;color:var(--muted);margin-top:6px}
+
+  .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:18px 0 6px;
+    border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .meta .cell{padding:11px 14px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .meta .cell:nth-child(4n){border-right:0}
+  .meta .cell:nth-child(n+5){border-bottom:0}
+  .meta .k{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .meta .k .ar{text-transform:none;letter-spacing:0}
+  .meta .v{font-size:14px;font-weight:700;color:var(--ink);margin-top:4px}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+  .kpi{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+  .kpi .lab{font-size:11px;color:var(--muted)}
+  .kpi .lab .ar{color:var(--teal)}
+  .kpi .num{font-size:22px;font-weight:800;color:var(--teal-d);margin-top:5px;line-height:1}
+  .kpi .unit{font-size:11px;color:var(--muted);font-weight:600}
+  .kpi.accent{background:var(--pos);border-color:#cfe6dd}
+
+  .sec{margin-top:20px}
+  .sec h3{font-size:13.5px;color:var(--teal-d);margin:0 0 9px;display:flex;
+    align-items:center;gap:8px;font-weight:800}
+  .sec h3 .ar{color:var(--muted);font-weight:600;font-size:12.5px}
+  .sec h3::before{content:"";width:5px;height:16px;background:var(--teal);border-radius:3px;display:inline-block}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{background:var(--teal);color:#fff;text-align:left;padding:9px 12px;font-weight:600;font-size:11.5px}
+  th.num,td.num{text-align:right;font-variant-numeric:tabular-nums}
+  td{padding:9px 12px;border-bottom:1px solid var(--line)}
+  tr:nth-child(even) td{background:#fafcfb}
+  tfoot td{font-weight:800;background:#eef4f2 !important;border-top:2px solid var(--teal);color:var(--teal-d)}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+
+  .recon{border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .recon .row{display:flex;justify-content:space-between;padding:10px 14px;font-size:12.5px;border-bottom:1px solid var(--line)}
+  .recon .row .lab .ar{color:var(--muted);font-size:11px;margin-left:6px}
+  .recon .row .amt{font-weight:700;font-variant-numeric:tabular-nums}
+  .recon .row.tot{background:#eef4f2;font-weight:800;color:var(--teal-d);border-bottom:0}
+  .recon .row.diff .amt{color:var(--green)}
+  .recon .plus .amt{color:var(--ink)}
+  .recon .minus .amt{color:var(--red)}
+
+  .sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px}
+  .sign .box{border-top:1.5px dashed #b9c4c1;padding-top:8px;font-size:12px;color:var(--muted);text-align:center}
+  .foot{margin-top:26px;text-align:center;font-size:10.5px;color:#9aa7a3;border-top:1px solid var(--line);padding-top:10px}
+
+  /* ---------------- 80mm RECEIPT ---------------- */
+  .receipt{
+    width:80mm;background:#fff;padding:6mm 5mm;
+    box-shadow:0 8px 30px rgba(0,0,0,.25);
+    font-family:'Courier New',ui-monospace,monospace;color:#111;font-size:11.5px;line-height:1.5;
+  }
+  .receipt .c{text-align:center}
+  .receipt .b{font-weight:700}
+  .receipt .lg{font-size:15px;font-weight:800;letter-spacing:1px}
+  .receipt .hr{border-top:1px dashed #333;margin:7px 0}
+  .receipt .hr2{border-top:1px solid #111;margin:7px 0}
+  .receipt .r{display:flex;justify-content:space-between;gap:8px}
+  .receipt .r .ar{color:#555;font-size:10px}
+  .receipt .big{font-size:14px;font-weight:800}
+  .receipt .muted{color:#555;font-size:10px}
+  .receipt table{font-family:inherit;font-size:11px}
+  .receipt table td{padding:2px 0;border:0;background:none!important}
+  .receipt .qr{width:70px;height:70px;margin:6px auto 0;
+    background:
+      repeating-linear-gradient(90deg,#111 0 4px,#fff 4px 8px),
+      repeating-linear-gradient(0deg,#111 0 4px,#fff 4px 8px);
+    background-blend-mode:multiply;opacity:.85;border:3px solid #fff;outline:1px solid #111}
+
+  @media print{
+    .topbar,.hint{display:none!important}
+    body{background:#fff}
+    .stage{padding:0;gap:0;display:block}
+    .sheet{box-shadow:none!important;border-radius:0}
+    .sheet[hidden]{display:none!important}
+    body.print-a4 .receipt{display:none}
+    body.print-receipt .a4{display:none}
+    body.print-a4 .a4{margin:0}
+    @page{margin:0}
+  }
+  @media (max-width:900px){ .a4{width:100%;min-height:auto;padding:8mm} .meta,.kpis{grid-template-columns:repeat(2,1fr)} .twocol{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brandmark">U</div>
+    <div>
+      <h1>POS Closing Report — Mockup</h1>
+      <div class="sub">موكاب تقرير إغلاق يومية الكاشير · بيانات حقيقية من جلسة POS/00116 — Farwaniya Shop</div>
+    </div>
+    <div class="seg">
+      <button id="bBoth" class="active" onclick="show('both')">Both · الاثنين</button>
+      <button id="bA4" onclick="show('a4')">A4</button>
+      <button id="bRc" onclick="show('receipt')">Receipt · إيصال 80مم</button>
+      <button class="print" onclick="printFmt('a4')">🖨 Print A4</button>
+      <button class="print" onclick="printFmt('receipt')">🖨 Print Receipt</button>
+    </div>
+  </div>
+  <div class="hint">
+    هذا موكاب تصميمي — أوبشن (١) طباعة A4 كامل · أوبشن (٢) طباعة على طابعة البوس بمقاس الإيصال 80mm. جرّب أزرار الطباعة بالأعلى. بعد موافقتك أنفّذه كتقرير فعلي داخل Odoo بزر «إغلاق الجلسة».
+  </div>
+
+  <div class="stage">
+    <!-- ================= A4 ================= -->
+    <section id="a4" class="sheet a4">
+      <div class="rhead">
+        <div class="co">
+          <div class="logo">U</div>
+          <div>
+            <h2>Uellow W.L.L</h2>
+            <div class="ct">Farwaniya Shop · فرع الفروانية<br>State of Kuwait · دولة الكويت</div>
+          </div>
+        </div>
+        <div class="rtitle">
+          <div class="big">CASHIER CLOSING REPORT</div>
+          <div class="ar">تقرير إغلاق يومية الكاشير</div>
+          <div class="rid">Session <b>POS/00116</b> &nbsp;·&nbsp; Z-Report</div>
+        </div>
+      </div>
+
+      <div class="meta">
+        <div class="cell"><div class="k">Cashier <span class="ar">· الكاشير</span></div><div class="v">Uellow</div></div>
+        <div class="cell"><div class="k">Register <span class="ar">· نقطة البيع</span></div><div class="v">Farwaniya Shop</div></div>
+        <div class="cell"><div class="k">Opened <span class="ar">· فتح</span></div><div class="v">22 Jan 2026 · 07:39</div></div>
+        <div class="cell"><div class="k">Closed <span class="ar">· إغلاق</span></div><div class="v">22 Jan 2026 · 19:20</div></div>
+        <div class="cell"><div class="k">Currency <span class="ar">· العملة</span></div><div class="v">KWD (د.ك)</div></div>
+        <div class="cell"><div class="k">Orders <span class="ar">· الطلبات</span></div><div class="v">24</div></div>
+        <div class="cell"><div class="k">Duration <span class="ar">· المدة</span></div><div class="v">11h 40m</div></div>
+        <div class="cell"><div class="k">Printed <span class="ar">· طُبع</span></div><div class="v">22 Jan 2026 · 19:22</div></div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi accent"><div class="lab">Net Sales <span class="ar">· صافي المبيعات</span></div><div class="num">171.510 <span class="unit">KWD</span></div></div>
+        <div class="kpi"><div class="lab">Transactions <span class="ar">· المعاملات</span></div><div class="num">24</div></div>
+        <div class="kpi"><div class="lab">Avg Ticket <span class="ar">· متوسط الفاتورة</span></div><div class="num">7.146 <span class="unit">KWD</span></div></div>
+        <div class="kpi"><div class="lab">Cash Difference <span class="ar">· فرق الصندوق</span></div><div class="num" style="color:var(--green)">0.000</div></div>
+      </div>
+
+      <div class="twocol">
+        <div class="sec">
+          <h3>Payments <span class="ar">· طرق الدفع</span></h3>
+          <table>
+            <thead><tr><th>Method · الطريقة</th><th class="num">Txns · عدد</th><th class="num">Amount · المبلغ</th></tr></thead>
+            <tbody>
+              <tr><td>💵 Cash · نقدي</td><td class="num">20</td><td class="num">122.760</td></tr>
+              <tr><td>💳 Card · بطاقة</td><td class="num">4</td><td class="num">48.750</td></tr>
+            </tbody>
+            <tfoot><tr><td>Total · الإجمالي</td><td class="num">24</td><td class="num">171.510</td></tr></tfoot>
+          </table>
+        </div>
+
+        <div class="sec">
+          <h3>Cash Reconciliation <span class="ar">· تسوية الصندوق</span></h3>
+          <div class="recon">
+            <div class="row plus"><div class="lab">Opening float <span class="ar">الرصيد الافتتاحي</span></div><div class="amt">0.000</div></div>
+            <div class="row plus"><div class="lab">+ Cash sales <span class="ar">مبيعات نقدية</span></div><div class="amt">+122.760</div></div>
+            <div class="row minus"><div class="lab">− Cash refunds <span class="ar">مرتجعات نقدية</span></div><div class="amt">−0.000</div></div>
+            <div class="row minus"><div class="lab">− Cash out / paid <span class="ar">مسحوبات</span></div><div class="amt">−0.000</div></div>
+            <div class="row tot"><div class="lab">Expected in drawer <span class="ar">المتوقع بالدرج</span></div><div class="amt">122.760</div></div>
+            <div class="row plus"><div class="lab">Counted <span class="ar">المعدود فعلياً</span></div><div class="amt">122.760</div></div>
+            <div class="row diff tot"><div class="lab">Difference <span class="ar">الفرق</span></div><div class="amt">0.000 ✓</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <h3>Sales Summary <span class="ar">· ملخّص المبيعات</span></h3>
+        <table>
+          <tbody>
+            <tr><td>Gross sales · إجمالي المبيعات</td><td class="num">179.760</td></tr>
+            <tr><td>Refunds (2) · المرتجعات</td><td class="num" style="color:var(--red)">−8.250</td></tr>
+            <tr><td>Discounts · الخصومات</td><td class="num">−0.000</td></tr>
+            <tr><td>Taxes · الضرائب</td><td class="num">0.000</td></tr>
+          </tbody>
+          <tfoot><tr><td>Net Sales · الصافي</td><td class="num">171.510 KWD</td></tr></tfoot>
+        </table>
+      </div>
+
+      <div class="sec">
+        <h3>Top Products <span class="ar">· أكثر المنتجات مبيعاً</span></h3>
+        <table>
+          <thead><tr><th>Product · المنتج</th><th class="num">Qty · كمية</th><th class="num">Total · الإجمالي</th></tr></thead>
+          <tbody>
+            <tr><td>C idea Tablet 7" CM86</td><td class="num">6</td><td class="num">54.000</td></tr>
+            <tr><td>Borofone FQ14 Joy TWS Earbuds</td><td class="num">7</td><td class="num">25.000</td></tr>
+            <tr><td>Poedagar Stainless Steel Men Watch 984</td><td class="num">3</td><td class="num">15.000</td></tr>
+            <tr><td>VIDIVE TWS Wireless Earphone BT894</td><td class="num">4</td><td class="num">10.000</td></tr>
+            <tr><td>Poedagar 889 Chronograph Men Watch</td><td class="num">2</td><td class="num">10.000</td></tr>
+            <tr><td>Bestrio bc01 pink</td><td class="num">2</td><td class="num">3.760</td></tr>
+            <tr><td>Neck Band W02</td><td class="num">2</td><td class="num">1.500</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="sign">
+        <div class="box">Cashier Signature · توقيع الكاشير</div>
+        <div class="box">Manager Approval · اعتماد المدير</div>
+      </div>
+      <div class="foot">Generated by Uellow POS · Odoo 18 &nbsp;|&nbsp; www.uellow.com &nbsp;|&nbsp; هذا التقرير سرّي وخاص بالإدارة</div>
+    </section>
+
+    <!-- ================= 80mm RECEIPT ================= -->
+    <section id="receipt" class="sheet receipt">
+      <div class="c lg">UELLOW</div>
+      <div class="c muted">Farwaniya Shop · فرع الفروانية</div>
+      <div class="c b">CASHIER CLOSING · إغلاق اليومية</div>
+      <div class="c muted">Z-Report</div>
+      <div class="hr2"></div>
+
+      <div class="r"><span>Session · الجلسة</span><span class="b">POS/00116</span></div>
+      <div class="r"><span>Cashier · الكاشير</span><span class="b">Uellow</span></div>
+      <div class="r"><span>Opened · فتح</span><span>22/01 07:39</span></div>
+      <div class="r"><span>Closed · إغلاق</span><span>22/01 19:20</span></div>
+      <div class="hr"></div>
+
+      <div class="b c">PAYMENTS · طرق الدفع</div>
+      <table>
+        <tr><td>Cash · نقدي (20)</td><td style="text-align:right">122.760</td></tr>
+        <tr><td>Card · بطاقة (4)</td><td style="text-align:right">48.750</td></tr>
+      </table>
+      <div class="hr"></div>
+      <div class="r big"><span>TOTAL · الإجمالي</span><span>171.510</span></div>
+      <div class="r muted"><span>Orders · الطلبات</span><span>24</span></div>
+      <div class="r muted"><span>Avg · المتوسط</span><span>7.146</span></div>
+      <div class="hr"></div>
+
+      <div class="b c">CASH DRAWER · الصندوق</div>
+      <div class="r"><span>Opening · افتتاحي</span><span>0.000</span></div>
+      <div class="r"><span>+ Cash · نقدي</span><span>122.760</span></div>
+      <div class="r"><span>Expected · متوقع</span><span>122.760</span></div>
+      <div class="r"><span>Counted · معدود</span><span>122.760</span></div>
+      <div class="r b"><span>Diff · الفرق</span><span>0.000</span></div>
+      <div class="hr"></div>
+
+      <div class="b c">SALES · المبيعات</div>
+      <div class="r"><span>Gross · إجمالي</span><span>179.760</span></div>
+      <div class="r"><span>Refunds · مرتجع (2)</span><span>-8.250</span></div>
+      <div class="r"><span>Tax · ضريبة</span><span>0.000</span></div>
+      <div class="r b"><span>Net · الصافي</span><span>171.510</span></div>
+      <div class="hr2"></div>
+
+      <div class="c muted">22 Jan 2026 · 19:22</div>
+      <div class="c muted">Cashier ______________</div>
+      <div class="c muted">Manager ______________</div>
+      <div class="qr"></div>
+      <div class="c muted" style="margin-top:6px">شكراً · Powered by Uellow POS</div>
+    </section>
+  </div>
+
+<script>
+  function show(m){
+    document.getElementById('a4').hidden = (m==='receipt');
+    document.getElementById('receipt').hidden = (m==='a4');
+    for(const [id,val] of [['bBoth','both'],['bA4','a4'],['bRc','receipt']])
+      document.getElementById(id).classList.toggle('active', val===m);
+  }
+  function printFmt(fmt){
+    document.body.classList.remove('print-a4','print-receipt');
+    document.body.classList.add('print-'+fmt);
+    const a4=document.getElementById('a4'), rc=document.getElementById('receipt');
+    const sa=a4.hidden, sr=rc.hidden; a4.hidden=false; rc.hidden=false;
+    window.print();
+    setTimeout(()=>{a4.hidden=sa; rc.hidden=sr;},300);
+  }
+</script>
+</body>
+</html>

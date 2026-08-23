@@ -35,9 +35,40 @@ class LammaConfig(models.Model):
         default='count', string='Discount mode')
     tier_ids = fields.One2many('uellow.lamma.tier', 'config_id', string='Tiers')
     max_discount_pct = fields.Float('Max discount (cap) %', default=20.0)
+    # ── Profit-band engine (all default 0 = OFF; no effect until configured) ──
+    min_profit_amount = fields.Float(
+        'Min profit / item (amount floor)', default=0.0,
+        help='حد أدنى مطلق للربح لكل منتج. الأرضية = الأكبر بين نسبة الهامش والمبلغ.')
+    max_margin_pct = fields.Float(
+        'Max profit margin % (cap)', default=0.0,
+        help='سقف ربح كنسبة. عند تجاوزه يُطبَّق خصم تلقائي. 0 = معطّل.')
+    max_profit_amount = fields.Float(
+        'Max profit / item (amount cap)', default=0.0,
+        help='سقف ربح كمبلغ مطلق لكل منتج. عند تجاوزه يُطبَّق خصم. 0 = معطّل.')
+    order_max_profit_amount = fields.Float(
+        'Max profit / bundle (order-level cap)', default=0.0,
+        help='سقف ربح إجمالي للّمّة كاملة (مبلغ). عند تجاوزه يُخصم الفائض. 0 = معطّل.')
     min_margin_pct = fields.Float('Guaranteed min profit margin %', default=12.0,
                                   help='The dynamic discount is never allowed to push the '
                                        'bundle margin below this floor.')
+    partial_discount = fields.Boolean(
+        'Discount eligible products only', default=True,
+        help='When some products are too thin on margin to discount, apply the '
+             'discount to the remaining eligible products instead of zeroing the '
+             'whole bundle. Each discounted product still keeps the guaranteed '
+             'min margin above.')
+    auto_start = fields.Boolean(
+        'Auto-start Lamma from cart', default=True,
+        help='When ON, the Lamma activates AUTOMATICALLY once the cart has 2+ '
+             'products (their cart items appear as a Lamma). When OFF, the '
+             'customer must start it manually by adding a product to the Lamma.')
+
+    discount_zero_cost = fields.Boolean(
+        'Discount products with no cost', default=True,
+        help='Many products have standard_price = 0 (unknown cost). When ON they '
+             'are discounted up to the max cap; turn OFF to EXCLUDE zero-cost '
+             'products from the discount so an unknown cost can never be sold '
+             'below the real one.')
 
     # --- installment lamma ---
     installment_enabled = fields.Boolean('Enable installment Lamma', default=True)
@@ -94,6 +125,30 @@ class LammaConfig(models.Model):
             })
         return prog
 
+    def _strip_lamma_rewards(self, order, prog):
+        """Remove every existing Lamma reward line + coupon + point entry
+        from `order` so the discount can never stack across abandoned
+        checkouts (idempotent: at most one Lamma discount per order)."""
+        from datetime import date, timedelta
+        try:
+            old_lines = order.order_line.filtered(
+                lambda l: l.reward_id and l.reward_id.program_id.id == prog.id)
+            coupons = old_lines.mapped("coupon_id")
+            if old_lines:
+                old_lines.unlink()
+            coupons |= order.applied_coupon_ids.filtered(
+                lambda c: c.program_id.id == prog.id)
+            if coupons:
+                order.applied_coupon_ids = [(3, c.id) for c in coupons]
+                coupons.sudo().write(
+                    {"expiration_date": date.today() - timedelta(days=1)})
+            pts = order.coupon_point_ids.filtered(
+                lambda pt: pt.coupon_id.program_id.id == prog.id)
+            if pts:
+                pts.unlink()
+        except Exception:
+            pass
+
     def _issue_coupon(self, order, amount, partner=None):
         """Create a one-time discount coupon worth `amount` and apply it to
         `order` (single discount line 'خصم لمّة يلو' on the total, consumed on
@@ -105,6 +160,10 @@ class LammaConfig(models.Model):
         prog = self._coupon_program()
         if not prog:
             return False
+        # Never stack Lamma discounts. An abandoned cart used to keep its old
+        # Lamma coupon, so a second checkout DOUBLED the discount (a real
+        # financial loss). Strip any prior Lamma reward / coupon first.
+        self._strip_lamma_rewards(order, prog)
         card = self.env['loyalty.card'].sudo().create({
             'program_id': prog.id,
             'points': round(amount * 1000),  # fils → 0.001/point = exact amount
@@ -217,24 +276,87 @@ class LammaConfig(models.Model):
         floor_margin = self.min_margin_pct + (self.installment_extra_margin if is_inst else 0.0)
 
         eligible = n >= max(1, self.min_items)
+        # Installment bundles must clear the installment minimum to get a discount.
         if is_inst and subtotal < self.installment_min_amount:
-            eligible = eligible  # still builds; UI may gate installments separately
+            eligible = False
 
         pct = min(self._tier_pct(n, subtotal), self.max_discount_pct) if eligible else 0.0
-        capped = False
-        if eligible and subtotal > 0:
-            # Floor is expressed as a margin ON THE SELLING PRICE so it matches the
-            # reported margin_pct exactly: at the floor, (pays-cost)/pays == floor_margin.
-            fm = min(floor_margin, 99.0)
-            floor = cost / (1 - fm / 100.0) if fm < 100 else float('inf')
-            if subtotal * (1 - pct / 100.0) < floor:
-                allowed = max(0.0, (1 - floor / subtotal) * 100.0)
-                if allowed < pct:
-                    pct = allowed
-                    capped = True
+        # Floor is a margin ON THE SELLING PRICE so it matches the reported
+        # margin_pct exactly: at the floor, (pays-cost)/pays == floor_margin.
+        fm = min(floor_margin, 99.0)
 
-        pays = self._round(subtotal * (1 - pct / 100.0))
+        def _floor_price(c):
+            p_pct = c / (1 - fm / 100.0) if fm < 100 else float('inf')
+            p_amt = (c + self.min_profit_amount) if self.min_profit_amount else 0.0
+            return max(p_pct, p_amt)
+
+        # Per-product headroom = how much each line can be discounted while KEEPING
+        # its own floor margin. A thin-margin product (e.g. a phone) yields 0 and is
+        # "excluded"; the discount is then spread over the products that can bear it.
+        def _headroom(l):
+            # zero/unknown-cost guard: optionally treat cost<=0 as non-discountable
+            if not self.discount_zero_cost and (l['cost'] or 0.0) <= 0.0:
+                return 0.0
+            return max(0.0, l['price'] - _floor_price(l['cost']))
+        headrooms = [_headroom(l) for l in lines] if eligible else [0.0] * n
+        total_headroom = sum(headrooms)
+        excluded = sum(1 for h in headrooms if h <= 1e-9) if eligible else 0
+        discountable_subtotal = round(
+            sum(l['price'] for l, h in zip(lines, headrooms) if h > 1e-9), 3)
+
+        target = subtotal * pct / 100.0                       # ideal tier discount
+        max_cap = subtotal * self.max_discount_pct / 100.0    # absolute cap
+
+        if not eligible or subtotal <= 0:
+            applied = 0.0
+        elif self.partial_discount:
+            # margin-safe: never exceed the summed per-product headroom
+            applied = min(target, total_headroom, max_cap)
+        else:
+            # legacy aggregate floor (whole bundle capped together)
+            applied = min(target, max(0.0, subtotal - _floor_price(cost)), max_cap)
+
+        # ── optional profit CEILING: pass profit above the cap back to the buyer.
+        # Cap binds at whichever limit is reached first (min of %/amount prices),
+        # but never below the profit floor. Runs only when a cap is configured. ──
+        if subtotal > 0 and (self.max_margin_pct or self.max_profit_amount):
+            def _cap_price(l):
+                caps = []
+                if self.max_margin_pct and self.max_margin_pct < 100:
+                    caps.append(l['cost'] / (1 - self.max_margin_pct / 100.0))
+                if self.max_profit_amount:
+                    caps.append(l['cost'] + self.max_profit_amount)
+                return min(caps) if caps else l['price']
+            _finals = []
+            for l, h in zip(lines, headrooms):
+                share = (applied * (h / total_headroom)) if total_headroom > 1e-9 else 0.0
+                after_tier = l['price'] - share
+                _finals.append(max(_floor_price(l['cost']), min(after_tier, _cap_price(l))))
+            _cap_applied = subtotal - sum(_finals)
+            if _cap_applied > applied:            # ceiling only ever adds discount
+                applied = _cap_applied
+
+        # ── installment ALWAYS reserves an extra guaranteed margin: reduce the
+        # discount by an installment fee so an installment Lamma always costs
+        # more than the same normal Lamma — even with fat margins or an active
+        # profit ceiling (installment keeps installment_extra_margin% more).
+        if is_inst and self.installment_extra_margin and applied > 0:
+            _fee = (discountable_subtotal or subtotal) * self.installment_extra_margin / 100.0
+            applied = max(0.0, applied - _fee)
+
+        pays = self._round(subtotal - applied)
+        # ── optional ORDER-level profit ceiling: cap the WHOLE bundle's total
+        # profit at an absolute amount; discount the excess down to the summed
+        # per-line floors. Runs only when configured. ──
+        if self.order_max_profit_amount and (pays - cost) > self.order_max_profit_amount:
+            floor_total = sum(_floor_price(l['cost']) for l in lines)
+            new_pays = self._round(max(floor_total, cost + self.order_max_profit_amount))
+            if new_pays < pays:
+                pays = new_pays
+                applied = subtotal - pays
         saved = round(subtotal - pays, 3)
+        eff_pct = (saved / subtotal * 100.0) if subtotal > 0 else 0.0
+        capped = bool(eligible and saved + 1e-6 < target)
         margin_pct = ((pays - cost) / pays * 100.0) if pays > 0 else 0.0
         months = max(1, self.installment_max_months) if is_inst else 1
         return {
@@ -242,11 +364,14 @@ class LammaConfig(models.Model):
             'n': n,
             'subtotal': round(subtotal, 3),
             'cost': round(cost, 3),
-            'discount_pct': round(pct, 2),
+            'discount_pct': round(eff_pct, 2),
             'pays': pays,
             'saved': saved,
             'margin_pct': round(margin_pct, 2),
             'capped': capped,
+            'excluded': excluded,                 # products that couldn't be discounted
+            'discountable_n': n - excluded,
+            'discountable_subtotal': discountable_subtotal,
             'floor_margin_pct': round(floor_margin, 2),
             'monthly': self._round(pays / months) if is_inst else 0.0,
             'eligible': eligible,

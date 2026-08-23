@@ -1195,9 +1195,9 @@ class DropshipProduct(models.Model):
             Rule = self.env['dropship.text.rule']
             for r in revs[:60]:
                 if r.get('text'):
-                    r['text'] = Rule._apply_all(r['text'], count=True)
+                    r['text'] = Rule._apply_all(r['text'])
                 if r.get('name'):
-                    r['name'] = Rule._apply_all(r['name'], count=True)
+                    r['name'] = Rule._apply_all(r['name'])
             if revs or rev.get('stats'):
                 vals['reviews_json'] = json.dumps(
                     {'reviews': revs[:60], 'stats': rev.get('stats') or {}},
