@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../api/uellow_api.dart';
 import '../../api/uellow_models.dart';
 import '../theme/uellow_theme.dart';
+import 'search_results_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -35,6 +36,13 @@ class _SearchScreenState extends State<SearchScreen> {
     } else {
       setState(() => _results = null);
     }
+  }
+
+  void _openAll(String v) {
+    final q = v.trim();
+    if (q.length < 2) return;
+    Navigator.push(context, MaterialPageRoute(
+        builder: (_) => SearchResultsScreen(query: q)));
   }
 
   @override
@@ -72,6 +80,8 @@ class _SearchScreenState extends State<SearchScreen> {
         const SizedBox(width: 8),
         Expanded(child: TextField(
           controller: _ctrl, focusNode: _focus, autofocus: true,
+          textInputAction: TextInputAction.search,
+          onSubmitted: (v) => _openAll(v),
           decoration: InputDecoration(
             hintText: 'ابحث عن منتج، ماركة، أو ﺗﺎﺟﺮ…',
             prefixIcon: const Icon(Icons.search, size: 18, color: UellowColors.muted),
@@ -248,7 +258,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () => _openAll(_ctrl.text),
               child: Text('See all results for "${_ctrl.text.trim()}"  →'),
             ),
           ),
