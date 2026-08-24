@@ -176,7 +176,22 @@ class IrHttpInherit(models.AbstractModel):
         path = request.httprequest.path or ''
         if _is_pass_through(path):
             return
-        if _is_kuwait():
+        _ua = (request.httprequest.headers.get('User-Agent') or '').lower()
+        # Hard-throttle aggressive/low-value crawlers regardless of the
+        # home-market (Kuwait) geo exemption — they were saturating the DB
+        # via /shop + search. Good bots (Googlebot/Bingbot/Applebot) excluded.
+        from werkzeug.exceptions import HTTPException as _UC_HE
+        try:
+            if any(b in _ua for b in ('amazonbot','gptbot','oai-searchbot','claudebot','anthropic-ai','ccbot','bytespider','bytedance','semrushbot','ahrefsbot','dataforseobot','mj12bot','dotbot','petalbot','blexbot','imagesift','meta-externalagent','facebookbot','serpstatbot','barkrowler','seznambot','applebot-extended','friendlycrawler','timpibot')):
+                cls._perf_emit_429(429, 'crawler', retry_after=3600)
+        except _UC_HE:
+            raise
+        except Exception:
+            pass
+        # Bots/crawlers are NOT granted the geo exemption; only real
+        # (non-bot) traffic is exempt, so every bot faces the quota.
+        _uc_bot = ('bot' in _ua or 'crawl' in _ua or 'spider' in _ua or 'slurp' in _ua)
+        if _is_kuwait() and not _uc_bot:
             return
 
         env = request.env
