@@ -143,6 +143,212 @@ def _to_company(env, amount, currency):
     return float(amount or 0)
 
 
+def compute_range(env, kw, today0, _to_company, _money):
+    So = env['sale.order'].sudo()
+    SoL = env['sale.order.line'].sudo()
+    P = env['res.partner'].sudo()
+    SALE = ('sale', 'done')
+
+    def _d(s):
+        return datetime.strptime(s, '%Y-%m-%d')
+
+    # ── حدّد الفترة [start,end) بتوقيت يُمثّل منتصف ليل الكويت (UTC) ──
+    period = (kw.get('period') or '30d').lower()
+    frm = kw.get('from') or kw.get('date_from')
+    to = kw.get('to') or kw.get('date_to')
+    day0 = today0                       # منتصف ليل اليوم (محلي) ممثّلاً بالـUTC
+    end = day0 + timedelta(days=1)       # نهاية اليوم (حصري)
+    if frm and to:
+        start = _d(frm) - timedelta(hours=3)
+        end = _d(to) + timedelta(days=1) - timedelta(hours=3)
+        period = 'custom'
+    elif period == 'today':
+        start = day0
+    elif period == '7d':
+        start = day0 - timedelta(days=6)
+    elif period == 'month':
+        start = day0.replace(day=1)
+    elif period == 'ytd':
+        start = day0.replace(month=1, day=1)
+    else:  # 30d افتراضي
+        period = '30d'
+        start = day0 - timedelta(days=29)
+
+    span = end - start
+    pstart = start - span                # الفترة السابقة المكافئة
+    pend = start
+    ndays = max(1, span.days)
+
+    def S(dt):
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    # ── جلب رؤوس الطلبات للفترتين دفعة واحدة ──
+    rows = So.search_read(
+        [('state', 'in', SALE),
+         ('date_order', '>=', S(pstart)), ('date_order', '<', S(end))],
+        ['date_order', 'amount_total', 'currency_id', 'website_id',
+         'partner_id'])
+    curc = {}
+
+    def conv(o):
+        cid = o['currency_id'] and o['currency_id'][0]
+        if cid not in curc:
+            curc[cid] = env['res.currency'].sudo().browse(cid) if cid else None
+        return _to_company(env, o['amount_total'], curc[cid])
+
+    cur = {'rev': 0.0, 'n': 0}
+    prv = {'rev': 0.0, 'n': 0}
+    daily = {}
+    daily_prev = {}
+    hourly = [0.0] * 24
+    by_ch = {}
+    by_cust = {}
+    cust_ids = set()
+    for o in rows:
+        amt = conv(o)
+        local = o['date_order'] + timedelta(hours=3)
+        in_cur = o['date_order'] >= start
+        if in_cur:
+            cur['rev'] += amt
+            cur['n'] += 1
+            daily.setdefault(local.strftime('%Y-%m-%d'), {'t': 0.0, 'c': 0})
+            daily[local.strftime('%Y-%m-%d')]['t'] += amt
+            daily[local.strftime('%Y-%m-%d')]['c'] += 1
+            hourly[local.hour] += amt
+            wname = (o['website_id'] and o['website_id'][1]) or 'الباك/POS'
+            ch = by_ch.setdefault(wname, {'t': 0.0, 'c': 0})
+            ch['t'] += amt
+            ch['c'] += 1
+            pid = o['partner_id'] and o['partner_id'][0]
+            if pid:
+                cust_ids.add(pid)
+                cu = by_cust.setdefault(pid, {'t': 0.0, 'c': 0,
+                                              'name': o['partner_id'][1]})
+                cu['t'] += amt
+                cu['c'] += 1
+        else:
+            prv['rev'] += amt
+            prv['n'] += 1
+            dp = (local - span).strftime('%Y-%m-%d')  # محاذاة لليوم المقابل
+            daily_prev.setdefault(dp, 0.0)
+            daily_prev[dp] += amt
+
+    # ── سلسلة يومية للفترة الحالية + المقابلة (محاذاة) ──
+    series = []
+    for i in range(ndays if ndays <= 92 else 92):
+        d = (start + timedelta(days=i, hours=3)).strftime('%Y-%m-%d')
+        cell = daily.get(d, {'t': 0.0, 'c': 0})
+        series.append({'date': d, 'total': round(cell['t'], 3),
+                       'count': cell['c'],
+                       'prev': round(daily_prev.get(d, 0.0), 3)})
+
+    # ── وحدات مباعة + أكثر المنتجات + التصنيفات (قراءة سطور) ──
+    def units(a, b):
+        g = SoL.read_group(
+            [('order_id.state', 'in', SALE),
+             ('order_id.date_order', '>=', S(a)),
+             ('order_id.date_order', '<', S(b)),
+             ('is_delivery', '=', False)],
+            ['product_uom_qty:sum'], [])
+        return int((g and g[0].get('product_uom_qty')) or 0)
+
+    u_cur = units(start, end)
+    u_prv = units(pstart, pend)
+
+    # أكثر المنتجات + التصنيفات — من السطور مع تحويل العملة (دقيق)
+    tops = []
+    bycat = {}
+    prod_agg = {}
+    try:
+        lrows = SoL.search_read(
+            [('order_id.state', 'in', SALE),
+             ('order_id.date_order', '>=', S(start)),
+             ('order_id.date_order', '<', S(end)),
+             ('product_id', '!=', False), ('is_delivery', '=', False)],
+            ['product_id', 'price_total', 'currency_id', 'product_uom_qty'])
+        for l in lrows:
+            cid = l['currency_id'] and l['currency_id'][0]
+            if cid not in curc:
+                curc[cid] = env['res.currency'].sudo().browse(cid) if cid else None
+            amt = _to_company(env, l['price_total'] or 0.0, curc[cid])
+            pid = l['product_id'][0]
+            a = prod_agg.setdefault(pid, {'name': l['product_id'][1],
+                                          'qty': 0, 't': 0.0})
+            a['qty'] += int(l['product_uom_qty'] or 0)
+            a['t'] += amt
+        tops = [{'id': pid, 'name': v['name'], 'qty': v['qty'],
+                 'total': round(v['t'], 3)}
+                for pid, v in sorted(prod_agg.items(),
+                                     key=lambda kv: -kv[1]['t'])[:7]]
+        # الفئة المتجرية (public category) أوضح من categ الداخلية
+        prods = env['product.product'].sudo().browse(list(prod_agg.keys()))
+        pm = {}
+        for p in prods:
+            pcs = p.product_tmpl_id.public_categ_ids
+            pm[p.id] = pcs[0].name if pcs else (p.categ_id.name or 'أخرى')
+        for pid, v in prod_agg.items():
+            cat = pm.get(pid, 'أخرى')
+            bycat[cat] = bycat.get(cat, 0.0) + v['t']
+    except Exception:
+        pass
+
+    # ── المحافظة (أفضل جهد عبر state_id للشركاء) ──
+    bygov = {}
+    try:
+        if cust_ids:
+            parts = P.browse(list(cust_ids))
+            st = {p.id: (p.state_id.name or 'غير محدّد') for p in parts}
+            for pid, v in by_cust.items():
+                g = st.get(pid, 'غير محدّد')
+                bygov[g] = bygov.get(g, 0.0) + v['t']
+    except Exception:
+        pass
+
+    # ── عملاء جدد ──
+    def newc(a, b):
+        return P.search_count([('create_date', '>=', S(a)),
+                               ('create_date', '<', S(b)),
+                               ('customer_rank', '>', 0)])
+    nc_cur = newc(start, end)
+    nc_prv = newc(pstart, pend)
+
+    def kpi(v, p):
+        v = round(v, 3)
+        dp = None
+        if p:
+            dp = round((v - p) / p * 100.0, 1)
+        return {'value': v, 'prev': round(p, 3), 'delta_pct': dp}
+
+    aov_c = (cur['rev'] / cur['n']) if cur['n'] else 0.0
+    aov_p = (prv['rev'] / prv['n']) if prv['n'] else 0.0
+
+    def top(d, key='t', n=7):
+        items = sorted(d.items(), key=lambda kv: -(kv[1] if isinstance(kv[1], (int, float)) else kv[1][key]))
+        return items[:n]
+
+    return {
+        'period': period, 'from': (start + timedelta(hours=3)).strftime('%Y-%m-%d'),
+        'to': (end - timedelta(days=1) + timedelta(hours=3)).strftime('%Y-%m-%d'),
+        'days': ndays,
+        'kpis': {
+            'revenue': kpi(cur['rev'], prv['rev']),
+            'orders': kpi(cur['n'], prv['n']),
+            'aov': kpi(aov_c, aov_p),
+            'units': kpi(u_cur, u_prv),
+            'new_customers': kpi(nc_cur, nc_prv),
+        },
+        'series': series,
+        'hourly': [round(h, 2) for h in hourly],
+        'by_channel': [{'name': k, 'total': round(v['t'], 3), 'count': v['c']}
+                       for k, v in top(by_ch)],
+        'by_category': [{'name': k, 'total': round(v, 3)} for k, v in top(bycat)],
+        'by_governorate': [{'name': k, 'total': round(v, 3)} for k, v in top(bygov)],
+        'top_products': tops,
+        'top_customers': [{'id': k, 'name': v['name'], 'orders': v['c'],
+                           'total': round(v['t'], 3)} for k, v in top(by_cust)],
+    }
+
+
 class UellowAdminAppController(http.Controller):
 
     # ─── check ────────────────────────────────────────────────────────
@@ -344,6 +550,11 @@ class UellowAdminAppController(http.Controller):
         except Exception:
             _logger.debug('live snapshot failed', exc_info=True)
         data['live'] = live
+        try:
+            data['range'] = compute_range(env, kw, today0, _to_company, _money)
+        except Exception:
+            _logger.debug('range block failed', exc_info=True)
+            data['range'] = None
         return ok(data)
 
     # ─── orders list ──────────────────────────────────────────────────
@@ -428,11 +639,14 @@ class UellowAdminAppController(http.Controller):
             if lmargin is None:
                 lmargin = round(l.price_subtotal - lcost, 3)
             lines.append({
-                'name': l.name or p.display_name,
+                'id': l.id,
+                'product_id': p.id if p else None,
+                'name': l.name or (p.display_name if p else ''),
                 'image': p and img_url('product.product', p.id, 'image_128',
                                        unique=p.write_date) or '',
                 'qty': l.product_uom_qty,
                 'price_unit': round(l.price_unit, 3),
+                'discount': round(l.discount or 0.0, 2),
                 'total': round(l.price_total, 3),
                 'cost': round(lcost, 3),
                 'margin': round(lmargin, 3),
@@ -1194,6 +1408,233 @@ class UellowAdminAppController(http.Controller):
             _logger.warning('admin product update failed', exc_info=True)
             return fail('UPDATE_FAILED', msg[:200], status=400)
         return ok({'updated': sorted(set(changed))})
+
+
+    # ─── product create: metadata for the native pickers ───────────────
+    @http.route('/api/mobile/v2/admin/product/meta', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_product_meta(self, **kw):
+        """Option lists the native 'New product' screen needs to fill its
+        dropdowns: units, customer taxes, internal + eCommerce categories,
+        plus sensible defaults and the company currency."""
+        env = request.env
+        Uom = env['uom.uom'].sudo()
+        uoms = [{'id': u.id,
+                 'name': u.name,
+                 'category': u.category_id.name or ''}
+                for u in Uom.search([], order='category_id, name')]
+        Tax = env['account.tax'].sudo()
+        tax_dom = [('type_tax_use', '=', 'sale')]
+        if 'company_id' in Tax._fields:
+            tax_dom.append(('company_id', '=', env.company.id))
+        taxes = [{'id': t.id, 'name': t.name,
+                  'amount': round(t.amount, 3)}
+                 for t in Tax.search(tax_dom, order='sequence, id')]
+        Cat = env['product.category'].sudo()
+        cats = [{'id': c.id, 'name': c.complete_name or c.name}
+                for c in Cat.search([], order='complete_name')]
+        Pub = env['product.public.category'].sudo()
+        pub_order = 'complete_name' if 'complete_name' in Pub._fields else 'name'
+        eco = [{'id': c.id,
+                'name': (getattr(c, 'complete_name', False) or c.display_name
+                         or c.name or '')}
+               for c in Pub.search([], order=pub_order)]
+        cur = _ccy(env)
+        # sensible defaults
+        def_uom = env.ref('uom.product_uom_unit', raise_if_not_found=False)
+        def_cat = env.ref('product.product_category_all',
+                          raise_if_not_found=False) \
+            or (Cat.search([], limit=1))
+        return ok({
+            'uoms': uoms,
+            'taxes': taxes,
+            'categories': cats,          # internal product.category
+            'eco_categories': eco,       # website sections
+            'defaults': {
+                'uom_id': def_uom.id if def_uom else (uoms[0]['id'] if uoms else 0),
+                'categ_id': def_cat.id if def_cat else (cats[0]['id'] if cats else 0),
+                'invoice_policy': 'order',
+                'tracking': 'none',
+                'kind': 'storable',
+                'sale_ok': True,
+                'purchase_ok': True,
+                'is_published': False,
+                'continue_selling': False,
+            },
+            'currency': {'symbol': cur.symbol or 'KD',
+                         'digits': cur.decimal_places or 3},
+        })
+
+    # ─── product create: build a full product.template ─────────────────
+    @http.route('/api/mobile/v2/admin/product/create', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_product_create(self, **kw):
+        """Create a new product with the full backend field set. Runs as the
+        SUPERUSER (cost/valuation recomputes re-check access with the public
+        request user). Optionally sets an initial on-hand qty and one vendor."""
+        from odoo import SUPERUSER_ID, api as _api
+        acting_partner = current_partner()
+        acting_user = acting_partner.sudo().user_ids[:1] if acting_partner \
+            and acting_partner.sudo().user_ids else None
+        env = _api.Environment(request.env.cr, SUPERUSER_ID,
+                               dict(request.env.context))
+        p = get_payload()
+
+        name = (p.get('name') or '').strip()
+        if not name:
+            return fail('NAME_REQUIRED', 'Product name is required / الاسم مطلوب',
+                        status=400)
+
+        # kind → Odoo 18 type / is_storable
+        kind = (p.get('kind') or 'storable').strip()
+        if kind == 'service':
+            ptype, storable = 'service', False
+        elif kind == 'consumable':
+            ptype, storable = 'consu', False
+        else:  # storable (default)
+            ptype, storable = 'consu', True
+
+        vals = {
+            'name': name,
+            'type': ptype,
+            'sale_ok': bool(p.get('sale_ok', True)),
+            'purchase_ok': bool(p.get('purchase_ok', True)),
+        }
+        if 'is_storable' in env['product.template']._fields:
+            vals['is_storable'] = storable
+        # pricing
+        if p.get('price') is not None:
+            try:
+                vals['list_price'] = float(p['price'])
+            except Exception:
+                pass
+        # identifiers
+        if (p.get('default_code') or '').strip():
+            vals['default_code'] = p['default_code'].strip()
+        if (p.get('barcode') or '').strip():
+            vals['barcode'] = p['barcode'].strip()
+        # categories
+        if p.get('categ_id'):
+            vals['categ_id'] = int(p['categ_id'])
+        if p.get('public_categ_ids'):
+            ids = [int(c) for c in p['public_categ_ids'] if str(c).strip()]
+            if ids:
+                vals['public_categ_ids'] = [(6, 0, ids)]
+        # taxes
+        if p.get('taxes_id') is not None:
+            tids = [int(t) for t in (p.get('taxes_id') or []) if str(t).strip()]
+            vals['taxes_id'] = [(6, 0, tids)]
+        # units
+        if p.get('uom_id'):
+            vals['uom_id'] = int(p['uom_id'])
+            vals['uom_po_id'] = int(p.get('uom_po_id') or p['uom_id'])
+        # descriptions
+        if (p.get('description_sale') or '').strip():
+            vals['description_sale'] = p['description_sale'].strip()
+        if (p.get('description') or '').strip():
+            vals['description'] = p['description'].strip()
+        # logistics
+        for f_in, f_out in (('weight', 'weight'), ('volume', 'volume')):
+            if p.get(f_in) is not None and f_out in env['product.template']._fields:
+                try:
+                    vals[f_out] = float(p[f_in])
+                except Exception:
+                    pass
+        if (p.get('hs_code') or '').strip() and \
+                'hs_code' in env['product.template']._fields:
+            vals['hs_code'] = p['hs_code'].strip()
+        # policies
+        if p.get('invoice_policy') in ('order', 'delivery') and \
+                'invoice_policy' in env['product.template']._fields:
+            vals['invoice_policy'] = p['invoice_policy']
+        if storable and p.get('tracking') in ('none', 'lot', 'serial') and \
+                'tracking' in env['product.template']._fields:
+            vals['tracking'] = p['tracking']
+        if p.get('continue_selling') is not None and \
+                'allow_out_of_stock_order' in env['product.template']._fields:
+            vals['allow_out_of_stock_order'] = bool(p['continue_selling'])
+        if p.get('is_published') is not None and \
+                'is_published' in env['product.template']._fields:
+            vals['is_published'] = bool(p['is_published'])
+        # image (base64, optional data-URI prefix)
+        img = p.get('image')
+        if img:
+            if isinstance(img, str) and ',' in img[:40] and img[:5] == 'data:':
+                img = img.split(',', 1)[1]
+            vals['image_1920'] = img
+
+        try:
+            tmpl = env['product.template'].sudo().create(vals)
+            variant = tmpl.product_variant_ids[:1]
+            # Arabic name (translation) on the variant/template name field
+            if (p.get('name_ar') or '').strip():
+                tmpl.with_context(lang='ar_001').write(
+                    {'name': p['name_ar'].strip()})
+            # cost lives on the variant (company-dependent)
+            if p.get('cost') is not None and variant:
+                try:
+                    variant.standard_price = float(p['cost'])
+                except Exception:
+                    pass
+            # one optional vendor (supplierinfo)
+            v = p.get('vendor') or {}
+            if v.get('partner_id'):
+                si = {
+                    'partner_id': int(v['partner_id']),
+                    'product_tmpl_id': tmpl.id,
+                }
+                if v.get('price') is not None:
+                    si['price'] = float(v['price'])
+                if v.get('min_qty') is not None:
+                    si['min_qty'] = float(v['min_qty'])
+                env['product.supplierinfo'].sudo().create(si)
+            # initial on-hand qty (storable only)
+            init_qty = p.get('init_qty')
+            if storable and init_qty not in (None, '') and variant:
+                try:
+                    new_qty = float(init_qty)
+                    loc = self._admin_stock_location(env)
+                    if loc and new_qty:
+                        Quant = env['stock.quant'].sudo().with_context(
+                            inventory_mode=True)
+                        quant = Quant.search(
+                            [('product_id', '=', variant.id),
+                             ('location_id', '=', loc.id)], limit=1)
+                        if not quant:
+                            quant = Quant.create({'product_id': variant.id,
+                                                  'location_id': loc.id})
+                        quant.inventory_quantity = new_qty
+                        quant.action_apply_inventory()
+                        if 'uellow.stock.adjust' in env:
+                            env['uellow.stock.adjust'].sudo().log(
+                                variant, loc, 0.0, new_qty,
+                                'Initial stock (new product)',
+                                user=acting_user or env.user)
+                except Exception:
+                    _logger.warning('initial stock set failed', exc_info=True)
+            request.env.cr.commit()
+        except Exception as e:
+            request.env.cr.rollback()
+            msg = str(e)
+            if 'barcode' in msg.lower() and ('unique' in msg.lower()
+                                             or 'duplicate' in msg.lower()):
+                return fail('BARCODE_DUP',
+                            'This barcode is already used by another product',
+                            status=400)
+            _logger.warning('admin product create failed', exc_info=True)
+            return fail('CREATE_FAILED', msg[:200], status=400)
+
+        return ok({
+            'id': tmpl.id,
+            'variant_id': variant.id if variant else 0,
+            'name': tmpl.name,
+            'image': img_url('product.template', tmpl.id, 'image_512',
+                             unique=tmpl.write_date),
+        })
 
     # ─── stock: main internal location helper ──────────────────────────
     def _admin_stock_location(self, env):
@@ -2683,11 +3124,18 @@ class UellowAdminAppController(http.Controller):
         Prod = env['product.product'].sudo()
         q = (kw.get('q') or '').strip()
         dom = [('purchase_ok', '=', True)]
+        # Hide Uellow World (dropship/China) products by default — they are
+        # dropshipped, not stock we raise local POs for. World (~19k) otherwise
+        # dominated the first page so ONLY World products showed. Escape: world=1.
+        _show_world = (str(kw.get('world') or '').lower() in ('1', 'true', 'yes')
+                       or (kw.get('country') or '').strip().lower()
+                       in ('cn', 'china', 'world'))
+        if not _show_world and 'is_dropship' in env['product.template']._fields:
+            dom.append(('product_tmpl_id.is_dropship', '=', False))
         if q:
-            dom = ['&', ('purchase_ok', '=', True),
-                   '|', '|', ('name', 'ilike', q),
-                   ('default_code', 'ilike', q), ('barcode', 'ilike', q)]
-        prods = Prod.search(dom, limit=30)
+            dom += ['|', '|', ('name', 'ilike', q),
+                    ('default_code', 'ilike', q), ('barcode', 'ilike', q)]
+        prods = Prod.search(dom, order='name', limit=40)
         return ok({'products': [{
             'id': p.id,
             'name': p.display_name or p.name or '',
@@ -2826,3 +3274,313 @@ class UellowAdminAppController(http.Controller):
             'top_vendors': [{'id': k[0], 'name': k[1],
                              'amount': _money(env, v)} for k, v in top],
         })
+
+
+    # ─── sale order: edit lines (add / remove / qty / price / discount) ─
+    def _so_write_lines(self, env, o, lines, remove):
+        """Apply an add/edit/remove set to an editable sale order. Mirrors the
+        purchase _po_write_lines, plus per-line discount — matching the backend
+        sale order form."""
+        SOL = env['sale.order.line']
+        for rid in (remove or []):
+            try:
+                ln = SOL.browse(int(rid)).exists()
+            except (TypeError, ValueError):
+                continue
+            if ln and ln.order_id.id == o.id and not ln.is_delivery:
+                ln.unlink()
+        for l in (lines or []):
+            qty = float(l.get('qty') or 0)
+            price = l.get('price_unit')
+            disc = l.get('discount')
+            if l.get('id'):
+                ln = SOL.browse(int(l['id'])).exists()
+                if not ln or ln.order_id.id != o.id:
+                    continue
+                vals = {}
+                if qty > 0:
+                    vals['product_uom_qty'] = qty
+                if price not in (None, ''):
+                    vals['price_unit'] = float(price)
+                if disc not in (None, ''):
+                    vals['discount'] = float(disc)
+                if vals:
+                    ln.write(vals)
+            elif l.get('product_id'):
+                ln = SOL.create({
+                    'order_id': o.id,
+                    'product_id': int(l['product_id']),
+                    'product_uom_qty': qty if qty > 0 else 1.0,
+                })
+                over = {}
+                if price not in (None, ''):
+                    over['price_unit'] = float(price)
+                if disc not in (None, ''):
+                    over['discount'] = float(disc)
+                if over:
+                    ln.write(over)
+
+    @http.route('/api/mobile/v2/admin/order/<int:order_id>/update-lines',
+                type='http', auth='public', methods=['POST', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_order_update_lines(self, order_id, **kw):
+        env = request.env
+        o = env['sale.order'].sudo().browse(order_id).exists()
+        if not o:
+            return fail('NOT_FOUND', 'Order not found', 404)
+        if o.state not in ('draft', 'sent'):
+            return fail('LOCKED',
+                        'Only draft / quotation orders can have their lines '
+                        'edited', 400)
+        p = get_payload()
+        try:
+            self._so_write_lines(env, o, p.get('lines') or [],
+                                 p.get('remove') or [])
+            request.env.cr.commit()
+        except Exception as e:
+            request.env.cr.rollback()
+            return fail('UPDATE_FAILED', str(e)[:200], 400)
+        return ok({'id': o.id, 'state': o.state,
+                   'amount_untaxed': round(o.amount_untaxed, 3),
+                   'amount_tax': round(o.amount_tax, 3),
+                   'amount_total': round(o.amount_total, 3),
+                   'line_count': len([1 for x in o.order_line
+                                      if not x.is_delivery])})
+
+    # ─── sale order: print / share as PDF (quotation or order) ─────────
+    @http.route('/api/mobile/v2/admin/order/<int:order_id>/print',
+                type='http', auth='public', methods=['GET', 'OPTIONS'],
+                csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_order_print(self, order_id, **kw):
+        env = request.env
+        o = env['sale.order'].sudo().browse(order_id).exists()
+        if not o:
+            return fail('NOT_FOUND', 'Order not found', 404)
+        ref = None
+        for cand in ('uellow_documents.uellow_saleorder',
+                     'sale.report_saleorder'):
+            if env.ref(cand, raise_if_not_found=False):
+                ref = cand
+                break
+        if not ref:
+            ref = 'sale.report_saleorder'
+        pdf, _ct = env['ir.actions.report'].sudo()._render_qweb_pdf(ref, [o.id])
+        fn = (o.name or ('SO-%s' % o.id)).replace('/', '-')
+        return request.make_response(pdf, headers=[
+            ('Content-Type', 'application/pdf'),
+            ('Content-Disposition', 'inline; filename="%s.pdf"' % fn)])
+
+
+    # ═══════════════════ PUSH NOTIFICATIONS (broadcast) ═══════════════════
+    #  Compose + send app push with ALL backend options, audience targeting,
+    #  reach estimate, history and per-broadcast statistics.
+
+    def _notify_vals_from_payload(self, p):
+        def _s(k):
+            return (p.get(k) or '').strip()
+        vals = {
+            'name': _s('title') or 'Notification',
+            'body': _s('body'),
+            'name_ar': _s('title_ar') or False,
+            'body_ar': _s('body_ar') or False,
+            'category': p.get('category') or 'general',
+            'target_audience': p.get('target_audience') or 'all',
+            'segment': p.get('segment') or False,
+            'action_type': p.get('action_type') or 'none',
+            'action_url': _s('action_url') or False,
+            'send_type': p.get('send_type') or 'now',
+        }
+        pids = p.get('partner_ids') or []
+        if isinstance(pids, str):
+            pids = [x for x in pids.split(',') if x.strip()]
+        pids = [int(x) for x in pids if str(x).strip().isdigit()]
+        if pids:
+            vals['target_partner_ids'] = [(6, 0, pids)]
+        if str(p.get('product_id') or '').isdigit():
+            vals['product_id'] = int(p['product_id'])
+        if str(p.get('category_id') or '').isdigit():
+            vals['category_id'] = int(p['category_id'])
+        if _s('scheduled_date'):
+            vals['scheduled_date'] = _s('scheduled_date')
+        return vals
+
+    def _notify_brief(self, env, r):
+        base = (env['ir.config_parameter'].sudo()
+                .get_param('web.base.url') or '').rstrip('/')
+        return {
+            'id': r.id, 'title': r.name or '', 'title_ar': r.name_ar or '',
+            'body': r.body or '', 'body_ar': r.body_ar or '',
+            'category': r.category or 'general',
+            'audience': r.target_audience or 'all', 'segment': r.segment or '',
+            'action_type': r.action_type or 'none', 'action_url': r.action_url or '',
+            'state': r.state or 'draft', 'send_type': r.send_type or 'now',
+            'scheduled_date': str(r.scheduled_date) if r.scheduled_date else '',
+            'sent_date': str(r.sent_date) if r.sent_date else '',
+            'sent_count': r.sent_count or 0, 'reached': r.delivered_count or 0,
+            'opened': r.opened_count or 0, 'failed': r.failed_count or 0,
+            'open_rate': round(r.open_rate or 0.0, 1),
+            'image_url': ('%s/web/image/mobile.notification/%s/image'
+                          % (base, r.id)) if r.image else '',
+            'create_date': str(r.create_date) if r.create_date else '',
+        }
+
+    @http.route('/api/mobile/v2/admin/notify/meta', type='http', auth='public',
+                methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_notify_meta(self, **kw):
+        env = _su_env()
+        cats = [{'value': 'promotion', 'en': 'Promotion / Marketing', 'ar': 'عروض وتسويق'},
+                {'value': 'order_update', 'en': 'Order Update', 'ar': 'تحديث الطلبات'},
+                {'value': 'general', 'en': 'General Info', 'ar': 'معلومات عامة'},
+                {'value': 'system', 'en': 'System / Critical', 'ar': 'نظام / هام'}]
+        auds = [{'value': 'all', 'en': 'All Users', 'ar': 'كل المستخدمين'},
+                {'value': 'specific', 'en': 'Specific Customers', 'ar': 'عملاء محدّدون'},
+                {'value': 'segment', 'en': 'User Segment', 'ar': 'شريحة مستخدمين'}]
+        segs = [{'value': 'new_users', 'en': 'New Users (< 30 days)', 'ar': 'مستخدمون جدد (أقل من ٣٠ يوم)'},
+                {'value': 'inactive', 'en': 'Inactive (> 30 days)', 'ar': 'غير نشطين (أكثر من ٣٠ يوم)'},
+                {'value': 'buyers', 'en': 'Purchased Before', 'ar': 'اشتروا سابقًا'},
+                {'value': 'no_purchase', 'en': 'Never Purchased', 'ar': 'لم يشتروا بعد'}]
+        acts = [{'value': 'none', 'en': 'Open App Home', 'ar': 'الصفحة الرئيسية'},
+                {'value': 'product', 'en': 'Open Product', 'ar': 'فتح منتج'},
+                {'value': 'category', 'en': 'Open Category', 'ar': 'فتح قسم'},
+                {'value': 'url', 'en': 'Open URL', 'ar': 'فتح رابط'},
+                {'value': 'order', 'en': 'My Orders', 'ar': 'طلباتي'}]
+        Sess = env['mobile.session'].sudo()
+        with_tok = Sess.search([('fcm_token', '!=', False)])
+        total_devices = len(with_tok)
+        total_customers = len(set(with_tok.mapped('partner_id').ids))
+        N = env['mobile.notification'].sudo()
+        sent = N.search([('state', '=', 'sent')])
+        total_reach = sum(sent.mapped('delivered_count'))
+        total_opened = sum(sent.mapped('opened_count'))
+        avg_open = (100.0 * total_opened / total_reach) if total_reach else 0.0
+        return ok({
+            'options': {'categories': cats, 'audiences': auds,
+                        'segments': segs, 'actions': acts},
+            'audience': {'total_devices': total_devices,
+                         'total_customers': total_customers},
+            'stats': {'broadcasts_sent': len(sent), 'total_reach': total_reach,
+                      'total_opened': total_opened,
+                      'avg_open_rate': round(avg_open, 1),
+                      'scheduled': N.search_count([('state', '=', 'scheduled')])},
+        })
+
+    @http.route('/api/mobile/v2/admin/notify/estimate', type='http',
+                auth='public', methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_notify_estimate(self, **kw):
+        env = _su_env()
+        p = get_payload() or {}
+        vals = self._notify_vals_from_payload(p)
+        rec = env['mobile.notification'].new(vals)
+        est = rec._estimate_recipients()
+        return ok(est)
+
+    @http.route('/api/mobile/v2/admin/notify/send', type='http', auth='public',
+                methods=['POST', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_notify_send(self, **kw):
+        env = _su_env()
+        p = get_payload() or {}
+        if not (p.get('title') or '').strip():
+            return fail('VALIDATION', 'Title is required', 400)
+        if not (p.get('body') or '').strip():
+            return fail('VALIDATION', 'Message body is required', 400)
+        vals = self._notify_vals_from_payload(p)
+        rec = env['mobile.notification'].sudo().create(vals)
+        img = p.get('image_base64') or ''
+        if img:
+            if ',' in img[:64]:
+                img = img.split(',', 1)[1]
+            try:
+                rec.image = img
+            except Exception:
+                _logger.warning('notify: bad image', exc_info=True)
+        if (p.get('send_type') == 'scheduled') and rec.scheduled_date:
+            rec.action_schedule()
+            return ok({'id': rec.id, 'state': rec.state, 'scheduled': True,
+                       'scheduled_date': str(rec.scheduled_date)})
+        rec.action_send_now()
+        return ok({'id': rec.id, 'state': rec.state, 'scheduled': False,
+                   'sent_count': rec.sent_count, 'reached': rec.delivered_count,
+                   'opened': rec.opened_count, 'failed': rec.failed_count})
+
+    @http.route('/api/mobile/v2/admin/notify/history', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_notify_history(self, **kw):
+        env = _su_env()
+        try:
+            page = max(1, int(kw.get('page', 1) or 1))
+        except Exception:
+            page = 1
+        per = 20
+        dom = []
+        if kw.get('state'):
+            dom.append(('state', '=', kw['state']))
+        if kw.get('category'):
+            dom.append(('category', '=', kw['category']))
+        N = env['mobile.notification'].sudo()
+        total = N.search_count(dom)
+        recs = N.search(dom, order='create_date desc', limit=per,
+                        offset=(page - 1) * per)
+        return ok({'items': [self._notify_brief(env, r) for r in recs],
+                   'page': page, 'per_page': per, 'total': total,
+                   'has_more': page * per < total})
+
+    @http.route('/api/mobile/v2/admin/notify/<int:notif_id>', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_notify_detail(self, notif_id, **kw):
+        env = _su_env()
+        r = env['mobile.notification'].sudo().browse(notif_id)
+        if not r.exists():
+            return fail('NOT_FOUND', 'Notification not found', 404)
+        d = self._notify_brief(env, r)
+        recs = r.receipt_ids.sorted(
+            key=lambda x: (x.opened, x.sent_at or x.create_date), reverse=True)[:60]
+        d['recipients'] = [{
+            'customer': (rc.partner_id.name or 'Guest') if rc.partner_id else 'Guest',
+            'platform': rc.platform or '', 'reached': rc.sent,
+            'opened': rc.opened, 'failed': rc.failed,
+            'opened_at': str(rc.opened_at) if rc.opened_at else '',
+        } for rc in recs]
+        plats = {}
+        for rc in r.receipt_ids:
+            k = (rc.platform or 'other').lower()
+            plats.setdefault(k, {'reached': 0, 'opened': 0})
+            if rc.sent:
+                plats[k]['reached'] += 1
+            if rc.opened:
+                plats[k]['opened'] += 1
+        d['by_platform'] = plats
+        return ok(d)
+
+    @http.route('/api/mobile/v2/admin/notify/customers', type='http',
+                auth='public', methods=['GET', 'OPTIONS'], csrf=False)
+    @safe_endpoint
+    @require_admin
+    def admin_notify_customers(self, **kw):
+        env = _su_env()
+        q = (kw.get('q') or '').strip().lower()
+        parts = env['mobile.session'].sudo().search(
+            [('partner_id', '!=', False), ('fcm_token', '!=', False)]
+        ).mapped('partner_id')
+        if q:
+            parts = parts.filtered(
+                lambda pp: q in (pp.name or '').lower()
+                or q in (pp.phone or '') or q in (pp.email or '').lower())
+        parts = parts[:30]
+        return ok({'items': [{'id': pp.id, 'name': pp.name or '—',
+                              'phone': pp.phone or '', 'email': pp.email or ''}
+                             for pp in parts]})
+
