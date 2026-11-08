@@ -90,7 +90,7 @@ class DeliveryTrip(models.Model):
             if Push and hasattr(Push, 'push_event'):
                 Push.sudo().push_event(
                     partner=user.partner_id,
-                    event='pickup_assigned',
+                    event_code='pickup_assigned',
                     title_en='New pickup assignment 📦',
                     title_ar='مهمة استلام جديدة 📦',
                     body_en='Collect trip %s from the Uellow warehouse.' % self.name,

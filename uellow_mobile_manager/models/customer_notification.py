@@ -31,6 +31,9 @@ EVENT_MAP = {
     'order_delivered':    ('notify_order_delivered',    'order_update'),
     'order_failed':       ('notify_order_failed',       'order_update'),
     'order_cancelled':    ('notify_order_cancelled',    'order_update'),
+    'order_scheduled':    ('notify_order_scheduled',    'order_update'),
+    'order_with_courier': ('notify_order_delivering',   'order_update'),
+    'pickup_assigned':    ('notify_driver_assigned',    'order_update'),
     'wallet_credit':      ('notify_wallet',             'general'),
     'loyalty_points':     ('notify_loyalty',            'general'),
     'review_reply':       ('notify_review_reply',       'general'),
@@ -63,6 +66,8 @@ class MobileNotificationSetting(models.Model):
         string='Delivery failed', default=True)
     notify_order_cancelled = fields.Boolean(
         string='Order cancelled', default=True)
+    notify_order_scheduled = fields.Boolean(
+        string='Delivery scheduled / rescheduled', default=True)
     notify_wallet = fields.Boolean(
         string='Wallet credited', default=True)
     notify_loyalty = fields.Boolean(
@@ -163,6 +168,32 @@ class MobileCustomerNotification(models.Model):
         self._try_fcm(conf, partner, rec)
         return rec
 
+    @api.model
+    def push_custom(self, partner, title_en, title_ar='', body_en='',
+                    body_ar='', payload=None, category='system'):
+        """Admin-authored, order-specific custom notification (sent from
+        the Sales Order form). Bypasses the per-event EVENT_MAP and the
+        customer's category preferences — it is a message the admin chose
+        to send — but still respects the master switch. Stores the app-inbox
+        row AND pushes over FCM."""
+        if not partner:
+            return self.browse()
+        conf = self.env['mobile.notification.setting'].get_conf()
+        if not conf.master_enabled:
+            return self.browse()
+        rec = self.sudo().create({
+            'partner_id': partner.id,
+            'event_code': 'custom',
+            'category': category,
+            'title': title_en or title_ar or '',
+            'title_ar': title_ar or title_en or '',
+            'body': body_en or body_ar or '',
+            'body_ar': body_ar or body_en or '',
+            'payload': json.dumps(payload or {}),
+        })
+        self._try_fcm(conf, partner, rec)
+        return rec
+
     # ── FCM HTTP v1 (v2.1.64) ─────────────────────────────────────
     # OAuth access tokens minted from the service-account JSON are cached
     # process-wide for ~50 min (they live 60).
@@ -205,7 +236,7 @@ class MobileCustomerNotification(models.Model):
             return None
 
     @api.model
-    def send_fcm(self, conf, token, title, body, data=None):
+    def send_fcm(self, conf, token, title, body, data=None, image=None):
         """Send ONE push over FCM HTTP v1. Returns True on success."""
         access = self._fcm_access_token(conf)
         if not access or not token:
@@ -220,11 +251,14 @@ class MobileCustomerNotification(models.Model):
                          'Content-Type': 'application/json'},
                 json={'message': {
                     'token': token,
-                    'notification': {'title': title or '',
-                                     'body': body or ''},
+                    'notification': ({'title': title or '', 'body': body or '',
+                                      'image': image} if image
+                                     else {'title': title or '', 'body': body or ''}),
                     'data': {k: str(v) for k, v in (data or {}).items()},
                     'android': {'priority': 'HIGH',
-                                'notification': {'sound': 'default'}},
+                                'notification': ({'sound': 'default',
+                                                  'image': image} if image
+                                                 else {'sound': 'default'})},
                     # v2.2.46 — iOS needs an explicit apns block, otherwise
                     # FCM delivers a silent payload and nothing shows on the
                     # lock screen / banner. alert + sound + badge make it ring.
@@ -377,10 +411,10 @@ class SaleOrderNotify(models.Model):
             try:
                 self.env['mobile.customer.notification'].push_event(
                     so.partner_id, 'order_confirmed',
-                    'Order %s confirmed ✓' % so.name,
-                    'تم تأكيد طلبك %s ✓' % so.name,
-                    'We are preparing your order now.',
-                    'نقوم بتجهيز طلبك الآن.',
+                    'Order received successfully ✅',
+                    'تم استلام طلبك بنجاح ✅',
+                    'We will start preparing it as soon as possible.',
+                    'وسنقوم بالعمل على تجهيزه في أسرع وقت ممكن.',
                     {'type': 'order', 'id': so.id})
             except Exception:
                 _logger.debug('order_confirmed notify failed',
@@ -447,6 +481,11 @@ class SaleOrderNotify(models.Model):
                              'تعذّر توصيل طلبك %s ⚠️',
                              'We could not deliver order %s — we will retry.',
                              'سنعيد محاولة التوصيل قريباً.'),
+        'failed_returned':  ('order_failed',
+                             'Order %s returned ↩️',
+                             'تم إرجاع طلبك %s ↩️',
+                             'Order %s was returned after a failed delivery.',
+                             'تعذّر توصيل طلبك وتمّت إعادته — سنتواصل معك قريباً.'),
     }
 
     def write(self, vals):
@@ -509,6 +548,10 @@ class SaleOrderNotify(models.Model):
 
     def _action_cancel(self):
         res = super()._action_cancel()
+        # Admin "silent cancel": when cancelled with skip_customer_notify=True
+        # (see sale.order.action_cancel_no_notify) do NOT ping the customer.
+        if self.env.context.get('skip_customer_notify'):
+            return res
         for so in self:
             try:
                 self.env['mobile.customer.notification'].push_event(

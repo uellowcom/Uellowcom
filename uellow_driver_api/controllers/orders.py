@@ -369,7 +369,7 @@ class DriverOrdersAPI(http.Controller):
         except Exception:
             pass
         line.sale_order_id.message_post(body=f'🚚 Out for delivery — {driver.name}')
-        _notify_customer(line.sale_order_id, 'order_out_for_delivery',
+        _notify_customer(line.sale_order_id, 'order_delivering',
             'On the way 🚚', 'طلبك في الطريق إليك 🚚',
             'Your order %s is out for delivery now — track your courier live.' % line.sale_order_id.name,
             'طلبك %s في الطريق إليك الآن — تابع مندوبك مباشرة على الخريطة.' % line.sale_order_id.name)
