@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_community_pick_user,community.pick.user,model_uellow_community_pick,base.group_user,1,1,1,1
+access_community_pick_public,community.pick.public,model_uellow_community_pick,base.group_public,0,0,0,0
+access_community_pick_portal,community.pick.portal,model_uellow_community_pick,base.group_portal,0,0,0,0

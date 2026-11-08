@@ -18,6 +18,7 @@ Each resolver receives:
 Each resolver returns a dict that gets merged into the block under `data`.
 """
 import logging
+import re
 
 _logger = logging.getLogger(__name__)
 
@@ -108,13 +109,32 @@ def resolve_categories(env, props, lang, block=None):
         # `auto` = top-level categories
         cats = Cat.search([('parent_id', '=', False)], limit=limit)
     out = []
+    Tmpl = env['product.template'].sudo()
     for c in cats:
+        # v2.2.177 — real MAX discount % in this category (for the icon badge
+        # + credibility). Bounded scan, cached with the page.
+        max_disc = 0
+        try:
+            prods = Tmpl.search([('is_published', '=', True),
+                                 ('website_published', '=', True),
+                                 ('public_categ_ids', 'child_of', c.id),
+                                 ('compare_list_price', '>', 0)], limit=60)
+            for pr in prods:
+                cmp_v = float(pr.compare_list_price or 0)
+                lp = float(pr.list_price or 0)
+                if cmp_v > lp > 0:
+                    d = int((1 - lp / cmp_v) * 100)
+                    if d > max_disc:
+                        max_disc = d
+        except Exception:
+            max_disc = 0
         out.append({
             'id': c.id,
             'name': _label(c, 'name', lang),
             'slug': getattr(c, 'website_url', None) or '',
             'icon_url': _img(env, 'product.public.category', c.id, 'image_128',
                              unique=c.write_date),
+            'max_discount': max_disc,
         })
     return {'items': out}
 
@@ -173,6 +193,8 @@ def resolve_products(env, props, lang, block=None):
         elif kind == 'recent':     source = 'recent'
         elif kind == 'grid':       source = 'newest'
         elif kind == 'new-user':   source = 'discounted'
+        elif kind == 'scratch':    source = 'discounted'
+        elif kind == 'deal_of_day': source = 'discounted'
         else:                      source = 'newest'
 
     want_limit = int(props.get('limit') or 12)
@@ -180,8 +202,7 @@ def resolve_products(env, props, lang, block=None):
     # rating), over-fetch so the row still fills after filtering. The final
     # trim back to want_limit happens at the end.
     _has_refine = any(props.get(k) for k in
-                      ('min_discount_pct', 'min_price', 'max_price',
-                       'min_rating'))
+                      ('min_discount_pct', 'min_price', 'max_price', 'min_rating', 'in_stock_only'))
     # v2.2.26 — also widen when page diversity is active so each block has
     # fresh (unseen) products to pick after excluding earlier blocks.
     _has_div = bool((props.get('_brain_ctx') or {}).get('cfg')) and \
@@ -195,6 +216,21 @@ def resolve_products(env, props, lang, block=None):
     base_dom = [('is_published', '=', True),
                 ('sale_ok', '=', True),
                 ('website_published', '=', True)] + _site_dom(env)
+    # v2.2.174 — push explicit price bounds into the SEARCH domain (not just
+    # the post-filter) so price-scoped blocks ("under X") pull real matches
+    # instead of trimming a small newest-pool down to near-empty.
+    try:
+        _mxp = float(props.get('max_price') or 0)
+        if _mxp > 0:
+            base_dom.append(('list_price', '<=', _mxp))
+    except Exception:
+        pass
+    try:
+        _mnp = float(props.get('min_price') or 0)
+        if _mnp > 0:
+            base_dom.append(('list_price', '>=', _mnp))
+    except Exception:
+        pass
     # v2.2.25 — optional: hide bundle products (the bundle itself AND the
     # component items inside published bundles) from THIS block, so bundles
     # live only in dedicated bundle blocks and don't clutter normal feeds.
@@ -210,6 +246,13 @@ def resolve_products(env, props, lang, block=None):
                     base_dom.append(('id', 'not in', comp_ids))
         except Exception:
             pass
+    # v2.2.178 — in_stock availability domain: consu (not storable) is
+    # always available; storable needs backorder OR qty>0. Applied at
+    # search level so consu products are NOT wrongly hidden.
+    if props.get('in_stock_only') or (block or {}).get('kind') == 'scratch':
+        base_dom += ['|', ('is_storable', '=', False),
+                     '|', ('allow_out_of_stock_order', '=', True),
+                          ('qty_available', '>', 0)]
     recs = Tmpl
 
     if source == 'manual' and props.get('product_ids'):
@@ -233,16 +276,33 @@ def resolve_products(env, props, lang, block=None):
         else:
             recs = Tmpl.search(base_dom, limit=limit)
 
-    elif source == 'brand' and props.get('brand_id') \
-            and 'brand_id' in Tmpl._fields:
-        # v2.2.27 — products of one brand (product.brand m2o). Guarded so
-        # it's a no-op if the brand module isn't installed.
+    elif source == 'brand' and (props.get('brand_id') or props.get('brand_value_id')):
+        # UELLOW-BRAND-ATTR: brands are a product.attribute.value (attribute
+        # 'Brand'), NOT a product.brand m2o. Prefer the m2o if that module is
+        # installed AND matches; otherwise filter by the Brand attribute value.
         try:
-            bid = int(props['brand_id'])
+            bid = int(props.get('brand_id') or props.get('brand_value_id'))
         except Exception:
             bid = 0
-        recs = (Tmpl.search(base_dom + [('brand_id', '=', bid)], limit=limit)
-                if bid else Tmpl.browse([]))
+        if bid and 'brand_id' in Tmpl._fields \
+                and Tmpl.search_count(base_dom + [('brand_id', '=', bid)]):
+            recs = Tmpl.search(base_dom + [('brand_id', '=', bid)], limit=limit)
+        elif bid:
+            dom = base_dom + [('attribute_line_ids.value_ids', '=', bid)]
+            srt = props.get('sort') or ''
+            if srt == 'discount':
+                pool = Tmpl.search(dom, limit=200)
+                def _disc(p):
+                    c = getattr(p, 'compare_list_price', 0.0) or 0.0
+                    return ((c - p.list_price) / c) if (c and c > (p.list_price or 0)) else 0.0
+                recs = pool.filtered(lambda p: _disc(p) > 0).sorted(_disc, reverse=True)[:limit]
+                if not recs:
+                    recs = pool[:limit]
+            else:
+                order = 'create_date desc' if srt == 'newest' else 'website_sequence, id desc'
+                recs = Tmpl.search(dom, order=order, limit=limit)
+        else:
+            recs = Tmpl.browse([])
 
     elif source == 'tag' and 'product_tag_ids' in Tmpl._fields \
             and (props.get('tag_ids') or props.get('tag_id')):
@@ -359,21 +419,53 @@ def resolve_products(env, props, lang, block=None):
         }
 
     elif source == 'bestsellers':
-        # v2.1.24 — REAL bestsellers from the daily rank table
-        # (uellow_product_rank). Optional props.category_id narrows the
-        # ladder to one category ("Best of Smart Watches" block).
+        # v2.2.177 — REAL top sellers computed from ACTUAL sales (online +
+        # POS) in the last 90 days, so the ranking always reflects true
+        # demand. Falls back to the daily rank table, then recent products.
         recs = Tmpl.browse([])
+        cat_id = props.get('category_id')
         try:
-            Rank = env.get('uellow.product.rank')
-            if Rank is not None:
-                cat_id = props.get('category_id')
-                recs = Rank.sudo().top_products(
-                    category_id=int(cat_id) if cat_id else None,
-                    website_id=None, limit=limit)
-                recs = recs.filtered(
-                    lambda p: p.is_published and _site_visible(env, p))
+            env.cr.execute("""
+                select pid, sum(q) q from (
+                  select pt.id pid, coalesce(sum(sol.product_uom_qty),0) q
+                  from sale_order_line sol
+                  join sale_order so on so.id=sol.order_id
+                  join product_product pp on pp.id=sol.product_id
+                  join product_template pt on pt.id=pp.product_tmpl_id
+                  where so.date_order > now() - interval '90 days'
+                    and so.state in ('sale','done')
+                  group by pt.id
+                  union all
+                  select pt.id pid, coalesce(sum(pol.qty),0) q
+                  from pos_order_line pol
+                  join pos_order po on po.id=pol.order_id
+                  join product_product pp on pp.id=pol.product_id
+                  join product_template pt on pt.id=pp.product_tmpl_id
+                  where po.date_order > now() - interval '90 days'
+                  group by pt.id
+                ) t group by pid order by q desc limit %s
+            """, (max(limit * 4, 60),))
+            sold_map = {r[0]: int(r[1]) for r in env.cr.fetchall()}
+            dom = list(base_dom)
+            if cat_id:
+                dom.append(('public_categ_ids', 'child_of', int(cat_id)))
+            ok_ids = set(Tmpl.search(dom).ids)
+            ranked = [pid for pid in sorted(sold_map, key=lambda i: -sold_map[i])
+                      if pid in ok_ids][:limit]
+            recs = Tmpl.browse(ranked)
         except Exception:
             recs = Tmpl.browse([])
+        if not recs:
+            try:
+                Rank = env.get('uellow.product.rank')
+                if Rank is not None:
+                    recs = Rank.sudo().top_products(
+                        category_id=int(cat_id) if cat_id else None,
+                        website_id=None, limit=limit)
+                    recs = recs.filtered(
+                        lambda p: p.is_published and _site_visible(env, p))
+            except Exception:
+                recs = Tmpl.browse([])
         if not recs:
             recs = Tmpl.search(base_dom, order='write_date desc', limit=limit)
 
@@ -415,8 +507,8 @@ def resolve_products(env, props, lang, block=None):
                 'flash_end_datetime':
                     earliest.isoformat() if earliest else '',
                 'flash_label': {
-                    'en': first.label_en or first.name or '',
-                    'ar': first.label_ar or first.label_en or '',
+                    'en': first.flash_title_en or first.label_en or first.name or '',
+                    'ar': first.flash_title_ar or first.label_ar or first.label_en or '',
                 },
                 'flash_count': len(promos),
             }
@@ -668,6 +760,11 @@ def _brain_diversify(env, items, props, want_limit):
     """Drop products already shown earlier on the page + enforce per-brand /
     per-category caps, using the shared ctx in props['_brain_ctx']. Returns
     the filtered list and records what it keeps. No-op without ctx/engine."""
+    # Curated/scoped blocks (brand store, manual pick, one collection/vendor/
+    # tag) must show ALL their matching items — diversity/no-repeat is only for
+    # auto discovery blocks. Skip it here so a brand page isn't starved.
+    if (props.get('source') or '') in ('brand', 'manual', 'collection', 'vendor', 'tag'):
+        return items
     ctx = props.get('_brain_ctx')
     if not ctx:
         return items
@@ -1164,6 +1261,60 @@ def resolve_passthrough(env, props, lang, block=None):
     return {}
 
 
+def resolve_story_bubbles(env, props, lang, block=None):
+    """Per-bubble product stories. Each bubble carries its own `source`
+    (new/discounted/category/brand/manual) + count; we resolve a product
+    list for it so the app can open a full-screen product story."""
+    try:
+        default_limit = int(props.get('story_count') or 8)
+    except Exception:
+        default_limit = 8
+    out = []
+    for bub in (props.get('bubbles') or []):
+        nb = dict(bub)
+        src = (bub.get('source') or '').strip().lower()
+        try:
+            lim = int(bub.get('count') or bub.get('limit') or default_limit)
+        except Exception:
+            lim = default_limit
+        sub = {'limit': max(1, min(lim, 20))}
+        sub['in_stock_only'] = True
+        if src in ('new', 'newest'):
+            sub['source'] = 'newest'
+        elif src in ('disc', 'discount', 'discounted'):
+            sub['source'] = 'discounted'
+        elif src in ('cat', 'category') and bub.get('category_id'):
+            sub['source'] = 'filter'
+            sub['category_id'] = bub.get('category_id')
+        elif src == 'brand' and bub.get('brand_id'):
+            sub['source'] = 'brand'
+            sub['brand_id'] = bub.get('brand_id')
+            # اختيار المستخدم: منتجات البراند «الأحدث» أو «الأعلى خصمًا»
+            _bs = (bub.get('brand_sort') or 'newest').strip().lower()
+            sub['sort'] = 'discount' if _bs in ('disc', 'discount', 'discounted') else 'newest'
+        elif src == 'manual' and bub.get('product_ids'):
+            sub['source'] = 'manual'
+            _pids = bub.get('product_ids')
+            if isinstance(_pids, str):
+                _pids = [int(x) for x in _pids.replace('\u060c', ',').split(',') if x.strip().isdigit()]
+            sub['product_ids'] = _pids
+        else:
+            out.append(nb)
+            continue
+        try:
+            res = resolve_products(env, sub, lang,
+                                   block={'kind': 'products', 'props': sub})
+            nb['products'] = res.get('items') or []
+        except Exception:
+            nb['products'] = []
+        out.append(nb)
+    try:
+        dur = int(props.get('story_duration') or 5)
+    except Exception:
+        dur = 5
+    return {'bubbles': out, 'story_duration': dur}
+
+
 def resolve_promo_coupons(env, props, lang, block=None):
     """v2.2.11 — the coupon block can now surface REAL coupons from the
     loyalty engine (picked ids or auto conditions) instead of one manual
@@ -1444,6 +1595,104 @@ def resolve_bundle_showcase(env, props, lang, block=None):
     return resolve_products(env, p, lang, block=block)
 
 
+# ─── v2.2.186 — بلوكات جديدة: ترشيح فريق يلو / جهّز باقتك / اختيار المجتمع ───
+
+def _num_from_price(v):
+    """استخراج قيمة رقمية من حقل سعر قد يكون نصًّا منسّقًا أو dict."""
+    if isinstance(v, dict):
+        try:
+            return float(v.get('amount') or 0)
+        except Exception:
+            return 0.0
+    s = str(v or '')
+    # حوّل الأرقام العربية إلى لاتينية
+    s = s.translate({ord(c): str(i) for i, c in enumerate('٠١٢٣٤٥٦٧٨٩')})
+    m = re.findall(r'[0-9]+(?:\.[0-9]+)?', s.replace(',', ''))
+    try:
+        return float(m[0]) if m else 0.0
+    except Exception:
+        return 0.0
+
+
+def resolve_expert_picks(env, props, lang, block=None):
+    """ترشيح فريق يلو: منتجات يختارها الأدمن. بطاقة الخبير (الاسم/الدور/
+    الاقتباس) تبقى في props ويقرأها التطبيق مباشرةً — هنا نجلب المنتجات فقط."""
+    ids = _int_list(props.get('product_ids'))
+    items = []
+    if ids:
+        sub = {'source': 'manual', 'product_ids': ids,
+               'limit': max(len(ids), 3), 'in_stock_only': False}
+        try:
+            items = (resolve_products(
+                env, sub, lang,
+                block={'kind': 'products', 'props': sub}) or {}).get('items') or []
+        except Exception:
+            items = []
+    return {'items': items}
+
+
+def resolve_build_kit(env, props, lang, block=None):
+    """جهّز باقتك: مجموعة منتجات قابلة للاختيار + نسبة خصم الباقة. نُرجع كل
+    عنصر مع سعر رقمي (price_value) ليحسب التطبيق الإجمالي والتوفير فورًا."""
+    ids = _int_list(props.get('product_ids'))
+    Tmpl = env['product.template'].sudo()
+    recs = Tmpl.browse(ids).exists() if ids else Tmpl.browse([])
+    recs = recs.filtered(lambda p: p.is_published and p.active)
+    items = []
+    for p in recs:
+        brief = _product_brief(env, p, lang)
+        if not brief:
+            continue
+        pv = _num_from_price(brief.get('price'))
+        cv = _num_from_price(brief.get('compare_price'))
+        brief['price_value'] = round(pv, 3)
+        brief['compare_value'] = round(cv, 3) if cv > pv else 0.0
+        items.append(brief)
+    try:
+        disc = float(props.get('bundle_discount') or 0)
+    except Exception:
+        disc = 0.0
+    disc = max(0.0, min(disc, 90.0))
+    try:
+        preselect = int(props.get('preselect'))
+    except Exception:
+        preselect = len(items)
+    return {'items': items, 'bundle_discount': disc, 'preselect': preselect}
+
+
+def resolve_community_picks(env, props, lang, block=None):
+    """اختيار المجتمع: منتجات رشّحها الزوّار، مرتّبة حسب عدد الترشيحات، مع
+    اسم آخر مُرشِّح + العدد. عالميّ (غير مقيّد بموقع) لتبسيط العرض."""
+    Pick = env.get('uellow.community.pick')
+    if Pick is None:
+        return {'items': []}
+    try:
+        limit = int(props.get('limit') or 10)
+    except Exception:
+        limit = 10
+    try:
+        rows = Pick.sudo()._top_picks(limit=limit, website_ids=None)
+    except Exception:
+        rows = []
+    if not rows:
+        return {'items': []}
+    Tmpl = env['product.template'].sudo()
+    by_id = {p.id: p for p in
+             Tmpl.browse([r['product_id'] for r in rows]).exists()}
+    items = []
+    for r in rows:
+        p = by_id.get(r['product_id'])
+        if not p or not p.is_published or not p.active:
+            continue
+        brief = _product_brief(env, p, lang)
+        if not brief:
+            continue
+        brief['nominator'] = r.get('latest_name') or ''
+        brief['nominations'] = int(r.get('count') or 0)
+        items.append(brief)
+    return {'items': items}
+
+
 RESOLVERS = {
     'cats-grid':       resolve_categories,
     'cats-strip':      resolve_categories,
@@ -1473,13 +1722,14 @@ RESOLVERS = {
     # v2.0.38 — Slider + 5 designs
     'slider':          resolve_slider,
     'tab-nav':         resolve_passthrough,
-    'story-bubbles':   resolve_passthrough,
+    'story-bubbles':   resolve_story_bubbles,
     'lookbook':        resolve_passthrough,
     'sticky-cta':      resolve_passthrough,
     'image-banner':    resolve_passthrough,
     'reels-strip':     resolve_reels_strip,
     'occasion-header': resolve_passthrough,
     'new-user':        resolve_products,
+    'scratch':         resolve_products,
     'trust-strip':     resolve_passthrough,
     # v2.1.75 — 5 promo-section presets (all fetch products by source).
     'promo-spotlight': resolve_products,
@@ -1501,6 +1751,12 @@ RESOLVERS = {
     'new-customer-zone': resolve_newcustomer,
     'promo-showcase':   resolve_promo_showcase,
     'bundle-showcase':  resolve_bundle_showcase,
+    'deal_of_day':      resolve_products,
+    'elevenele_hero':   resolve_passthrough,
+    # v2.2.186 — بلوكات جديدة
+    'expert_picks':     resolve_expert_picks,
+    'build_kit':        resolve_build_kit,
+    'community_ugc':    resolve_community_picks,
 }
 
 

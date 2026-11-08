@@ -1,0 +1,48 @@
+/* اختيار المجتمع — زر الترشيح الصغير في صفحة المنتج */
+.uc-cpk { position: relative; display: inline-block; margin: 8px 0; direction: rtl; }
+.uc-cpk-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg,#ffd60a 0%,#ffb000 48%,#ff7a00 100%);
+  color: #1a1205; border: 0; border-radius: 999px;
+  padding: 7px 14px; font-size: 12.5px; font-weight: 800;
+  cursor: pointer; box-shadow: 0 3px 10px rgba(255,138,0,.28);
+  font-family: inherit; line-height: 1;
+}
+.uc-cpk-btn:hover { filter: brightness(1.03); }
+.uc-cpk-btn.done {
+  background: #e9f7ef; color: #17a05f; box-shadow: none;
+  border: 1px solid #b7e6cd; cursor: default;
+}
+.uc-cpk-ic { font-size: 13px; }
+
+.uc-cpk-pop {
+  position: absolute; z-index: 50; top: calc(100% + 8px);
+  inset-inline-start: 0; width: 240px; max-width: 80vw;
+  background: #fff; border: 1px solid #e9e6df; border-radius: 14px;
+  padding: 12px; box-shadow: 0 12px 34px rgba(60,40,0,.16);
+  display: none;
+}
+.uc-cpk.open .uc-cpk-pop { display: block; }
+.uc-cpk-ttl { font-size: 13px; font-weight: 900; color: #1a1710; }
+.uc-cpk-sub { font-size: 11px; color: #78736a; margin: 2px 0 9px; }
+.uc-cpk-row { display: flex; gap: 6px; }
+.uc-cpk-name {
+  flex: 1; border: 1px solid #e4e4e2; border-radius: 10px;
+  padding: 8px 10px; font-size: 12.5px; font-family: inherit; outline: none;
+}
+.uc-cpk-name:focus { border-color: #ff7a00; }
+.uc-cpk-send {
+  border: 0; border-radius: 10px; padding: 8px 14px;
+  background: #211e16; color: #fff; font-weight: 800; font-size: 12.5px;
+  cursor: pointer; font-family: inherit;
+}
+.uc-cpk-send:disabled { opacity: .5; cursor: default; }
+.uc-cpk-msg { font-size: 11px; margin-top: 7px; min-height: 14px; }
+.uc-cpk-msg.ok { color: #17a05f; font-weight: 700; }
+.uc-cpk-msg.err { color: #e03131; }
+
+@media (prefers-color-scheme: dark) {
+  .uc-cpk-pop { background: #181b21; border-color: #2a2b30; }
+  .uc-cpk-ttl { color: #f1ecdd; }
+  .uc-cpk-name { background: #1e2127; color: #f1ecdd; border-color: #2a2b30; }
+}

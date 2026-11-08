@@ -608,6 +608,8 @@
     border-bottom:1px solid var(--border);
   }
   .sub-h:first-child{margin-top:0}
+  .row2{display:flex;gap:8px}
+  .row2 .field{flex:1;min-width:0}
 
   /* link picker field — looks like an input but is a button */
   .link-field{
@@ -1134,7 +1136,28 @@ let WEBSITES = [
 ];
 let WORLD_WEBSITE_ID = 0;   // set from lookups; Uellow World dropship site
 
+const PRESETS = {
+  hero1111:   { kind:'elevenele_hero', label:'هيرو 11.11',        props:{ eyebrowAr:'مهرجان التسوّق الأكبر', eyebrowEn:'THE BIGGEST SALE', big_text:'11.11', subtitleAr:'عروض يلو الكبرى', subtitleEn:'Mega Sale', offAr:'خصومات تصل ٩٠٪', offEn:'Up to 90% OFF', bg1:'#1A1308', bg2:'#2A2012', accent1:'#FFD60A', accent2:'#FF7A00', text_color:'#FFFFFF', bg_style:'radial', pattern:'sparkles' } },
+  flash:      { kind:'flash',         label:'العروض الخاطفة',   props:{ titleAr:'العروض الخاطفة', titleEn:'Flash Deals', source:'discounted', show_title:true, limit:10 } },
+  trending:   { kind:'bestsellers',   label:'الأكثر رواجًا',    props:{ titleAr:'الأكثر رواجًا', titleEn:'Trending', show_title:true, limit:12 } },
+  price_drop: { kind:'products',      label:'انخفضت الأسعار',   props:{ titleAr:'انخفضت الأسعار', titleEn:'Price Drops', source:'discounted', sort:'discount_desc', show_title:true, limit:12 } },
+  under5:     { kind:'grid',          label:'كله بأقل من ٥',    props:{ titleAr:'كله بأقل من ٥ د.ك', titleEn:'Under 5 KWD', source:'filter', max_price:5, sort:'price_asc', show_title:true, limit:12 } },
+  deal_day:   { kind:'deal_of_day',   label:'صفقة اليوم',       props:{ titleAr:'صفقة اليوم', titleEn:'Deal of the Day', source:'discounted', sort:'discount_desc', limit:1 } },
+  stories:    { kind:'story-bubbles', label:'قصص يلو',          props:{ titleAr:'قصص يلو', titleEn:'Stories', show_title:true } },
+  scratch:    { kind:'scratch',       label:'اكشف العرض (خدش)', props:{ titleAr:'اكشف العرض', titleEn:'Scratch & Win', source:'discounted', limit:1 } },
+};
+
 const SNIPPETS = [
+  { cat:'⭐ عروض يلو (جاهزة)', items:[
+    { kind:'preset:hero1111',   icon:'🎆', label:'هيرو 11.11' },
+    { kind:'preset:flash',      icon:'⚡', label:'العروض الخاطفة' },
+    { kind:'preset:trending',   icon:'🔥', label:'الأكثر رواجًا' },
+    { kind:'preset:price_drop', icon:'📉', label:'انخفضت الأسعار' },
+    { kind:'preset:under5',     icon:'💰', label:'كله بأقل من ٥' },
+    { kind:'preset:deal_day',   icon:'⏰', label:'صفقة اليوم' },
+    { kind:'preset:stories',    icon:'🟡', label:'قصص يلو' },
+    { kind:'preset:scratch',    icon:'🎟', label:'اكشف العرض (خدش)' },
+  ]},
   { cat:'Headers',     items:[
     { kind:'hero',        icon:'🌅', label:'Hero Banner' },
     { kind:'carousel',    icon:'🎠', label:'Carousel' },
@@ -1152,7 +1175,10 @@ const SNIPPETS = [
     { kind:'recent',      icon:'⏱', label:'Recently Viewed' },
     { kind:'rec-ai',      icon:'✨', label:'AI Recommended' },
     { kind:'bestsellers', icon:'🏆', label:'Bestsellers' },
+    { kind:'scratch',     icon:'🎟', label:'Scratch & Win' },
     { kind:'explore-more',icon:'🧭', label:'Explore More (infinite)' },
+    { kind:'expert_picks', icon:'🎖️', label:'ترشيح فريق يلو' },
+    { kind:'build_kit',    icon:'🧰', label:'جهّز باقتك' },
   ]},
   { cat:'Banners',     items:[
     { kind:'banner-1',    icon:'▬', label:'Single Banner' },
@@ -1173,6 +1199,7 @@ const SNIPPETS = [
     { kind:'app-promo',   icon:'📱', label:'App Promo' },
     { kind:'reviews',     icon:'⭐', label:'Testimonials' },
     { kind:'beena',       icon:'💬', label:'Ask Beena AI' },
+    { kind:'community_ugc',icon:'📸', label:'اختيار المجتمع' },
   ]},
   { cat:'Content',     items:[
     { kind:'text',        icon:'📝', label:'Text Block' },
@@ -1398,6 +1425,7 @@ const KIND_DEFAULTS = {
     autoplay:false, autoplay_speed:3,
     show_rings:true, ring_color:'#F5C320',
     size:60,           // bubble diameter
+    story_duration:5, story_count:8,
     bubbles:[
       {labelEn:'New',    labelAr:'جديد',   icon:'✨', image_url:'', link:{type:'screen',value:'shop'}},
       {labelEn:'Sale',   labelAr:'تخفيضات', icon:'⚡', image_url:'', link:{type:'screen',value:'shop'}},
@@ -1473,6 +1501,31 @@ const KIND_DEFAULTS = {
     card_color:'#FFFFFF', font_color:'#412402', layout:'list', card:{} }),
   'promo-marquee': () => ({ textsEn:'Free shipping over 10 KD | 100% authentic | Fast delivery', textsAr:'شحن مجاني فوق 10 د.ك | منتجات أصلية 100% | توصيل سريع', c1:'#412402', text_color:'#FFFFFF', speed:14, pad_x:0 }),
   'products': () => ({ pad_top:2 }),
+  // v2.2.186 — بلوكات جديدة مطابقة للموكاب
+  'expert_picks': () => ({
+    eyebrowEn:'EXPERTS\u2019 CHOICE', eyebrowAr:'اختيار الخبراء',
+    titleEn:'Yellow Team Picks', titleAr:'ترشيح فريق يلو',
+    show_title:true, pad_y:8,
+    expert_avatar:'👨‍🔧',
+    expertNameEn:'Eng. Abdullah', expertNameAr:'م. عبدالله',
+    expertRoleEn:'Electronics expert at Yellow', expertRoleAr:'خبير الإلكترونيات في يلو',
+    quoteEn:'Best value for money this week — hand-picked by our team.',
+    quoteAr:'أفضل قيمة مقابل السعر هذا الأسبوع — اختارها فريقنا بعناية.',
+    product_ids:[], product_labels:[],
+  }),
+  'build_kit': () => ({
+    eyebrowEn:'PICK & MATCH', eyebrowAr:'اختر وركّب',
+    titleEn:'Build your bundle', titleAr:'جهّز باقتك',
+    show_title:true, pad_y:8,
+    product_ids:[], product_labels:[], bundle_discount:10,
+    ctaEn:'Add bundle', ctaAr:'أضف الباقة',
+  }),
+  'community_ugc': () => ({
+    eyebrowEn:'FROM OUR CUSTOMERS', eyebrowAr:'من عملائنا',
+    titleEn:'Community Picks', titleAr:'اختيار المجتمع',
+    moreEn:'#Yellow', moreAr:'#يلو',
+    show_title:true, pad_y:8, limit:12,
+  }),
   'trust-strip': () => ({
     show_title:false, pad_y:0,
     style:'plain',             // plain | cards | divided
@@ -2364,6 +2417,48 @@ function renderBlockContent(b){
   const linkBadge = p.link && p.link.type === 'page'
     ? `<div class="pglink">🔗 ${p.link.label}</div>` : '';
   switch(b.kind){
+    case 'elevenele_hero': {
+      const bg1=p.bg1||'#1A1308', bg2=p.bg2||'#2A2012';
+      const a1=p.accent1||'#FFD60A', a2=p.accent2||'#FF7A00';
+      const tc=p.text_color||'#FFFFFF', ec=p.eyebrow_color||a1, btc=p.badge_text_color||'#1A1205';
+      const st=p.bg_style||'radial';
+      const bgCss = st==='solid' ? bg1 : st==='linear'
+        ? `linear-gradient(135deg,${bg1},${bg2})`
+        : `radial-gradient(circle at 50% -10%, ${a2}66, ${bg1} 62%)`;
+      return `<div style="border-radius:12px;background:${bgCss};padding:16px 14px;text-align:center;overflow:hidden">
+        <div style="font-size:9px;font-weight:900;letter-spacing:3px;color:${ec}">${p.eyebrowAr||p.eyebrowEn||'مهرجان التسوّق الأكبر'}</div>
+        <div style="font-size:40px;font-weight:900;letter-spacing:-2px;line-height:.95;background:linear-gradient(90deg,${a1},${a2});-webkit-background-clip:text;background-clip:text;color:transparent">${p.big_text||'11.11'}</div>
+        <div style="font-size:12px;font-weight:900;margin-top:2px;color:${tc}">${p.subtitleAr||p.subtitleEn||'عروض يلو الكبرى'}</div>
+        <div style="display:inline-block;margin-top:8px;background:linear-gradient(90deg,${a1},${a2});color:${btc};border-radius:999px;padding:4px 14px;font-size:10px;font-weight:900">🔥 ${p.offAr||p.offEn||'خصومات تصل ٩٠٪'}</div>
+        <div style="display:flex;gap:5px;justify-content:center;margin-top:11px">${['٠٢','١٤','٣٨','٠٩'].map(n=>`<div style="background:rgba(255,255,255,.07);border:1px solid ${a2}55;border-radius:8px;padding:4px 7px;color:${a1};font-weight:900;font-size:13px">${n}</div>`).join('')}</div>
+      </div>`;
+    }
+    case 'deal_of_day':
+      return `<div style="border-radius:12px;background:#1a1308;color:#fff;padding:12px;display:flex;gap:10px;align-items:center"><div style="width:52px;height:52px;border-radius:10px;background:#fff;display:grid;place-items:center;font-size:26px">🔋</div><div style="flex:1"><div style="font-size:9px;font-weight:900;color:#ffc400;letter-spacing:1px">⏰ صفقة اليوم</div><div style="font-size:12px;font-weight:800">${p.titleAr||'أقوى خصم اليوم'}</div><div style="font-size:14px;font-weight:900;color:#ffc400">١٢٫٩٠٠ د.ك</div></div></div>`;
+    case 'scratch':
+      return `<div style="border-radius:12px;background:#fff;border:1px solid #eee;padding:12px;display:flex;gap:10px;align-items:center"><div style="width:48px;height:48px;border-radius:10px;background:#f5f3ec;display:grid;place-items:center;font-size:24px">🎁</div><div style="flex:1"><div style="font-size:12px;font-weight:800">${p.titleAr||'اكشف العرض'}</div><div style="font-size:10px;color:#999">اخدش لتكشف خصمك</div></div><div style="width:72px;height:40px;border-radius:8px;background:repeating-linear-gradient(45deg,#ffc400,#ffc400 6px,#ff7a00 6px,#ff7a00 12px)"></div></div>`;
+    case 'expert_picks':
+      return '<div style="border-radius:12px;background:#fff;border:1px solid #eee;padding:12px">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+        + '<div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#ffd60a,#ff7a00);display:grid;place-items:center;font-size:17px">'+(p.expert_avatar||'👨‍🔧')+'</div>'
+        + '<div><div style="font-size:12px;font-weight:900">'+(p.expertNameAr||p.expertNameEn||'م. عبدالله')+'</div>'
+        + '<div style="font-size:9.5px;color:#999">'+(p.expertRoleAr||p.expertRoleEn||'خبير الإلكترونيات في يلو')+'</div></div></div>'
+        + '<div style="font-size:11px;border-inline-start:3px solid #ff7a00;padding-inline-start:8px;color:#444">'+(p.quoteAr||p.quoteEn||'اختارها فريقنا بعناية.')+'</div>'
+        + '<div style="display:flex;gap:8px;margin-top:9px"><div style="flex:1;height:52px;border-radius:10px;background:#f5f3ec;display:grid;place-items:center;font-size:22px">🛍️</div><div style="flex:1;height:52px;border-radius:10px;background:#f5f3ec;display:grid;place-items:center;font-size:22px">🛍️</div><div style="flex:1;height:52px;border-radius:10px;background:#f5f3ec;display:grid;place-items:center;font-size:22px">🛍️</div></div></div>';
+    case 'build_kit': {
+      const kt = (on,emoji)=> '<div style="flex:0 0 auto;width:60px;border:1px solid '+(on?'#ff7a00':'#eee')+';border-radius:10px;padding:7px 5px;text-align:center;position:relative;background:'+(on?'#fff7ed':'#fff')+'">'+(on?'<span style="position:absolute;top:-6px;inset-inline-end:-6px;background:#17a05f;color:#fff;width:16px;height:16px;border-radius:50%;font-size:9px;display:grid;place-items:center">✓</span>':'')+'<div style="font-size:20px">'+emoji+'</div></div>';
+      return '<div style="border-radius:12px;background:#fff;border:1px solid #eee;padding:12px">'
+        + '<div style="font-size:12px;font-weight:900;margin-bottom:8px">'+(p.titleAr||p.titleEn||'جهّز باقتك')+'</div>'
+        + '<div style="display:flex;gap:7px;overflow:hidden">'+kt(1,'🔌')+kt(1,'🎧')+kt(0,'🔋')+kt(1,'📱')+'</div>'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">'
+        + '<div style="font-size:14px;font-weight:900">٥.١٧٥ <span style="font-size:9px;color:#17a05f">(وفّرت ٠.٥٧٥)</span></div>'
+        + '<button style="background:linear-gradient(135deg,#ffd60a,#ff7a00);border:0;border-radius:10px;padding:7px 13px;font-weight:900;font-size:11px">'+(p.ctaAr||p.ctaEn||'أضف الباقة')+'</button>'
+        + '</div></div>';
+    }
+    case 'community_ugc': {
+      const uc = (nm)=> '<div style="flex:0 0 auto;width:92px;border:1px solid #eee;border-radius:12px;overflow:hidden"><div style="height:80px;background:#f5f3ec;display:grid;place-items:center;font-size:30px;position:relative">🛍️<div style="position:absolute;bottom:5px;inset-inline-start:5px;background:rgba(0,0,0,.5);color:#fff;border-radius:999px;padding:1px 7px 1px 2px;font-size:8.5px;display:flex;align-items:center;gap:3px"><span style="width:15px;height:15px;border-radius:50%;background:linear-gradient(135deg,#ffd60a,#ff7a00);color:#1a1205;display:grid;place-items:center;font-size:9px">'+nm.charAt(0)+'</span>'+nm+'</div></div><div style="padding:6px 7px;font-size:9px;font-weight:700">منتج مرشّح</div></div>';
+      return '<div style="border-radius:12px;background:#fff;border:1px solid #eee;padding:12px"><div style="font-size:12px;font-weight:900;margin-bottom:8px">'+(p.titleAr||p.titleEn||'اختيار المجتمع')+'</div><div style="display:flex;gap:9px;overflow:hidden">'+uc('محمد')+uc('نورة')+uc('علي')+'</div><div style="font-size:10px;color:#999;margin-top:7px">يظهر هنا ما يرشّحه الزوّار من صفحة المنتج تلقائيًا.</div></div>';
+    }
     case 'hero': return `
       <div class="b-hero">
         ${linkBadge}
@@ -2372,13 +2467,45 @@ function renderBlockContent(b){
         <span class="cta">${p.ctaEn || 'Shop now'} →</span>
       </div>`;
     case 'cats-grid':
-    case 'cats-strip': return `
-      <div class="b-cats">
-        <div class="row">
-          ${['📱','👕','👟','💄','🏠','🎮','⌚','🎁'].map((e,i)=>`
-            <div class="item"><div class="ic">${e}</div><div class="lbl">Cat ${i+1}</div></div>`).join('')}
-        </div>
-      </div>`;
+    case 'cats-strip': {
+      const shape = p.shape || 'circle';
+      const cols = Math.max(3, Math.min(6, parseInt(p.columns)||4));
+      const sz = Math.max(28, Math.min(64, parseInt(p.icon_size)||42));
+      const ts = p.tile_style || 'clean';
+      const rad = shape==='square' ? '8px' : shape==='rounded' ? '16px' : shape==='capsule' ? Math.round(sz)+'px' : (ts==='card' ? '16px' : '50%');
+      const w = shape==='capsule' ? Math.round(sz*0.72) : sz;
+      const h = shape==='capsule' ? Math.round(sz*1.1) : sz;
+      const bg = ts==='card' ? '#ffffff' : ts==='image' ? '#F1F2F5' : ts==='default' ? '#FFF1E0' : '#F3F4F7';
+      const bd = (ts==='clean'||ts==='card') ? '1px solid #E4E4E2' : ts==='default' ? '1px solid #f1e6cf' : 'none';
+      const sh = ts==='card' ? 'box-shadow:0 4px 12px rgba(40,30,10,.08);' : '';
+      const showDisc = p.show_discount !== false;
+      const discs = [40,35,50,25,0,60,18,0];
+      const emo = ['📱','👕','👟','💄','🏠','🎮','⌚','🎁'];
+      const isStrip = (p.layout==='strip') || b.kind==='cats-strip';
+      const rows = Math.max(1, Math.min(3, parseInt(p.rows)||1));
+      const n = isStrip ? 8 : cols;
+      const tile = (e,i)=>`
+        <div style="text-align:center;flex:0 0 auto">
+          <div style="position:relative;width:${w}px;height:${h}px;margin:0 auto">
+            <div style="width:100%;height:100%;border-radius:${rad};background:${bg};border:${bd};${sh}display:grid;place-items:center;font-size:${Math.round(Math.min(w,h)*0.46)}px">${e}</div>
+            ${showDisc&&discs[i%discs.length]>0?`<div style="position:absolute;bottom:-5px;inset-inline-start:50%;transform:translateX(50%);background:#ff7a00;color:#fff;font-size:8px;font-weight:900;border-radius:999px;padding:1px 6px;border:1.5px solid #fff;white-space:nowrap">-${discs[i%discs.length]}٪</div>`:''}
+          </div>
+          <div style="font-size:9px;color:#8a8370;margin-top:7px">Cat ${i+1}</div>
+        </div>`;
+      if (isStrip && rows>1) {
+        let colsHtml='';
+        for (let i=0;i<n;i+=rows){
+          let colItems='';
+          for(let r=0;r<rows&&i+r<n;r++) colItems+=tile(emo[i+r],i+r);
+          colsHtml+=`<div style="display:flex;flex-direction:column;gap:12px">${colItems}</div>`;
+        }
+        return `<div class="b-cats"><div style="display:flex;gap:12px;overflow:hidden;padding:10px">${colsHtml}</div></div>`;
+      }
+      const items = emo.slice(0,n).map(tile).join('');
+      return `<div class="b-cats">${ isStrip
+        ? `<div style="display:flex;gap:12px;overflow:hidden;padding:10px">${items}</div>`
+        : `<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:12px 6px;padding:10px">${items}</div>` }</div>`;
+    }
     case 'flash': return `
       <div class="b-flash">
         <div class="head"><div class="ttl">${p.titleEn || '⚡ Flash Deals'}</div><div class="countdown">02:14:09</div></div>
@@ -2813,10 +2940,15 @@ function handleAction(id, act){
 }
 function addBlock(kind, at){
   const p = cur();
-  const b = block(kind, {});
+  let realKind = kind, props = {};
+  if (kind && kind.indexOf('preset:') === 0) {
+    const pr = PRESETS[kind.slice(7)];
+    if (pr) { realKind = pr.kind; props = Object.assign({}, (KIND_DEFAULTS[pr.kind] ? KIND_DEFAULTS[pr.kind]() : {}), pr.props); }
+  }
+  const b = block(realKind, props);
   p.blocks.splice(at, 0, b);
   selectBlock(b.id);
-  toast('Added · '+labelFor(kind));
+  toast('Added · ' + ((kind && kind.indexOf('preset:') === 0 && PRESETS[kind.slice(7)]) ? PRESETS[kind.slice(7)].label : labelFor(kind)));
 }
 function reorderBlock(id, at){
   const p = cur();
@@ -3013,6 +3145,104 @@ function addItemBtn(arrayKey, label){
 function renderContent(b){
   const p = b.props || {};
   switch(b.kind){
+    case 'expert_picks':
+      return `${mlField(b,'eyebrow','سطر علوي صغير')}
+        ${mlField(b,'title','عنوان القسم')}
+        <div class="sub-h">👤 بطاقة الخبير</div>
+        <div class="field"><label>إيموجي/أيقونة الخبير</label><input data-prop="expert_avatar" value="${p.expert_avatar||'👨‍🔧'}"/></div>
+        ${mlField(b,'expertName','اسم الخبير')}
+        ${mlField(b,'expertRole','دور الخبير')}
+        ${mlField(b,'quote','الاقتباس')}
+        <div class="sub-h">🛍️ المنتجات المرشَّحة</div>
+        <div class="field"><label>🛍️ المنتجات المختارة</label><button type="button" class="link-field" onclick="openProductsPicker('product_ids')"><div class="lk-ic">🛍</div><div class="lk-info"><div class="lk-t">${(p.product_ids&&p.product_ids.length)?(p.product_ids.length+' منتجات مختارة'):'اضغط لاختيار المنتجات'}</div><div class="lk-s">${(p.product_ids&&p.product_ids.length)?((p.product_labels||[]).slice(0,2).join(' · ')):'ابحث بالاسم أو الكود (SKU)'}</div></div><div class="lk-chev">✏</div></button></div>
+        <p class="hint">ابحث واختر المنتجات؛ تظهر بالترتيب الذي تختاره.</p>`;
+    case 'build_kit':
+      return `${mlField(b,'eyebrow','سطر علوي صغير')}
+        ${mlField(b,'title','عنوان القسم')}
+        <div class="field"><label>🛍️ المنتجات المختارة</label><button type="button" class="link-field" onclick="openProductsPicker('product_ids')"><div class="lk-ic">🛍</div><div class="lk-info"><div class="lk-t">${(p.product_ids&&p.product_ids.length)?(p.product_ids.length+' منتجات مختارة'):'اضغط لاختيار المنتجات'}</div><div class="lk-s">${(p.product_ids&&p.product_ids.length)?((p.product_labels||[]).slice(0,2).join(' · ')):'ابحث بالاسم أو الكود (SKU)'}</div></div><div class="lk-chev">✏</div></button></div>
+        <div class="field"><label>خصم الباقة (٪)</label><input type="number" min="0" max="90" data-prop="bundle_discount" value="${p.bundle_discount!=null?p.bundle_discount:10}"/></div>
+        ${mlField(b,'cta','زر الإضافة')}
+        <p class="hint">يختار العميل المنتجات ويُحسب الإجمالي والتوفير فورًا؛ «أضف الباقة» يضيفها للسلة.</p>`;
+    case 'community_ugc':
+      return `${mlField(b,'eyebrow','سطر علوي صغير')}
+        ${mlField(b,'title','عنوان القسم')}
+        ${mlField(b,'more','نص الزاوية (مثل #يلو)')}
+        <div class="field"><label>عدد المنتجات</label><input type="number" min="3" max="30" data-prop="limit" value="${p.limit||12}"/></div>
+        <p class="hint">يعرض ما يرشّحه الزوّار من صفحة المنتج، مرتّبًا حسب عدد الترشيحات. الترشيح فوري بلا مراجعة.</p>`;
+
+    case 'elevenele_hero':
+      return `
+        ${mlField(b,'eyebrow','السطر العلوي الصغير')}
+        <div class="field"><label>النص الكبير (الرقم/العنوان)</label>
+          <input type="text" data-prop="big_text" value="${p.big_text||'11.11'}" placeholder="11.11"/></div>
+        ${mlField(b,'subtitle','العنوان الفرعي')}
+        ${mlField(b,'off','نص شارة الخصم')}
+        <div class="sub-h">الخلفية والألوان</div>
+        <div class="field"><label>نمط الخلفية</label>
+          ${sourceSelect(b,'bg_style',[['radial','توهّج دائري'],['linear','تدرّج قطري'],['solid','لون ثابت']],'radial')}
+        </div>
+        <div class="row2">
+          <div class="field"><label>خلفية ١</label><input type="color" value="${p.bg1||'#1A1308'}" data-prop="bg1" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>خلفية ٢</label><input type="color" value="${p.bg2||'#2A2012'}" data-prop="bg2" style="height:32px;padding:2px"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>لون مميّز ١</label><input type="color" value="${p.accent1||'#FFD60A'}" data-prop="accent1" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>لون مميّز ٢</label><input type="color" value="${p.accent2||'#FF7A00'}" data-prop="accent2" style="height:32px;padding:2px"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>لون النص</label><input type="color" value="${p.text_color||'#FFFFFF'}" data-prop="text_color" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>لون السطر العلوي</label><input type="color" value="${p.eyebrow_color||p.accent1||'#FFD60A'}" data-prop="eyebrow_color" style="height:32px;padding:2px"/></div>
+        </div>
+        <div class="field"><label>لون نص شارة الخصم</label><input type="color" value="${p.badge_text_color||'#1A1205'}" data-prop="badge_text_color" style="height:32px;padding:2px"/></div>
+        <div class="field"><label>🎨 باترن الخلفية</label>
+          ${sourceSelect(b,'pattern',[['sparkles','لمعات'],['stars','نجوم'],['dots','نقاط'],['confetti','قصاصات'],['rays','أشعّة'],['none','بدون']],'sparkles')}
+        </div>
+        <div class="field"><label>نهاية العدّاد</label>
+          <input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/>
+          <p class="hint">اتركه فارغًا لعدّاد افتراضي ٣ أيام.</p></div>`;
+    case 'deal_of_day':
+      return `
+        ${mlField(b,'title','عنوان القسم (اختياري)')}
+        <div class="field"><label>مصدر المنتج</label>
+          <select data-prop="source">
+            <option value="discounted" ${(p.source||'discounted')==='discounted'?'selected':''}>تلقائي — أعلى خصم</option>
+            <option value="manual" ${p.source==='manual'?'selected':''}>اختيار يدوي</option>
+          </select></div>
+        ${p.source==='manual' ? `<div class="field"><label>المنتج المثبّت</label>${productsPickerBtn(b)}</div>` : ''}
+        <div class="field"><label>نهاية العدّاد</label>
+          <input type="datetime-local" data-prop="ends_at" value="${p.ends_at||''}"/>
+          <p class="hint">اتركه فارغًا لعدّاد افتراضي.</p></div>
+        <div class="sub-h">الألوان والتصميم</div>
+        <div class="row2">
+          <div class="field"><label>خلفية ١</label><input type="color" value="${p.bg1||'#1C1206'}" data-prop="bg1" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>خلفية ٢</label><input type="color" value="${p.bg2||'#30200C'}" data-prop="bg2" style="height:32px;padding:2px"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>لون مميّز</label><input type="color" value="${p.accent||'#FFB800'}" data-prop="accent" style="height:32px;padding:2px"/></div>
+          <div class="field"><label>لون مميّز ٢</label><input type="color" value="${p.accent2||'#FF7A00'}" data-prop="accent2" style="height:32px;padding:2px"/></div>
+        </div>
+        <div class="field"><label>لون النص</label><input type="color" value="${p.text_color||'#FFFFFF'}" data-prop="text_color" style="height:32px;padding:2px"/></div>
+        ${mlField(b,'cta','نص زر الشراء')}
+        <div class="field switch-row"><label>إظهار شريط «الكمية محدودة»</label>
+          <div class="switch ${p.show_stock!==false?'on':''}" data-toggle-prop="show_stock"></div></div>`;
+    case 'scratch':
+      return `
+        ${mlField(b,'title','عنوان القسم (اختياري)')}
+        <div class="field"><label>مصدر المنتج</label>
+          <select data-prop="source">
+            <option value="discounted" ${(p.source||'discounted')==='discounted'?'selected':''}>تلقائي — أعلى خصم</option>
+            <option value="manual" ${p.source==='manual'?'selected':''}>اختيار يدوي</option>
+          </select></div>
+        ${p.source==='manual' ? `<div class="field"><label>المنتج</label>${productsPickerBtn(b)}</div>` : ''}
+        <div class="field"><label>نسبة الخصم %</label>
+          <input type="number" min="0" max="90" data-prop-num="pct" value="${p.pct||''}" placeholder="فارغ = عشوائي ٥-٢٠٪"/>
+          <p class="hint">يظهر خصمًا ثابتًا، أو عشوائيًا محفّزًا لو فارغ.</p></div>
+        <div class="sub-h">🛡️ جارد الربح</div>
+        <div class="toggle"><div class="nm">منع أي خصم يسبب خسارة<small>لا ينزّل السعر تحت التكلفة أبدًا</small></div>
+          <div class="switch ${(p.guard!==false)?'on':''}" data-toggle-prop="guard"></div></div>
+        <div class="field"><label>أدنى هامش ربح يُحافَظ عليه %</label>
+          <input type="number" min="0" max="90" data-prop-num="min_margin" value="${p.min_margin||0}"/>
+          <p class="hint">يُبقي هذا الهامش فوق التكلفة بعد الخصم.</p></div>`;
     case 'quick-pills': {
       const items = p.items || [];
       return `${mlField(b,'title','Section title (optional — toggle in Style)')}
@@ -3857,14 +4087,39 @@ function renderContent(b){
           <div class="switch ${(p.show_rings!==false)?'on':''}" data-toggle-prop="show_rings"></div></div>
         <div class="field"><label>Bubble size (px)</label>
           <input type="number" min="40" max="100" data-prop-num="size" value="${p.size||60}"/></div>
-        <div class="sub-h">Bubbles (${bubbles.length})</div>
+        <div class="field"><label>⏱️ مدة عرض الستوري (ثوانٍ)</label>
+          <input type="number" min="2" max="15" data-prop-num="story_duration" value="${p.story_duration||5}"/></div>
+        <div class="field"><label>عدد القصص الافتراضي لكل أيقونة</label>
+          <input type="number" min="1" max="20" data-prop-num="story_count" value="${p.story_count||8}"/></div>
+        <div class="toggle"><div class="nm">🖼️ إظهار صور المنتجات داخل الفقاعة</div>
+          <div class="switch ${(p.bubble_images)?'on':''}" data-toggle-prop="bubble_images"></div></div>
+        <div class="toggle"><div class="nm">🔄 تقليب الصور تلقائيًا</div>
+          <div class="switch ${(p.bubble_rotate)?'on':''}" data-toggle-prop="bubble_rotate"></div></div>
+        <div class="field"><label>سرعة التقليب (ثوانٍ)</label>
+          <input type="number" min="2" max="12" data-prop-num="bubble_rotate_sec" value="${p.bubble_rotate_sec||3}"/></div>
+        <div class="sub-h">⭕ الأيقونات / القصص (${bubbles.length})</div>
         ${bubbles.map((it,i)=>`
           <div class="item-card">
-            ${itemHeader('Bubble', 'bubbles', i, bubbles.length)}
+            ${itemHeader('أيقونة', 'bubbles', i, bubbles.length)}
             ${itemIcon('bubbles', i, 'icon', it)}
-            ${itemBilingualImage('bubbles', i, 'image_url', it, 'Bubble image')}
-            ${itemMl('bubbles', i, 'labelEn', 'labelAr', 'Label', it)}
-            ${itemLink('bubbles', i, 'link', it)}
+            ${itemBilingualImage('bubbles', i, 'image_url', it, 'صورة الأيقونة')}
+            ${itemMl('bubbles', i, 'labelEn', 'labelAr', 'الاسم', it)}
+            <div class="sub-h" style="margin-top:6px">🎯 محتوى الستوري</div>
+            <div class="field"><label>المصدر</label>
+              <select data-i-prop="bubbles|${i}|source">
+                <option value="" ${!it.source?'selected':''}>— بدون (رابط فقط) —</option>
+                <option value="new" ${it.source==='new'?'selected':''}>🆕 منتجات جديدة</option>
+                <option value="discounted" ${it.source==='discounted'?'selected':''}>🏷️ خصومات</option>
+                <option value="category" ${it.source==='category'?'selected':''}>📂 قسم معيّن</option>
+                <option value="brand" ${it.source==='brand'?'selected':''}>®️ براند</option>
+                <option value="manual" ${it.source==='manual'?'selected':''}>✋ منتجات بعينها</option>
+              </select></div>
+            ${it.source==='category' ? `<div class="field"><label>رقم القسم (Category ID)</label><input type="number" data-i-prop="bubbles|${i}|category_id" value="${it.category_id||''}"/></div>` : ''}
+            ${it.source==='brand' ? `<div class="field"><label>البراند</label>${brandNameSelect('bubbles|'+i+'|brand_id', it.brand_id)}</div>${brandLogoPreview(it.brand_id)}<div class="field"><label>منتجات الستوري</label><select data-i-prop="bubbles|${i}|brand_sort"><option value="newest" ${(it.brand_sort||'newest')==='newest'?'selected':''}>🆕 الأحدث</option><option value="discount" ${it.brand_sort==='discount'?'selected':''}>🏷️ الأعلى خصمًا</option></select></div>` : ''}
+            ${it.source==='manual' ? `<div class="field"><label>أرقام المنتجات (مفصولة بفاصلة)</label><input data-i-prop="bubbles|${i}|product_ids" value="${it.product_ids||''}" placeholder="1597, 2272"/></div>` : ''}
+            ${it.source ? `<div class="field"><label>كم ستوري (منتج)</label><input type="number" min="1" max="20" data-i-prop="bubbles|${i}|count" value="${it.count||8}"/></div>` : ''}
+            ${it.source ? `<div class="field"><label>⏱️ سرعة تقليب صور هذه الفقاعة (ث)</label><input type="number" min="2" max="12" data-i-prop="bubbles|${i}|rotate_sec" value="${it.rotate_sec||''}" placeholder="فارغ = السرعة العامة (${p.bubble_rotate_sec||3} ث)"/><p class="hint">اجعلها مختلفة عن باقي الفقاعات حتى لا تتزامن الدوائر.</p></div>` : ''}
+            ${itemLink('bubbles', i, 'link', it, 'رابط احتياطي (لو بدون مصدر)')}
           </div>`).join('')}
         ${addItemBtn('bubbles', 'Add bubble')}`;
     }
@@ -4208,6 +4463,9 @@ function renderContent(b){
             ['5','5 — compact'],['6','6 — very compact']
           ], '4')}
         </div>
+        <div class="field"><label>عدد الصفوف (شريط أفقي)</label>
+          ${sourceSelect(b, 'rows', [['1','صف واحد'],['2','صفّين'],['3','٣ صفوف']], '1')}
+        </div>
         <div class="field"><label>Icon shape</label>
           ${sourceSelect(b, 'shape', [
             ['circle',  '○ Circle'],
@@ -4218,8 +4476,25 @@ function renderContent(b){
         </div>
         <div class="field"><label>Icon size (px)</label>
           <input type="number" min="36" max="100" data-prop-num="icon_size" value="${p.icon_size||56}"/></div>
-        <div class="field"><label>Gap between items (px)</label>
-          <input type="number" min="4" max="24" data-prop-num="gap" value="${p.gap||10}"/></div>
+        <div class="sub-h">🎨 التصميم</div>
+        <div class="field"><label>شكل البطاقة</label>
+          ${sourceSelect(b, 'tile_style', [
+            ['clean','✨ نظيف (دائرة + شارة خصم)'],
+            ['card','🔲 كارت بظل'],
+            ['image','🖼️ صورة تملأ الدائرة'],
+            ['default','قديم (ألوان متعددة)']
+          ], 'clean')}
+        </div>
+        <div class="toggle"><div class="nm">🏷️ شارة «أعلى خصم» على الأيقونة</div>
+          <div class="switch ${(p.show_discount!==false)?'on':''}" data-toggle-prop="show_discount"></div></div>
+        <div class="toggle"><div class="nm">🎯 فتح القسم مرتّبًا بالأعلى خصمًا</div>
+          <div class="switch ${(p.open_by_discount!==false)?'on':''}" data-toggle-prop="open_by_discount"></div></div>
+
+        <div class="field"><label>التباعد الأفقي بين الأعمدة (px)</label>
+          <input type="number" min="0" max="24" data-prop-num="gap" value="${p.gap||10}"/></div>
+        <div class="field"><label>التباعد الرأسي بين الصفوف (px)</label>
+          <input type="number" min="0" max="24" data-prop-num="row_gap" value="${p.row_gap!=null?p.row_gap:(p.gap||10)}"/>
+          <p class="hint">قلّله لتقريب الصفوف من بعضها.</p></div>
 
         <div class="sub-h">Display</div>
         <div class="toggle"><div class="nm">📝 Show label under icon</div>
@@ -4273,6 +4548,7 @@ function renderContent(b){
           <select data-prop="bs_style">
             <option value="arena" ${(p.bs_style||'arena')==='arena'?'selected':''}>👑 Champions Arena — hero #1 + racing pack (new)</option>
             <option value="podium" ${p.bs_style==='podium'?'selected':''}>🥇 Classic podium + list</option>
+            <option value="cards" ${p.bs_style==='cards'?'selected':''}>🗂️ كروت واضحة — صفّ منتجات نظيف</option>
           </select></div>
         <p class="hint">Podium design: #1 crowned on a gold stand, #2 silver, #3 bronze, then a ranked list — fed by the REAL daily sales ranking.</p>
         <div class="field"><label>Theme</label>
@@ -4401,8 +4677,43 @@ function renderContent(b){
       return `<div class="field"><label>Height (px)</label><input type="number" value="16"/></div>`;
     case 'divider':
       return `<div class="field"><label>Style</label><select><option>Solid thin</option><option>Dashed</option><option>Gradient fade</option></select></div>`;
+    case 'anker-banner':
+      return `<p class="hint">بانر حملة أنكر — تصميمه ومحتواه مدمجان في التطبيق (ثابت). لتغيير صوره أو روابطه يلزم تحديث التطبيق.</p>`;
+    case 'app-promo':
+      return `${mlField(b,'title','العنوان')}
+        ${mlField(b,'sub','السطر الفرعي')}
+        <p class="hint">بطاقة «حمّل تطبيقنا».</p>`;
+    case 'beena':
+      return `${mlField(b,'title','العنوان')}
+        <p class="hint">بطاقة مساعد «بينة» الذكي — تفتح المحادثة عند الضغط.</p>`;
+    case 'carousel':
+      return `<p class="hint">يعرض شرائح السلايدر (سجلّات mobile.slider). لو لا توجد شرائح يظهر هيرو من الإعدادات التالية.</p>
+        ${mlField(b,'title','عنوان الهيرو (احتياطي)')}
+        ${mlField(b,'sub','سطر فرعي (احتياطي)')}`;
+    case 'countdown':
+      return `${mlField(b,'title','النص العلوي')}
+        <p class="hint">عدّاد تنازلي زخرفي (يبدأ من ٢٣:٥٩).</p>`;
+    case 'coupons':
+      return `<p class="hint">يعرض كوبونات العميل المتاحة — لا إعدادات لهذا البلوك.</p>`;
+    case 'loyalty':
+      return `<p class="hint">بطاقة نقاط الولاء — لا إعدادات لهذا البلوك.</p>`;
+    case 'wallet':
+      return `<p class="hint">بطاقة المحفظة — لا إعدادات لهذا البلوك.</p>`;
+    case 'reviews':
+      return `<p class="hint">يعرض أحدث تقييمات العملاء — لا إعدادات لهذا البلوك.</p>`;
+    case 'searchbar':
+      return `<p class="hint">شريط بحث يفتح صفحة البحث عند الضغط — لا إعدادات لهذا البلوك.</p>`;
+    case 'video':
+      return `<p class="hint">عنصر فيديو (عنصر نائب حاليًا) — تشغيل الفيديو غير مُفعّل بعد.</p>`;
+    case 'tabs':
+      return `<div class="field"><label>نمط التبويبات</label>
+        <select data-prop="style">
+          <option value="underline" ${(p.style||'underline')==='underline'?'selected':''}>خط سفلي</option>
+          <option value="pills" ${p.style==='pills'?'selected':''}>حبوب</option>
+        </select></div>
+        <p class="hint">تبويبات تنقّل.</p>`;
     default:
-      return `<p style="font-size:12px;color:var(--muted)">No content fields for ${b.kind}.</p>`;
+      return `<p style="font-size:12px;color:var(--muted)">هذا البلوك لا يحتوي إعدادات قابلة للتعديل for ${b.kind}.</p>`;
   }
 }
 
@@ -4695,6 +5006,33 @@ function withBrandTagFilter(options){
   if (!out.some(o => o[0] === 'filter'))
     out = out.concat([['filter','🧪 Custom filter (category + brand + tag + price)…']]);
   return out;
+}
+// ── قائمة البراندات: تُحمَّل مرّة واحدة من الخادم وتُخزَّن مؤقتًا ───────────
+let __BRANDS = null;              // null=لم تبدأ، 'loading'=قيد التحميل، []=جاهزة
+function ensureBrands(){
+  if (__BRANDS !== null) return;  // محمّلة أو قيد التحميل
+  __BRANDS = 'loading';
+  api('GET', '/api/admin/v2/lookups/brands')
+    .then(d => { __BRANDS = d.brands || []; renderRight(); })  // أعد رسم اللوحة بعد الوصول
+    .catch(() => { __BRANDS = []; });
+}
+// يبني <select> بكل أسماء البراندات؛ path=مسار data-i-prop، curVal=القيمة الحالية
+function brandNameSelect(path, curVal){
+  if (!Array.isArray(__BRANDS)) { ensureBrands();
+    return `<select data-i-prop="${path}"><option>⏳ جاري تحميل البراندات…</option></select>`; }
+  const cur = (curVal === undefined || curVal === null) ? '' : String(curVal);
+  const opts = ['<option value="">— اختر البراند —</option>'].concat(
+    __BRANDS.map(br => `<option value="${br.id}" ${cur===String(br.id)?'selected':''}>${(br.name||'(بدون اسم)').replace(/</g,'&lt;')}</option>`));
+  return `<select data-i-prop="${path}">${opts.join('')}</select>`;
+}
+// يعرض لوجو البراند المختار (من ذاكرة __BRANDS) تحت القائمة المنسدلة
+function brandLogoPreview(id){
+  if (!Array.isArray(__BRANDS) || !id) return '';
+  const br = __BRANDS.find(x => String(x.id) === String(id));
+  if (!br || !br.logo) return '';
+  return `<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px">
+    <img src="${br.logo}" style="width:42px;height:42px;border-radius:8px;object-fit:contain;border:1px solid #eee;background:#fff"/>
+    <span style="font-size:12px;color:#666">${(br.name||'').replace(/</g,'&lt;')}</span></div>`;
 }
 function brandPickerBtn(b){
   const id = b.props.brand_id;

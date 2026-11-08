@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <!-- قائمة ترشيحات المجتمع (للمالك: متابعة وإدارة الترشيحات) -->
+  <record id="view_community_pick_list" model="ir.ui.view">
+    <field name="name">uellow.community.pick.list</field>
+    <field name="model">uellow.community.pick</field>
+    <field name="arch" type="xml">
+      <list string="ترشيحات المجتمع">
+        <field name="create_date" string="التاريخ"/>
+        <field name="product_tmpl_id" string="المنتج"/>
+        <field name="nominator_name" string="المُرشِّح"/>
+        <field name="website_id" string="الموقع" optional="show"/>
+        <field name="partner_id" string="العميل" optional="hide"/>
+      </list>
+    </field>
+  </record>
+
+  <record id="view_community_pick_form" model="ir.ui.view">
+    <field name="name">uellow.community.pick.form</field>
+    <field name="model">uellow.community.pick</field>
+    <field name="arch" type="xml">
+      <form string="ترشيح">
+        <sheet>
+          <group>
+            <field name="product_tmpl_id"/>
+            <field name="nominator_name"/>
+            <field name="website_id"/>
+            <field name="partner_id"/>
+            <field name="active"/>
+          </group>
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- تجميع افتراضي حسب المنتج لرؤية الأكثر ترشيحًا -->
+  <record id="view_community_pick_search" model="ir.ui.view">
+    <field name="name">uellow.community.pick.search</field>
+    <field name="model">uellow.community.pick</field>
+    <field name="arch" type="xml">
+      <search>
+        <field name="product_tmpl_id"/>
+        <field name="nominator_name"/>
+        <group expand="1" string="تجميع">
+          <filter name="grp_product" string="حسب المنتج"
+                  context="{'group_by': 'product_tmpl_id'}"/>
+          <filter name="grp_website" string="حسب الموقع"
+                  context="{'group_by': 'website_id'}"/>
+        </group>
+      </search>
+    </field>
+  </record>
+
+  <record id="action_community_pick" model="ir.actions.act_window">
+    <field name="name">اختيار المجتمع (ترشيحات)</field>
+    <field name="res_model">uellow.community.pick</field>
+    <field name="view_mode">list,form</field>
+    <field name="context">{'search_default_grp_product': 1}</field>
+    <field name="help" type="html">
+      <p class="o_view_nocontent_smiling_face">لا توجد ترشيحات بعد</p>
+      <p>يظهر هنا كل منتج رشّحه الزوّار من صفحة المنتج.</p>
+    </field>
+  </record>
+
+  <menuitem id="menu_community_pick_root"
+            name="اختيار المجتمع"
+            parent="website.menu_website_configuration"
+            action="action_community_pick"
+            sequence="90"/>
+</odoo>
